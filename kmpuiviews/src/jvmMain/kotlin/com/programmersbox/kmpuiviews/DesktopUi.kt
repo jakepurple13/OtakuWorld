@@ -425,6 +425,59 @@ fun InternalBaseDesktopUi(
     )
 }
 
+@Composable
+fun BaseWindow(
+    title: String,
+    exitApplication: () -> Unit,
+    content: @Composable () -> Unit,
+) {
+    val windowState = rememberWindowState()
+
+    Window(
+        onCloseRequest = exitApplication,
+        title = title,
+        state = windowState,
+        undecorated = true,
+        transparent = true,
+    ) {
+        KmpLocalCompositionSetup {
+            OtakuMaterialTheme(
+                settingsHandling = koinInject(),
+            ) {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    shape = MaterialTheme.shapes.medium,
+                    border = BorderStroke(
+                        1.dp,
+                        MaterialTheme.colorScheme.outlineVariant
+                    )
+                ) {
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        CompositionLocalProvider(
+                            LocalNavHostPadding provides PaddingValues()
+                        ) {
+                            CustomTitleBar(
+                                title = title,
+                                onMinimizeClick = { windowState.isMinimized = true },
+                                onMaximizeToggle = {
+                                    windowState.placement = if (windowState.placement == WindowPlacement.Maximized) {
+                                        WindowPlacement.Floating
+                                    } else {
+                                        WindowPlacement.Maximized
+                                    }
+                                },
+                                onCloseClick = exitApplication
+                            )
+                            HorizontalDivider()
+                            content()
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FrameWindowScope.CustomTitleBar(

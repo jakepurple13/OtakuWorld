@@ -1,22 +1,11 @@
 package com.programmersbox.showcase
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.grid.LazyGridState
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.expressiveLightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import ca.gosyer.appdirs.AppDirs
-import com.materialkolor.dynamicColorScheme
-import com.materialkolor.ktx.animateColorScheme
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
@@ -51,24 +40,7 @@ fun main(args: Array<String>) {
         moduleBlock = {
 
         },
-        content = {
-            val isDarkMode = isSystemInDarkTheme()
-            var themeMode by remember { mutableStateOf(isDarkMode) }
-            val colorScheme by remember(themeMode) {
-                derivedStateOf {
-                    if (themeMode) dynamicColorScheme(Color.Cyan, isDark = true)
-                    else expressiveLightColorScheme()
-                }
-            }
-            MaterialTheme(
-                colorScheme = animateColorScheme(colorScheme),
-            ) {
-                App(
-                    themeMode = themeMode,
-                    onThemeModeChange = { themeMode = it },
-                )
-            }
-        }
+        content = { App() }
     )
 }
 

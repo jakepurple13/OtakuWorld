@@ -25,7 +25,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Card
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilledTonalIconToggleButton
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -40,8 +40,12 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -53,10 +57,18 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.scene.DialogSceneStrategy
 import androidx.navigation3.ui.NavDisplay
+import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.kmpuiviews.BaseWindow
+import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.navigation.scenestrategy.BottomSheetSceneStrategy
+import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
+import com.programmersbox.kmpuiviews.presentation.settings.general.AmoledModeSetting
+import com.programmersbox.kmpuiviews.presentation.settings.general.ExpressivenessSetting
+import com.programmersbox.kmpuiviews.presentation.settings.general.ThemeSetting
 import com.programmersbox.showcase.annotations.ShowcaseEntry
 import com.programmersbox.showcase.annotations.ShowcaseRegistryProvider
 import kotlinx.serialization.Serializable
+import org.koin.compose.koinInject
 import java.util.ServiceLoader
 
 private val allEntries: List<ShowcaseEntry> by lazy {
@@ -65,10 +77,7 @@ private val allEntries: List<ShowcaseEntry> by lazy {
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun App(
-    themeMode: Boolean,
-    onThemeModeChange: (Boolean) -> Unit,
-) {
+fun App() {
     Surface(modifier = Modifier.fillMaxSize()) {
         val groups = remember {
             allEntries
@@ -78,30 +87,71 @@ fun App(
 
         val backStack = remember { mutableStateListOf<NavKey>(Home) }
 
+        var showThemeSettings by remember { mutableStateOf(false) }
+
+        if (showThemeSettings) {
+            BaseWindow(
+                title = "Theme Settings",
+                exitApplication = { showThemeSettings = false },
+            ) {
+                val handling: NewSettingsHandling = koinInject()
+
+                SettingsScaffold(
+                    title = "Theme",
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    var isAmoledMode by handling.rememberIsAmoledMode()
+                    CategoryGroup {
+                        item {
+                            ThemeSetting(
+                                handling = handling,
+                                isAmoledMode = isAmoledMode
+                            )
+                        }
+
+                        item {
+                            AmoledModeSetting(
+                                isAmoledMode = isAmoledMode,
+                                onAmoledModeChange = { isAmoledMode = it }
+                            )
+                        }
+
+                        item { ExpressivenessSetting(handling = handling) }
+                    }
+                }
+            }
+        }
+
         Row(modifier = Modifier.fillMaxSize()) {
             NavigationRail {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
-                    NavigationRailItem(
-                        selected = backStack.lastOrNull() == Home,
-                        onClick = { backStack.add(Home) },
-                        icon = { Icon(Icons.Default.Home, contentDescription = "All") },
-                        label = { Text("Home") },
-                    )
-                    NavigationRailItem(
-                        selected = backStack.lastOrNull() == All,
-                        onClick = { backStack.add(All) },
-                        icon = { Icon(Icons.Default.AllInbox, contentDescription = "All") },
-                        label = { Text("All") },
-                    )
-                    groups.forEach { group ->
+                    item(contentType = "navItem") {
                         NavigationRailItem(
-                            selected = (backStack.lastOrNull() as? Sample)?.key == group.key,
-                            onClick = { backStack.add(Sample(group.key)) },
-                            icon = { Icon(Icons.Default.Apps, contentDescription = group.key) },
-                            label = { Text(group.key) },
+                            selected = backStack.lastOrNull() == Home,
+                            onClick = { backStack.navigateToTop(Home) },
+                            icon = { Icon(Icons.Default.Home, contentDescription = "All") },
+                            label = { Text("Home") },
                         )
+                    }
+                    item(contentType = "navItem") {
+                        NavigationRailItem(
+                            selected = backStack.lastOrNull() == All,
+                            onClick = { backStack.navigateToTop(All) },
+                            icon = { Icon(Icons.Default.AllInbox, contentDescription = "All") },
+                            label = { Text("All") },
+                        )
+                    }
+                    groups.forEach { group ->
+                        item(contentType = "navItem") {
+                            NavigationRailItem(
+                                selected = (backStack.lastOrNull() as? Sample)?.key == group.key,
+                                onClick = { backStack.navigateToTop(Sample(group.key)) },
+                                icon = { Icon(Icons.Default.Apps, contentDescription = group.key) },
+                                label = { Text(group.key) },
+                            )
+                        }
                     }
                 }
             }
@@ -111,9 +161,8 @@ fun App(
                     TopAppBar(
                         title = { Text("Component Showcase") },
                         actions = {
-                            FilledTonalIconToggleButton(
-                                checked = themeMode,
-                                onCheckedChange = onThemeModeChange
+                            FilledTonalIconButton(
+                                onClick = { showThemeSettings = true }
                             ) { Icon(Icons.Default.DarkMode, contentDescription = "Theme") }
                         },
                         subtitle = { Text("${allEntries.size} components") }
@@ -143,8 +192,8 @@ fun App(
                             ) {
                                 WelcomePlaceholder(
                                     groups = groups.keys.toList(),
-                                    onGroupClick = { backStack.add(Sample(it)) },
-                                    onAllClick = { backStack.add(All) }
+                                    onGroupClick = { backStack.navigateToTop(Sample(it)) },
+                                    onAllClick = { backStack.navigateToTop(All) }
                                 )
                             }
                         }
@@ -192,6 +241,14 @@ fun App(
             }
         }
     }
+}
+
+fun <T> SnapshotStateList<T>.navigateToTop(destination: T) {
+    // 1. Remove the item if it exists anywhere in the list
+    this.remove(destination)
+
+    // 2. Add it to the end of the list to make it the active screen
+    this.add(destination)
 }
 
 @Serializable
