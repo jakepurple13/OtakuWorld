@@ -18,12 +18,18 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AllInbox
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Card
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalIconToggleButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
@@ -38,6 +44,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -77,9 +84,15 @@ fun App(
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     NavigationRailItem(
-                        selected = (backStack.lastOrNull() as? Sample)?.key == null,
-                        onClick = { backStack.add(Sample(null)) },
-                        icon = { Icon(Icons.Default.Apps, contentDescription = "All") },
+                        selected = backStack.lastOrNull() == Home,
+                        onClick = { backStack.add(Home) },
+                        icon = { Icon(Icons.Default.Home, contentDescription = "All") },
+                        label = { Text("Home") },
+                    )
+                    NavigationRailItem(
+                        selected = backStack.lastOrNull() == All,
+                        onClick = { backStack.add(All) },
+                        icon = { Icon(Icons.Default.AllInbox, contentDescription = "All") },
                         label = { Text("All") },
                     )
                     groups.forEach { group ->
@@ -130,9 +143,19 @@ fun App(
                             ) {
                                 WelcomePlaceholder(
                                     groups = groups.keys.toList(),
-                                    onGroupClick = { backStack.add(Sample(it)) }
+                                    onGroupClick = { backStack.add(Sample(it)) },
+                                    onAllClick = { backStack.add(All) }
                                 )
                             }
+                        }
+
+                        entry<All> {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(16.dp)
+                                    .padding(padding)
+                            ) { ComponentList(allEntries) }
                         }
 
                         entry<Sample> { sample ->
@@ -143,11 +166,7 @@ fun App(
                                     .padding(padding)
                             ) {
                                 val entries = remember {
-                                    if (sample.key == null) {
-                                        allEntries
-                                    } else {
-                                        allEntries.filter { it.group == sample.key }
-                                    }
+                                    allEntries.filter { it.group == sample.key }
                                 }
                                 ComponentList(entries)
                             }
@@ -179,12 +198,16 @@ fun App(
 data object Home : NavKey
 
 @Serializable
-data class Sample(val key: String?) : NavKey
+data class Sample(val key: String) : NavKey
+
+@Serializable
+data object All : NavKey
 
 @Composable
 private fun WelcomePlaceholder(
     groups: List<String>,
     onGroupClick: (String) -> Unit,
+    onAllClick: () -> Unit,
 ) {
     LazyVerticalGrid(
         columns = GridCells.Adaptive(150.dp),
@@ -192,7 +215,28 @@ private fun WelcomePlaceholder(
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         modifier = Modifier.fillMaxSize(),
     ) {
-        items(groups) { entry ->
+        item(contentType = "group") {
+            Card(
+                onClick = onAllClick,
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        "All",
+                        style = MaterialTheme.typography.titleMedium,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            }
+        }
+        items(
+            items = groups,
+            contentType = { _ -> "group" },
+            key = { it }
+        ) { entry ->
             Card(
                 onClick = { onGroupClick(entry) },
             ) {
@@ -215,14 +259,36 @@ private fun WelcomePlaceholder(
 @Composable
 private fun ComponentList(entries: List<ShowcaseEntry>) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
-        items(entries) { entry ->
-            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(entry.name, style = MaterialTheme.typography.titleMedium)
-                    Text(entry.description, style = MaterialTheme.typography.bodyMedium)
-                    Spacer(modifier = Modifier.height(12.dp))
-                    entry.content()
-                }
+        item(contentType = "contentType1") {
+            ListItem(
+                headlineContent = { Text("${entries.size} ${entries.first().group} components") }
+            )
+            HorizontalDivider()
+        }
+        items(
+            items = entries,
+            contentType = { _ -> "contentType2" },
+            key = { it }
+        ) { entry ->
+            ElevatedCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+            ) {
+                ListItem(
+                    overlineContent = { Text(entry.packageName) },
+                    headlineContent = { Text(entry.name) },
+                    supportingContent = {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(entry.description, style = MaterialTheme.typography.bodyMedium)
+                            Spacer(modifier = Modifier.height(12.dp))
+                            entry.content()
+                        }
+                    },
+                    colors = ListItemDefaults.colors(
+                        containerColor = Color.Transparent
+                    )
+                )
             }
         }
     }

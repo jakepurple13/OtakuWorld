@@ -11,6 +11,7 @@ kotlin {
 }
 
 dependencies {
+    implementation(projects.favoritesdatabase)
     implementation(projects.showcase.annotations)
     ksp(projects.showcase.processor)
 
@@ -26,6 +27,9 @@ dependencies {
     implementation(commonLibs.cmp.lifecycle.viewmodel.navigation3)
     implementation(commonLibs.cmp.navigationevent.compose)
     implementation(commonLibs.cmp.material3.adaptive.nav3)
+
+    implementation(project.dependencies.platform(commonLibs.koin.bom))
+    implementation(commonLibs.bundles.koinKmp)
 
     implementation(projects.kmpuiviews)
 }

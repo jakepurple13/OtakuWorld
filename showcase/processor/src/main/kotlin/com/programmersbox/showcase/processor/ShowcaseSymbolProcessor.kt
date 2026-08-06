@@ -19,6 +19,7 @@ private data class GeneratedEntry(
     val name: String,
     val description: String,
     val group: String,
+    val packageName: String,
     val qualifiedReference: String,
 )
 
@@ -132,7 +133,7 @@ class ShowcaseSymbolProcessor(
         val packageName = function.packageName.asString()
         val qualifiedReference = if (packageName.isEmpty()) functionName else "$packageName.$functionName"
 
-        return GeneratedEntry(name, description, group, qualifiedReference)
+        return GeneratedEntry(name, description, group, packageName, qualifiedReference)
     }
 
     private fun generateFileContents(className: String, entries: List<GeneratedEntry>): String = buildString {
@@ -148,6 +149,7 @@ class ShowcaseSymbolProcessor(
             appendLine("            name = ${entry.name.quoted()},")
             appendLine("            description = ${entry.description.quoted()},")
             appendLine("            group = ${entry.group.quoted()},")
+            appendLine("            packageName = ${entry.packageName.quoted()},")
             appendLine("            content = { ${entry.qualifiedReference}() },")
             appendLine("        ),")
         }

@@ -6,5 +6,6 @@ data class ShowcaseEntry(
     val name: String,
     val description: String,
     val group: String,
+    val packageName: String,
     val content: @Composable () -> Unit,
 )

@@ -69,6 +69,8 @@ import com.programmersbox.kmpuiviews.utils.JvmAppLogo
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.bindsPlatformGenericInfo
+import com.programmersbox.supabaseintegration.Res
+import com.programmersbox.supabaseintegration.supabase_logo_icon
 import dev.nucleusframework.application.NucleusApplicationScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
@@ -120,6 +122,44 @@ fun desktopSetup(
                         }
                     )
                 }
+            )
+        }
+    }
+}
+
+fun baseDesktopSetup(
+    args: Array<String>,
+    name: String,
+    appDirs: AppDirs,
+    appConfig: Scope.() -> AppConfig,
+    jvmAppLogo: Scope.() -> JvmAppLogo = { JvmAppLogo(Res.drawable.supabase_logo_icon) },
+    genericInfo: Module.() -> KoinDefinition<PlatformGenericInfo>,
+    moduleBlock: Module.() -> Unit,
+    content: @Composable () -> Unit,
+) {
+    DataStoreSettings { File(appDirs.getUserDataDir(), it).absolutePath }
+
+    if (BackgroundWorkHandlerImpl.setupSyncCheckers(args)) return
+    val desktopViewModelStoreOwner = DesktopViewModelStoreOwner()
+    application {
+        CompositionLocalProvider(
+            LocalViewModelStoreOwner provides desktopViewModelStoreOwner
+        ) {
+            InternalBaseDesktopUi(
+                title = name,
+                moduleBlock = {
+                    modules(
+                        module {
+                            single { appConfig() }
+                            single { jvmAppLogo() }
+                            genericInfo(this).bindsPlatformGenericInfo()
+                            moduleBlock()
+                        }
+                    )
+                },
+                tray = {},
+                exitApplication = ::exitApplication,
+                content = content,
             )
         }
     }
@@ -289,6 +329,92 @@ private fun InternalDesktopUi(
                                         bottomBarAdditions = {},
                                         customPreferences = customSettings,
                                     )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+@Composable
+fun InternalBaseDesktopUi(
+    title: String,
+    tray: @Composable () -> Unit,
+    exitApplication: () -> Unit,
+    moduleBlock: KoinApplication.() -> Unit,
+    content: @Composable () -> Unit,
+) {
+    KoinApplication(
+        configuration = koinConfiguration(
+            declaration = {
+                printLogger(Level.DEBUG)
+                modules(
+                    module {
+                        includes(kmpModule)
+
+                        singleOf(::DataStoreHandling)
+                        single {
+                            NewSettingsHandling(
+                                createProtobuf(
+                                    serializer = SettingsSerializer(),
+                                    fileName = File(
+                                        System.getProperty("user.home"),
+                                        "Settings.preferences_pb"
+                                    ).absolutePath,
+                                ),
+                            )
+                        }
+                    }
+                )
+                moduleBlock()
+            }
+        ),
+        content = {
+            tray()
+
+            val windowState = rememberWindowState()
+
+            Window(
+                onCloseRequest = exitApplication,
+                title = title,
+                state = windowState,
+                undecorated = true,
+                transparent = true,
+            ) {
+                KmpLocalCompositionSetup {
+                    OtakuMaterialTheme(
+                        settingsHandling = koinInject(),
+                    ) {
+                        Surface(
+                            modifier = Modifier.fillMaxSize(),
+                            shape = MaterialTheme.shapes.medium,
+                            border = BorderStroke(
+                                1.dp,
+                                MaterialTheme.colorScheme.outlineVariant
+                            )
+                        ) {
+                            Column(modifier = Modifier.fillMaxSize()) {
+                                CompositionLocalProvider(
+                                    LocalNavHostPadding provides PaddingValues()
+                                ) {
+                                    CustomTitleBar(
+                                        title = title,
+                                        onMinimizeClick = { windowState.isMinimized = true },
+                                        onMaximizeToggle = {
+                                            windowState.placement = if (windowState.placement == WindowPlacement.Maximized) {
+                                                WindowPlacement.Floating
+                                            } else {
+                                                WindowPlacement.Maximized
+                                            }
+                                        },
+                                        onCloseClick = exitApplication
+                                    )
+                                    HorizontalDivider()
+                                    content()
                                 }
                             }
                         }
