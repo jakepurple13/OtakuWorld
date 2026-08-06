@@ -45,7 +45,7 @@ class ShowcaseSymbolProcessor(
             .filterIsInstance<KSFunctionDeclaration>()
             .toList()
 
-        println("Function count: ${functions.size}")
+        println("Function count in $moduleId: ${functions.size}")
 
         val entries = functions.mapNotNull { function -> toEntryOrReportError(function) }
 
@@ -58,11 +58,15 @@ class ShowcaseSymbolProcessor(
         val className = "${sanitizedModuleId()}ShowcaseRegistryProvider"
         val qualifiedClassName = "$GENERATED_PACKAGE.$className"
 
+        println("Generating $qualifiedClassName")
+
         codeGenerator.createNewFile(
             dependencies = dependencies,
             packageName = GENERATED_PACKAGE,
             fileName = className,
         ).bufferedWriter().use { writer -> writer.write(generateFileContents(className, sortedEntries)) }
+
+        println("Generating $PROVIDER_INTERFACE")
 
         codeGenerator.createNewFileByPath(
             dependencies = dependencies,

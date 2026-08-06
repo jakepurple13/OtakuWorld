@@ -3,11 +3,13 @@ package com.programmersbox.showcase
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.expressiveLightColorScheme
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -23,6 +25,7 @@ import androidx.compose.ui.window.rememberWindowState
 import com.materialkolor.dynamicColorScheme
 import com.materialkolor.ktx.animateColorScheme
 import com.programmersbox.kmpuiviews.CustomTitleBar
+import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 
 fun main() = application {
     val windowState = rememberWindowState()
@@ -67,10 +70,14 @@ fun main() = application {
                         onCloseClick = ::exitApplication
                     )
                     HorizontalDivider()
-                    App(
-                        themeMode = themeMode,
-                        onThemeModeChange = { themeMode = it },
-                    )
+                    CompositionLocalProvider(
+                        LocalNavHostPadding provides PaddingValues()
+                    ) {
+                        App(
+                            themeMode = themeMode,
+                            onThemeModeChange = { themeMode = it },
+                        )
+                    }
                 }
             }
         }

@@ -97,6 +97,8 @@ fun App(
                     TopAppBar(
                         title = { Text("Component Showcase") },
                         actions = {
+                            Text("${allEntries.size} components")
+
                             FilledTonalIconToggleButton(
                                 checked = themeMode,
                                 onCheckedChange = onThemeModeChange

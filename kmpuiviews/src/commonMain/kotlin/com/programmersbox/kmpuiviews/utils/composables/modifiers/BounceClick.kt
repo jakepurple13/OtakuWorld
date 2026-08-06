@@ -1,10 +1,17 @@
 package com.programmersbox.kmpuiviews.utils.composables.modifiers
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.input.pointer.SuspendingPointerInputModifierNode
@@ -12,6 +19,8 @@ import androidx.compose.ui.node.DelegatingNode
 import androidx.compose.ui.node.DrawModifierNode
 import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.platform.InspectorInfo
+import androidx.compose.ui.unit.dp
+import com.programmersbox.showcase.annotations.ShowcaseComponent
 import kotlinx.coroutines.launch
 
 // 1. The Extension Function
@@ -77,4 +86,23 @@ private class BounceClickNode(
             this@draw.drawContent()
         }
     }
+}
+
+@ShowcaseComponent(
+    name = "Bounce Click",
+    description = "A modifier that adds a bounce effect to a clickable element.",
+    group = "Modifiers"
+)
+@Composable
+fun BounceClickSample() {
+    Box(
+        modifier = Modifier
+            .size(50.dp)
+            .bounceClick(.9f)
+            .background(
+                MaterialTheme.colorScheme.primary,
+                RoundedCornerShape(10.dp)
+            )
+            .clip(RoundedCornerShape(10.dp))
+    )
 }

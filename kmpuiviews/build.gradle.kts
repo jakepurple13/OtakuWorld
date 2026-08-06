@@ -154,7 +154,7 @@ kotlin {
                 implementation(commonLibs.cmp.navigationevent.compose)
                 implementation(commonLibs.cmp.material3.adaptive.nav3)
 
-                implementation(projects.showcase.annotations)
+                api(projects.showcase.annotations)
             }
         }
 
@@ -278,7 +278,9 @@ kotlin {
 }
 
 dependencies {
-    add("kspJvm", projects.showcase.processor)
+    if (System.getenv("CI") == null) {
+        add("kspJvm", projects.showcase.processor)
+    }
 }
 
 ksp {
