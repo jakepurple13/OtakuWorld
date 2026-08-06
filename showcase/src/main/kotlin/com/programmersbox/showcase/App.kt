@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalIconToggleButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -55,7 +56,7 @@ private val allEntries: List<ShowcaseEntry> by lazy {
     ServiceLoader.load(ShowcaseRegistryProvider::class.java).flatMap { it.entries }
 }
 
-@OptIn(ExperimentalMaterial3AdaptiveApi::class)
+@OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun App(
     themeMode: Boolean,
@@ -97,13 +98,12 @@ fun App(
                     TopAppBar(
                         title = { Text("Component Showcase") },
                         actions = {
-                            Text("${allEntries.size} components")
-
                             FilledTonalIconToggleButton(
                                 checked = themeMode,
                                 onCheckedChange = onThemeModeChange
                             ) { Icon(Icons.Default.DarkMode, contentDescription = "Theme") }
-                        }
+                        },
+                        subtitle = { Text("${allEntries.size} components") }
                     )
                 }
             ) { padding ->
@@ -142,10 +142,12 @@ fun App(
                                     .padding(16.dp)
                                     .padding(padding)
                             ) {
-                                val entries = if (sample.key == null) {
-                                    allEntries
-                                } else {
-                                    allEntries.filter { it.group == sample.key }
+                                val entries = remember {
+                                    if (sample.key == null) {
+                                        allEntries
+                                    } else {
+                                        allEntries.filter { it.group == sample.key }
+                                    }
                                 }
                                 ComponentList(entries)
                             }
