@@ -11,11 +11,6 @@ import androidx.navigationevent.DirectNavigationEventInput
 import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
 import com.programmersbox.showcase.annotations.ShowcaseComponent
 
-@ShowcaseComponent(
-    name = "Back Button",
-    description = "A simple back button.",
-    group = "Buttons",
-)
 @Composable
 fun BackButton() {
     val navEvent = LocalNavigationEventDispatcherOwner.current?.navigationEventDispatcher
@@ -30,4 +25,14 @@ fun BackButton() {
     IconButton(
         onClick = { navInput.backCompleted() }
     ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
+}
+
+@ShowcaseComponent(
+    name = "Back Button",
+    description = "A simple back button.",
+    group = "Buttons",
+)
+@Composable
+fun BackButtonSample() {
+    BackButton()
 }
