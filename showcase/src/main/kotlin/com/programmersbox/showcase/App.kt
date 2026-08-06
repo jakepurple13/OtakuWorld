@@ -130,7 +130,10 @@ fun App() {
                     item(contentType = "navItem") {
                         NavigationRailItem(
                             selected = backStack.lastOrNull() == Home,
-                            onClick = { backStack.navigateToTop(Home) },
+                            onClick = {
+                                backStack.clear()
+                                backStack.add(Home)
+                            },
                             icon = { Icon(Icons.Default.Home, contentDescription = "All") },
                             label = { Text("Home") },
                         )
