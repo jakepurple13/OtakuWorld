@@ -9,6 +9,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.navigationevent.DirectNavigationEventInput
 import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
+import com.programmersbox.showcase.annotations.ShowcaseComponent
 
 @Composable
 fun GenericBackButton() {
@@ -24,4 +25,14 @@ fun GenericBackButton() {
     IconButton(
         onClick = { navInput.backCompleted() }
     ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
+}
+
+@ShowcaseComponent(
+    name = "Generic Back Button",
+    description = "A simple back button that is located in shared components.",
+    group = "Buttons",
+)
+@Composable
+fun GenericBackButtonSample() {
+    GenericBackButton()
 }

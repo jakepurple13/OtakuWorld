@@ -4,23 +4,26 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Animation
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.SettingsBrightness
+import androidx.compose.material.icons.filled.SettingsSystemDaydream
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -33,7 +36,7 @@ import com.programmersbox.datastore.ThemeColor
 import com.programmersbox.kmpuiviews.presentation.components.ThemeItem
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroupDefaults
-import com.programmersbox.kmpuiviews.presentation.components.settings.ListSetting
+import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.ShowMoreSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
@@ -42,9 +45,7 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.amoled_mode
-import otakuworld.kmpuiviews.generated.resources.cancel
 import otakuworld.kmpuiviews.generated.resources.choose_a_theme
-import otakuworld.kmpuiviews.generated.resources.theme_choice_title
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,7 +75,6 @@ fun ThemeSettingsScreen() {
             item { ExpressivenessSetting(handling = handling) }
             item { BlurSetting(handling = handling) }
         }
-
     }
 }
 
@@ -86,29 +86,41 @@ fun ThemeSetting(
 ) {
     var themeSetting by handling.rememberSystemThemeMode()
 
-    val themeText by remember {
-        derivedStateOf {
-            when (themeSetting) {
-                SystemThemeMode.FollowSystem -> "System"
-                SystemThemeMode.Day -> "Light"
-                SystemThemeMode.Night -> "Dark"
-            }
-        }
-    }
-
-    ListSetting(
-        settingTitle = { Text(stringResource(Res.string.theme_choice_title)) },
-        dialogIcon = { Icon(Icons.Default.SettingsBrightness, null) },
+    PreferenceSetting(
+        settingTitle = { Text(stringResource(Res.string.choose_a_theme)) },
         settingIcon = { Icon(Icons.Default.SettingsBrightness, null, modifier = Modifier.fillMaxSize()) },
-        dialogTitle = { Text(stringResource(Res.string.choose_a_theme)) },
-        summaryValue = { Text(themeText) },
-        confirmText = { TextButton(onClick = { it.value = false }) { Text(stringResource(Res.string.cancel)) } },
-        value = themeSetting,
-        options = listOf(SystemThemeMode.FollowSystem, SystemThemeMode.Day, SystemThemeMode.Night),
-        updateValue = { it, d ->
-            d.value = false
-            themeSetting = it
-        }
+        summaryValue = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth()
+            ) {
+                SingleChoiceSegmentedButtonRow {
+                    SystemThemeMode.entries.forEachIndexed { index, systemThemeMode ->
+                        SegmentedButton(
+                            onClick = { themeSetting = systemThemeMode },
+                            selected = themeSetting == systemThemeMode,
+                            icon = {
+                                Icon(
+                                    when (systemThemeMode) {
+                                        SystemThemeMode.FollowSystem -> Icons.Default.SettingsSystemDaydream
+                                        SystemThemeMode.Day -> Icons.Default.LightMode
+                                        SystemThemeMode.Night -> Icons.Default.DarkMode
+                                    },
+                                    null
+                                )
+                            },
+                            label = { Text(systemThemeMode.name) },
+                            shape = SegmentedButtonDefaults.itemShape(
+                                index = index,
+                                count = SystemThemeMode.entries.size
+                            )
+                        )
+                    }
+                }
+            }
+        },
     )
 
     CategoryGroupDefaults.Divider()
@@ -167,7 +179,7 @@ fun AmoledModeSetting(
 }
 
 @Composable
-private fun ExpressivenessSetting(handling: NewSettingsHandling) {
+fun ExpressivenessSetting(handling: NewSettingsHandling) {
     var showExpressiveness by handling.rememberShowExpressiveness()
     SwitchSetting(
         settingTitle = { Text("Show Expressiveness") },

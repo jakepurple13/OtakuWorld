@@ -41,6 +41,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.programmersbox.showcase.annotations.ShowcaseComponent
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.dialogs.compose.util.toImageBitmap
@@ -202,3 +203,25 @@ expect fun CameraView(
     torchState: Boolean,
     modifier: Modifier = Modifier,
 )
+
+@ShowcaseComponent(
+    name = "Scan QR code",
+    description = "Scan QR code.",
+    group = "BottomSheet"
+)
+@Composable
+fun QrCodeScannerSample() {
+    var showShareDialog by remember { mutableStateOf(false) }
+    if (showShareDialog) {
+        ScanQrCode<String>(
+            onOpen = {},
+            onRemove = { showShareDialog = false },
+            customUi = {}
+        )
+    }
+
+    Button(
+        onClick = { showShareDialog = true },
+        modifier = Modifier.fillMaxWidth(.75f)
+    ) { Text("Scan QR code") }
+}

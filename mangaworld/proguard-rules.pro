@@ -315,3 +315,7 @@
 
 # PackageInstaller broadcast receiver — instantiated by the OS via manifest registration
 -keep class com.programmersbox.kmpuiviews.receivers.PackageInstallReceiver { public <init>(); }
+
+-assumenosideeffects class * {
+    @com.programmersbox.showcase.annotations.ShowcaseComponent <methods>;
+}

@@ -147,17 +147,14 @@ kotlin {
                 /*implementation(commonLibs.androidx.navigation3.runtime)
                 implementation(commonLibs.androidx.navigation3.ui)*/
 
-                implementation(commonLibs.generativeai.google)
-                implementation(commonLibs.generic.ai)
-                implementation(commonLibs.anthropic.sdk.kotlin)
-                implementation(commonLibs.xemantic.ai.tool.schema)
-
                 //implementation(commonLibs.heatmap)
 
                 implementation(commonLibs.cmp.navigation3.ui)
                 implementation(commonLibs.cmp.lifecycle.viewmodel.navigation3)
                 implementation(commonLibs.cmp.navigationevent.compose)
                 implementation(commonLibs.cmp.material3.adaptive.nav3)
+
+                api(projects.showcase.annotations)
             }
         }
 
@@ -278,6 +275,16 @@ kotlin {
 
         }
     }
+}
+
+dependencies {
+    if (System.getenv("CI") == null) {
+        add("kspJvm", projects.showcase.processor)
+    }
+}
+
+ksp {
+    arg("showcaseModuleId", "kmpuiviews")
 }
 
 buildkonfig {

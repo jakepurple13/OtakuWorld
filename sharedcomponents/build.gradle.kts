@@ -47,6 +47,7 @@ kotlin {
                 implementation(commonLibs.scanner)
                 implementation(commonLibs.multiplatform.lifecycle.runtime.compose)
                 implementation(commonLibs.lifecycle.viewmodel.compose)
+                implementation(projects.showcase.annotations)
             }
         }
 
@@ -90,4 +91,14 @@ kotlin {
             }
         }
     }
+}
+
+dependencies {
+    if (System.getenv("CI") == null) {
+        add("kspJvm", projects.showcase.processor)
+    }
+}
+
+ksp {
+    arg("showcaseModuleId", "sharedcomponents")
 }

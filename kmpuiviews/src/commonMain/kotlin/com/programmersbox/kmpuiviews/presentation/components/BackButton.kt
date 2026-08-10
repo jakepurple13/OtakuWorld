@@ -9,6 +9,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.navigationevent.DirectNavigationEventInput
 import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
+import com.programmersbox.showcase.annotations.ShowcaseComponent
 
 @Composable
 fun BackButton() {
@@ -24,4 +25,14 @@ fun BackButton() {
     IconButton(
         onClick = { navInput.backCompleted() }
     ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
+}
+
+@ShowcaseComponent(
+    name = "Back Button",
+    description = "A simple back button.",
+    group = "Buttons",
+)
+@Composable
+fun BackButtonSample() {
+    BackButton()
 }

@@ -59,6 +59,10 @@ develocity {
     }
 }*/
 
+fun includeIfLocal(block: () -> Unit) {
+    if (System.getenv("CI") == null) block()
+}
+
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 include(
@@ -104,6 +108,11 @@ include(":novelworld:desktop")
 include(":animeworld:shared")
 include(":animeworld:desktop")
 include(":kmpuiviews:koogintegration")
-include(":kmpuiviews:koogintegration:customscraper")
 include(":sharedtools")
 include(":sharedcomponents")
+include(":showcase:annotations")
+include(":showcase:processor")
+includeIfLocal {
+    include(":showcase")
+    include(":kmpuiviews:koogintegration:customscraper")
+}
