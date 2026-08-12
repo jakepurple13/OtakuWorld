@@ -1,16 +1,12 @@
 package com.programmersbox.kmpuiviews.presentation.webview
 
 import androidx.compose.foundation.basicMarquee
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.multiplatform.webview.web.WebView
-import com.multiplatform.webview.web.rememberWebViewState
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
 
@@ -20,7 +16,7 @@ fun WebViewScreen(
     url: String,
 ) {
     HideNavBarWhileOnScreen()
-    val state = rememberWebViewState(url = url) {
+    /*val state = rememberWebViewState(url = url) {
         isJavaScriptEnabled = true
         androidWebSettings.apply {
             isAlgorithmicDarkeningAllowed = true
@@ -29,7 +25,7 @@ fun WebViewScreen(
         desktopWebSettings.apply {
             offScreenRendering = true
         }
-    }
+    }*/
 
     Scaffold(
         topBar = {
@@ -44,11 +40,11 @@ fun WebViewScreen(
             )
         }
     ) { padding ->
-        WebView(
+        /*WebView(
             state = state,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-        )
+        )*/
     }
 }

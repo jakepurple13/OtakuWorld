@@ -103,7 +103,7 @@ kotlin {
 
                 implementation(commonLibs.roomRuntime)
 
-                api(commonLibs.compose.webview.multiplatform)
+                //api(commonLibs.compose.webview.multiplatform)
 
                 implementation(commonLibs.connectivity.core)
                 implementation(commonLibs.connectivity.compose)
