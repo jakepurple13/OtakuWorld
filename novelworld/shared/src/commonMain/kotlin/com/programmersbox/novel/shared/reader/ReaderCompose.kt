@@ -60,7 +60,7 @@ import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKin
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.kmpuiviews.utils.RecordTimeSpentDoing
 import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
-import dev.chrisbanes.haze.blur.HazeProgressive
+import dev.chrisbanes.haze.HazeProgressive
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
@@ -165,8 +165,8 @@ fun NovelReadView(
                         modifier = Modifier.setBlurKind(
                             blurKindState = blurKindState,
                         ) {
-                            progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
-                            alpha = 1f
+                            progressive(HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true))
+                            alpha(1f)
                         }
                     )
                 }

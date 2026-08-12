@@ -64,9 +64,10 @@ import com.programmersbox.kmpuiviews.theme.Emerald
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
+import dev.chrisbanes.haze.HazeInput
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.blur.blurEffect
-import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.blur.HazeBlurStyle
+import dev.chrisbanes.haze.blur.hazeBlur
 import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -169,11 +170,12 @@ private fun VideoLoad(
                         IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
-                    modifier = Modifier.hazeEffect(hazeState) {
-                        blurEffect {
-                            backgroundColor = surface
+                    modifier = Modifier.hazeBlur(
+                        HazeInput.Sources(hazeState),
+                        style = HazeBlurStyle {
+                            backgroundColor(surface)
                         }
-                    }
+                    )
                 )
             },
             containerColor = Color.Transparent,
