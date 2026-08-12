@@ -57,7 +57,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.utils.showSourceChoos
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.composables.InfiniteListHandler
 import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
-import dev.chrisbanes.haze.blur.HazeProgressive
+import dev.chrisbanes.haze.HazeProgressive
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
@@ -208,10 +208,12 @@ fun RecentView(
         },
         blurTopBar = showBlur,
         topBarBlur = {
-            progressive = HazeProgressive.verticalGradient(
-                startIntensity = 1f,
-                endIntensity = 0f,
-                preferPerformance = true
+            progressive(
+                HazeProgressive.verticalGradient(
+                    startIntensity = 1f,
+                    endIntensity = 0f,
+                    preferPerformance = true
+                )
             )
         },
         snackbarHost = {

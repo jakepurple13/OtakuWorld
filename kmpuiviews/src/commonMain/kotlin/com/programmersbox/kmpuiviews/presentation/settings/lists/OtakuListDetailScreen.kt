@@ -128,7 +128,7 @@ import com.programmersbox.kmpuiviews.utils.loadItem
 import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
 import com.programmersbox.kmpuiviews.utils.rememberBiometricPrompting
 import com.programmersbox.sharedcomponents.qrcode.QrCodeRepository
-import dev.chrisbanes.haze.blur.HazeProgressive
+import dev.chrisbanes.haze.HazeProgressive
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher
@@ -456,7 +456,9 @@ fun OtakuCustomListScreen(
                 modifier = Modifier.setBlurKind(
                     blurKindState = blurKindState,
                     hazeScope = {
-                        progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
+                        progressive(
+                            HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
+                        )
                     }
                 ),
             ) {

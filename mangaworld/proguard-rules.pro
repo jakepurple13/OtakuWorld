@@ -41,18 +41,21 @@
 
 # Keep your extension loader and the interfaces/classes it reflects on
 -keep class com.programmersbox.kmpextensionloader.** { *; }
--keep class com.programmersbox.** { *; }
+
+# Keep everything in programmersbox, EXCEPT classes inside the showcase package
+-keep class !com.programmersbox.showcase.**, com.programmersbox.** { *; }
 
 # ============================================================
 # Compose / Compose Multiplatform
 # ============================================================
 -keep class androidx.compose.** { *; }
--keepclassmembers class * {
-    @androidx.compose.runtime.Composable *;
-}
--keepclassmembers class * {
-    @androidx.compose.ui.tooling.preview.Preview *;
-}
+#-keepclassmembers class * {
+#    @androidx.compose.runtime.Composable *;
+#}
+#-keepclassmembers class * {
+#    @androidx.compose.ui.tooling.preview.Preview *;
+#}
+
 -dontwarn androidx.compose.**
 
 # ============================================================

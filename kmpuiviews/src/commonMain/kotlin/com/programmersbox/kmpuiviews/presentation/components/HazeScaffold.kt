@@ -29,7 +29,7 @@ import com.programmersbox.kmpuiviews.presentation.components.blurkind.BlurKindSt
 import com.programmersbox.kmpuiviews.presentation.components.blurkind.rememberBlurKindState
 import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKind
 import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKindSource
-import dev.chrisbanes.haze.blur.BlurVisualEffect
+import dev.chrisbanes.haze.blur.HazeBlurStyleScope
 
 private val LocalScaffoldContentPadding = staticCompositionLocalOf { PaddingValues(0.dp) }
 
@@ -53,8 +53,8 @@ fun HazeScaffold(
     contentWindowInsets: WindowInsets = ScaffoldDefaults.contentWindowInsets,
     blurTopBar: Boolean = false,
     blurBottomBar: Boolean = false,
-    topBarBlur: (BlurVisualEffect.() -> Unit)? = null,
-    bottomBarBlur: (BlurVisualEffect.() -> Unit)? = null,
+    topBarBlur: (HazeBlurStyleScope.() -> Unit)? = null,
+    bottomBarBlur: (HazeBlurStyleScope.() -> Unit)? = null,
     content: @Composable (PaddingValues) -> Unit,
 ) {
     NestedScaffold(

@@ -63,6 +63,8 @@ kotlin {
                 implementation(commonLibs.material3.window.size)
                 api(commonLibs.haze)
                 api(commonLibs.haze.blur)
+                api(commonLibs.haze.glass)
+                api(commonLibs.haze.glass.material3)
                 api(commonLibs.haze.materials)
                 //api(commonLibs.backdrop)
                 implementation(commonLibs.material.kolor)

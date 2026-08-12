@@ -77,7 +77,7 @@ import com.programmersbox.manga.shared.reader.curl.rememberPageCurlConfig
 import com.programmersbox.manga.shared.reader.curl.rememberPageCurlState
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
-import dev.chrisbanes.haze.blur.HazeProgressive
+import dev.chrisbanes.haze.HazeProgressive
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.engawapg.lib.zoomable.ExperimentalZoomableApi
@@ -385,8 +385,14 @@ fun ReadView(
                         modifier = Modifier.setBlurKind(
                             blurKindState = blurKind,
                             hazeScope = {
-                                progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
-                                alpha = scrollAlpha
+                                progressive(
+                                    HazeProgressive.verticalGradient(
+                                        startIntensity = 1f,
+                                        endIntensity = 0f,
+                                        preferPerformance = true
+                                    )
+                                )
+                                alpha(scrollAlpha)
                             }
                         )
                     )

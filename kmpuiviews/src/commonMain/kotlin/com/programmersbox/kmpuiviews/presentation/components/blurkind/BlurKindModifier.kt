@@ -13,9 +13,10 @@ import androidx.compose.ui.unit.dp
 import com.programmersbox.datastore.BlurKind
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.kmpuiviews.presentation.components.custombackdrop.backdrops.layerBackdrop
-import dev.chrisbanes.haze.blur.BlurVisualEffect
-import dev.chrisbanes.haze.blur.blurEffect
-import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.HazeInput
+import dev.chrisbanes.haze.blur.HazeBlurStyleScope
+import dev.chrisbanes.haze.blur.hazeBlur
+import dev.chrisbanes.haze.glass.hazeGlass
 import dev.chrisbanes.haze.hazeSource
 import org.koin.compose.koinInject
 
@@ -45,17 +46,22 @@ fun rememberBlurKindState(
         dataStore = dataStore,
         backgroundColor = backgroundColor
     )
+    val blurKindHazeGlassState = rememberBlurKindHazeGlassState(
+        dataStore = dataStore,
+    )
 
     return remember(
         blurKind,
         showBlur,
         blurKindLiquidState,
-        blurKindHazeState
+        blurKindHazeState,
+        blurKindHazeGlassState
     ) {
         BlurKindState(
             blurKind = blurKind,
             showBlur = showBlur,
             hazeState = blurKindHazeState,
+            hazeGlassState = blurKindHazeGlassState,
             liquidState = blurKindLiquidState
         )
     }
@@ -80,6 +86,7 @@ class BlurKindState(
     val blurKind: BlurKind,
     val showBlur: Boolean,
     val hazeState: BlurKindHazeState,
+    val hazeGlassState: BlurKindHazeGlassState,
     val liquidState: BlurKindLiquidState,
 )
 
@@ -95,24 +102,82 @@ class BlurKindState(
 fun Modifier.setBlurKind(
     blurKindState: BlurKindState,
     liquidGlassShape: () -> Shape = { RoundedCornerShape(1.dp) },
-    hazeScope: BlurVisualEffect.() -> Unit = {},
+    hazeScope: HazeBlurStyleScope.() -> Unit = {},
 ) = if (blurKindState.showBlur) {
     when (blurKindState.blurKind) {
-        BlurKind.Haze -> hazeEffect(state = blurKindState.hazeState.hazeState) {
-            blurEffect {
-                style = blurKindState.hazeState.hazeStyle
-                blurEnabled = blurKindState.showBlur
+        BlurKind.Haze -> hazeBlur(
+            input = HazeInput.Sources(blurKindState.hazeState.hazeState),
+            style = blurKindState.hazeState.hazeStyle.then {
                 hazeScope()
+                blurEnabled(blurKindState.showBlur)
                 if (!blurKindState.hazeState.useProgressive) {
-                    progressive = null
+                    progressive(null)
                 }
             }
+        )
+
+        BlurKind.HazeGlass -> hazeGlass(
+            input = HazeInput.Sources(blurKindState.hazeGlassState.hazeState),
+            style = blurKindState.hazeGlassState.hazeStyle.then {
+                shape(liquidGlassShape() as RoundedCornerShape)
+            }
+        )
+        /*hazeEffect(state = blurKindState.hazeState.hazeState) {
+        blurEffect {
+            style = blurKindState.hazeState.hazeStyle
+            blurEnabled = blurKindState.showBlur
+            hazeScope()
+            if (!blurKindState.hazeState.useProgressive) {
+                progressive = null
+            }
         }
+    }*/
 
         BlurKind.LiquidGlass -> liquidGlassBlur(
             blurKindState = blurKindState,
             liquidGlassShape = liquidGlassShape
         )
+        /*hazeGlass(
+        input = HazeInput.Sources(blurKindState.hazeState.hazeState),
+        style = GlassStyle {
+            backgroundColor(blurKindState.liquidState.backgroundColor)
+            shape(liquidGlassShape() as RoundedCornerShape)
+            optics(
+                refractionHeightFraction = blurKindState.liquidState.refractionHeight,
+                refractionStrength = blurKindState.liquidState.refractionAmount,
+            )
+            chromaticAberrationMode(
+                if(blurKindState.liquidState.chromaticAberration) {
+                    ChromaticAberrationMode.Full
+                } else {
+                    ChromaticAberrationMode.Simple
+                }
+            )
+        }
+    )*/
+        /*
+        drawBackdrop(
+    backdrop = blurKindState.liquidState.backdrop,
+    shape = liquidGlassShape,
+    effects = {
+        vibrancy()
+        blur(blurKindState.liquidState.blurAmount.dp.toPx())
+        lens(
+            refractionHeight = blurKindState.liquidState.refractionHeight.dp.toPx(),
+            refractionAmount = blurKindState.liquidState.refractionAmount.dp.toPx(),
+            depthEffect = blurKindState.liquidState.depthEffect,
+            chromaticAberration = blurKindState.liquidState.chromaticAberration
+        )
+    },
+    onDrawSurface = { drawRect(blurKindState.liquidState.backgroundColor.copy(alpha = 0.5f)) },
+    highlight = { Highlight.Ambient }
+)
+         */
+
+        /*liquidGlassBlur(
+        blurKindState = blurKindState,
+        liquidGlassShape = liquidGlassShape
+    )*/
     }
 } else this
 
@@ -126,6 +191,7 @@ fun Modifier.setBlurKind(
 fun Modifier.setBlurKindSource(blurKindState: BlurKindState) = if (blurKindState.showBlur) {
     when (blurKindState.blurKind) {
         BlurKind.Haze -> hazeSource(blurKindState.hazeState.hazeState)
+        BlurKind.HazeGlass -> hazeSource(blurKindState.hazeGlassState.hazeState)
         BlurKind.LiquidGlass -> layerBackdrop(blurKindState.liquidState.backdrop)
     }
 } else this
@@ -149,6 +215,7 @@ fun Modifier.floatingActionButtonBlurKind(
 ) = if (blurKindState.showBlur) {
     when (blurKindState.blurKind) {
         BlurKind.Haze -> this
+        BlurKind.HazeGlass -> this
         BlurKind.LiquidGlass -> liquidGlassFABBlur(
             blurKindState = blurKindState,
             customBlurAmount = customBlurAmount,
