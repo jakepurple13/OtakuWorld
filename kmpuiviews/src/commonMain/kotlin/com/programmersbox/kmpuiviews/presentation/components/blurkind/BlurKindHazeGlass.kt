@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.components.blurkind
 
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -22,7 +23,7 @@ val hazeGlassOptions = DataStoreHandlerObject<String, HazeOptionsInfo>(
     key = stringPreferencesKey("haze_glass_options"),
     defaultValue = HazeOptionsInfo(),
     mapToKey = { Json.encodeToString(it) },
-    mapToType = { Json.decodeFromString(it) }
+    mapToType = { runCatching { Json.decodeFromString<HazeOptionsInfo>(it) }.getOrNull() }
 )
 
 @Serializable
@@ -41,54 +42,48 @@ data class HazeOptionsInfo(
     val chromaMultiplier: Float = GlassDefaults.chromaMultiplier,
     val specularExponent: Float = GlassDefaults.specularExponent,
     val fresnelExponent: Float = GlassDefaults.fresnelExponent,
-) {
-    fun asedf() {
-        GlassDefaults.optics
-    }
-}
+)
 
 @Composable
 fun rememberBlurKindHazeGlassState(
     dataStore: NewSettingsHandling = koinInject(),
 ): BlurKindHazeGlassState {
-    val useProgressive by dataStore.rememberUseProgressive()
     val hazeState = rememberHazeState()
 
     val handle by remember { hazeGlassOptions }
         .asFlow()
         .collectAsStateWithLifecycle(HazeOptionsInfo())
 
-    val m3 = GlassStyle.Material3()
+    val m3 = GlassStyle.Material3(
+        tint = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.16f)
+    )
 
     return remember(
         hazeState,
-        useProgressive,
-        handle
+        handle,
+        m3
     ) {
         BlurKindHazeGlassState(
             hazeState = hazeState,
-            hazeStyle = m3// then GlassDefaults.style
-                //m3
-                .then {
-                    optics(
-                        refractionStrength = handle.refractionStrength,
-                        refractionHeightFraction = handle.refractionHeightFraction,
-                        refractionDisplacement = handle.refractionDisplacement.dp,
-                        depth = handle.depth,
-                        blurRadius = handle.blurRadius.dp
-                    )
-                    specularIntensity(handle.specularIntensity.coerceIn(0f..1f))
-                    ambientResponse(handle.ambientResponse.coerceIn(0f..1f))
-                    edgeSoftness(handle.edgeSoftness.dp)
+            hazeStyle = m3.then {
+                optics(
+                    refractionStrength = handle.refractionStrength,
+                    refractionHeightFraction = handle.refractionHeightFraction,
+                    refractionDisplacement = handle.refractionDisplacement.dp,
+                    depth = handle.depth,
+                    blurRadius = handle.blurRadius.dp
+                )
+                specularIntensity(handle.specularIntensity.coerceIn(0f..1f))
+                ambientResponse(handle.ambientResponse.coerceIn(0f..1f))
+                edgeSoftness(handle.edgeSoftness.dp)
 
-                    chromaticAberrationStrength(handle.chromaticAberrationStrength)
-                    chromaMultiplier(handle.chromaMultiplier.coerceIn(0f..2f))
-                    specularExponent(handle.specularExponent)
-                    fresnelExponent(handle.fresnelExponent)
-                    //shape(RoundedCornerShape(20.dp))
-                    //surfaceProfile(SurfaceProfile.Squircle)
-                },
-            useProgressive = useProgressive
+                chromaticAberrationStrength(handle.chromaticAberrationStrength)
+                chromaMultiplier(handle.chromaMultiplier.coerceIn(0f..2f))
+                specularExponent(handle.specularExponent)
+                fresnelExponent(handle.fresnelExponent)
+                //shape(RoundedCornerShape(20.dp))
+                //surfaceProfile(SurfaceProfile.Squircle)
+            },
         )
     }
 }
@@ -104,5 +99,4 @@ fun rememberBlurKindHazeGlassState(
 class BlurKindHazeGlassState(
     val hazeState: HazeState,
     val hazeStyle: GlassStyle,
-    val useProgressive: Boolean,
 )
