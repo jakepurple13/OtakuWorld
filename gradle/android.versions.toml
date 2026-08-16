@@ -100,7 +100,7 @@ adaptive-navigation-android = { group = "androidx.compose.material3.adaptive", n
 composeActivity = { module = "androidx.activity:activity-compose", version.ref = "activity" }
 composeAnimation = { group = "androidx.compose.animation", name = "animation" }
 composeCollapsable = { module = "me.tatarka.compose.collapsable:compose-collapsable", version.ref = "composeCollapsable" }
-composeConstraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.1.1"
+composeConstraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.1.2"
 composeFoundation = { group = "androidx.compose.foundation", name = "foundation" }
 composeLifecycle = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
 composeLifecycleRuntime = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
