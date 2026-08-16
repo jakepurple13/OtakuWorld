@@ -60,7 +60,7 @@ appCompat = "androidx.appcompat:appcompat:1.7.1"
 androidx-activity = { module = "androidx.activity:activity", version.ref = "activity" }
 androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "activity" }
 androidx-core-performance = { module = "androidx.core:core-performance", version.ref = "corePerformance" }
-constraintlayout = "androidx.constraintlayout:constraintlayout:2.2.1"
+constraintlayout = "androidx.constraintlayout:constraintlayout:2.2.2"
 coreLibraryDesugaring = { module = "com.android.tools:desugar_jdk_libs", version = "2.1.5" }
 fragmentKtx = "androidx.fragment:fragment-ktx:1.8.9"
 iconicsCore = "com.mikepenz:iconics-core:5.5.0"
