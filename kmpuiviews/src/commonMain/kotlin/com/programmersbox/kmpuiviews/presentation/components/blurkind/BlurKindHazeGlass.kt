@@ -55,7 +55,7 @@ fun rememberBlurKindHazeGlassState(
         .collectAsStateWithLifecycle(HazeOptionsInfo())
 
     val m3 = GlassStyle.Material3(
-        tint = MaterialTheme.colorScheme.surface.copy(alpha = 0.16f)
+        tint = MaterialTheme.colorScheme.surface.copy(alpha = 0.3f)
     )
 
     return remember(
