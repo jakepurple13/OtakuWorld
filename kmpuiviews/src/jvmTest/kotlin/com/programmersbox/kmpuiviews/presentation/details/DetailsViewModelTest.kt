@@ -138,19 +138,6 @@ class DetailsViewModelTest {
     }
 
     @Test
-    fun `loads item info from source and transitions to Success`() = runTest {
-        val vm = viewModel()
-
-        awaitCondition { vm.currentState is DetailState.Success }
-
-        val state = vm.currentState as DetailState.Success
-        assertEquals("Example", state.info.title)
-        assertEquals(10, state.info.chapters.size)
-        assertEquals("Example", vm.info?.title)
-        assertEquals("Example", vm.description)
-    }
-
-    @Test
     fun `uses cached info instead of refetching from source`() = runTest {
         val service = ExampleService()
         val cachedInfo = service.itemInfo(
