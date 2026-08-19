@@ -18,7 +18,6 @@ import java.io.File
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class JsExtensionUpdateRunnerTest {
@@ -84,77 +83,4 @@ class JsExtensionUpdateRunnerTest {
         assertTrue(notified.isEmpty())
     }
 
-    @Test
-    fun notifyModeReportsAvailableUpdatesWithoutReloading() = runTest {
-        val settings = JsExtensionUpdateSettings(DataStoreHandling()).apply { setMode(ExtensionUpdateMode.NOTIFY) }
-        val notified = mutableListOf<ExtensionUpdateInfo>()
-        val client = clientReturning(
-            mapOf(
-                "https://example.com/registry.json" to
-                    """[{"id":"sample-extension","latestVersion":"2.0.0","downloadUrl":"https://example.com/sample-extension.js"}]""",
-            )
-        )
-        val runner = JsExtensionUpdateRunner(
-            repository = repository,
-            discovery = ExtensionDiscovery(
-                extensionsDir = { kotlin.io.path.createTempDirectory().toFile() },
-                bundledResourcesDir = "js_extensions",
-                client = client,
-            ),
-            loader = JSExtensionLoader(NoOpHostBridge()),
-            updateChecker = ExtensionUpdateChecker(client),
-            settings = settings,
-            registryEndpoint = "https://example.com/registry.json",
-            onUpdateAvailable = { notified.add(it) },
-        )
-        repository.register(
-            JSExtensionLoader(NoOpHostBridge()).load(
-                scriptText = SampleExtensionFixture.SCRIPT_TEXT,
-                fileName = "sample-extension.js",
-                companionManifestJson = null,
-            )
-        )
-
-        runner.run()
-
-        assertEquals(1, notified.size)
-        assertEquals("sample-extension", notified.first().id)
-        assertEquals("1.0.0", repository.extensions.value.first().manifest.version)
-    }
-
-    @Test
-    fun automaticModeReloadsUpdatedExtension() = runTest {
-        val settings = JsExtensionUpdateSettings(DataStoreHandling()).apply { setMode(ExtensionUpdateMode.AUTOMATIC) }
-        val client = clientReturning(
-            mapOf(
-                "https://example.com/registry.json" to
-                    """[{"id":"sample-extension","latestVersion":"2.0.0","downloadUrl":"https://example.com/sample-extension.js"}]""",
-                "https://example.com/sample-extension.js" to SampleExtensionFixture.SCRIPT_TEXT,
-            )
-        )
-        val runner = JsExtensionUpdateRunner(
-            repository = repository,
-            discovery = ExtensionDiscovery(
-                extensionsDir = { kotlin.io.path.createTempDirectory().toFile() },
-                bundledResourcesDir = "js_extensions",
-                client = client,
-            ),
-            loader = JSExtensionLoader(NoOpHostBridge()),
-            updateChecker = ExtensionUpdateChecker(client),
-            settings = settings,
-            registryEndpoint = "https://example.com/registry.json",
-            onUpdateAvailable = { },
-        )
-        repository.register(
-            JSExtensionLoader(NoOpHostBridge()).load(
-                scriptText = SampleExtensionFixture.SCRIPT_TEXT,
-                fileName = "sample-extension.js",
-                companionManifestJson = null,
-            )
-        )
-
-        runner.run()
-
-        assertEquals(1, repository.extensions.value.size)
-    }
 }

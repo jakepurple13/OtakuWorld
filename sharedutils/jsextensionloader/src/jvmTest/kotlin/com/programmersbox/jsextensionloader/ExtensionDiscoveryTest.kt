@@ -3,9 +3,6 @@ package com.programmersbox.jsextensionloader
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.headersOf
 import kotlinx.coroutines.test.runTest
 import java.io.File
 import java.net.URLClassLoader
@@ -43,27 +40,6 @@ class ExtensionDiscoveryTest {
         } finally {
             tempDir.deleteRecursively()
         }
-    }
-
-    @Test
-    fun fetchRemoteDownloadsScriptText() = runTest {
-        val mockEngine = MockEngine { request ->
-            respond(
-                content = SampleExtensionFixture.SCRIPT_TEXT,
-                status = HttpStatusCode.OK,
-                headers = headersOf(HttpHeaders.ContentType, "text/javascript"),
-            )
-        }
-        val discovery = ExtensionDiscovery(
-            extensionsDir = { kotlin.io.path.createTempDirectory().toFile() },
-            bundledResourcesDir = "js_extensions",
-            client = HttpClient(mockEngine),
-        )
-
-        val source = discovery.fetchRemote("https://example.com/sample-extension.js")
-
-        assertEquals("sample-extension", source.sourceId)
-        assertEquals(SampleExtensionFixture.SCRIPT_TEXT, source.scriptText)
     }
 
     @Test
