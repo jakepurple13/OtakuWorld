@@ -7,7 +7,7 @@ barcodeScanning = "17.3.0"
 benchmark-macro-junit4 = "1.4.1"
 biometricVersion = "1.4.0-alpha07"
 coil = "3.5.0"
-composeBomVersion = "2026.07.01"
+composeBomVersion = "2026.08.00"
 composeCollapsable = "0.4.0"
 composeXr = "1.0.0-alpha13"
 core = "1.7.0"
@@ -15,7 +15,7 @@ corePerformance = "1.0.0"
 coroutinesVersion = "1.11.0"
 dragselect = "3.3.0"
 espresso-core = "3.7.0"
-firebaseBom = "34.16.0"
+firebaseBom = "34.17.0"
 generativeai = "0.9.0"
 glideVersion = "5.0.9"
 junit = "1.3.0"
@@ -24,10 +24,10 @@ landscapist = "2.11.0"
 latestAboutLibsRelease = "14.2.1"
 lifecycle = "2.11.0"
 lottieCompose = "6.7.1"
-media3Version = "1.10.1"
+media3Version = "1.11.0"
 okhttpVersion = "5.4.0"
 pagecurl = "1.5.1"
-pagingVersion = "3.5.0"
+pagingVersion = "3.5.1"
 piasy = "1.8.1"
 profileinstaller = "1.4.1"
 protobufVersion = "4.34.1"
@@ -50,19 +50,19 @@ adaptive = { module = "com.google.accompanist:accompanist-adaptive", version.ref
 drawablePainter = { module = "com.google.accompanist:accompanist-drawablepainter", version.ref = "accompanist" }
 
 # Android Foundation
-androidBrowserHelper = "com.google.androidbrowserhelper:androidbrowserhelper:2.7.2"
+androidBrowserHelper = "com.google.androidbrowserhelper:androidbrowserhelper:2.7.3"
 androidCore = "androidx.core:core-ktx:1.19.0"
 androidxBrowser = "androidx.browser:browser:1.10.0"
 androidxLegacySupport = "androidx.legacy:legacy-support-v4:1.0.0"
-androidxWebkit = "androidx.webkit:webkit:1.16.0"
+androidxWebkit = "androidx.webkit:webkit:1.17.0"
 androidxWindow = "androidx.window:window:1.5.1"
-appCompat = "androidx.appcompat:appcompat:1.7.1"
+appCompat = "androidx.appcompat:appcompat:1.8.0"
 androidx-activity = { module = "androidx.activity:activity", version.ref = "activity" }
 androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "activity" }
 androidx-core-performance = { module = "androidx.core:core-performance", version.ref = "corePerformance" }
-constraintlayout = "androidx.constraintlayout:constraintlayout:2.2.1"
+constraintlayout = "androidx.constraintlayout:constraintlayout:2.2.2"
 coreLibraryDesugaring = { module = "com.android.tools:desugar_jdk_libs", version = "2.1.5" }
-fragmentKtx = "androidx.fragment:fragment-ktx:1.8.9"
+fragmentKtx = "androidx.fragment:fragment-ktx:1.9.0"
 iconicsCore = "com.mikepenz:iconics-core:5.5.0"
 material = "com.google.android.material:material:1.14.0"
 preference = "androidx.preference:preference-ktx:1.2.1"
@@ -100,7 +100,7 @@ adaptive-navigation-android = { group = "androidx.compose.material3.adaptive", n
 composeActivity = { module = "androidx.activity:activity-compose", version.ref = "activity" }
 composeAnimation = { group = "androidx.compose.animation", name = "animation" }
 composeCollapsable = { module = "me.tatarka.compose.collapsable:compose-collapsable", version.ref = "composeCollapsable" }
-composeConstraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.1.1"
+composeConstraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.1.2"
 composeFoundation = { group = "androidx.compose.foundation", name = "foundation" }
 composeLifecycle = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
 composeLifecycleRuntime = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
@@ -167,7 +167,7 @@ glideRecyclerview = { module = "com.github.bumptech.glide:recyclerview-integrati
 duktape = "com.squareup.duktape:duktape-android:1.4.0"
 fileChooser = "com.github.hedzr:android-file-chooser:1.2.0"
 gson = "com.google.code.gson:gson:2.13.2"
-jsoup = "org.jsoup:jsoup:1.22.2"
+jsoup = "org.jsoup:jsoup:1.23.1"
 karnKhttp = "io.karn:khttp-android:0.1.2"
 kotson = "com.github.salomonbrys.kotson:kotson:2.5.0"
 palette = "androidx.palette:palette-ktx:1.0.0"

@@ -3,11 +3,11 @@ kfswatch = "1.4.0"
 knotify = "0.4.3"
 kotlinMultiplatformAppdirsVersion = "2.0.0"
 kotlinx-coroutines = "1.11.0"
-nucleusSystem = "2.1.10"
+nucleusSystem = "2.4.7"
 javase = "3.5.4"
 connectivity = "2.5.0"
-camerak = "1.1"
-ksafe = "2.2.1"
+camerak = "1.2"
+ksafe = "3.0.0"
 
 [libraries]
 core = { module = "com.google.zxing:core", version.ref = "javase" }

@@ -45,6 +45,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
@@ -52,6 +53,7 @@ import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.DateFormatItem
 import com.programmersbox.kmpuiviews.utils.HeatMapWrapper
 import com.programmersbox.kmpuiviews.utils.KmpHeat
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
 import com.programmersbox.supabaseintegration.auth.SupabaseUser
 import org.koin.compose.koinInject
@@ -68,6 +70,7 @@ fun AccountInfoScreen(
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
     val list by viewModel.uiState.collectAsStateWithLifecycle()
+    val navActions = LocalNavActions.current
 
     OtakuScaffold(
         topBar = {
@@ -108,6 +111,7 @@ fun AccountInfoScreen(
                     favorites = state.totalFavorites,
                     chapters = state.chapters,
                     timeSpent = state.timeSpentDoing,
+                    onFavoritesClick = { navActions.navigate(Screen.AccountInfo.AccountStatDetails) },
                     modifier = Modifier
                         .animateItem()
                         .fillMaxWidth()
@@ -248,14 +252,10 @@ private fun HeroStatChip(
     label: String,
     value: String,
     color: Color,
+    onClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(10.dp),
-        color = color.copy(alpha = 0.12f),
-        border = BorderStroke(1.dp, color.copy(alpha = 0.25f)),
-    ) {
+    val content = @Composable {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
@@ -274,6 +274,24 @@ private fun HeroStatChip(
             )
         }
     }
+    if (onClick != null) {
+        Surface(
+            onClick = onClick,
+            modifier = modifier,
+            shape = RoundedCornerShape(10.dp),
+            color = color.copy(alpha = 0.12f),
+            border = BorderStroke(1.dp, color.copy(alpha = 0.25f)),
+            content = content
+        )
+    } else {
+        Surface(
+            modifier = modifier,
+            shape = RoundedCornerShape(10.dp),
+            color = color.copy(alpha = 0.12f),
+            border = BorderStroke(1.dp, color.copy(alpha = 0.25f)),
+            content = content
+        )
+    }
 }
 
 @Composable
@@ -281,6 +299,7 @@ private fun HeroChipsRow(
     favorites: Int,
     chapters: Int,
     timeSpent: String,
+    onFavoritesClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val animatedFavorites by animateIntAsState(favorites, label = "heroFavorites")
@@ -295,6 +314,7 @@ private fun HeroChipsRow(
             label = "Favorites",
             value = animatedFavorites.toString(),
             color = MaterialTheme.colorScheme.primary,
+            onClick = onFavoritesClick,
             modifier = Modifier.weight(1f),
         )
         HeroStatChip(

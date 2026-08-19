@@ -128,7 +128,7 @@ kotlin {
                 implementation(commonLibs.roomPaging)
 
                 implementation(commonLibs.constraintlayout.compose.multiplatform)
-                implementation(commonLibs.compose.constraintlayout.compose.multiplatform)
+                //implementation(commonLibs.compose.constraintlayout.compose.multiplatform)
 
                 implementation(commonLibs.qrose)
                 //implementation(commonLibs.androidx.navigationevent)

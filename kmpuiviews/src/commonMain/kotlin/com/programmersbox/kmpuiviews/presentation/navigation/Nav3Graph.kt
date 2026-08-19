@@ -33,6 +33,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.about.AppInfoScreen
 import com.programmersbox.kmpuiviews.presentation.settings.about.DeveloperScreen
 import com.programmersbox.kmpuiviews.presentation.settings.about.DiagnosticsScreen
 import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.AccountInfoScreen
+import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.accountstatdetails.AccountStatDetailsScreen
 import com.programmersbox.kmpuiviews.presentation.settings.appearance.AppearanceScreen
 import com.programmersbox.kmpuiviews.presentation.settings.appearance.ColorsScreen
 import com.programmersbox.kmpuiviews.presentation.settings.backuprestore.BackupWizardScreen
@@ -332,6 +333,10 @@ fun buildKmpGraph(): Module = module {
         DeleteFromListScreen(
             deleteFromList = it
         )
+    }
+
+    navigation<Screen.AccountInfo.AccountStatDetails> {
+        AccountStatDetailsScreen()
     }
 }
 

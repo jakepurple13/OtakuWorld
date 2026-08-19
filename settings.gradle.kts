@@ -24,7 +24,7 @@ dependencyResolutionManagement {
 
     versionCatalogs {
         create("androidx") {
-            from("androidx.gradle:gradle-version-catalog:2026.05.00")
+            from("androidx.gradle:gradle-version-catalog:2026.08.00")
         }
         create("commonLibs") {
             from(files("gradle/common.versions.toml"))

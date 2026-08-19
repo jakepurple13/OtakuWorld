@@ -15,6 +15,7 @@ import com.programmersbox.kmpuiviews.presentation.notifications.NotificationScre
 import com.programmersbox.kmpuiviews.presentation.recent.RecentViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.SettingViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.AccountInfoViewModel
+import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.accountstatdetails.AccountStatDetailsViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.backuprestore.BackupWizardViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.backuprestore.RestoreWizardViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.downloadstate.DownloadStateViewModel
@@ -96,6 +97,7 @@ val viewModels: Module = module {
     viewModelOf(::DictionaryListViewModel)
     viewModelOf(::DictionaryDetailViewModel)
     viewModelOf(::DictionaryFormViewModel)
+    viewModelOf(::AccountStatDetailsViewModel)
 
     includes(platformViewModels())
 }
