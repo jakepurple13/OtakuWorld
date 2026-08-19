@@ -1,7 +1,7 @@
 [versions]
 accompanist = "0.37.3"
 activity = "1.13.0"
-arcore = "1.0.0-alpha13"
+arcore = "1.0.0-beta02"
 autoBinding = "1.1-beta04"
 barcodeScanning = "17.3.0"
 benchmark-macro-junit4 = "1.4.1"
