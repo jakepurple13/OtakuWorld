@@ -38,6 +38,7 @@ import io.kamel.core.config.KamelConfig
 import io.kamel.core.config.takeFrom
 import io.kamel.image.config.Default
 import io.kamel.image.config.animatedImageDecoder
+import io.kamel.image.config.resourcesFetcher
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.koinInject
 import org.koin.core.module.Module
@@ -119,6 +120,7 @@ actual fun customKamelConfig(): KamelConfig {
     return KamelConfig {
         takeFrom(KamelConfig.Default)
         animatedImageDecoder()
+        resourcesFetcher()
     }
 }
 
