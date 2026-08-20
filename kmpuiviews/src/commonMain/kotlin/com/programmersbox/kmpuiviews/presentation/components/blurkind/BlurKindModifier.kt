@@ -125,7 +125,7 @@ fun Modifier.setBlurKind(
             style = blurKindState.hazeGlassState.hazeStyle.then {
                 shape(liquidGlassShape() as RoundedCornerShape)
             },
-            interactionTransformTarget = GlassTransformTarget.MaterialOnly,
+            interactionTransformTarget = GlassTransformTarget.MaterialAndContent,
             interactionTransformPivot = GlassTransformPivot.Pointer,
             performanceMode = HazePerformanceMode.Performance
         )
