@@ -37,8 +37,12 @@ class AndroidApplicationPlugin : AndroidPluginBase<BaseAppModuleExtension>(BaseA
                     "proguard-rules.pro",
                 )
             }
-            ApplicationBuildTypes.Debug.setup(this)
-            ApplicationBuildTypes.Beta.setup(this)
+            ApplicationBuildTypes.Debug.setup(this) {
+                applicationIdSuffix = ".debug"
+            }
+            ApplicationBuildTypes.Beta.setup(this) {
+                applicationIdSuffix = ".beta"
+            }
         }
 
         flavorDimensions.add(ProductFlavorTypes.dimension)
