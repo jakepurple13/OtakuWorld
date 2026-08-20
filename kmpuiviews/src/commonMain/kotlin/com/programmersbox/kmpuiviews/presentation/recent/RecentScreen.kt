@@ -211,8 +211,7 @@ fun RecentView(
             progressive(
                 HazeProgressive.verticalGradient(
                     startIntensity = 1f,
-                    endIntensity = 0f,
-                    preferPerformance = true
+                    endIntensity = 0f
                 )
             )
         },

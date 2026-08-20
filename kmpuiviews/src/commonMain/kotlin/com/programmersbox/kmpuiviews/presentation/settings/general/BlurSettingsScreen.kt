@@ -258,8 +258,7 @@ fun BlurSettings(
                                         if (blurKindState.hazeState.useProgressive)
                                             HazeProgressive.verticalGradient(
                                                 startIntensity = 0f,
-                                                endIntensity = 1f,
-                                                preferPerformance = true
+                                                endIntensity = 1f
                                             )
                                         else
                                             null

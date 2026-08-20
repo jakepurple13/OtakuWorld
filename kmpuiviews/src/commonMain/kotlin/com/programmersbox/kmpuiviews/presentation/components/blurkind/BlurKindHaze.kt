@@ -7,6 +7,7 @@ import androidx.compose.runtime.remember
 import com.programmersbox.datastore.NewSettingsHandling
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.blur.HazeBlurStyle
+import dev.chrisbanes.haze.blur.material3.Material3
 import dev.chrisbanes.haze.rememberHazeState
 import org.koin.compose.koinInject
 
@@ -15,8 +16,7 @@ fun rememberBlurKindHazeState(
     dataStore: NewSettingsHandling = koinInject(),
 ): BlurKindHazeState {
     val useProgressive by dataStore.rememberUseProgressive()
-    val blurType by dataStore.rememberBlurType()
-    val hazeStyle = blurType.toHazeStyle()
+    val hazeStyle = HazeBlurStyle.Material3()
     val hazeState = rememberHazeState()
 
     return remember(

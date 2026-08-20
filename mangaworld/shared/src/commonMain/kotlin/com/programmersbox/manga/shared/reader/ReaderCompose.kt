@@ -389,7 +389,6 @@ fun ReadView(
                                     HazeProgressive.verticalGradient(
                                         startIntensity = 1f,
                                         endIntensity = 0f,
-                                        preferPerformance = true
                                     )
                                 )
                                 alpha(scrollAlpha)

@@ -14,8 +14,11 @@ import com.programmersbox.datastore.BlurKind
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.kmpuiviews.presentation.components.custombackdrop.backdrops.layerBackdrop
 import dev.chrisbanes.haze.HazeInput
+import dev.chrisbanes.haze.HazePerformanceMode
 import dev.chrisbanes.haze.blur.HazeBlurStyleScope
 import dev.chrisbanes.haze.blur.hazeBlur
+import dev.chrisbanes.haze.glass.GlassTransformPivot
+import dev.chrisbanes.haze.glass.GlassTransformTarget
 import dev.chrisbanes.haze.glass.hazeGlass
 import dev.chrisbanes.haze.hazeSource
 import org.koin.compose.koinInject
@@ -113,48 +116,24 @@ fun Modifier.setBlurKind(
                 if (!blurKindState.hazeState.useProgressive) {
                     progressive(null)
                 }
-            }
+            },
+            performanceMode = HazePerformanceMode.Performance
         )
 
         BlurKind.HazeGlass -> hazeGlass(
             input = HazeInput.Sources(blurKindState.hazeGlassState.hazeState),
             style = blurKindState.hazeGlassState.hazeStyle.then {
                 shape(liquidGlassShape() as RoundedCornerShape)
-            }
+            },
+            interactionTransformTarget = GlassTransformTarget.MaterialAndContent,
+            interactionTransformPivot = GlassTransformPivot.Pointer,
+            performanceMode = HazePerformanceMode.Performance
         )
-        /*hazeEffect(state = blurKindState.hazeState.hazeState) {
-        blurEffect {
-            style = blurKindState.hazeState.hazeStyle
-            blurEnabled = blurKindState.showBlur
-            hazeScope()
-            if (!blurKindState.hazeState.useProgressive) {
-                progressive = null
-            }
-        }
-    }*/
 
         BlurKind.LiquidGlass -> liquidGlassBlur(
             blurKindState = blurKindState,
             liquidGlassShape = liquidGlassShape
         )
-        /*hazeGlass(
-        input = HazeInput.Sources(blurKindState.hazeState.hazeState),
-        style = GlassStyle {
-            backgroundColor(blurKindState.liquidState.backgroundColor)
-            shape(liquidGlassShape() as RoundedCornerShape)
-            optics(
-                refractionHeightFraction = blurKindState.liquidState.refractionHeight,
-                refractionStrength = blurKindState.liquidState.refractionAmount,
-            )
-            chromaticAberrationMode(
-                if(blurKindState.liquidState.chromaticAberration) {
-                    ChromaticAberrationMode.Full
-                } else {
-                    ChromaticAberrationMode.Simple
-                }
-            )
-        }
-    )*/
         /*
         drawBackdrop(
     backdrop = blurKindState.liquidState.backdrop,

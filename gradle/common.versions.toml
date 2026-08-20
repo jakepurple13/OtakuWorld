@@ -20,7 +20,7 @@ filekitCore = "0.15.0"
 foundation = "1.11.1"
 genericAi = "0.6.6"
 generativeaiGoogle = "0.9.0-1.1.0"
-haze = "2.0.0-alpha05"
+haze = "2.0.0-beta01"
 heatmap = "1.0.5"
 humanReadable = "1.13.1"
 kamelImage = "1.0.9"
@@ -120,6 +120,7 @@ haze-blur = { module = "dev.chrisbanes.haze:haze-blur", version.ref = "haze" }
 haze-glass = { module = "dev.chrisbanes.haze:haze-glass", version.ref = "haze" }
 haze-glass-material3 = { module = "dev.chrisbanes.haze:haze-glass-material3", version.ref = "haze" }
 haze-materials = { module = "dev.chrisbanes.haze:haze-blur-materials", version.ref = "haze" }
+haze-blur-materials3 = { module = "dev.chrisbanes.haze:haze-blur-material3", version.ref = "haze" }
 
 # Kamel
 kamel-image = { module = "media.kamel:kamel-image-default", version.ref = "kamelImage" }
@@ -255,3 +256,10 @@ ktorLibs = [
     "ktorJsoup"
 ]
 roomLibs = ["roomRuntime"]
+hazeLibs = [
+    "haze",
+    "haze-blur",
+    "haze-blur-materials3",
+    "haze-glass",
+    "haze-glass-material3",
+]

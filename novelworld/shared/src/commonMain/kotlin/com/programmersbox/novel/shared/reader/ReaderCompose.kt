@@ -165,7 +165,7 @@ fun NovelReadView(
                         modifier = Modifier.setBlurKind(
                             blurKindState = blurKindState,
                         ) {
-                            progressive(HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true))
+                            progressive(HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f))
                             alpha(1f)
                         }
                     )

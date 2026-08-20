@@ -1,5 +1,8 @@
 package com.programmersbox.kmpuiviews.presentation.components.blurkind
 
+import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -83,10 +86,41 @@ fun rememberBlurKindHazeGlassState(
                 fresnelExponent(handle.fresnelExponent)
                 //shape(RoundedCornerShape(20.dp))
                 //surfaceProfile(SurfaceProfile.Squircle)
+            }.then {
+                hovered {
+                    animate(DefaultGlassHoverAnimationSpec, DefaultGlassReleaseAnimationSpec) {
+                        lightingIntensity(0.35f)
+                        refractionMultiplier(1.02f)
+                        whitePointDelta(0.01f)
+                    }
+                }
+                pressed {
+                    animate(DefaultGlassPressAnimationSpec, DefaultGlassReleaseAnimationSpec) {
+                        lightingIntensity(1f)
+                        refractionMultiplier(1.08f)
+                        whitePointDelta(0.04f)
+                        scale(0.98f)
+                    }
+                }
             },
         )
     }
 }
+
+internal val DefaultGlassHoverAnimationSpec: FiniteAnimationSpec<Float> = spring(
+    dampingRatio = 1f,
+    stiffness = Spring.StiffnessMediumLow,
+)
+
+internal val DefaultGlassPressAnimationSpec: FiniteAnimationSpec<Float> = spring(
+    dampingRatio = 0.82f,
+    stiffness = Spring.StiffnessMedium,
+)
+
+internal val DefaultGlassReleaseAnimationSpec: FiniteAnimationSpec<Float> = spring(
+    dampingRatio = 0.72f,
+    stiffness = Spring.StiffnessMediumLow,
+)
 
 /**
  * Represents the state configuration for applying a blur effect with haze.

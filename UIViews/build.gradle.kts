@@ -108,9 +108,7 @@ dependencies {
     //implementation(projects.imageloader)
     api(commonLibs.bundles.kamel)
 
-    api(commonLibs.haze)
-    api(commonLibs.haze.blur)
-    api(commonLibs.haze.materials)
+    api(commonLibs.bundles.hazeLibs)
 
     implementation(androidLibs.composeCollapsable)
 

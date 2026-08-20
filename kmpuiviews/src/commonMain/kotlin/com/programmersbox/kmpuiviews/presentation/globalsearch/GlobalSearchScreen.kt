@@ -214,7 +214,7 @@ fun GlobalSearchScreen(
                     blurKindState = blurKindState,
                     hazeScope = {
                         progressive(
-                            HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
+                            HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f)
                         )
                     }
                 )
