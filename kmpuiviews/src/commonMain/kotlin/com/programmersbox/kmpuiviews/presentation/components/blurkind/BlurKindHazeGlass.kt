@@ -99,7 +99,6 @@ fun rememberBlurKindHazeGlassState(
                         lightingIntensity(1f)
                         refractionMultiplier(1.08f)
                         whitePointDelta(0.04f)
-                        scale(0.98f)
                     }
                 }
             },
