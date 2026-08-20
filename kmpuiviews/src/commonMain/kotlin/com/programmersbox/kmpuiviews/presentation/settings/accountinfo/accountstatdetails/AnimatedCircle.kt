@@ -33,6 +33,7 @@ data class CircleInfo(
     val color: Color,
     val value: Float,
     val key: Any? = null,
+    val label: String? = null,
     val extraInfo: Map<String, Any?> = emptyMap(),
 )
 
