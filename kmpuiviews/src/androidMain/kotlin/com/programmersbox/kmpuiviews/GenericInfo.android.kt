@@ -10,7 +10,11 @@ import androidx.core.net.toUri
 import androidx.fragment.app.FragmentActivity
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.DeepLinks
+import com.programmersbox.kmpuiviews.utils.composables.WidgetAddCard
+import com.programmersbox.kmpuiviews.utils.composables.widgetChecker
+import com.programmersbox.kmpuiviews.widget.notification.NotificationWidgetReceiver
 
 actual interface PlatformGenericInfo : KmpGenericInfo {
     val deepLinkUri: String
@@ -38,6 +42,16 @@ actual interface PlatformGenericInfo : KmpGenericInfo {
                 )
                 .toUri()
         } ?: "$deepLinkUri${Screen.DetailsScreen.route}".toUri()
+    }
+
+    override fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit = {
+        generalSettings {
+            val state = widgetChecker(NotificationWidgetReceiver::class.java)
+            WidgetAddCard(
+                widgetCheckerState = state.value,
+                description = "View saved notifications straight on your home screen!"
+            )
+        }
     }
 
     fun deepLinkSettingsUri() = deepLinks

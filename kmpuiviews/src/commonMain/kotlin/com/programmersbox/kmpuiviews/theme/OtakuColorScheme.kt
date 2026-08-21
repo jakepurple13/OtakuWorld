@@ -30,29 +30,36 @@ fun generateColorScheme(
         SystemThemeMode.Night -> true
     }
 
-    val colorScheme = if (themeColor == ThemeColor.Dynamic) {
-        createColorScheme(darkTheme, isExpressive).let {
-            if (isAmoledMode && darkTheme) {
-                it.copy(
-                    surface = Color.Black,
-                    onSurface = Color.White,
-                    background = Color.Black,
-                    onBackground = Color.White,
-                )
-            } else {
-                it
+    val colorScheme = when (themeColor) {
+        ThemeColor.Dynamic -> {
+            createColorScheme(darkTheme, isExpressive).let {
+                if (isAmoledMode && darkTheme) {
+                    it.copy(
+                        surface = Color.Black,
+                        onSurface = Color.White,
+                        background = Color.Black,
+                        onBackground = Color.White,
+                    )
+                } else {
+                    it
+                }
             }
         }
-    } else {
-        val swatchStyle by rememberSwatchStyle()
 
-        rememberDynamicColorScheme(
-            seedColor = themeColor.seedColor,
-            isAmoled = isAmoledMode,
-            isDark = darkTheme,
-            style = swatchStyle,
-            specVersion = ColorSpec.SpecVersion.SPEC_2025
-        )
+        ThemeColor.Ugly -> if (darkTheme) FullyUglyDarkColorScheme else FullyUglyLightColorScheme
+        ThemeColor.MyEyes -> if (darkTheme) UglyDarkColorScheme else UglyLightColorScheme
+
+        else -> {
+            val swatchStyle by rememberSwatchStyle()
+
+            rememberDynamicColorScheme(
+                seedColor = themeColor.seedColor,
+                isAmoled = isAmoledMode,
+                isDark = darkTheme,
+                style = swatchStyle,
+                specVersion = ColorSpec.SpecVersion.SPEC_2025
+            )
+        }
     }
 
     return animateColorScheme(remember(isAmoledMode, isExpressive, themeColor, themeSetting, colorScheme) { colorScheme })

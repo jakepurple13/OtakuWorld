@@ -13,12 +13,15 @@ import androidx.compose.runtime.Composer
 import androidx.compose.runtime.ExperimentalComposeRuntimeApi
 import androidx.compose.runtime.tooling.ComposeStackTraceMode
 import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.glance.appwidget.updateAll
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.work.Configuration
 import com.programmersbox.datastore.DataStoreSettings
+import com.programmersbox.datastore.PlatformDataStoreHandling
 import com.programmersbox.favoritesdatabase.CustomListItem
+import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.kmpextensionloader.SourceLoader
 import com.programmersbox.kmpuiviews.di.kmpModule
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
@@ -29,9 +32,13 @@ import com.programmersbox.kmpuiviews.utils.NotificationChannels
 import com.programmersbox.kmpuiviews.utils.NotificationGroups
 import com.programmersbox.kmpuiviews.utils.OtakuLogger
 import com.programmersbox.kmpuiviews.utils.printLogs
+import com.programmersbox.kmpuiviews.widget.notification.NotificationWidget
 import com.programmersbox.supabaseintegration.repository.ActivityRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
@@ -92,7 +99,6 @@ abstract class KmpOtakuApp : Application(), Configuration.Provider {
         shortcutSetup()
 
         val activityRepository = get<ActivityRepository>()
-        GlobalScope.launch(Dispatchers.IO) { activityRepository.migrateFromDataStoreIfNeeded() }
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onStop(owner: LifecycleOwner) {
@@ -100,12 +106,23 @@ abstract class KmpOtakuApp : Application(), Configuration.Provider {
             }
         })
 
-        /*runCatching {
-            get<ServerRepository>()
-                .init()
-                .launchIn(GlobalScope)
-        }*/
+        val platformDataStoreHandling = get<PlatformDataStoreHandling>()
+        val itemDao = get<ItemDao>()
 
+        GlobalScope.launch(Dispatchers.IO) {
+            platformDataStoreHandling.hasWidget
+                .asFlow()
+                .onEach {
+                    if (it) {
+                        NotificationWidget().updateAll(this@KmpOtakuApp)
+                        itemDao
+                            .getTotalCountFlow()
+                            .flowOn(Dispatchers.IO)
+                            .collect { NotificationWidget().updateAll(this@KmpOtakuApp) }
+                    }
+                }
+                .launchIn(this)
+        }
     }
 
     abstract val isDebug: Boolean

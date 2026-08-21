@@ -107,28 +107,14 @@ class GenericMangaDesktop(
 
     @OptIn(ExperimentalMaterial3ExpressiveApi::class)
     override fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit {
-        val compose = ComposeSettingsDsl()
-            .apply(super<GenericSharedManga>.composeCustomPreferences())
-
         return {
             viewSettings {
-                compose.viewSettings(this)
-
                 segmentedListItem(
                     content = { Text("Platform Settings") },
                     leadingContent = { Icon(Icons.Default.DesktopMac, null) },
                     onClick = { navigationActions.navigate(PlatformSettings) }
                 )
-
-                /*segmentedListItem(
-                    content = { Text("Custom Scraper") },
-                    leadingContent = { Icon(Icons.Default.Bolt, null) },
-                    onClick = { navigationActions.navigate(CustomScraper) }
-                )*/
             }
-            generalSettings = compose.generalSettings
-            onboardingSettings = compose.onboardingSettings
-            playerSettings = compose.playerSettings
         }
     }
 }

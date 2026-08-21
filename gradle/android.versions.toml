@@ -17,6 +17,7 @@ dragselect = "3.3.0"
 espresso-core = "3.7.0"
 firebaseBom = "34.17.0"
 generativeai = "0.9.0"
+glance = "1.3.0-alpha02"
 glideVersion = "5.0.9"
 junit = "1.3.0"
 koin-bom = "4.2.2"
@@ -48,6 +49,11 @@ zoomimageComposeGlide = "1.6.0"
 # Accompanist
 adaptive = { module = "com.google.accompanist:accompanist-adaptive", version.ref = "accompanist" }
 drawablePainter = { module = "com.google.accompanist:accompanist-drawablepainter", version.ref = "accompanist" }
+
+# Glance
+glance = { module = "androidx.glance:glance", version.ref = "glance" }
+glance-appwidget = { module = "androidx.glance:glance-appwidget", version.ref = "glance" }
+glance-material3 = { module = "androidx.glance:glance-material3", version.ref = "glance" }
 
 # Android Foundation
 androidBrowserHelper = "com.google.androidbrowserhelper:androidbrowserhelper:2.7.3"
