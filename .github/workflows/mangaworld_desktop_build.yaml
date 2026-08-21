@@ -32,7 +32,7 @@ jobs:
 
     steps:
       - name: Check out the source code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup JDK
         uses: actions/setup-java@v5
