@@ -5,93 +5,175 @@ import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGr
 import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingScope
 
 class ComposeSettingsDsl {
-    //TODO: Turn back to internal once settings move to kmpuiviews
     var generalSettings: @Composable () -> Unit = {}
+        private set
     var viewSettings: CategoryGroupScope.() -> Unit = {}
+        private set
     var playerSettings: @Composable () -> Unit = {}
-
+        private set
     var onboardingSettings: OnboardingScope.() -> Unit = {}
+        private set
 
     fun generalSettings(block: @Composable () -> Unit) {
-        generalSettings = block
+        val previous = generalSettings
+        generalSettings = {
+            previous()
+            block()
+        }
     }
 
     fun viewSettings(block: CategoryGroupScope.() -> Unit) {
-        viewSettings = block
+        val previous = viewSettings
+        viewSettings = {
+            previous()
+            block()
+        }
     }
 
     fun playerSettings(block: @Composable () -> Unit) {
-        playerSettings = block
+        val previous = playerSettings
+        playerSettings = {
+            previous()
+            block()
+        }
     }
 
     fun onboardingSettings(block: OnboardingScope.() -> Unit) {
-        onboardingSettings = block
+        val previous = onboardingSettings
+        onboardingSettings = {
+            previous()
+            block()
+        }
     }
 
     // ── New: per-section injection ───────────────────────────
     var quickActionsSettings: CategoryGroupScope.() -> Unit = {}
+        private set
 
     fun quickActionsSettings(block: CategoryGroupScope.() -> Unit) {
-        quickActionsSettings = block
+        val previous = quickActionsSettings
+        quickActionsSettings = {
+            previous()
+            block()
+        }
     }
 
     var librarySettings: CategoryGroupScope.() -> Unit = {}
+        private set
 
     fun librarySettings(block: CategoryGroupScope.() -> Unit) {
-        librarySettings = block
+        val previous = librarySettings
+        librarySettings = {
+            previous()
+            block()
+        }
     }
 
     var discoverSettings: CategoryGroupScope.() -> Unit = {}
+        private set
 
     fun discoverSettings(block: CategoryGroupScope.() -> Unit) {
-        discoverSettings = block
+        val previous = discoverSettings
+        discoverSettings = {
+            previous()
+            block()
+        }
     }
 
     var sourcesSettings: CategoryGroupScope.() -> Unit = {}
+        private set
 
     fun sourcesSettings(block: CategoryGroupScope.() -> Unit) {
-        sourcesSettings = block
+        val previous = sourcesSettings
+        sourcesSettings = {
+            previous()
+            block()
+        }
     }
 
     var integrationsSettings: CategoryGroupScope.() -> Unit = {}
+        private set
 
     fun integrationsSettings(block: CategoryGroupScope.() -> Unit) {
-        integrationsSettings = block
+        val previous = integrationsSettings
+        integrationsSettings = {
+            previous()
+            block()
+        }
     }
 
     var appearanceSettings: @Composable () -> Unit = {}
+        private set
 
     fun appearanceSettings(block: @Composable () -> Unit) {
-        appearanceSettings = block
+        val previous = appearanceSettings
+        appearanceSettings = {
+            previous()
+            block()
+        }
     }
 
     var behaviorSettings: @Composable () -> Unit = {}
+        private set
 
     fun behaviorSettings(block: @Composable () -> Unit) {
-        behaviorSettings = block
+        val previous = behaviorSettings
+        behaviorSettings = {
+            previous()
+            block()
+        }
     }
 
     var layoutSettings: @Composable () -> Unit = {}
+        private set
 
     fun layoutSettings(block: @Composable () -> Unit) {
-        layoutSettings = block
+        val previous = layoutSettings
+        layoutSettings = {
+            previous()
+            block()
+        }
     }
 
     var contentReadingSettings: @Composable () -> Unit = {}
+        private set
 
     fun contentReadingSettings(block: @Composable () -> Unit) {
-        contentReadingSettings = block
+        val previous = contentReadingSettings
+        contentReadingSettings = {
+            previous()
+            block()
+        }
     }
 
     var dataSettings: @Composable () -> Unit = {}
+        private set
 
     fun dataSettings(block: @Composable () -> Unit) {
-        dataSettings = block
+        val previous = dataSettings
+        dataSettings = {
+            previous()
+            block()
+        }
     }
 
     var aboutSettings: CategoryGroupScope.() -> Unit = {}
+        private set
 
     fun aboutSettings(block: CategoryGroupScope.() -> Unit) {
-        aboutSettings = block
+        val previous = aboutSettings
+        aboutSettings = {
+            previous()
+            block()
+        }
+    }
+}
+
+operator fun (ComposeSettingsDsl.() -> Unit).plus(
+    other: ComposeSettingsDsl.() -> Unit,
+): ComposeSettingsDsl.() -> Unit {
+    return {
+        this@plus.invoke(this) // Execute the left side's lambda on the DSL instance
+        other.invoke(this)     // Execute the right side's lambda on the DSL instance
     }
 }

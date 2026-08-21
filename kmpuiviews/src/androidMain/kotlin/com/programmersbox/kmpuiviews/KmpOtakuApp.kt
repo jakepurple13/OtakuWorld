@@ -19,6 +19,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.work.Configuration
 import com.programmersbox.datastore.DataStoreSettings
+import com.programmersbox.datastore.PlatformDataStoreHandling
 import com.programmersbox.favoritesdatabase.CustomListItem
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.kmpextensionloader.SourceLoader
@@ -36,9 +37,10 @@ import com.programmersbox.supabaseintegration.repository.ActivityRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.get
-import org.koin.android.ext.android.getKoin
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.androidx.workmanager.koin.workManagerFactory
@@ -104,13 +106,22 @@ abstract class KmpOtakuApp : Application(), Configuration.Provider {
             }
         })
 
+        val platformDataStoreHandling = get<PlatformDataStoreHandling>()
+        val itemDao = get<ItemDao>()
+
         GlobalScope.launch(Dispatchers.IO) {
-            NotificationWidget().updateAll(this@KmpOtakuApp)
-            getKoin()
-                .get<ItemDao>()
-                .getTotalCountFlow()
-                .flowOn(Dispatchers.IO)
-                .collect { NotificationWidget().updateAll(this@KmpOtakuApp) }
+            platformDataStoreHandling.hasWidget
+                .asFlow()
+                .onEach {
+                    if (it) {
+                        NotificationWidget().updateAll(this@KmpOtakuApp)
+                        itemDao
+                            .getTotalCountFlow()
+                            .flowOn(Dispatchers.IO)
+                            .collect { NotificationWidget().updateAll(this@KmpOtakuApp) }
+                    }
+                }
+                .launchIn(this)
         }
     }
 

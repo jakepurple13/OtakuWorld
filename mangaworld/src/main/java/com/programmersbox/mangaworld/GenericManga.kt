@@ -12,8 +12,10 @@ import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.SystemAlerter
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.AppConfig
+import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.NotificationLogo
 import com.programmersbox.kmpuiviews.utils.Zipper
+import com.programmersbox.kmpuiviews.utils.plus
 import com.programmersbox.manga.shared.ChapterHolder
 import com.programmersbox.manga.shared.GenericSharedManga
 import com.programmersbox.manga.shared.downloads.DownloadChapterWorker
@@ -103,6 +105,10 @@ class GenericManga(
                 }
             )
         }
+    }
+
+    override fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit {
+        return super<GenericSharedManga>.composeCustomPreferences() + super<GenericInfo>.composeCustomPreferences()
     }
 
     override fun deepLinkDetails(context: Context, itemModel: KmpItemModel?): PendingIntent? {

@@ -42,7 +42,7 @@ class NotificationWidget : GlanceAppWidget(), KoinComponent {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         provideContent {
-            val state by getWidgetStateFlow().collectAsState(WidgetDataState())
+            val state by getWidgetStateFlow(itemDao).collectAsState(WidgetDataState())
 
             WidgetTheme {
                 TextOnlyWidgetContent(
@@ -51,14 +51,16 @@ class NotificationWidget : GlanceAppWidget(), KoinComponent {
             }
         }
     }
+}
 
-    fun getWidgetStateFlow(): Flow<WidgetDataState> {
-        return combine(
-            itemDao.getTotalCountFlow(),
-            itemDao.getTopSourcesFlow()
-        ) { total, sources ->
-            WidgetDataState(totalCount = total, topSources = sources)
-        }
+fun getWidgetStateFlow(
+    itemDao: ItemDao,
+): Flow<WidgetDataState> {
+    return combine(
+        itemDao.getTotalCountFlow(),
+        itemDao.getTopSourcesFlow()
+    ) { total, sources ->
+        WidgetDataState(totalCount = total, topSources = sources)
     }
 }
 

@@ -14,4 +14,9 @@ actual class PlatformDataStoreHandling {
         defaultValue = true
     )
 
+    val hasWidget = DataStoreHandler(
+        key = booleanPreferencesKey("has_widget"),
+        defaultValue = false
+    )
+
 }
