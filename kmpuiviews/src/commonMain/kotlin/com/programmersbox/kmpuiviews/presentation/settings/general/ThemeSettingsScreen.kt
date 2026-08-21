@@ -40,6 +40,8 @@ import com.programmersbox.kmpuiviews.presentation.components.settings.Preference
 import com.programmersbox.kmpuiviews.presentation.components.settings.ShowMoreSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
+import com.programmersbox.kmpuiviews.theme.UglyDarkColorScheme
+import com.programmersbox.kmpuiviews.theme.UglyLightColorScheme
 import com.programmersbox.kmpuiviews.utils.seedColor
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
@@ -147,10 +149,21 @@ fun ThemeSetting(
                         themeColor = it,
                         onClick = { themeColor = it },
                         selected = it == themeColor,
-                        colorScheme = if (it == ThemeColor.Dynamic)
-                            MaterialTheme.colorScheme
-                        else
-                            rememberDynamicColorScheme(
+                        colorScheme = when (it) {
+                            ThemeColor.Dynamic -> MaterialTheme.colorScheme
+                            ThemeColor.Ugly -> when (themeSetting) {
+                                SystemThemeMode.FollowSystem -> if (isSystemInDarkTheme()) UglyDarkColorScheme else UglyLightColorScheme
+                                SystemThemeMode.Day -> UglyLightColorScheme
+                                SystemThemeMode.Night -> UglyDarkColorScheme
+                            }
+
+                            ThemeColor.MyEyes -> when (themeSetting) {
+                                SystemThemeMode.FollowSystem -> if (isSystemInDarkTheme()) UglyDarkColorScheme else UglyLightColorScheme
+                                SystemThemeMode.Day -> UglyLightColorScheme
+                                SystemThemeMode.Night -> UglyDarkColorScheme
+                            }
+
+                            else -> rememberDynamicColorScheme(
                                 it.seedColor,
                                 isDark = when (themeSetting) {
                                     SystemThemeMode.FollowSystem -> isSystemInDarkTheme()
@@ -159,6 +172,7 @@ fun ThemeSetting(
                                 },
                                 isAmoled = isAmoledMode
                             )
+                        }
                     )
                 }
         }

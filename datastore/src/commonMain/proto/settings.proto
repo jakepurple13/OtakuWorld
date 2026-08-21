@@ -65,6 +65,8 @@ enum ThemeColor {
   Cyan = 6;
   Magenta = 7;
   Custom = 8;
+  Ugly = 9;
+  MyEyes = 10;
 }
 
 enum NotificationSortBy {

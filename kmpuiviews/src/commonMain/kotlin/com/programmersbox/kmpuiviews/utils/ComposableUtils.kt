@@ -45,7 +45,7 @@ val ThemeColor.seedColor
         ThemeColor.Yellow -> Color.Yellow
         ThemeColor.Cyan -> Color.Cyan
         ThemeColor.Magenta -> Color.Magenta
-        ThemeColor.Custom -> Color.Transparent
+        else -> Color.Transparent
     }
 
 enum class ComponentState { Pressed, Released }
