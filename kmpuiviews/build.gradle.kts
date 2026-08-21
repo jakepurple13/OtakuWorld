@@ -191,6 +191,9 @@ kotlin {
                 implementation(androidLibs.koin.workmanager)
                 implementation(androidx.paging.pagingCompose)
                 implementation(androidLibs.lifecycleProcess)
+                implementation(androidLibs.glance)
+                implementation(androidLibs.glance.appwidget)
+                implementation(androidLibs.glance.material3)
             }
         }
 

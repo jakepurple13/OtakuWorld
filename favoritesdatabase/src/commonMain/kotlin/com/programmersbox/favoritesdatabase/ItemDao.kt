@@ -1,6 +1,7 @@
 package com.programmersbox.favoritesdatabase
 
 import androidx.paging.PagingSource
+import androidx.room3.ColumnInfo
 import androidx.room3.Dao
 import androidx.room3.DaoReturnTypeConverters
 import androidx.room3.Delete
@@ -240,4 +241,28 @@ interface ItemDao {
 
     @Query("UPDATE ChapterWatched SET is_deleted = 0")
     suspend fun resetAllChaptersIsDeleted()
+
+    // Get the total number of active items
+    @Query("SELECT COUNT(*) FROM Notifications WHERE is_deleted = 0")
+    fun getTotalCountFlow(): Flow<Int>
+
+    // Group by source, sort by highest count, and limit to 4 for the widget grid
+    @Query(
+        """
+        SELECT source, COUNT(*) as count 
+        FROM Notifications 
+        WHERE is_deleted = 0 
+        GROUP BY source 
+        ORDER BY count DESC 
+        LIMIT 4
+    """
+    )
+    fun getTopSourcesFlow(): Flow<List<SourceCount>>
 }
+
+data class SourceCount(
+    @ColumnInfo(name = "source")
+    val source: String,
+    @ColumnInfo(name = "count")
+    val count: Int,
+)
