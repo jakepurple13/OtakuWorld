@@ -5,7 +5,7 @@ kotlinMultiplatformAppdirsVersion = "2.0.0"
 kotlinx-coroutines = "1.11.0"
 nucleusSystem = "2.4.7"
 javase = "3.5.4"
-connectivity = "2.5.0"
+connectivity = "2.5.1"
 camerak = "1.2"
 ksafe = "3.0.0"
 
