@@ -23,7 +23,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - run: |
           echo "IS_PRERELEASE=${{ inputs.IS_PRERELEASE }}" >> $GITHUB_ENV
