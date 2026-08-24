@@ -1,5 +1,4 @@
 [versions]
-anthropicSdkKotlin = "0.32.5"
 androidx-lifecycle = "2.11.0"
 backdrop = "2.0.0"
 blurhash = "0.4.0-SNAPSHOT"
@@ -12,14 +11,12 @@ compose-multiplatform = "1.12.0-rc01"
 cmpMaterial3 = "1.12.0-alpha03"
 composeWebviewMultiplatform = "2.0.3"
 compottie = "2.2.4"
-connectivity = "2.5.0"
+connectivity = "2.5.1"
 coroutinesVersion = "1.11.0"
 datastore = "1.3.0-alpha10"
 dragselect = "3.3.0"
 filekitCore = "0.15.0"
 foundation = "1.11.1"
-genericAi = "0.6.6"
-generativeaiGoogle = "0.9.0-1.1.0"
 haze = "2.0.0-beta01"
 heatmap = "1.0.5"
 humanReadable = "1.13.1"
@@ -31,9 +28,9 @@ koog-beta = "1.1.1-beta"
 kotlinTest = "2.4.10"
 kotlinx-coroutines = "1.11.0"
 kotlinxDatetime = "0.8.0"
-kotzilla = "2.3.3"
+kotzilla = "2.3.4"
 ktorVersion = "3.3.3"
-latestAboutLibsRelease = "15.0.4"
+latestAboutLibsRelease = "15.1.1"
 lifecycleViewmodelNavigation3 = "2.11.0"
 markdown-renderer = "0.44.0"
 material3AdaptiveNavigationSuite = "1.10.0-alpha05"
@@ -52,7 +49,6 @@ scanner = "0.7.2"
 sqlite = "2.7.0"
 turbine = "1.2.1"
 urlencoderLib = "1.6.0"
-xemanticAiToolSchema = "1.2.0"
 kmpalette = "3.1.0"
 materialAdaptiveCmp = "1.2.0"
 supabase = "3.6.0"
@@ -64,14 +60,10 @@ aboutLibrariesCore = { module = "com.mikepenz:aboutlibraries-core", version.ref 
 aboutLibrariesCompose = { module = "com.mikepenz:aboutlibraries-compose-m3", version.ref = "latestAboutLibsRelease" }
 
 # AI/LLM
-anthropic-sdk-kotlin = { module = "com.xemantic.ai:anthropic-sdk-kotlin", version.ref = "anthropicSdkKotlin" }
-generic-ai = { module = "io.github.bay73:generic-ai", version.ref = "genericAi" }
-generativeai-google = { module = "dev.shreyaspatil.generativeai:generativeai-google", version.ref = "generativeaiGoogle" }
 koog-agents = { module = "ai.koog:koog-agents", version.ref = "koog" }
 koog-agents-additions = { module = "ai.koog:koog-agents-additions", version.ref = "koog-beta" }
 koog-http = { module = "ai.koog:http-client-ktor", version.ref = "koog" }
 koog-memory = { module = "ai.koog:agents-features-memory", version.ref = "koog" }
-xemantic-ai-tool-schema = { module = "com.xemantic.ai:xemantic-ai-tool-schema", version.ref = "xemanticAiToolSchema" }
 
 # Coil (KMP)
 coilCompose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
