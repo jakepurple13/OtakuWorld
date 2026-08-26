@@ -76,4 +76,9 @@ class ListRepository(
         listDao.updateBiometric(uuid, useBiometric)
         systemAlerter.alertListChange()
     }
+
+    suspend fun updateCoverImage(uuid: String, coverImageUrl: String) {
+        listDao.updateCoverImageUrl(uuid, coverImageUrl, Clock.System.now().toEpochMilliseconds())
+        systemAlerter.alertListChange()
+    }
 }

@@ -9,6 +9,7 @@ import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,8 +19,10 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -32,6 +35,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.Cancel
@@ -67,6 +71,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SheetState
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -90,11 +95,13 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.programmersbox.datastore.ColorBlindnessType
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListInfo
+import com.programmersbox.favoritesdatabase.resolvedCoverImageUrl
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.kmpuiviews.painterLogo
@@ -359,6 +366,7 @@ fun OtakuCustomListScreen(
             sheetState = infoSheetState,
             customItem = customItem,
             rename = { name -> scope.launch { rename(name) } },
+            onUpdateCoverImage = viewModel::updateCoverImage,
             addSecurityItem = addSecurityItem,
             removeSecurityItem = removeSecurityItem,
             onDeleteListAction = { deleteList = true },
@@ -887,6 +895,7 @@ private fun InfoSheet(
     addSecurityItem: (String) -> Unit,
     removeSecurityItem: (String) -> Unit,
     rename: (String) -> Unit,
+    onUpdateCoverImage: (String) -> Unit,
     onDismiss: () -> Unit,
     onDeleteListAction: () -> Unit,
     onRemoveItemsAction: () -> Unit,
@@ -961,6 +970,21 @@ private fun InfoSheet(
 
     var currentName by remember { mutableStateOf(customItem.item.name) }
 
+    var showCoverPicker by remember { mutableStateOf(false) }
+
+    if (showCoverPicker) {
+        CoverPickerSheet(
+            items = customItem.list,
+            currentCoverUrl = customItem.resolvedCoverImageUrl(),
+            colorFilter = colorFilter,
+            onSelect = {
+                onUpdateCoverImage(it)
+                showCoverPicker = false
+            },
+            onDismiss = { showCoverPicker = false },
+        )
+    }
+
     var showAdd by remember { mutableStateOf(false) }
 
     if (showAdd) {
@@ -1008,15 +1032,21 @@ private fun InfoSheet(
             ListItem(
                 headlineContent = {},
                 leadingContent = {
-                    ImageLoaderChoice(
-                        imageUrl = customItem.list.firstOrNull()?.imageUrl.orEmpty(),
-                        name = "",
-                        placeHolder = { painterLogo() },
-                        colorFilter = colorFilter,
-                        modifier = Modifier
-                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                            .clip(MaterialTheme.shapes.small)
-                    )
+                    Box(contentAlignment = Alignment.BottomEnd) {
+                        ImageLoaderChoice(
+                            imageUrl = customItem.resolvedCoverImageUrl(),
+                            name = "",
+                            placeHolder = { painterLogo() },
+                            colorFilter = colorFilter,
+                            modifier = Modifier
+                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                                .clip(MaterialTheme.shapes.small)
+                        )
+                        SmallFloatingActionButton(
+                            onClick = { showCoverPicker = true },
+                            modifier = Modifier.size(24.dp)
+                        ) { Icon(Icons.Default.Add, null) }
+                    }
                 },
                 supportingContent = {
                     Column {
@@ -1133,6 +1163,77 @@ private fun InfoSheet(
                         Icon(Icons.Default.Delete, null)
                         Text(stringResource(Res.string.delete))
                     }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CoverPickerSheet(
+    items: List<CustomListInfo>,
+    currentCoverUrl: String,
+    colorFilter: ColorFilter?,
+    onSelect: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surface,
+    ) {
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(3),
+            contentPadding = PaddingValues(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 480.dp)
+        ) {
+            items(items, key = { it.uniqueId }) { info ->
+                val isSelected = info.imageUrl == currentCoverUrl
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onSelect(info.imageUrl) }
+                ) {
+                    Box {
+                        ImageLoaderChoice(
+                            imageUrl = info.imageUrl,
+                            name = info.title,
+                            placeHolder = { painterLogo() },
+                            colorFilter = colorFilter,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .aspectRatio(2f / 3f)
+                                .clip(MaterialTheme.shapes.small)
+                                .let {
+                                    if (isSelected)
+                                        it.border(2.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.small)
+                                    else
+                                        it
+                                }
+                        )
+                        if (isSelected) {
+                            Icon(
+                                Icons.Default.Check,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(4.dp)
+                            )
+                        }
+                    }
+                    Text(
+                        info.title,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
                 }
             }
         }
