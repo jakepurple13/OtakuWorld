@@ -110,6 +110,7 @@ CREATE TABLE IF NOT EXISTS custom_list_items (
     time          BIGINT  NOT NULL DEFAULT 0,
     use_biometric BOOLEAN NOT NULL DEFAULT false,
     description   TEXT    NOT NULL DEFAULT '',
+    cover_image_url TEXT,
     supabase_id   TEXT    NOT NULL DEFAULT '',
     created_at    BIGINT  NOT NULL DEFAULT 0,
     updated_at    BIGINT  NOT NULL DEFAULT 0,
@@ -120,6 +121,9 @@ CREATE TABLE IF NOT EXISTS custom_list_items (
 ALTER TABLE custom_list_items ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "own_custom_list_items" ON custom_list_items FOR ALL USING (auth.uid() = user_id);
 CREATE INDEX idx_custom_list_items_updated ON custom_list_items(user_id, updated_at);
+
+-- Migration for already-provisioned databases:
+-- ALTER TABLE custom_list_items ADD COLUMN IF NOT EXISTS cover_image_url TEXT;
 
 -- ─── CUSTOM LIST INFO ─────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS custom_list_info (

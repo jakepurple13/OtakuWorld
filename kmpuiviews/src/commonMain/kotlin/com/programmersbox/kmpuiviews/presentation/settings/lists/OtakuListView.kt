@@ -50,7 +50,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.programmersbox.favoritesdatabase.CustomList
-import com.programmersbox.kmpuiviews.painterLogo
+import com.programmersbox.favoritesdatabase.resolvedCoverImageUrl
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.optionsSheet
@@ -250,25 +250,20 @@ fun OtakuListView(
                                 leadingContent = if (it.item.useBiometric) {
                                     null
                                 } else {
-                                    it
-                                        .list
-                                        .firstOrNull()
-                                        ?.let { image ->
-                                            {
-                                                ImageLoaderChoice(
-                                                    imageUrl = image.imageUrl,
-                                                    name = it.item.name,
-                                                    //placeHolder = { painterLogo() },
-                                                    placeHolder = { rememberVectorPainter(Icons.Default.BrokenImage) },
-                                                    modifier = Modifier
-                                                        .size(
-                                                            width = ComposableUtils.IMAGE_WIDTH,
-                                                            height = ComposableUtils.IMAGE_HEIGHT
-                                                        )
-                                                        .clip(MaterialTheme.shapes.medium)
+                                    {
+                                        ImageLoaderChoice(
+                                            imageUrl = it.resolvedCoverImageUrl(),
+                                            name = it.item.name,
+                                            //placeHolder = { painterLogo() },
+                                            placeHolder = { rememberVectorPainter(Icons.Default.BrokenImage) },
+                                            modifier = Modifier
+                                                .size(
+                                                    width = ComposableUtils.IMAGE_WIDTH / 2,
+                                                    height = ComposableUtils.IMAGE_HEIGHT / 2
                                                 )
-                                            }
-                                        }
+                                                .clip(MaterialTheme.shapes.medium)
+                                        )
+                                    }
                                 },
                                 colors = ListItemDefaults.colors(
                                     containerColor = Color.Transparent
@@ -364,24 +359,19 @@ fun OtakuListView(
                     leadingContent = if (it.item.uuid == AppConfig.forLaterUuid) {
                         { Icon(Icons.Default.WatchLater, null) }
                     } else {
-                        it
-                            .list
-                            .firstOrNull()
-                            ?.let { image ->
-                                {
-                                    ImageLoaderChoice(
-                                        imageUrl = image.imageUrl,
-                                        name = it.item.name,
-                                        placeHolder = { painterLogo() },
-                                        modifier = Modifier
-                                            .size(
-                                                width = ComposableUtils.IMAGE_WIDTH,
-                                                height = ComposableUtils.IMAGE_HEIGHT
-                                            )
-                                            .clip(MaterialTheme.shapes.medium)
+                        {
+                            ImageLoaderChoice(
+                                imageUrl = it.resolvedCoverImageUrl(),
+                                name = it.item.name,
+                                placeHolder = { rememberVectorPainter(Icons.Default.BrokenImage) },
+                                modifier = Modifier
+                                    .size(
+                                        width = ComposableUtils.IMAGE_WIDTH / 2,
+                                        height = ComposableUtils.IMAGE_HEIGHT / 2
                                     )
-                                }
-                            }
+                                    .clip(MaterialTheme.shapes.medium)
+                            )
+                        }
                     },
                     supportingContent = {
                         if (!it.item.useBiometric) {

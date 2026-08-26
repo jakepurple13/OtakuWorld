@@ -217,6 +217,7 @@ class ReadViewModel(
         currentChapter = newChapter
         addToFavorites = addToFavorites.copy(count = addToFavorites.count + 1)
         list.getOrNull(newChapter)?.let { item ->
+            chapterHolder.chapterModel = item
             viewModelScope.launch {
                 if (!favoritesRepository.isIncognito(item.source.serviceName)) {
                     favoritesRepository.addWatched(ChapterWatched(item.url, item.name, mangaUrl))
@@ -504,6 +505,7 @@ class ReadViewModel(
     fun updateCurrentChapter(chapterListIndex: Int) {
         if (chapterListIndex == currentChapter) return
         currentChapter = chapterListIndex
+        chapterHolder.chapterModel = list.getOrNull(chapterListIndex)
     }
 
     fun refresh() {
