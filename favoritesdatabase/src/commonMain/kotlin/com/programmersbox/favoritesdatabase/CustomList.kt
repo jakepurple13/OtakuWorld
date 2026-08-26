@@ -31,7 +31,7 @@ import kotlin.uuid.Uuid
 
 @Database(
     entities = [CustomListItem::class, CustomListInfo::class],
-    version = 12,
+    version = 13,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
         AutoMigration(from = 2, to = 7),
@@ -96,13 +96,20 @@ abstract class ListDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_12_13 = object : Migration(12, 13) {
+            override suspend fun migrate(connection: SQLiteConnection) {
+                connection.execSQL("ALTER TABLE `CustomListItem` ADD COLUMN `cover_image_url` TEXT DEFAULT NULL")
+            }
+        }
+
         fun getInstance(databaseBuilder: DatabaseBuilder): ListDatabase = databaseBuilder
             .build<ListDatabase>("list.db")
             .fallbackToDestructiveMigration(true)
             .addMigrations(
                 MIGRATION_8_9,
                 MIGRATION_9_10,
-                MIGRATION_11_12
+                MIGRATION_11_12,
+                MIGRATION_12_13
             )
             .build()
     }
@@ -212,6 +219,9 @@ interface ListDao {
     @Update(onConflict = OnConflictStrategy.REPLACE)
     suspend fun updateCustomListInfo(info: CustomListInfo)
 
+    @Query("UPDATE CustomListItem SET cover_image_url = :coverImageUrl, is_dirty = 1, updated_at = :timestamp WHERE uuid = :uuid")
+    suspend fun updateCoverImageUrl(uuid: String, coverImageUrl: String?, timestamp: Long)
+
     @Query("UPDATE CustomListItem SET is_deleted = 1, is_dirty = 1, updated_at = :timestamp WHERE uuid = :uuid")
     suspend fun softDeleteCustomListItem(uuid: String, timestamp: Long)
 
@@ -254,6 +264,9 @@ data class CustomList(
     val list: List<CustomListInfo>,
 )
 
+fun CustomList.resolvedCoverImageUrl(): String =
+    item.coverImageUrl?.takeIf { it.isNotEmpty() } ?: list.firstOrNull()?.imageUrl.orEmpty()
+
 @Serializable
 @Entity(tableName = "CustomListItem")
 data class CustomListItem(
@@ -273,6 +286,7 @@ data class CustomListItem(
     @ColumnInfo(name = "updated_at", defaultValue = "0") val updatedAt: Long = 0L,
     @ColumnInfo(name = "is_deleted", defaultValue = "0") val isDeleted: Boolean = false,
     @ColumnInfo(name = "is_dirty", defaultValue = "1") val isDirty: Boolean = true,
+    @ColumnInfo(name = "cover_image_url") val coverImageUrl: String? = null,
 )
 
 @OptIn(ExperimentalUuidApi::class)

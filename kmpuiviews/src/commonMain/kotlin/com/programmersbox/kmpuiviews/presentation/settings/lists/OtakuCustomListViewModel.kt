@@ -14,6 +14,7 @@ import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.ListDao
+import com.programmersbox.favoritesdatabase.resolvedCoverImageUrl
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.repository.ListRepository
 import com.programmersbox.kmpuiviews.utils.printLogs
@@ -52,6 +53,8 @@ class OtakuCustomListViewModel(
             }
         } ?: OtakuListState.Empty
     }
+
+    val coverImageUrl by derivedStateOf { customList?.resolvedCoverImageUrl().orEmpty() }
 
     val searchItems by derivedStateOf {
         customList
@@ -121,6 +124,10 @@ class OtakuCustomListViewModel(
 
     fun rename(newName: String) {
         viewModelScope.launch { customList?.item?.copy(name = newName)?.let { listRepository.updateFullList(it) } }
+    }
+
+    fun updateCoverImage(coverImageUrl: String) {
+        viewModelScope.launch { customList?.item?.uuid?.let { listRepository.updateCoverImage(it, coverImageUrl) } }
     }
 
     fun deleteAll() {
