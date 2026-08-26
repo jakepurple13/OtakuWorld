@@ -1,5 +1,9 @@
 package com.programmersbox.kmpuiviews.presentation.bookmarks
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.BookmarkedChapter
@@ -15,7 +19,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-enum class BookmarkSortOrder { DATE_DESC, DATE_ASC, TITLE_AZ, MANGA_AZ }
+enum class BookmarkSortOrder { DATE_DESC, DATE_ASC, TITLE_AZ, PARENT_AZ }
 
 fun String.toFtsQuery(): String =
     trim().split("\\s+".toRegex()).filter { it.isNotBlank() }.joinToString(" ") { "$it*" }
@@ -25,7 +29,7 @@ fun List<BookmarkedChapter>.sortedByOrder(order: BookmarkSortOrder): List<Bookma
         BookmarkSortOrder.DATE_DESC -> sortedByDescending { it.timestamp }
         BookmarkSortOrder.DATE_ASC -> sortedBy { it.timestamp }
         BookmarkSortOrder.TITLE_AZ -> sortedBy { it.chapterName }
-        BookmarkSortOrder.MANGA_AZ -> sortedBy { it.parentTitle }
+        BookmarkSortOrder.PARENT_AZ -> sortedBy { it.parentTitle }
     }
 
 fun List<BookmarkedChapter>.groupByManga(): Map<String, List<BookmarkedChapter>> =
@@ -37,15 +41,11 @@ class BookmarkChaptersViewModel(
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
-    private val _sortOrder = MutableStateFlow(BookmarkSortOrder.DATE_DESC)
+    var sortOrder by mutableStateOf(BookmarkSortOrder.DATE_DESC)
 
     var searchQuery: String
         get() = _searchQuery.value
         set(value) { _searchQuery.value = value }
-
-    var sortOrder: BookmarkSortOrder
-        get() = _sortOrder.value
-        set(value) { _sortOrder.value = value }
 
     val bookmarks: StateFlow<Map<String, List<BookmarkedChapter>>> =
         combine(
@@ -53,7 +53,7 @@ class BookmarkChaptersViewModel(
                 if (q.isBlank()) bookmarkRepository.getAllBookmarks()
                 else bookmarkRepository.searchBookmarks(q.toFtsQuery())
             },
-            _sortOrder,
+            snapshotFlow { sortOrder },
         ) { list, sort -> list.sortedByOrder(sort).groupByManga() }
             .stateIn(
                 scope = viewModelScope,

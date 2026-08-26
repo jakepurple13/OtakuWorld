@@ -1,13 +1,15 @@
 package com.programmersbox.kmpuiviews.presentation.bookmarks
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -22,6 +24,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilterChip
@@ -29,9 +32,9 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -42,12 +45,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.favoritesdatabase.BookmarkedChapter
+import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.CustomKamelImage
 import org.koin.compose.viewmodel.koinViewModel
@@ -63,7 +68,7 @@ fun BookmarkScreen(
     val bookmarks by vm.bookmarks.collectAsStateWithLifecycle()
     val navActions = LocalNavActions.current
 
-    Scaffold(
+    OtakuScaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Bookmarks") },
@@ -90,11 +95,11 @@ fun BookmarkScreen(
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
             )
-            Row(
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 BookmarkSortOrder.entries.forEach { sort ->
                     FilterChip(
@@ -106,36 +111,40 @@ fun BookmarkScreen(
                                     BookmarkSortOrder.DATE_DESC -> "Newest"
                                     BookmarkSortOrder.DATE_ASC -> "Oldest"
                                     BookmarkSortOrder.TITLE_AZ -> "Chapter A–Z"
-                                    BookmarkSortOrder.MANGA_AZ -> "Manga A–Z"
+                                    BookmarkSortOrder.PARENT_AZ -> "Parent A–Z"
                                 }
                             )
                         },
                     )
                 }
             }
-            if (bookmarks.isEmpty()) {
-                BookmarksEmptyState(modifier = Modifier.fillMaxSize())
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = 16.dp),
-                ) {
-                    bookmarks.forEach { (mangaTitle, chapters) ->
-                        item(key = mangaTitle) {
-                            MangaBookmarkGroup(
-                                mangaTitle = mangaTitle,
-                                chapters = chapters,
-                                onRemove = { vm.removeBookmark(it.chapterUrl) },
-                                onClick = {
-                                    navActions.details(
-                                        title = mangaTitle,
-                                        url = it.parentUrl,
-                                        source = it.source,
-                                        imageUrl = it.parentImageUrl,
-                                        description = ""
-                                    )
-                                }
-                            )
+            Crossfade(bookmarks.isEmpty()) { target ->
+                if (target) {
+                    BookmarksEmptyState(modifier = Modifier.fillMaxSize())
+                } else {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        contentPadding = PaddingValues(bottom = 16.dp),
+                        modifier = Modifier.fillMaxSize(),
+                    ) {
+                        bookmarks.forEach { (mangaTitle, chapters) ->
+                            item(key = mangaTitle) {
+                                MangaBookmarkGroup(
+                                    mangaTitle = mangaTitle,
+                                    chapters = chapters,
+                                    onRemove = { vm.removeBookmark(it.chapterUrl) },
+                                    onClick = {
+                                        navActions.details(
+                                            title = mangaTitle,
+                                            url = it.parentUrl,
+                                            source = it.source,
+                                            imageUrl = it.parentImageUrl,
+                                            description = ""
+                                        )
+                                    },
+                                    modifier = Modifier.animateItem()
+                                )
+                            }
                         }
                     }
                 }
@@ -183,7 +192,9 @@ private fun MangaBookmarkGroup(
     var expanded by remember { mutableStateOf(true) }
     val coverUrl = chapters.firstOrNull()?.parentImageUrl.orEmpty()
 
-    Column(modifier = modifier.fillMaxWidth()) {
+    Card(
+        modifier = modifier.fillMaxWidth()
+    ) {
         ListItem(
             content = {
                 Text(
@@ -191,6 +202,7 @@ private fun MangaBookmarkGroup(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.basicMarquee(1)
                 )
             },
             supportingContent = {
@@ -220,21 +232,27 @@ private fun MangaBookmarkGroup(
                 )
             },
             onClick = { expanded = !expanded },
+            colors = ListItemDefaults.colors(
+                containerColor = Color.Transparent,
+            ),
         )
-        HorizontalDivider()
+        AnimatedVisibility(expanded) {
+            HorizontalDivider()
+        }
         AnimatedVisibility(
             visible = expanded,
             enter = expandVertically(),
             exit = shrinkVertically(),
         ) {
             Column {
-                chapters.forEach { bookmark ->
+                chapters.forEachIndexed { index, bookmark ->
                     BookmarkedChapterRow(
                         bookmark = bookmark,
                         onClick = { onClick(bookmark) },
                         onRemove = { onRemove(bookmark) },
                     )
-                    HorizontalDivider(modifier = Modifier.padding(start = 72.dp))
+                    if (index != chapters.lastIndex)
+                        HorizontalDivider(modifier = Modifier.padding(start = 72.dp))
                 }
             }
         }
@@ -277,6 +295,9 @@ private fun BookmarkedChapterRow(
             }
         },
         onClick = onClick,
+        colors = ListItemDefaults.colors(
+            containerColor = Color.Transparent,
+        ),
         modifier = modifier.padding(start = 16.dp),
     )
 }
