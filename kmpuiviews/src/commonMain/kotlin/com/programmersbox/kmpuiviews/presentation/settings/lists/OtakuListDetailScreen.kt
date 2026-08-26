@@ -71,7 +71,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SheetState
-import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -1032,20 +1031,24 @@ private fun InfoSheet(
             ListItem(
                 headlineContent = {},
                 leadingContent = {
-                    Box(contentAlignment = Alignment.BottomEnd) {
-                        ImageLoaderChoice(
-                            imageUrl = customItem.resolvedCoverImageUrl(),
-                            name = "",
-                            placeHolder = { painterLogo() },
-                            colorFilter = colorFilter,
-                            modifier = Modifier
-                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                                .clip(MaterialTheme.shapes.small)
-                        )
-                        SmallFloatingActionButton(
-                            onClick = { showCoverPicker = true },
-                            modifier = Modifier.size(24.dp)
-                        ) { Icon(Icons.Default.Add, null) }
+                    Card(
+                        onClick = { showCoverPicker = true },
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            ImageLoaderChoice(
+                                imageUrl = customItem.resolvedCoverImageUrl(),
+                                name = "",
+                                placeHolder = { painterLogo() },
+                                colorFilter = colorFilter,
+                                modifier = Modifier
+                                    .size(
+                                        ComposableUtils.IMAGE_WIDTH / 2,
+                                        ComposableUtils.IMAGE_HEIGHT / 2
+                                    )
+                                    .clip(MaterialTheme.shapes.small)
+                            )
+                            Icon(Icons.Default.Add, null)
+                        }
                     }
                 },
                 supportingContent = {
