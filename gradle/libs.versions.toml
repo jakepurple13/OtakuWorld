@@ -2,7 +2,7 @@
 androidx-baselineprofile = "1.4.1"
 androidxBaselineprofileGradlePlugin = "1.3.4"
 buildKonfig = "0.22.0"
-compose-multiplatform = "1.12.0-rc01"
+compose-multiplatform = "1.12.0"
 easylauncher = "6.4.1"
 firebaseCrashlyticsGradle = "3.0.8"
 googleAndroidLibrariesMapsplatformSecretsGradlePlugin = "2.0.1"
