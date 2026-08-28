@@ -1,54 +1,54 @@
 # ============================================================
 # Kotlin
 # ============================================================
--keep class kotlin.Metadata { *; }
--keepclassmembers class **$WhenMappings { *; }
--keepclassmembers class kotlin.Lazy { *; }
--dontwarn kotlin.**
+#-keep class kotlin.Metadata { *; }
+#-keepclassmembers class **$WhenMappings { *; }
+#-keepclassmembers class kotlin.Lazy { *; }
+#-dontwarn kotlin.**
 
 # ============================================================
 # Kotlin Coroutines
 # ============================================================
--keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
--keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
--keepclassmembernames class kotlinx.** { volatile <fields>; }
--dontwarn kotlinx.coroutines.**
+#-keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
+#-keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
+#-keepclassmembernames class kotlinx.** { volatile <fields>; }
+#-dontwarn kotlinx.coroutines.**
 
 # ============================================================
 # Kotlinx Serialization
 # ============================================================
--keepattributes *Annotation*, InnerClasses
--dontnote kotlinx.serialization.AnnotationsKt
--keepclassmembers class kotlinx.serialization.json.** { *** Companion; }
--keepclasseswithmembers class kotlinx.serialization.json.** { kotlinx.serialization.KSerializer serializer(...); }
--keep,includedescriptorclasses class com.programmersbox.**$$serializer { *; }
--keepclassmembers class com.programmersbox.** {
-    *** Companion;
-}
--keepclasseswithmembers class com.programmersbox.** {
-    kotlinx.serialization.KSerializer serializer(...);
-}
--keep @kotlinx.serialization.Serializable class * { *; }
+#-keepattributes *Annotation*, InnerClasses
+#-dontnote kotlinx.serialization.AnnotationsKt
+#-keepclassmembers class kotlinx.serialization.json.** { *** Companion; }
+#-keepclasseswithmembers class kotlinx.serialization.json.** { kotlinx.serialization.KSerializer serializer(...); }
+#-keep,includedescriptorclasses class com.programmersbox.**$$serializer { *; }
+#-keepclassmembers class com.programmersbox.** {
+#    *** Companion;
+#}
+#-keepclasseswithmembers class com.programmersbox.** {
+#    kotlinx.serialization.KSerializer serializer(...);
+#}
+#-keep @kotlinx.serialization.Serializable class * { *; }
 
 # Keep Kotlin standard library methods that extensions might rely on
--keep class kotlin.** { *; }
--keep class kotlin.jvm.internal.** { *; }
--keepclassmembers class kotlin.** { *; }
+#-keep class kotlin.** { *; }
+#-keep class kotlin.jvm.internal.** { *; }
+#-keepclassmembers class kotlin.** { *; }
 
 # Keep kotlinx.serialization for extensions
--keep class kotlinx.serialization.** { *; }
--keepclassmembers class kotlinx.serialization.** { *; }
+#-keep class kotlinx.serialization.** { *; }
+#-keepclassmembers class kotlinx.serialization.** { *; }
 
 # Keep your extension loader and the interfaces/classes it reflects on
 -keep class com.programmersbox.kmpextensionloader.** { *; }
 
 # Keep everything in programmersbox, EXCEPT classes inside the showcase package
--keep class !com.programmersbox.showcase.**, com.programmersbox.** { *; }
+#-keep class !com.programmersbox.showcase.**, com.programmersbox.** { *; }
 
 # ============================================================
 # Compose / Compose Multiplatform
 # ============================================================
--keep class androidx.compose.** { *; }
+#-keep class androidx.compose.** { *; }
 #-keepclassmembers class * {
 #    @androidx.compose.runtime.Composable *;
 #}
@@ -56,26 +56,26 @@
 #    @androidx.compose.ui.tooling.preview.Preview *;
 #}
 
--dontwarn androidx.compose.**
+#-dontwarn androidx.compose.**
 
 # ============================================================
 # Koin
 # ============================================================
--keep class org.koin.** { *; }
--keepnames class * {
-    @org.koin.core.annotation.* *;
-}
--dontwarn org.koin.**
+#-keep class org.koin.** { *; }
+#-keepnames class * {
+#    @org.koin.core.annotation.* *;
+#}
+#-dontwarn org.koin.**
 
 # ============================================================
 # Room 3 (androidx.room3 artifact and package)
 # ============================================================
--keep @androidx.room3.Entity class * { *; }
--keep @androidx.room3.Database class * { *; }
--keep @androidx.room3.Dao class * { *; }
--keepclassmembers class * extends androidx.room3.RoomDatabase { *; }
--dontwarn androidx.room3.**
--dontwarn androidx.room.**
+#-keep @androidx.room3.Entity class * { *; }
+#-keep @androidx.room3.Database class * { *; }
+#-keep @androidx.room3.Dao class * { *; }
+#-keepclassmembers class * extends androidx.room3.RoomDatabase { *; }
+#-dontwarn androidx.room3.**
+#-dontwarn androidx.room.**
 
 # ============================================================
 # Extension / source-loading contract (kmpmodels)
@@ -130,15 +130,15 @@
 # ============================================================
 # Haze (glassmorphism)
 # ============================================================
--keep class dev.chrisbanes.haze.** { *; }
--dontwarn dev.chrisbanes.haze.**
+#-keep class dev.chrisbanes.haze.** { *; }
+#-dontwarn dev.chrisbanes.haze.**
 
 # ============================================================
 # Navigation3
 # ============================================================
--keep class * implements androidx.navigation3.runtime.NavKey { *; }
--keep @kotlinx.serialization.Serializable class * implements androidx.navigation3.runtime.NavKey { *; }
--dontwarn androidx.navigation3.**
+#-keep class * implements androidx.navigation3.runtime.NavKey { *; }
+#-keep @kotlinx.serialization.Serializable class * implements androidx.navigation3.runtime.NavKey { *; }
+#-dontwarn androidx.navigation3.**
 
 # ============================================================
 # DataStore / Protobuf
@@ -163,8 +163,8 @@
 # ============================================================
 # jakepurple13 HelpfulTools
 # ============================================================
--keep class com.github.jakepurple13.** { *; }
--dontwarn com.github.jakepurple13.**
+#-keep class com.github.jakepurple13.** { *; }
+#-dontwarn com.github.jakepurple13.**
 
 # ============================================================
 # Piasy BigImageViewer
@@ -207,8 +207,8 @@
 # ============================================================
 # Supabase
 # ============================================================
--keep class io.github.jan.supabase.** { *; }
--dontwarn io.github.jan.supabase.**
+#-keep class io.github.jan.supabase.** { *; }
+#-dontwarn io.github.jan.supabase.**
 
 # ============================================================
 # R8 missing classes (transitive deps not present on Android;
@@ -224,10 +224,8 @@
 # ============================================================
 # Preserve stack traces
 # ============================================================
--keepattributes SourceFile,LineNumberTable
--renamesourcefileattribute SourceFile
-
--dontobfuscate
+#-keepattributes SourceFile,LineNumberTable
+#-renamesourcefileattribute SourceFile
 
 -keep,allowoptimization class eu.kanade.**
 -keep,allowoptimization class tachiyomi.**
@@ -317,7 +315,7 @@
 -keep interface com.google.firebase.installations.** { *; }
 
 # PackageInstaller broadcast receiver — instantiated by the OS via manifest registration
--keep class com.programmersbox.kmpuiviews.receivers.PackageInstallReceiver { public <init>(); }
+#-keep class com.programmersbox.kmpuiviews.receivers.PackageInstallReceiver { public <init>(); }
 
 -assumenosideeffects class * {
     @com.programmersbox.showcase.annotations.ShowcaseComponent <methods>;
