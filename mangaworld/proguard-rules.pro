@@ -14,6 +14,13 @@
 #-keepclassmembernames class kotlinx.** { volatile <fields>; }
 #-dontwarn kotlinx.coroutines.**
 
+-keepclassmembers class androidx.core.content.ContextCompat {
+    public static java.util.concurrent.Executor getMainExecutor(android.content.Context);
+}
+
+-keep class com.programmersbox.source_utilities.NetworkHelper { *; }
+-keep class com.programmersbox.source_utilities.** { *; }
+
 # ============================================================
 # Kotlinx Serialization
 # ============================================================
@@ -61,11 +68,11 @@
 # ============================================================
 # Koin
 # ============================================================
-#-keep class org.koin.** { *; }
-#-keepnames class * {
-#    @org.koin.core.annotation.* *;
-#}
-#-dontwarn org.koin.**
+-keep class org.koin.** { *; }
+-keepnames class * {
+    @org.koin.core.annotation.* *;
+}
+-dontwarn org.koin.**
 
 # ============================================================
 # Room 3 (androidx.room3 artifact and package)
@@ -86,6 +93,7 @@
 -keep class com.programmersbox.kmpmodels.** { *; }
 -keep class * implements com.programmersbox.kmpmodels.KmpApiService { *; }
 -dontwarn com.programmersbox.kmpmodels.**
+-keep class com.programmersbox.models.** { *; }
 
 # ============================================================
 # Firebase
