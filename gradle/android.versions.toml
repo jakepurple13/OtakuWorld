@@ -171,7 +171,7 @@ glideRecyclerview = { module = "com.github.bumptech.glide:recyclerview-integrati
 duktape = "com.squareup.duktape:duktape-android:1.4.0"
 fileChooser = "com.github.hedzr:android-file-chooser:1.2.0"
 gson = "com.google.code.gson:gson:2.13.2"
-jsoup = "org.jsoup:jsoup:1.23.1"
+jsoup = "org.jsoup:jsoup:1.23.2"
 karnKhttp = "io.karn:khttp-android:0.1.2"
 kotson = "com.github.salomonbrys.kotson:kotson:2.5.0"
 palette = "androidx.palette:palette-ktx:1.0.0"
