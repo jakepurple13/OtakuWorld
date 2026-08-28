@@ -33,6 +33,9 @@ android {
         getByName("release") {
             isMinifyEnabled = true
             isShrinkResources = true
+            //For testing
+            if (System.getenv("CI") == null)
+                signingConfig = signingConfigs.getByName("debug")
         }
     }
 }
