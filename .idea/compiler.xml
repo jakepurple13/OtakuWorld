@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="CompilerConfiguration">
-    <bytecodeTargetLevel target="11">
+    <bytecodeTargetLevel target="21">
       <module name="OtakuWorld.anime_sources" target="21" />
       <module name="OtakuWorld.anime_sources.defaultanimesources" target="21" />
       <module name="OtakuWorld.animeworldtv" target="21" />

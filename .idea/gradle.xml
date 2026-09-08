@@ -17,28 +17,42 @@
         </compositeConfiguration>
         <option name="testRunner" value="CHOOSE_PER_TEST" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
-        <option name="gradleHome" value="/usr/local/Cellar/gradle/6.7.1/libexec" />
         <option name="gradleJvm" value="#GRADLE_LOCAL_JAVA_HOME" />
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/AnimeWorldbaselineprofile" />
+            <option value="$PROJECT_DIR$/MangaWorldbaselineprofile" />
             <option value="$PROJECT_DIR$/Models" />
+            <option value="$PROJECT_DIR$/NovelWorldbaselineprofile" />
             <option value="$PROJECT_DIR$/UIViews" />
             <option value="$PROJECT_DIR$/animeworld" />
-            <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/animeworld/desktop" />
+            <option value="$PROJECT_DIR$/animeworld/shared" />
             <option value="$PROJECT_DIR$/buildSrc" />
             <option value="$PROJECT_DIR$/datastore" />
             <option value="$PROJECT_DIR$/datastore/mangasettings" />
             <option value="$PROJECT_DIR$/favoritesdatabase" />
+            <option value="$PROJECT_DIR$/favoritesdatabase/supabase-integration" />
             <option value="$PROJECT_DIR$/kmpmodels" />
+            <option value="$PROJECT_DIR$/kmpmodels/extensioninterfaces" />
             <option value="$PROJECT_DIR$/kmpuiviews" />
+            <option value="$PROJECT_DIR$/kmpuiviews/koogintegration" />
+            <option value="$PROJECT_DIR$/kmpuiviews/koogintegration/customscraper" />
             <option value="$PROJECT_DIR$/mangaworld" />
             <option value="$PROJECT_DIR$/mangaworld/desktop" />
             <option value="$PROJECT_DIR$/mangaworld/shared" />
             <option value="$PROJECT_DIR$/novelworld" />
+            <option value="$PROJECT_DIR$/novelworld/desktop" />
             <option value="$PROJECT_DIR$/novelworld/shared" />
+            <option value="$PROJECT_DIR$/sharedcomponents" />
+            <option value="$PROJECT_DIR$/sharedtools" />
             <option value="$PROJECT_DIR$/sharedutils" />
+            <option value="$PROJECT_DIR$/sharedutils/jsextensionloader" />
             <option value="$PROJECT_DIR$/sharedutils/kmpextensionloader" />
+            <option value="$PROJECT_DIR$/showcase" />
+            <option value="$PROJECT_DIR$/showcase/annotations" />
+            <option value="$PROJECT_DIR$/showcase/processor" />
             <option value="$PROJECT_DIR$/source_utilities" />
           </set>
         </option>

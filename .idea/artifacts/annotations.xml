@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="annotations">
+    <output-path>$PROJECT_DIR$/showcase/annotations/build/libs</output-path>
+    <root id="archive" name="annotations.jar">
+      <element id="module-output" name="OtakuWorld.showcase.annotations.androidMain" />
+    </root>
+  </artifact>
+</component>

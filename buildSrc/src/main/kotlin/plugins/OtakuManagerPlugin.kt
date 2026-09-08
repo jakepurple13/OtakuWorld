@@ -16,7 +16,7 @@ class OtakuManagerPlugin : AndroidPluginBase<BaseAppModuleExtension>(BaseAppModu
         buildFeatures.compose = true
         buildFeatures.buildConfig = true
 
-        compileSdk = AppInfo.compileVersion
+        compileSdk(AppInfo::setCustomCompileSdkVersion)
 
         lint {
             checkReleaseBuilds = false

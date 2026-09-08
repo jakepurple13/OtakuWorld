@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="jsextensionloader">
+    <output-path>$PROJECT_DIR$/sharedutils/jsextensionloader/build/libs</output-path>
+    <root id="archive" name="jsextensionloader.jar">
+      <element id="module-output" name="OtakuWorld.sharedutils.jsextensionloader.androidMain" />
+    </root>
+  </artifact>
+</component>

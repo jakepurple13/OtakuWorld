@@ -20,7 +20,7 @@ class AndroidApplicationPlugin : AndroidPluginBase<BaseAppModuleExtension>(BaseA
         buildFeatures.compose = true
         buildFeatures.buildConfig = true
 
-        compileSdk = AppInfo.compileVersion
+        compileSdk(AppInfo::setCustomCompileSdkVersion)
 
         lint {
             checkReleaseBuilds = false
