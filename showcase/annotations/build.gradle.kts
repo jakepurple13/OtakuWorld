@@ -11,7 +11,7 @@ kotlin {
 
     android {
         namespace = "com.programmersbox.showcase.annotations"
-        compileSdk = AppInfo.compileVersion
+        compileSdk(AppInfo::setCustomCompileSdkVersion)
         minSdk = AppInfo.minimumSdk
     }
 

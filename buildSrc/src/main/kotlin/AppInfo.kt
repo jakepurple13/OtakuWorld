@@ -1,3 +1,5 @@
+import com.android.build.api.dsl.CompileSdkSpec
+
 object AppInfo {
     const val otakuVersionName = "33.0.0"
     val versionBump = 5000
@@ -13,7 +15,16 @@ object AppInfo {
 
         code
     }
-    const val compileVersion = 37
+
+    const val compileVersion = "37.2"
     const val minimumSdk = 28
     const val targetSdk = 37
+
+    fun setCustomCompileSdkVersion(spec: CompileSdkSpec) {
+        with(spec) {
+            version = release(37) {
+                minorApiLevel = 2
+            }
+        }
+    }
 }

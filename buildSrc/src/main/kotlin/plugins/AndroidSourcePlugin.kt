@@ -21,7 +21,9 @@ class AndroidSourcePlugin : AndroidPluginBase<BaseAppModuleExtension>(BaseAppMod
         pluginManager.apply("com.android.application")
     }
 
-    override fun BaseAppModuleExtension.androidConfig(project: Project) {}
+    override fun BaseAppModuleExtension.androidConfig(project: Project) {
+        compileSdk(AppInfo::setCustomCompileSdkVersion)
+    }
 }
 
 abstract class SourceInformation @Inject constructor(private val project: Project) {

@@ -37,7 +37,7 @@ class MultiplatformLibraryPlugin : Plugin<Project> {
             .extensions
             .configure(com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryExtension::class.java) {
                 namespace = dependencyHandling.androidPackageName
-                compileSdk = AppInfo.compileVersion
+                compileSdk(AppInfo::setCustomCompileSdkVersion)
                 minSdk = AppInfo.minimumSdk
 
                 lint {

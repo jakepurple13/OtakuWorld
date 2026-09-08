@@ -71,11 +71,10 @@ abstract class AndroidPluginBase<T : BaseExtension>(
     private fun Project.configureAndroidBase() {
         extensions.findByType(clazz)?.apply {
             androidConfig(this@configureAndroidBase)
-            compileSdkVersion(AppInfo.compileVersion)
 
             defaultConfig {
                 minSdk = AppInfo.minimumSdk
-                targetSdk = AppInfo.targetSdk
+                targetSdkVersion(AppInfo.targetSdk)
                 versionCode = AppInfo.versionCode
                 versionName = AppInfo.otakuVersionName
 

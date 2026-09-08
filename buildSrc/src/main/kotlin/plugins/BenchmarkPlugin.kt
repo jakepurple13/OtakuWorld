@@ -30,7 +30,7 @@ class BenchmarkPlugin : Plugin<Project> {
 
     private fun Project.configureAndroidBase() {
         extensions.findByType(TestExtension::class)?.apply {
-            compileSdk = AppInfo.compileVersion
+            compileSdk(AppInfo::setCustomCompileSdkVersion)
 
             compileOptions {
                 sourceCompatibility = JavaVersion.VERSION_1_8

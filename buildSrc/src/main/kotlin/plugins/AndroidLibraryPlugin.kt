@@ -10,6 +10,8 @@ class AndroidLibraryPlugin : AndroidPluginBase<LibraryExtension>(LibraryExtensio
     }
 
     override fun LibraryExtension.androidConfig(project: Project) {
+        compileSdk(AppInfo::setCustomCompileSdkVersion)
+
         lint {
             checkReleaseBuilds = false
         }

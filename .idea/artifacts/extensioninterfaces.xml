@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="extensioninterfaces">
+    <output-path>$PROJECT_DIR$/kmpmodels/extensioninterfaces/build/libs</output-path>
+    <root id="archive" name="extensioninterfaces.jar">
+      <element id="module-output" name="OtakuWorld.kmpmodels.extensioninterfaces.androidMain" />
+    </root>
+  </artifact>
+</component>

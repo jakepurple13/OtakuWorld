@@ -65,7 +65,7 @@
           <targets>
             <Target type="DEFAULT_BOOT">
               <handle>
-                <DeviceId pluginId="PhysicalDevice" identifier="serial=IKMB0522001282" />
+                <DeviceId pluginId="PhysicalDevice" identifier="serial=MBX6P240401889" />
               </handle>
             </Target>
             <Target type="DEFAULT_BOOT">
