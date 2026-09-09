@@ -42,11 +42,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.programmersbox.kmpuiviews.DateTimeFormatHandler
+import com.programmersbox.kmpuiviews.utils.DateTimeFormatScreensaverItem
+import com.programmersbox.kmpuiviews.utils.toLocalDateTime
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import org.koin.compose.koinInject
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
@@ -64,15 +65,17 @@ fun ScreensaverScreen() {
         animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec,
     )
 
-    val formatter = remember {
-        SimpleDateFormat("hh:mm a", Locale.getDefault())
-    }
+    val dateTimeFormatHandler: DateTimeFormatHandler = koinInject()
+
+    val dateFormat = DateTimeFormatScreensaverItem(
+        dateTimeFormatHandler.is24Time()
+    )
 
     val currentTimeMs by rememberCurrentTime()
 
     val timeString by remember {
         derivedStateOf {
-            formatter.format(Date(currentTimeMs))
+            dateFormat.format(currentTimeMs.toLocalDateTime())
         }
     }
 
