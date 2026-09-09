@@ -55,29 +55,7 @@ import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun ScreensaverScreen() {
-
     val resources = LocalConfiguration.current.orientation
-
-    val timeRemaining by rememberBatteryInfo()
-
-    val animatedProgress by animateFloatAsState(
-        targetValue = timeRemaining.percentage / 100f,
-        animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec,
-    )
-
-    val dateTimeFormatHandler: DateTimeFormatHandler = koinInject()
-
-    val dateFormat = DateTimeFormatScreensaverItem(
-        dateTimeFormatHandler.is24Time()
-    )
-
-    val currentTimeMs by rememberCurrentTime()
-
-    val timeString by remember {
-        derivedStateOf {
-            dateFormat.format(currentTimeMs.toLocalDateTime())
-        }
-    }
 
     SharedTransitionLayout {
         val boxes = remember {
@@ -93,37 +71,9 @@ fun ScreensaverScreen() {
                         )
                         .animateContentSize()
                 ) {
-                    Card(
-                        shape = MaterialTheme.shapes.extraLarge,
-                        modifier = Modifier
-                            .weight(1f)
-                            .animateContentSize()
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp)
-                                .animateContentSize()
-                        ) {
-                            Column {
-                                Text(
-                                    timeString,
-                                    style = MaterialTheme.typography.headlineSmall,
-                                )
-                                Text("Battery:")
-                                Text("${timeRemaining.percentage}%")
-                                Text("Time Remaining Until Full:")
-                                Text("${timeRemaining.timeRemainingMs.milliseconds}")
-                            }
-
-                            CircularWavyProgressIndicator(
-                                progress = { animatedProgress },
-                                modifier = Modifier.size(64.dp)
-                            )
-                        }
-                    }
+                    DateBatteryCard(
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
         }
@@ -167,6 +117,62 @@ fun ScreensaverScreen() {
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun DateBatteryCard(
+    modifier: Modifier = Modifier,
+) {
+    val timeRemaining by rememberBatteryInfo()
+
+    val animatedProgress by animateFloatAsState(
+        targetValue = timeRemaining.percentage / 100f,
+        animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec,
+    )
+
+    val dateTimeFormatHandler: DateTimeFormatHandler = koinInject()
+
+    val dateFormat = DateTimeFormatScreensaverItem(
+        dateTimeFormatHandler.is24Time()
+    )
+
+    val currentTimeMs by rememberCurrentTime()
+
+    val timeString by remember {
+        derivedStateOf {
+            dateFormat.format(currentTimeMs.toLocalDateTime())
+        }
+    }
+
+    Card(
+        shape = MaterialTheme.shapes.extraLarge,
+        modifier = modifier.animateContentSize()
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .animateContentSize()
+        ) {
+            Column {
+                Text(
+                    timeString,
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+                Text("Battery:")
+                Text("${timeRemaining.percentage}%")
+                Text("Time Remaining Until Full:")
+                Text("${timeRemaining.timeRemainingMs.milliseconds}")
+            }
+
+            CircularWavyProgressIndicator(
+                progress = { animatedProgress },
+                modifier = Modifier.size(64.dp)
+            )
         }
     }
 }
