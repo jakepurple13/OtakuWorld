@@ -35,7 +35,6 @@ import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -82,90 +81,87 @@ fun ScreensaverScreen(
 ) {
     val items by viewModel.items.collectAsStateWithLifecycle()
     val physicalOrientation by rememberPhysicalDeviceOrientation()
-
-    SensorRotatedLayout(physicalOrientation = physicalOrientation) {
-        SharedTransitionLayout {
-            val boxes = remember {
-                movableContentOf { modifier: Modifier, animatedVisibilityScope: AnimatedVisibilityScope ->
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = modifier
-                            .sharedBounds(
-                                sharedContentState = rememberSharedContentState(
-                                    key = "other",
-                                ),
-                                animatedVisibilityScope = animatedVisibilityScope
+    Scaffold { padding ->
+        SensorRotatedLayout(physicalOrientation = physicalOrientation) {
+            SharedTransitionLayout {
+                val boxes = remember {
+                    movableContentOf { modifier: Modifier, animatedVisibilityScope: AnimatedVisibilityScope ->
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = modifier
+                                .sharedBounds(
+                                    sharedContentState = rememberSharedContentState(
+                                        key = "other",
+                                    ),
+                                    animatedVisibilityScope = animatedVisibilityScope
+                                )
+                                .animateContentSize()
+                        ) {
+                            DateBatteryCard(
+                                modifier = Modifier.weight(.7f)
                             )
-                            .animateContentSize()
-                    ) {
-                        DateBatteryCard(
-                            modifier = Modifier.weight(.7f)
-                        )
 
-                        InfoCard(
-                            activity = viewModel.activity,
-                            favoriteCount = viewModel.favoritesCount,
-                            modifier = Modifier.weight(.3f)
-                        )
-                    }
-
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = modifier
-                            .sharedBounds(
-                                sharedContentState = rememberSharedContentState(
-                                    key = "list",
-                                ),
-                                animatedVisibilityScope = animatedVisibilityScope
+                            InfoCard(
+                                activity = viewModel.activity,
+                                favoriteCount = viewModel.favoritesCount,
+                                modifier = Modifier.weight(.3f)
                             )
-                            .animateContentSize()
-                    ) {
-                        ItemsCard(
-                            list = items,
-                            modifier = Modifier.weight(1f)
-                        )
+                        }
+
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = modifier
+                                .sharedBounds(
+                                    sharedContentState = rememberSharedContentState(
+                                        key = "list",
+                                    ),
+                                    animatedVisibilityScope = animatedVisibilityScope
+                                )
+                                .animateContentSize()
+                        ) {
+                            ItemsCard(
+                                list = items,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
                     }
                 }
-            }
 
-            AnimatedContent(physicalOrientation) { target ->
-                Scaffold { padding ->
-                    Surface(
-                        modifier = Modifier.padding(padding)
-                    ) {
-                        when (target) {
-                            PhysicalOrientation.PORTRAIT,
-                            PhysicalOrientation.REVERSE_PORTRAIT,
-                            PhysicalOrientation.UNKNOWN,
-                                -> {
-                                Column(
-                                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(16.dp)
-                                ) {
-                                    boxes(
-                                        Modifier.weight(1f, false),
-                                        this@AnimatedContent
-                                    )
-                                }
+                AnimatedContent(physicalOrientation) { target ->
+                    when (target) {
+                        PhysicalOrientation.PORTRAIT,
+                        PhysicalOrientation.REVERSE_PORTRAIT,
+                        PhysicalOrientation.UNKNOWN,
+                            -> {
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(16.dp)
+                                    .padding(padding)
+                            ) {
+                                boxes(
+                                    Modifier.weight(1f, false),
+                                    this@AnimatedContent
+                                )
                             }
+                        }
 
-                            PhysicalOrientation.LANDSCAPE_LEFT,
-                            PhysicalOrientation.LANDSCAPE_RIGHT,
-                                -> {
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(16.dp)
-                                ) {
-                                    boxes(
-                                        Modifier.weight(1f, false),
-                                        this@AnimatedContent
-                                    )
-                                }
+                        PhysicalOrientation.LANDSCAPE_LEFT,
+                        PhysicalOrientation.LANDSCAPE_RIGHT,
+                            -> {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(16.dp)
+                                    .padding(padding)
+                            ) {
+                                boxes(
+                                    Modifier.weight(1f, false),
+                                    this@AnimatedContent
+                                )
                             }
                         }
                     }
