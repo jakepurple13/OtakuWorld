@@ -56,9 +56,6 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.kmpuiviews.DateTimeFormatHandler
@@ -66,7 +63,11 @@ import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard2
 import com.programmersbox.kmpuiviews.utils.DateTimeFormatScreensaverItem
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
 import com.programmersbox.kmpuiviews.utils.toLocalDateTime
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.isActive
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -456,44 +457,58 @@ enum class PhysicalOrientation {
 }
 
 @Composable
-fun rememberPhysicalDeviceOrientation(): State<PhysicalOrientation> {
+fun rememberPhysicalDeviceOrientation(
+    debounceMillis: Long = 300L,
+): State<PhysicalOrientation> {
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
-    val orientation = remember { mutableStateOf(PhysicalOrientation.UNKNOWN) }
 
-    DisposableEffect(context, lifecycleOwner) {
-        val listener = object : OrientationEventListener(context) {
-            override fun onOrientationChanged(degrees: Int) {
-                if (degrees == ORIENTATION_UNKNOWN) return // Device is flat
+    // 1. Create and remember the debounced flow
+    val orientationFlow = remember(context, debounceMillis) {
+        physicalDeviceOrientationFlow(context)
+            .debounce(debounceMillis.milliseconds)
+    }
 
-                // Map 360 degrees to 4 basic orientations
-                orientation.value = when (degrees) {
-                    in 45..134 -> PhysicalOrientation.LANDSCAPE_LEFT
-                    in 135..224 -> PhysicalOrientation.REVERSE_PORTRAIT
-                    in 225..314 -> PhysicalOrientation.LANDSCAPE_RIGHT
-                    else -> PhysicalOrientation.PORTRAIT // 0..44 and 315..359
-                }
+    // 2. collectAsStateWithLifecycle automatically starts/stops the flow
+    // on ON_START / ON_STOP, managing the sensor battery usage for you.
+    return orientationFlow.collectAsStateWithLifecycle(
+        initialValue = PhysicalOrientation.UNKNOWN
+    )
+}
+
+/**
+ * Creates a cold flow that listens to hardware orientation changes.
+ */
+private fun physicalDeviceOrientationFlow(context: Context): Flow<PhysicalOrientation> = callbackFlow {
+    val listener = object : OrientationEventListener(context) {
+        private var currentOrientation = PhysicalOrientation.UNKNOWN
+
+        override fun onOrientationChanged(degrees: Int) {
+            if (degrees == ORIENTATION_UNKNOWN) return // Device is flat
+
+            val newOrientation = when (degrees) {
+                in 45..134 -> PhysicalOrientation.LANDSCAPE_LEFT
+                in 135..224 -> PhysicalOrientation.REVERSE_PORTRAIT
+                in 225..314 -> PhysicalOrientation.LANDSCAPE_RIGHT
+                else -> PhysicalOrientation.PORTRAIT
             }
-        }
 
-        // Only listen when the activity is active to save battery
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_START -> if (listener.canDetectOrientation()) listener.enable()
-                Lifecycle.Event.ON_STOP -> listener.disable()
-                else -> {}
+            // Only push to the flow if the 4-way orientation actually changed
+            if (newOrientation != currentOrientation) {
+                currentOrientation = newOrientation
+                trySend(newOrientation)
             }
-        }
-
-        lifecycleOwner.lifecycle.addObserver(observer)
-
-        onDispose {
-            listener.disable()
-            lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
 
-    return orientation
+    if (listener.canDetectOrientation()) {
+        listener.enable()
+    }
+
+    // This block runs when the flow collection is cancelled
+    // (e.g., when the Activity goes into the background)
+    awaitClose {
+        listener.disable()
+    }
 }
 
 @Composable
