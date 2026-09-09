@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.screensaver
 
 import android.service.dreams.DreamService
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.lifecycle.Lifecycle
@@ -14,7 +15,9 @@ import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.kmpuiviews.theme.OtakuMaterialTheme
+import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import org.koin.compose.koinInject
 
 class ScreensaverService : DreamService(),
@@ -56,10 +59,15 @@ class ScreensaverService : DreamService(),
             // Ensure Compose cleans up when the screensaver stops
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
             setContent {
+                val settingsHandling = koinInject<NewSettingsHandling>()
                 OtakuMaterialTheme(
-                    settingsHandling = koinInject()
+                    settingsHandling = settingsHandling
                 ) {
-                    ScreensaverScreen()
+                    CompositionLocalProvider(
+                        LocalSettingsHandling provides settingsHandling,
+                    ) {
+                        ScreensaverScreen()
+                    }
                 }
             }
         }
