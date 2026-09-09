@@ -81,7 +81,7 @@ fun ScreensaverScreen(
 ) {
     val items by viewModel.items.collectAsStateWithLifecycle()
     val physicalOrientation by rememberPhysicalDeviceOrientation()
-    Scaffold { padding ->
+    Scaffold { _ ->
         SensorRotatedLayout(physicalOrientation = physicalOrientation) {
             SharedTransitionLayout {
                 val boxes = remember {
@@ -139,7 +139,6 @@ fun ScreensaverScreen(
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .padding(16.dp)
-                                    .padding(padding)
                             ) {
                                 boxes(
                                     Modifier.weight(1f, false),
@@ -156,7 +155,6 @@ fun ScreensaverScreen(
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .padding(16.dp)
-                                    .padding(padding)
                             ) {
                                 boxes(
                                     Modifier.weight(1f, false),
