@@ -49,6 +49,15 @@
                 android:resource="@xml/notification_widget_info" />
         </receiver>
 
+        <service
+            android:name=".screensaver.ScreensaverService"
+            android:exported="true"
+            android:permission="android.permission.BIND_DREAM_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.dreams.DreamService" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>
