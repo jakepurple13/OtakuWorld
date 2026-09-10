@@ -28,5 +28,5 @@ object AppInfo {
         }
     }
 
-    const val includeIos = false
+    const val includeIos = true
 }
