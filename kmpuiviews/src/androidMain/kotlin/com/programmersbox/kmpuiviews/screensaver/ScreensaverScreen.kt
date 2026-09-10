@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -60,8 +61,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.kmpuiviews.DateTimeFormatHandler
 import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard2
+import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.DateTimeFormatScreensaverItem
-import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
 import com.programmersbox.kmpuiviews.utils.toLocalDateTime
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
@@ -189,7 +190,7 @@ private fun ItemsCard(
         modifier = modifier.animateContentSize()
     ) {
         LazyVerticalGrid(
-            columns = adaptiveGridCell(),
+            columns = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
             state = listState,
             verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
