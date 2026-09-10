@@ -1,6 +1,6 @@
 [versions]
 androidx-lifecycle = "2.11.0"
-backdrop = "2.0.0"
+backdrop = "2.0.1"
 blurhash = "0.4.0-SNAPSHOT"
 cmpLifecycle = "2.11.0"
 cmp-nav3 = "1.2.0-beta01"
