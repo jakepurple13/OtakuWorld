@@ -22,7 +22,6 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Slideshow
 import androidx.compose.material.icons.filled.UnfoldLess
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -53,7 +52,6 @@ import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.GridChoice
 import com.programmersbox.datastore.MiddleNavigationAction
 import com.programmersbox.datastore.NewSettingsHandling
-import com.programmersbox.datastore.ScreensaverType
 import com.programmersbox.datastore.asState
 import com.programmersbox.datastore.rememberFloatingNavigation
 import com.programmersbox.kmpuiviews.presentation.Screen
@@ -68,7 +66,6 @@ import com.programmersbox.kmpuiviews.presentation.components.visibleName
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.cancel
 import otakuworld.kmpuiviews.generated.resources.general_menu_title
@@ -202,37 +199,6 @@ fun ColorBlindTypeSettings(handling: NewSettingsHandling) {
         confirmText = { TextButton(onClick = { it.value = false }) { Text(stringResource(Res.string.cancel)) } },
         dialogTitle = { Text("Color Blindness") },
         dialogIcon = { Icon(Icons.Default.ColorLens, null) },
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
-@Composable
-fun ScreensaverTypeSettings(handling: NewSettingsHandling) {
-    var screensaverType by handling.rememberScreensaverType()
-
-    ListSetting(
-        settingTitle = { Text("Screensaver") },
-        settingIcon = { Icon(Icons.Default.Slideshow, null, modifier = Modifier.fillMaxSize()) },
-        value = screensaverType,
-        updateValue = { it, d ->
-            d.value = false
-            screensaverType = it
-        },
-        options = ScreensaverType.entries,
-        summaryValue = {
-            Text(
-                when (screensaverType) {
-                    ScreensaverType.Dashboard -> "Dashboard: Clock, battery, activity, and saved items."
-                    ScreensaverType.CoverCarousel -> "Cover Carousel: Full-screen rotating cover art."
-                    ScreensaverType.HistoryFeed -> "History Feed: Recently viewed items."
-                    ScreensaverType.StatsDashboard -> "Stats: Reading/watching activity totals."
-                    ScreensaverType.CustomListRotation -> "Custom Lists: Cycles through your custom lists."
-                }
-            )
-        },
-        confirmText = { TextButton(onClick = { it.value = false }) { Text(stringResource(Res.string.cancel)) } },
-        dialogTitle = { Text("Screensaver") },
-        dialogIcon = { Icon(Icons.Default.Slideshow, null) },
     )
 }
 

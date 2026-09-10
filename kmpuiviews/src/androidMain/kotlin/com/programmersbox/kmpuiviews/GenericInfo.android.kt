@@ -10,11 +10,14 @@ import androidx.core.net.toUri
 import androidx.fragment.app.FragmentActivity
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroupListItem
+import com.programmersbox.kmpuiviews.presentation.settings.ScreensaverTypeSettings
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.DeepLinks
 import com.programmersbox.kmpuiviews.utils.composables.WidgetAddCard
 import com.programmersbox.kmpuiviews.utils.composables.widgetChecker
 import com.programmersbox.kmpuiviews.widget.notification.NotificationWidgetReceiver
+import org.koin.compose.koinInject
 
 actual interface PlatformGenericInfo : KmpGenericInfo {
     val deepLinkUri: String
@@ -51,6 +54,12 @@ actual interface PlatformGenericInfo : KmpGenericInfo {
                 widgetCheckerState = state.value,
                 description = "View saved notifications straight on your home screen!"
             )
+        }
+
+        layoutSettings {
+            CategoryGroupListItem {
+                item { ScreensaverTypeSettings(handling = koinInject()) }
+            }
         }
     }
 

@@ -1,14 +1,14 @@
 package com.programmersbox.kmpuiviews.screensaver
 
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
@@ -39,8 +39,11 @@ fun HistoryFeedScreen(
     val recentlyViewed by viewModel.recentlyViewed.collectAsStateWithLifecycle()
     val physicalOrientation by rememberPhysicalDeviceOrientation()
 
-    Scaffold { _ ->
-        SensorRotatedLayout(physicalOrientation = physicalOrientation) {
+    Scaffold { padding ->
+        SensorRotatedLayout(
+            physicalOrientation = physicalOrientation,
+            modifier = Modifier.padding(padding)
+        ) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier

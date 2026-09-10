@@ -1,8 +1,8 @@
 package com.programmersbox.kmpuiviews.screensaver
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -55,8 +55,11 @@ fun CoverCarouselScreen(
         }
     }
 
-    Scaffold { _ ->
-        SensorRotatedLayout(physicalOrientation = physicalOrientation) {
+    Scaffold { padding ->
+        SensorRotatedLayout(
+            physicalOrientation = physicalOrientation,
+            modifier = Modifier.padding(padding)
+        ) {
             Box(modifier = Modifier.fillMaxSize()) {
                 val item = items.getOrNull(currentIndex % items.size.coerceAtLeast(1))
                 if (item != null) {

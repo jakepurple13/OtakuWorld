@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
@@ -38,8 +39,11 @@ fun CustomListRotationScreen(
     val physicalOrientation by rememberPhysicalDeviceOrientation()
     val currentList = lists.getOrNull(viewModel.currentIndex)
 
-    Scaffold { _ ->
-        SensorRotatedLayout(physicalOrientation = physicalOrientation) {
+    Scaffold { padding ->
+        SensorRotatedLayout(
+            physicalOrientation = physicalOrientation,
+            modifier = Modifier.padding(padding)
+        ) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier
@@ -75,12 +79,20 @@ fun CustomListRotationScreen(
 
 @Composable
 private fun CustomListGrid(list: CustomList) {
+    val listState = rememberLazyGridState()
+
+    SlowScroll(
+        listState = listState,
+        animateScrollToItem = { listState.scrollToItem(it) }
+    )
+
     Card(
         shape = MaterialTheme.shapes.extraLarge,
         modifier = Modifier.fillMaxSize()
     ) {
         LazyVerticalGrid(
             columns = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
+            state = listState,
             verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier

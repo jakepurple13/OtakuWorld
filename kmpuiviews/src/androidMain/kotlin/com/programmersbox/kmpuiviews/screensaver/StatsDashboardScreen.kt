@@ -22,8 +22,11 @@ fun StatsDashboardScreen(
 ) {
     val physicalOrientation by rememberPhysicalDeviceOrientation()
 
-    Scaffold { _ ->
-        SensorRotatedLayout(physicalOrientation = physicalOrientation) {
+    Scaffold { padding ->
+        SensorRotatedLayout(
+            physicalOrientation = physicalOrientation,
+            modifier = Modifier.padding(padding)
+        ) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier
