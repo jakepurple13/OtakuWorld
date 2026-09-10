@@ -7,7 +7,6 @@ import android.os.StrictMode
 import android.util.Log
 import androidx.annotation.CallSuper
 import androidx.annotation.StringRes
-import androidx.compose.foundation.ComposeFoundationFlags
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.runtime.Composer
 import androidx.compose.runtime.ExperimentalComposeRuntimeApi
@@ -56,9 +55,6 @@ abstract class KmpOtakuApp : Application(), Configuration.Provider {
     @CallSuper
     override fun onCreate() {
         super.onCreate()
-        //If firebase is giving issues, comment these lines out
-        //ComposeRuntimeFlags.isLinkBufferComposerEnabled = true
-        ComposeFoundationFlags.isPausableCompositionInPrefetchEnabled = true
         Composer.setDiagnosticStackTraceMode(if (isDebug) ComposeStackTraceMode.SourceInformation else ComposeStackTraceMode.None)
 
         //TODO: Create an abstract class for KMPOtakuApp that handles some of this stuff

@@ -27,4 +27,6 @@ object AppInfo {
             }
         }
     }
+
+    const val includeIos = false
 }

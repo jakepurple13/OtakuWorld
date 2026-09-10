@@ -45,15 +45,17 @@ class MultiplatformLibraryPlugin : Plugin<Project> {
                 }
             }
 
-        val xcfName = "sharedKit"
+        if(AppInfo.includeIos) {
+            val xcfName = "sharedKit"
 
-        listOf(
-            iosArm64(),
-            iosSimulatorArm64()
-        ).forEach { iosTarget ->
-            iosTarget.binaries.framework {
-                baseName = xcfName
-                isStatic = true
+            listOf(
+                iosArm64(),
+                iosSimulatorArm64()
+            ).forEach { iosTarget ->
+                iosTarget.binaries.framework {
+                    baseName = xcfName
+                    isStatic = true
+                }
             }
         }
 
