@@ -206,6 +206,13 @@ class NewSettingsHandling(
     )
 
     @Composable
+    fun rememberScreensaverType() = preferences.rememberPreference(
+        key = { it.screensaverType },
+        update = { copy(screensaverType = it) },
+        defaultValue = ScreensaverType.Dashboard
+    )
+
+    @Composable
     fun rememberShowExpressiveness() = preferences.rememberPreference(
         key = { it.showExpressiveness },
         update = { copy(showExpressiveness = it) },
