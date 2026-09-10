@@ -35,6 +35,15 @@ message Settings {
   bool liquidGlassDepthEffect = 33;
   bool liquidGlassChromaticAberration = 34;
   BlurKind blurKind = 35;
+  ScreensaverType screensaverType = 36;
+}
+
+enum ScreensaverType {
+  Dashboard = 0;
+  CoverCarousel = 1;
+  HistoryFeed = 2;
+  StatsDashboard = 3;
+  CustomListRotation = 4;
 }
 
 enum BlurKind {

@@ -12,6 +12,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
 import com.programmersbox.kmpuiviews.presentation.settings.general.DetailPaneSettings
 import com.programmersbox.kmpuiviews.presentation.settings.general.GridTypeSettings
 import com.programmersbox.kmpuiviews.presentation.settings.general.NavigationBarSettings
+import com.programmersbox.kmpuiviews.presentation.settings.general.ScreensaverTypeSettings
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import org.koin.compose.koinInject
 
@@ -33,6 +34,10 @@ fun LayoutScreen(
 
         CategoryGroupListItem {
             item { NavigationBarSettings(handling = handling) }
+        }
+
+        CategoryGroupListItem {
+            item { ScreensaverTypeSettings(handling = handling) }
         }
 
         composeSettingsDsl.layoutSettings()
