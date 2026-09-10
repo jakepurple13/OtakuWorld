@@ -58,6 +58,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.datastore.ScreensaverType
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.kmpuiviews.DateTimeFormatHandler
 import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard2
@@ -80,7 +82,21 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
-fun ScreensaverScreen(
+fun ScreensaverScreen() {
+    val settingsHandling: NewSettingsHandling = koinInject()
+    val screensaverType by settingsHandling.rememberScreensaverType()
+
+    when (screensaverType) {
+        ScreensaverType.Dashboard -> DashboardScreensaverScreen()
+        ScreensaverType.CoverCarousel -> CoverCarouselScreen()
+        ScreensaverType.HistoryFeed -> HistoryFeedScreen()
+        ScreensaverType.StatsDashboard -> StatsDashboardScreen()
+        ScreensaverType.CustomListRotation -> CustomListRotationScreen()
+    }
+}
+
+@Composable
+private fun DashboardScreensaverScreen(
     viewModel: ScreensaverViewModel = koinViewModel(),
 ) {
     val items by viewModel.items.collectAsStateWithLifecycle()
@@ -249,7 +265,7 @@ private fun InfoCard(
 }
 
 @Composable
-private fun DateBatteryCard(
+fun DateBatteryCard(
     modifier: Modifier = Modifier,
 ) {
     val timeRemaining by rememberBatteryInfo()
