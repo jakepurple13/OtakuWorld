@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -62,6 +61,7 @@ import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.kmpuiviews.DateTimeFormatHandler
 import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard2
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
+import com.programmersbox.kmpuiviews.utils.CustomAdaptive
 import com.programmersbox.kmpuiviews.utils.DateTimeFormatScreensaverItem
 import com.programmersbox.kmpuiviews.utils.toLocalDateTime
 import kotlinx.coroutines.channels.awaitClose
@@ -85,8 +85,11 @@ fun ScreensaverScreen(
 ) {
     val items by viewModel.items.collectAsStateWithLifecycle()
     val physicalOrientation by rememberPhysicalDeviceOrientation()
-    Scaffold { _ ->
-        SensorRotatedLayout(physicalOrientation = physicalOrientation) {
+    Scaffold { padding ->
+        SensorRotatedLayout(
+            physicalOrientation = physicalOrientation,
+            modifier = Modifier.padding(padding)
+        ) {
             SharedTransitionLayout {
                 val boxes = remember {
                     movableContentOf { modifier: Modifier, animatedVisibilityScope: AnimatedVisibilityScope ->
@@ -182,7 +185,7 @@ private fun ItemsCard(
 
     SlowScroll(
         listState = listState,
-        animateScrollToItem = { listState.animateScrollToItem(it) }
+        animateScrollToItem = { listState.scrollToItem(it) }
     )
 
     Card(
@@ -190,7 +193,7 @@ private fun ItemsCard(
         modifier = modifier.animateContentSize()
     ) {
         LazyVerticalGrid(
-            columns = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
+            columns = CustomAdaptive(ComposableUtils.IMAGE_WIDTH),
             state = listState,
             verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -202,6 +205,7 @@ private fun ItemsCard(
         ) {
             item(
                 span = { GridItemSpan(maxLineSpan) },
+                contentType = "title"
             ) {
                 Text(
                     "Saved For Later",
@@ -213,7 +217,11 @@ private fun ItemsCard(
                 )
             }
 
-            items(list) {
+            items(
+                items = list,
+                contentType = { _ -> "listItem" },
+                key = { it.url }
+            ) {
                 M3CoverCard2(
                     imageUrl = it.imageUrl.orEmpty(),
                     name = it.notiTitle,
@@ -486,6 +494,8 @@ private fun physicalDeviceOrientationFlow(context: Context): Flow<PhysicalOrient
         override fun onOrientationChanged(degrees: Int) {
             if (degrees == ORIENTATION_UNKNOWN) return // Device is flat
 
+            android.util.Log.d("OrientationSensor", "Raw Hardware Degrees: $degrees")
+
             val newOrientation = when (degrees) {
                 in 45..134 -> PhysicalOrientation.LANDSCAPE_LEFT
                 in 135..224 -> PhysicalOrientation.REVERSE_PORTRAIT
@@ -525,23 +535,36 @@ fun SensorRotatedLayout(
         PhysicalOrientation.LANDSCAPE_RIGHT -> 90f
     }
 
-    val animatedRotation by animateFloatAsState(
-        targetValue = targetRotation,
-        animationSpec = tween(durationMillis = 500),
-        label = "rotation"
-    )
-
     BoxWithConstraints(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        val isLandscape = targetRotation % 180 != 0f
+        // 1. Detect if the OS actually rotated the window to landscape
+        val isWindowLandscape = maxWidth > maxHeight
+        // 2. Detect if the hardware sensor wants a landscape layout
+        val isSensorLandscape = targetRotation % 180 != 0f
 
-        // Swap width and height based on orientation
-        val targetWidth = if (isLandscape) maxHeight else maxWidth
-        val targetHeight = if (isLandscape) maxWidth else maxHeight
+        // 3. If the window and sensor agree, the OS already did the work.
+        // We only apply rotation if the OS is locked in portrait.
+        val finalRotation = if (isSensorLandscape && isWindowLandscape) {
+            0f
+        } else {
+            targetRotation
+        }
 
-        // Animate the size change so SharedTransitionLayout doesn't jump
+        // 4. Only swap dimensions if the physical window aspect ratio
+        // doesn't match the sensor's intended orientation.
+        val needsDimensionSwap = isSensorLandscape != isWindowLandscape
+
+        val targetWidth = if (needsDimensionSwap) maxHeight else maxWidth
+        val targetHeight = if (needsDimensionSwap) maxWidth else maxHeight
+
+        val animatedRotation by animateFloatAsState(
+            targetValue = finalRotation,
+            animationSpec = tween(durationMillis = 500),
+            label = "rotation"
+        )
+
         val animatedWidth by animateDpAsState(
             targetValue = targetWidth,
             animationSpec = tween(durationMillis = 500),
