@@ -10,7 +10,6 @@ import androidx.core.net.toUri
 import androidx.fragment.app.FragmentActivity
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroupListItem
 import com.programmersbox.kmpuiviews.presentation.settings.ScreensaverTypeSettings
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.DeepLinks
@@ -57,9 +56,7 @@ actual interface PlatformGenericInfo : KmpGenericInfo {
         }
 
         layoutSettings {
-            CategoryGroupListItem {
-                item { ScreensaverTypeSettings(handling = koinInject()) }
-            }
+            ScreensaverTypeSettings(handling = koinInject())
         }
     }
 
