@@ -107,7 +107,7 @@ jobs:
 
       - name: Upload generated profiles as artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: baseline-profiles
           path: |
@@ -189,7 +189,7 @@ jobs:
       # Results JSON land here; upload even on failure to preserve regression data
       - name: Upload MangaWorld benchmark results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: macrobenchmark-mangaworld
           path: MangaWorldbaselineprofile/build/outputs/connected_android_test_additional_output/
@@ -197,7 +197,7 @@ jobs:
 
       - name: Upload AnimeWorld benchmark results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: macrobenchmark-animeworld
           path: AnimeWorldbaselineprofile/build/outputs/connected_android_test_additional_output/
@@ -205,7 +205,7 @@ jobs:
 
       - name: Upload NovelWorld benchmark results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: macrobenchmark-novelworld
           path: NovelWorldbaselineprofile/build/outputs/connected_android_test_additional_output/
