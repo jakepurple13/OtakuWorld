@@ -127,7 +127,8 @@ fun Modifier.setBlurKind(
             },
             interactionTransformTarget = GlassTransformTarget.MaterialAndContent,
             interactionTransformPivot = GlassTransformPivot.Pointer,
-            performanceMode = HazePerformanceMode.Performance
+            performanceMode = HazePerformanceMode.Performance,
+            expandLayerBounds = true
         )
 
         BlurKind.LiquidGlass -> liquidGlassBlur(
