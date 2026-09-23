@@ -2,8 +2,17 @@
 
 package com.programmersbox.kmpuiviews.presentation.components
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -31,6 +40,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,6 +64,7 @@ import com.programmersbox.kmpuiviews.presentation.components.textflow.TextFlow
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.settings.lists.addtolist.ListChoiceScreen
 import com.programmersbox.kmpuiviews.presentation.settings.qrcode.ShareViaQrCode
+import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.repository.IncognitoRepository
 import com.programmersbox.kmpuiviews.repository.ListRepository
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
@@ -404,6 +415,7 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
     listDao: ListRepository = koinInject(),
     platformRepository: PlatformRepository = koinInject(),
     notificationRepository: NotificationRepository = koinInject(),
+    favoritesRepository: FavoritesRepository = koinInject(),
     scope: CoroutineScope = rememberCoroutineScope(),
     moreContent: @Composable OptionsSheetScope.(T) -> Unit = {},
 ) {
@@ -421,6 +433,14 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
     val isSaved by dao
         .doesNotificationExistFlow(url)
         .collectAsStateWithLifecycle(false)
+
+    val dbModel by dao
+        .getDbModel(url)
+        .collectAsStateWithLifecycle(null)
+
+    val shouldCheck by koinInject<NewSettingsHandling>()
+        .mediaCheckerSettings
+        .rememberPreference()
 
     val colorBlindness: ColorBlindnessType by koinInject<NewSettingsHandling>().rememberColorBlindType()
     val colorFilter by remember { derivedStateOf { colorFilterBlind(colorBlindness) } }
@@ -517,6 +537,52 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
                                     notificationRepository.cancelNotification(it)
                                     dao.deleteNotification(it)
                                 }
+                        }
+                    }
+                )
+            }
+        }
+
+        val updateParams by remember {
+            derivedStateOf {
+                CheckForUpdateParams(
+                    isFavorite = dbModel != null,
+                    deviceCheckForUpdate = shouldCheck.shouldRun,
+                    shouldCheckForUpdate = dbModel?.shouldCheckForUpdate == true
+                )
+            }
+        }
+
+        AnimatedContent(
+            updateParams,
+            transitionSpec = {
+                val wasVisible = initialState.isFavorite && initialState.deviceCheckForUpdate
+                val isVisible = targetState.isFavorite && targetState.deviceCheckForUpdate
+
+                if (wasVisible != isVisible) {
+                    // Run the expand/shrink animation if visibility changes
+                    (fadeIn(animationSpec = tween(220, delayMillis = 90)) +
+                            scaleIn(initialScale = 0.92f, animationSpec = tween(220, delayMillis = 90)) +
+                            expandVertically(animationSpec = tween(220, delayMillis = 90)))
+                        .togetherWith(
+                            fadeOut(animationSpec = tween(90)) +
+                                    scaleOut(targetScale = 0.92f, animationSpec = tween(90)) +
+                                    shrinkVertically(animationSpec = tween(90))
+                        )
+                } else {
+                    // Run a simple crossfade if only shouldCheckForUpdate changed
+                    fadeIn() togetherWith fadeOut()
+                }
+            },
+        ) { target ->
+            if (target.isFavorite && target.deviceCheckForUpdate) {
+                OptionsItem(
+                    title = if (target.shouldCheckForUpdate) "Check for updates" else "Do not check for updates",
+                    onClick = {
+                        scope.launch {
+                            dbModel
+                                ?.let { it.copy(shouldCheckForUpdate = !it.shouldCheckForUpdate) }
+                                ?.let { favoritesRepository.toggleNotify(it) }
                         }
                     }
                 )
@@ -625,11 +691,13 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
                     )
                 }
             }
-        } else {
-            OptionsItem(
-                title = "Biometrics/Security not set",
-                onClick = {}
-            )
         }
     }
 }
+
+@Stable
+private data class CheckForUpdateParams(
+    val isFavorite: Boolean,
+    val deviceCheckForUpdate: Boolean,
+    val shouldCheckForUpdate: Boolean,
+)
