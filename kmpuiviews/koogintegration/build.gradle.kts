@@ -22,11 +22,7 @@ kotlin {
     // See: https://kotlinlang.org/docs/multiplatform-discover-project.html#targets
     android {
         namespace = "com.programmersbox.koogintegration"
-        compileSdk {
-            version = release(36) {
-                minorApiLevel = 1
-            }
-        }
+        compileSdk(AppInfo::setCustomCompileSdkVersion)
         minSdk = 24
     }
 

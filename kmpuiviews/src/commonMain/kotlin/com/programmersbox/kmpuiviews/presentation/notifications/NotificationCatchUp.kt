@@ -1,14 +1,13 @@
 package com.programmersbox.kmpuiviews.presentation.notifications
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Close
@@ -75,25 +75,26 @@ import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.components.GradientImage
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
+import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
 import kotlinx.coroutines.launch
-import kotlin.math.abs
 import org.jetbrains.compose.resources.stringResource
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.all_caught_up
 import otakuworld.kmpuiviews.generated.resources.back_to_list
-import otakuworld.kmpuiviews.generated.resources.catch_up_handled
-import otakuworld.kmpuiviews.generated.resources.catch_up_left
 import otakuworld.kmpuiviews.generated.resources.cancel
 import otakuworld.kmpuiviews.generated.resources.catch_up_delete_body
 import otakuworld.kmpuiviews.generated.resources.catch_up_delete_title
 import otakuworld.kmpuiviews.generated.resources.catch_up_dont_ask_again
+import otakuworld.kmpuiviews.generated.resources.catch_up_handled
+import otakuworld.kmpuiviews.generated.resources.catch_up_left
 import otakuworld.kmpuiviews.generated.resources.catch_up_progress
+import otakuworld.kmpuiviews.generated.resources.catch_up_swipe_hint_delete
+import otakuworld.kmpuiviews.generated.resources.catch_up_swipe_hint_skip
 import otakuworld.kmpuiviews.generated.resources.delete
 import otakuworld.kmpuiviews.generated.resources.read
 import otakuworld.kmpuiviews.generated.resources.remind
 import otakuworld.kmpuiviews.generated.resources.skip
-import otakuworld.kmpuiviews.generated.resources.catch_up_swipe_hint_delete
-import otakuworld.kmpuiviews.generated.resources.catch_up_swipe_hint_skip
+import kotlin.math.abs
 
 /**
  * One update at a time. Swipe left to skip or delete (per [swipeDeletes]), up or tap to read, right to remind.
@@ -207,6 +208,8 @@ internal fun CatchUpDeck(
         )
     }
 
+    HideNavBarWhileOnScreen()
+
     NotifyAt(
         items = listOfNotNull(top),
         notificationScreenInterface = notificationScreenInterface,
@@ -234,14 +237,18 @@ internal fun CatchUpDeck(
                     }
                 )
             },
-            snackbarHost = { SnackbarHost(snackbarHostState) },
+            snackbarHost = {
+                SnackbarHost(
+                    snackbarHostState,
+                    modifier = Modifier.padding(LocalNavHostPadding.current)
+                )
+            },
         ) { p ->
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(p)
-                    .padding(LocalNavHostPadding.current)
             ) {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -350,8 +357,10 @@ internal fun CatchUpDeck(
                                         animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
                                         label = "cardAlpha"
                                     )
+
                                     CatchUpCard(
                                         item = item,
+                                        onClick = { onReadTop(item) },
                                         colorFilter = colorFilter,
                                         actionLabel = if (isTop) {
                                             when (dragDirection) {
@@ -382,28 +391,23 @@ internal fun CatchUpDeck(
                                             }
                                             .then(
                                                 if (isTop) {
-                                                    Modifier
-                                                        .pointerInput(item.url) {
-                                                            detectDragGestures(
-                                                                onDragEnd = {
-                                                                    when (swipeDirection(offsetX.value, offsetY.value, threshold)) {
-                                                                        DeckSwipe.Left -> onLeft(item)
-                                                                        DeckSwipe.Right -> onRemind()
-                                                                        DeckSwipe.Up -> onReadTop(item)
-                                                                        null -> snapBack()
-                                                                    }
-                                                                },
-                                                                onDragCancel = snapBack,
-                                                            ) { change, dragAmount ->
-                                                                change.consume()
-                                                                scope.launch { offsetX.snapTo(offsetX.value + dragAmount.x) }
-                                                                scope.launch { offsetY.snapTo(offsetY.value + dragAmount.y) }
-                                                            }
+                                                    Modifier.pointerInput(item.url) {
+                                                        detectDragGestures(
+                                                            onDragEnd = {
+                                                                when (swipeDirection(offsetX.value, offsetY.value, threshold)) {
+                                                                    DeckSwipe.Left -> onLeft(item)
+                                                                    DeckSwipe.Right -> onRemind()
+                                                                    DeckSwipe.Up -> onReadTop(item)
+                                                                    null -> snapBack()
+                                                                }
+                                                            },
+                                                            onDragCancel = snapBack,
+                                                        ) { change, dragAmount ->
+                                                            change.consume()
+                                                            scope.launch { offsetX.snapTo(offsetX.value + dragAmount.x) }
+                                                            scope.launch { offsetY.snapTo(offsetY.value + dragAmount.y) }
                                                         }
-                                                        .clickable(
-                                                            onClickLabel = stringResource(Res.string.read),
-                                                            onClick = { onReadTop(item) }
-                                                        )
+                                                    }
                                                 } else {
                                                     Modifier
                                                 }
@@ -419,20 +423,22 @@ internal fun CatchUpDeck(
                         horizontalArrangement = Arrangement.spacedBy(24.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        val leftLabel = stringResource(if (swipeDeletes) Res.string.delete else Res.string.skip)
-                        DeckAction(label = leftLabel) {
-                            FilledTonalIconButton(
-                                onClick = { onLeft(top) },
-                                colors = if (swipeDeletes) {
-                                    IconButtonDefaults.filledTonalIconButtonColors(
-                                        containerColor = MaterialTheme.colorScheme.errorContainer,
-                                        contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                                    )
-                                } else {
-                                    IconButtonDefaults.filledTonalIconButtonColors()
-                                },
-                                modifier = Modifier.size(56.dp)
-                            ) { Icon(if (swipeDeletes) Icons.Default.Delete else Icons.Default.SkipNext, leftLabel) }
+                        Crossfade(swipeDeletes) { target ->
+                            val leftLabel = stringResource(if (target) Res.string.delete else Res.string.skip)
+                            DeckAction(label = leftLabel) {
+                                FilledTonalIconButton(
+                                    onClick = { onLeft(top) },
+                                    colors = if (target) {
+                                        IconButtonDefaults.filledTonalIconButtonColors(
+                                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                                            contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                                        )
+                                    } else {
+                                        IconButtonDefaults.filledTonalIconButtonColors()
+                                    },
+                                    modifier = Modifier.size(56.dp)
+                                ) { Icon(if (target) Icons.Default.Delete else Icons.Default.SkipNext, leftLabel) }
+                            }
                         }
 
                         DeckAction(label = stringResource(Res.string.read)) {
@@ -489,6 +495,7 @@ private fun DeckAction(
 @Composable
 private fun CatchUpCard(
     item: NotificationItem,
+    onClick: () -> Unit,
     colorFilter: ColorFilter?,
     modifier: Modifier = Modifier,
     actionLabel: String? = null,
@@ -496,6 +503,7 @@ private fun CatchUpCard(
 ) {
     ElevatedCard(
         shape = MaterialTheme.shapes.extraLarge,
+        onClick = onClick,
         modifier = modifier.aspectRatio(2f / 3f, matchHeightConstraintsFirst = true)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
