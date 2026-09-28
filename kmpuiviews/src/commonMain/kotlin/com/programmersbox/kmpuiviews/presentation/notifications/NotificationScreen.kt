@@ -58,6 +58,7 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -101,8 +102,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.programmersbox.datastore.ColorBlindnessType
 import com.programmersbox.datastore.DataStoreHandling
-import com.programmersbox.datastore.asState
 import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.datastore.asState
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.favoritesdatabase.toDbModel
@@ -115,7 +116,6 @@ import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.GradientImage
 import com.programmersbox.kmpuiviews.presentation.components.LoadingDialog
 import com.programmersbox.kmpuiviews.presentation.components.OptionsSheetValues
-import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.SourceNotInstalledModal
 import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.presentation.components.optionsSheet
@@ -368,7 +368,7 @@ private fun NotificationTimeline(
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val is24Hour = koinInject<DateTimeFormatHandler>().is24Time()
 
-    OtakuScaffold(
+    Scaffold(
         topBar = {
             AnimatedContent(
                 vm.isSelecting,
@@ -446,6 +446,7 @@ private fun NotificationTimeline(
                     EmptyTimeline(Modifier.fillMaxSize())
                 } else {
                     LazyColumn(
+                        contentPadding = LocalNavHostPadding.current,
                         modifier = Modifier.fillMaxSize()
                     ) {
                         vm.dayBuckets.forEach { (day, list) ->
