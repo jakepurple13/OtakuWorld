@@ -1,9 +1,9 @@
 package com.programmersbox.kmpuiviews.presentation.notifications
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Close
@@ -71,12 +72,12 @@ import org.jetbrains.compose.resources.stringResource
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.all_caught_up
 import otakuworld.kmpuiviews.generated.resources.back_to_list
-import otakuworld.kmpuiviews.generated.resources.catch_up_handled
-import otakuworld.kmpuiviews.generated.resources.catch_up_left
 import otakuworld.kmpuiviews.generated.resources.cancel
 import otakuworld.kmpuiviews.generated.resources.catch_up_delete_body
 import otakuworld.kmpuiviews.generated.resources.catch_up_delete_title
 import otakuworld.kmpuiviews.generated.resources.catch_up_dont_ask_again
+import otakuworld.kmpuiviews.generated.resources.catch_up_handled
+import otakuworld.kmpuiviews.generated.resources.catch_up_left
 import otakuworld.kmpuiviews.generated.resources.catch_up_progress
 import otakuworld.kmpuiviews.generated.resources.delete
 import otakuworld.kmpuiviews.generated.resources.read
@@ -341,20 +342,22 @@ internal fun CatchUpDeck(
                     horizontalArrangement = Arrangement.spacedBy(24.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    val leftLabel = stringResource(if (swipeDeletes) Res.string.delete else Res.string.skip)
-                    DeckAction(label = leftLabel) {
-                        FilledTonalIconButton(
-                            onClick = { onLeft(top) },
-                            colors = if (swipeDeletes) {
-                                IconButtonDefaults.filledTonalIconButtonColors(
-                                    containerColor = MaterialTheme.colorScheme.errorContainer,
-                                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                                )
-                            } else {
-                                IconButtonDefaults.filledTonalIconButtonColors()
-                            },
-                            modifier = Modifier.size(56.dp)
-                        ) { Icon(if (swipeDeletes) Icons.Default.Delete else Icons.Default.SkipNext, leftLabel) }
+                    Crossfade(swipeDeletes) { target ->
+                        val leftLabel = stringResource(if (target) Res.string.delete else Res.string.skip)
+                        DeckAction(label = leftLabel) {
+                            FilledTonalIconButton(
+                                onClick = { onLeft(top) },
+                                colors = if (target) {
+                                    IconButtonDefaults.filledTonalIconButtonColors(
+                                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                                        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                                    )
+                                } else {
+                                    IconButtonDefaults.filledTonalIconButtonColors()
+                                },
+                                modifier = Modifier.size(56.dp)
+                            ) { Icon(if (target) Icons.Default.Delete else Icons.Default.SkipNext, leftLabel) }
+                        }
                     }
 
                     DeckAction(label = stringResource(Res.string.read)) {
