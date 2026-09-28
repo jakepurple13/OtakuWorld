@@ -8,7 +8,9 @@ plugins {
 android {
     setFlavorDimensions(listOf(ProductFlavorTypes.dimension))
     productFlavors {
-        ProductFlavorTypes.NoFirebase(this)
+        ProductFlavorTypes.NoFirebase(this) {
+            isDefault = true
+        }
         ProductFlavorTypes.Full(this)
     }
 

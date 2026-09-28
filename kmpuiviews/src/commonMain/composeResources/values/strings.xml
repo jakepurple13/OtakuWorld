@@ -228,4 +228,30 @@
 
 \n\nStay tuned for updates, and know that every line of code, every design choice, is driven by our desire to create the ultimate otaku experience. Thank you for being the amazing community that you are!
 \n\nNow, let's create your perfect experience! You can change any of these settings at any time in the settings menu</string>
+    <string name="catch_up">Catch up</string>
+    <string name="catch_up_progress">%1$d of %2$d</string>
+    <string name="catch_up_left">%1$d left</string>
+    <string name="all_caught_up">All caught up</string>
+    <string name="catch_up_handled">%1$d updates handled</string>
+    <string name="back_to_list">Back to list</string>
+    <string name="remind">Remind</string>
+    <string name="in_tray">In tray</string>
+    <string name="notifications_today">Today</string>
+    <string name="notifications_yesterday">Yesterday</string>
+    <string name="notifications_this_week">Earlier this week</string>
+    <string name="notifications_older">Older</string>
+    <string name="selected_count">%1$d selected</string>
+    <string name="select_all_notifications">Select all</string>
+    <string name="clear_selection">Clear selection</string>
+    <string name="deleted_notification">Deleted %1$s</string>
+    <string name="deleted_notification_count">Deleted %1$d updates</string>
+    <string name="sent_to_tray">Sent %1$d to the notification tray</string>
+    <string name="no_updates_here">No updates here</string>
+    <string name="skip">Skip</string>
+    <string name="catch_up_swipe_hint_skip">← Skip · ↑ Read · Remind →</string>
+    <string name="catch_up_swipe_hint_delete">← Delete · ↑ Read · Remind →</string>
+    <string name="catch_up_delete_title">Delete %1$s?</string>
+    <string name="catch_up_delete_body">It will be removed from your saved notifications.</string>
+    <string name="catch_up_dont_ask_again">Don\'t ask again during this catch-up</string>
+    <string name="no_updates_description">New chapters from saved titles show up here.</string>
 </resources>
