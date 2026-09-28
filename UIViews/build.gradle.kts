@@ -29,7 +29,9 @@ android {
 
     setFlavorDimensions(listOf(ProductFlavorTypes.dimension))
     productFlavors {
-        ProductFlavorTypes.NoFirebase(this)
+        ProductFlavorTypes.NoFirebase(this) {
+            isDefault = true
+        }
         ProductFlavorTypes.Full(this)
     }
     namespace = "com.programmersbox.uiviews"
@@ -125,7 +127,7 @@ dependencies {
 
     //implementation(projects.gemini)
 
-    debugImplementation(androidLibs.workinspector)
+    //debugImplementation(androidLibs.workinspector)
 
     //implementation(libs.bundles.xr)
 

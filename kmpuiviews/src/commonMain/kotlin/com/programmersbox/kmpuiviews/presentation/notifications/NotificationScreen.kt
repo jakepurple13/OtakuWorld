@@ -3,6 +3,10 @@ package com.programmersbox.kmpuiviews.presentation.notifications
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -357,44 +361,60 @@ private fun NotificationTimeline(
 
     Scaffold(
         topBar = {
-            if (vm.isSelecting) {
-                TopAppBar(
-                    scrollBehavior = scrollBehavior,
-                    title = { Text(stringResource(Res.string.selected_count, vm.selected.size)) },
-                    navigationIcon = {
-                        IconButton(onClick = vm::clearSelection) {
-                            Icon(Icons.Default.Close, stringResource(Res.string.clear_selection))
-                        }
-                    },
-                    actions = {
-                        IconButton(onClick = vm::selectAll) {
-                            Icon(Icons.Default.SelectAll, stringResource(Res.string.select_all_notifications))
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            AnimatedContent(
+                vm.isSelecting,
+                transitionSpec = {
+                    // Compare targetState to initialState to determine animation direction
+                    if (targetState > initialState) {
+                        // Moving Forward: Slide in from bottom, slide out to top
+                        (slideInVertically { height -> height } + fadeIn()) togetherWith
+                                (slideOutVertically { height -> -height } + fadeOut())
+                    } else {
+                        // Moving Backward: Slide in from top, slide out to bottom
+                        (slideInVertically { height -> -height } + fadeIn()) togetherWith
+                                (slideOutVertically { height -> height } + fadeOut())
+                    }
+                }
+            ) { target ->
+                if (target) {
+                    TopAppBar(
+                        scrollBehavior = scrollBehavior,
+                        title = { Text(stringResource(Res.string.selected_count, vm.selected.size)) },
+                        navigationIcon = {
+                            IconButton(onClick = vm::clearSelection) {
+                                Icon(Icons.Default.Close, stringResource(Res.string.clear_selection))
+                            }
+                        },
+                        actions = {
+                            IconButton(onClick = vm::selectAll) {
+                                Icon(Icons.Default.SelectAll, stringResource(Res.string.select_all_notifications))
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        )
                     )
-                )
-            } else {
-                TopAppBar(
-                    scrollBehavior = scrollBehavior,
-                    title = { Text(stringResource(Res.string.notifications)) },
-                    navigationIcon = { BackButton() },
-                    actions = {
-                        if (vm.filteredItems.size > CATCH_UP_THRESHOLD) {
-                            FilledTonalButton(
-                                onClick = vm::startCatchUp,
-                                contentPadding = PaddingValues(horizontal = 12.dp),
-                                modifier = Modifier.padding(end = 8.dp)
-                            ) {
-                                Icon(Icons.Default.Layers, null, modifier = Modifier.size(18.dp))
-                                Spacer(Modifier.width(6.dp))
-                                Text(stringResource(Res.string.catch_up))
+                } else {
+                    TopAppBar(
+                        scrollBehavior = scrollBehavior,
+                        title = { Text(stringResource(Res.string.notifications)) },
+                        navigationIcon = { BackButton() },
+                        actions = {
+                            if (vm.filteredItems.size > CATCH_UP_THRESHOLD) {
+                                FilledTonalButton(
+                                    onClick = vm::startCatchUp,
+                                    contentPadding = PaddingValues(horizontal = 12.dp),
+                                    modifier = Modifier.padding(end = 8.dp)
+                                ) {
+                                    Icon(Icons.Default.Layers, null, modifier = Modifier.size(18.dp))
+                                    Spacer(Modifier.width(6.dp))
+                                    Text(stringResource(Res.string.catch_up))
+                                }
                             }
                         }
-                    }
-                )
+                    )
+                }
             }
         },
         snackbarHost = {
@@ -417,12 +437,16 @@ private fun NotificationTimeline(
                     EmptyTimeline(Modifier.fillMaxSize())
                 } else {
                     LazyColumn(
-                        contentPadding = LocalNavHostPadding.current + PaddingValues(bottom = 96.dp),
+                        contentPadding = LocalNavHostPadding.current,
                         modifier = Modifier.fillMaxSize()
                     ) {
                         vm.dayBuckets.forEach { (day, list) ->
                             stickyHeader(key = day) {
-                                DayHeader(day = day, count = list.size)
+                                DayHeader(
+                                    day = day,
+                                    count = list.size,
+                                    modifier = Modifier.animateItem()
+                                )
                             }
 
                             items(list, key = { it.url }) { item ->
@@ -523,8 +547,12 @@ private fun FilterRow(vm: NotificationScreenViewModel) {
 }
 
 @Composable
-private fun DayHeader(day: NotificationDay, count: Int) {
-    Surface(color = MaterialTheme.colorScheme.surface) {
+private fun DayHeader(
+    day: NotificationDay,
+    count: Int,
+    modifier: Modifier = Modifier,
+) {
+    Surface(color = MaterialTheme.colorScheme.surface, modifier = modifier) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier

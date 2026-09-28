@@ -220,7 +220,7 @@ textflow-material3 = { module = "io.github.oleksandrbalan:textflow-material3", v
 zoomable-peek-overlay = { module = "me.saket.telephoto:zoomable-peek-overlay", version.ref = "telephoto" }
 
 # Misc Android UI
-lazyColumnScrollbar = "com.github.nanihadesuka:LazyColumnScrollbar:2.2.0"
+lazyColumnScrollbar = "com.github.nanihadesuka.LazyColumnScrollbar:lazycolumnscrollbar:3.0.0"
 showMoreLess = "com.github.noowenz:ShowMoreLess:1.0.3"
 toolbarCompose = "me.onebone:toolbar-compose:2.3.5"
 workinspector = { module = "com.github.koitharu:workinspector", version.ref = "workinspector" }
