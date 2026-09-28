@@ -5,7 +5,9 @@ import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -48,6 +50,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -64,6 +67,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -72,6 +76,7 @@ import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.components.GradientImage
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 import org.jetbrains.compose.resources.stringResource
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.all_caught_up
@@ -87,11 +92,11 @@ import otakuworld.kmpuiviews.generated.resources.delete
 import otakuworld.kmpuiviews.generated.resources.read
 import otakuworld.kmpuiviews.generated.resources.remind
 import otakuworld.kmpuiviews.generated.resources.skip
-import otakuworld.kmpuiviews.generated.resources.swipe_left_to_delete
-import otakuworld.kmpuiviews.generated.resources.swipe_left_to_skip
+import otakuworld.kmpuiviews.generated.resources.catch_up_swipe_hint_delete
+import otakuworld.kmpuiviews.generated.resources.catch_up_swipe_hint_skip
 
 /**
- * One update at a time: swipe or tap to skip or delete (per [swipeDeletes]), read (open details), or remind later.
+ * One update at a time. Swipe left to skip or delete (per [swipeDeletes]), up or tap to read, right to remind.
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -116,10 +121,18 @@ internal fun CatchUpDeck(
     val scope = rememberCoroutineScope()
     val top = remaining.firstOrNull()
     val offsetX = remember(top?.url) { Animatable(0f) }
-    val flingDistance = LocalWindowInfo.current.containerSize.width * 1.5f
+    val offsetY = remember(top?.url) { Animatable(0f) }
+    val containerSize = LocalWindowInfo.current.containerSize
+    val flingDistance = containerSize.width * 1.5f
+    val flingDistanceY = containerSize.height * 1f
     val threshold = flingDistance / 6
     val flingSpec = remember { tween<Float>(durationMillis = 200, easing = FastOutLinearInEasing) }
     var pendingDelete by remember { mutableStateOf<NotificationItem?>(null) }
+
+    val snapBack: () -> Unit = {
+        scope.launch { offsetX.animateTo(0f) }
+        scope.launch { offsetY.animateTo(0f) }
+    }
 
     // Swipe left and the left button both land here. Skip mode never deletes.
     val onLeft: (NotificationItem) -> Unit = { item ->
@@ -131,7 +144,7 @@ internal fun CatchUpDeck(
                 }
 
                 confirmDeletes -> {
-                    offsetX.animateTo(0f)
+                    snapBack()
                     pendingDelete = item
                 }
 
@@ -140,6 +153,14 @@ internal fun CatchUpDeck(
                     onDelete(item)
                 }
             }
+        }
+    }
+
+    // Swipe up, a tap on the card, and the Read button all land here.
+    val onReadTop: (NotificationItem) -> Unit = { item ->
+        scope.launch {
+            offsetY.animateTo(-flingDistanceY, flingSpec)
+            onRead(item)
         }
     }
 
@@ -186,224 +207,250 @@ internal fun CatchUpDeck(
         )
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(title) },
-                navigationIcon = {
-                    IconButton(onClick = onClose) {
-                        Icon(Icons.Default.Close, stringResource(Res.string.back_to_list))
-                    }
-                }
-            )
+    NotifyAt(
+        items = listOfNotNull(top),
+        notificationScreenInterface = notificationScreenInterface,
+        onScheduled = {
+            scope.launch {
+                offsetX.animateTo(flingDistance, flingSpec)
+                onReminded()
+            }
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-    ) { p ->
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(p)
-                .padding(LocalNavHostPadding.current)
-        ) {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-                modifier = Modifier.padding(horizontal = 24.dp)
-            ) {
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        stringResource(Res.string.catch_up_progress, (index + 1).coerceAtMost(total), total),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Text(
-                        stringResource(Res.string.catch_up_left, remaining.size),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                LinearProgressIndicator(
-                    progress = { if (total == 0) 1f else index.toFloat() / total },
-                    modifier = Modifier.fillMaxWidth()
-                )
+    ) { showRemindPicker ->
+        // Swipe right and the Remind button both land here. The card waits until a time is picked.
+        val onRemind: () -> Unit = {
+            snapBack()
+            showRemindPicker()
+        }
 
-                if (top != null) {
-                    SingleChoiceSegmentedButtonRow(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 8.dp)
-                    ) {
-                        SegmentedButton(
-                            selected = !swipeDeletes,
-                            onClick = { onSwipeDeletesChange(false) },
-                            shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
-                            icon = {
-                                SegmentedButtonDefaults.Icon(active = !swipeDeletes) {
-                                    Icon(Icons.Default.SkipNext, null, modifier = Modifier.size(SegmentedButtonDefaults.IconSize))
-                                }
-                            }
-                        ) { Text(stringResource(Res.string.skip)) }
-                        SegmentedButton(
-                            selected = swipeDeletes,
-                            onClick = { onSwipeDeletesChange(true) },
-                            shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
-                            icon = {
-                                SegmentedButtonDefaults.Icon(active = swipeDeletes) {
-                                    Icon(Icons.Default.Delete, null, modifier = Modifier.size(SegmentedButtonDefaults.IconSize))
-                                }
-                            }
-                        ) { Text(stringResource(Res.string.delete)) }
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(title) },
+                    navigationIcon = {
+                        IconButton(onClick = onClose) {
+                            Icon(Icons.Default.Close, stringResource(Res.string.back_to_list))
+                        }
                     }
-                    Text(
-                        stringResource(if (swipeDeletes) Res.string.swipe_left_to_delete else Res.string.swipe_left_to_skip),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
+                )
+            },
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+        ) { p ->
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(p)
+                    .padding(LocalNavHostPadding.current)
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.padding(horizontal = 24.dp)
+                ) {
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            stringResource(Res.string.catch_up_progress, (index + 1).coerceAtMost(total), total),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            stringResource(Res.string.catch_up_left, remaining.size),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    LinearProgressIndicator(
+                        progress = { if (total == 0) 1f else index.toFloat() / total },
                         modifier = Modifier.fillMaxWidth()
                     )
-                }
-            }
 
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(horizontal = 32.dp, vertical = 24.dp)
-            ) {
-                if (top == null) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(stringResource(Res.string.all_caught_up), style = MaterialTheme.typography.headlineSmall)
+                    if (top != null) {
+                        SingleChoiceSegmentedButtonRow(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp)
+                        ) {
+                            SegmentedButton(
+                                selected = !swipeDeletes,
+                                onClick = { onSwipeDeletesChange(false) },
+                                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                                icon = {
+                                    SegmentedButtonDefaults.Icon(active = !swipeDeletes) {
+                                        Icon(Icons.Default.SkipNext, null, modifier = Modifier.size(SegmentedButtonDefaults.IconSize))
+                                    }
+                                }
+                            ) { Text(stringResource(Res.string.skip)) }
+                            SegmentedButton(
+                                selected = swipeDeletes,
+                                onClick = { onSwipeDeletesChange(true) },
+                                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                                icon = {
+                                    SegmentedButtonDefaults.Icon(active = swipeDeletes) {
+                                        Icon(Icons.Default.Delete, null, modifier = Modifier.size(SegmentedButtonDefaults.IconSize))
+                                    }
+                                }
+                            ) { Text(stringResource(Res.string.delete)) }
+                        }
                         Text(
-                            stringResource(Res.string.catch_up_handled, total),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            stringResource(if (swipeDeletes) Res.string.catch_up_swipe_hint_delete else Res.string.catch_up_swipe_hint_skip),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
                         )
-                        Button(onClick = onClose) { Text(stringResource(Res.string.back_to_list)) }
                     }
-                } else {
-                    // A 4th, fully transparent card waits at the back so it can fade in as the stack moves up.
-                    remaining
-                        .take(4)
-                        .withIndex()
-                        .reversed()
-                        .forEach { (depth, item) ->
-                            // Keyed so each card keeps its animation state as it moves up the stack.
-                            key(item.url) {
-                                val isTop = depth == 0
-                                val animatedDepth by animateFloatAsState(
-                                    targetValue = depth.toFloat(),
-                                    animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
-                                    label = "cardDepth"
-                                )
-                                val cardAlpha by animateFloatAsState(
-                                    targetValue = when (depth) {
-                                        0 -> 1f
-                                        1 -> .7f
-                                        2 -> .4f
-                                        else -> 0f
-                                    },
-                                    animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-                                    label = "cardAlpha"
-                                )
-                                CatchUpCard(
-                                    item = item,
-                                    colorFilter = colorFilter,
-                                    modifier = Modifier
-                                        .graphicsLayer {
-                                            scaleX = 1f - animatedDepth * .06f
-                                            scaleY = 1f - animatedDepth * .06f
-                                            translationY = -animatedDepth * 14.dp.toPx()
-                                            alpha = cardAlpha
-                                            if (isTop) {
-                                                translationX = offsetX.value
-                                                rotationZ = offsetX.value / 60f
+                }
+
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .padding(horizontal = 32.dp, vertical = 24.dp)
+                ) {
+                    if (top == null) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(stringResource(Res.string.all_caught_up), style = MaterialTheme.typography.headlineSmall)
+                            Text(
+                                stringResource(Res.string.catch_up_handled, total),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Button(onClick = onClose) { Text(stringResource(Res.string.back_to_list)) }
+                        }
+                    } else {
+                        // Only recomposes when the direction under the finger changes, not every frame.
+                        val dragDirection by remember(top.url) {
+                            derivedStateOf { swipeDirection(offsetX.value, offsetY.value, threshold) }
+                        }
+                        // A 4th, fully transparent card waits at the back so it can fade in as the stack moves up.
+                        remaining
+                            .take(4)
+                            .withIndex()
+                            .reversed()
+                            .forEach { (depth, item) ->
+                                // Keyed so each card keeps its animation state as it moves up the stack.
+                                key(item.url) {
+                                    val isTop = depth == 0
+                                    val animatedDepth by animateFloatAsState(
+                                        targetValue = depth.toFloat(),
+                                        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
+                                        label = "cardDepth"
+                                    )
+                                    val cardAlpha by animateFloatAsState(
+                                        targetValue = when (depth) {
+                                            0 -> 1f
+                                            1 -> .7f
+                                            2 -> .4f
+                                            else -> 0f
+                                        },
+                                        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+                                        label = "cardAlpha"
+                                    )
+                                    CatchUpCard(
+                                        item = item,
+                                        colorFilter = colorFilter,
+                                        actionLabel = if (isTop) {
+                                            when (dragDirection) {
+                                                DeckSwipe.Left -> stringResource(if (swipeDeletes) Res.string.delete else Res.string.skip)
+                                                DeckSwipe.Right -> stringResource(Res.string.remind)
+                                                DeckSwipe.Up -> stringResource(Res.string.read)
+                                                null -> null
                                             }
-                                        }
-                                        .then(
-                                            if (isTop) {
-                                                Modifier.pointerInput(item.url) {
-                                                    detectHorizontalDragGestures(
-                                                        onDragEnd = {
-                                                            scope.launch {
-                                                                when {
-                                                                    offsetX.value > threshold -> {
-                                                                        offsetX.animateTo(flingDistance, flingSpec)
-                                                                        onRead(item)
-                                                                    }
-
-                                                                    offsetX.value < -threshold -> onLeft(item)
-
-                                                                    else -> offsetX.animateTo(0f)
-                                                                }
-                                                            }
-                                                        },
-                                                        onDragCancel = { scope.launch { offsetX.animateTo(0f) } },
-                                                    ) { change, dragAmount ->
-                                                        change.consume()
-                                                        scope.launch { offsetX.snapTo(offsetX.value + dragAmount) }
-                                                    }
+                                        } else {
+                                            null
+                                        },
+                                        actionLabelColor = when (dragDirection) {
+                                            DeckSwipe.Left -> if (swipeDeletes) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.secondary
+                                            DeckSwipe.Right -> MaterialTheme.colorScheme.tertiary
+                                            else -> MaterialTheme.colorScheme.primary
+                                        },
+                                        modifier = Modifier
+                                            .graphicsLayer {
+                                                scaleX = 1f - animatedDepth * .06f
+                                                scaleY = 1f - animatedDepth * .06f
+                                                translationY = -animatedDepth * 14.dp.toPx()
+                                                alpha = cardAlpha
+                                                if (isTop) {
+                                                    translationX = offsetX.value
+                                                    translationY += offsetY.value
+                                                    rotationZ = offsetX.value / 60f
                                                 }
-                                            } else {
-                                                Modifier
                                             }
-                                        )
+                                            .then(
+                                                if (isTop) {
+                                                    Modifier
+                                                        .pointerInput(item.url) {
+                                                            detectDragGestures(
+                                                                onDragEnd = {
+                                                                    when (swipeDirection(offsetX.value, offsetY.value, threshold)) {
+                                                                        DeckSwipe.Left -> onLeft(item)
+                                                                        DeckSwipe.Right -> onRemind()
+                                                                        DeckSwipe.Up -> onReadTop(item)
+                                                                        null -> snapBack()
+                                                                    }
+                                                                },
+                                                                onDragCancel = snapBack,
+                                                            ) { change, dragAmount ->
+                                                                change.consume()
+                                                                scope.launch { offsetX.snapTo(offsetX.value + dragAmount.x) }
+                                                                scope.launch { offsetY.snapTo(offsetY.value + dragAmount.y) }
+                                                            }
+                                                        }
+                                                        .clickable(
+                                                            onClickLabel = stringResource(Res.string.read),
+                                                            onClick = { onReadTop(item) }
+                                                        )
+                                                } else {
+                                                    Modifier
+                                                }
+                                            )
+                                    )
+                                }
+                            }
+                    }
+                }
+
+                if (top != null) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(24.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        val leftLabel = stringResource(if (swipeDeletes) Res.string.delete else Res.string.skip)
+                        DeckAction(label = leftLabel) {
+                            FilledTonalIconButton(
+                                onClick = { onLeft(top) },
+                                colors = if (swipeDeletes) {
+                                    IconButtonDefaults.filledTonalIconButtonColors(
+                                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                                        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                                    )
+                                } else {
+                                    IconButtonDefaults.filledTonalIconButtonColors()
+                                },
+                                modifier = Modifier.size(56.dp)
+                            ) { Icon(if (swipeDeletes) Icons.Default.Delete else Icons.Default.SkipNext, leftLabel) }
+                        }
+
+                        DeckAction(label = stringResource(Res.string.read)) {
+                            FilledIconButton(
+                                onClick = { onReadTop(top) },
+                                modifier = Modifier.size(72.dp)
+                            ) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.MenuBook,
+                                    stringResource(Res.string.read),
+                                    modifier = Modifier.size(32.dp)
                                 )
                             }
                         }
-                }
-            }
 
-            if (top != null) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(24.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    val leftLabel = stringResource(if (swipeDeletes) Res.string.delete else Res.string.skip)
-                    DeckAction(label = leftLabel) {
-                        FilledTonalIconButton(
-                            onClick = { onLeft(top) },
-                            colors = if (swipeDeletes) {
-                                IconButtonDefaults.filledTonalIconButtonColors(
-                                    containerColor = MaterialTheme.colorScheme.errorContainer,
-                                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                                )
-                            } else {
-                                IconButtonDefaults.filledTonalIconButtonColors()
-                            },
-                            modifier = Modifier.size(56.dp)
-                        ) { Icon(if (swipeDeletes) Icons.Default.Delete else Icons.Default.SkipNext, leftLabel) }
-                    }
-
-                    DeckAction(label = stringResource(Res.string.read)) {
-                        FilledIconButton(
-                            onClick = {
-                                scope.launch {
-                                    offsetX.animateTo(flingDistance, flingSpec)
-                                    onRead(top)
-                                }
-                            },
-                            modifier = Modifier.size(72.dp)
-                        ) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.MenuBook,
-                                stringResource(Res.string.read),
-                                modifier = Modifier.size(32.dp)
-                            )
-                        }
-                    }
-
-                    DeckAction(label = stringResource(Res.string.remind)) {
-                        NotifyAt(
-                            items = listOf(top),
-                            notificationScreenInterface = notificationScreenInterface,
-                            onScheduled = onReminded,
-                        ) { showDatePicker ->
+                        DeckAction(label = stringResource(Res.string.remind)) {
                             FilledTonalIconButton(
-                                onClick = showDatePicker,
+                                onClick = onRemind,
                                 colors = IconButtonDefaults.filledTonalIconButtonColors(
                                     containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                                     contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
@@ -444,6 +491,8 @@ private fun CatchUpCard(
     item: NotificationItem,
     colorFilter: ColorFilter?,
     modifier: Modifier = Modifier,
+    actionLabel: String? = null,
+    actionLabelColor: Color = Color.White,
 ) {
     ElevatedCard(
         shape = MaterialTheme.shapes.extraLarge,
@@ -459,6 +508,25 @@ private fun CatchUpCard(
                 colorFilter = colorFilter,
                 modifier = Modifier.fillMaxSize()
             )
+
+            if (actionLabel != null) {
+                Surface(
+                    shape = MaterialTheme.shapes.small,
+                    color = Color.Black.copy(alpha = .65f),
+                    contentColor = actionLabelColor,
+                    border = BorderStroke(2.dp, actionLabelColor),
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 20.dp)
+                ) {
+                    Text(
+                        actionLabel.uppercase(),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                    )
+                }
+            }
 
             Column(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -496,4 +564,14 @@ private fun CatchUpCard(
             }
         }
     }
+}
+
+private enum class DeckSwipe { Left, Right, Up }
+
+/** The larger axis wins once it passes [threshold]. Dragging down does nothing. */
+private fun swipeDirection(dx: Float, dy: Float, threshold: Float): DeckSwipe? = when {
+    abs(dx) >= abs(dy) && dx < -threshold -> DeckSwipe.Left
+    abs(dx) >= abs(dy) && dx > threshold -> DeckSwipe.Right
+    abs(dy) > abs(dx) && dy < -threshold -> DeckSwipe.Up
+    else -> null
 }

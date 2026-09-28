@@ -248,8 +248,8 @@
     <string name="sent_to_tray">Sent %1$d to the notification tray</string>
     <string name="no_updates_here">No updates here</string>
     <string name="skip">Skip</string>
-    <string name="swipe_left_to_skip">Swipe left to skip</string>
-    <string name="swipe_left_to_delete">Swipe left to delete</string>
+    <string name="catch_up_swipe_hint_skip">← Skip · ↑ Read · Remind →</string>
+    <string name="catch_up_swipe_hint_delete">← Delete · ↑ Read · Remind →</string>
     <string name="catch_up_delete_title">Delete %1$s?</string>
     <string name="catch_up_delete_body">It will be removed from your saved notifications.</string>
     <string name="catch_up_dont_ask_again">Don\'t ask again during this catch-up</string>
