@@ -71,6 +71,7 @@ import androidx.compose.ui.unit.dp
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.components.GradientImage
+import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
@@ -200,7 +201,12 @@ internal fun CatchUpDeck(
                 }
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = {
+            SnackbarHost(
+                snackbarHostState,
+                modifier = Modifier.padding(LocalNavHostPadding.current)
+            )
+        },
     ) { p ->
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
