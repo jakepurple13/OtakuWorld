@@ -3,12 +3,13 @@ package com.programmersbox.kmpuiviews.presentation.notifications
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -57,7 +58,6 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -113,10 +113,10 @@ import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.GradientImage
 import com.programmersbox.kmpuiviews.presentation.components.LoadingDialog
 import com.programmersbox.kmpuiviews.presentation.components.OptionsSheetValues
+import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.SourceNotInstalledModal
 import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.presentation.components.optionsSheet
-import com.programmersbox.kmpuiviews.presentation.components.plus
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
 import com.programmersbox.kmpuiviews.utils.Cached
@@ -153,9 +153,9 @@ import otakuworld.kmpuiviews.generated.resources.delete
 import otakuworld.kmpuiviews.generated.resources.deleted_notification
 import otakuworld.kmpuiviews.generated.resources.deleted_notification_count
 import otakuworld.kmpuiviews.generated.resources.in_tray
+import otakuworld.kmpuiviews.generated.resources.no
 import otakuworld.kmpuiviews.generated.resources.no_updates_description
 import otakuworld.kmpuiviews.generated.resources.no_updates_here
-import otakuworld.kmpuiviews.generated.resources.no
 import otakuworld.kmpuiviews.generated.resources.notifications
 import otakuworld.kmpuiviews.generated.resources.notifications_older
 import otakuworld.kmpuiviews.generated.resources.notifications_this_week
@@ -359,7 +359,7 @@ private fun NotificationTimeline(
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val is24Hour = koinInject<DateTimeFormatHandler>().is24Time()
 
-    Scaffold(
+    OtakuScaffold(
         topBar = {
             AnimatedContent(
                 vm.isSelecting,
@@ -437,7 +437,6 @@ private fun NotificationTimeline(
                     EmptyTimeline(Modifier.fillMaxSize())
                 } else {
                     LazyColumn(
-                        contentPadding = LocalNavHostPadding.current,
                         modifier = Modifier.fillMaxSize()
                     ) {
                         vm.dayBuckets.forEach { (day, list) ->
@@ -482,11 +481,10 @@ private fun NotificationTimeline(
 
             AnimatedVisibility(
                 visible = vm.isSelecting,
-                enter = slideInVertically { it * 2 },
-                exit = slideOutVertically { it * 2 },
+                enter = slideInVertically { it * 2 } + fadeIn() + scaleIn(),
+                exit = slideOutVertically { it * 2 } + fadeOut() + scaleOut(),
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(LocalNavHostPadding.current)
                     .offset(y = -FloatingToolbarDefaults.ScreenOffset)
             ) {
                 val selected = vm.selectedItems()

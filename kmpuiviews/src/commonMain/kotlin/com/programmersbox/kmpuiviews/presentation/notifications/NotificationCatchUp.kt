@@ -25,7 +25,7 @@ import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -50,7 +50,7 @@ import androidx.compose.ui.unit.dp
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.components.GradientImage
-import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
+import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import otakuworld.kmpuiviews.generated.resources.Res
@@ -87,6 +87,8 @@ internal fun CatchUpDeck(
     val flingDistance = LocalWindowInfo.current.containerSize.width * 1.5f
     val threshold = flingDistance / 6
 
+    HideNavBarWhileOnScreen()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -105,7 +107,6 @@ internal fun CatchUpDeck(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(p)
-                .padding(LocalNavHostPadding.current)
         ) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -124,7 +125,7 @@ internal fun CatchUpDeck(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                LinearProgressIndicator(
+                LinearWavyProgressIndicator(
                     progress = { if (total == 0) 1f else index.toFloat() / total },
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -178,11 +179,13 @@ internal fun CatchUpDeck(
                                                     onDragEnd = {
                                                         scope.launch {
                                                             when {
+                                                                //Left
                                                                 offsetX.value > threshold -> {
                                                                     offsetX.animateTo(flingDistance)
                                                                     onRead(item)
                                                                 }
 
+                                                                //Right
                                                                 offsetX.value < -threshold -> {
                                                                     offsetX.animateTo(-flingDistance)
                                                                     onDismiss(item)
