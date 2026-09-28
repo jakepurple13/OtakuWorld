@@ -495,6 +495,7 @@ private fun NotificationTimeline(
                 exit = slideOutVertically { it * 2 } + fadeOut() + scaleOut(),
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
+                    .padding(LocalNavHostPadding.current)
                     .offset(y = -FloatingToolbarDefaults.ScreenOffset)
             ) {
                 val selected = vm.selectedItems()
