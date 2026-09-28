@@ -4,6 +4,7 @@ import androidx.room3.ColumnInfo
 import androidx.room3.Entity
 import androidx.room3.PrimaryKey
 import kotlinx.serialization.Serializable
+import kotlin.time.Clock
 
 @Serializable
 @Entity(tableName = "FavoriteItem")
@@ -80,7 +81,7 @@ data class NotificationItem(
     @ColumnInfo(name = "supabase_id", defaultValue = "")
     val supabaseId: String? = null,
     @ColumnInfo(name = "created_at", defaultValue = "0")
-    val createdAt: Long = 0L,
+    val createdAt: Long = Clock.System.now().toEpochMilliseconds(),
     @ColumnInfo(name = "updated_at", defaultValue = "0")
     val updatedAt: Long = 0L,
     @ColumnInfo(name = "is_deleted", defaultValue = "0")
