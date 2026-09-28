@@ -3,10 +3,12 @@ package com.programmersbox.kmpuiviews.presentation.notifications
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,8 +18,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
@@ -28,14 +34,21 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -45,6 +58,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.programmersbox.favoritesdatabase.NotificationItem
@@ -58,13 +73,20 @@ import otakuworld.kmpuiviews.generated.resources.all_caught_up
 import otakuworld.kmpuiviews.generated.resources.back_to_list
 import otakuworld.kmpuiviews.generated.resources.catch_up_handled
 import otakuworld.kmpuiviews.generated.resources.catch_up_left
+import otakuworld.kmpuiviews.generated.resources.cancel
+import otakuworld.kmpuiviews.generated.resources.catch_up_delete_body
+import otakuworld.kmpuiviews.generated.resources.catch_up_delete_title
+import otakuworld.kmpuiviews.generated.resources.catch_up_dont_ask_again
 import otakuworld.kmpuiviews.generated.resources.catch_up_progress
-import otakuworld.kmpuiviews.generated.resources.dismiss
+import otakuworld.kmpuiviews.generated.resources.delete
 import otakuworld.kmpuiviews.generated.resources.read
 import otakuworld.kmpuiviews.generated.resources.remind
+import otakuworld.kmpuiviews.generated.resources.skip
+import otakuworld.kmpuiviews.generated.resources.swipe_left_to_delete
+import otakuworld.kmpuiviews.generated.resources.swipe_left_to_skip
 
 /**
- * One update at a time: swipe or tap to dismiss (delete), read (open details), or remind later.
+ * One update at a time: swipe or tap to skip or delete (per [swipeDeletes]), read (open details), or remind later.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,8 +98,13 @@ internal fun CatchUpDeck(
     colorFilter: ColorFilter?,
     snackbarHostState: SnackbarHostState,
     notificationScreenInterface: NotificationScreenInterface,
+    swipeDeletes: Boolean,
+    onSwipeDeletesChange: (Boolean) -> Unit,
+    confirmDeletes: Boolean,
+    onStopConfirmingDeletes: () -> Unit,
     onClose: () -> Unit,
-    onDismiss: (NotificationItem) -> Unit,
+    onSkip: (NotificationItem) -> Unit,
+    onDelete: (NotificationItem) -> Unit,
     onRead: (NotificationItem) -> Unit,
     onReminded: () -> Unit,
 ) {
@@ -86,6 +113,72 @@ internal fun CatchUpDeck(
     val offsetX = remember(top?.url) { Animatable(0f) }
     val flingDistance = LocalWindowInfo.current.containerSize.width * 1.5f
     val threshold = flingDistance / 6
+    var pendingDelete by remember { mutableStateOf<NotificationItem?>(null) }
+
+    // Swipe left and the left button both land here. Skip mode never deletes.
+    val onLeft: (NotificationItem) -> Unit = { item ->
+        scope.launch {
+            when {
+                !swipeDeletes -> {
+                    offsetX.animateTo(-flingDistance)
+                    onSkip(item)
+                }
+
+                confirmDeletes -> {
+                    offsetX.animateTo(0f)
+                    pendingDelete = item
+                }
+
+                else -> {
+                    offsetX.animateTo(-flingDistance)
+                    onDelete(item)
+                }
+            }
+        }
+    }
+
+    pendingDelete?.let { item ->
+        var dontAskAgain by remember(item.url) { mutableStateOf(false) }
+        AlertDialog(
+            onDismissRequest = { pendingDelete = null },
+            icon = { Icon(Icons.Default.Delete, null) },
+            title = { Text(stringResource(Res.string.catch_up_delete_title, item.notiTitle)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(stringResource(Res.string.catch_up_delete_body))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .toggleable(
+                                value = dontAskAgain,
+                                onValueChange = { dontAskAgain = it },
+                                role = Role.Checkbox
+                            )
+                    ) {
+                        Checkbox(checked = dontAskAgain, onCheckedChange = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(Res.string.catch_up_dont_ask_again))
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        pendingDelete = null
+                        if (dontAskAgain) onStopConfirmingDeletes()
+                        scope.launch {
+                            offsetX.animateTo(-flingDistance)
+                            onDelete(item)
+                        }
+                    }
+                ) { Text(stringResource(Res.string.delete), color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingDelete = null }) { Text(stringResource(Res.string.cancel)) }
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -128,6 +221,42 @@ internal fun CatchUpDeck(
                     progress = { if (total == 0) 1f else index.toFloat() / total },
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                if (top != null) {
+                    SingleChoiceSegmentedButtonRow(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp)
+                    ) {
+                        SegmentedButton(
+                            selected = !swipeDeletes,
+                            onClick = { onSwipeDeletesChange(false) },
+                            shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                            icon = {
+                                SegmentedButtonDefaults.Icon(active = !swipeDeletes) {
+                                    Icon(Icons.Default.SkipNext, null, modifier = Modifier.size(SegmentedButtonDefaults.IconSize))
+                                }
+                            }
+                        ) { Text(stringResource(Res.string.skip)) }
+                        SegmentedButton(
+                            selected = swipeDeletes,
+                            onClick = { onSwipeDeletesChange(true) },
+                            shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                            icon = {
+                                SegmentedButtonDefaults.Icon(active = swipeDeletes) {
+                                    Icon(Icons.Default.Delete, null, modifier = Modifier.size(SegmentedButtonDefaults.IconSize))
+                                }
+                            }
+                        ) { Text(stringResource(Res.string.delete)) }
+                    }
+                    Text(
+                        stringResource(if (swipeDeletes) Res.string.swipe_left_to_delete else Res.string.swipe_left_to_skip),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
 
             Box(
@@ -183,10 +312,7 @@ internal fun CatchUpDeck(
                                                                     onRead(item)
                                                                 }
 
-                                                                offsetX.value < -threshold -> {
-                                                                    offsetX.animateTo(-flingDistance)
-                                                                    onDismiss(item)
-                                                                }
+                                                                offsetX.value < -threshold -> onLeft(item)
 
                                                                 else -> offsetX.animateTo(0f)
                                                             }
@@ -212,20 +338,20 @@ internal fun CatchUpDeck(
                     horizontalArrangement = Arrangement.spacedBy(24.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    DeckAction(label = stringResource(Res.string.dismiss)) {
+                    val leftLabel = stringResource(if (swipeDeletes) Res.string.delete else Res.string.skip)
+                    DeckAction(label = leftLabel) {
                         FilledTonalIconButton(
-                            onClick = {
-                                scope.launch {
-                                    offsetX.animateTo(-flingDistance)
-                                    onDismiss(top)
-                                }
+                            onClick = { onLeft(top) },
+                            colors = if (swipeDeletes) {
+                                IconButtonDefaults.filledTonalIconButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                                )
+                            } else {
+                                IconButtonDefaults.filledTonalIconButtonColors()
                             },
-                            colors = IconButtonDefaults.filledTonalIconButtonColors(
-                                containerColor = MaterialTheme.colorScheme.errorContainer,
-                                contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                            ),
                             modifier = Modifier.size(56.dp)
-                        ) { Icon(Icons.Default.Close, stringResource(Res.string.dismiss)) }
+                        ) { Icon(if (swipeDeletes) Icons.Default.Delete else Icons.Default.SkipNext, leftLabel) }
                     }
 
                     DeckAction(label = stringResource(Res.string.read)) {

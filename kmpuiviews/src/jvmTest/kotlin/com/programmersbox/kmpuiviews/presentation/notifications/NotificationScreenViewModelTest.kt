@@ -216,6 +216,23 @@ class NotificationScreenViewModelTest {
         assertNull(vm.catchUp)
     }
 
+    @Test fun `catch up delete confirmation can be turned off until the next catch up`() = runTest {
+        insert(notification(1))
+        val vm = viewModel()
+        awaitCondition { vm.items.size == 1 }
+
+        vm.startCatchUp()
+        assertEquals(true, vm.catchUp?.confirmDeletes)
+
+        vm.stopConfirmingCatchUpDeletes()
+        vm.advanceCatchUp()
+        assertEquals(false, vm.catchUp?.confirmDeletes)
+
+        vm.endCatchUp()
+        vm.startCatchUp()
+        assertEquals(true, vm.catchUp?.confirmDeletes)
+    }
+
     @Test fun `catch up skips items deleted from the deck`() = runTest {
         insert(notification(1), notification(2), notification(3))
         val vm = viewModel()

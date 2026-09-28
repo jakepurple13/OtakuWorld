@@ -96,6 +96,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.programmersbox.datastore.ColorBlindnessType
+import com.programmersbox.datastore.DataStoreHandling
+import com.programmersbox.datastore.asState
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.NotificationItem
@@ -279,6 +281,8 @@ fun NotificationScreen(
         }
     }
 
+    var catchUpSwipeDeletes by koinInject<DataStoreHandling>().catchUpSwipeDeletes.asState()
+
     BackHandler(vm.isSelecting) { vm.clearSelection() }
     BackHandler(vm.catchUp != null) { vm.endCatchUp() }
 
@@ -297,7 +301,12 @@ fun NotificationScreen(
                 snackbarHostState = snackbarHostState,
                 notificationScreenInterface = notificationScreenInterface,
                 onClose = vm::endCatchUp,
-                onDismiss = { item ->
+                swipeDeletes = catchUpSwipeDeletes,
+                onSwipeDeletesChange = { catchUpSwipeDeletes = it },
+                confirmDeletes = state?.confirmDeletes ?: true,
+                onStopConfirmingDeletes = vm::stopConfirmingCatchUpDeletes,
+                onSkip = { vm.advanceCatchUp() },
+                onDelete = { item ->
                     deleteWithUndo(listOf(item))
                     vm.advanceCatchUp()
                 },
