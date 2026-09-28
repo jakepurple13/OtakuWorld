@@ -2,6 +2,9 @@ package com.programmersbox.kmpuiviews.presentation.notifications
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -27,6 +30,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
@@ -46,6 +50,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -89,7 +94,7 @@ import otakuworld.kmpuiviews.generated.resources.swipe_left_to_skip
 /**
  * One update at a time: swipe or tap to skip or delete (per [swipeDeletes]), read (open details), or remind later.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun CatchUpDeck(
     remaining: List<NotificationItem>,
@@ -114,6 +119,7 @@ internal fun CatchUpDeck(
     val offsetX = remember(top?.url) { Animatable(0f) }
     val flingDistance = LocalWindowInfo.current.containerSize.width * 1.5f
     val threshold = flingDistance / 6
+    val flingSpec = remember { tween<Float>(durationMillis = 200, easing = FastOutLinearInEasing) }
     var pendingDelete by remember { mutableStateOf<NotificationItem?>(null) }
 
     // Swipe left and the left button both land here. Skip mode never deletes.
@@ -121,7 +127,7 @@ internal fun CatchUpDeck(
         scope.launch {
             when {
                 !swipeDeletes -> {
-                    offsetX.animateTo(-flingDistance)
+                    offsetX.animateTo(-flingDistance, flingSpec)
                     onSkip(item)
                 }
 
@@ -131,7 +137,7 @@ internal fun CatchUpDeck(
                 }
 
                 else -> {
-                    offsetX.animateTo(-flingDistance)
+                    offsetX.animateTo(-flingDistance, flingSpec)
                     onDelete(item)
                 }
             }
@@ -169,7 +175,7 @@ internal fun CatchUpDeck(
                         pendingDelete = null
                         if (dontAskAgain) onStopConfirmingDeletes()
                         scope.launch {
-                            offsetX.animateTo(-flingDistance)
+                            offsetX.animateTo(-flingDistance, flingSpec)
                             onDelete(item)
                         }
                     }
@@ -281,58 +287,74 @@ internal fun CatchUpDeck(
                         Button(onClick = onClose) { Text(stringResource(Res.string.back_to_list)) }
                     }
                 } else {
+                    // A 4th, fully transparent card waits at the back so it can fade in as the stack moves up.
                     remaining
-                        .take(3)
+                        .take(4)
                         .withIndex()
                         .reversed()
                         .forEach { (depth, item) ->
-                            val isTop = depth == 0
-                            CatchUpCard(
-                                item = item,
-                                colorFilter = colorFilter,
-                                modifier = Modifier
-                                    .graphicsLayer {
-                                        if (isTop) {
-                                            translationX = offsetX.value
-                                            rotationZ = offsetX.value / 60f
-                                        } else {
-                                            scaleX = 1f - depth * .06f
-                                            scaleY = 1f - depth * .06f
-                                            translationY = -depth * 14.dp.toPx()
-                                            alpha = 1f - depth * .3f
-                                        }
-                                    }
-                                    .then(
-                                        if (isTop) {
-                                            Modifier.pointerInput(item.url) {
-                                                detectHorizontalDragGestures(
-                                                    onDragEnd = {
-                                                        scope.launch {
-                                                            when {
-                                                                //Left
-                                                                offsetX.value > threshold -> {
-                                                                    offsetX.animateTo(flingDistance)
-                                                                    onRead(item)
-                                                                }
-
-                                                                //Right
-                                                                offsetX.value < -threshold -> onLeft(item)
-
-                                                                else -> offsetX.animateTo(0f)
-                                                            }
-                                                        }
-                                                    },
-                                                    onDragCancel = { scope.launch { offsetX.animateTo(0f) } },
-                                                ) { change, dragAmount ->
-                                                    change.consume()
-                                                    scope.launch { offsetX.snapTo(offsetX.value + dragAmount) }
-                                                }
+                            // Keyed so each card keeps its animation state as it moves up the stack.
+                            key(item.url) {
+                                val isTop = depth == 0
+                                val animatedDepth by animateFloatAsState(
+                                    targetValue = depth.toFloat(),
+                                    animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
+                                    label = "cardDepth"
+                                )
+                                val cardAlpha by animateFloatAsState(
+                                    targetValue = when (depth) {
+                                        0 -> 1f
+                                        1 -> .7f
+                                        2 -> .4f
+                                        else -> 0f
+                                    },
+                                    animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+                                    label = "cardAlpha"
+                                )
+                                CatchUpCard(
+                                    item = item,
+                                    colorFilter = colorFilter,
+                                    modifier = Modifier
+                                        .graphicsLayer {
+                                            scaleX = 1f - animatedDepth * .06f
+                                            scaleY = 1f - animatedDepth * .06f
+                                            translationY = -animatedDepth * 14.dp.toPx()
+                                            alpha = cardAlpha
+                                            if (isTop) {
+                                                translationX = offsetX.value
+                                                rotationZ = offsetX.value / 60f
                                             }
-                                        } else {
-                                            Modifier
                                         }
-                                    )
-                            )
+                                        .then(
+                                            if (isTop) {
+                                                Modifier.pointerInput(item.url) {
+                                                    detectHorizontalDragGestures(
+                                                        onDragEnd = {
+                                                            scope.launch {
+                                                                when {
+                                                                    offsetX.value > threshold -> {
+                                                                        offsetX.animateTo(flingDistance, flingSpec)
+                                                                        onRead(item)
+                                                                    }
+
+                                                                    offsetX.value < -threshold -> onLeft(item)
+
+                                                                    else -> offsetX.animateTo(0f)
+                                                                }
+                                                            }
+                                                        },
+                                                        onDragCancel = { scope.launch { offsetX.animateTo(0f) } },
+                                                    ) { change, dragAmount ->
+                                                        change.consume()
+                                                        scope.launch { offsetX.snapTo(offsetX.value + dragAmount) }
+                                                    }
+                                                }
+                                            } else {
+                                                Modifier
+                                            }
+                                        )
+                                )
+                            }
                         }
                 }
             }
@@ -364,7 +386,7 @@ internal fun CatchUpDeck(
                         FilledIconButton(
                             onClick = {
                                 scope.launch {
-                                    offsetX.animateTo(flingDistance)
+                                    offsetX.animateTo(flingDistance, flingSpec)
                                     onRead(top)
                                 }
                             },
