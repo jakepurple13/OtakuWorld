@@ -234,7 +234,6 @@
     <string name="all_caught_up">All caught up</string>
     <string name="catch_up_handled">%1$d updates handled</string>
     <string name="back_to_list">Back to list</string>
-    <string name="dismiss">Dismiss</string>
     <string name="remind">Remind</string>
     <string name="in_tray">In tray</string>
     <string name="notifications_today">Today</string>
@@ -248,5 +247,11 @@
     <string name="deleted_notification_count">Deleted %1$d updates</string>
     <string name="sent_to_tray">Sent %1$d to the notification tray</string>
     <string name="no_updates_here">No updates here</string>
+    <string name="skip">Skip</string>
+    <string name="swipe_left_to_skip">Swipe left to skip</string>
+    <string name="swipe_left_to_delete">Swipe left to delete</string>
+    <string name="catch_up_delete_title">Delete %1$s?</string>
+    <string name="catch_up_delete_body">It will be removed from your saved notifications.</string>
+    <string name="catch_up_dont_ask_again">Don\'t ask again during this catch-up</string>
     <string name="no_updates_description">New chapters from saved titles show up here.</string>
 </resources>

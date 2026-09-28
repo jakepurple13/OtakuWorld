@@ -37,7 +37,12 @@ enum class NotificationDay { Today, Yesterday, ThisWeek, Older }
 /** Items hidden from the list while the Undo snackbar is showing. */
 class PendingDeletion(val items: List<NotificationItem>)
 
-data class CatchUp(val urls: List<String>, val index: Int = 0)
+data class CatchUp(
+    val urls: List<String>,
+    val index: Int = 0,
+    /** Whether a delete from the deck asks first. Resets for every new catch-up. */
+    val confirmDeletes: Boolean = true,
+)
 
 class NotificationScreenViewModel(
     private val db: ItemDao,
@@ -161,6 +166,10 @@ class NotificationScreenViewModel(
 
     fun advanceCatchUp() {
         catchUp = catchUp?.let { it.copy(index = it.index + 1) }
+    }
+
+    fun stopConfirmingCatchUpDeletes() {
+        catchUp = catchUp?.copy(confirmDeletes = false)
     }
 
     fun endCatchUp() {

@@ -50,6 +50,12 @@ class DataStoreHandling {
         defaultValue = 1
     )
 
+    // Catch up deck: true makes swipe left delete, false (default) makes it skip.
+    val catchUpSwipeDeletes = DataStoreHandler(
+        key = booleanPreferencesKey("catchUpSwipeDeletes"),
+        defaultValue = false
+    )
+
     val hasGoneThroughOnboarding = DataStoreHandler(
         key = booleanPreferencesKey("hasGoneThroughOnboarding"),
         defaultValue = false
