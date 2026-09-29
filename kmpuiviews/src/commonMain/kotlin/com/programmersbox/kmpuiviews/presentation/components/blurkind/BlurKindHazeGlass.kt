@@ -16,6 +16,7 @@ import com.programmersbox.datastore.NewSettingsHandling
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.glass.GlassDefaults
 import dev.chrisbanes.haze.glass.GlassStyle
+import dev.chrisbanes.haze.glass.material3.material3
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -56,20 +57,18 @@ fun rememberBlurKindHazeGlassState(
         .asFlow()
         .collectAsStateWithLifecycle(HazeOptionsInfo())
 
-    val m3 = GlassStyle.clear
-
-    val colorTint = MaterialTheme.colorScheme.surface.copy(alpha = 0.3f)
+    val m3 = GlassStyle.material3(
+        tint = MaterialTheme.colorScheme.surface.copy(alpha = 0.3f)
+    )
 
     return remember(
         hazeState,
         handle,
         m3,
-        colorTint
     ) {
         BlurKindHazeGlassState(
             hazeState = hazeState,
             hazeStyle = m3.then {
-                tint(colorTint)
                 optics(
                     refractionStrength = handle.refractionStrength,
                     refractionHeightFraction = handle.refractionHeightFraction,

@@ -21,3 +21,4 @@ local.properties
 /otakumanager/google-services.json
 .claude/worktrees/
 .superpowers/
+.hotswan/
