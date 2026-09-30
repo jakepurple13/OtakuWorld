@@ -451,19 +451,19 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
         text = buildAnnotatedString {
             withStyle(
                 MaterialTheme.typography.labelSmall
-                    .copy(color = listItemColors.overlineColor)
+                    .copy(color = listItemColors.overlineContentColor)
                     .toSpanStyle()
             ) { appendLine(serviceName) }
 
             withStyle(
                 MaterialTheme.typography.bodyLarge
-                    .copy(color = listItemColors.headlineColor)
+                    .copy(color = listItemColors.contentColor)
                     .toSpanStyle()
             ) { appendLine(title) }
 
             withStyle(
                 MaterialTheme.typography.bodySmall
-                    .copy(color = listItemColors.supportingTextColor)
+                    .copy(color = listItemColors.supportingContentColor)
                     .toSpanStyle()
             ) { appendLine(description.trimIndent()) }
         },
