@@ -24,6 +24,7 @@ import com.programmersbox.kmpuiviews.presentation.favorite.FavoriteScreen
 import com.programmersbox.kmpuiviews.presentation.globalsearch.GlobalSearchScreen
 import com.programmersbox.kmpuiviews.presentation.history.HistoryUi
 import com.programmersbox.kmpuiviews.presentation.notes.NotesScreen
+import com.programmersbox.kmpuiviews.presentation.notifications.CatchUpScreen
 import com.programmersbox.kmpuiviews.presentation.notifications.NotificationScreen
 import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingScreen
 import com.programmersbox.kmpuiviews.presentation.recent.RecentView
@@ -268,6 +269,10 @@ fun buildKmpGraph(): Module = module {
 
     navigation<Screen.NotificationScreen> {
         NotificationScreen()
+    }
+
+    navigation<Screen.NotificationScreen.CatchUp> {
+        CatchUpScreen()
     }
 
     navigation<Screen.ExtensionListScreen> {

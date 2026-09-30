@@ -199,7 +199,7 @@ class NotificationScreenViewModel(
     }
 }
 
-private fun NotificationItem.matches(filter: NotificationFilter) = when (filter) {
+fun NotificationItem.matches(filter: NotificationFilter) = when (filter) {
     NotificationFilter.All -> true
     NotificationFilter.InTray -> isShowing
     is NotificationFilter.Source -> source == filter.name

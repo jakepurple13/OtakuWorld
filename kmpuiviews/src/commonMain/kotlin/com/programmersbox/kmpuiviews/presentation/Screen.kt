@@ -118,6 +118,9 @@ sealed class Screen(val route: String) : NavKey {
     data object NotificationScreen : Screen("notifications") {
         @Serializable
         data object Home : Screen("home")
+
+        @Serializable
+        data object CatchUp : Screen("catch_up")
     }
 
     @Serializable

@@ -11,6 +11,7 @@ import com.programmersbox.kmpuiviews.presentation.globalsearch.GlobalSearchViewM
 import com.programmersbox.kmpuiviews.presentation.history.HistoryViewModel
 import com.programmersbox.kmpuiviews.presentation.notes.AllNotesViewModel
 import com.programmersbox.kmpuiviews.presentation.notes.DetailsNotesViewModel
+import com.programmersbox.kmpuiviews.presentation.notifications.CatchUpViewModel
 import com.programmersbox.kmpuiviews.presentation.notifications.NotificationScreenViewModel
 import com.programmersbox.kmpuiviews.presentation.recent.RecentViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.SettingViewModel
@@ -44,6 +45,7 @@ import org.koin.dsl.module
 val viewModels: Module = module {
     viewModelOf(::NotificationSettingsViewModel)
     viewModelOf(::NotificationScreenViewModel)
+    viewModelOf(::CatchUpViewModel)
     viewModelOf(::PrereleaseViewModel)
     viewModelOf(::ExtensionListViewModel)
     viewModelOf(::IncognitoViewModel)

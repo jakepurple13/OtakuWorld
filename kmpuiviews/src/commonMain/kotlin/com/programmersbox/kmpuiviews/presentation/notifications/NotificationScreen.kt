@@ -101,9 +101,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.programmersbox.datastore.ColorBlindnessType
-import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.NewSettingsHandling
-import com.programmersbox.datastore.asState
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.favoritesdatabase.toDbModel
@@ -112,6 +110,7 @@ import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.DateTimeFormatHandler
 import com.programmersbox.kmpuiviews.painterLogo
+import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.GradientImage
 import com.programmersbox.kmpuiviews.presentation.components.LoadingDialog
@@ -285,67 +284,34 @@ fun NotificationScreen(
         }
     }
 
-    var catchUpSwipeDeletes by koinInject<DataStoreHandling>().catchUpSwipeDeletes.asState()
-
     BackHandler(vm.isSelecting) { vm.clearSelection() }
-    BackHandler(vm.catchUp != null) { vm.endCatchUp() }
 
-    AnimatedContent(
-        targetState = vm.catchUp != null,
-        label = "catchUp",
-    ) { inCatchUp ->
-        if (inCatchUp) {
-            val state = vm.catchUp
-            CatchUpDeck(
-                remaining = vm.catchUpRemaining,
-                index = state?.index ?: 0,
-                total = state?.urls?.size ?: 0,
-                title = vm.filter.catchUpTitle(),
-                colorFilter = colorFilter,
-                snackbarHostState = snackbarHostState,
-                notificationScreenInterface = notificationScreenInterface,
-                onClose = vm::endCatchUp,
-                swipeDeletes = catchUpSwipeDeletes,
-                onSwipeDeletesChange = { catchUpSwipeDeletes = it },
-                confirmDeletes = state?.confirmDeletes ?: true,
-                onStopConfirmingDeletes = vm::stopConfirmingCatchUpDeletes,
-                onSkip = { vm.advanceCatchUp() },
-                onDelete = { item ->
-                    deleteWithUndo(listOf(item))
-                    vm.advanceCatchUp()
-                },
-                onRead = { item ->
-                    vm.advanceCatchUp()
-                    openItem(item)
-                },
-                onReminded = { vm.advanceCatchUp() },
-            )
-        } else {
-            NotificationTimeline(
-                vm = vm,
-                navController = navController,
-                itemDao = itemDao,
-                colorFilter = colorFilter,
-                snackbarHostState = snackbarHostState,
-                notificationScreenInterface = notificationScreenInterface,
-                toSource = toSource,
-                onError = onError,
-                onLoadingChange = { showLoadingDialog = it },
-                openItem = openItem,
-                deleteWithUndo = deleteWithUndo,
-                notifySelected = { selected ->
-                    vm.clearSelection()
-                    scope.launch {
-                        withContext(Dispatchers.IO) {
-                            selected.forEach { notificationScreenInterface.notifyItem(it) }
-                        }
-                        snackbarHostState.currentSnackbarData?.dismiss()
-                        snackbarHostState.showSnackbar(getString(Res.string.sent_to_tray, selected.size))
-                    }
-                },
-            )
+    NotificationTimeline(
+        vm = vm,
+        navController = navController,
+        itemDao = itemDao,
+        colorFilter = colorFilter,
+        snackbarHostState = snackbarHostState,
+        notificationScreenInterface = notificationScreenInterface,
+        toSource = toSource,
+        onError = onError,
+        onLoadingChange = { showLoadingDialog = it },
+        openItem = openItem,
+        deleteWithUndo = deleteWithUndo,
+        notifySelected = { selected ->
+            vm.clearSelection()
+            scope.launch {
+                withContext(Dispatchers.IO) {
+                    selected.forEach { notificationScreenInterface.notifyItem(it) }
+                }
+                snackbarHostState.currentSnackbarData?.dismiss()
+                snackbarHostState.showSnackbar(getString(Res.string.sent_to_tray, selected.size))
+            }
+        },
+        navToCatch = {
+            navController.navigate(Screen.NotificationScreen.CatchUp)
         }
-    }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -363,6 +329,7 @@ private fun NotificationTimeline(
     openItem: (NotificationItem) -> Unit,
     deleteWithUndo: (List<NotificationItem>) -> Unit,
     notifySelected: (List<NotificationItem>) -> Unit,
+    navToCatch: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
@@ -410,9 +377,14 @@ private fun NotificationTimeline(
                         title = { Text(stringResource(Res.string.notifications)) },
                         navigationIcon = { BackButton() },
                         actions = {
-                            if (vm.filteredItems.size > CATCH_UP_THRESHOLD) {
+                            AnimatedVisibility(
+                                vm.filteredItems.size >= CATCH_UP_THRESHOLD,
+                                enter = fadeIn(),
+                                exit = fadeOut()
+                            ) {
                                 FilledTonalButton(
-                                    onClick = vm::startCatchUp,
+                                    //onClick = vm::startCatchUp,
+                                    onClick = navToCatch,
                                     contentPadding = PaddingValues(horizontal = 12.dp),
                                     modifier = Modifier.padding(end = 8.dp)
                                 ) {
@@ -816,7 +788,7 @@ private fun NotificationDay.label(): String = stringResource(
 )
 
 @Composable
-private fun NotificationFilter.catchUpTitle(): String = when (this) {
+internal fun NotificationFilter.catchUpTitle(): String = when (this) {
     NotificationFilter.All -> stringResource(Res.string.catch_up)
     NotificationFilter.InTray -> "${stringResource(Res.string.catch_up)} · ${stringResource(Res.string.in_tray)}"
     is NotificationFilter.Source -> "${stringResource(Res.string.catch_up)} · $name"

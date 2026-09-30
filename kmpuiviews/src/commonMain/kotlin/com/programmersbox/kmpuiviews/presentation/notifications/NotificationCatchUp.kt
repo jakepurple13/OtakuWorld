@@ -43,8 +43,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -71,13 +73,38 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.programmersbox.datastore.ColorBlindnessType
+import com.programmersbox.datastore.DataStoreHandling
+import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.datastore.asState
 import com.programmersbox.favoritesdatabase.NotificationItem
+import com.programmersbox.favoritesdatabase.toDbModel
+import com.programmersbox.favoritesdatabase.toItemModel
+import com.programmersbox.kmpmodels.KmpApiService
+import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.components.GradientImage
+import com.programmersbox.kmpuiviews.presentation.components.LoadingDialog
+import com.programmersbox.kmpuiviews.presentation.components.SourceNotInstalledModal
+import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
+import com.programmersbox.kmpuiviews.utils.Cached
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
+import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
+import com.programmersbox.kmpuiviews.utils.dispatchIo
+import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
 import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.all_caught_up
 import otakuworld.kmpuiviews.generated.resources.back_to_list
@@ -91,10 +118,145 @@ import otakuworld.kmpuiviews.generated.resources.catch_up_progress
 import otakuworld.kmpuiviews.generated.resources.catch_up_swipe_hint_delete
 import otakuworld.kmpuiviews.generated.resources.catch_up_swipe_hint_skip
 import otakuworld.kmpuiviews.generated.resources.delete
+import otakuworld.kmpuiviews.generated.resources.deleted_notification
+import otakuworld.kmpuiviews.generated.resources.deleted_notification_count
 import otakuworld.kmpuiviews.generated.resources.read
 import otakuworld.kmpuiviews.generated.resources.remind
 import otakuworld.kmpuiviews.generated.resources.skip
+import otakuworld.kmpuiviews.generated.resources.undo
 import kotlin.math.abs
+
+@Composable
+fun CatchUpScreen(
+    vm: CatchUpViewModel = koinViewModel(),
+    navController: NavigationActions = LocalNavActions.current,
+    sourceRepository: SourceRepository = LocalSourcesRepository.current,
+) {
+    var catchUpSwipeDeletes by koinInject<DataStoreHandling>()
+        .catchUpSwipeDeletes
+        .asState()
+
+    val state = vm.catchUp
+
+    val colorBlindness: ColorBlindnessType by koinInject<NewSettingsHandling>().rememberColorBlindType()
+    val colorFilter by remember { derivedStateOf { colorFilterBlind(colorBlindness) } }
+    val notificationScreenInterface: NotificationScreenInterface = koinInject()
+
+    var showLoadingDialog by remember { mutableStateOf(false) }
+
+    LoadingDialog(
+        showLoadingDialog = showLoadingDialog,
+        onDismissRequest = { showLoadingDialog = false }
+    )
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val biometricOpen = rememberBiometricOpening()
+
+    var showNotificationItem by remember { mutableStateOf<NotificationItem?>(null) }
+
+    SourceNotInstalledModal(
+        showItem = showNotificationItem?.notiTitle,
+        onShowItemDismiss = { showNotificationItem = null },
+        source = showNotificationItem?.source,
+        url = showNotificationItem?.url
+    )
+
+    val toSource: (String) -> KmpApiService? = { s -> sourceRepository.toSourceByApiServiceName(s)?.apiService }
+
+    val onError: (NotificationItem) -> Unit = {
+        scope.launch {
+            snackbarHostState.currentSnackbarData?.dismiss()
+            val result = snackbarHostState.showSnackbar(
+                "Something went wrong. Source might not be installed",
+                duration = SnackbarDuration.Long,
+                actionLabel = "More Options",
+                withDismissAction = true
+            )
+            showNotificationItem = when (result) {
+                SnackbarResult.Dismissed -> null
+                SnackbarResult.ActionPerformed -> it
+            }
+        }
+    }
+
+    val openItem: (NotificationItem) -> Unit = { item ->
+        scope.launch {
+            biometricOpen.openIfNotIncognito(item.url, item.notiTitle) {
+                toSource(item.source)
+                    ?.let { source ->
+                        flow {
+                            Cached.cache[item.url]?.let {
+                                emit(
+                                    it
+                                        .toDbModel()
+                                        .toItemModel(source)
+                                )
+                            } ?: emitAll(source.getSourceByUrlFlow(item.url))
+                        }
+                    }
+                    ?.dispatchIo()
+                    ?.onStart { showLoadingDialog = true }
+                    ?.onEach {
+                        showLoadingDialog = false
+                        navController.details(it)
+                    }
+                    ?.launchIn(scope) ?: onError(item)
+            }
+        }
+    }
+
+    val deleteWithUndo: (List<NotificationItem>) -> Unit = { toDelete ->
+        if (toDelete.isNotEmpty()) {
+            val batch = vm.deleteWithUndo(toDelete)
+            scope.launch {
+                snackbarHostState.currentSnackbarData?.dismiss()
+                var undone = false
+                try {
+                    val message = toDelete.singleOrNull()
+                        ?.let { getString(Res.string.deleted_notification, it.notiTitle) }
+                        ?: getString(Res.string.deleted_notification_count, toDelete.size)
+                    val result = snackbarHostState.showSnackbar(
+                        message = message,
+                        actionLabel = getString(Res.string.undo),
+                        withDismissAction = true,
+                        duration = SnackbarDuration.Short,
+                    )
+                    undone = result == SnackbarResult.ActionPerformed
+                    if (undone) vm.undoDeletion(batch)
+                } finally {
+                    // Also runs when the screen leaves composition mid-snackbar.
+                    if (!undone) vm.commitDeletion(batch)
+                }
+            }
+        }
+    }
+
+    CatchUpDeck(
+        remaining = vm.catchUpRemaining,
+        index = state?.index ?: 0,
+        total = state?.urls?.size ?: 0,
+        title = vm.filter.catchUpTitle(),
+        colorFilter = colorFilter,
+        snackbarHostState = snackbarHostState,
+        notificationScreenInterface = notificationScreenInterface,
+        onClose = { navController.popBackStack() },
+        swipeDeletes = catchUpSwipeDeletes,
+        onSwipeDeletesChange = { catchUpSwipeDeletes = it },
+        confirmDeletes = state?.confirmDeletes ?: true,
+        onStopConfirmingDeletes = vm::stopConfirmingCatchUpDeletes,
+        onSkip = { vm.advanceCatchUp() },
+        onDelete = { item ->
+            deleteWithUndo(listOf(item))
+            vm.advanceCatchUp()
+        },
+        onRead = { item ->
+            vm.advanceCatchUp()
+            openItem(item)
+        },
+        onReminded = { vm.advanceCatchUp() },
+    )
+}
 
 /**
  * One update at a time. Swipe left to skip or delete (per [swipeDeletes]), up or tap to read, right to remind.
