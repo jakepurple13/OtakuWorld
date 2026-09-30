@@ -2,17 +2,8 @@
 
 package com.programmersbox.kmpuiviews.presentation.components
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -48,6 +39,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.buildAnnotatedString
@@ -553,28 +545,7 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
             }
         }
 
-        AnimatedContent(
-            updateParams,
-            transitionSpec = {
-                val wasVisible = initialState.isFavorite && initialState.deviceCheckForUpdate
-                val isVisible = targetState.isFavorite && targetState.deviceCheckForUpdate
-
-                if (wasVisible != isVisible) {
-                    // Run the expand/shrink animation if visibility changes
-                    (fadeIn(animationSpec = tween(220, delayMillis = 90)) +
-                            scaleIn(initialScale = 0.92f, animationSpec = tween(220, delayMillis = 90)) +
-                            expandVertically(animationSpec = tween(220, delayMillis = 90)))
-                        .togetherWith(
-                            fadeOut(animationSpec = tween(90)) +
-                                    scaleOut(targetScale = 0.92f, animationSpec = tween(90)) +
-                                    shrinkVertically(animationSpec = tween(90))
-                        )
-                } else {
-                    // Run a simple crossfade if only shouldCheckForUpdate changed
-                    fadeIn() togetherWith fadeOut()
-                }
-            },
-        ) { target ->
+        Crossfade(updateParams) { target ->
             if (target.isFavorite && target.deviceCheckForUpdate) {
                 OptionsItem(
                     title = if (target.shouldCheckForUpdate) "Check for updates" else "Do not check for updates",
@@ -585,6 +556,12 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
                                 ?.let { favoritesRepository.toggleNotify(it) }
                         }
                     }
+                )
+            } else {
+                OptionsItem(
+                    title = "Cannot change update status without being a favorite",
+                    onClick = {},
+                    modifier = Modifier.alpha(.5f)
                 )
             }
         }
