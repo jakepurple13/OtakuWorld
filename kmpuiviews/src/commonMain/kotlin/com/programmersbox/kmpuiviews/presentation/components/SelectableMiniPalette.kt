@@ -33,7 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.materialkolor.ktx.from
 import com.materialkolor.palettes.TonalPalette
-import com.materialkolor.rememberDynamicColorScheme
+import com.materialkolor.material3.rememberDynamicColorScheme
 import com.programmersbox.datastore.ThemeColor
 
 val ThemeColor.seedColor

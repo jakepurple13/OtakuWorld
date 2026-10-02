@@ -19,8 +19,8 @@ import androidx.datastore.preferences.core.edit
 import androidx.glance.LocalContext
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
-import com.materialkolor.ktx.animateColorScheme
-import com.materialkolor.rememberDynamicColorScheme
+import com.materialkolor.material3.ktx.animateColorScheme
+import com.materialkolor.material3.rememberDynamicColorScheme
 import com.programmersbox.datastore.Settings
 import com.programmersbox.datastore.ThemeColor
 import com.programmersbox.datastore.otakuDataStore

@@ -20,7 +20,7 @@ fun WidgetTheme(
     val settings by settingsHandling.preferences.data.collectAsState(Settings())
     val swatchStyle by rememberPreferenceForWidget(
         key = stringPreferencesKey("swatchStyle"),
-        mapToType = { runCatching { PaletteStyle.valueOf(it) }.getOrDefault(PaletteStyle.TonalSpot) },
+        mapToType = { runCatching { PaletteStyle.fromName(it) }.getOrDefault(PaletteStyle.TonalSpot) },
         mapToKey = { it.name },
         defaultValue = PaletteStyle.TonalSpot
     )

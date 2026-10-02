@@ -105,7 +105,7 @@ fun ColorsScreen() {
                         summaryValue = { Text(paletteStyle.name) },
                         confirmText = { TextButton(onClick = { it.value = false }) { Text(stringResource(Res.string.cancel)) } },
                         value = paletteStyle,
-                        options = PaletteStyle.entries,
+                        options = PaletteStyle.KnownStyles,
                         updateValue = { it, d -> d.value = false; paletteStyle = it },
                     )
                 }

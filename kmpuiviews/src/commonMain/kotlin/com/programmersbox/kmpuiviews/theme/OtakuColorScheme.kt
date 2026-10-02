@@ -7,8 +7,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import com.materialkolor.dynamiccolor.ColorSpec
-import com.materialkolor.ktx.animateColorScheme
-import com.materialkolor.rememberDynamicColorScheme
+import com.materialkolor.material3.ktx.animateColorScheme
+import com.materialkolor.material3.rememberDynamicColorScheme
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.SystemThemeMode
 import com.programmersbox.datastore.ThemeColor

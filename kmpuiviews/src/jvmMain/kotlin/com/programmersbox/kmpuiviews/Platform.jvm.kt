@@ -21,7 +21,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.navigation.NavHostController
 import ca.gosyer.appdirs.AppDirs
 import com.materialkolor.Contrast
-import com.materialkolor.dynamicColorScheme
+import com.materialkolor.material3.dynamicColorScheme
 import com.mikepenz.aboutlibraries.Libs
 import com.programmersbox.datastore.DataStoreHandler
 import com.programmersbox.favoritesdatabase.DatabaseBuilder
@@ -77,6 +77,7 @@ actual fun createColorScheme(darkTheme: Boolean, isExpressive: Boolean): ColorSc
     ) {
         when {
             accentColor != null -> dynamicColorScheme(
+                seedColor = accentColor,
                 primary = accentColor,
                 isDark = darkTheme,
                 contrastLevel = if (isSystemInHighContrast) {

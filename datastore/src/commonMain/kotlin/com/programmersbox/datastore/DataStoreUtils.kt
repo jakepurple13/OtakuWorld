@@ -114,7 +114,7 @@ fun rememberFloatingNavigation() = rememberPreference(
 @Composable
 fun rememberSwatchStyle() = rememberPreference(
     key = stringPreferencesKey("swatchStyle"),
-    mapToType = { runCatching { PaletteStyle.valueOf(it) }.getOrDefault(PaletteStyle.TonalSpot) },
+    mapToType = { runCatching { PaletteStyle.fromName(it) }.getOrDefault(PaletteStyle.TonalSpot) },
     mapToKey = { it.name },
     defaultValue = PaletteStyle.TonalSpot
 )
