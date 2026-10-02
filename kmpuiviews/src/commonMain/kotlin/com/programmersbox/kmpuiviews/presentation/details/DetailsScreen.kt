@@ -101,8 +101,8 @@ import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kmpalette.color
-import com.materialkolor.DynamicMaterialTheme
-import com.materialkolor.rememberDynamicMaterialThemeState
+import com.materialkolor.material3.DynamicMaterialTheme
+import com.materialkolor.material3.rememberDynamicMaterialThemeState
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.DetailsChapterSwipeBehavior
 import com.programmersbox.datastore.DetailsChapterSwipeBehaviorHandle
