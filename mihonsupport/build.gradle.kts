@@ -41,6 +41,7 @@ kotlin {
                 implementation(project.dependencies.platform(commonLibs.koin.bom))
                 implementation(commonLibs.koinCores)
                 implementation(androidLibs.okhttpLib)
+                implementation(commonLibs.kotlinxSerializationOkio)
                 implementation(androidLibs.okhttpDns)
                 implementation(androidLibs.okhttpLogging)
                 implementation(androidLibs.brotli)
