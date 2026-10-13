@@ -85,6 +85,10 @@ below, including `FilterList.kt`; re-apply them.)
   annotations.
 - `eu/kanade/tachiyomi/AppInfo.kt` — implements the extensions-lib `AppInfo` surface from the
   host `Application` in Injekt.
+- `app/cash/quickjs/QuickJs.kt` — replaces the `quickjs-android` artifact Mihon ships. It has the
+  same JVM surface extensions bind to (static `create()`, `evaluate(String)`,
+  `evaluate(String, String)`, `compile(String, String)`, `execute(ByteArray)`, `close()`) and delegates to Zipline's `app.cash.zipline.QuickJs`.
+  Both libraries ship a different `libquickjs.so`, so the app cannot package both.
 - `com/programmersbox/mihon/MihonRuntime.kt` — registers `Application`, `Context`, `NetworkHelper`,
   `JavaScriptEngine` and `Json` in Injekt before extensions load.
 

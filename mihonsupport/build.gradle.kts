@@ -48,7 +48,7 @@ kotlin {
                 implementation(androidLibs.jsoup)
                 implementation(androidLibs.injekt)
                 implementation(androidLibs.rxjava1)
-                implementation(androidLibs.quickjsAndroid)
+                implementation(commonLibs.zipline)
                 implementation(androidLibs.squareLogcat)
                 implementation(androidLibs.preference)
                 implementation(androidLibs.androidxWebkit)
