@@ -58,7 +58,7 @@ open class MihonApiService(val source: CatalogueSource) : KmpApiService {
     override suspend fun sourceByUrl(url: String): KmpItemModel = withContext(Dispatchers.IO) {
         val resolvable = source as? ResolvableSource ?: error("${source.name} cannot open URLs")
         val manga = resolvable.getManga(url) ?: error("${source.name} could not resolve $url")
-        MihonSourceMapper.toItem(manga, this@MihonApiService)
+        MihonSourceMapper.toItem(manga, this@MihonApiService) ?: error("${source.name} returned a manga without a url for $url")
     }
 }
 

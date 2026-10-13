@@ -62,6 +62,21 @@ class FakeCatalogueSource(
     )
 }
 
+/** Mimics extension details parsers: returns a NEW SManga/SChapters with url/title never set. */
+class PartialUpdateCatalogueSource(
+    private val chapters: () -> List<SChapter> = { emptyList() },
+) : CatalogueSource by FakeCatalogueSource() {
+    override suspend fun getMangaUpdate(
+        manga: SManga,
+        chapters: List<SChapter>,
+        fetchDetails: Boolean,
+        fetchChapters: Boolean,
+    ): SMangaUpdate = SMangaUpdate(
+        SManga.create().apply { description = "D"; genre = "A, B" },
+        this.chapters(),
+    )
+}
+
 /** HttpSource that never touches Injekt/network: overrides headersBuilder and getImageUrl. */
 @Suppress("OVERRIDE_DEPRECATION")
 class FakeHttpSource : HttpSource() {

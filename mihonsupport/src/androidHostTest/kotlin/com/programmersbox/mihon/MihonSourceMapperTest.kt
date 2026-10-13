@@ -2,6 +2,7 @@ package com.programmersbox.mihon
 
 import com.programmersbox.kmpmodels.KmpConfigurableApiService
 import com.programmersbox.kmpmodels.KmpItemModel
+import eu.kanade.tachiyomi.source.model.SChapter
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -108,5 +109,34 @@ class MihonSourceMapperTest {
             override fun setupPreferenceScreen(screen: androidx.preference.PreferenceScreen) = Unit
         }
         assertIs<KmpConfigurableApiService>(mihonApiService(configurable))
+    }
+
+    @Test
+    fun itemInfoToleratesUninitializedUrlAndTitle() = runTest {
+        val service = mihonApiService(PartialUpdateCatalogueSource())
+        val item = service.allList(1).single()
+
+        val info = service.itemInfo(item)
+
+        assertEquals(item.url, info.url)
+        assertEquals("Popular", info.title)
+        assertEquals("D", info.description)
+        assertEquals(listOf("A", "B"), info.genres)
+    }
+
+    @Test
+    fun chapterWithUninitializedUrlIsSkipped() = runTest {
+        val service = mihonApiService(
+            PartialUpdateCatalogueSource {
+                listOf(
+                    SChapter.create().apply { name = "Bad" },
+                    SChapter.create().apply { name = "Good"; url = "/c/1" },
+                )
+            },
+        )
+
+        val info = service.itemInfo(service.allList(1).single())
+
+        assertEquals(listOf("Good"), info.chapters.map { it.name })
     }
 }
