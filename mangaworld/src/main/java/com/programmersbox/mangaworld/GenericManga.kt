@@ -3,6 +3,8 @@ package com.programmersbox.mangaworld
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.runtime.NavKey
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.gsonutils.toJson
@@ -10,6 +12,7 @@ import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.SystemAlerter
+import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
@@ -106,6 +109,12 @@ class GenericManga(
                 }
             )
         }
+    }
+
+    context(navGraph: EntryProviderScope<NavKey>)
+    override fun globalNav3Setup() {
+        super<GenericSharedManga>.globalNav3Setup()
+        navGraph.entry<Screen.SourcePreferences> { MihonPreferencesScreen(it.serviceName) }
     }
 
     override fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit {

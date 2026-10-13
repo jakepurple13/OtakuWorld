@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.InstallMobile
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.SendTimeExtension
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Update
 import androidx.compose.material.icons.filled.Warning
@@ -92,6 +93,7 @@ import coil3.compose.AsyncImage
 import coil3.pathSegments
 import coil3.toUri
 import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.kmpmodels.KmpConfigurableApiService
 import com.programmersbox.kmpmodels.KmpRemoteSources
 import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpmodels.KmpUntrustedApiService
@@ -106,6 +108,7 @@ import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
 import com.programmersbox.kmpuiviews.repository.SourceInfoRepository
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.LocalCurrentSource
+import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher
@@ -323,6 +326,7 @@ private fun InstalledExtensionItems(
 ) {
     val sourceInfoRepository = koinInject<SourceInfoRepository>()
     val currentSourceRepository = LocalCurrentSource.current
+    val navActions = LocalNavActions.current
     Surface {
         Column(
             modifier = modifier
@@ -412,6 +416,12 @@ private fun InstalledExtensionItems(
                                                     }
                                                 ) { Icon(Icons.Default.Update, null) }
                                             }
+                                        }
+
+                                        if (source.apiService is KmpConfigurableApiService) {
+                                            IconButton(
+                                                onClick = { navActions.navigate(Screen.SourcePreferences(source.apiService.serviceName)) }
+                                            ) { Icon(Icons.Default.Settings, null) }
                                         }
 
                                         (source.apiService as? KmpUntrustedApiService)
