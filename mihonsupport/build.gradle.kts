@@ -46,6 +46,7 @@ kotlin {
                 implementation(androidLibs.okhttpDns)
                 implementation(androidLibs.okhttpLogging)
                 implementation(androidLibs.brotli)
+                implementation(androidLibs.zstd)
                 implementation(androidLibs.jsoup)
                 implementation(androidLibs.injekt)
                 implementation(androidLibs.rxjava1)

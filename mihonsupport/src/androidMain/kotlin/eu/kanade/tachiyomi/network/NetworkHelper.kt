@@ -11,7 +11,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import okhttp3.Cache
 import okhttp3.OkHttpClient
-import okhttp3.brotli.BrotliInterceptor
 import java.io.File
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -28,7 +27,6 @@ class NetworkHelper(private val context: Context) {
         .cache(Cache(directory = File(context.cacheDir, "mihon_network_cache"), maxSize = 5L * 1024 * 1024))
         .addInterceptor(UncaughtExceptionInterceptor())
         .addInterceptor(UserAgentInterceptor(::defaultUserAgentProvider))
-        .addNetworkInterceptor(BrotliInterceptor)
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
