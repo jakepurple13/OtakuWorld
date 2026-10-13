@@ -235,9 +235,12 @@
 #-keepattributes SourceFile,LineNumberTable
 #-renamesourcefileattribute SourceFile
 
--keep,allowoptimization class eu.kanade.**
--keep,allowoptimization class tachiyomi.**
--keep,allowoptimization class mihon.**
+# Mihon extension host API (vendored in :mihonsupport). Extension APKs subclass and call these at
+# runtime, invisible to R8, so keep every member and forbid optimization (finalization/stripping).
+-keep class eu.kanade.tachiyomi.** { *; }
+-keep class tachiyomi.** { *; }
+-keep class mihon.** { *; }
+-keep class app.cash.quickjs.** { *; }
 
 # Keep common dependencies used in extensions
 -keep,allowoptimization class androidx.preference.** { public protected *; }
@@ -254,12 +257,6 @@
 -keep,allowoptimization class com.squareup.zstd.** { public protected *; }
 
 # From extensions-lib
--keep,allowoptimization class eu.kanade.tachiyomi.network.interceptor.RateLimitInterceptorKt { public protected *; }
--keep,allowoptimization class eu.kanade.tachiyomi.network.interceptor.SpecificHostRateLimitInterceptorKt { public protected *; }
--keep,allowoptimization class eu.kanade.tachiyomi.network.NetworkHelper { public protected *; }
--keep,allowoptimization class eu.kanade.tachiyomi.network.OkHttpExtensionsKt { public protected *; }
--keep,allowoptimization class eu.kanade.tachiyomi.network.RequestsKt { public protected *; }
--keep,allowoptimization class eu.kanade.tachiyomi.AppInfo { public protected *; }
 
 -keepclassmembers class * implements java.io.Serializable {
     java.lang.Object writeReplace();
