@@ -58,7 +58,15 @@ class MihonExtensionLoader(private val context: Context) {
         onTrust: suspend (String) -> Unit,
     ): List<KmpSourceInformation> = installedPackages()
         .filter { it.isMihonExtension() }
-        .flatMap { loadPackage(it, catalog, repoSigningKeys, trustedIds, onTrust) }
+        .flatMap {
+            // One broken package must not abort loading the rest.
+            try {
+                loadPackage(it, catalog, repoSigningKeys, trustedIds, onTrust)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                emptyList()
+            }
+        }
 
     fun isExtension(packageName: String): Boolean = runCatching {
         val pm = context.packageManager

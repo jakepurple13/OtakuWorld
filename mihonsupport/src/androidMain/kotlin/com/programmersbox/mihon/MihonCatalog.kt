@@ -36,7 +36,8 @@ class MihonCatalog(
 
     override fun getSources(): List<KmpSourceInformation> = sources
 
-    override fun shouldReload(packageName: String): Boolean = loader.isExtension(packageName)
+    override fun shouldReload(packageName: String): Boolean =
+        sources.any { it.packageName == packageName } || loader.isExtension(packageName)
 
     override suspend fun getRemoteSources(customUrls: List<String>): List<KmpRemoteSources> = repoClient.fetch(customUrls)
 }
