@@ -315,3 +315,35 @@ These supersede the sections above where they differ.
 - **R8:** existing keep rules in `mangaworld/proguard-rules.pro` already cover the vendored
   packages; they stay there (not moved to consumer rules).
 - **Proto field:** `repeated string trustedMihonExtensions = 37;`.
+
+## Addendum (2026-10-13, after on-device testing; user-approved)
+
+### Source display name
+`serviceName` stays `"mihon:<id>"` (stable key for favorites/history/current source). `KmpApiService`
+gains `val displayName: String get() = serviceName`; `MihonApiService` overrides it with
+`"<name> (<lang>)"`, `UntrustedMihonApiService` with the extension label. Shared UI shows
+`displayName` wherever it currently *displays* `serviceName` (top bar, "Current Source", source
+chooser, details source label); lookups and persistence keep using `serviceName`.
+
+### Mihon index_v2 repos
+Keiyoushi (and current Mihon stores) publish `repo.json` with `"index_v2": "<url>"` pointing at a
+TachiyomiX index (`mihonapp/extensions-lib` `index/index.proto`): protobuf, optionally gzip
+(magic `1f 8b`), or its proto3-JSON equivalent. The legacy `index.min.json` is now a stub.
+
+- `MihonRepo` gains `@SerialName("index_v2") val indexV2: String? = null`.
+- When `indexV2` is present the client uses it; otherwise the legacy `index.min.json` path.
+- Decode: gunzip if gzip magic; if first non-whitespace byte is `{` parse JSON, else protobuf
+  (`kotlinx-serialization-protobuf`). `Index.extensions` is a oneof: inline `ExtensionList` or
+  `extensionListUrl` (fetched and decoded the same way).
+- Signing key: `repo.json` `meta.signingKeyFingerprint`, else `Index.signingKey`.
+- Mapping per `Extension`: name (+ " (18+)" when `contentWarning == NSFW`), `packageName`,
+  `versionName`, `resources.iconUrl`, `resources.apkUrl`, sources → `KmpSources(name, homeUrl,
+  versionName)`. Lib filter: `extensionLib` ("1.6") parsed as Double, must be in `{1.4, 1.6}`.
+- All index URLs must be https (same rule as repo URLs).
+- gzip is `expect fun gunzip(bytes: ByteArray): ByteArray` — JVM/Android via
+  `java.util.zip.GZIPInputStream`; iOS actual throws `UnsupportedOperationException` (iOS has no
+  Mihon runtime).
+
+### Out of scope (follow-up)
+Page images do not go through the extension's OkHttp client (interceptors such as image
+descrambling and Cloudflare cookies don't apply to reader/downloader image requests).

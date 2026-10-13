@@ -2184,3 +2184,88 @@ Expected: all PASS.
 git add CLAUDE.md README.md mangaworld/proguard-rules.pro
 git commit -m "docs(mihon): document native Mihon support"
 ```
+
+---
+
+## Addendum tasks (after on-device testing; see spec "Addendum")
+
+### Task 11: Source display name
+
+**Files:**
+- Modify: `kmpmodels/src/commonMain/kotlin/com/programmersbox/kmpmodels/ApiService.kt` (`KmpApiService`)
+- Modify: `mihonsupport/src/androidMain/kotlin/com/programmersbox/mihon/MihonApiService.kt`, `.../UntrustedMihonApiService.kt`
+- Modify: shared UI call sites in `kmpuiviews` that *display* `serviceName` (find with `grep -rn "serviceName" kmpuiviews/src/commonMain | grep -i "text\|title\|stringResource"`): at minimum the Recent/All top bar title, `Res.string.currentSource` in `ExtensionListScreen.kt`, the source chooser rows, and the details screen source label.
+- Test: `kmpmodels/src/commonTest/.../DisplayNameTest.kt`, extend `mihonsupport/src/androidHostTest/.../MihonSourceMapperTest.kt`
+
+**Interfaces:**
+- Produces: `KmpApiService.displayName: String` (default `serviceName`).
+
+- [ ] **Step 1: Failing tests** — kmpmodels: an object implementing `KmpApiService` without overriding has `displayName == serviceName`. mihonsupport: `mihonApiService(FakeCatalogueSource()).displayName == "Fake (en)"` and `serviceName == "mihon:42"` (unchanged).
+- [ ] **Step 2: Run** `./gradlew :kmpmodels:jvmTest :mihonsupport:testAndroidHostTest` → FAIL (unresolved/does not override).
+- [ ] **Step 3: Implement** — in `KmpApiService`: `val displayName: String get() = serviceName`. In `MihonApiService` change `val displayName` to `override val displayName`. In `UntrustedMihonApiService` add a `label` constructor param and `override val displayName = label` (pass the label from `MihonExtensionLoader.notLoaded`).
+- [ ] **Step 4: Swap display call sites** to `displayName`; never change lookups (`toSourceByApiServiceName`, DB writes, `currentService` persistence) — those keep `serviceName`.
+- [ ] **Step 5: Verify** `./gradlew :kmpmodels:jvmTest :mihonsupport:testAndroidHostTest :kmpuiviews:jvmTest :mangaworld:assembleNoFirebaseDebug :animeworld:assembleNoFirebaseDebug`.
+- [ ] **Step 6: Commit** `feat(mihon): show source display names instead of service ids`.
+
+### Task 12: index_v2 repos
+
+**Files:**
+- Modify: `gradle/common.versions.toml` (add `kotlinxSerializationProtobuf = { module = "org.jetbrains.kotlinx:kotlinx-serialization-protobuf", version = "1.11.0" }` next to `kotlinxSerialization`), `mihonsupport/build.gradle.kts` (commonMain dep)
+- Create: `mihonsupport/src/commonMain/kotlin/com/programmersbox/mihon/repo/MihonIndexV2.kt` (protobuf + JSON models), `.../repo/Gzip.kt` (`expect fun gunzip(bytes: ByteArray): ByteArray` + `fun isGzip(bytes: ByteArray)`), `mihonsupport/src/jvmMain/.../repo/Gzip.jvm.kt`, `mihonsupport/src/androidMain/.../repo/Gzip.android.kt`, `mihonsupport/src/iosMain/.../repo/Gzip.ios.kt`
+- Modify: `mihonsupport/src/commonMain/kotlin/com/programmersbox/mihon/repo/MihonRepoModels.kt` (`indexV2`), `.../repo/MihonRepoClient.kt`
+- Test: `mihonsupport/src/commonTest/.../repo/MihonIndexV2Test.kt` (plain protobuf + JSON), `mihonsupport/src/jvmTest/.../repo/MihonIndexV2GzipTest.kt` (gzip via `java.util.zip.GZIPOutputStream`)
+
+**Interfaces:**
+- Consumes: `MihonLib`, `MihonRepoClient` (fetch/signingKeys contract unchanged: keys only for repos in latest fetch, https-only, CancellationException rethrown).
+
+Protobuf models (field numbers from `mihonapp/extensions-lib/index/index.proto`, verbatim):
+
+```kotlin
+@Serializable data class V2Index(
+    @ProtoNumber(1) val name: String = "",
+    @ProtoNumber(2) val badgeLabel: String = "",
+    @ProtoNumber(3) val signingKey: String = "",
+    @ProtoNumber(4) val contact: V2Contact? = null,
+    @ProtoOneOf val extensions: V2Extensions? = null,
+)
+@Serializable sealed interface V2Extensions
+@Serializable data class V2InlineList(@ProtoNumber(101) val extensionList: V2ExtensionList) : V2Extensions
+@Serializable data class V2ListUrl(@ProtoNumber(102) val extensionListUrl: String) : V2Extensions
+@Serializable data class V2Contact(@ProtoNumber(1) val website: String = "", @ProtoNumber(2) val discord: String? = null)
+@Serializable data class V2ExtensionList(@ProtoNumber(1) val extensions: List<V2Extension> = emptyList())
+@Serializable data class V2Extension(
+    @ProtoNumber(1) val name: String = "",
+    @ProtoNumber(2) val packageName: String = "",
+    @ProtoNumber(3) val resources: V2Resources? = null,
+    @ProtoNumber(4) val extensionLib: String = "",
+    @ProtoNumber(5) val versionCode: Long = 0,
+    @ProtoNumber(6) val versionName: String = "",
+    @ProtoNumber(7) val contentWarning: V2ContentWarning = V2ContentWarning.CONTENT_WARNING_UNSPECIFIED,
+    @ProtoNumber(8) val sources: List<V2Source> = emptyList(),
+)
+@Serializable data class V2Resources(@ProtoNumber(1) val apkUrl: String = "", @ProtoNumber(2) val iconUrl: String = "")
+@Serializable data class V2Source(
+    @ProtoNumber(1) val id: Long = 0, @ProtoNumber(2) val name: String = "", @ProtoNumber(3) val language: String = "",
+    @ProtoNumber(4) val homeUrl: String = "", @ProtoNumber(5) val mirrorUrls: List<String> = emptyList(),
+    @ProtoNumber(7) val message: String? = null,
+)
+@Serializable enum class V2ContentWarning {
+    @ProtoNumber(0) CONTENT_WARNING_UNSPECIFIED, @ProtoNumber(1) CONTENT_WARNING_SAFE,
+    @ProtoNumber(2) CONTENT_WARNING_MIXED, @ProtoNumber(3) CONTENT_WARNING_NSFW,
+}
+```
+(If `@ProtoOneOf` with these exact class shapes doesn't compile/decode in kotlinx-serialization 1.11.0, follow its documented oneof pattern; keep field numbers.) For proto3-JSON, decode the same JSON keys (`extensionList` / `extensionListUrl` objects, enum names as strings, int64 possibly quoted) with separate JSON-tolerant data classes or a lenient `Json { ignoreUnknownKeys = true; isLenient = true; coerceInputValues = true }` against JSON-shaped mirror classes.
+
+- [ ] **Step 1: Failing tests** (commonTest, MockEngine):
+  - repo.json with `index_v2` → client fetches that URL, decodes a protobuf `V2Index` built in-test via `ProtoBuf.encodeToByteArray`, maps entries: name, `packageName`, `versionName`, `iconUrl`, `apkUrl`, sources (`homeUrl` as baseUrl); NSFW gets " (18+)"; `extensionLib` "1.5"/"1.3" filtered out; "1.4"/"1.6" kept.
+  - `extensionListUrl` variant: index points at a second URL serving an `V2ExtensionList` → same mapping.
+  - JSON variant of the index decodes to the same result.
+  - signing key from `repo.json` meta; when meta lacks it, from `Index.signingKey`.
+  - http `index_v2` URL is rejected (no entries, no key).
+  - repo.json without `index_v2` still uses legacy `index.min.json` (existing tests stay green).
+  jvmTest: gzip-compressed protobuf index decodes.
+- [ ] **Step 2: Run** `./gradlew :mihonsupport:jvmTest` → FAIL.
+- [ ] **Step 3: Implement** models, gunzip expect/actuals, and the v2 branch in `MihonRepoClient.fetchRepo` (keeping the Task-5/fix-wave guarantees: mutex-guarded keys, scoped to latest fetch, CancellationException rethrown, https-only).
+- [ ] **Step 4: Run** `./gradlew :mihonsupport:jvmTest :mihonsupport:testAndroidHostTest :mihonsupport:compileKotlinIosSimulatorArm64 :mangaworld:assembleNoFirebaseDebug` → PASS.
+- [ ] **Step 5: Commit** `feat(mihon): support Mihon index_v2 extension repos`.
+- [ ] **Step 6: Device** — controller verifies Keiyoushi remote list populates and an extension installs.
