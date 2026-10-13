@@ -113,8 +113,11 @@ Uses **Navigation3** (AndroidX). Navigation graph is built in `entryGraph()` (
 `kmpuiviews/commonMain/.../navigation/Nav3Graph.kt`). Screens are `NavKey` data objects/classes
 defined in `Screen.kt`.
 
-`KmpGenericInfo` has `globalNav3Setup()` and `settingsNav3Setup()` context functions that let each
-app inject additional nav entries into the shared graph.
+Entries are registered with Koin's navigation3 DSL (`navigation<Key> { ... }` inside Koin modules)
+and consumed by `koinEntryProvider()` in `Nav3View.kt`. Examples: `buildKmpGraph()` in `Nav3Graph.kt`
+and `mangaworld/shared/.../MangaModule.kt`. Apps add their own entries by contributing such modules.
+`KmpGenericInfo.globalNav3Setup()`/`settingsNav3Setup()` still exist as overridable hooks (only
+overridden in the anime apps and the manga desktop app).
 
 `NavigationActions` is a Koin singleton that abstracts navigation calls — use it instead of directly
 accessing the nav controller.
