@@ -27,6 +27,12 @@ private const val METADATA_NAME = "programmersbox.otaku.name"
 private const val METADATA_CLASS = "programmersbox.otaku.class"
 private const val EXTENSION_FEATURE = "programmersbox.otaku.extension"
 
+// Legacy bridges register their own Injekt bindings (e.g. NetworkHelper) that clash with the app's native Mihon runtime.
+private val LEGACY_TACHIYOMI_BRIDGES = setOf(
+    "com.programmersbox.tachiyomibridge",
+    "com.programmersbox.customtachiyomibridge",
+)
+
 //TODO: Abstract this out to a kmp library
 // expect/actual class
 // koin for DI
@@ -44,6 +50,9 @@ actual class SourceLoader(
         "$EXTENSION_FEATURE.$sourceType",
         METADATA_CLASS,
     ) { t, a, p ->
+        if (nativeCatalogs.catalogs.isNotEmpty() && p.packageName in LEGACY_TACHIYOMI_BRIDGES) {
+            return@ExtensionLoader emptyList()
+        }
         when (t) {
             is ApiService -> listOf(
                 SourceInformation(
