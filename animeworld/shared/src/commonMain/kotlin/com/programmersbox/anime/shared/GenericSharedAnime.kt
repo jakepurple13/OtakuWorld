@@ -166,7 +166,7 @@ abstract class GenericSharedAnime(
                             )
                         },
                         headlineContent = { Text(it.title) },
-                        overlineContent = { Text(it.source.serviceName) },
+                        overlineContent = { Text(it.source.displayName) },
                         supportingContent = if (it.description.isNotEmpty()) {
                             { Text(it.description) }
                         } else null

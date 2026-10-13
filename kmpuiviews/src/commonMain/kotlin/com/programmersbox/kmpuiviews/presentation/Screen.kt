@@ -11,6 +11,9 @@ import net.thauvin.erik.urlencoder.UrlEncoderUtil
 sealed class Screen(val route: String) : NavKey {
 
     @Serializable
+    data class SourcePreferences(val serviceName: String) : Screen("source_preferences")
+
+    @Serializable
     data object RecentScreen : Screen("recent")
 
     @Serializable

@@ -73,6 +73,9 @@ interface KmpApiService {
 
     val serviceName: String get() = this::class.simpleName!!
 
+    /** Human-readable name for display only. Never use as a key; use [serviceName] for lookups and persistence. */
+    val displayName: String get() = serviceName
+
     fun <T> Flow<List<T>>.dispatchIoAndCatchList() = this
         .dispatchIo()
         .catch {
@@ -139,3 +142,16 @@ data class KmpSourceInformation(
     val packageName: String,
     val catalog: KmpApiServicesCatalog? = null,
 )
+
+/** A source that exposes a settings screen (e.g. Mihon ConfigurableSource). */
+interface KmpConfigurableApiService : KmpApiService
+
+/** Placeholder for an installed extension that was not loaded (untrusted, unsupported, or failed). */
+interface KmpUntrustedApiService : KmpApiService {
+    val reason: String
+    val canTrust: Boolean
+    suspend fun trust()
+}
+
+/** Catalogs that an app registers natively (in-process) rather than through an extension APK. */
+class NativeCatalogs(val catalogs: List<KmpExternalCustomApiServicesCatalog>)

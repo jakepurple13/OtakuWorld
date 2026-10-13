@@ -84,7 +84,7 @@ fun UrlOpenerScreen(
                 summaryValue = if (viewModel.currentChosenSource == null) {
                     {}
                 } else {
-                    { Text(viewModel.currentChosenSource?.apiService?.serviceName.orEmpty()) }
+                    { Text(viewModel.currentChosenSource?.apiService?.displayName.orEmpty()) }
                 },
                 endIcon = { Icon(Icons.Default.ArrowDropDown, null) },
                 modifier = Modifier.clickable { showSources = true }
@@ -111,7 +111,7 @@ fun UrlOpenerScreen(
                             MaterialTheme.typography.labelSmall
                                 .copy(color = listItemColors.overlineColor)
                                 .toSpanStyle()
-                        ) { appendLine(it.source.serviceName) }
+                        ) { appendLine(it.source.displayName) }
 
                         withStyle(
                             MaterialTheme.typography.bodyLarge

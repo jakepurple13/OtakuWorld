@@ -210,7 +210,7 @@ internal fun DetailsHeader(
                         .animateContentSize()
                 ) {
                     Text(
-                        model.source.serviceName,
+                        model.source.displayName,
                         style = MaterialTheme.typography.labelSmall,
                     )
 

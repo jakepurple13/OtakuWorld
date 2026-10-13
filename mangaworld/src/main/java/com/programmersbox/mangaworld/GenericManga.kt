@@ -10,6 +10,7 @@ import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.SystemAlerter
+import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
@@ -26,6 +27,7 @@ import com.programmersbox.manga.shared.reader.ReadViewModel
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangasettings.MangaNewSettingsSerializer
 import com.programmersbox.mangaworld.reader.ReadActivity
+import com.programmersbox.mihon.mihonModule
 import com.programmersbox.sharedtools.BackupProcessor
 import com.programmersbox.source_utilities.NetworkHelper
 import com.programmersbox.uiviews.GenericInfo
@@ -36,6 +38,7 @@ import org.koin.androidx.workmanager.dsl.workerOf
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
+import org.koin.dsl.navigation3.navigation
 
 val appModule = module {
     singleOf(::GenericManga) { bindsGenericInfo() }
@@ -56,7 +59,9 @@ val appModule = module {
     singleOf(::MangaDownloadManager)
     workerOf(::DownloadChapterWorker)
 
-    includes(mangaSharedModule())
+    navigation<Screen.SourcePreferences> { MihonPreferencesScreen(it.serviceName) }
+
+    includes(mangaSharedModule(), mihonModule)
 }
 
 //TODO: For multiplatform, maybe this becomes an open class that then the Android version overrides

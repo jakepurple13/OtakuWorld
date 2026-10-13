@@ -14,6 +14,8 @@ import com.programmersbox.kmpmodels.KmpExternalApiServicesCatalog
 import com.programmersbox.kmpmodels.KmpExternalCustomApiServicesCatalog
 import com.programmersbox.kmpmodels.KmpRemoteSources
 import com.programmersbox.kmpmodels.KmpSourceInformation
+import com.programmersbox.kmpmodels.KmpUntrustedApiService
+import com.programmersbox.kmpmodels.NativeCatalogs
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.OtakuWorldCatalog
 import com.programmersbox.kmpuiviews.repository.DownloadStateInterface
@@ -32,6 +34,7 @@ class ExtensionListViewModel(
     val downloadAndInstaller: DownloadAndInstaller,
     private val downloadStateRepository: DownloadStateInterface,
     private val extensionShareHandler: ExtensionShareHandler,
+    private val nativeCatalogs: NativeCatalogs,
 ) : ViewModel() {
     private val installedSources = mutableStateListOf<KmpSourceInformation>()
     val remoteSources = mutableStateMapOf<String, RemoteState>()
@@ -49,7 +52,8 @@ class ExtensionListViewModel(
     val remoteSourcesShowing = mutableStateMapOf<String, Boolean>()
 
     val hasCustomBridge by derivedStateOf {
-        installedSources.any { it.catalog is KmpExternalCustomApiServicesCatalog && it.name == "Custom Tachiyomi Bridge" }
+        nativeCatalogs.catalogs.isNotEmpty() ||
+            installedSources.any { it.catalog is KmpExternalCustomApiServicesCatalog && it.name == "Custom Tachiyomi Bridge" }
     }
 
     fun downloadAndInstall(downloadLink: String, destinationPath: String) {
@@ -93,9 +97,8 @@ class ExtensionListViewModel(
                     }
             }
             .combine(settingsHandling.customUrls) { sources, urls ->
-                sources.asSequence()
-                    .map { it.catalog }
-                    .filterIsInstance<KmpExternalCustomApiServicesCatalog>()
+                (sources.asSequence().map { it.catalog }.filterIsInstance<KmpExternalCustomApiServicesCatalog>() +
+                    nativeCatalogs.catalogs.asSequence())
                     .filter { it.hasRemoteSources }
                     .distinct()
                     .toList()
@@ -109,6 +112,13 @@ class ExtensionListViewModel(
                     }
             }
             .launchIn(viewModelScope)
+    }
+
+    fun trust(source: KmpSourceInformation) {
+        viewModelScope.launch {
+            (source.apiService as? KmpUntrustedApiService)?.trust()
+            sourceLoader.blockingLoad()
+        }
     }
 
     fun refreshExtensions() {
@@ -133,6 +143,9 @@ class InstalledViewState(
     val sourceInformation: List<KmpSourceInformation>,
 ) {
     var showItems by mutableStateOf(false)
+
+    /** A catalog group can only be uninstalled as a unit when it is one APK (e.g. a bridge). */
+    val canUninstallAll: Boolean get() = sourceInformation.map { it.packageName }.distinct().size == 1
 }
 
 sealed class RemoteState

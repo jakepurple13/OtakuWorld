@@ -27,9 +27,10 @@ A server is required, fortunately, we have made a basic server that will only wo
 network.
 Help wanted to help set up a more solid solution!
 
-For MangaWorld: Any sources that work with [Mihon](https://mihon.app/) will work with
-MangaWorld...After the bridge
-is installed.
+For MangaWorld: installed Mihon extensions are loaded natively. Add a Mihon repo URL in Extensions so
+its signing key marks that repo's extensions as trusted. In-app browsing and installing supports
+both repos that publish the legacy `index.min.json` and repos that publish Mihon's newer `index_v2`
+format.
 
 For AnimeWorld: Any sources that work with [Aniyomi](https://aniyomi.org/) will work with
 AnimeWorld...After the

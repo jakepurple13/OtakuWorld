@@ -9,21 +9,30 @@ import android.content.pm.PackageManager
 import android.os.Build
 import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpmodels.ModelMapper
+import com.programmersbox.kmpmodels.NativeCatalogs
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ApiServicesCatalog
 import com.programmersbox.models.ExternalApiServicesCatalog
 import com.programmersbox.models.ExternalCustomApiServicesCatalog
 import com.programmersbox.models.SourceInformation
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
 
 private const val METADATA_NAME = "programmersbox.otaku.name"
 private const val METADATA_CLASS = "programmersbox.otaku.class"
 private const val EXTENSION_FEATURE = "programmersbox.otaku.extension"
+
+// Legacy bridges register their own Injekt bindings (e.g. NetworkHelper) that clash with the app's native Mihon runtime.
+private val LEGACY_TACHIYOMI_BRIDGES = setOf(
+    "com.programmersbox.tachiyomibridge",
+    "com.programmersbox.customtachiyomibridge",
+)
 
 //TODO: Abstract this out to a kmp library
 // expect/actual class
@@ -34,6 +43,7 @@ actual class SourceLoader(
     private val context: Context,
     sourceType: String,
     private val sourceRepository: SourceRepository,
+    private val nativeCatalogs: NativeCatalogs = NativeCatalogs(emptyList()),
     private val modelMapper: ModelMapper = ModelMapper(application),
 ) {
     private val extensionLoader = ExtensionLoader<Any, List<KmpSourceInformation>>(
@@ -41,6 +51,9 @@ actual class SourceLoader(
         "$EXTENSION_FEATURE.$sourceType",
         METADATA_CLASS,
     ) { t, a, p ->
+        if (nativeCatalogs.catalogs.isNotEmpty() && p.packageName in LEGACY_TACHIYOMI_BRIDGES) {
+            return@ExtensionLoader emptyList()
+        }
         when (t) {
             is ApiService -> listOf(
                 SourceInformation(
@@ -85,6 +98,12 @@ actual class SourceLoader(
             override fun onReceive(context: Context?, intent: Intent) {
                 if (intent.dataString == null) return
                 val packageString = intent.dataString.orEmpty().removePrefix("package:")
+                if (intent.action == Intent.ACTION_PACKAGE_REMOVED &&
+                    sourceRepository.list.any { it.packageName == packageString }
+                ) {
+                    scope.launch { blockingLoad() }
+                    return
+                }
                 val isOtakuExtension = runCatching {
                     val p = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         context?.packageManager?.getPackageInfo(
@@ -98,7 +117,8 @@ actual class SourceLoader(
                     val s = sourceRepository.list
                         .filter { it.catalog is ExternalApiServicesCatalog }
                         .any { (it.catalog as ExternalApiServicesCatalog).shouldReload(packageString, p) }
-                    p.reqFeatures?.any { it.name == extensionType } == true || s
+                    p.reqFeatures?.any { it.name == extensionType } == true || s ||
+                        nativeCatalogs.catalogs.any { it.shouldReload(packageString) }
                 }.getOrDefault(false)
 
                 if (!isOtakuExtension) return
@@ -119,20 +139,24 @@ actual class SourceLoader(
         context.registerReceiver(uninstallApplication, intentFilter)
     }
 
+    private suspend fun nativeSources(): List<KmpSourceInformation> = withContext(Dispatchers.IO) {
+        nativeCatalogs.catalogs.flatMap { catalog ->
+            runCatching { catalog.initialize(); catalog.getSources() }
+                .onFailure { if (it is CancellationException) throw it else it.printStackTrace() }
+                .getOrDefault(emptyList())
+        }
+    }
+
     actual fun load() {
         sourceRepository.setSources(
-            extensionLoader
-                .loadExtensions()
-                .flatten()
+            (extensionLoader.loadExtensions().flatten() + runBlocking { nativeSources() })
                 .sortedBy { it.apiService.serviceName }
         )
     }
 
     actual suspend fun blockingLoad() {
         sourceRepository.setSources(
-            extensionLoader
-                .loadExtensionsBlocking()
-                .flatten()
+            (extensionLoader.loadExtensionsBlocking().flatten() + nativeSources())
                 .sortedBy { it.apiService.serviceName }
         )
     }

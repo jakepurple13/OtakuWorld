@@ -45,7 +45,7 @@ fun SourcesScreen(
     ) {
         CategoryGroupListItem {
             segmentedListItem(
-                content = { Text(stringResource(Res.string.currentSource, source?.serviceName.orEmpty())) },
+                content = { Text(stringResource(Res.string.currentSource, source?.displayName.orEmpty())) },
                 leadingContent = { Icon(Icons.Default.Source, null) },
                 onClick = { showSourceChooser = true },
             )

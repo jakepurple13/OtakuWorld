@@ -178,7 +178,7 @@ fun RecentView(
                         },
                         label = ""
                     ) { targetState ->
-                        Text(sourceList.getOrNull(targetState)?.apiService?.serviceName.orEmpty())
+                        Text(sourceList.getOrNull(targetState)?.apiService?.displayName.orEmpty())
                     }
                 },
                 actions = {

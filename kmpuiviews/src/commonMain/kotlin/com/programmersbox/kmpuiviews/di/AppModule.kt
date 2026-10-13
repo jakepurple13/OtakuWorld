@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import com.programmersbox.datastore.DataStoreHandler
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.encrypted.EncryptedDataStoreHandling
+import com.programmersbox.kmpmodels.NativeCatalogs
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.OtakuWorldCatalog
 import com.programmersbox.kmpuiviews.domain.AppUpdateCheck
@@ -51,6 +52,7 @@ import kotlin.time.Duration.Companion.minutes
 val appModule = module {
     singleOf(::AppUpdateCheck)
     single { JsExtensionSourceBridge(get(), get()) }
+    single { NativeCatalogs(getAll()) }
     single {
         OtakuWorldCatalog(
             get<KmpGenericInfo>().sourceType

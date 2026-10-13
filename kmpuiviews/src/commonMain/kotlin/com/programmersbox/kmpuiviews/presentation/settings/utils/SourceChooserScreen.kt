@@ -113,16 +113,16 @@ fun SourceChooserScreen(
                         .find { it.apiService.serviceName == "${it.name}$languageCode" }
                         ?.let {
                             ListBottomSheetItemModel(
-                                primaryText = it.apiService.serviceName,
+                                primaryText = it.apiService.displayName,
                                 icon = if (it.apiService.serviceName == currentService) Icons.Default.Check else null
-                            )
+                            ) to it.apiService.serviceName
                         }
-                        ?.let { c ->
+                        ?.let { (c, serviceKey) ->
                             item {
                                 ListItem(
                                     modifier = Modifier.clickable {
                                         onChosen()
-                                        scope.launch { dataStoreHandling.currentService.set(c.primaryText) }
+                                        scope.launch { dataStoreHandling.currentService.set(serviceKey) }
                                     },
                                     leadingContent = c.icon?.let { i -> { Icon(i, null) } },
                                     headlineContent = { Text("Current Language Source") },
@@ -134,7 +134,7 @@ fun SourceChooserScreen(
                 }
             ) {
                 ListBottomSheetItemModel(
-                    primaryText = it.apiService.serviceName,
+                    primaryText = it.apiService.displayName,
                     icon = if (it.apiService.serviceName == currentService) Icons.Default.Check else null
                 )
             }
@@ -253,7 +253,7 @@ private fun SourceChooserScreen(
                         .find { it.apiService.serviceName == "${it.name}$languageCode" }
                         ?.let {
                             ListBottomSheetItemModel(
-                                primaryText = it.apiService.serviceName,
+                                primaryText = it.apiService.displayName,
                                 icon = if (it.apiService.serviceName == currentService) Icons.Default.Check else null
                             ) to it
                         }
@@ -271,7 +271,7 @@ private fun SourceChooserScreen(
                 }
             ) {
                 ListBottomSheetItemModel(
-                    primaryText = it.apiService.serviceName,
+                    primaryText = it.apiService.displayName,
                     icon = if (it.apiService.serviceName == currentService) Icons.Default.Check else null
                 )
             }
