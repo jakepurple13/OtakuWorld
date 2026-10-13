@@ -67,6 +67,7 @@ Flavor-specific Firebase utility implementations live in
 | `datastore:mangasettings` | Manga-specific protobuf settings                                                                                                |
 | `sharedutils`             | Firebase utilities with flavor-specific implementations                                                                         |
 | `source_utilities`        | `NetworkHelper` for HTTP source plugins                                                                                         |
+| `mihonsupport`            | Native Mihon extension runtime (vendored `eu.kanade.tachiyomi.*`), loader, repo client, mapper to `Kmp*` models (KMP; Android implementation only) |
 | `mangaworld`              | MangaWorld Android app, `GenericManga` implementation                                                                           |
 | `mangaworld:shared`       | Shared manga reader UI (KMP)                                                                                                    |
 | `mangaworld:desktop`      | JVM/Desktop Compose app for MangaWorld                                                                                          |
