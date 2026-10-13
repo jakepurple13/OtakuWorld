@@ -3,8 +3,6 @@ package com.programmersbox.mangaworld
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import androidx.navigation3.runtime.EntryProviderScope
-import androidx.navigation3.runtime.NavKey
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.gsonutils.toJson
@@ -40,6 +38,7 @@ import org.koin.androidx.workmanager.dsl.workerOf
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
+import org.koin.dsl.navigation3.navigation
 
 val appModule = module {
     singleOf(::GenericManga) { bindsGenericInfo() }
@@ -59,6 +58,8 @@ val appModule = module {
     factory { Zipper(get(), getAll<BackupProcessor>(), get()) }
     singleOf(::MangaDownloadManager)
     workerOf(::DownloadChapterWorker)
+
+    navigation<Screen.SourcePreferences> { MihonPreferencesScreen(it.serviceName) }
 
     includes(mangaSharedModule(), mihonModule)
 }
@@ -109,12 +110,6 @@ class GenericManga(
                 }
             )
         }
-    }
-
-    context(navGraph: EntryProviderScope<NavKey>)
-    override fun globalNav3Setup() {
-        super<GenericSharedManga>.globalNav3Setup()
-        navGraph.entry<Screen.SourcePreferences> { MihonPreferencesScreen(it.serviceName) }
     }
 
     override fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit {
