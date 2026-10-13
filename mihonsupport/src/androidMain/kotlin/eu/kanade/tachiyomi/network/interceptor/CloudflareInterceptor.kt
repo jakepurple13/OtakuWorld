@@ -258,7 +258,11 @@ class CloudflareInterceptor(
             cookieManager.remove(originalRequest.url, COOKIE_NAMES, 0)
             // Prompt user to update WebView if it seems too outdated
             if (isWebViewOutdated) {
-                Toast.makeText(context, "Please update the WebView app for better compatibility", Toast.LENGTH_LONG).show() // OTAKU
+                // OTAKU: literal string; posted to main thread (we are on an OkHttp thread here)
+                executor.execute {
+                    Toast.makeText(context, "Please update the WebView app for better compatibility", Toast.LENGTH_LONG)
+                        .show()
+                }
             }
 
             throw CloudflareBypassException()

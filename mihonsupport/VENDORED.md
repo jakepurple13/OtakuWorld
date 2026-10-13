@@ -62,10 +62,11 @@ below, including `FilterList.kt`; re-apply them.)
 
 - `CloudflareInterceptor.kt`: removed imports `util.system.toast`, `core.common.i18n.stringResource`,
   `tachiyomi.i18n.MR` (moko-resources not vendored). The bypass-failure `IOException` message is the
-  literal "Failed to bypass Cloudflare"; the outdated-WebView toast is a plain
-  `Toast.makeText(...)` with a literal string.
+  literal "Failed to bypass Cloudflare"; the outdated-WebView toast is a `Toast.makeText(...)` with a literal
+  string, posted via the main executor (the call site is an OkHttp thread).
 - `WebViewInterceptor.kt`: removed imports `util.system.toast`, `tachiyomi.i18n.MR`; the
-  WebView-required toast is a plain `Toast.makeText(...)` with a literal string.
+  WebView-required toast is a plain `Toast.makeText(...)` with a literal string (already inside
+  `scope.launch(Dispatchers.Main)`, so no thread hop needed).
 - `NetworkHelper.kt` (hand-written): `client` now adds `CloudflareInterceptor`.
 
 ### Build notes
