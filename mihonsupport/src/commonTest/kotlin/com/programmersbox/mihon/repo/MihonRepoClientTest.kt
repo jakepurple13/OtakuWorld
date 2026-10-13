@@ -31,6 +31,19 @@ class MihonRepoClientTest {
         }
     })
 
+    /** Per-host repo: fingerprint = [keysByHost][host]; hosts in [failing] return 500. */
+    private fun perHostClient(keysByHost: Map<String, String>, failing: Set<String>) = HttpClient(MockEngine { request ->
+        val host = request.url.host
+        when {
+            host in failing -> respondError(HttpStatusCode.InternalServerError)
+            host !in keysByHost -> respondError(HttpStatusCode.NotFound)
+            request.url.encodedPath.endsWith("/repo.json") ->
+                respond("""{"meta":{"name":"$host","signingKeyFingerprint":"${keysByHost.getValue(host)}"}}""")
+            request.url.encodedPath.endsWith("/index.min.json") -> respond(INDEX)
+            else -> respondError(HttpStatusCode.NotFound)
+        }
+    })
+
     // Review Focus 2
     @Test
     fun normalizesUserUrls() {
@@ -60,5 +73,27 @@ class MihonRepoClientTest {
         val repo = MihonRepoClient(client(failHost = "bad.example"))
         val result = repo.fetch(listOf("https://bad.example", "https://good.example"))
         assertEquals(listOf("eu.kanade.tachiyomi.extension.all.mangadex"), result.map { it.packageName })
+    }
+
+    @Test
+    fun signingKeysOnlyCoverReposInLatestFetch() = runTest {
+        val repo = MihonRepoClient(perHostClient(mapOf("a.example" to "keyA", "b.example" to "keyB"), failing = emptySet()))
+        repo.fetch(listOf("https://a.example", "https://b.example"))
+        assertEquals(setOf("keyA", "keyB"), repo.signingKeys)
+
+        repo.fetch(listOf("https://b.example"))
+        assertEquals(setOf("keyB"), repo.signingKeys)
+    }
+
+    @Test
+    fun failedRepoKeepsCachedKey() = runTest {
+        val failing = mutableSetOf<String>()
+        val repo = MihonRepoClient(perHostClient(mapOf("a.example" to "keyA"), failing))
+        repo.fetch(listOf("https://a.example"))
+        assertEquals(setOf("keyA"), repo.signingKeys)
+
+        failing += "a.example"
+        repo.fetch(listOf("https://a.example"))
+        assertEquals(setOf("keyA"), repo.signingKeys)
     }
 }
