@@ -3,8 +3,12 @@
 package eu.kanade.tachiyomi.network
 
 import android.content.Context
+import eu.kanade.tachiyomi.network.interceptor.CloudflareInterceptor
 import eu.kanade.tachiyomi.network.interceptor.UncaughtExceptionInterceptor
 import eu.kanade.tachiyomi.network.interceptor.UserAgentInterceptor
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import okhttp3.Cache
 import okhttp3.OkHttpClient
 import okhttp3.brotli.BrotliInterceptor
@@ -26,7 +30,13 @@ class NetworkHelper(private val context: Context) {
         .addInterceptor(UserAgentInterceptor(::defaultUserAgentProvider))
         .addNetworkInterceptor(BrotliInterceptor)
 
-    val client: OkHttpClient by lazy { clientBuilder().build() }
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    val client: OkHttpClient by lazy {
+        clientBuilder()
+            .addInterceptor(CloudflareInterceptor(context, cookieJar, scope, ::defaultUserAgentProvider))
+            .build()
+    }
 
     @Deprecated("The regular client handles Cloudflare by default")
     @Suppress("UNUSED")

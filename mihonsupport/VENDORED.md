@@ -46,12 +46,27 @@ From `core/common/src/main/kotlin`:
 - `tachiyomi/core/common/util/lang/RxCoroutineBridge.kt`
 - `tachiyomi/core/common/util/system/LogcatExtensions.kt`
 - `mihon/core/common/extensions/JsonObject.kt`
+- `eu/kanade/tachiyomi/network/interceptor/CloudflareInterceptor.kt` — **edited** (see below)
+- `eu/kanade/tachiyomi/network/interceptor/WebViewInterceptor.kt` — **edited** (see below)
+- `eu/kanade/tachiyomi/util/system/DeviceUtil.kt`
+- `eu/kanade/tachiyomi/util/system/WebViewUtil.kt`
+
+(The last four are fetched only with `WITH_WEBVIEW=1`. Re-running the script overwrites all edits
+below, including `FilterList.kt`; re-apply them.)
 
 ### Local edits (`OTAKU:`)
 
 - `eu/kanade/tachiyomi/source/model/FilterList.kt`: removed the `androidx.compose.runtime.Stable`
   import and `@Stable` annotation; this module has no Compose dependency. The annotation has no
   effect on extension binary compatibility.
+
+- `CloudflareInterceptor.kt`: removed imports `util.system.toast`, `core.common.i18n.stringResource`,
+  `tachiyomi.i18n.MR` (moko-resources not vendored). The bypass-failure `IOException` message is the
+  literal "Failed to bypass Cloudflare"; the outdated-WebView toast is a plain
+  `Toast.makeText(...)` with a literal string.
+- `WebViewInterceptor.kt`: removed imports `util.system.toast`, `tachiyomi.i18n.MR`; the
+  WebView-required toast is a plain `Toast.makeText(...)` with a literal string.
+- `NetworkHelper.kt` (hand-written): `client` now adds `CloudflareInterceptor`.
 
 ### Build notes
 
