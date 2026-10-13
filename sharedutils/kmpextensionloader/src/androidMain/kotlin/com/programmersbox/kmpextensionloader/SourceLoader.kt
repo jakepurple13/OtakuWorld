@@ -20,6 +20,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
 
 private const val METADATA_NAME = "programmersbox.otaku.name"
@@ -128,10 +129,12 @@ actual class SourceLoader(
         context.registerReceiver(uninstallApplication, intentFilter)
     }
 
-    private suspend fun nativeSources(): List<KmpSourceInformation> = nativeCatalogs.catalogs.flatMap { catalog ->
-        runCatching { catalog.initialize(); catalog.getSources() }
-            .onFailure { it.printStackTrace() }
-            .getOrDefault(emptyList())
+    private suspend fun nativeSources(): List<KmpSourceInformation> = withContext(Dispatchers.IO) {
+        nativeCatalogs.catalogs.flatMap { catalog ->
+            runCatching { catalog.initialize(); catalog.getSources() }
+                .onFailure { it.printStackTrace() }
+                .getOrDefault(emptyList())
+        }
     }
 
     actual fun load() {
