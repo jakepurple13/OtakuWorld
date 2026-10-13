@@ -62,8 +62,8 @@ class MihonExtensionLoader(private val context: Context) {
             // One broken package must not abort loading the rest.
             try {
                 loadPackage(it, catalog, repoSigningKeys, trustedIds, onTrust)
-            } catch (e: Exception) {
-                e.printStackTrace()
+            } catch (t: Throwable) {
+                t.printStackTrace()
                 emptyList()
             }
         }
@@ -130,22 +130,22 @@ class MihonExtensionLoader(private val context: Context) {
         val classNames = MihonSourceInstantiator.classNames(pkg, metaData.getString(METADATA_SOURCE_CLASS))
         if (classNames.isEmpty()) return notLoaded("Malformed")
 
-        val sources = runCatching { DelegateLastClassLoader(appInfo.sourceDir, null, context.classLoader) }
-            .mapCatching { MihonSourceInstantiator.instantiate(classNames, it).getOrThrow() }
-            .getOrElse {
-                it.printStackTrace()
-                return notLoaded("Failed to load: ${it.message}")
+        // Building the service reads extension-supplied id/baseUrl/name, so it is guarded too.
+        return try {
+            val classLoader = DelegateLastClassLoader(appInfo.sourceDir, null, context.classLoader)
+            MihonSourceInstantiator.instantiate(classNames, classLoader).getOrThrow().map { source ->
+                val service = mihonApiService(source)
+                KmpSourceInformation(
+                    apiService = service,
+                    name = service.displayName,
+                    icon = null,
+                    packageName = pkg,
+                    catalog = catalog,
+                )
             }
-
-        return sources.map { source ->
-            val service = mihonApiService(source)
-            KmpSourceInformation(
-                apiService = service,
-                name = service.displayName,
-                icon = null,
-                packageName = pkg,
-                catalog = catalog,
-            )
+        } catch (t: Throwable) {
+            t.printStackTrace()
+            notLoaded("Failed to load: ${t.message}")
         }
     }
 

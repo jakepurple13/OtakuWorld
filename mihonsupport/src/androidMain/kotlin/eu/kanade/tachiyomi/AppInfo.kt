@@ -13,7 +13,7 @@ object AppInfo {
 
     /** @since extensions-lib 1.5 */
     fun getSupportedImageMimeTypes(): List<String> =
-        listOf("image/jpeg", "image/png", "image/gif", "image/webp", "image/avif", "image/heif", "image/jxl")
+        listOf("image/jpeg", "image/png", "image/gif", "image/webp")
 
     private fun packageInfo() = Injekt.get<Application>().let { it.packageManager.getPackageInfo(it.packageName, 0) }
 }

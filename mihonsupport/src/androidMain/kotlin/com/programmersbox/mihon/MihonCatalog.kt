@@ -7,6 +7,7 @@ import com.programmersbox.kmpmodels.KmpRemoteSources
 import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.mihon.loader.MihonExtensionLoader
 import com.programmersbox.mihon.repo.MihonRepoClient
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 
 class MihonCatalog(
@@ -26,6 +27,7 @@ class MihonCatalog(
         MihonRuntime.init(application)
         // Refresh repo signing keys; on failure keep whatever was fetched earlier this session.
         runCatching { repoClient.fetch(settings.customUrls.first()) }
+            .onFailure { if (it is CancellationException) throw it }
         sources = loader.load(
             catalog = this,
             repoSigningKeys = repoClient.signingKeys.map { it.lowercase() }.toSet(),

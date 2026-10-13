@@ -16,6 +16,7 @@ import com.programmersbox.models.ApiServicesCatalog
 import com.programmersbox.models.ExternalApiServicesCatalog
 import com.programmersbox.models.ExternalCustomApiServicesCatalog
 import com.programmersbox.models.SourceInformation
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -141,7 +142,7 @@ actual class SourceLoader(
     private suspend fun nativeSources(): List<KmpSourceInformation> = withContext(Dispatchers.IO) {
         nativeCatalogs.catalogs.flatMap { catalog ->
             runCatching { catalog.initialize(); catalog.getSources() }
-                .onFailure { it.printStackTrace() }
+                .onFailure { if (it is CancellationException) throw it else it.printStackTrace() }
                 .getOrDefault(emptyList())
         }
     }
