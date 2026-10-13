@@ -11,6 +11,12 @@ import org.koin.java.KoinJavaComponent.get
 /** Renders a Mihon ConfigurableSource's preferences, stored where the extension reads them. */
 class MihonPreferenceFragment : PreferenceFragmentCompat() {
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        // Host theme may lack preferenceTheme; force=false only fills attrs that are missing.
+        requireContext().theme.applyStyle(androidx.preference.R.style.PreferenceThemeOverlay, false)
+        super.onCreate(savedInstanceState)
+    }
+
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         val serviceName = requireArguments().getString(ARG_SERVICE_NAME).orEmpty()
         val source = (get<SourceRepository>(SourceRepository::class.java)
