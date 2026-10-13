@@ -96,4 +96,20 @@ class MihonRepoClientTest {
         repo.fetch(listOf("https://a.example"))
         assertEquals(setOf("keyA"), repo.signingKeys)
     }
+
+    @Test
+    fun httpRepoIsIgnored() = runTest {
+        val repo = MihonRepoClient(client())
+        val result = repo.fetch(listOf("http://repo.example"))
+        assertEquals(emptyList(), result)
+        assertEquals(emptySet(), repo.signingKeys)
+    }
+
+    @Test
+    fun httpIgnoredHttpsKept() = runTest {
+        val repo = MihonRepoClient(client())
+        val result = repo.fetch(listOf("http://bad.example", "https://repo.example"))
+        assertEquals(1, result.size)
+        assertEquals(setOf("abc123"), repo.signingKeys)
+    }
 }

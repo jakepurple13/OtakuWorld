@@ -38,7 +38,10 @@ class MihonRepoClient(private val httpClient: HttpClient) {
     val signingKeys: Set<String> get() = keySnapshot
 
     suspend fun fetch(urls: List<String>): List<KmpRemoteSources> {
-        val bases = urls.map(::normalize).filter { it.isNotEmpty() }.distinct()
+        val bases = urls.map(::normalize).filter { it.isNotEmpty() }.distinct().filter {
+            // Plain http would let a network attacker inject a signing key that marks extensions trusted.
+            it.startsWith("https://", ignoreCase = true).also { ok -> if (!ok) println("Ignoring non-https Mihon repo: $it") }
+        }
         val results = coroutineScope {
             bases.map { base -> async { fetchRepo(base) } }.awaitAll()
         }

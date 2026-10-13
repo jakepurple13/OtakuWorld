@@ -8,6 +8,6 @@ import org.koin.dsl.bind
 import org.koin.dsl.module
 
 val mihonModule = module {
-    single { MihonRepoClient(HttpClient(OkHttp)) }
+    single { MihonRepoClient(HttpClient(OkHttp) { engine { config { followSslRedirects(false) } } }) }
     single { MihonCatalog(get(), get(), get()) } bind KmpExternalCustomApiServicesCatalog::class
 }
