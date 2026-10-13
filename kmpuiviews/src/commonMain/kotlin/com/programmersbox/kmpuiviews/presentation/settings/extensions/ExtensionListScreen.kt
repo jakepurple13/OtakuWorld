@@ -334,7 +334,7 @@ private fun InstalledExtensionItems(
             ListItem(
                 headlineContent = {
                     val source by LocalCurrentSource.current.asFlow().collectAsStateWithLifecycle(initialValue = null)
-                    Text(stringResource(Res.string.currentSource, source?.serviceName.orEmpty()))
+                    Text(stringResource(Res.string.currentSource, source?.displayName.orEmpty()))
                 }
             )
 

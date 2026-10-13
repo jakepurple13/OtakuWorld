@@ -113,7 +113,7 @@ fun SourceChooserScreen(
                         .find { it.apiService.serviceName == "${it.name}$languageCode" }
                         ?.let {
                             ListBottomSheetItemModel(
-                                primaryText = it.apiService.serviceName,
+                                primaryText = it.apiService.displayName,
                                 icon = if (it.apiService.serviceName == currentService) Icons.Default.Check else null
                             )
                         }
@@ -134,7 +134,7 @@ fun SourceChooserScreen(
                 }
             ) {
                 ListBottomSheetItemModel(
-                    primaryText = it.apiService.serviceName,
+                    primaryText = it.apiService.displayName,
                     icon = if (it.apiService.serviceName == currentService) Icons.Default.Check else null
                 )
             }
@@ -253,7 +253,7 @@ private fun SourceChooserScreen(
                         .find { it.apiService.serviceName == "${it.name}$languageCode" }
                         ?.let {
                             ListBottomSheetItemModel(
-                                primaryText = it.apiService.serviceName,
+                                primaryText = it.apiService.displayName,
                                 icon = if (it.apiService.serviceName == currentService) Icons.Default.Check else null
                             ) to it
                         }
@@ -271,7 +271,7 @@ private fun SourceChooserScreen(
                 }
             ) {
                 ListBottomSheetItemModel(
-                    primaryText = it.apiService.serviceName,
+                    primaryText = it.apiService.displayName,
                     icon = if (it.apiService.serviceName == currentService) Icons.Default.Check else null
                 )
             }

@@ -126,7 +126,7 @@ fun AllScreen(
                     Text(
                         stringResource(
                             Res.string.searchFor,
-                            source?.serviceName.orEmpty()
+                            source?.displayName.orEmpty()
                         )
                     )
                 },

@@ -80,7 +80,7 @@ class GlobalSearchViewModel(
                     .apiService
                     .searchSourceList(searchText.text.toString(), list = emptyList())
                     .dispatchIoAndCatchList()
-                    .map { SearchModel(a.apiService.serviceName, it) }
+                    .map { SearchModel(a.apiService.displayName, it) }
                     .filter { it.data.isNotEmpty() }
                     .onEach { searchListPublisher += it }
                     .onCompletion { isRefreshing = false }
@@ -100,7 +100,7 @@ class GlobalSearchViewModel(
                             .apiService
                             .searchSourceList(searchText.text.toString(), list = emptyList())
                             .dispatchIoAndCatchList()
-                            .map { SearchModel(a.apiService.serviceName, it) }
+                            .map { SearchModel(a.apiService.displayName, it) }
                             .filter { it.data.isNotEmpty() }
                             .firstOrNull()
                     }

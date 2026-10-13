@@ -22,6 +22,13 @@ class MihonSourceMapperTest {
     }
 
     @Test
+    fun untrustedServiceDisplaysLabelButKeepsKey() {
+        val service = UntrustedMihonApiService("a.b.c", "Unsigned", false, "My Ext") {}
+        assertEquals("mihon-untrusted:a.b.c", service.serviceName)
+        assertEquals("My Ext", service.displayName)
+    }
+
+    @Test
     fun recentUsesLatestWhenSupported() = runTest {
         assertEquals("Latest", mihonApiService(FakeCatalogueSource(supportsLatest = true)).recent(1).single().title)
         assertEquals("Popular", mihonApiService(FakeCatalogueSource(supportsLatest = false)).recent(1).single().title)

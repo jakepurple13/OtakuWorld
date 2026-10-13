@@ -73,6 +73,9 @@ interface KmpApiService {
 
     val serviceName: String get() = this::class.simpleName!!
 
+    /** Human-readable name for display only. Never use as a key; use [serviceName] for lookups and persistence. */
+    val displayName: String get() = serviceName
+
     fun <T> Flow<List<T>>.dispatchIoAndCatchList() = this
         .dispatchIo()
         .catch {

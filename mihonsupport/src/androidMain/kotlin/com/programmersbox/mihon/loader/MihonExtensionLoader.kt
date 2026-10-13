@@ -107,7 +107,7 @@ class MihonExtensionLoader(private val context: Context) {
 
         fun notLoaded(reason: String, canTrust: Boolean = false) = listOf(
             KmpSourceInformation(
-                apiService = UntrustedMihonApiService(pkg, reason, canTrust) {
+                apiService = UntrustedMihonApiService(pkg, reason, canTrust, label) {
                     onTrust(MihonTrust.trustId(pkg, versionCode, fingerprints.last()))
                 },
                 name = "$label ($reason)",
