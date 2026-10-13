@@ -57,6 +57,8 @@ dependencies {
 
     implementation(projects.uiViews)
     implementation(projects.kmpmodels)
+    implementation(projects.mihonsupport)
+    implementation(androidLibs.fragmentCompose)
     implementation(projects.favoritesdatabase)
     implementation(projects.favoritesdatabase.supabaseIntegration)
     implementation(projects.sharedutils)

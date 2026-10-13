@@ -47,7 +47,8 @@ actual fun platformModule(): Module = module {
             application = get(),
             context = get(),
             sourceType = get<KmpGenericInfo>().sourceType,
-            sourceRepository = get()
+            sourceRepository = get(),
+            nativeCatalogs = get(),
         )
     }
 

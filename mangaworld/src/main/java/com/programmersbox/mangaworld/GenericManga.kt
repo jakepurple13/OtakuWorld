@@ -26,6 +26,7 @@ import com.programmersbox.manga.shared.reader.ReadViewModel
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangasettings.MangaNewSettingsSerializer
 import com.programmersbox.mangaworld.reader.ReadActivity
+import com.programmersbox.mihon.mihonModule
 import com.programmersbox.sharedtools.BackupProcessor
 import com.programmersbox.source_utilities.NetworkHelper
 import com.programmersbox.uiviews.GenericInfo
@@ -56,7 +57,7 @@ val appModule = module {
     singleOf(::MangaDownloadManager)
     workerOf(::DownloadChapterWorker)
 
-    includes(mangaSharedModule())
+    includes(mangaSharedModule(), mihonModule)
 }
 
 //TODO: For multiplatform, maybe this becomes an open class that then the Android version overrides

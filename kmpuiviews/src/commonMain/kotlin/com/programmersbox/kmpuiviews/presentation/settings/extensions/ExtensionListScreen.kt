@@ -94,6 +94,7 @@ import coil3.toUri
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.kmpmodels.KmpRemoteSources
 import com.programmersbox.kmpmodels.KmpSourceInformation
+import com.programmersbox.kmpmodels.KmpUntrustedApiService
 import com.programmersbox.kmpuiviews.IconLoader
 import com.programmersbox.kmpuiviews.SourceIcon
 import com.programmersbox.kmpuiviews.domain.AppUpdate
@@ -289,7 +290,8 @@ fun ExtensionList(
                             //TODO: Need to show some ui for download progress and installing progress
                             viewModel.downloadAndInstall(downloadLink, destinationPath)
                         },
-                        onUninstall = { sourceInfoRepository.uninstall(it) }
+                        onUninstall = { sourceInfoRepository.uninstall(it) },
+                        onTrust = { viewModel.trust(it) },
                     )
                 }
             },
@@ -316,6 +318,7 @@ private fun InstalledExtensionItems(
     iconLoader: IconLoader,
     onDownloadAndInstall: (String, String) -> Unit,
     onUninstall: (KmpSourceInformation) -> Unit,
+    onTrust: (KmpSourceInformation) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val sourceInfoRepository = koinInject<SourceInfoRepository>()
@@ -361,7 +364,7 @@ private fun InstalledExtensionItems(
                                     Text(t ?: u.sourceInformation.firstOrNull()?.name ?: "Single Source")
                                 },
                                 leadingContent = { Text("(${itemList.size})") },
-                                trailingContent = t?.let {
+                                trailingContent = t?.takeIf { u.canUninstallAll }?.let {
                                     {
                                         IconButton(
                                             onClick = { onUninstall(u.sourceInformation.random()) }
@@ -386,7 +389,7 @@ private fun InstalledExtensionItems(
                             ExtensionItem(
                                 sourceInformation = source,
                                 version = version,
-                                onClick = { currentSourceRepository.tryEmit(source.apiService) },
+                                onClick = { if (source.apiService !is KmpUntrustedApiService) currentSourceRepository.tryEmit(source.apiService) },
                                 iconLoader = iconLoader,
                                 trailingIcon = {
                                     Row(
@@ -410,6 +413,12 @@ private fun InstalledExtensionItems(
                                                 ) { Icon(Icons.Default.Update, null) }
                                             }
                                         }
+
+                                        (source.apiService as? KmpUntrustedApiService)
+                                            ?.takeIf { it.canTrust }
+                                            ?.let {
+                                                TextButton(onClick = { onTrust(source) }) { Text("Trust") }
+                                            }
 
                                         IconButton(
                                             onClick = { onUninstall(source) }
