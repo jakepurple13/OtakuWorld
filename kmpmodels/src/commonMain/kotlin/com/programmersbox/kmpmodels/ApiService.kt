@@ -139,3 +139,6 @@ data class KmpSourceInformation(
     val packageName: String,
     val catalog: KmpApiServicesCatalog? = null,
 )
+
+/** A source that exposes a settings screen (e.g. Mihon ConfigurableSource). */
+interface KmpConfigurableApiService : KmpApiService
