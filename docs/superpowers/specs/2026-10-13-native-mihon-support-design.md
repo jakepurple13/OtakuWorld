@@ -279,3 +279,39 @@ block (`mangaworld/proguard-rules.pro:238-262`) into `mihonsupport/consumer-rule
   `"Failed to load"` entries instead of crashing.
 - Class-loader conflicts if the app's dependency versions (OkHttp, kotlinx.serialization) diverge
   from what extensions were compiled against; mitigated by aligning to Mihon's catalog versions.
+
+## Plan refinements (2026-10-13, found while writing the implementation plan)
+
+These supersede the sections above where they differ.
+
+- **Wiring through Koin, not module dependencies.** `SourceLoader` is shared by all three apps, so
+  `:sharedutils:kmpextensionloader` does not depend on `:mihonsupport`. A new
+  `NativeCatalogs(catalogs: List<KmpExternalCustomApiServicesCatalog>)` (kmpmodels) is registered as
+  `single { NativeCatalogs(getAll()) }`; MangaWorld binds `MihonCatalog` as a
+  `KmpExternalCustomApiServicesCatalog`. `SourceLoader` and `ExtensionListViewModel` consume
+  `NativeCatalogs`. The remote-repo pane therefore works before any Mihon extension is installed.
+- **`MihonCatalog` is androidMain only.** No expect/actual stubs; `jvmMain`/`iosMain` are empty and
+  KMP-readiness comes from `commonMain` (`MihonLib`, `MihonTrust`, repo client).
+- **Class loading uses `dalvik.system.DelegateLastClassLoader`** (as Mihon does; minSdk 28), not a
+  custom child-first loader.
+- **Lib version** comes from `tachiyomix.extensionLib` metadata, falling back to the `versionName`
+  prefix (Mihon behavior).
+- **Mihon's `NetworkHelper` / `JavaScriptEngine` use Metro DI**, so they are hand-written with the
+  same public API; the rest is vendored verbatim with `OTAKU:`-marked edits (i18n strings → literals).
+  Mihon's `LogcatExtensions` is vendored with `com.squareup.logcat:logcat`.
+- **Mapper uses the lib 1.6 API:** `getMangaUpdate(manga, emptyList(), true, true)` for details +
+  chapters. `SManga`/`SChapter` `memo` (lib 1.6) is preserved in `extras["mihonMemo"]`. Image
+  headers come from the protected `HttpSource.imageRequest(page)` via reflection, falling back to
+  `source.headers`.
+- **Untrusted/failed entries** implement a new kmpmodels `KmpUntrustedApiService`
+  (`reason`, `canTrust`, `trust()`) so the shared extension UI can show **Trust** without depending
+  on `:mihonsupport`. Unsigned and malformed packages are listed too.
+- **Group uninstall guard:** the per-catalog uninstall button only shows when the group is a single
+  package (otherwise the "Mihon" group would uninstall a random extension).
+- **Preferences:** the Compose host (`MihonPreferencesScreen`) lives in `mangaworld`;
+  `:mihonsupport` provides only `MihonPreferenceFragment`. No custom theme:
+  `PreferenceFragmentCompat` falls back to `PreferenceThemeOverlay`. `NavigationActions` already
+  has generic `navigate(nav)`, so no new nav action function.
+- **R8:** existing keep rules in `mangaworld/proguard-rules.pro` already cover the vendored
+  packages; they stay there (not moved to consumer rules).
+- **Proto field:** `repeated string trustedMihonExtensions = 37;`.
