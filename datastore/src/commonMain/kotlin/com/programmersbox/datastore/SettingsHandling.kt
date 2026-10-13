@@ -163,6 +163,12 @@ class NewSettingsHandling(
         it.copy(customUrls = l)
     }
 
+    val trustedMihonExtensions = all.map { it.trustedMihonExtensions }
+
+    suspend fun addTrustedMihonExtension(id: String) = preferences.updateData {
+        if (id in it.trustedMihonExtensions) it else it.copy(trustedMihonExtensions = it.trustedMihonExtensions + id)
+    }
+
     @Composable
     fun rememberShowDownload() = preferences.rememberPreference(
         key = { it.showDownload },
