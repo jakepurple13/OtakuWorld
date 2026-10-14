@@ -57,6 +57,7 @@ import com.programmersbox.kmpuiviews.repository.ListRepository
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
+import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
 import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
 import kotlinx.coroutines.launch
@@ -234,7 +235,7 @@ private fun CustomItem(
                     .weight(1f)
                     .padding(start = 16.dp, top = 4.dp)
             ) {
-                Text(item.source, style = MaterialTheme.typography.labelMedium)
+                Text(LocalSourcesRepository.current.displayNameFor(item.source), style = MaterialTheme.typography.labelMedium)
                 Text(item.title, style = MaterialTheme.typography.titleSmall)
                 Text(item.description, style = MaterialTheme.typography.bodyMedium, maxLines = 3)
             }

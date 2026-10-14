@@ -726,7 +726,7 @@ private fun CatchUpCard(
                     contentColor = Color.White,
                 ) {
                     Text(
-                        item.source,
+                        LocalSourcesRepository.current.displayNameFor(item.source),
                         style = MaterialTheme.typography.labelMedium,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                     )

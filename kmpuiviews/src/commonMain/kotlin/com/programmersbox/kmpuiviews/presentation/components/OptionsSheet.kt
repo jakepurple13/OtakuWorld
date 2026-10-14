@@ -63,6 +63,7 @@ import com.programmersbox.kmpuiviews.repository.NotificationRepository
 import com.programmersbox.kmpuiviews.repository.PlatformRepository
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
+import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
 import com.programmersbox.kmpuiviews.utils.rememberBiometricPrompting
 import kotlinx.coroutines.CoroutineScope
@@ -362,7 +363,7 @@ fun <T : OptionsSheetValues> OptionsSheet(
                     ) {
                         ListItem(
                             headlineContent = { Text(it.title) },
-                            overlineContent = { Text(it.serviceName) },
+                            overlineContent = { Text(LocalSourcesRepository.current.displayNameFor(it.serviceName)) },
                             trailingContent = {
                                 Icon(
                                     if (showInfo) Icons.Default.ArrowDropUp else Icons.Default.ArrowDropDown,
@@ -445,7 +446,7 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
                 MaterialTheme.typography.labelSmall
                     .copy(color = listItemColors.overlineContentColor)
                     .toSpanStyle()
-            ) { appendLine(serviceName) }
+            ) { appendLine(LocalSourcesRepository.current.displayNameFor(serviceName)) }
 
             withStyle(
                 MaterialTheme.typography.bodyLarge

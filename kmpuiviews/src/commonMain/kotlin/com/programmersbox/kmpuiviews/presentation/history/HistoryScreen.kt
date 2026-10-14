@@ -335,7 +335,7 @@ fun HistoryItem(
                             //modifier = Modifier.customSharedElement(OtakuTitleElement(source = item.title, origin = item.title))
                         )
                     },
-                    overlineContent = { Text(item.source) },
+                    overlineContent = { Text(info.displayNameFor(item.source)) },
                     supportingContent = { Text(LocalSystemDateTimeFormat.current.format(item.timestamp.toLocalDateTime())) },
                     leadingContent = {
                         val logo = painterLogo()

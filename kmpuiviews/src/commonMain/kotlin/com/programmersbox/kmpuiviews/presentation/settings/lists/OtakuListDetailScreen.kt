@@ -574,7 +574,7 @@ fun OtakuCustomListScreen(
                             ) {
                                 ListItem(
                                     modifier = Modifier.padding(4.dp),
-                                    headlineContent = { Text(source) },
+                                    headlineContent = { Text(LocalSourcesRepository.current.displayNameFor(source)) },
                                     leadingContent = { Text(sourceItems.size.toString()) },
                                     trailingContent = {
                                         Icon(
