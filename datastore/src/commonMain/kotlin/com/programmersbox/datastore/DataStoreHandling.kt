@@ -13,11 +13,6 @@ class DataStoreHandling {
         key = stringPreferencesKey("currentService"),
     )
 
-    val showBySource = DataStoreHandler(
-        key = booleanPreferencesKey("showBySource"),
-        defaultValue = false
-    )
-
     val shouldCheck = DataStoreHandler(
         key = booleanPreferencesKey("shouldCheckUpdate"),
         defaultValue = true

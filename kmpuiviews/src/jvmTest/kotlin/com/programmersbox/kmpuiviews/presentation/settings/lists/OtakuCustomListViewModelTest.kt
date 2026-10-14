@@ -3,13 +3,13 @@ package com.programmersbox.kmpuiviews.presentation.settings.lists
 import androidx.lifecycle.ViewModelStore
 import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.favoritesdatabase.ListDatabase
 import com.programmersbox.kmpuiviews.SystemAlerter
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.repository.ListRepository
 import com.programmersbox.kmpuiviews.testing.FakeAuthManager
-import com.programmersbox.kmpuiviews.testing.createTestDataStoreHandling
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -51,9 +51,19 @@ class OtakuCustomListViewModelTest {
         authManager = FakeAuthManager(),
     )
 
+    private suspend fun listWith(vararg items: Pair<String, String>): String {
+        dao().create("My List")
+        val uuid = dao().getAllListsSync()[0].item.uuid
+        items.forEachIndexed { index, (title, source) ->
+            dao().addToList(uuid, title, "", "https://example.com/$index", "", source)
+            // createdAt has millisecond resolution; keep each add distinct.
+            Thread.sleep(2)
+        }
+        return uuid
+    }
+
     private fun viewModel(uuid: String) = OtakuCustomListViewModel(
         screen = Screen.CustomListScreen.CustomListItem(uuid),
-        dataStoreHandling = createTestDataStoreHandling(),
         listDao = dao(),
         listRepository = listRepository(),
     ).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
@@ -123,70 +133,92 @@ class OtakuCustomListViewModelTest {
         assertEquals(1, (vm.items as OtakuListState.ByTitle).items.size)
     }
 
-    @Test fun `toggleShowSource switches items to BySource grouping`() = runTest {
-        dao().create("My List")
-        val uuid = dao().getAllListsSync()[0].item.uuid
-        dao().addToList(
-            uuid = uuid,
-            title = "Title",
-            description = "Description",
-            url = "https://example.com/1",
-            imageUrl = "https://example.com/1.jpg",
-            source = "ExampleService",
-        )
+    @Test fun `viewMode BySource switches items to BySource grouping`() = runTest {
+        val uuid = listWith("Title" to "ExampleService")
 
         val vm = viewModel(uuid)
         awaitCondition { vm.customList != null }
 
-        vm.toggleShowSource(true)
-        awaitCondition { vm.showBySource }
+        vm.viewMode = ListViewMode.BySource
 
         assertTrue(vm.items is OtakuListState.BySource)
     }
 
-    @Test fun `filter removes and re-adds a source from filtered`() = runTest {
-        dao().create("My List")
-        val uuid = dao().getAllListsSync()[0].item.uuid
-        dao().addToList(
-            uuid = uuid,
-            title = "Title",
-            description = "Description",
-            url = "https://example.com/1",
-            imageUrl = "https://example.com/1.jpg",
-            source = "ExampleService",
-        )
+    @Test fun `defaults to recently added sort with newest first`() = runTest {
+        val uuid = listWith("Old" to "A", "Middle" to "A", "New" to "A")
 
         val vm = viewModel(uuid)
-        awaitCondition { vm.customList != null }
-        assertTrue("ExampleService" in vm.filtered)
+        awaitCondition { vm.customList?.list?.size == 3 }
 
-        vm.filter("ExampleService")
-        assertFalse("ExampleService" in vm.filtered)
+        assertEquals(ListSort.RecentlyAdded, vm.sort)
+        assertEquals(listOf("New", "Middle", "Old"), (vm.items as OtakuListState.ByTitle).items.map { it.key })
+    }
 
-        vm.filter("ExampleService")
-        assertTrue("ExampleService" in vm.filtered)
+    @Test fun `recently added puts items without createdAt last in reverse insertion order`() = runTest {
+        dao().create("My List")
+        val uuid = dao().getAllListsSync()[0].item.uuid
+        dao().addItem(CustomListInfo(uuid = uuid, title = "Legacy1", description = "", url = "u1", imageUrl = "", source = "A"))
+        dao().addItem(CustomListInfo(uuid = uuid, title = "Legacy2", description = "", url = "u2", imageUrl = "", source = "A"))
+        dao().addToList(uuid, "Fresh", "", "u3", "", "A")
+
+        val vm = viewModel(uuid)
+        awaitCondition { vm.customList?.list?.size == 3 }
+
+        assertEquals(listOf("Fresh", "Legacy2", "Legacy1"), (vm.items as OtakuListState.ByTitle).items.map { it.key })
+    }
+
+    @Test fun `title sort orders alphabetically ignoring case`() = runTest {
+        val uuid = listWith("beta" to "A", "Alpha" to "A", "Gamma" to "A")
+
+        val vm = viewModel(uuid)
+        awaitCondition { vm.customList?.list?.size == 3 }
+        vm.sort = ListSort.Title
+
+        assertEquals(listOf("Alpha", "beta", "Gamma"), (vm.items as OtakuListState.ByTitle).items.map { it.key })
+    }
+
+    @Test fun `source sort orders by source then title`() = runTest {
+        val uuid = listWith("Zed" to "Alpha", "Bee" to "Zulu", "Ant" to "Zulu")
+
+        val vm = viewModel(uuid)
+        awaitCondition { vm.customList?.list?.size == 3 }
+        vm.sort = ListSort.Source
+
+        assertEquals(listOf("Zed", "Ant", "Bee"), (vm.items as OtakuListState.ByTitle).items.map { it.key })
+    }
+
+    @Test fun `selectSource narrows to one source then toggles and resets when empty`() = runTest {
+        val uuid = listWith("One" to "A", "Two" to "B", "Three" to "C")
+
+        val vm = viewModel(uuid)
+        awaitCondition { vm.customList?.list?.size == 3 }
+        assertTrue(vm.allSourcesShown)
+
+        vm.selectSource("A")
+        assertEquals(listOf("A"), vm.filtered.toList())
+        assertFalse(vm.allSourcesShown)
+
+        vm.selectSource("B")
+        assertEquals(setOf("A", "B"), vm.filtered.toSet())
+
+        vm.selectSource("A")
+        vm.selectSource("B")
+        assertEquals(setOf("A", "B", "C"), vm.filtered.toSet())
+        assertTrue(vm.allSourcesShown)
     }
 
     @Test fun `clearFilter resets filtered to all sources in the list`() = runTest {
-        dao().create("My List")
-        val uuid = dao().getAllListsSync()[0].item.uuid
-        dao().addToList(
-            uuid = uuid,
-            title = "Title",
-            description = "Description",
-            url = "https://example.com/1",
-            imageUrl = "https://example.com/1.jpg",
-            source = "ExampleService",
-        )
+        val uuid = listWith("One" to "A", "Two" to "B")
 
         val vm = viewModel(uuid)
-        awaitCondition { vm.customList != null }
+        awaitCondition { vm.customList?.list?.size == 2 }
 
-        vm.filter("ExampleService")
-        assertFalse("ExampleService" in vm.filtered)
+        vm.selectSource("A")
+        assertFalse(vm.allSourcesShown)
 
         vm.clearFilter()
-        assertTrue("ExampleService" in vm.filtered)
+        assertTrue(vm.allSourcesShown)
+        assertEquals(setOf("A", "B"), vm.filtered.toSet())
     }
 
     @Test fun `setQuery updates searchQuery text`() = runTest {
@@ -218,6 +250,86 @@ class OtakuCustomListViewModelTest {
 
         assertTrue(result.isSuccess)
         assertTrue(dao().getAllListsSync()[0].list.isEmpty())
+    }
+
+    @Test fun `toggleSelection selects a whole title group and clears it again`() = runTest {
+        val uuid = listWith("Same" to "A", "Same" to "B", "Other" to "A")
+
+        val vm = viewModel(uuid)
+        awaitCondition { vm.customList?.list?.size == 3 }
+        val group = vm.customList!!.list.filter { it.title == "Same" }
+
+        vm.toggleSelection(group)
+        assertTrue(vm.inSelectionMode)
+        assertEquals(group.map { it.uniqueId }.toSet(), vm.selectedItems.map { it.uniqueId }.toSet())
+
+        vm.toggleSelection(group)
+        assertFalse(vm.inSelectionMode)
+    }
+
+    @Test fun `selectAllVisible only selects items that pass the filter`() = runTest {
+        val uuid = listWith("One" to "A", "Two" to "B")
+
+        val vm = viewModel(uuid)
+        awaitCondition { vm.customList?.list?.size == 2 }
+        vm.selectSource("A")
+
+        vm.selectAllVisible()
+
+        assertEquals(listOf("One"), vm.selectedItems.map { it.title })
+    }
+
+    @Test fun `randomPick returns a visible title group`() = runTest {
+        val uuid = listWith("One" to "A", "Two" to "B")
+
+        val vm = viewModel(uuid)
+        awaitCondition { vm.customList?.list?.size == 2 }
+        vm.selectSource("B")
+
+        repeat(5) { assertEquals(listOf("Two"), vm.randomPick()?.map { it.title }) }
+    }
+
+    @Test fun `addSelectedTo copies items to the target list and keeps them here`() = runTest {
+        val uuid = listWith("Copied" to "A", "Stayer" to "A")
+        dao().create("Target")
+        val target = dao().getAllListsSync().first { it.item.name == "Target" }
+
+        val vm = viewModel(uuid)
+        awaitCondition { vm.customList?.list?.size == 2 }
+        vm.toggleSelection(vm.customList!!.list.filter { it.title == "Copied" })
+
+        val result = vm.addSelectedTo(target)
+        awaitCondition { dao().getCustomListItem(target.item.uuid).list.size == 1 }
+
+        assertEquals(1, result.getOrNull())
+        assertEquals(setOf("Copied", "Stayer"), dao().getCustomListItem(uuid).list.map { it.title }.toSet())
+        assertEquals(listOf("Copied"), dao().getCustomListItem(target.item.uuid).list.map { it.title })
+        assertFalse(vm.inSelectionMode)
+    }
+
+    @Test fun `addSelectedTo counts zero when the target already has the items`() = runTest {
+        val uuid = listWith("Dupe" to "A")
+        dao().create("Target")
+        val target = dao().getAllListsSync().first { it.item.name == "Target" }
+        dao().addToList(target.item.uuid, "Dupe", "", "https://example.com/0", "", "A")
+
+        val vm = viewModel(uuid)
+        awaitCondition { vm.customList?.list?.size == 1 }
+        vm.toggleSelection(vm.customList!!.list)
+
+        assertEquals(0, vm.addSelectedTo(target).getOrNull())
+    }
+
+    @Test fun `updateDetails saves name and description`() = runTest {
+        val uuid = listWith()
+
+        val vm = viewModel(uuid)
+        awaitCondition { vm.customList != null }
+
+        vm.updateDetails("Renamed", "A description")
+        awaitCondition { dao().getCustomListItem(uuid).item.name == "Renamed" }
+
+        assertEquals("A description", dao().getCustomListItem(uuid).item.description)
     }
 
     @Test fun `deleteAll removes the whole list`() = runTest {

@@ -198,10 +198,6 @@ class Navigation3Actions : NavigationActions, Navigator {
     override fun diagnostics() = navigate(Screen.Settings.Diagnostics)
     override fun developer() = navigate(Screen.Settings.Developer)
 
-    override fun deleteFromList(uuid: String) {
-        navBackStack.add(Screen.CustomListScreen.DeleteFromList(uuid = uuid))
-    }
-
     override fun importList(uri: String) {
         navBackStack.add(Screen.ImportListScreen(uri = uri))
     }

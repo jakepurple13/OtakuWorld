@@ -17,7 +17,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListItem
 import com.programmersbox.favoritesdatabase.ExceptionDao
@@ -130,7 +129,6 @@ private fun CustomListScreenPreview() {
         val viewModel: OtakuCustomListViewModel = viewModel {
             OtakuCustomListViewModel(
                 screen = Screen.CustomListScreen.CustomListItem(""),
-                dataStoreHandling = DataStoreHandling(),
                 listDao = listDao,
                 listRepository = listRepository
             )
@@ -148,7 +146,7 @@ private fun CustomListScreenPreview() {
             navigateBack = {},
             isHorizontal = false,
             deleteAll = viewModel::deleteAll,
-            rename = viewModel::rename,
+            updateDetails = viewModel::updateDetails,
             searchQuery = viewModel.searchQuery,
             setQuery = viewModel::setQuery,
             addSecurityItem = {},

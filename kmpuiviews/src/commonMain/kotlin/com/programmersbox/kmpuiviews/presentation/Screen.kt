@@ -147,9 +147,6 @@ sealed class Screen(val route: String) : NavKey {
         data object Home : Screen("home")
 
         @Serializable
-        data class DeleteFromList(val uuid: String) : NavKey
-
-        @Serializable
         data class CustomListItem(val uuid: String) : Screen("import_list")
     }
 

@@ -57,7 +57,6 @@ import com.programmersbox.kmpuiviews.presentation.settings.integrations.Integrat
 import com.programmersbox.kmpuiviews.presentation.settings.library.LibraryScreen
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuCustomListScreenStandAlone
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuListView
-import com.programmersbox.kmpuiviews.presentation.settings.lists.deletefromlist.DeleteFromListScreen
 import com.programmersbox.kmpuiviews.presentation.settings.lists.imports.ImportFullListScreen
 import com.programmersbox.kmpuiviews.presentation.settings.lists.imports.ImportListScreen
 import com.programmersbox.kmpuiviews.presentation.settings.moreinfo.MoreInfoScreen
@@ -332,12 +331,6 @@ fun buildKmpGraph(): Module = module {
         metadata = ListDetailSceneStrategy.detailPane()
     ) {
         OtakuCustomListScreenStandAlone(it)
-    }
-
-    dialogEntry<Screen.CustomListScreen.DeleteFromList> {
-        DeleteFromListScreen(
-            deleteFromList = it
-        )
     }
 
     navigation<Screen.AccountInfo.AccountStatDetails> {
