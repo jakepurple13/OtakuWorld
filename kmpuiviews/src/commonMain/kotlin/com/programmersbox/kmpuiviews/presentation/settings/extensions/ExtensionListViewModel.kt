@@ -147,11 +147,3 @@ class InstalledViewState(
     /** A catalog group can only be uninstalled as a unit when it is one APK (e.g. a bridge). */
     val canUninstallAll: Boolean get() = sourceInformation.map { it.packageName }.distinct().size == 1
 }
-
-sealed class RemoteState
-
-class RemoteViewState(
-    val sources: List<KmpRemoteSources>,
-) : RemoteState()
-
-class RemoteErrorState : RemoteState()

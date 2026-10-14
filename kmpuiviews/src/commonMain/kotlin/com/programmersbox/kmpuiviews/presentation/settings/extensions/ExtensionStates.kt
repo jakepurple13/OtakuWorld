@@ -122,7 +122,8 @@ fun catalogUi(
             state.sources.map { RemoteItem(it, name, resolveState(it, installed, versionOf, downloads)) }.shelfOrder()
         )
 
-        is RemoteErrorState -> CatalogUi.Error(null)
+        is RemoteErrorState -> CatalogUi.Error(state.message)
+        RemoteLoadingState -> CatalogUi.Loading
     }
 }
 

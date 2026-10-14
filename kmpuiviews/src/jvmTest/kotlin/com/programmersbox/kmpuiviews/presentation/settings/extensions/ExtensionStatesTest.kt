@@ -173,12 +173,17 @@ class ExtensionStatesTest {
     @Test
     fun catalogUiMapsStates() {
         val ui = catalogUi(
-            mapOf("ok" to RemoteViewState(listOf(remote("dex"))), "bad" to RemoteErrorState()),
+            mapOf(
+                "ok" to RemoteViewState(listOf(remote("dex"))),
+                "bad" to RemoteErrorState("404"),
+                "wait" to RemoteLoadingState,
+            ),
             listOf(info("dex")), versionOf, emptyList(),
         )
         val loaded = assertIs<CatalogUi.Loaded>(ui["ok"])
         assertEquals("ok", loaded.items.single().catalog)
         assertIs<RemoteItemState.UpdateAvailable>(loaded.items.single().state)
-        assertIs<CatalogUi.Error>(ui["bad"])
+        assertEquals(CatalogUi.Error("404"), ui["bad"])
+        assertEquals(CatalogUi.Loading, ui["wait"])
     }
 }

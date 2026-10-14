@@ -523,6 +523,8 @@ private fun RemoteExtensionItems(
                             }
                         }
 
+                        RemoteLoadingState -> Unit
+
                         is RemoteErrorState -> {
                             item {
                                 ElevatedCard {
