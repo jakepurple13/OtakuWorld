@@ -1,51 +1,37 @@
 package com.programmersbox.kmpuiviews.presentation.settings.extensions
 
 
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircleOutline
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.HideSource
-import androidx.compose.material.icons.filled.InstallMobile
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.SendTimeExtension
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Update
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -62,64 +48,41 @@ import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.layout.AnimatedPane
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffold
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
+import androidx.compose.material3.adaptive.layout.PaneAdaptedValue
 import androidx.compose.material3.adaptive.layout.defaultDragHandleSemantics
 import androidx.compose.material3.adaptive.layout.rememberPaneExpansionState
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
-import androidx.compose.ui.composed
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalClipboard
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil3.compose.AsyncImage
-import coil3.pathSegments
-import coil3.toUri
 import com.programmersbox.datastore.NewSettingsHandling
-import com.programmersbox.kmpmodels.KmpConfigurableApiService
-import com.programmersbox.kmpmodels.KmpRemoteSources
-import com.programmersbox.kmpmodels.KmpSourceInformation
-import com.programmersbox.kmpmodels.KmpUntrustedApiService
-import com.programmersbox.kmpuiviews.IconLoader
-import com.programmersbox.kmpuiviews.SourceIcon
-import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.LoadingDialog
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
-import com.programmersbox.kmpuiviews.presentation.components.ToolTipWrapper
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
 import com.programmersbox.kmpuiviews.repository.SourceInfoRepository
 import com.programmersbox.kmpuiviews.utils.AppConfig
-import com.programmersbox.kmpuiviews.utils.LocalCurrentSource
-import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
-import otakuworld.kmpuiviews.generated.resources.Res
-import otakuworld.kmpuiviews.generated.resources.currentSource
 import kotlin.time.Duration.Companion.minutes
 
 @OptIn(
@@ -162,6 +125,8 @@ fun ExtensionList(
     }
 
     val navigator = rememberListDetailPaneScaffoldNavigator<Int>()
+    val listVisible = navigator.scaffoldValue[ListDetailPaneScaffoldRole.List] == PaneAdaptedValue.Expanded
+    val detailVisible = navigator.scaffoldValue[ListDetailPaneScaffoldRole.Detail] == PaneAdaptedValue.Expanded
 
     BackHandler(navigator.canNavigateBack()) {
         scope.launch { navigator.navigateBack() }
@@ -171,36 +136,11 @@ fun ExtensionList(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
-                title = {
-                    Text(
-                        if (navigator.currentDestination?.contentKey == 1) {
-                            "Remote Extensions"
-                        } else {
-                            "Installed Extensions"
-                        }
-                    )
-                },
+                title = { Text(if (detailVisible && !listVisible) "Browse" else "Extensions") },
                 navigationIcon = { BackButton() },
                 actions = {
                     var showDropDown by remember { mutableStateOf(false) }
                     var checked by remember { mutableStateOf(false) }
-
-                    if (navigator.currentDestination?.contentKey == 1) {
-                        ToolTipWrapper(info = { Text("View Installed Extensions") }) {
-                            IconButton(onClick = { scope.launch { navigator.navigateBack() } }) {
-                                Icon(
-                                    Icons.Default.SendTimeExtension, null,
-                                    modifier = Modifier.scale(scaleX = -1f, scaleY = 1f)
-                                )
-                            }
-                        }
-                    } else {
-                        ToolTipWrapper(info = { Text("View Remote Extensions") }) {
-                            IconButton(onClick = { scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, 1) } }) {
-                                Icon(Icons.Default.SendTimeExtension, null)
-                            }
-                        }
-                    }
 
                     IconButton(onClick = { showDropDown = true }) { Icon(Icons.Default.MoreVert, null) }
 
@@ -252,7 +192,7 @@ fun ExtensionList(
 
                         if (viewModel.hasCustomBridge) {
                             DropdownMenuItem(
-                                text = { Text("Add Custom Tachiyomi Bridge") },
+                                text = { Text("Custom repos") },
                                 onClick = {
                                     showUrlDialog = true
                                     showDropDown = false
@@ -264,6 +204,15 @@ fun ExtensionList(
                 },
                 scrollBehavior = scrollBehavior,
             )
+        },
+        floatingActionButton = {
+            if (!detailVisible) {
+                ExtendedFloatingActionButton(
+                    text = { Text("Get extensions") },
+                    icon = { Icon(Icons.Default.Add, null) },
+                    onClick = { scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, 1) } },
+                )
+            }
         },
     ) { paddingValues ->
         ListDetailPaneScaffold(
@@ -284,12 +233,12 @@ fun ExtensionList(
             },
             listPane = {
                 AnimatedPane(modifier = Modifier.fillMaxSize()) {
-                    Box(Modifier.fillMaxSize())
+                    Surface { InstalledPane(viewModel) }
                 }
             },
             detailPane = {
                 AnimatedPane(modifier = Modifier.fillMaxSize()) {
-                    Box(Modifier.fillMaxSize())
+                    Surface { BrowsePane(viewModel) }
                 }
             },
             modifier = Modifier.padding(paddingValues),
