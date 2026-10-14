@@ -319,7 +319,8 @@ internal fun InstalledRow(
                         )
                     ) { Text("Trust") }
 
-                    updateAction && installing == null && update != null -> FilledTonalIconButton(onClick = onUpdate) {
+                    updateAction && (installing == null || installing is DownloadAndInstallStatus.Error) && update != null ->
+                        FilledTonalIconButton(onClick = onUpdate) {
                         Icon(Icons.Default.Update, "Update to ${update.version}")
                     }
 

@@ -42,13 +42,21 @@ class ExtensionListViewModel(
     private val installedSources = mutableStateListOf<KmpSourceInformation>()
     private val downloads = mutableStateListOf<DownloadAndInstallState>()
     private val remoteCatalogs = RemoteCatalogs()
-    private val versionOf: (KmpSourceInformation) -> String = sourceInfoRepository::versionName
+
+    /** Links sent to the downloader that haven't reported a terminal status; queued jobs carry no url. */
+    private var requested by mutableStateOf(emptySet<String>())
+
+    /** Installed versions, looked up once per source list change instead of on every progress update. */
+    private val installedVersions by derivedStateOf {
+        installedSources.associate { it.packageName to sourceInfoRepository.versionName(it) }
+    }
+    private val versionOf: (KmpSourceInformation) -> String = { installedVersions[it.packageName].orEmpty() }
 
     private val allRemote by derivedStateOf {
         remoteCatalogs.states.values.filterIsInstance<RemoteViewState>().flatMap { it.sources }
     }
 
-    val installedItems by derivedStateOf { installedItems(installedSources, allRemote, versionOf, downloads) }
+    val installedItems by derivedStateOf { installedItems(installedSources, allRemote, versionOf, downloads, requested) }
 
     val summary by derivedStateOf { installedItems.summary() }
 
@@ -59,7 +67,7 @@ class ExtensionListViewModel(
     /** User expand/collapse choices per catalog; absent = default (expanded when it needs attention). */
     val expanded = mutableStateMapOf<String?, Boolean>()
 
-    val catalogs by derivedStateOf { catalogUi(remoteCatalogs.states, installedSources, versionOf, downloads) }
+    val catalogs by derivedStateOf { catalogUi(remoteCatalogs.states, installedSources, versionOf, downloads, requested) }
 
     fun item(key: String): RemoteItem? = catalogs.values
         .filterIsInstance<CatalogUi.Loaded>()
@@ -71,11 +79,17 @@ class ExtensionListViewModel(
     }
 
     fun install(remote: KmpRemoteSources) {
-        downloadStateRepository.downloadAndInstall(remote.downloadLink)
+        request(remote.downloadLink)
     }
 
     fun updateAll() {
-        installedItems.updateLinks().forEach(downloadStateRepository::downloadAndInstall)
+        installedItems.updateLinks().forEach(::request)
+    }
+
+    private fun request(link: String) {
+        if (link.isBlank()) return
+        requested = requested + link
+        downloadStateRepository.downloadAndInstall(link)
     }
 
     fun retry(catalog: String) {
@@ -91,6 +105,7 @@ class ExtensionListViewModel(
             .onEach {
                 downloads.clear()
                 downloads.addAll(it)
+                requested = pendingAfter(requested, it)
             }
             .launchIn(viewModelScope)
 

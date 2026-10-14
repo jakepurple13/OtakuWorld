@@ -130,6 +130,56 @@ class ExtensionStatesTest {
     }
 
     @Test
+    fun duplicatePackagesInCatalogKeepHighestVersion() {
+        val ui = catalogUi(
+            mapOf("c" to RemoteViewState(listOf(remote("dex", version = "1.4.9"), remote("dex", version = "1.4.12"), remote("fire")))),
+            emptyList(), versionOf, emptyList(),
+        )
+        val items = assertIs<CatalogUi.Loaded>(ui["c"]).items
+        assertEquals(items.size, items.map { it.key }.distinct().size)
+        assertEquals("1.4.12", items.single { it.remote.packageName == "dex" }.remote.version)
+    }
+
+    @Test
+    fun blankUrlNeverMatchesDownloads() {
+        val list = listOf(DownloadAndInstallState("", "", "1", DownloadAndInstallStatus.Error(InstallErrorReason.UNKNOWN, "x")))
+        assertNull(list.statusFor(""))
+    }
+
+    @Test
+    fun requestedLinkShowsAsQueuedUntilListReportsIt() {
+        val requested = setOf("https://repo/dex.apk")
+        // queued WorkInfos carry no url, so only the requested set knows about it
+        val queued = listOf(DownloadAndInstallState("", "", "1", DownloadAndInstallStatus.Error(InstallErrorReason.UNKNOWN, "x")))
+        assertIs<RemoteItemState.Installing>(resolveState(remote("dex"), listOf(info("dex")), versionOf, queued, requested))
+        assertIs<RemoteItemState.Installing>(resolveState(remote("new"), emptyList(), versionOf, emptyList(), setOf("https://repo/new.apk")))
+        // once installed and up to date, a stale request no longer holds it
+        assertIs<RemoteItemState.Installed>(resolveState(remote("fire"), listOf(info("fire")), versionOf, emptyList(), setOf("https://repo/fire.apk")))
+        val items = installedItems(listOf(info("dex")), listOf(remote("dex")), versionOf, queued, requested)
+        assertEquals(emptyList(), items.updateLinks())
+    }
+
+    @Test
+    fun pendingDropsTerminalLinks() {
+        val requested = setOf("a", "b", "c", "d")
+        val downloads = listOf(
+            DownloadAndInstallState("a", "", "1", DownloadAndInstallStatus.Installed),
+            DownloadAndInstallState("b", "", "2", DownloadAndInstallStatus.Cancelled),
+            DownloadAndInstallState("c", "", "3", DownloadAndInstallStatus.Error(InstallErrorReason.GENERIC, "x")),
+            DownloadAndInstallState("d", "", "4", DownloadAndInstallStatus.Downloading(0.5f)),
+        )
+        assertEquals(setOf("d"), pendingAfter(requested, downloads))
+    }
+
+    @Test
+    fun failedUpdateCanBeRetriedFromUpdateAll() {
+        val err = DownloadAndInstallStatus.Error(InstallErrorReason.GENERIC, "boom")
+        val downloads = listOf(DownloadAndInstallState("https://repo/dex.apk", "dex", "1", err))
+        val items = installedItems(listOf(info("dex")), listOf(remote("dex")), versionOf, downloads)
+        assertEquals(listOf("https://repo/dex.apk"), items.updateLinks())
+    }
+
+    @Test
     fun canUninstallAllOnlyForSinglePackage() {
         assertTrue(listOf(info("a"), info("a")).canUninstallAll())
         assertFalse(listOf(info("a"), info("b")).canUninstallAll())

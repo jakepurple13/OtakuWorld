@@ -92,12 +92,18 @@ internal fun RemoteItemSheet(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 when (val s = item.state) {
-                    RemoteItemState.NotInstalled -> Button(onClick = { viewModel.install(remote) }) {
+                    RemoteItemState.NotInstalled -> Button(
+                        onClick = { viewModel.install(remote) },
+                        enabled = remote.downloadLink.isNotBlank(),
+                    ) {
                         Icon(Icons.Default.Download, null)
                         Text("Install", modifier = Modifier.padding(start = 6.dp))
                     }
 
-                    is RemoteItemState.UpdateAvailable -> Button(onClick = { viewModel.install(remote) }) {
+                    is RemoteItemState.UpdateAvailable -> Button(
+                        onClick = { viewModel.install(remote) },
+                        enabled = remote.downloadLink.isNotBlank(),
+                    ) {
                         Text("Update to ${remote.version}")
                     }
 

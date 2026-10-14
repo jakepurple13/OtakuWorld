@@ -57,23 +57,40 @@ fun KmpSourceInformation.findRemote(remotes: List<KmpRemoteSources>): KmpRemoteS
 
 /** Latest download entry for [url], unless it already finished or was cancelled. Errors stay visible. */
 fun List<DownloadAndInstallState>.statusFor(url: String): DownloadAndInstallStatus? =
-    lastOrNull { it.url == url }
-        ?.status
-        ?.takeUnless { it == DownloadAndInstallStatus.Installed || it == DownloadAndInstallStatus.Cancelled }
+    if (url.isBlank()) {
+        null
+    } else {
+        lastOrNull { it.url == url }
+            ?.status
+            ?.takeUnless { it == DownloadAndInstallStatus.Installed || it == DownloadAndInstallStatus.Cancelled }
+    }
+
+/** Shown for a requested download whose job is still queued (queued jobs report no url). */
+private val Queued = DownloadAndInstallStatus.Downloading(0f)
+
+private fun DownloadAndInstallStatus.isTerminal() =
+    this == DownloadAndInstallStatus.Installed || this == DownloadAndInstallStatus.Cancelled || this is DownloadAndInstallStatus.Error
+
+/** Requested download links that have not yet reached a terminal status in [downloads]. */
+fun pendingAfter(requested: Set<String>, downloads: List<DownloadAndInstallState>): Set<String> =
+    requested.filterNot { url -> downloads.lastOrNull { it.url == url }?.status?.isTerminal() == true }.toSet()
 
 fun resolveState(
     remote: KmpRemoteSources,
     installed: List<KmpSourceInformation>,
     versionOf: (KmpSourceInformation) -> String,
     downloads: List<DownloadAndInstallState>,
+    requested: Set<String> = emptySet(),
 ): RemoteItemState {
     downloads.statusFor(remote.downloadLink)?.let { return RemoteItemState.Installing(it) }
-    val match = remote.findInstalled(installed) ?: return RemoteItemState.NotInstalled
+    val queued = remote.downloadLink in requested
+    val match = remote.findInstalled(installed)
+        ?: return if (queued) RemoteItemState.Installing(Queued) else RemoteItemState.NotInstalled
     val version = versionOf(match)
-    return if (AppUpdate.checkForUpdate(version, remote.version)) {
-        RemoteItemState.UpdateAvailable(match, version)
-    } else {
-        RemoteItemState.Installed(match)
+    return when {
+        !AppUpdate.checkForUpdate(version, remote.version) -> RemoteItemState.Installed(match)
+        queued -> RemoteItemState.Installing(Queued)
+        else -> RemoteItemState.UpdateAvailable(match, version)
     }
 }
 
@@ -82,12 +99,14 @@ fun installedItems(
     remotes: List<KmpRemoteSources>,
     versionOf: (KmpSourceInformation) -> String,
     downloads: List<DownloadAndInstallState>,
+    requested: Set<String> = emptySet(),
 ): List<InstalledItem> = installed
     .distinctBy { it.packageName.ifBlank { it.name } }
     .map { info ->
         val version = versionOf(info)
         val update = info.findRemote(remotes)?.takeIf { AppUpdate.checkForUpdate(version, it.version) }
-        InstalledItem(info, version, update, update?.let { downloads.statusFor(it.downloadLink) })
+        val installing = update?.let { downloads.statusFor(it.downloadLink) ?: Queued.takeIf { _ -> it.downloadLink in requested } }
+        InstalledItem(info, version, update, installing)
     }
 
 fun List<InstalledItem>.summary() = InstalledSummary(
@@ -104,9 +123,9 @@ fun List<InstalledItem>.filteredBy(filter: InstalledFilter): List<InstalledItem>
 
 fun List<InstalledItem>.byCatalog(): Map<String?, List<InstalledItem>> = groupBy { it.info.catalog?.name }
 
-/** Download links for every pending update not already downloading/installing. */
+/** Download links for every pending update not already downloading/installing; failed ones are retried. */
 fun List<InstalledItem>.updateLinks(): List<String> =
-    filter { it.installing == null }.mapNotNull { it.update?.downloadLink }
+    filter { it.installing == null || it.installing is DownloadAndInstallStatus.Error }.mapNotNull { it.update?.downloadLink }
 
 /** A catalog group can only be uninstalled as a unit when it is one APK (e.g. a bridge). */
 fun List<KmpSourceInformation>.canUninstallAll(): Boolean = map { it.packageName }.distinct().size == 1
@@ -116,16 +135,26 @@ fun catalogUi(
     installed: List<KmpSourceInformation>,
     versionOf: (KmpSourceInformation) -> String,
     downloads: List<DownloadAndInstallState>,
+    requested: Set<String> = emptySet(),
 ): Map<String, CatalogUi> = states.mapValues { (name, state) ->
     when (state) {
         is RemoteViewState -> CatalogUi.Loaded(
-            state.sources.map { RemoteItem(it, name, resolveState(it, installed, versionOf, downloads)) }.shelfOrder()
+            state.sources
+                .newestPerPackage()
+                .map { RemoteItem(it, name, resolveState(it, installed, versionOf, downloads, requested)) }
+                .shelfOrder()
         )
 
         is RemoteErrorState -> CatalogUi.Error(state.message)
         RemoteLoadingState -> CatalogUi.Loading
     }
 }
+
+/** A catalog can merge several repos that ship the same package; keep one entry (the newest) per package. */
+private fun List<KmpRemoteSources>.newestPerPackage(): List<KmpRemoteSources> =
+    groupBy { it.packageName.ifBlank { it.downloadLink } }
+        .values
+        .map { same -> same.reduce { best, next -> if (AppUpdate.checkForUpdate(best.version, next.version)) next else best } }
 
 private fun RemoteItemState.rank() = when (this) {
     is RemoteItemState.UpdateAvailable -> 0
