@@ -186,7 +186,17 @@ interface ListDao {
         return if (item.list.any { it.url == url && it.uuid == uuid }) {
             false
         } else {
-            addItem(CustomListInfo(uuid = uuid, title = title, description = description, url = url, imageUrl = imageUrl, source = source))
+            addItem(
+                CustomListInfo(
+                    uuid = uuid,
+                    title = title,
+                    description = description,
+                    url = url,
+                    imageUrl = imageUrl,
+                    source = source,
+                    createdAt = Clock.System.now().toEpochMilliseconds(),
+                )
+            )
             updateFullList(item.item)
             true
         }

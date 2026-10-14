@@ -34,7 +34,6 @@ import com.programmersbox.kmpuiviews.presentation.settings.general.ThemeSettings
 import com.programmersbox.kmpuiviews.presentation.settings.incognito.IncognitoScreen
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuCustomListScreenStandAlone
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuListView
-import com.programmersbox.kmpuiviews.presentation.settings.lists.deletefromlist.DeleteFromListScreen
 import com.programmersbox.kmpuiviews.presentation.settings.lists.imports.ImportFullListScreen
 import com.programmersbox.kmpuiviews.presentation.settings.lists.imports.ImportListScreen
 import com.programmersbox.kmpuiviews.presentation.settings.moreinfo.MoreInfoScreen
@@ -189,12 +188,6 @@ private fun EntryProviderScope<NavKey>.settingsEntryGraph(
 
     twoPaneEntry<Screen.CustomListScreen.CustomListItem> {
         OtakuCustomListScreenStandAlone(it)
-    }
-
-    dialogEntry<Screen.CustomListScreen.DeleteFromList> {
-        DeleteFromListScreen(
-            deleteFromList = it
-        )
     }
 
     entry<Screen.ImportListScreen> {

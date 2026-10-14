@@ -62,12 +62,11 @@ val gridColumns: Int
     }
 
 @Composable
-fun adaptiveGridCell(): GridCells {
+fun adaptiveGridCell(width: Dp = ComposableUtils.IMAGE_WIDTH): GridCells {
     val gridChoice by LocalSettingsHandling.current.rememberGridChoice()
-    val width = ComposableUtils.IMAGE_WIDTH
     return when (gridChoice) {
-        GridChoice.FullAdaptive -> remember { CustomAdaptive(width) }
-        GridChoice.Adaptive -> remember { GridCells.Adaptive(width) }
+        GridChoice.FullAdaptive -> remember(width) { CustomAdaptive(width) }
+        GridChoice.Adaptive -> remember(width) { GridCells.Adaptive(width) }
         GridChoice.Fixed -> GridCells.Fixed(gridColumns)
         else -> GridCells.Fixed(gridColumns)
     }

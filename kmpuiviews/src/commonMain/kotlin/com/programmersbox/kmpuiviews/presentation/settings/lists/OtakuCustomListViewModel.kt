@@ -10,7 +10,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.ListDao
@@ -31,28 +30,48 @@ import kotlinx.serialization.json.Json
 
 class OtakuCustomListViewModel(
     screen: Screen.CustomListScreen.CustomListItem,
-    dataStoreHandling: DataStoreHandling,
     private val listDao: ListDao,
     private val listRepository: ListRepository,
 ) : ViewModel() {
-    private val showBySourceFlow = dataStoreHandling.showBySource
     var customItem: CustomList? by mutableStateOf(null)
 
     var customList by mutableStateOf<CustomList?>(null)
 
     val filtered = mutableStateListOf<String>()
-    var showBySource by mutableStateOf(false)
+
+    var sort by mutableStateOf(ListSort.RecentlyAdded)
+    var viewMode by mutableStateOf(ListViewMode.Grid)
 
     var searchQuery by mutableStateOf(TextFieldState())
 
     val items by derivedStateOf {
         customList?.let {
-            when {
-                showBySource -> OtakuListState.BySource(it, searchQuery.text.toString(), filtered)
-                else -> OtakuListState.ByTitle(it, searchQuery.text.toString(), filtered)
+            when (viewMode) {
+                ListViewMode.BySource -> OtakuListState.BySource(it, searchQuery.text.toString(), filtered, sort)
+                ListViewMode.Grid -> OtakuListState.ByTitle(it, searchQuery.text.toString(), filtered, sort)
             }
         } ?: OtakuListState.Empty
     }
+
+    val sources by derivedStateOf {
+        customList
+            ?.list
+            .orEmpty()
+            .groupingBy { it.source }
+            .eachCount()
+            .toList()
+            .sortedByDescending { it.second }
+    }
+
+    val allSourcesShown by derivedStateOf { sources.all { it.first in filtered } }
+
+    private val selectedIds = mutableStateListOf<String>()
+
+    val selectedItems by derivedStateOf {
+        customList?.list.orEmpty().filter { it.uniqueId in selectedIds }
+    }
+
+    val inSelectionMode by derivedStateOf { selectedIds.isNotEmpty() }
 
     val coverImageUrl by derivedStateOf { customList?.resolvedCoverImageUrl().orEmpty() }
 
@@ -73,41 +92,44 @@ class OtakuCustomListViewModel(
             .onEach { customList = it }
             .launchIn(viewModelScope)
 
-        showBySourceFlow
-            .asFlow()
-            .onEach { showBySource = it }
-            .launchIn(viewModelScope)
-
         listDao
             .getCustomListItemFlow(screen.uuid)
             .onEach { setList(it) }
             .launchIn(viewModelScope)
     }
 
-    fun toggleShowSource(value: Boolean) {
-        viewModelScope.launch {
-            //context.updatePref(SHOW_BY_SOURCE, value)
-            showBySourceFlow.set(value)
-        }
-    }
-
     fun setList(customList: CustomList?) {
+        // Keep a narrowed source filter across list updates (like removing items).
+        val previous = if (allSourcesShown) emptyList() else filtered.toList()
         this.customList = customList
         val sources = customList
             ?.list
             ?.map { it.source }
             .orEmpty()
             .distinct()
+        val kept = previous.filter { it in sources }
         filtered.clear()
-        filtered.addAll(sources)
+        filtered.addAll(kept.ifEmpty { sources })
         searchQuery = TextFieldState()
     }
 
-    fun filter(source: String) {
-        if (filtered.contains(source)) {
-            filtered.removeAll { it == source }
-        } else {
-            filtered.add(source)
+    /**
+     * With every source shown, picking one narrows to just that source.
+     * After that, sources toggle, and deselecting the last one shows everything again.
+     */
+    fun selectSource(source: String) {
+        when {
+            allSourcesShown -> {
+                filtered.clear()
+                filtered.add(source)
+            }
+
+            source in filtered -> {
+                filtered.remove(source)
+                if (filtered.isEmpty()) clearFilter()
+            }
+
+            else -> filtered.add(source)
         }
     }
 
@@ -122,8 +144,58 @@ class OtakuCustomListViewModel(
         true
     }
 
-    fun rename(newName: String) {
-        viewModelScope.launch { customList?.item?.copy(name = newName)?.let { listRepository.updateFullList(it) } }
+    fun updateDetails(name: String, description: String) {
+        viewModelScope.launch {
+            customList
+                ?.item
+                ?.copy(name = name, description = description)
+                ?.let { listRepository.updateFullList(it) }
+        }
+    }
+
+    private fun visibleItems(): List<CustomListInfo> = when (val state = items) {
+        is OtakuListState.ByTitle -> state.items.flatMap { it.value }
+        is OtakuListState.BySource -> state.items.flatMap { it.value }
+        OtakuListState.Empty -> emptyList()
+    }
+
+    fun toggleSelection(group: List<CustomListInfo>) {
+        val ids = group.map { it.uniqueId }
+        if (selectedIds.containsAll(ids)) selectedIds.removeAll(ids)
+        else selectedIds.addAll(ids.filterNot { it in selectedIds })
+    }
+
+    fun isSelected(group: List<CustomListInfo>) = group.isNotEmpty() && group.all { it.uniqueId in selectedIds }
+
+    fun selectAllVisible() {
+        selectedIds.addAll(visibleItems().map { it.uniqueId }.filterNot { it in selectedIds })
+    }
+
+    fun clearSelection() = selectedIds.clear()
+
+    suspend fun removeSelected(): Result<Boolean> = removeItems(selectedItems).onSuccess { clearSelection() }
+
+    /** Copies the selected items into [target]. Returns how many were new there. */
+    suspend fun addSelectedTo(target: CustomList): Result<Int> = runCatching {
+        selectedItems
+            .count { item ->
+                listRepository.addToList(
+                    uuid = target.item.uuid,
+                    title = item.title,
+                    description = item.description,
+                    url = item.url,
+                    imageUrl = item.imageUrl,
+                    source = item.source,
+                )
+            }
+            .also { clearSelection() }
+    }
+
+    /** A random title from what is currently visible, as all of its source entries. */
+    fun randomPick(): List<CustomListInfo>? = when (val state = items) {
+        is OtakuListState.ByTitle -> state.items.randomOrNull()?.value
+        is OtakuListState.BySource -> state.items.flatMap { it.value }.randomOrNull()?.let(::listOf)
+        OtakuListState.Empty -> null
     }
 
     fun updateCoverImage(coverImageUrl: String) {
@@ -169,20 +241,50 @@ class OtakuCustomListViewModel(
     }
 }
 
+enum class ListSort { RecentlyAdded, Title, Source }
+
+enum class ListViewMode { Grid, BySource }
+
+/**
+ * Items added before createdAt was recorded have 0, so they fall back to list order,
+ * which is insertion order. Either way, newest comes first.
+ */
+private fun List<Map.Entry<String, List<CustomListInfo>>>.sortedForList(
+    sort: ListSort,
+    order: Map<String, Int>,
+): List<Map.Entry<String, List<CustomListInfo>>> = when (sort) {
+    ListSort.RecentlyAdded -> sortedWith(
+        compareByDescending<Map.Entry<String, List<CustomListInfo>>> { e -> e.value.maxOf { it.createdAt } }
+            .thenByDescending { e -> e.value.maxOf { order[it.uniqueId] ?: 0 } }
+    )
+
+    ListSort.Title -> sortedBy { it.key.lowercase() }
+    ListSort.Source -> sortedWith(
+        compareBy<Map.Entry<String, List<CustomListInfo>>> { e -> e.value.minOf { it.source.lowercase() } }
+            .thenBy { it.key.lowercase() }
+    )
+}
+
+private fun CustomList.insertionOrder() = list.withIndex().associate { it.value.uniqueId to it.index }
+
+private fun CustomList.visible(searchQuery: String, filtered: List<String>) = list
+    .filter { it.title.contains(searchQuery, ignoreCase = true) }
+    .filter { filtered.contains(it.source) }
+
 sealed class OtakuListState {
     data class ByTitle(val items: List<Map.Entry<String, List<CustomListInfo>>>) : OtakuListState() {
         constructor(
             customList: CustomList,
             searchQuery: String,
             filtered: List<String>,
+            sort: ListSort = ListSort.RecentlyAdded,
         ) : this(
             customList
-                .list
-                .filter { it.title.contains(searchQuery, ignoreCase = true) }
-                .filter { filtered.contains(it.source) }
+                .visible(searchQuery, filtered)
                 .groupBy { it.title }
                 .entries
                 .toList()
+                .sortedForList(sort, customList.insertionOrder())
         )
     }
 
@@ -195,12 +297,19 @@ sealed class OtakuListState {
             customList: CustomList,
             searchQuery: String,
             filtered: List<String>,
+            sort: ListSort = ListSort.RecentlyAdded,
         ) : this(
             customList
-                .list
-                .filter { it.title.contains(searchQuery, ignoreCase = true) }
-                .filter { filtered.contains(it.source) }
+                .visible(searchQuery, filtered)
                 .groupBy { it.source }
+                .mapValues { (_, sourceItems) ->
+                    sourceItems
+                        .groupBy { it.uniqueId }
+                        .entries
+                        .toList()
+                        .sortedForList(sort, customList.insertionOrder())
+                        .flatMap { it.value }
+                }
                 .entries
                 .toList()
                 .sortedByDescending { it.value.size }

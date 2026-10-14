@@ -6,60 +6,58 @@ import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.updateTransition
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.itemsIndexed
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.BrokenImage
-import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.ImportExport
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.RemoveCircle
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardColors
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FilterChip
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -69,7 +67,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -77,8 +74,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.material3.rememberSearchBarState
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -88,24 +84,29 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.programmersbox.datastore.ColorBlindnessType
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListInfo
-import com.programmersbox.favoritesdatabase.resolvedCoverImageUrl
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.kmpuiviews.presentation.components.DynamicSearchBar
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomScreen
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomSheetItemModel
 import com.programmersbox.kmpuiviews.presentation.components.LoadingDialog
@@ -118,23 +119,23 @@ import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKin
 import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.presentation.components.optionsSheetList
 import com.programmersbox.kmpuiviews.presentation.components.plus
+import com.programmersbox.kmpuiviews.presentation.settings.lists.addtolist.ListChoiceScreen
 import com.programmersbox.kmpuiviews.repository.ListRepository
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.Cached
-import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
+import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
-import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
+import com.programmersbox.kmpuiviews.utils.LocalWindowSizeClass
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
 import com.programmersbox.kmpuiviews.utils.dispatchIo
 import com.programmersbox.kmpuiviews.utils.loadItem
 import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
-import com.programmersbox.kmpuiviews.utils.rememberBiometricPrompting
+import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
 import com.programmersbox.sharedcomponents.qrcode.QrCodeRepository
-import dev.chrisbanes.haze.HazeProgressive
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher
@@ -159,15 +160,12 @@ import otakuworld.kmpuiviews.generated.resources.are_you_sure_delete_list
 import otakuworld.kmpuiviews.generated.resources.cancel
 import otakuworld.kmpuiviews.generated.resources.chooseASource
 import otakuworld.kmpuiviews.generated.resources.confirm
-import otakuworld.kmpuiviews.generated.resources.delete
 import otakuworld.kmpuiviews.generated.resources.delete_list_title
 import otakuworld.kmpuiviews.generated.resources.delete_multiple
-import otakuworld.kmpuiviews.generated.resources.export_list
 import otakuworld.kmpuiviews.generated.resources.no
 import otakuworld.kmpuiviews.generated.resources.remove
 import otakuworld.kmpuiviews.generated.resources.remove_items
 import otakuworld.kmpuiviews.generated.resources.search
-import otakuworld.kmpuiviews.generated.resources.update_list_name_title
 import otakuworld.kmpuiviews.generated.resources.yes
 
 @Composable
@@ -191,7 +189,7 @@ fun OtakuCustomListScreenStandAlone(
                     writeToFile = viewModel::writeToFile,
                     isHorizontal = isHorizontal,
                     deleteAll = viewModel::deleteAll,
-                    rename = viewModel::rename,
+                    updateDetails = viewModel::updateDetails,
                     searchQuery = viewModel.searchQuery,
                     setQuery = viewModel::setQuery,
                     navigateBack = { navController.popBackStack() },
@@ -207,14 +205,19 @@ fun OtakuCustomListScreenStandAlone(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalFoundationApi::class,
+    ExperimentalMaterial3ExpressiveApi::class,
+    ExperimentalComposeUiApi::class,
+)
 @Composable
 fun OtakuCustomListScreen(
     viewModel: OtakuCustomListViewModel,
     customItem: CustomList,
     writeToFile: (PlatformFile) -> Unit,
     deleteAll: suspend () -> Unit,
-    rename: suspend (String) -> Unit,
+    updateDetails: (name: String, description: String) -> Unit,
     searchQuery: TextFieldState,
     setQuery: (String) -> Unit,
     navigateBack: () -> Unit,
@@ -240,6 +243,44 @@ fun OtakuCustomListScreen(
     ) { document -> document?.let { writeToFile(it) } }
 
     val qrCodeRepository = koinInject<QrCodeRepository>()
+
+    HideNavBarWhileOnScreen()
+
+    // Phones hide the toolbar while scrolling down. Wider windows keep it visible.
+    val isCompact = LocalWindowSizeClass.current.widthSizeClass == WindowWidthSizeClass.Compact && !isHorizontal
+    var toolbarScrolledAway by remember { mutableStateOf(false) }
+    val toolbarScrollConnection = remember {
+        object : NestedScrollConnection {
+            override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
+                if (consumed.y < -1f) toolbarScrolledAway = true
+                else if (consumed.y > 1f) toolbarScrolledAway = false
+                return Offset.Zero
+            }
+        }
+    }
+
+    var searching by remember { mutableStateOf(false) }
+    val toolbarMode = when {
+        viewModel.inSelectionMode -> ListToolbarMode.Select
+        searching -> ListToolbarMode.Search
+        else -> ListToolbarMode.Browse
+    }
+
+    BackHandler(toolbarMode != ListToolbarMode.Browse) {
+        if (viewModel.inSelectionMode) {
+            viewModel.clearSelection()
+        } else {
+            searching = false
+            setQuery("")
+        }
+    }
+
+    fun showMessage(message: String) {
+        scope.launch {
+            snackbarHostState.currentSnackbarData?.dismiss()
+            snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short)
+        }
+    }
 
     var deleteList by remember { mutableStateOf(false) }
 
@@ -286,22 +327,6 @@ fun OtakuCustomListScreen(
         showLoadingDialog = showLoadingDialog,
         onDismissRequest = { showLoadingDialog = false }
     )
-
-    /*val modalSheetState = rememberModalBottomSheetState()
-    var showDeleteModal by remember { mutableStateOf(false) }
-
-    if (showDeleteModal) {
-        DeleteItemsModal(
-            list = listBySource,
-            onRemove = removeItems,
-            onDismiss = {
-                scope.launch { modalSheetState.hide() }
-                    .invokeOnCompletion { showDeleteModal = false }
-            },
-            drawable = logoDrawable.logo,
-            state = modalSheetState
-        )
-    }*/
 
     var optionsSheet by optionsSheetList<CustomListItemOptionSheet>(
         onOpen = {
@@ -356,156 +381,177 @@ fun OtakuCustomListScreen(
         )
     }
 
-    var showInfoSheet by remember { mutableStateOf(false) }
-    val infoSheetState = rememberModalBottomSheetState()
+    var showCoverPicker by remember { mutableStateOf(false) }
 
-    if (showInfoSheet) {
-        InfoSheet(
-            onDismiss = { showInfoSheet = false },
-            sheetState = infoSheetState,
-            customItem = customItem,
-            rename = { name -> scope.launch { rename(name) } },
-            onUpdateCoverImage = viewModel::updateCoverImage,
-            addSecurityItem = addSecurityItem,
-            removeSecurityItem = removeSecurityItem,
-            onDeleteListAction = { deleteList = true },
-            onRemoveItemsAction = {
-                customItem
-                    .item
-                    .uuid
-                    .let { navController.deleteFromList(it) }
+    if (showCoverPicker) {
+        CoverPickerSheet(
+            items = customItem.list,
+            currentCoverUrl = viewModel.coverImageUrl,
+            colorFilter = colorFilter,
+            onSelect = {
+                viewModel.updateCoverImage(it)
+                showCoverPicker = false
             },
-            onExportAction = { pickDocumentLauncher.launch(customItem.item.name, "json") },
-            filtered = viewModel.filtered,
-            onFilterAction = viewModel::filter,
-            onClearFilterAction = viewModel::clearFilter,
-            showBySource = viewModel.showBySource,
-            onShowBySource = { viewModel.toggleShowSource(it) },
-            colorFilter = colorFilter
+            onDismiss = { showCoverPicker = false },
         )
     }
 
+    var showEditSheet by remember { mutableStateOf(false) }
 
-    Scaffold(
-        snackbarHost = {
-            SnackbarHost(
-                snackbarHostState,
-                modifier = Modifier.padding(LocalNavHostPadding.current)
-            )
-        },
-        topBar = {
-            val searchBarState = rememberSearchBarState()
+    if (showEditSheet) {
+        EditListSheet(
+            customList = customItem,
+            coverUrl = viewModel.coverImageUrl,
+            colorFilter = colorFilter,
+            onChangeCover = { showCoverPicker = true },
+            onSave = { name, description ->
+                updateDetails(name, description)
+                showEditSheet = false
+            },
+            addSecurityItem = addSecurityItem,
+            removeSecurityItem = removeSecurityItem,
+            onDismiss = { showEditSheet = false },
+        )
+    }
 
-            DynamicSearchBar(
-                textFieldState = searchQuery,
-                searchBarState = searchBarState,
-                isDocked = isHorizontal,
-                onSearch = { scope.launch { searchBarState.animateToCollapsed() } },
-                placeholder = { Text(stringResource(Res.string.search) + " " + customItem.item.name) },
-                leadingIcon = {
-                    IconButton(
-                        onClick = { scope.launch { searchBarState.animateToCollapsed() } }
-                    ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = navigateBack
-                    ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
-                },
-                trailingIcon = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        AnimatedVisibility(searchQuery.text.isNotEmpty()) {
-                            IconButton(
-                                onClick = { setQuery("") }
-                            ) { Icon(Icons.Default.Cancel, null) }
+    var showSortSheet by remember { mutableStateOf(false) }
+
+    if (showSortSheet) {
+        SortAndViewSheet(
+            sort = viewModel.sort,
+            viewMode = viewModel.viewMode,
+            onSort = { viewModel.sort = it },
+            onViewMode = { viewModel.viewMode = it },
+            onDismiss = { showSortSheet = false },
+        )
+    }
+
+    var showRemoveDialog by remember { mutableStateOf(false) }
+
+    if (showRemoveDialog) {
+        val count = viewModel.selectedItems.size
+        AlertDialog(
+            onDismissRequest = { showRemoveDialog = false },
+            title = { Text(stringResource(Res.string.remove_items)) },
+            text = { Text(pluralStringResource(Res.plurals.areYouSureRemove, count, count)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        scope.launch {
+                            viewModel.removeSelected()
+                                .onFailure { showMessage("Couldn't remove those titles") }
+                            showRemoveDialog = false
                         }
-
-                        Text("(${customItem.list.size})")
                     }
+                ) { Text(stringResource(Res.string.remove)) }
+            },
+            dismissButton = { TextButton(onClick = { showRemoveDialog = false }) { Text(stringResource(Res.string.cancel)) } }
+        )
+    }
+
+    var showAddToListSheet by remember { mutableStateOf(false) }
+
+    if (showAddToListSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showAddToListSheet = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+        ) {
+            ListChoiceScreen(
+                navigationIcon = {
+                    IconButton(onClick = { showAddToListSheet = false }) { Icon(Icons.Default.Close, null) }
                 },
-                actions = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        IconButton(
-                            onClick = {
-                                scope.launch {
-                                    qrCodeRepository.shareUrl(
-                                        customItem.list.joinToString("\n") { "${it.title} - ${it.url}" },
-                                        customItem.item.name
+                onClick = { target ->
+                    if (target.item.uuid == customItem.item.uuid) {
+                        showMessage("Already in ${target.item.name}")
+                    } else {
+                        scope.launch {
+                            viewModel.addSelectedTo(target)
+                                .onSuccess { added ->
+                                    showMessage(
+                                        if (added == 0) "Already in ${target.item.name}"
+                                        else "Added $added to ${target.item.name}"
                                     )
                                 }
-                            }
-                        ) { Icon(Icons.Default.Share, null) }
-
-                        IconButton(
-                            onClick = { showInfoSheet = true }
-                        ) { Icon(Icons.Default.Info, null) }
-                    }
-                },
-                colors = SearchBarDefaults.appBarWithSearchColors(
-                    appBarContainerColor = if (showBlur)
-                        Color.Transparent
-                    else
-                        MaterialTheme.colorScheme.surface,
-                    searchBarColors = SearchBarDefaults.colors(
-                        inputFieldColors = if (showBlur)
-                            SearchBarDefaults.inputFieldColors(
-                                focusedContainerColor = Color.Transparent,
-                                unfocusedContainerColor = Color.Transparent,
-                            )
-                        else
-                            SearchBarDefaults.inputFieldColors()
-                    )
-                ),
-                modifier = Modifier.setBlurKind(
-                    blurKindState = blurKindState,
-                    hazeScope = {
-                        progressive(
-                            HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f)
-                        )
-                    }
-                ),
-            ) {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(1),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth()
-                ) {
-                    itemsIndexed(items = viewModel.searchItems) { index, item ->
-                        Card(
-                            onClick = {
-                                setQuery(item.title)
-                                scope.launch { searchBarState.animateToCollapsed() }
-                            },
-                            modifier = Modifier.animateItem()
-                        ) {
-                            ListItem(
-                                headlineContent = { Text(item.title) },
-                                leadingContent = { Icon(Icons.Filled.Search, contentDescription = null) },
-                                colors = ListItemDefaults.colors(
-                                    containerColor = Color.Transparent
-                                )
-                            )
+                                .onFailure { showMessage("Couldn't add those titles") }
                         }
                     }
+                    showAddToListSheet = false
                 }
-            }
-        },
-    ) { padding ->
+            )
+        }
+    }
+
+    val visibleCount = when (val state = viewModel.items) {
+        is OtakuListState.ByTitle -> state.items.size
+        is OtakuListState.BySource -> state.items.sumOf { it.value.size }
+        OtakuListState.Empty -> 0
+    }
+    val countLabel = if (viewModel.allSourcesShown && searchQuery.text.isEmpty()) {
+        "${customItem.list.size} titles"
+    } else {
+        "$visibleCount of ${customItem.list.size}"
+    }
+
+    val sourceChips: @Composable () -> Unit = {
+        SourceChipsRow(
+            sources = viewModel.sources,
+            total = customItem.list.size,
+            filtered = viewModel.filtered,
+            allSourcesShown = viewModel.allSourcesShown,
+            onSelectSource = viewModel::selectSource,
+            onShowAll = viewModel::clearFilter,
+        )
+    }
+
+    // The app's bottom nav is hidden here, so only the system bars and keyboard matter.
+    // Works for both 3-button and gesture navigation.
+    val bottomInsets = WindowInsets.navigationBars.union(WindowInsets.ime)
+    // Room for the toolbar so the last row and the snackbar aren't covered.
+    val toolbarClearance = FloatingToolbarDefaults.ContainerSize + FloatingToolbarDefaults.ScreenOffset * 2
+
+    val gridState = rememberLazyGridState()
+    // Swap to the slim bar once the header's back/edit row has scrolled under the status bar.
+    val collapseThreshold = with(LocalDensity.current) { 96.dp.roundToPx() }
+    val collapsed by remember {
+        derivedStateOf {
+            gridState.firstVisibleItemIndex > 0 || gridState.firstVisibleItemScrollOffset > collapseThreshold
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
         LazyVerticalGrid(
-            columns = adaptiveGridCell(),
-            contentPadding = padding + LocalNavHostPadding.current,
+            state = gridState,
+            // Smaller covers than other grids so more of the list fits on screen.
+            columns = adaptiveGridCell(ComposableUtils.IMAGE_WIDTH * 2 / 3),
+            contentPadding = WindowInsets.navigationBars.asPaddingValues() + PaddingValues(bottom = toolbarClearance),
             verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier
-                .padding(vertical = 4.dp)
+                .fillMaxSize()
+                .nestedScroll(toolbarScrollConnection)
                 .setBlurKindSource(blurKindState)
         ) {
+            item(
+                key = "hero",
+                span = { GridItemSpan(maxLineSpan) }
+            ) {
+                ListHeroHeader(
+                    customList = customItem,
+                    coverUrl = viewModel.coverImageUrl,
+                    sources = viewModel.sources,
+                    colorFilter = colorFilter,
+                    onBack = navigateBack,
+                    onEdit = { showEditSheet = true },
+                )
+            }
+
+            item(
+                key = "chips",
+                span = { GridItemSpan(maxLineSpan) }
+            ) {
+                Box(modifier = Modifier.padding(bottom = 4.dp)) { sourceChips() }
+            }
+
             when (val state = viewModel.items) {
                 is OtakuListState.BySource if state.items.isNotEmpty() -> {
                     state.items.forEach { (source, sourceItems) ->
@@ -554,16 +600,10 @@ fun OtakuCustomListScreen(
                                     items = listOf(item),
                                     title = item.title,
                                     showLoadingDialog = { showLoadingDialog = it },
-                                    onError = {
-                                        scope.launch {
-                                            snackbarHostState.currentSnackbarData?.dismiss()
-                                            snackbarHostState.showSnackbar(
-                                                "Something went wrong. Source might not be installed",
-                                                duration = SnackbarDuration.Short
-                                            )
-                                        }
-                                    },
-                                    onShowBanner = { optionsSheet = listOf(item.toOptionsSheetValues()) },
+                                    onError = { showMessage("Something went wrong. Source might not be installed") },
+                                    selectionMode = viewModel.inSelectionMode,
+                                    selected = viewModel.isSelected(listOf(item)),
+                                    onToggleSelection = { viewModel.toggleSelection(listOf(item)) },
                                     colorFilter = colorFilter,
                                     modifier = Modifier.animateItem()
                                 )
@@ -582,16 +622,10 @@ fun OtakuCustomListScreen(
                             items = item.value,
                             title = item.key,
                             showLoadingDialog = { showLoadingDialog = it },
-                            onError = {
-                                scope.launch {
-                                    snackbarHostState.currentSnackbarData?.dismiss()
-                                    snackbarHostState.showSnackbar(
-                                        "Something went wrong. Source might not be installed",
-                                        duration = SnackbarDuration.Short
-                                    )
-                                }
-                            },
-                            onShowBanner = { optionsSheet = item.value.map { it.toOptionsSheetValues() } },
+                            onError = { showMessage("Something went wrong. Source might not be installed") },
+                            selectionMode = viewModel.inSelectionMode,
+                            selected = viewModel.isSelected(item.value),
+                            onToggleSelection = { viewModel.toggleSelection(item.value) },
                             colorFilter = colorFilter,
                             modifier = Modifier.animateItem()
                         )
@@ -604,14 +638,89 @@ fun OtakuCustomListScreen(
                     ) {
                         Box(
                             contentAlignment = Alignment.Center,
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(32.dp)
                         ) {
-                            Text("You haven't added anything to this list yet!")
+                            Text(
+                                if (customItem.list.isEmpty()) "You haven't added anything to this list yet!"
+                                else "No titles match."
+                            )
                         }
                     }
                 }
             }
         }
+
+        AnimatedVisibility(
+            visible = collapsed,
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically(),
+            modifier = Modifier.align(Alignment.TopCenter)
+        ) {
+            CollapsedListBar(
+                customList = customItem,
+                coverUrl = viewModel.coverImageUrl,
+                countLabel = countLabel,
+                colorFilter = colorFilter,
+                onBack = navigateBack,
+                containerColor = if (showBlur) Color.Transparent else MaterialTheme.colorScheme.surface,
+                modifier = Modifier.setBlurKind(blurKindState),
+                chips = sourceChips,
+            )
+        }
+
+        AnimatedVisibility(
+            visible = !isCompact || toolbarMode != ListToolbarMode.Browse || !toolbarScrolledAway,
+            enter = slideInVertically { it * 2 } + fadeIn(),
+            exit = slideOutVertically { it * 2 } + fadeOut(),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .windowInsetsPadding(bottomInsets)
+                .padding(bottom = FloatingToolbarDefaults.ScreenOffset)
+        ) {
+            ListFloatingToolbar(
+                mode = toolbarMode,
+                searchQuery = searchQuery,
+                searchPlaceholder = stringResource(Res.string.search) + " " + customItem.item.name,
+                selectedCount = viewModel.selectedItems.size,
+                canDeleteList = customItem.item.uuid != AppConfig.forLaterUuid,
+                onSearch = { searching = true },
+                onCloseSearch = {
+                    searching = false
+                    setQuery("")
+                },
+                onSort = { showSortSheet = true },
+                onShare = {
+                    scope.launch {
+                        qrCodeRepository.shareUrl(
+                            customItem.list.joinToString("\n") { "${it.title} - ${it.url}" },
+                            customItem.item.name
+                        )
+                    }
+                },
+                onEdit = { showEditSheet = true },
+                onExport = { pickDocumentLauncher.launch(customItem.item.name, "json") },
+                onDeleteList = { deleteList = true },
+                onRandom = {
+                    viewModel.randomPick()
+                        ?.let { pick -> optionsSheet = pick.map { it.toOptionsSheetValues() } }
+                        ?: showMessage("Nothing to pick from")
+                },
+                onClearSelection = viewModel::clearSelection,
+                onSelectAll = viewModel::selectAllVisible,
+                onAddToList = { showAddToListSheet = true },
+                onRemove = { showRemoveDialog = true },
+            )
+        }
+
+        SnackbarHost(
+            snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .windowInsetsPadding(bottomInsets)
+                .padding(bottom = toolbarClearance)
+        )
     }
 }
 
@@ -640,7 +749,9 @@ private fun CustomItemVertical(
     title: String,
     showLoadingDialog: (Boolean) -> Unit,
     onError: () -> Unit,
-    onShowBanner: (Boolean) -> Unit,
+    selectionMode: Boolean,
+    selected: Boolean,
+    onToggleSelection: () -> Unit,
     modifier: Modifier = Modifier,
     colorFilter: ColorFilter? = null,
 ) {
@@ -698,12 +809,33 @@ private fun CustomItemVertical(
     }
 
     M3CoverCard(
-        onLongPress = { c -> onShowBanner(c == ComponentState.Pressed) },
+        onLongPress = { c -> if (c == ComponentState.Pressed) onToggleSelection() },
         imageUrl = remember(items) { items.firstOrNull()?.imageUrl.orEmpty() },
         name = title,
         //placeHolder = { painterLogo() },
         placeHolder = { rememberVectorPainter(Icons.Default.BrokenImage) },
         favoriteIcon = {
+            if (selected) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.35f))
+                )
+            }
+            if (selectionMode) {
+                Icon(
+                    if (selected) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
+                    contentDescription = if (selected) "Selected" else "Not selected",
+                    tint = if (selected) MaterialTheme.colorScheme.primary else Color.White,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(4.dp)
+                        .background(
+                            if (selected) MaterialTheme.colorScheme.onPrimary else Color.Transparent,
+                            CircleShape
+                        )
+                )
+            }
             if (items.size > 1) {
                 Box(
                     modifier = Modifier
@@ -725,6 +857,10 @@ private fun CustomItemVertical(
             }
         },
         onClick = {
+            if (selectionMode) {
+                onToggleSelection()
+                return@M3CoverCard
+            }
             scope.launch {
                 biometrics.openIfNotIncognito(*items.toTypedArray()) {
                     if (items.size == 1) {
@@ -751,6 +887,11 @@ private fun CustomItemVertical(
         },
         colorFilter = colorFilter,
         modifier = modifier
+            .aspectRatio(2f / 3f)
+            .then(
+                if (selected) Modifier.border(3.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.medium)
+                else Modifier
+            )
     )
 }
 
@@ -886,292 +1027,6 @@ private fun DeleteItemsModal(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
-@Composable
-private fun InfoSheet(
-    customItem: CustomList,
-    sheetState: SheetState,
-    addSecurityItem: (String) -> Unit,
-    removeSecurityItem: (String) -> Unit,
-    rename: (String) -> Unit,
-    onUpdateCoverImage: (String) -> Unit,
-    onDismiss: () -> Unit,
-    onDeleteListAction: () -> Unit,
-    onRemoveItemsAction: () -> Unit,
-    onExportAction: () -> Unit,
-    filtered: List<String>,
-    onFilterAction: (String) -> Unit,
-    onClearFilterAction: () -> Unit,
-    showBySource: Boolean,
-    onShowBySource: (Boolean) -> Unit,
-    colorFilter: ColorFilter? = null,
-) {
-    val scope = rememberCoroutineScope()
-    val biometric = rememberBiometricPrompting()
-
-    var showSecurityDialog by remember { mutableStateOf(false) }
-
-    if (showSecurityDialog) {
-        AlertDialog(
-            onDismissRequest = { showSecurityDialog = false },
-            title = { Text("Require Authentication to View this list?") },
-            text = { Text("This will require phone authentication to view this list") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showSecurityDialog = false
-                        biometric.authenticate(
-                            title = "Add Authentication for ${customItem.item.name}",
-                            subtitle = "Enter Authentication to add",
-                            negativeButtonText = "Never Mind",
-                            onAuthenticationSucceeded = { addSecurityItem(customItem.item.uuid) },
-                            onAuthenticationFailed = { showSecurityDialog = false }
-                        )
-                    }
-                ) { Text(stringResource(Res.string.confirm)) }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showSecurityDialog = false }
-                ) { Text(stringResource(Res.string.cancel)) }
-            }
-        )
-    }
-
-    var showRemoveSecurityDialog by remember { mutableStateOf(false) }
-
-    if (showRemoveSecurityDialog) {
-        AlertDialog(
-            onDismissRequest = { showRemoveSecurityDialog = false },
-            title = { Text("Remove Authentication?") },
-            text = { Text("This will remove the phone authentication to view this list") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showRemoveSecurityDialog = false
-                        biometric.authenticate(
-                            title = "Remove Authentication for ${customItem.item.name}",
-                            subtitle = "Enter Authentication to remove",
-                            negativeButtonText = "Never Mind",
-                            onAuthenticationSucceeded = { removeSecurityItem(customItem.item.uuid) },
-                            onAuthenticationFailed = { showRemoveSecurityDialog = false }
-                        )
-                    }
-                ) { Text(stringResource(Res.string.confirm)) }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showRemoveSecurityDialog = false }
-                ) { Text(stringResource(Res.string.cancel)) }
-            }
-        )
-    }
-
-    var currentName by remember { mutableStateOf(customItem.item.name) }
-
-    var showCoverPicker by remember { mutableStateOf(false) }
-
-    if (showCoverPicker) {
-        CoverPickerSheet(
-            items = customItem.list,
-            currentCoverUrl = customItem.resolvedCoverImageUrl(),
-            colorFilter = colorFilter,
-            onSelect = {
-                onUpdateCoverImage(it)
-                showCoverPicker = false
-            },
-            onDismiss = { showCoverPicker = false },
-        )
-    }
-
-    var showAdd by remember { mutableStateOf(false) }
-
-    if (showAdd) {
-        AlertDialog(
-            onDismissRequest = { showAdd = false },
-            title = { Text(stringResource(Res.string.update_list_name_title)) },
-            text = { Text("Are you sure you want to change the name?") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        rename(currentName)
-                        showAdd = false
-                    }
-                ) { Text(stringResource(Res.string.confirm)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showAdd = false }) { Text(stringResource(Res.string.cancel)) }
-            }
-        )
-    }
-
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surface,
-    ) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState())
-        ) {
-            OutlinedTextField(
-                currentName,
-                onValueChange = { currentName = it },
-                shape = MaterialTheme.shapes.large,
-                trailingIcon = {
-                    IconButton(
-                        onClick = { showAdd = true },
-                        enabled = currentName != customItem.item.name
-                    ) { Icon(Icons.Default.Check, null) }
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
-            ListItem(
-                headlineContent = {},
-                leadingContent = {
-                    Card(
-                        onClick = { showCoverPicker = true },
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            ImageLoaderChoice(
-                                imageUrl = customItem.resolvedCoverImageUrl(),
-                                name = "",
-                                placeHolder = { painterLogo() },
-                                colorFilter = colorFilter,
-                                modifier = Modifier
-                                    .size(
-                                        ComposableUtils.IMAGE_WIDTH / 2,
-                                        ComposableUtils.IMAGE_HEIGHT / 2
-                                    )
-                                    .clip(MaterialTheme.shapes.small)
-                            )
-                            Icon(Icons.Default.Add, null)
-                        }
-                    }
-                },
-                supportingContent = {
-                    Column {
-                        Row(
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("Require Biometrics?")
-                            Checkbox(
-                                checked = customItem.item.useBiometric,
-                                onCheckedChange = {
-                                    if (it) {
-                                        showSecurityDialog = true
-                                    } else {
-                                        showRemoveSecurityDialog = true
-                                    }
-                                }
-                            )
-                        }
-
-                        Row(
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("Show by Source?")
-                            Checkbox(
-                                checked = showBySource,
-                                onCheckedChange = onShowBySource
-                            )
-                        }
-                    }
-                },
-                colors = ListItemDefaults.colors(
-                    containerColor = Color.Transparent,
-                )
-            )
-
-            HorizontalDivider()
-
-            Text("List Count: ${customItem.list.size}")
-
-            FlowRow(
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                customItem.list
-                    .groupBy { it.source }
-                    .forEach { (t, u) ->
-                        FilterChip(
-                            selected = filtered.contains(t),
-                            onClick = { onFilterAction(t) },
-                            label = { Text(t) },
-                            trailingIcon = { Text(u.size.toString()) }
-                        )
-                    }
-
-                FilledTonalButton(
-                    onClick = onClearFilterAction
-                ) { Text("Clear Filter") }
-            }
-
-            HorizontalDivider()
-
-            FlowRow(
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                ActionItem(
-                    onClick = {
-                        scope.launch { sheetState.hide() }
-                            .invokeOnCompletion {
-                                onDismiss()
-                                onExportAction()
-                            }
-                    }
-                ) {
-                    Icon(Icons.Default.ImportExport, null)
-                    Text(stringResource(Res.string.export_list))
-                }
-
-                ActionItem(
-                    onClick = {
-                        scope.launch { sheetState.hide() }
-                            .invokeOnCompletion {
-                                onDismiss()
-                                onRemoveItemsAction()
-                            }
-                    },
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color.Transparent,
-                        contentColor = MaterialTheme.colorScheme.error,
-                    )
-                ) {
-                    Icon(Icons.Default.RemoveCircle, null)
-                    Text(stringResource(Res.string.remove_items))
-                }
-
-                if (customItem.item.uuid != AppConfig.forLaterUuid) {
-                    ActionItem(
-                        onClick = {
-                            scope.launch { sheetState.hide() }
-                                .invokeOnCompletion {
-                                    onDismiss()
-                                    onDeleteListAction()
-                                }
-                        },
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer,
-                            contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                        ),
-                    ) {
-                        Icon(Icons.Default.Delete, null)
-                        Text(stringResource(Res.string.delete))
-                    }
-                }
-            }
-        }
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CoverPickerSheet(
@@ -1240,25 +1095,5 @@ private fun CoverPickerSheet(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun ActionItem(
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit,
-    colors: CardColors = CardDefaults.cardColors(),
-    content: @Composable ColumnScope.() -> Unit,
-) {
-    Card(
-        onClick = onClick,
-        colors = colors,
-        modifier = modifier
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(8.dp),
-            content = content
-        )
     }
 }

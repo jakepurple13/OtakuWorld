@@ -45,7 +45,6 @@ interface NavigationActions {
     fun otherSettings()
     fun workerInfo()
     fun about()
-    fun deleteFromList(uuid: String)
     fun importList(uri: String)
     fun importFullList(uri: String)
     fun popBackStack()
