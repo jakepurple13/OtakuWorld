@@ -2203,7 +2203,8 @@ git commit -m "docs(mihon): document native Mihon support"
 - [ ] **Step 1: Failing tests** — kmpmodels: an object implementing `KmpApiService` without overriding has `displayName == serviceName`. mihonsupport: `mihonApiService(FakeCatalogueSource()).displayName == "Fake (en)"` and `serviceName == "mihon:42"` (unchanged).
 - [ ] **Step 2: Run** `./gradlew :kmpmodels:jvmTest :mihonsupport:testAndroidHostTest` → FAIL (unresolved/does not override).
 - [ ] **Step 3: Implement** — in `KmpApiService`: `val displayName: String get() = serviceName`. In `MihonApiService` change `val displayName` to `override val displayName`. In `UntrustedMihonApiService` add a `label` constructor param and `override val displayName = label` (pass the label from `MihonExtensionLoader.notLoaded`).
-- [ ] **Step 4: Swap display call sites** to `displayName`; never change lookups (`toSourceByApiServiceName`, DB writes, `currentService` persistence) — those keep `serviceName`.
+- [ ] **Step 4: Swap display call sites** to `sourceDisplayName`; never change lookups
+  (`toSourceByApiServiceName`, DB writes, `currentService` persistence) — those keep `serviceName`.
 - [ ] **Step 5: Verify** `./gradlew :kmpmodels:jvmTest :mihonsupport:testAndroidHostTest :kmpuiviews:jvmTest :mangaworld:assembleNoFirebaseDebug :animeworld:assembleNoFirebaseDebug`.
 - [ ] **Step 6: Commit** `feat(mihon): show source display names instead of service ids`.
 

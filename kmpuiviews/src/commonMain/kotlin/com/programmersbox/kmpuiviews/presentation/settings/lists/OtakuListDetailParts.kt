@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.settings.lists
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,6 +34,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ImportExport
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
@@ -360,6 +362,7 @@ internal fun ListFloatingToolbar(
     onSelectAll: () -> Unit,
     onAddToList: () -> Unit,
     onRemove: () -> Unit,
+    onInfo: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     when (mode) {
@@ -458,6 +461,9 @@ internal fun ListFloatingToolbar(
             )
             IconButton(onClick = onSelectAll) { Icon(Icons.Default.SelectAll, "Select all") }
             IconButton(onClick = onAddToList) { Icon(Icons.AutoMirrored.Filled.PlaylistAdd, "Add to another list") }
+            AnimatedVisibility(selectedCount == 1) {
+                IconButton(onClick = onInfo) { Icon(Icons.Default.Info, "Info") }
+            }
         }
     }
 }
