@@ -153,7 +153,7 @@ New UI-facing state, computed with pure functions so they can be unit tested:
   replaces its `RemoteState`.
 - `RemoteErrorState` gains `message: String?` from the caught exception.
 
-The catalog page resolves the same `ExtensionListViewModel` via Koin with the catalog name as input.
+The catalog page uses the same `ExtensionListViewModel` class via `koinViewModel()`; as a separate nav entry it gets its own instance and fetches catalogs again on open (spinner until loaded).
 
 ## Error handling
 
