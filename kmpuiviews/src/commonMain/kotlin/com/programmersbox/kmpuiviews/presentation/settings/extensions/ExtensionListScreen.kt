@@ -77,6 +77,7 @@ import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
 import com.programmersbox.kmpuiviews.repository.SourceInfoRepository
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
+import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher
 import kotlinx.coroutines.delay
@@ -131,6 +132,9 @@ fun ExtensionList(
     BackHandler(navigator.canNavigateBack()) {
         scope.launch { navigator.navigateBack() }
     }
+
+    // OtakuScaffold pads content for the floating bottom nav, but not the FAB.
+    val navBottom = LocalNavHostPadding.current.calculateBottomPadding()
 
     OtakuScaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -211,6 +215,7 @@ fun ExtensionList(
                     text = { Text("Get extensions") },
                     icon = { Icon(Icons.Default.Add, null) },
                     onClick = { scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, 1) } },
+                    modifier = Modifier.padding(bottom = navBottom),
                 )
             }
         },

@@ -101,6 +101,13 @@ internal fun BrowsePane(
                             ) { CircularProgressIndicator() }
 
                             is CatalogUi.Error -> CatalogError(ui.message, onRetry = { viewModel.retry(name) })
+                            is CatalogUi.Loaded if ui.items.isEmpty() -> Text(
+                                "No extensions in this catalog",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                            )
+
                             is CatalogUi.Loaded -> TileRows(
                                 ui.items.take(SHELF_SIZE),
                                 showCatalog = false,

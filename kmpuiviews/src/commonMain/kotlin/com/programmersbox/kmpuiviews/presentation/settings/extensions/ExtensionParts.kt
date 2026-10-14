@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -26,6 +27,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -49,6 +51,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpuiviews.IconLoader
 import com.programmersbox.kmpuiviews.SourceIcon
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus
@@ -71,6 +74,25 @@ internal fun RemoteIcon(name: String, iconUrl: String, size: Dp, modifier: Modif
         if (iconUrl.isNotBlank()) {
             AsyncImage(model = iconUrl, contentDescription = null, modifier = Modifier.fillMaxSize())
         }
+    }
+}
+
+/** Installed source icon clamped to [size], over a letter avatar for sources without one. */
+@Composable
+internal fun InstalledIcon(iconLoader: IconLoader, info: KmpSourceInformation, size: Dp, modifier: Modifier = Modifier) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .size(size)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.secondaryContainer)
+    ) {
+        Text(
+            info.name.take(1).uppercase(),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSecondaryContainer,
+        )
+        SourceIcon(iconLoader, info)
     }
 }
 
@@ -273,21 +295,19 @@ internal fun InstalledRow(
     val updateAction = !trustAction && update != null
     val settingsAction = !trustAction && !updateAction && onSettings != null
     ListItem(
-        headlineContent = {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(item.info.name, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
-                if (isCurrent) Pill("Current", MaterialTheme.colorScheme.primaryContainer)
-            }
-        },
+        headlineContent = { Text(item.info.name, maxLines = 1, overflow = TextOverflow.Ellipsis) },
         supportingContent = {
-            when {
-                untrusted != null -> Text(untrusted.reason, color = MaterialTheme.colorScheme.error, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                installing != null -> InstallProgress(installing, Modifier.width(160.dp))
-                update != null -> Text("${item.version} → ${update.version}")
-                else -> Text("v${item.version}")
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                if (isCurrent) Pill("Current", MaterialTheme.colorScheme.primaryContainer)
+                when {
+                    untrusted != null -> Text(untrusted.reason, color = MaterialTheme.colorScheme.error, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    installing != null -> InstallProgress(installing, Modifier.width(140.dp))
+                    update != null -> Text("${item.version} → ${update.version}", maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    item.version.isNotBlank() -> Text("v${item.version}", maxLines = 1)
+                }
             }
         },
-        leadingContent = { SourceIcon(iconLoader, item.info) },
+        leadingContent = { InstalledIcon(iconLoader, item.info, 40.dp) },
         trailingContent = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 when {
@@ -299,9 +319,8 @@ internal fun InstalledRow(
                         )
                     ) { Text("Trust") }
 
-                    updateAction && installing == null && update != null -> FilledTonalButton(onClick = onUpdate) {
-                        Icon(Icons.Default.Update, null, modifier = Modifier.size(18.dp))
-                        Text(update.version, modifier = Modifier.padding(start = 4.dp))
+                    updateAction && installing == null && update != null -> FilledTonalIconButton(onClick = onUpdate) {
+                        Icon(Icons.Default.Update, "Update to ${update.version}")
                     }
 
                     settingsAction && onSettings != null -> IconButton(onClick = onSettings) { Icon(Icons.Default.Settings, "Settings") }

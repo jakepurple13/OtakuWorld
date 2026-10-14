@@ -37,7 +37,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.kmpmodels.KmpConfigurableApiService
 import com.programmersbox.kmpuiviews.IconLoader
-import com.programmersbox.kmpuiviews.SourceIcon
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.utils.LocalCurrentSource
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
@@ -94,7 +93,7 @@ internal fun InstalledPane(
                         .animateItem()
                 ) {
                     CatalogHeader(
-                        title = catalog ?: rows.firstOrNull()?.info?.name ?: "Single Source",
+                        title = catalog ?: "Other sources",
                         rows = rows,
                         open = open,
                         iconLoader = iconLoader,
@@ -154,7 +153,7 @@ private fun CatalogHeader(
             .padding(start = 14.dp, end = 4.dp, top = 12.dp, bottom = 12.dp)
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy((-10).dp)) {
-            rows.take(3).forEach { Box { SourceIcon(iconLoader, it.info) } }
+            rows.take(3).forEach { InstalledIcon(iconLoader, it.info, 32.dp) }
         }
         Column(Modifier.weight(1f)) {
             Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
