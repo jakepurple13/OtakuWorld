@@ -47,6 +47,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.data.DataManagementSc
 import com.programmersbox.kmpuiviews.presentation.settings.discover.DiscoverScreen
 import com.programmersbox.kmpuiviews.presentation.settings.downloadstate.DownloadStateScreen
 import com.programmersbox.kmpuiviews.presentation.settings.exceptions.ExceptionsScreen
+import com.programmersbox.kmpuiviews.presentation.settings.extensions.ExtensionCatalogScreen
 import com.programmersbox.kmpuiviews.presentation.settings.extensions.ExtensionList
 import com.programmersbox.kmpuiviews.presentation.settings.general.BlurSettingsScreen
 import com.programmersbox.kmpuiviews.presentation.settings.general.DetailsSettingsScreen
@@ -277,6 +278,10 @@ fun buildKmpGraph(): Module = module {
 
     navigation<Screen.ExtensionListScreen> {
         ExtensionList()
+    }
+
+    navigation<Screen.ExtensionListScreen.Catalog> {
+        ExtensionCatalogScreen(catalogName = it.catalogName)
     }
 
     twoPaneEntry<Screen.AccountInfo> {

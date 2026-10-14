@@ -171,6 +171,9 @@ sealed class Screen(val route: String) : NavKey {
     data object ExtensionListScreen : Screen("extension_list") {
         @Serializable
         data object Home : Screen("home")
+
+        @Serializable
+        data class Catalog(val catalogName: String) : Screen("extension_catalog")
     }
 
     @Serializable
