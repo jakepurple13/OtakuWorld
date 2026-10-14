@@ -177,11 +177,14 @@ fun OtakuCustomListScreenStandAlone(
 ) {
     val scope = rememberCoroutineScope()
     val navController = LocalNavActions.current
+    // Key on loaded/not loaded only. Keying on the list itself rebuilt the whole screen on every
+    // database update, resetting scroll and selection and re-showing the hidden nav bar.
     Crossfade(
-        targetState = viewModel.customList,
+        targetState = viewModel.customList != null,
         label = "",
-    ) { target ->
-        if (target != null) {
+    ) { loaded ->
+        val target = viewModel.customList
+        if (loaded && target != null) {
             SecureScreenWrapper(target.item.useBiometric) {
                 OtakuCustomListScreen(
                     viewModel = viewModel,
@@ -367,7 +370,11 @@ fun OtakuCustomListScreen(
                             scope.launch {
                                 dao.removeItem(model.info)
                                 viewModel.customList?.item?.let { dao.updateFullList(it) }
-                            }.invokeOnCompletion { showDeleteDialog = false }
+                            }.invokeOnCompletion {
+                                showDeleteDialog = false
+                                // The item is gone, so the sheet has nothing left to show.
+                                dismiss()
+                            }
                         }
                     ) { Text(stringResource(Res.string.confirm)) }
                 },

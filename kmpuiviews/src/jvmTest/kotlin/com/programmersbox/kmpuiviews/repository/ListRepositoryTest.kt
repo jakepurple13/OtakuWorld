@@ -14,6 +14,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class ListRepositoryTest {
@@ -77,6 +78,51 @@ class ListRepositoryTest {
         val list = repo.getAllLists().first()[0]
         assertEquals(1, list.list.size)
         assertEquals("https://example.com/1", list.list[0].url)
+    }
+
+    private suspend fun ListRepository.listWithTwoItems(): String {
+        create("My List")
+        val uuid = getAllLists().first()[0].item.uuid
+        addToList(uuid, "Keep", "", "https://example.com/keep", "", "ExampleService")
+        addToList(uuid, "Remove", "", "https://example.com/remove", "", "ExampleService")
+        return uuid
+    }
+
+    @Test fun `removeItem hard-deletes when logged out`() = runTest {
+        val repo = repository(loggedIn = false)
+        val uuid = repo.listWithTwoItems()
+        val toRemove = repo.getCustomListItemFlow(uuid).first().list.first { it.title == "Remove" }
+
+        repo.removeItem(toRemove)
+
+        assertEquals(listOf("Keep"), repo.getCustomListItemFlow(uuid).first().list.map { it.title })
+        assertNull(database.listDao().getCustomListInfoByUniqueId(toRemove.uniqueId))
+    }
+
+    @Test fun `removeItem soft-deletes only that item when logged in`() = runTest {
+        val repo = repository(loggedIn = true)
+        val uuid = repo.listWithTwoItems()
+        val toRemove = repo.getCustomListItemFlow(uuid).first().list.first { it.title == "Remove" }
+
+        repo.removeItem(toRemove)
+
+        assertEquals(listOf("Keep"), repo.getCustomListItemFlow(uuid).first().list.map { it.title })
+        assertEquals(listOf("Keep"), repo.getAllLists().first()[0].list.map { it.title })
+        val row = database.listDao().getCustomListInfoByUniqueId(toRemove.uniqueId)
+        assertNotNull(row)
+        assertTrue(row.isDeleted)
+    }
+
+    @Test fun `addToList can re-add an item that was soft-deleted`() = runTest {
+        val repo = repository(loggedIn = true)
+        val uuid = repo.listWithTwoItems()
+        val toRemove = repo.getCustomListItemFlow(uuid).first().list.first { it.title == "Remove" }
+        repo.removeItem(toRemove)
+
+        val added = repo.addToList(uuid, "Remove", "", "https://example.com/remove", "", "ExampleService")
+
+        assertTrue(added)
+        assertEquals(setOf("Keep", "Remove"), repo.getCustomListItemFlow(uuid).first().list.map { it.title }.toSet())
     }
 
     @Test fun `removeList hard-deletes when logged out`() = runTest {

@@ -40,12 +40,12 @@ private fun fakeListDao(lists: List<CustomList>): ListDao = object : ListDao by 
 /** Every method is unimplemented — these tests only ever call `getAllListsSync`, overridden per-fake above via delegation. */
 private object UnimplementedListDao : ListDao {
     private fun unsupported(): Nothing = throw NotImplementedError("not used in these tests")
-    override fun getAllLists() = throw NotImplementedError()
+    override fun getAllListsWithDeleted() = throw NotImplementedError()
     override fun getAllListsCount() = throw NotImplementedError()
     override fun getAllListItemsCount() = throw NotImplementedError()
-    override suspend fun getAllListsSync(): List<CustomList> = unsupported()
-    override suspend fun getCustomListItem(uuid: String) = unsupported()
-    override fun getCustomListItemFlow(uuid: String) = throw NotImplementedError()
+    override suspend fun getAllListsSyncWithDeleted(): List<CustomList> = unsupported()
+    override suspend fun getCustomListItemWithDeleted(uuid: String) = unsupported()
+    override fun getCustomListItemFlowWithDeleted(uuid: String) = throw NotImplementedError()
     override suspend fun createList(listItem: CustomListItem) = unsupported()
     override suspend fun addItem(listItem: CustomListInfo) = unsupported()
     override suspend fun removeItem(listItem: CustomListInfo) = unsupported()
