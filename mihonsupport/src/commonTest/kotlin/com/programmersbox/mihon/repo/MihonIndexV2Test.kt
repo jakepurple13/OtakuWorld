@@ -55,7 +55,10 @@ internal fun v2Client(routes: Map<String, () -> Any>) = HttpClient(MockEngine { 
 internal fun assertV2Mapping(result: List<KmpRemoteSources>) {
     assertEquals(listOf("pkg.dex", "pkg.six"), result.map { it.packageName })
     val dex = result.first()
-    assertEquals("Dex (18+)", dex.name)
+    assertEquals("Dex", dex.name)
+    assertEquals(true, dex.nsfw)
+    assertEquals("en", dex.lang)
+    assertEquals(false, result[1].nsfw)
     assertEquals("1.4.7", dex.version)
     assertEquals("https://cdn.example/pkg.dex.png", dex.iconUrl)
     assertEquals("https://cdn.example/pkg.dex.apk", dex.downloadLink)
@@ -163,5 +166,20 @@ class MihonIndexV2Test {
         )
         assertEquals(emptyList(), repo.fetch(listOf(base)))
         assertEquals(emptySet(), repo.signingKeys)
+    }
+
+    @Test
+    fun multiLanguageV2ExtensionIsAll() = runTest {
+        val multi = v2Extension("Multi", "pkg.multi", "1.4").copy(
+            sources = listOf(
+                V2Source(id = 1, name = "Multi", language = "en", homeUrl = "https://m.example"),
+                V2Source(id = 2, name = "Multi", language = "es", homeUrl = "https://m.example"),
+            )
+        )
+        val index = ProtoBuf.encodeToByteArray(
+            V2Index(name = "Store", signingKey = "indexKey", extensions = V2InlineList(V2ExtensionList(listOf(multi))))
+        )
+        val repo = MihonRepoClient(v2Client(mapOf("$base/repo.json" to { repoJson(indexUrl) }, indexUrl to { index })))
+        assertEquals("all", repo.fetch(listOf(base)).single().lang)
     }
 }

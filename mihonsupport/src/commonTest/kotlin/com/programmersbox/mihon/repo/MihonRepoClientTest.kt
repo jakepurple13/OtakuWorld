@@ -59,7 +59,9 @@ class MihonRepoClientTest {
         val result = repo.fetch(listOf("https://repo.example/index.min.json"))
 
         val dex = result.single()
-        assertEquals("MangaDex (18+)", dex.name)
+        assertEquals("MangaDex", dex.name)
+        assertEquals("all", dex.lang)
+        assertEquals(true, dex.nsfw)
         assertEquals("eu.kanade.tachiyomi.extension.all.mangadex", dex.packageName)
         assertEquals("1.4.190", dex.version)
         assertEquals("https://repo.example/icon/eu.kanade.tachiyomi.extension.all.mangadex.png", dex.iconUrl)

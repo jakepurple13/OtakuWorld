@@ -125,6 +125,8 @@ data class KmpRemoteSources(
     val iconUrl: String,
     val downloadLink: String,
     val sources: List<KmpSources>,
+    val lang: String = "",
+    val nsfw: Boolean = false,
 )
 
 @Serializable
