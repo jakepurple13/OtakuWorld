@@ -23,6 +23,7 @@ import androidx.room3.migration.Migration
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.execSQL
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
@@ -118,9 +119,14 @@ abstract class ListDatabase : RoomDatabase() {
 @Dao
 interface ListDao {
 
+    // @Relation can't filter, so the raw queries below still return soft-deleted CustomListInfo
+    // rows. Use the non-"WithDeleted" functions, which drop them.
+
     @Transaction
     @Query("SELECT * FROM CustomListItem WHERE is_deleted = 0 ORDER BY useBiometric ASC, time DESC ")
-    fun getAllLists(): Flow<List<CustomList>>
+    fun getAllListsWithDeleted(): Flow<List<CustomList>>
+
+    fun getAllLists(): Flow<List<CustomList>> = getAllListsWithDeleted().map { lists -> lists.map { it.withoutDeleted() } }
 
     @Query("SELECT COUNT(uuid) FROM CustomListItem WHERE is_deleted = 0")
     fun getAllListsCount(): Flow<Int>
@@ -130,15 +136,21 @@ interface ListDao {
 
     @Transaction
     @Query("SELECT * FROM CustomListItem WHERE is_deleted = 0 ORDER BY time DESC")
-    suspend fun getAllListsSync(): List<CustomList>
+    suspend fun getAllListsSyncWithDeleted(): List<CustomList>
+
+    suspend fun getAllListsSync(): List<CustomList> = getAllListsSyncWithDeleted().map { it.withoutDeleted() }
 
     @Transaction
     @Query("SELECT * FROM CustomListItem WHERE :uuid = uuid")
-    suspend fun getCustomListItem(uuid: String): CustomList
+    suspend fun getCustomListItemWithDeleted(uuid: String): CustomList
+
+    suspend fun getCustomListItem(uuid: String): CustomList = getCustomListItemWithDeleted(uuid).withoutDeleted()
 
     @Transaction
     @Query("SELECT * FROM CustomListItem WHERE :uuid = uuid AND is_deleted = 0")
-    fun getCustomListItemFlow(uuid: String): Flow<CustomList>
+    fun getCustomListItemFlowWithDeleted(uuid: String): Flow<CustomList>
+
+    fun getCustomListItemFlow(uuid: String): Flow<CustomList> = getCustomListItemFlowWithDeleted(uuid).map { it.withoutDeleted() }
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun createList(listItem: CustomListItem): Long
@@ -273,6 +285,10 @@ data class CustomList(
     )
     val list: List<CustomListInfo>,
 )
+
+/** Drops items that were soft-deleted while signed in and are waiting to sync. */
+fun CustomList.withoutDeleted(): CustomList =
+    if (list.none { it.isDeleted }) this else copy(list = list.filterNot { it.isDeleted })
 
 fun CustomList.resolvedCoverImageUrl(): String =
     item.coverImageUrl?.takeIf { it.isNotEmpty() } ?: list.firstOrNull()?.imageUrl.orEmpty()

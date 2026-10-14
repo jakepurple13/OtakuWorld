@@ -66,7 +66,7 @@ class ListRepository(
 
     suspend fun removeItem(customListItem: CustomListInfo) {
         if (authManager.isLoggedIn())
-            listDao.softDeleteCustomListInfo(customListItem.uuid, Clock.System.now().toEpochMilliseconds())
+            listDao.softDeleteCustomListInfo(customListItem.uniqueId, Clock.System.now().toEpochMilliseconds())
         else
             listDao.removeItem(customListItem)
         systemAlerter.alertListItemChange()
