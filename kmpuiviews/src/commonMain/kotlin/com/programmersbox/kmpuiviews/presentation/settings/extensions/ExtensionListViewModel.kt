@@ -18,7 +18,9 @@ import com.programmersbox.kmpmodels.KmpUntrustedApiService
 import com.programmersbox.kmpmodels.NativeCatalogs
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.OtakuWorldCatalog
+import com.programmersbox.kmpuiviews.repository.DownloadAndInstallState
 import com.programmersbox.kmpuiviews.repository.DownloadStateInterface
+import com.programmersbox.kmpuiviews.repository.SourceInfoRepository
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstaller
 import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.flow.combine
@@ -35,51 +37,70 @@ class ExtensionListViewModel(
     private val downloadStateRepository: DownloadStateInterface,
     private val extensionShareHandler: ExtensionShareHandler,
     private val nativeCatalogs: NativeCatalogs,
+    private val sourceInfoRepository: SourceInfoRepository,
 ) : ViewModel() {
     private val installedSources = mutableStateListOf<KmpSourceInformation>()
-    val remoteSources = mutableStateMapOf<String, RemoteState>()
+    private val downloads = mutableStateListOf<DownloadAndInstallState>()
+    private val remoteCatalogs = RemoteCatalogs()
+    private val versionOf: (KmpSourceInformation) -> String = sourceInfoRepository::versionName
 
-    val installed by derivedStateOf {
-        installedSources
-            .groupBy { it.catalog?.name }
-            .mapValues { InstalledViewState(it.value) }
+    private val allRemote by derivedStateOf {
+        remoteCatalogs.states.values.filterIsInstance<RemoteViewState>().flatMap { it.sources }
     }
 
-    val remoteSourcesVersions by derivedStateOf {
-        remoteSources.values.filterIsInstance<RemoteViewState>().flatMap { it.sources }
-    }
+    val installedItems by derivedStateOf { installedItems(installedSources, allRemote, versionOf, downloads) }
 
-    val remoteSourcesShowing = mutableStateMapOf<String, Boolean>()
+    val summary by derivedStateOf { installedItems.summary() }
+
+    var filter by mutableStateOf(InstalledFilter.None)
+
+    val visibleInstalled by derivedStateOf { installedItems.filteredBy(filter).byCatalog() }
+
+    /** User expand/collapse choices per catalog; absent = default (expanded when it needs attention). */
+    val expanded = mutableStateMapOf<String?, Boolean>()
+
+    val catalogs by derivedStateOf { catalogUi(remoteCatalogs.states, installedSources, versionOf, downloads) }
+
+    fun item(key: String): RemoteItem? = catalogs.values
+        .filterIsInstance<CatalogUi.Loaded>()
+        .firstNotNullOfOrNull { c -> c.items.find { it.key == key } }
 
     val hasCustomBridge by derivedStateOf {
         nativeCatalogs.catalogs.isNotEmpty() ||
             installedSources.any { it.catalog is KmpExternalCustomApiServicesCatalog && it.name == "Custom Tachiyomi Bridge" }
     }
 
-    fun downloadAndInstall(downloadLink: String, destinationPath: String) {
-        /*downloadAndInstaller
-            .downloadAndInstall(downloadLink, destinationPath)
-            .launchIn(viewModelScope)*/
-        downloadStateRepository.downloadAndInstall(downloadLink)
+    fun install(remote: KmpRemoteSources) {
+        downloadStateRepository.downloadAndInstall(remote.downloadLink)
     }
 
-    fun uninstall(packageName: String) {
-        viewModelScope.launch {
-            downloadAndInstaller.uninstall(packageName)
-            sourceLoader.blockingLoad()
-        }
+    fun updateAll() {
+        installedItems.updateLinks().forEach(downloadStateRepository::downloadAndInstall)
+    }
+
+    fun retry(catalog: String) {
+        viewModelScope.launch { remoteCatalogs.retry(catalog) }
+    }
+
+    fun uninstall(source: KmpSourceInformation) {
+        sourceInfoRepository.uninstall(source)
     }
 
     init {
+        downloadStateRepository.downloadList
+            .onEach {
+                downloads.clear()
+                downloads.addAll(it)
+            }
+            .launchIn(viewModelScope)
+
         sourceRepository.sources
             .onEach {
                 installedSources.clear()
                 installedSources.addAll(it)
             }
             .onEach { sources ->
-                remoteSourcesShowing.clear()
-                remoteSources["${otakuWorldCatalog.name}World"] = RemoteViewState(otakuWorldCatalog.getRemoteSources())
-                remoteSourcesShowing["${otakuWorldCatalog.name}World"] = false
+                remoteCatalogs.load("${otakuWorldCatalog.name}World") { otakuWorldCatalog.getRemoteSources() }
                 sources
                     .asSequence()
                     .map { it.catalog }
@@ -87,14 +108,7 @@ class ExtensionListViewModel(
                     .filter { it.hasRemoteSources }
                     .distinct()
                     .toList()
-                    .forEach { c ->
-                        remoteSources[c.name] = runCatching { c.getRemoteSources() }.fold(
-                            onSuccess = { RemoteViewState(it) },
-                            onFailure = { RemoteErrorState() }
-                        )
-
-                        remoteSourcesShowing[c.name] = false
-                    }
+                    .forEach { c -> remoteCatalogs.load(c.name) { c.getRemoteSources() } }
             }
             .combine(settingsHandling.customUrls) { sources, urls ->
                 (sources.asSequence().map { it.catalog }.filterIsInstance<KmpExternalCustomApiServicesCatalog>() +
@@ -102,14 +116,7 @@ class ExtensionListViewModel(
                     .filter { it.hasRemoteSources }
                     .distinct()
                     .toList()
-                    .forEach { c ->
-                        remoteSources[c.name] = runCatching { c.getRemoteSources(urls) }
-                            .onFailure { it.printStackTrace() }
-                            .fold(
-                                onSuccess = { RemoteViewState(it) },
-                                onFailure = { RemoteErrorState() }
-                            )
-                    }
+                    .forEach { c -> remoteCatalogs.load(c.name) { c.getRemoteSources(urls) } }
             }
             .launchIn(viewModelScope)
     }
@@ -137,13 +144,4 @@ class ExtensionListViewModel(
             extensionSharing = false
         }
     }
-}
-
-class InstalledViewState(
-    val sourceInformation: List<KmpSourceInformation>,
-) {
-    var showItems by mutableStateOf(false)
-
-    /** A catalog group can only be uninstalled as a unit when it is one APK (e.g. a bridge). */
-    val canUninstallAll: Boolean get() = sourceInformation.map { it.packageName }.distinct().size == 1
 }
