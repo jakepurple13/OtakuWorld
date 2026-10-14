@@ -5,6 +5,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.ItemDao
+import com.programmersbox.kmpmodels.SourceRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,6 +19,7 @@ import kotlin.random.Random
 
 class AccountStatDetailsViewModel(
     itemDao: ItemDao,
+    sourceRepository: SourceRepository,
 ) : ViewModel() {
 
     val state: StateFlow<AccountStatDetailsState>
@@ -32,7 +34,7 @@ class AccountStatDetailsViewModel(
                     .mapValues { it.value.size }
                     .map {
                         FavoriteInfo(
-                            name = it.key,
+                            name = sourceRepository.displayNameFor(it.key),
                             count = it.value.toLong(),
                             color = Random.nextRandomColor()
                         )

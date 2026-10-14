@@ -313,7 +313,7 @@ fun FavoriteScreen(
                                 ) {
                                     ListItem(
                                         headlineContent = { Text(dbModel.title) },
-                                        supportingContent = { Text(dbModel.source) },
+                                        supportingContent = { Text(sourceRepository.displayNameFor(dbModel.source)) },
                                         leadingContent = { Icon(Icons.Filled.Star, contentDescription = null) },
                                         colors = ListItemDefaults.colors(
                                             containerColor = Color.Transparent
@@ -356,7 +356,7 @@ fun FavoriteScreen(
                                         FilterChip(
                                             selected = it.first in viewModel.selectedSources,
                                             onClick = { viewModel.newSource(it.first) },
-                                            label = { Text(it.first) },
+                                            label = { Text(sourceRepository.displayNameFor(it.first)) },
                                             leadingIcon = { Text("${it.second.size - 1}") },
                                             modifier = Modifier.combinedClickable(
                                                 onClick = { viewModel.newSource(it.first) },

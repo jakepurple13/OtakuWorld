@@ -82,6 +82,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.kmpuiviews.painterLogo
+import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
 import com.programmersbox.kmpuiviews.utils.rememberBiometricPrompting
 import org.jetbrains.compose.resources.stringResource
@@ -264,7 +265,7 @@ internal fun SourceChipsRow(
             FilterChip(
                 selected = !allSourcesShown && source in filtered,
                 onClick = { onSelectSource(source) },
-                label = { Text(source) },
+                label = { Text(LocalSourcesRepository.current.displayNameFor(source)) },
                 trailingIcon = { Text(count.toString()) },
             )
         }

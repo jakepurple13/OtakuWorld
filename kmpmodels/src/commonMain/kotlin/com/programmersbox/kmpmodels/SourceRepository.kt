@@ -40,4 +40,8 @@ class SourceRepository {
 
     fun toSource(name: String) = sourcesList.value.find { it.name == name }
     fun toSourceByApiServiceName(name: String) = sourcesList.value.find { it.apiService.serviceName == name }
+
+    /** Display name for a stored [KmpApiService.serviceName], falling back to [serviceName] when the source isn't loaded. */
+    fun displayNameFor(serviceName: String): String =
+        toSourceByApiServiceName(serviceName)?.apiService?.displayName ?: serviceName
 }

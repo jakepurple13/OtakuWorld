@@ -72,4 +72,25 @@ class SourceRepositoryTest {
         repository.removeSource(info)
         assertTrue(repository.list.isEmpty())
     }
+
+    private class NamedApiService : KmpApiService {
+        override val baseUrl: String = ""
+        override val serviceName: String = "mihon:2012"
+        override val displayName: String = "MangaDex"
+    }
+
+    @Test
+    fun displayNameForUsesLoadedSourceDisplayName() {
+        val repository = SourceRepository()
+        repository.addSource(
+            KmpSourceInformation(apiService = NamedApiService(), name = "MangaDex", icon = null, packageName = "mihon.pkg")
+        )
+
+        assertEquals("MangaDex", repository.displayNameFor("mihon:2012"))
+    }
+
+    @Test
+    fun displayNameForFallsBackToServiceNameWhenSourceNotLoaded() {
+        assertEquals("mihon:9999", SourceRepository().displayNameFor("mihon:9999"))
+    }
 }

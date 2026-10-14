@@ -499,6 +499,7 @@ private fun NotificationTimeline(
 
 @Composable
 private fun FilterRow(vm: NotificationScreenViewModel) {
+    val sourceRepository = LocalSourcesRepository.current
     @Composable
     fun Chip(filter: NotificationFilter, label: String, count: Int) {
         val selected = vm.filter == filter
@@ -522,7 +523,7 @@ private fun FilterRow(vm: NotificationScreenViewModel) {
             item { Chip(NotificationFilter.InTray, stringResource(Res.string.in_tray), vm.trayCount) }
         }
         items(vm.sourceCounts, key = { it.first }) { (source, count) ->
-            Chip(NotificationFilter.Source(source), source, count)
+            Chip(NotificationFilter.Source(source), sourceRepository.displayNameFor(source), count)
         }
     }
 }
@@ -571,6 +572,7 @@ private fun NotificationRow(
     modifier: Modifier = Modifier,
 ) {
     val haptic = LocalHapticFeedback.current
+    val sourceRepository = LocalSourcesRepository.current
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
     if (showDeleteConfirm) {
@@ -708,7 +710,7 @@ private fun NotificationRow(
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
-                        listOf(item.source, timeLabel).filter { it.isNotEmpty() }.joinToString(" · "),
+                        listOf(sourceRepository.displayNameFor(item.source), timeLabel).filter { it.isNotEmpty() }.joinToString(" · "),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.outline,
                         maxLines = 1,
@@ -791,7 +793,7 @@ private fun NotificationDay.label(): String = stringResource(
 internal fun NotificationFilter.catchUpTitle(): String = when (this) {
     NotificationFilter.All -> stringResource(Res.string.catch_up)
     NotificationFilter.InTray -> "${stringResource(Res.string.catch_up)} · ${stringResource(Res.string.in_tray)}"
-    is NotificationFilter.Source -> "${stringResource(Res.string.catch_up)} · $name"
+    is NotificationFilter.Source -> "${stringResource(Res.string.catch_up)} · ${LocalSourcesRepository.current.displayNameFor(name)}"
 }
 
 /** Time for today and yesterday, weekday for this week, month and day for older items. */

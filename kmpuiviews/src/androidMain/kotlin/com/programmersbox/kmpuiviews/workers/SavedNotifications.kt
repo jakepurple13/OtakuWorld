@@ -46,7 +46,7 @@ object SavedNotifications {
             icon
         ) {
             title = n.notiTitle
-            subText = n.source
+            subText = sourceRepository.displayNameFor(n.source)
             client.getBitmapFromURL(n.imageUrl)?.let {
                 largeIconBitmap = it
                 pictureStyle {
@@ -138,7 +138,7 @@ object SavedNotifications {
                     icon
                 ) {
                     title = n.notiTitle
-                    subText = n.source
+                    subText = sourceRepository.displayNameFor(n.source)
                     client.getBitmapFromURL(n.imageUrl)?.let {
                         largeIconBitmap = it
                         pictureStyle {

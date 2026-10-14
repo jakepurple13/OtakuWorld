@@ -69,7 +69,7 @@ class UpdateNotification(
                     icon.notificationId
                 ) {
                     title = pair.second.title
-                    subText = pair.second.source
+                    subText = pair.first?.source?.displayName ?: pair.second.source
                     client.getBitmapFromURL(pair.second.imageUrl, pair.first?.extras.orEmpty())?.let {
                         largeIconBitmap = it
                         pictureStyle {
