@@ -5,6 +5,7 @@ import android.content.Context
 import eu.kanade.tachiyomi.network.JavaScriptEngine
 import eu.kanade.tachiyomi.network.NetworkHelper
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.protobuf.ProtoBuf
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.addSingleton
 import uy.kohesive.injekt.api.addSingletonFactory
@@ -29,6 +30,7 @@ object MihonRuntime {
                     explicitNulls = false
                 }
             }
+            Injekt.addSingletonFactory(fullType<ProtoBuf>()) { ProtoBuf }
             initialized = true
         }
     }
