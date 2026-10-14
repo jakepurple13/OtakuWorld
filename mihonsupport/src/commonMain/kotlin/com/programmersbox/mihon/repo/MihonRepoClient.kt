@@ -148,21 +148,31 @@ class MihonRepoClient(private val httpClient: HttpClient) {
     }
 
     private fun MihonIndexEntry.toRemote(base: String) = KmpRemoteSources(
-        name = name.removePrefix("Tachiyomi: ") + if (nsfw == 1) " (18+)" else "",
+        name = name.removePrefix("Tachiyomi: "),
         packageName = pkg,
         version = version,
         iconUrl = "$base/icon/$pkg.png",
         downloadLink = "$base/apk/$apk",
         sources = sources.map { KmpSources(name = it.name, baseUrl = it.baseUrl, version = version) },
+        lang = lang,
+        nsfw = nsfw == 1,
     )
 
     private fun V2Extension.toRemote() = KmpRemoteSources(
-        name = name + if (contentWarning == V2ContentWarning.CONTENT_WARNING_NSFW) " (18+)" else "",
+        name = name,
         packageName = packageName,
         version = versionName,
         iconUrl = resources?.iconUrl.orEmpty(),
         downloadLink = resources?.apkUrl.orEmpty(),
         sources = sources.map { KmpSources(name = it.name, baseUrl = it.homeUrl, version = versionName) },
+        lang = sources.map { it.language }.filter { it.isNotBlank() }.distinct().let {
+            when (it.size) {
+                0 -> ""
+                1 -> it.single()
+                else -> "all"
+            }
+        },
+        nsfw = contentWarning == V2ContentWarning.CONTENT_WARNING_NSFW,
     )
 
     companion object {
