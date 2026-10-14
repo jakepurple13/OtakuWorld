@@ -322,7 +322,8 @@ These supersede the sections above where they differ.
 `serviceName` stays `"mihon:<id>"` (stable key for favorites/history/current source). `KmpApiService`
 gains `val displayName: String get() = serviceName`; `MihonApiService` overrides it with
 `"<name> (<lang>)"`, `UntrustedMihonApiService` with the extension label. Shared UI shows
-`displayName` wherever it currently *displays* `serviceName` (top bar, "Current Source", source
+`sourceDisplayName` wherever it currently *displays* `serviceName` (top bar, "Current Source",
+source
 chooser, details source label); lookups and persistence keep using `serviceName`.
 
 ### Mihon index_v2 repos

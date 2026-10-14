@@ -514,7 +514,7 @@ class SyncProcessorBackupGuardTest {
 Run:
 `./gradlew :favoritesdatabase:supabase-integration:jvmTest --tests "com.programmersbox.supabaseintegration.sync.syncprocessor.SyncProcessorBackupGuardTest"`
 Expected: FAIL to compile — `TestSyncProcessor` cannot override `backupPreferenceRepository`/
-`displayName` because they don't exist yet on `SyncProcessor`, and the "enabled" tests fail
+`sourceDisplayName` because they don't exist yet on `SyncProcessor`, and the "enabled" tests fail
 logically since there is no guard yet (once the two abstract members are added,
 `getDirtyItemsCallCount` would be 1 in the "disabled" test too, without the guard).
 
