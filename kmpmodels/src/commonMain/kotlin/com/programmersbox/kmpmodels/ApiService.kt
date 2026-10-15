@@ -76,6 +76,9 @@ interface KmpApiService {
     /** Human-readable name for display only. Never use as a key; use [serviceName] for lookups and persistence. */
     val displayName: String get() = serviceName
 
+    /** Language code of the content (e.g. "en", "pt-BR", or "all" for multi-language); null when unknown. */
+    val language: String? get() = null
+
     fun <T> Flow<List<T>>.dispatchIoAndCatchList() = this
         .dispatchIo()
         .catch {

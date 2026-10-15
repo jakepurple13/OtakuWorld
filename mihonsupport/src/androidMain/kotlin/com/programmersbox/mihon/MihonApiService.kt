@@ -21,6 +21,7 @@ open class MihonApiService(val source: CatalogueSource) : KmpApiService {
     override val serviceName: String = "mihon:${source.id}"
     override val canScroll: Boolean = true
     override val displayName: String = "${source.name} (${source.lang})"
+    override val language: String = source.lang
 
     override suspend fun recent(page: Int): List<KmpItemModel> = withContext(Dispatchers.IO) {
         val result = if (source.supportsLatest) source.getLatestUpdates(page) else source.getPopularManga(page)
