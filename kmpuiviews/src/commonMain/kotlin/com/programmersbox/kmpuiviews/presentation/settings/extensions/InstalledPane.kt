@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.settings.extensions
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -103,7 +104,7 @@ internal fun InstalledPane(
                             .takeIf { catalog != null && it.canUninstallAll() }
                             ?.let { infos -> { viewModel.uninstall(infos.first()) } },
                     )
-                    if (open) {
+                    AnimatedVisibility(open) {
                         Column(
                             verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap),
                         ) {

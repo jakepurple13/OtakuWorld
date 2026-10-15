@@ -1,5 +1,12 @@
 package com.programmersbox.kmpuiviews.presentation.globalsearch
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -21,9 +28,10 @@ import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -59,21 +67,50 @@ fun SearchLanguagesSheet(
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(true),
+        sheetState = rememberBottomSheetState(SheetValue.Expanded),
         containerColor = MaterialTheme.colorScheme.surface,
     ) {
         val group = s.groups.find { it.packageName == editing }
         Column(
-            verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 16.dp)
+                .animateContentSize()
                 .verticalScroll(rememberScrollState())
         ) {
-            if (group == null) {
-                DefaultsContent(s, settings) { editing = it }
-            } else {
-                OverrideContent(group, s, settings) { editing = null }
+            AnimatedContent(
+                group,
+                transitionSpec = {
+                    if (targetState != null) {
+                        // Sliding to the Right when going to OverrideContent
+                        slideIntoContainer(
+                            towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                            animationSpec = tween(300)
+                        ) + fadeIn() togetherWith slideOutOfContainer(
+                            towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                            animationSpec = tween(300)
+                        ) + fadeOut()
+                    } else {
+                        // Sliding to the Left when returning to DefaultsContent
+                        slideIntoContainer(
+                            towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                            animationSpec = tween(300)
+                        ) + fadeIn() togetherWith slideOutOfContainer(
+                            towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                            animationSpec = tween(300)
+                        ) + fadeOut()
+                    }
+                }
+            ) { target ->
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    if (target == null) {
+                        DefaultsContent(s, settings) { editing = it }
+                    } else {
+                        OverrideContent(target, s, settings) { editing = null }
+                    }
+                }
             }
         }
     }
