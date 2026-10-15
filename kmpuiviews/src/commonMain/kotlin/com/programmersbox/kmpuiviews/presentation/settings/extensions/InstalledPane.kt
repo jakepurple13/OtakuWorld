@@ -15,13 +15,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -43,6 +44,7 @@ import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun InstalledPane(
     viewModel: ExtensionListViewModel,
@@ -82,11 +84,10 @@ internal fun InstalledPane(
         }
 
         viewModel.visibleInstalled.forEach { (catalog, rows) ->
-            item(key = "catalog:$catalog") {
+            item(key = "catalog:$catalog", contentType = "installed") {
                 val needsAttention = rows.any { it.update != null || it.untrusted != null }
                 val open = filtering || (viewModel.expanded[catalog] ?: needsAttention)
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+                OutlinedCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 12.dp)
@@ -103,23 +104,29 @@ internal fun InstalledPane(
                             ?.let { infos -> { viewModel.uninstall(infos.first()) } },
                     )
                     if (open) {
-                        rows.forEach { row ->
-                            val api = row.info.apiService
-                            InstalledRow(
-                                item = row,
-                                isCurrent = currentSource?.serviceName == api.serviceName,
-                                iconLoader = iconLoader,
-                                onClick = { if (row.untrusted == null) currentSourceRepository.tryEmit(api) },
-                                onTrust = { viewModel.trust(row.info) },
-                                onUpdate = { row.update?.let(viewModel::install) },
-                                onSettings = if (api is KmpConfigurableApiService) {
-                                    { navActions.navigate(Screen.SourcePreferences(api.serviceName)) }
-                                } else {
-                                    null
-                                },
-                                onSetCurrent = { scope.launch { currentSourceRepository.emit(api) } },
-                                onUninstall = { viewModel.uninstall(row.info) },
-                            )
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap),
+                        ) {
+                            rows.forEachIndexed { index, row ->
+                                val api = row.info.apiService
+                                InstalledRow(
+                                    item = row,
+                                    isCurrent = currentSource?.serviceName == api.serviceName,
+                                    iconLoader = iconLoader,
+                                    onClick = { if (row.untrusted == null) currentSourceRepository.tryEmit(api) },
+                                    onTrust = { viewModel.trust(row.info) },
+                                    onUpdate = { row.update?.let(viewModel::install) },
+                                    onSettings = if (api is KmpConfigurableApiService) {
+                                        { navActions.navigate(Screen.SourcePreferences(api.serviceName)) }
+                                    } else {
+                                        null
+                                    },
+                                    onSetCurrent = { scope.launch { currentSourceRepository.emit(api) } },
+                                    onUninstall = { viewModel.uninstall(row.info) },
+                                    index = index,
+                                    count = rows.size
+                                )
+                            }
                         }
                     }
                 }

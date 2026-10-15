@@ -1,6 +1,5 @@
 package com.programmersbox.manga.shared.reader
 
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -132,7 +131,6 @@ internal fun ChapterPage(
     } else {
         Box(
             modifier = Modifier
-                .animateContentSize()
                 .fillMaxSize()
                 .requiredHeightIn(min = 100.dp),
             contentAlignment = Alignment.Center

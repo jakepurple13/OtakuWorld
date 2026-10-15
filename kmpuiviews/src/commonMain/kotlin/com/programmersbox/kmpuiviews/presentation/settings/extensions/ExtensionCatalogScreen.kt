@@ -11,9 +11,10 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -25,7 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
-import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
+import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,6 +35,7 @@ fun ExtensionCatalogScreen(
     catalogName: String,
     viewModel: ExtensionListViewModel = koinViewModel(),
 ) {
+    HideNavBarWhileOnScreen()
     val ui = viewModel.catalogs[catalogName]
     val all = (ui as? CatalogUi.Loaded)?.items.orEmpty()
     var query by rememberSaveable { mutableStateOf("") }
@@ -46,7 +48,7 @@ fun ExtensionCatalogScreen(
     val hasNsfw = all.any { it.remote.nsfw }
     val shown = all.filterCatalog(lang, hideNsfw).search(query)
 
-    OtakuScaffold(
+    Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(if (ui is CatalogUi.Loaded) "$catalogName · ${all.size}" else catalogName) },
@@ -76,7 +78,7 @@ fun ExtensionCatalogScreen(
             }
             when (ui) {
                 null, CatalogUi.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+                    CircularWavyProgressIndicator()
                 }
 
                 is CatalogUi.Error -> CatalogError(ui.message, onRetry = { viewModel.retry(catalogName) })
