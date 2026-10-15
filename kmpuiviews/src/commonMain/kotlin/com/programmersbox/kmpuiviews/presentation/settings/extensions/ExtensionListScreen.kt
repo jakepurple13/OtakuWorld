@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.AddCircleOutline
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.HideSource
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Share
@@ -71,6 +72,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
+import com.programmersbox.kmpuiviews.presentation.globalsearch.SearchLanguagesSheet
 import com.programmersbox.kmpuiviews.presentation.components.LoadingDialog
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
@@ -114,6 +116,11 @@ fun ExtensionList(
         showLoadingDialog = viewModel.extensionSharing,
         onDismissRequest = {/* viewModel.extensionSharing = false */ },
     )
+
+    var showLanguages by remember { mutableStateOf(false) }
+    if (showLanguages) {
+        SearchLanguagesSheet(onDismiss = { showLanguages = false })
+    }
 
     var showUrlDialog by remember { mutableStateOf(false) }
     if (showUrlDialog) {
@@ -183,6 +190,15 @@ fun ExtensionList(
                                 navController.incognito()
                             },
                             leadingIcon = { Icon(Icons.Default.HideSource, null) }
+                        )
+
+                        DropdownMenuItem(
+                            text = { Text("Search languages") },
+                            onClick = {
+                                showDropDown = false
+                                showLanguages = true
+                            },
+                            leadingIcon = { Icon(Icons.Default.Language, null) }
                         )
 
                         DropdownMenuItem(

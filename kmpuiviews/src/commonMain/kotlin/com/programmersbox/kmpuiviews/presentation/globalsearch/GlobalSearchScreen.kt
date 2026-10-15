@@ -25,10 +25,12 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.BottomSheetScaffoldState
 import androidx.compose.material3.Card
@@ -42,6 +44,7 @@ import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SheetValue
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -144,6 +147,16 @@ fun GlobalSearchScreen(
     val bottomScaffold = rememberBottomSheetScaffoldState()
     var optionsSheet by optionsKmpSheet()
     var searchModelBottom by remember { mutableStateOf<SearchModel?>(null) }
+    var showLanguages by remember { mutableStateOf(false) }
+
+    if (showLanguages) {
+        SearchLanguagesSheet(
+            onDismiss = {
+                showLanguages = false
+                if (viewModel.searchText.text.isNotEmpty()) viewModel.searchForItems()
+            }
+        )
+    }
 
     BackHandler(bottomScaffold.bottomSheetState.currentValue == SheetValue.Expanded) {
         scope.launch {
@@ -309,7 +322,8 @@ fun GlobalSearchScreen(
                     scope = scope,
                     onSearchModel = { searchModelBottom = it },
                     bottomScaffold = bottomScaffold,
-                    onLongPress = { optionsSheet = it }
+                    onLongPress = { optionsSheet = it },
+                    onLanguagesClick = { showLanguages = true },
                 )
             } else {
                 NoNetwork(padding)
@@ -330,8 +344,10 @@ private fun Content(
     onSearchModel: (SearchModel) -> Unit,
     onLongPress: (KmpItemModel) -> Unit,
     bottomScaffold: BottomSheetScaffoldState,
+    onLanguagesClick: () -> Unit,
 ) {
     val biometrics = rememberBiometricOpening()
+    val languages by viewModel.languages.collectAsStateWithLifecycle()
     OtakuPullToRefreshBox(
         isRefreshing = viewModel.isRefreshing,
         state = pullRefreshState,
@@ -349,6 +365,21 @@ private fun Content(
                 .fillMaxSize()
                 .padding(top = 8.dp)
         ) {
+            languages
+                ?.takeIf { it.groups.isNotEmpty() }
+                ?.let { l ->
+                    item {
+                        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp)) {
+                            FilterChip(
+                                selected = true,
+                                onClick = onLanguagesClick,
+                                label = { Text(l.defaults.sorted().joinToString()) },
+                                leadingIcon = { Icon(Icons.Default.Language, null) },
+                                trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) },
+                            )
+                        }
+                    }
+                }
             if (viewModel.isRefreshing) {
                 items(3) {
                     Surface(
@@ -392,12 +423,27 @@ private fun Content(
                     ) {
                         Column {
                             Box(modifier = Modifier.fillMaxWidth()) {
-                                Text(
-                                    i.apiName,
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                                     modifier = Modifier
                                         .align(Alignment.CenterStart)
                                         .padding(start = 4.dp)
-                                )
+                                ) {
+                                    Text(i.title)
+                                    i.language?.let { lang ->
+                                        Surface(
+                                            color = MaterialTheme.colorScheme.tertiaryContainer,
+                                            shape = MaterialTheme.shapes.small,
+                                        ) {
+                                            Text(
+                                                lang,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            )
+                                        }
+                                    }
+                                }
                                 IconButton(
                                     onClick = {
                                         onSearchModel(i)

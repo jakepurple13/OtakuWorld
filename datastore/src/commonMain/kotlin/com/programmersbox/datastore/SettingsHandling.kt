@@ -169,6 +169,26 @@ class NewSettingsHandling(
         if (id in it.trustedMihonExtensions) it else it.copy(trustedMihonExtensions = it.trustedMihonExtensions + id)
     }
 
+    val globalSearchLanguages = all.map { it.globalSearchLanguages }
+
+    suspend fun setGlobalSearchLanguages(languages: List<String>) = preferences.updateData {
+        it.copy(globalSearchLanguages = languages)
+    }
+
+    val globalSearchLanguageOverrides = all.map { it.globalSearchLanguageOverrides }
+
+    /** A null [override] removes it, so the extension goes back to the default languages. */
+    suspend fun setGlobalSearchLanguageOverride(packageName: String, override: GlobalSearchLanguageOverride?) =
+        preferences.updateData {
+            it.copy(
+                globalSearchLanguageOverrides = if (override == null) {
+                    it.globalSearchLanguageOverrides - packageName
+                } else {
+                    it.globalSearchLanguageOverrides + (packageName to override)
+                }
+            )
+        }
+
     @Composable
     fun rememberShowDownload() = preferences.rememberPreference(
         key = { it.showDownload },

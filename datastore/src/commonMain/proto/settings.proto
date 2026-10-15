@@ -37,6 +37,15 @@ message Settings {
   BlurKind blurKind = 35;
   ScreensaverType screensaverType = 36;
   repeated string trustedMihonExtensions = 37;
+  // Empty means "use the device language".
+  repeated string globalSearchLanguages = 38;
+  // Keyed by extension package name.
+  map<string, GlobalSearchLanguageOverride> globalSearchLanguageOverrides = 39;
+}
+
+message GlobalSearchLanguageOverride {
+  bool searchAll = 1;
+  repeated string languages = 2;
 }
 
 enum ScreensaverType {

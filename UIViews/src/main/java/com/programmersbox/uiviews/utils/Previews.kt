@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListItem
 import com.programmersbox.favoritesdatabase.ExceptionDao
@@ -86,6 +87,7 @@ private fun GlobalScreenPreview() {
     PreviewTheme {
         val dao = LocalHistoryDao.current
         val exceptionDao = koinInject<ExceptionDao>()
+        val settings = koinInject<NewSettingsHandling>()
         GlobalSearchScreen(
             dao = dao,
             isHorizontal = false,
@@ -95,7 +97,8 @@ private fun GlobalScreenPreview() {
                     sourceRepository = SourceRepository(),
                     handle = Screen.GlobalSearchScreen(),
                     dao = dao,
-                    exceptionDao = exceptionDao
+                    exceptionDao = exceptionDao,
+                    settings = settings,
                 )
             }
         )
