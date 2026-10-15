@@ -26,14 +26,15 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -271,6 +272,7 @@ internal fun TileRows(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun InstalledRow(
     item: InstalledItem,
@@ -282,6 +284,8 @@ internal fun InstalledRow(
     onSettings: (() -> Unit)?,
     onSetCurrent: () -> Unit,
     onUninstall: () -> Unit,
+    count: Int,
+    index: Int,
 ) {
     var showMenu by remember { mutableStateOf(false) }
     var confirmUninstall by remember { mutableStateOf(false) }
@@ -294,13 +298,19 @@ internal fun InstalledRow(
     val trustAction = untrusted?.canTrust == true
     val updateAction = !trustAction && update != null
     val settingsAction = !trustAction && !updateAction && onSettings != null
-    ListItem(
-        headlineContent = { Text(item.info.name, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+    SegmentedListItem(
+        content = { Text(item.info.name, maxLines = 1, overflow = TextOverflow.Ellipsis) },
         supportingContent = {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 if (isCurrent) Pill("Current", MaterialTheme.colorScheme.primaryContainer)
                 when {
-                    untrusted != null -> Text(untrusted.reason, color = MaterialTheme.colorScheme.error, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    untrusted != null -> Text(
+                        untrusted.reason,
+                        color = MaterialTheme.colorScheme.error,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
                     installing != null -> InstallProgress(installing, Modifier.width(140.dp))
                     update != null -> Text("${item.version} → ${update.version}", maxLines = 1, overflow = TextOverflow.Ellipsis)
                     item.version.isNotBlank() -> Text("v${item.version}", maxLines = 1)
@@ -321,8 +331,8 @@ internal fun InstalledRow(
 
                     updateAction && (installing == null || installing is DownloadAndInstallStatus.Error) && update != null ->
                         FilledTonalIconButton(onClick = onUpdate) {
-                        Icon(Icons.Default.Update, "Update to ${update.version}")
-                    }
+                            Icon(Icons.Default.Update, "Update to ${update.version}")
+                        }
 
                     settingsAction && onSettings != null -> IconButton(onClick = onSettings) { Icon(Icons.Default.Settings, "Settings") }
                 }
@@ -357,8 +367,11 @@ internal fun InstalledRow(
                 }
             }
         },
-        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-        modifier = Modifier.clickable(onClick = onClick)
+        onClick = onClick,
+        shapes = ListItemDefaults.segmentedShapes(index, count),
+        colors = ListItemDefaults.segmentedColors(
+            containerColor = CardDefaults.cardColors().containerColor
+        )
     )
 }
 
