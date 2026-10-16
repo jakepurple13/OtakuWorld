@@ -57,6 +57,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -141,8 +142,8 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
     val activity = LocalActivity.current
 
     val audioManager = remember { context.audioManager }
-    val originalAudioLevel = remember { audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) }
-    val originalScreenBrightness = remember { getScreenBrightness(context) }
+    val originalAudioLevel = rememberSaveable { audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) }
+    val originalScreenBrightness = rememberSaveable { getScreenBrightness(context) }
 
     HideSystemBarsWhileOnScreen()
     HideNavBarWhileOnScreen()
