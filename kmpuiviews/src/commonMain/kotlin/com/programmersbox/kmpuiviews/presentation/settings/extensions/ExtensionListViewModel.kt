@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlin.coroutines.cancellation.CancellationException
 
 class ExtensionListViewModel(
     private val sourceRepository: SourceRepository,
@@ -104,7 +105,16 @@ class ExtensionListViewModel(
 
     fun uninstall(source: KmpSourceInformation) {
         viewModelScope.launch {
-            if ((source.catalog as? KmpExternalCustomApiServicesCatalog)?.uninstall(source) == true) {
+            val catalogUninstalled = try {
+                (source.catalog as? KmpExternalCustomApiServicesCatalog)?.uninstall(source) == true
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // The catalog owns this source; a failed uninstall must not fall through to the APK path.
+                e.printStackTrace()
+                return@launch
+            }
+            if (catalogUninstalled) {
                 sourceLoader.blockingLoad()
             } else {
                 sourceInfoRepository.uninstall(source)

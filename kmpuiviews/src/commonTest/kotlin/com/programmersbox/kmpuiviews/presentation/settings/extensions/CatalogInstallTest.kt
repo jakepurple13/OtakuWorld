@@ -10,18 +10,22 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
+import kotlin.coroutines.cancellation.CancellationException
 
 private class FakeCatalog(
     override val name: String,
     private val claims: Boolean,
     private val calls: MutableList<String>,
+    private val failure: Throwable? = null,
 ) : KmpExternalCustomApiServicesCatalog {
     override suspend fun initialize() = Unit
     override fun getSources(): List<KmpSourceInformation> = emptyList()
     override val hasRemoteSources: Boolean = true
     override suspend fun install(remote: KmpRemoteSources): Boolean {
         calls += name
+        failure?.let { throw it }
         return claims
     }
 }
@@ -64,6 +68,26 @@ class CatalogInstallTest {
 
         assertFalse(installViaCatalogs(catalogs, remote("x")))
         assertEquals(listOf("a", "b"), calls)
+    }
+
+    @Test
+    fun throwingCatalog_countsAsClaimed() = runTest {
+        val calls = mutableListOf<String>()
+        val catalogs = listOf(
+            FakeCatalog("a", false, calls, failure = IllegalStateException("boom")),
+            FakeCatalog("b", true, calls),
+        )
+
+        assertTrue(installViaCatalogs(catalogs, remote("x")))
+        assertEquals(listOf("a"), calls)
+    }
+
+    @Test
+    fun cancellationIsRethrown() = runTest {
+        val calls = mutableListOf<String>()
+        val catalogs = listOf(FakeCatalog("a", false, calls, failure = CancellationException("cancelled")))
+
+        assertFailsWith<CancellationException> { installViaCatalogs(catalogs, remote("x")) }
     }
 
     @Test
