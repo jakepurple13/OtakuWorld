@@ -1,8 +1,10 @@
 package com.programmersbox.anime.shared.videoplayer
 
+import com.programmersbox.kmpmodels.KmpSubtitle
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 
 class PlayerRequestTest {
 
@@ -48,5 +50,36 @@ class PlayerRequestTest {
     fun subtitleMime_ignoresQuery() {
         assertEquals("text/vtt", subtitleMime("https://x/en.vtt?token=1"))
         assertEquals("application/x-subrip", subtitleMime("https://x/a.srt#t"))
+    }
+
+    private fun subs(vararg langs: String) = langs.map { KmpSubtitle("https://x/$it.vtt", it) }
+
+    @Test
+    fun defaultSubtitleIndex_emptyIsNull() {
+        assertNull(defaultSubtitleIndex(emptyList(), "en"))
+    }
+
+    @Test
+    fun defaultSubtitleIndex_localeMatch() {
+        assertEquals(2, defaultSubtitleIndex(subs("English", "Spanish", "es-MX"), "ES"))
+        assertEquals(1, defaultSubtitleIndex(subs("en", "fr", "de"), "fr"))
+    }
+
+    @Test
+    fun defaultSubtitleIndex_nameMatch() {
+        assertEquals(1, defaultSubtitleIndex(subs("Spanish", "English"), "en"))
+        assertEquals(1, defaultSubtitleIndex(subs("Spanish", "English"), "English"))
+    }
+
+    @Test
+    fun defaultSubtitleIndex_englishFallback() {
+        assertEquals(2, defaultSubtitleIndex(subs("Spanish", "Portuguese", "English [CC]"), "ja"))
+        assertEquals(1, defaultSubtitleIndex(subs("fr", "en-US"), "ja"))
+    }
+
+    @Test
+    fun defaultSubtitleIndex_firstFallback() {
+        assertEquals(0, defaultSubtitleIndex(subs("Spanish", "French"), "ja"))
+        assertEquals(0, defaultSubtitleIndex(subs("Spanish", "French"), ""))
     }
 }
