@@ -6,6 +6,7 @@ autoBinding = "1.1-beta04"
 barcodeScanning = "17.3.0"
 benchmark-macro-junit4 = "1.4.1"
 biometricVersion = "1.4.0-alpha07"
+cloudstreamCryptography = "0.6.0"
 coil = "3.5.0"
 composeBomVersion = "2026.09.00"
 composeCollapsable = "0.4.0"
@@ -279,6 +280,21 @@ androidx-xr-material3 = { module = "androidx.xr.compose.material3:material3", ve
 # Zipline
 ziplineLoader = { module = "app.cash.zipline:zipline-loader", version.ref = "ziplineVersion" }
 ziplineProfiler = { module = "app.cash.zipline:zipline-profiler", version.ref = "ziplineVersion" }
+
+# CloudStream (:source_utilities:cloudstream). Versions follow recloudstream/cloudstream's catalog;
+# Upstream pins jackson and rhino strictly because newer releases need minSdk 26. Here only rhino is
+# strict; jackson is `require 2.13.1` and resolves to 2.21.x because koog needs it (our minSdk is 28).
+cloudstreamAnnotation = "androidx.annotation:annotation:1.10.0"
+cloudstreamAtomicfu = "org.jetbrains.kotlinx:atomicfu:0.33.0"
+cloudstreamCryptographyCore = { module = "dev.whyoleg.cryptography:cryptography-core", version.ref = "cloudstreamCryptography" }
+cloudstreamCryptographyProvider = { module = "dev.whyoleg.cryptography:cryptography-provider-optimal", version.ref = "cloudstreamCryptography" }
+# Not strict: koog (kmpuiviews:koogintegration) needs jackson 2.21.x. Upstream pins 2.13.1 strictly only
+# for API <= 25 devices; our minSdk is 28.
+cloudstreamJackson = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version = { require = "2.13.1" } }
+cloudstreamKotlinxIo = "org.jetbrains.kotlinx:kotlinx-io-core:0.9.1"
+cloudstreamKsoup = "com.fleeksoft.ksoup:ksoup:0.2.6"
+cloudstreamNiceHttp = "com.github.Blatzar:NiceHttp:0.4.18"
+cloudstreamRhino = { module = "org.mozilla:rhino", version = { strictly = "1.8.1" } }
 
 [bundles]
 compose = [

@@ -73,6 +73,7 @@ import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpStorage
 import com.programmersbox.aniyomi.aniyomiModule
+import com.programmersbox.cloudstream.cloudstreamModule
 import com.programmersbox.kmpuiviews.SystemAlerter
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
@@ -119,6 +120,7 @@ val appModule = module {
     navigation<Screen.SourcePreferences> { SourcePreferencesRoute(it.serviceName) }
 
     includes(aniyomiModule)
+    includes(cloudstreamModule)
 
     navigation<VideoViewerRoute> {
         val context = LocalContext.current

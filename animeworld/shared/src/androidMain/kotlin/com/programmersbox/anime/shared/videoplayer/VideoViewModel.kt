@@ -261,8 +261,8 @@ fun Context.getMediaSource(
     val mediaItem = MediaItem.Builder()
         .setUri(url)
         .setMimeType(
-            when (mimeType) {
-                "application/x-mpegURL" -> MimeTypes.APPLICATION_M3U8
+            when (mimeType?.lowercase()) {
+                "application/x-mpegurl" -> MimeTypes.APPLICATION_M3U8
                 "application/dash+xml" -> MimeTypes.APPLICATION_MPD
                 "video/mp4" -> MimeTypes.VIDEO_MP4
                 else -> null

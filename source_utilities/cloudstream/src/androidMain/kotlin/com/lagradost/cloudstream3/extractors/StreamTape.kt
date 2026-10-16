@@ -1,0 +1,57 @@
+// Copied from recloudstream/cloudstream d9c55e2e5b020dde8e28c12a3e7802df962265ac, GPL-3.0
+package com.lagradost.cloudstream3.extractors
+
+import com.lagradost.cloudstream3.app
+import com.lagradost.cloudstream3.utils.ExtractorApi
+import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.Qualities
+import com.lagradost.cloudstream3.utils.evalJs
+import com.lagradost.cloudstream3.utils.newExtractorLink
+
+class Watchadsontape : StreamTape() {
+    override var mainUrl = "https://watchadsontape.com"
+}
+
+class StreamTapeNet : StreamTape() {
+    override var mainUrl = "https://streamtape.net"
+}
+
+class StreamTapeXyz : StreamTape() {
+    override var mainUrl = "https://streamtape.xyz"
+}
+
+class ShaveTape : StreamTape() {
+    override var mainUrl = "https://shavetape.cash"
+}
+
+open class StreamTape : ExtractorApi() {
+    override var name = "StreamTape"
+    override var mainUrl = "https://streamtape.com"
+    override val requiresReferer = false
+
+    override suspend fun getUrl(url: String, referer: String?): List<ExtractorLink>? {
+        with(app.get(url)) {
+            val result =
+                this.document.select("script").firstOrNull { it.html().contains("botlink').innerHTML") }
+                    ?.html()?.lines()?.firstOrNull { it.contains("botlink').innerHTML") }?.let {
+                        val scriptContent = it.substringAfter(").innerHTML").replaceFirst("=", "var url =")
+                        evalJs(scriptContent, "url")?.toString()
+                    }
+
+            if (!result.isNullOrEmpty()) {
+                val extractedUrl = "https:${result}&stream=1"
+                return listOf(
+                    newExtractorLink(
+                        name,
+                        name,
+                        extractedUrl,
+                    ) {
+                        this.referer = url
+                        this.quality = Qualities.Unknown.value
+                    }
+                )
+            }
+        }
+        return null
+    }
+}
