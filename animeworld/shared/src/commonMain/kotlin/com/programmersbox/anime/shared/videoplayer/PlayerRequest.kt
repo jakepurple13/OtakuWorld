@@ -1,6 +1,7 @@
 package com.programmersbox.anime.shared.videoplayer
 
 import com.programmersbox.kmpmodels.KmpStorage
+import com.programmersbox.kmpmodels.KmpSubtitle
 
 val DEFAULT_PLAYER_HEADERS: Map<String, String> = mapOf(
     "accept" to "*/*",
@@ -33,3 +34,20 @@ fun subtitleMime(url: String): String =
     }
 
 fun streamMime(storage: KmpStorage): String? = storage.mimeType
+
+/**
+ * Index of the subtitle to show by default: first whose lang starts with [deviceLanguage]
+ * (case-insensitive, so "en" matches "en", "en-US" and "English"), else the first English one,
+ * else the first. Null when [subtitles] is empty.
+ */
+fun defaultSubtitleIndex(subtitles: List<KmpSubtitle>, deviceLanguage: String): Int? {
+    if (subtitles.isEmpty()) return null
+    val langs = subtitles.map { it.lang.trim().lowercase() }
+    val device = deviceLanguage.trim().lowercase()
+    if (device.isNotEmpty()) {
+        langs.indexOfFirst { it.startsWith(device) }.takeIf { it >= 0 }?.let { return it }
+    }
+    langs.indexOfFirst { it.contains("english") || it == "en" || it.startsWith("en-") || it.startsWith("en_") }
+        .takeIf { it >= 0 }?.let { return it }
+    return 0
+}
