@@ -25,6 +25,9 @@ kotlin {
                 implementation(libs.kotlinStLib)
                 implementation(commonLibs.coroutinesCore)
                 implementation(commonLibs.kotlinxSerialization)
+                implementation(commonLibs.kotlinxSerializationProtobuf)
+                implementation(commonLibs.ktorCore)
+                implementation(projects.kmpmodels)
             }
         }
 
@@ -32,6 +35,7 @@ kotlin {
             dependencies {
                 implementation(commonLibs.kotlin.test)
                 implementation(commonLibs.coroutinesTest)
+                implementation(commonLibs.ktorMock)
             }
         }
 
@@ -61,6 +65,7 @@ kotlin {
             dependencies {
                 implementation(commonLibs.kotlin.test)
                 implementation(commonLibs.coroutinesTest)
+                implementation(commonLibs.ktorMock)
             }
         }
     }
