@@ -77,8 +77,38 @@ class PlayerRequestTest {
         assertEquals(1, defaultSubtitleIndex(subs("fr", "en-US"), "ja"))
     }
 
+    private val aniZoneTracks = listOf(
+        KmpSubtitle("https://x/0_en.ass", "[BestBob] English Subtitles"),
+        KmpSubtitle("https://x/1_en.ass", "English - [BestBob] Signs/Songs"),
+        KmpSubtitle("https://x/2_en.ass", "English - [BestBob] Dubtitles"),
+        KmpSubtitle("https://x/3_ja.ass", "[Netflix] Japanese Subtitles"),
+    )
+
+    @Test
+    fun defaultSubtitleIndex_prefersFullDialogueOverSignsSongs() {
+        assertEquals(0, defaultSubtitleIndex(aniZoneTracks, "en", "English"))
+        assertEquals(0, defaultSubtitleIndex(aniZoneTracks, "en"))
+        assertEquals(0, defaultSubtitleIndex(aniZoneTracks, "en-US", "English"))
+        assertEquals(3, defaultSubtitleIndex(aniZoneTracks, "ja", "Japanese"))
+    }
+
+    @Test
+    fun defaultSubtitleIndex_partialOnlyMatchStillPicked() {
+        assertEquals(1, defaultSubtitleIndex(subs("Japanese", "English Signs & Songs"), "en", "English"))
+        assertEquals(0, defaultSubtitleIndex(subs("Signs & Songs only"), "en", "English"))
+    }
+
+    @Test
+    fun defaultSubtitleIndex_wholeTokenOnly() {
+        assertEquals(1, defaultSubtitleIndex(subs("Estonian", "es"), "es"))
+        assertEquals(1, defaultSubtitleIndex(subs("Estonian", "Spanish"), "es", "Spanish"))
+        // No Spanish match: falls back to English, not to "Estonian".
+        assertEquals(1, defaultSubtitleIndex(subs("Estonian", "English"), "es", "Spanish"))
+    }
+
     @Test
     fun defaultSubtitleIndex_firstFallback() {
+        assertEquals(1, defaultSubtitleIndex(subs("Forced", "French"), "ja"))
         assertEquals(0, defaultSubtitleIndex(subs("Spanish", "French"), "ja"))
         assertEquals(0, defaultSubtitleIndex(subs("Spanish", "French"), ""))
     }

@@ -35,19 +35,52 @@ fun subtitleMime(url: String): String =
 
 fun streamMime(storage: KmpStorage): String? = storage.mimeType
 
-/**
- * Index of the subtitle to show by default: first whose lang starts with [deviceLanguage]
- * (case-insensitive, so "en" matches "en", "en-US" and "English"), else the first English one,
- * else the first. Null when [subtitles] is empty.
- */
-fun defaultSubtitleIndex(subtitles: List<KmpSubtitle>, deviceLanguage: String): Int? {
-    if (subtitles.isEmpty()) return null
-    val langs = subtitles.map { it.lang.trim().lowercase() }
-    val device = deviceLanguage.trim().lowercase()
-    if (device.isNotEmpty()) {
-        langs.indexOfFirst { it.startsWith(device) }.takeIf { it >= 0 }?.let { return it }
+/** Label fragments marking a track that only covers part of the dialogue. */
+private val PARTIAL_SUBTITLE_MARKERS = listOf("sign", "song", "forced", "dubtitle", "cc only")
+
+/** Lowercase runs of letters; everything else separates tokens ("0_en" -> ["en"]). */
+private fun letterTokens(text: String): List<String> {
+    val tokens = mutableListOf<String>()
+    val current = StringBuilder()
+    for (c in text.lowercase()) {
+        if (c.isLetter()) {
+            current.append(c)
+        } else if (current.isNotEmpty()) {
+            tokens += current.toString()
+            current.clear()
+        }
     }
-    langs.indexOfFirst { it.contains("english") || it == "en" || it.startsWith("en-") || it.startsWith("en_") }
-        .takeIf { it >= 0 }?.let { return it }
-    return 0
+    if (current.isNotEmpty()) tokens += current.toString()
+    return tokens
+}
+
+/**
+ * Index of the subtitle to show by default, or null when [subtitles] is empty.
+ *
+ * A lang matches when [deviceLanguage] (a code like "en"; any region suffix is dropped) or
+ * [deviceLanguageName] (like "English") appears in it as whole words, case-insensitively.
+ * Tries the device language, then English, then any track. Within each step, full-dialogue
+ * tracks win over partial ones (signs/songs, forced, dubtitles, "CC only"); a partial track is
+ * picked only when it is the only match.
+ */
+fun defaultSubtitleIndex(
+    subtitles: List<KmpSubtitle>,
+    deviceLanguage: String,
+    deviceLanguageName: String = "",
+): Int? {
+    if (subtitles.isEmpty()) return null
+    val labels = subtitles.map { letterTokens(it.lang) }
+    val partial = subtitles.map { s -> PARTIAL_SUBTITLE_MARKERS.any { s.lang.contains(it, ignoreCase = true) } }
+
+    fun pick(candidates: List<Int>): Int? = candidates.firstOrNull { !partial[it] } ?: candidates.firstOrNull()
+
+    fun matching(vararg queries: String): Int? {
+        val phrases = queries.map(::letterTokens).filter { it.isNotEmpty() }
+        return pick(
+            labels.indices.filter { i -> phrases.any { phrase -> labels[i].windowed(phrase.size).any { it == phrase } } }
+        )
+    }
+
+    val code = deviceLanguage.trim().substringBefore('-').substringBefore('_')
+    return matching(code, deviceLanguageName) ?: matching("en", "english") ?: pick(subtitles.indices.toList())
 }

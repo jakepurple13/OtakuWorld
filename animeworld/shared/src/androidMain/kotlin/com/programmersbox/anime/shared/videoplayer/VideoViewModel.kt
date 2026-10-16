@@ -58,7 +58,11 @@ class VideoViewModel(
     val requestHeaders = playerHeaders(storageHolder.storageModel?.headers.orEmpty(), videoScreen.referer)
     val subtitles = storageHolder.storageModel?.subtitles.orEmpty()
     val mimeType = storageHolder.storageModel?.let(::streamMime)
-    val defaultSubtitle = defaultSubtitleIndex(subtitles, Locale.getDefault().language)
+    val defaultSubtitle = defaultSubtitleIndex(
+        subtitles,
+        Locale.getDefault().language,
+        Locale.getDefault().getDisplayLanguage(Locale.ENGLISH),
+    )
 
     /** Text tracks the player currently exposes; drives the CC menu. */
     var textTracks by mutableStateOf<List<TextTrackOption>>(emptyList())

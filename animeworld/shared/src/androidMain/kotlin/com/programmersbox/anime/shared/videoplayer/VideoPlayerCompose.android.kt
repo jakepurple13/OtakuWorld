@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.pm.ActivityInfo
 import android.media.AudioManager
 import android.provider.Settings
+import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.activity.compose.LocalActivity
@@ -305,6 +306,19 @@ fun VideoPlayer(
 
                 player = exoPlayer
                 layoutParams = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
+
+                // The stock layout puts the SubtitleView inside the content frame, which RESIZE_MODE_ZOOM
+                // grows past the screen edges, so bottom-anchored cues land off-screen. Pin it to the
+                // view bounds instead; PlayerView keeps feeding cues to the same instance.
+                val subtitles = subtitleView
+                val overlay = overlayFrameLayout
+                if (subtitles != null && overlay != null) {
+                    (subtitles.parent as? ViewGroup)?.removeView(subtitles)
+                    overlay.addView(
+                        subtitles,
+                        FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
+                    )
+                }
             }
         }
     )
