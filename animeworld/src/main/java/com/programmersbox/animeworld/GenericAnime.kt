@@ -167,6 +167,13 @@ class GenericAnime(
 
     override val deepLinkUri: String get() = "animeworld://"
 
+    override fun onResolveFailed(storage: KmpStorage, error: Throwable) {
+        val name = listOfNotNull(storage.source, storage.quality).joinToString(" ").ifBlank { "stream" }
+        runOnUIThread {
+            Toast.makeText(context, "Couldn't load $name: ${error.message ?: error::class.simpleName}", Toast.LENGTH_LONG).show()
+        }
+    }
+
     override fun playOrCast(
         navController: NavigationActions,
         storage: KmpStorage,
@@ -541,16 +548,6 @@ class GenericAnime(
                 model = it.model,
                 genericInfo = this,
                 navController = navController,
-                isCastActive = { MainActivity.cast.isCastActive() },
-                onCastLoad = { storage ->
-                    MainActivity.cast.loadUrl(
-                        storage.link,
-                        it.infoModel.title,
-                        it.model.name,
-                        it.infoModel.imageUrl,
-                        storage.headers
-                    )
-                },
                 onPlay = { s -> playResolved(navController, s, it.model, it.infoModel) }
             )
         }

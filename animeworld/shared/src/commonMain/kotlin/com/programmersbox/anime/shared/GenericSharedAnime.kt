@@ -70,22 +70,23 @@ abstract class GenericSharedAnime(
         infoModel: KmpInfoModel,
         navController: NavigationActions,
     ) {
+        if (isLoadingChapter) return
         isLoadingChapter = true
-        val storages = try {
-            model.getChapterInfo().firstOrNull().orEmpty()
+        try {
+            val storages = model.getChapterInfo().firstOrNull().orEmpty()
+
+            when {
+                storages.size == 1 -> playResolved(navController, storages.first(), model, infoModel)
+                storages.isNotEmpty() -> VideoSourceModel.showVideoSources = VideoSourceModel(
+                    c = storages,
+                    infoModel = infoModel,
+                    isStreaming = true,
+                    model = model,
+                )
+                else -> Unit
+            }
         } finally {
             isLoadingChapter = false
-        }
-
-        when {
-            storages.size == 1 -> playResolved(navController, storages.first(), model, infoModel)
-            storages.isNotEmpty() -> VideoSourceModel.showVideoSources = VideoSourceModel(
-                c = storages,
-                infoModel = infoModel,
-                isStreaming = true,
-                model = model,
-            )
-            else -> Unit
         }
     }
 
@@ -102,10 +103,14 @@ abstract class GenericSharedAnime(
             throw e
         } catch (e: Exception) {
             e.printStackTrace()
+            onResolveFailed(storage, e)
             return
         }
         playOrCast(navController, resolved, model, infoModel)
     }
+
+    /** Called when resolving a stream fails, so the platform can tell the user. */
+    open fun onResolveFailed(storage: KmpStorage, error: Throwable) {}
 
     abstract fun playOrCast(
         navController: NavigationActions,

@@ -8,7 +8,9 @@ import androidx.compose.material.icons.filled._1k
 import androidx.compose.material.icons.filled._4k
 import androidx.compose.material.icons.filled._4mp
 import androidx.compose.material.icons.filled._7mp
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.runtime.Composable
@@ -17,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpStorage
@@ -59,8 +62,6 @@ fun VideoChoiceScreen(
     model: KmpChapterModel,
     genericInfo: KmpGenericInfo,
     navController: NavigationActions,
-    isCastActive: () -> Boolean = { false },
-    onCastLoad: (KmpStorage) -> Unit = {},
     onPlay: suspend (KmpStorage) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
@@ -73,7 +74,7 @@ fun VideoChoiceScreen(
     var playing by remember { mutableStateOf(false) }
 
     val onAction: (KmpStorage) -> Unit = {
-        if (isStreaming && !(isCastActive() && model.source.canCast)) {
+        if (isStreaming) {
             // Keep the sheet (and this scope) alive until resolve/play finishes.
             if (!playing) {
                 playing = true
@@ -85,9 +86,6 @@ fun VideoChoiceScreen(
                     }
                 }
             }
-        } else if (isStreaming) {
-            VideoSourceModel.showVideoSources = null
-            onCastLoad(it)
         } else {
             VideoSourceModel.showVideoSources = null
             genericInfo.downloadChapter(model, listOf(model), infoModel, navController)
@@ -102,7 +100,10 @@ fun VideoChoiceScreen(
             includeInsetPadding = false,
             title = "Choose quality for ${model.name}",
             list = ordered,
-            onClick = { onAction(it) }
+            onClick = { onAction(it) },
+            lazyListContent = {
+                if (playing) item { LinearProgressIndicator(modifier = Modifier.fillMaxWidth()) }
+            }
         ) {
             ListBottomSheetItemModel(
                 primaryText = it.quality.orEmpty(),
