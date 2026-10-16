@@ -79,11 +79,17 @@ class ExtensionListViewModel(
     }
 
     fun install(remote: KmpRemoteSources) {
-        request(remote.downloadLink)
+        viewModelScope.launch {
+            if (installViaCatalogs(nativeCatalogs.catalogs, remote)) {
+                sourceLoader.blockingLoad()
+            } else {
+                request(remote.downloadLink)
+            }
+        }
     }
 
     fun updateAll() {
-        installedItems.updateLinks().forEach(::request)
+        installedItems.updateRemotes().forEach(::install)
     }
 
     private fun request(link: String) {
@@ -97,7 +103,13 @@ class ExtensionListViewModel(
     }
 
     fun uninstall(source: KmpSourceInformation) {
-        sourceInfoRepository.uninstall(source)
+        viewModelScope.launch {
+            if ((source.catalog as? KmpExternalCustomApiServicesCatalog)?.uninstall(source) == true) {
+                sourceLoader.blockingLoad()
+            } else {
+                sourceInfoRepository.uninstall(source)
+            }
+        }
     }
 
     init {

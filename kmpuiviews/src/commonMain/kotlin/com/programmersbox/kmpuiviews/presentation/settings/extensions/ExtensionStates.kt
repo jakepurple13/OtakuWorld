@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.settings.extensions
 
+import com.programmersbox.kmpmodels.KmpExternalCustomApiServicesCatalog
 import com.programmersbox.kmpmodels.KmpRemoteSources
 import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpmodels.KmpUntrustedApiService
@@ -124,8 +125,15 @@ fun List<InstalledItem>.filteredBy(filter: InstalledFilter): List<InstalledItem>
 fun List<InstalledItem>.byCatalog(): Map<String?, List<InstalledItem>> = groupBy { it.info.catalog?.name }
 
 /** Download links for every pending update not already downloading/installing; failed ones are retried. */
-fun List<InstalledItem>.updateLinks(): List<String> =
-    filter { it.installing == null || it.installing is DownloadAndInstallStatus.Error }.mapNotNull { it.update?.downloadLink }
+fun List<InstalledItem>.updateLinks(): List<String> = updateRemotes().map { it.downloadLink }
+
+/** Same selection as [updateLinks], but the remote entries themselves. */
+fun List<InstalledItem>.updateRemotes(): List<KmpRemoteSources> =
+    filter { it.installing == null || it.installing is DownloadAndInstallStatus.Error }.mapNotNull { it.update }
+
+/** Offers [remote] to each catalog in turn; the first that installs it itself wins. False means fall back to the APK installer. */
+suspend fun installViaCatalogs(catalogs: List<KmpExternalCustomApiServicesCatalog>, remote: KmpRemoteSources): Boolean =
+    catalogs.any { it.install(remote) }
 
 /** A catalog group can only be uninstalled as a unit when it is one APK (e.g. a bridge). */
 fun List<KmpSourceInformation>.canUninstallAll(): Boolean = map { it.packageName }.distinct().size == 1
