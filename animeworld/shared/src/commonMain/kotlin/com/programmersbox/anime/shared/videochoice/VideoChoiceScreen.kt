@@ -67,9 +67,7 @@ fun VideoChoiceScreen(
     val scope = rememberCoroutineScope()
     val groups = remember(items) { items.groupedByServer() }
     val ordered = remember(groups) { groups.flatMap { it.second } }
-    val serverStarts = remember(groups) {
-        if (groups.size > 1) groups.mapNotNull { (server, list) -> server?.let { list.first() to it } }.toMap() else emptyMap()
-    }
+    val serverStarts = remember(groups) { groups.serverLabels() }
 
     var playing by remember { mutableStateOf(false) }
 
