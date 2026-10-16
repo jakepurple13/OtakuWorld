@@ -2,7 +2,6 @@ package com.programmersbox.cloudstream.plugins
 
 import com.programmersbox.cloudstream.repo.CsPlugin
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -87,7 +86,7 @@ class PluginStore(
         return record
     }
 
-    fun uninstall(internalName: String) = runBlocking {
+    suspend fun uninstall(internalName: String) {
         nameLock(internalName).withLock {
             synchronized(lock) {
                 val existing = read()
