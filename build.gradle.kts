@@ -22,7 +22,7 @@ subprojects {
     configurations.all {
         resolutionStrategy.eachDependency {
             if (requested.group == "org.jetbrains.kotlinx" && requested.name.startsWith("kotlinx-coroutines")) {
-                useVersion("1.10.2")
+                useVersion(commonLibs.versions.coroutinesVersion.get())
             }
         }
     }

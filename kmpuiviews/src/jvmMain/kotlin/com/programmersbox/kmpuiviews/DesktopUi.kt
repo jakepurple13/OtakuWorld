@@ -276,8 +276,6 @@ private fun InternalDesktopUi(
                 backgroundWorkHandler.setupPeriodicCheckers()
             }
 
-            tray()
-
             val windowState = rememberWindowState()
 
             Window(
@@ -335,6 +333,11 @@ private fun InternalDesktopUi(
                     }
                 }
             }
+
+            // Tray must come after Window: the Skiko graphics implementation is registered
+            // when the window's ComposeContainer is created, and Tray converts its icon
+            // painter to an AWT image as soon as it enters composition.
+            tray()
         }
     )
 }
@@ -374,8 +377,6 @@ fun InternalBaseDesktopUi(
             }
         ),
         content = {
-            tray()
-
             val windowState = rememberWindowState()
 
             Window(
@@ -421,6 +422,11 @@ fun InternalBaseDesktopUi(
                     }
                 }
             }
+
+            // Tray must come after Window: the Skiko graphics implementation is registered
+            // when the window's ComposeContainer is created, and Tray converts its icon
+            // painter to an AWT image as soon as it enters composition.
+            tray()
         }
     )
 }
