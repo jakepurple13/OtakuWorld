@@ -32,6 +32,17 @@ kotlin {
             dependencies {
                 implementation(libs.kotlinStLib)
                 implementation(commonLibs.coroutinesCore)
+                implementation(commonLibs.kotlinxSerialization)
+                implementation(commonLibs.ktorCore)
+                implementation(projects.kmpmodels)
+            }
+        }
+
+        commonTest {
+            dependencies {
+                implementation(commonLibs.kotlin.test)
+                implementation(commonLibs.coroutinesTest)
+                implementation(commonLibs.ktorMock)
             }
         }
 
@@ -66,6 +77,7 @@ kotlin {
             dependencies {
                 implementation(commonLibs.kotlin.test)
                 implementation(commonLibs.coroutinesTest)
+                implementation(commonLibs.ktorMock)
             }
         }
     }
