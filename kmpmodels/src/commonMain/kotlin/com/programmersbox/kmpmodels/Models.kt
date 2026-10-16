@@ -60,9 +60,16 @@ data class KmpStorage(
     /** One of "application/x-mpegURL", "application/dash+xml", "video/mp4"; null = infer. */
     var mimeType: String? = null,
 ) {
+    /**
+     * Body property: excluded from `equals`, `copy()` and serialization. Copy it by hand.
+     */
     val headers = mutableMapOf<String, String>()
 
-    /** Source-private keys (e.g. a lazy hoster id). Not serialized. */
+    /**
+     * Source-private keys (e.g. a lazy hoster id).
+     *
+     * Body property: excluded from `equals`, `copy()` and serialization. Copy it by hand.
+     */
     val extras = mutableMapOf<String, String>()
 }
 
