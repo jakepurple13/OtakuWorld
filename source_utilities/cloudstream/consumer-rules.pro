@@ -10,3 +10,4 @@
 -keep class com.google.android.material.** { *; }
 -dontwarn org.mozilla.javascript.**
 -dontwarn com.fasterxml.jackson.**
+-keep class com.google.gson.** { *; }

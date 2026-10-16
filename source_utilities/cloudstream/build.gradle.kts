@@ -54,6 +54,11 @@ kotlin {
                 api(commonLibs.kotlinxSerialization)
                 api(commonLibs.coroutinesCore)
                 api(kotlin("reflect"))
+                // Plugin settings UIs and some parsers use these (see shims.md).
+                api(androidLibs.appCompat)
+                api(androidLibs.fragmentKtx)
+                api(androidLibs.material)
+                api(androidLibs.gson)
             }
         }
 
