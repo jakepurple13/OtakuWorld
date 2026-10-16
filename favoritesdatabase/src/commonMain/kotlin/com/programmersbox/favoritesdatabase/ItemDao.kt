@@ -79,6 +79,9 @@ interface ItemDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertNotification(notificationItem: NotificationItem)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertNotification(notificationItem: NotificationItem)
+
     @Delete
     suspend fun deleteNotification(notificationItem: NotificationItem)
 

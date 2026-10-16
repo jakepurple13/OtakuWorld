@@ -127,7 +127,8 @@ class MediaUpdateChecker(
         else
             pair.second.hashCode()
 
-        dao.insertNotification(
+        // Replace any existing row so a repeat update refreshes createdAt and the summary
+        dao.upsertNotification(
             NotificationItem(
                 id = notificationId,
                 url = pair.second.url,
@@ -140,7 +141,8 @@ class MediaUpdateChecker(
                 imageUrl = pair.second.imageUrl,
                 source = pair.second.source,
                 contentTitle = pair.second.title,
-                isShowing = true
+                isShowing = true,
+                supabaseId = item?.supabaseId
             )
         )
 
