@@ -15,18 +15,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.media3.common.C
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MimeTypes
 import androidx.media3.common.util.Util
 import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.dash.DashMediaSource
-import androidx.media3.exoplayer.hls.HlsMediaSource
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.source.MediaSource
-import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.exoplayer.upstream.BandwidthMeter
 import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.anime.shared.VideoScreen
@@ -208,19 +205,16 @@ fun Context.getMediaSource(
     mimeType: String? = null,
 ): MediaSource {
     val dataSourceFactory = getHttpDataSourceFactory(preview, bandwidthMeter, headers)
-    val factory = when (mimeType) {
-        "application/x-mpegURL" -> HlsMediaSource.Factory(dataSourceFactory)
-        "application/dash+xml" -> DashMediaSource.Factory(dataSourceFactory)
-        "video/mp4" -> ProgressiveMediaSource.Factory(dataSourceFactory)
-        else -> when (Util.inferContentType(url.lastPathSegment.orEmpty().toUri())) {
-            C.CONTENT_TYPE_DASH -> DashMediaSource.Factory(dataSourceFactory)
-            C.CONTENT_TYPE_HLS -> HlsMediaSource.Factory(dataSourceFactory)
-            C.CONTENT_TYPE_OTHER -> ProgressiveMediaSource.Factory(dataSourceFactory)
-            else -> DefaultMediaSourceFactory(dataSourceFactory)
-        }
-    }
     val mediaItem = MediaItem.Builder()
         .setUri(url)
+        .setMimeType(
+            when (mimeType) {
+                "application/x-mpegURL" -> MimeTypes.APPLICATION_M3U8
+                "application/dash+xml" -> MimeTypes.APPLICATION_MPD
+                "video/mp4" -> MimeTypes.VIDEO_MP4
+                else -> null
+            }
+        )
         .setSubtitleConfigurations(
             subtitles.map {
                 MediaItem.SubtitleConfiguration.Builder(it.url.toUri())
@@ -231,7 +225,8 @@ fun Context.getMediaSource(
             }
         )
         .build()
-    return factory.createMediaSource(mediaItem)
+    // Only DefaultMediaSourceFactory merges sidecar subtitle configurations.
+    return DefaultMediaSourceFactory(dataSourceFactory).createMediaSource(mediaItem)
 }
 
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
