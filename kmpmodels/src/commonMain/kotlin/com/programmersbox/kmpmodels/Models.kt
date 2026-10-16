@@ -42,14 +42,28 @@ class NormalLink(var normal: Normal? = null)
 class Normal(var storage: Array<KmpStorage>? = emptyArray())
 
 @kotlinx.serialization.Serializable
+data class KmpSubtitle(
+    val url: String,
+    val lang: String,
+    val headers: Map<String, String> = emptyMap(),
+)
+
+@kotlinx.serialization.Serializable
 data class KmpStorage(
     var sub: String? = null,
     var source: String? = null,
     var link: String? = null,
     var quality: String? = null,
     var filename: String? = null,
+    var subtitles: List<KmpSubtitle> = emptyList(),
+    var server: String? = null,
+    /** One of "application/x-mpegURL", "application/dash+xml", "video/mp4"; null = infer. */
+    var mimeType: String? = null,
 ) {
     val headers = mutableMapOf<String, String>()
+
+    /** Source-private keys (e.g. a lazy hoster id). Not serialized. */
+    val extras = mutableMapOf<String, String>()
 }
 
 //TODO: Make a new module (KmpModels), leaving this one alone.
