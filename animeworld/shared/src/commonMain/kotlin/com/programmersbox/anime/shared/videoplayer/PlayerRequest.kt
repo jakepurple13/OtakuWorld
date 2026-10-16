@@ -33,6 +33,12 @@ fun subtitleMime(url: String): String =
         else -> "text/vtt"
     }
 
+/** Name for an in-stream text track; a blank or "Unknown" label is not shown as-is. */
+fun embeddedTrackLabel(label: String?, language: String?): String {
+    if (!label.isNullOrBlank() && !label.equals("Unknown", ignoreCase = true)) return label
+    return if (language.isNullOrBlank()) "Embedded" else "Embedded ($language)"
+}
+
 fun streamMime(storage: KmpStorage): String? = storage.mimeType
 
 /** Label fragments marking a track that only covers part of the dialogue. */

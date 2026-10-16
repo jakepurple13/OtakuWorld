@@ -73,7 +73,7 @@ class VideoViewModel(
             .filter { it.type == C.TRACK_TYPE_TEXT }
             .map { group ->
                 val format = group.getTrackFormat(0)
-                TextTrackOption(group, format.label ?: format.language ?: "Unknown", group.isSelected)
+                TextTrackOption(group, embeddedTrackLabel(format.label, format.language), group.isSelected)
             }
         Log.d(TAG, "textTracks=${textTracks.map { "${it.group.getTrackFormat(0).language}|${it.label}|selected=${it.selected}" }}")
     }

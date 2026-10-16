@@ -9,6 +9,14 @@ import kotlin.test.assertNull
 class PlayerRequestTest {
 
     @Test
+    fun embeddedTrackLabel_names() {
+        assertEquals("Embedded", embeddedTrackLabel(null, null))
+        assertEquals("Embedded", embeddedTrackLabel("  ", ""))
+        assertEquals("Embedded (ja)", embeddedTrackLabel("Unknown", "ja"))
+        assertEquals("Eng", embeddedTrackLabel("Eng", "en"))
+    }
+
+    @Test
     fun playerHeaders_isCaseInsensitive() {
         val result = playerHeaders(mapOf("Referer" to "https://a/"), "https://b/")
         val referers = result.filterKeys { it.equals("referer", ignoreCase = true) }
