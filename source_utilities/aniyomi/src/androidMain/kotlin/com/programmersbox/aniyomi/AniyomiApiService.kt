@@ -9,8 +9,11 @@ import com.programmersbox.kmpmodels.KmpStorage
 import eu.kanade.tachiyomi.animesource.AnimeCatalogueSource
 import eu.kanade.tachiyomi.animesource.ConfigurableAnimeSource
 import eu.kanade.tachiyomi.animesource.model.Hoster
+import eu.kanade.tachiyomi.animesource.model.Hoster.Companion.toHosterList
+import eu.kanade.tachiyomi.animesource.model.SEpisode
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
+import eu.kanade.tachiyomi.animesource.online.ParsedAnimeHttpSource
 import eu.kanade.tachiyomi.animesource.online.ResolvableAnimeSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -65,11 +68,10 @@ open class AniyomiApiService(val source: AnimeCatalogueSource, val lib: Double) 
 
     override suspend fun chapterInfo(chapterModel: KmpChapterModel): List<KmpStorage> = withContext(Dispatchers.IO) {
         val episode = AniyomiSourceMapper.toSEpisode(chapterModel, this@AniyomiApiService)
-        if (lib < 16) {
-            @Suppress("DEPRECATION")
-            return@withContext source.getVideoList(episode).sorted().map { toStorage(it, server = null) }
-        }
-        source.getHosterList(episode).flatMap { hoster ->
+        // Only the latest episode's picks can be resolved; drop the previous ones.
+        lazyHosters.clear()
+        pendingVideos.clear()
+        hostersFor(episode).flatMap { hoster ->
             val server = hoster.hosterName.takeUnless { it == Hoster.NO_HOSTER_LIST }
             if (hoster.lazy) {
                 listOf(placeholder(hoster, server))
@@ -102,6 +104,34 @@ open class AniyomiApiService(val source: AnimeCatalogueSource, val lib: Double) 
             ?: error("${source.name} returned an anime without a url for $url")
     }
 
+    /**
+     * Mirrors Aniyomi's `EpisodeLoader.getHostersOnHttp`: extensions that do not implement hosters
+     * (lib 14, or lib 16+ without overrides) get their episode videos wrapped in a single hoster.
+     */
+    @Suppress("DEPRECATION")
+    private suspend fun hostersFor(episode: SEpisode): List<Hoster> {
+        val http = source as? AnimeHttpSource
+        return when {
+            // AnimeCatalogueSource's own getHosterList default recurses forever.
+            http == null -> source.getVideoList(episode).toHosterList()
+            lib >= 16 && hasHosters(http) -> http.run { getHosterList(episode).sortHosters() }
+            else -> source.getVideoList(episode).sorted().toHosterList()
+        }
+    }
+
+    /** Upstream `EpisodeLoader.checkHasHosters`: a hoster method declared below [AnimeHttpSource]. */
+    private fun hasHosters(source: AnimeHttpSource): Boolean {
+        var current: Class<*>? = source.javaClass
+        while (current != null &&
+            current != ParsedAnimeHttpSource::class.java &&
+            current != AnimeHttpSource::class.java
+        ) {
+            if (current.declaredMethods.any { it.name in HOSTER_METHODS }) return true
+            current = current.superclass
+        }
+        return false
+    }
+
     private suspend fun videosFor(hoster: Hoster): List<Video> =
         (hoster.videoList ?: source.getVideoList(hoster)).sorted()
 
@@ -124,12 +154,17 @@ open class AniyomiApiService(val source: AnimeCatalogueSource, val lib: Double) 
             }
         }
 
-    private fun needsResolve(video: Video) = !video.initialized || video.videoUrl.isEmpty()
+    private fun needsResolve(video: Video) = !video.initialized || video.videoUrl.isEmpty() || hasNullUrl(video)
+
+    /** Lib 14 videos built with a null url carry the literal "null" until `getVideoUrl` fills it. */
+    private fun hasNullUrl(video: Video) = video.videoUrl == "null"
 
     private suspend fun playable(video: Video): Video {
         val http = source as? AnimeHttpSource ?: return video
         var result = video
-        if (needsResolve(result)) {
+        // Upstream `EpisodeLoader.parseVideoUrls`.
+        if (hasNullUrl(result)) result = result.copy(videoUrl = http.getVideoUrl(result))
+        if (!result.initialized || result.videoUrl.isEmpty()) {
             result = http.resolveVideo(result) ?: error("${source.name} could not resolve ${video.videoTitle}")
         }
         if (result.usesHttpServer()) result = result.copyHttpServer(AniyomiHttpServers.portFor(http))
@@ -139,6 +174,7 @@ open class AniyomiApiService(val source: AnimeCatalogueSource, val lib: Double) 
     companion object {
         const val HOSTER = "aniyomiHoster"
         const val VIDEO = "aniyomiVideo"
+        private val HOSTER_METHODS = setOf("getHosterList", "hosterListRequest", "hosterListParse")
     }
 }
 

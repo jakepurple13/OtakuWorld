@@ -126,7 +126,8 @@ object AniyomiSourceMapper {
 
     fun toStorage(video: Video, source: AnimeCatalogueSource, server: String?): KmpStorage =
         KmpStorage(
-            link = video.videoUrl,
+            // Lib 14 videos with a deferred url hold the literal "null" until resolved.
+            link = video.videoUrl.takeUnless { it == "null" },
             quality = video.videoTitle,
             subtitles = video.subtitleTracks.map { KmpSubtitle(it.url, it.lang) },
             server = server,
