@@ -161,16 +161,20 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
     }
 
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
-        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, originalAudioLevel, 0)
-        activity?.let { setWindowBrightness(it, originalScreenBrightness.toFloat()) }
+        if (activity?.isChangingConfigurations != true) {
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, originalAudioLevel, 0)
+            activity?.let { setWindowBrightness(it, originalScreenBrightness.toFloat()) }
+        }
     }
 
     DisposableEffect(Unit) {
         onDispose {
-            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, originalAudioLevel, 0)
-            activity?.let { setWindowBrightness(it, originalScreenBrightness.toFloat()) }
+            if (activity?.isChangingConfigurations != true) {
+                activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, originalAudioLevel, 0)
+                activity?.let { setWindowBrightness(it, originalScreenBrightness.toFloat()) }
+            }
         }
     }
 
