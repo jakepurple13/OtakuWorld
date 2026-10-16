@@ -1,6 +1,9 @@
 package com.programmersbox.cloudstream.plugins
 
 import com.programmersbox.cloudstream.repo.CsPlugin
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.test.runTest
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
@@ -92,6 +95,41 @@ class PluginStoreTest {
         store.uninstall("Foo")
         assertFalse(File(r.path).exists())
         assertTrue(store.installed().isEmpty())
+    }
+
+    @Test
+    fun hashMismatchOnUpdateKeepsOldFileAndEntry() = runTest {
+        serve("v1".toByteArray())
+        val r = store.install(repo, plugin(version = 1))
+        serve("v2".toByteArray())
+        assertFailsWith<IOException> { store.install(repo, plugin(version = 2, hash = "sha256-" + "0".repeat(64))) }
+        assertEquals(listOf(r), store.installed())
+        assertEquals("v1", File(r.path).readText())
+    }
+
+    @Test
+    fun parallelInstallsOfSamePluginBothSucceedAndLeaveOneValidFile() = runTest {
+        val bytes = "same".toByteArray()
+        repeat(2) { serve(bytes) }
+        val results = (1..2).map {
+            async(Dispatchers.IO) { store.install(repo, plugin(hash = "sha256-" + sha(bytes))) }
+        }.awaitAll()
+        assertEquals(results[0].path, results[1].path)
+        assertEquals(1, store.installed().size)
+        assertEquals("same", File(results[0].path).readText())
+        assertEquals(1, root.walkTopDown().count { it.isFile && it.name.endsWith(".cs3") })
+        assertEquals(0, root.walkTopDown().count { it.name.endsWith(".tmp") })
+    }
+
+    @Test
+    fun corruptIndexIsRebuiltFromDisk() = runTest {
+        serve("dex".toByteArray())
+        val r = store.install(repo, plugin())
+        File(root, "installed.json").writeText("{ not json")
+        val rebuilt = store.installed()
+        assertEquals(listOf(InstalledPlugin("", "Foo", 0, r.path)), rebuilt)
+        assertTrue(root.listFiles().any { it.name.startsWith("installed.json.corrupt-") })
+        assertEquals(rebuilt, PluginStore(root, OkHttpClient()).installed())
     }
 
     @Test

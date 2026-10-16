@@ -2,6 +2,9 @@ package com.programmersbox.cloudstream.plugins
 
 import com.programmersbox.cloudstream.repo.CsPlugin
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
@@ -12,6 +15,7 @@ import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.security.MessageDigest
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Downloads, verifies and records `.cs3` plugins under [root].
@@ -24,15 +28,22 @@ class PluginStore(
     private val json = Json { ignoreUnknownKeys = true }
     private val indexFile get() = File(root, "installed.json")
     private val lock = Any()
+    private val nameLocks = ConcurrentHashMap<String, Mutex>()
+
+    private fun nameLock(name: String) = nameLocks.getOrPut(name) { Mutex() }
 
     suspend fun install(repoUrl: String, plugin: CsPlugin): InstalledPlugin = withContext(Dispatchers.IO) {
         val name = plugin.internalName
         // A hostile plugins.json must not be able to write outside root.
         require(SAFE_NAME.matches(name) && !name.startsWith(".")) { "Unsafe internalName: $name" }
+        nameLock(name).withLock { installLocked(repoUrl, plugin) }
+    }
 
+    private fun installLocked(repoUrl: String, plugin: CsPlugin): InstalledPlugin {
+        val name = plugin.internalName
         val dir = File(root, hex(sha256(repoUrl.toByteArray())).take(16)).also { it.mkdirs() }
         val target = File(dir, "$name.cs3")
-        val temp = File(dir, "$name.cs3.tmp")
+        val temp = File.createTempFile(name, ".tmp", dir)
         try {
             val digest = MessageDigest.getInstance("SHA-256")
             client.newCall(Request.Builder().url(plugin.url).build()).execute().use { response ->
@@ -73,14 +84,16 @@ class PluginStore(
             existing.firstOrNull { it.internalName == name && it.path != record.path }?.let { deleteFile(File(it.path)) }
             write(existing.filterNot { it.internalName == name } + record)
         }
-        record
+        return record
     }
 
-    fun uninstall(internalName: String) {
-        synchronized(lock) {
-            val existing = read()
-            existing.filter { it.internalName == internalName }.forEach { deleteFile(File(it.path)) }
-            write(existing.filterNot { it.internalName == internalName })
+    fun uninstall(internalName: String) = runBlocking {
+        nameLock(internalName).withLock {
+            synchronized(lock) {
+                val existing = read()
+                existing.filter { it.internalName == internalName }.forEach { deleteFile(File(it.path)) }
+                write(existing.filterNot { it.internalName == internalName })
+            }
         }
     }
 
@@ -91,13 +104,29 @@ class PluginStore(
         file.delete()
     }
 
-    private fun read(): List<InstalledPlugin> = runCatching {
-        json.decodeFromString(ListSerializer(InstalledPlugin.serializer()), indexFile.readText())
-    }.getOrDefault(emptyList())
+    private fun read(): List<InstalledPlugin> {
+        if (!indexFile.exists()) return emptyList()
+        return try {
+            json.decodeFromString(ListSerializer(InstalledPlugin.serializer()), indexFile.readText())
+        } catch (e: Exception) {
+            println("PluginStore: corrupt installed.json (${e.message}); rebuilding from disk")
+            indexFile.renameTo(File(root, "installed.json.corrupt-${System.currentTimeMillis()}"))
+            rebuild().also { write(it) }
+        }
+    }
+
+    // Repo url is unknown and version 0, so the next repo refresh offers an update.
+    private fun rebuild(): List<InstalledPlugin> =
+        root.listFiles { f -> f.isDirectory }.orEmpty()
+            .flatMap { dir -> dir.listFiles { f -> f.isFile && f.name.endsWith(".cs3") }.orEmpty().toList() }
+            .distinctBy { it.name }
+            .map { InstalledPlugin("", it.name.removeSuffix(".cs3"), 0, it.absolutePath) }
 
     private fun write(list: List<InstalledPlugin>) {
         root.mkdirs()
-        indexFile.writeText(json.encodeToString(ListSerializer(InstalledPlugin.serializer()), list))
+        val tmp = File(root, "installed.json.tmp")
+        tmp.writeText(json.encodeToString(ListSerializer(InstalledPlugin.serializer()), list))
+        Files.move(tmp.toPath(), indexFile.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
     }
 
     private fun sha256(bytes: ByteArray) = MessageDigest.getInstance("SHA-256").digest(bytes)
