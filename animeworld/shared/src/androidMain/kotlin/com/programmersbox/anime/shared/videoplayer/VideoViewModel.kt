@@ -2,6 +2,7 @@ package com.programmersbox.anime.shared.videoplayer
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -17,19 +18,21 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MimeTypes
+import androidx.media3.common.TrackSelectionOverride
+import androidx.media3.common.Tracks
 import androidx.media3.common.util.Util
 import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.DefaultHttpDataSource
+import androidx.media3.datasource.ResolvingDataSource
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.dash.DashMediaSource
-import androidx.media3.exoplayer.hls.HlsMediaSource
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.source.MediaSource
-import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.exoplayer.upstream.BandwidthMeter
 import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.anime.shared.VideoScreen
+import com.programmersbox.kmpmodels.KmpSubtitle
 import com.programmersbox.helpfulutils.battery
 import com.programmersbox.uiviews.utils.BatteryInformation2
 import kotlinx.coroutines.Dispatchers
@@ -52,7 +55,42 @@ class VideoViewModel(
     val showPath = storageHolder.storageModel?.link ?: videoScreen.showPath
     val showName = videoScreen.showName
     val downloadOrStream = videoScreen.downloadOrStream
-    val headers = videoScreen.referer ?: ""
+    val requestHeaders = playerHeaders(storageHolder.storageModel?.headers.orEmpty(), videoScreen.referer)
+    val subtitles = storageHolder.storageModel?.subtitles.orEmpty()
+    val mimeType = storageHolder.storageModel?.let(::streamMime)
+    val defaultSubtitle = defaultSubtitleIndex(
+        subtitles,
+        Locale.getDefault().language,
+        Locale.getDefault().getDisplayLanguage(Locale.ENGLISH),
+    )
+
+    /** Text tracks the player currently exposes; drives the CC menu. */
+    var textTracks by mutableStateOf<List<TextTrackOption>>(emptyList())
+    var subtitleMenuOpen by mutableStateOf(false)
+
+    fun updateTextTracks(tracks: Tracks) {
+        textTracks = tracks.groups
+            .filter { it.type == C.TRACK_TYPE_TEXT }
+            .map { group ->
+                val format = group.getTrackFormat(0)
+                TextTrackOption(group, format.label ?: format.language ?: "Unknown", group.isSelected)
+            }
+        Log.d(TAG, "textTracks=${textTracks.map { "${it.group.getTrackFormat(0).language}|${it.label}|selected=${it.selected}" }}")
+    }
+
+    fun selectTextTrack(option: TextTrackOption?) {
+        val player = exoPlayer ?: return
+        player.trackSelectionParameters = player.trackSelectionParameters.buildUpon()
+            .apply {
+                if (option == null) {
+                    setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true)
+                } else {
+                    setTrackTypeDisabled(C.TRACK_TYPE_TEXT, false)
+                    setOverrideForType(TrackSelectionOverride(option.group.mediaTrackGroup, 0))
+                }
+            }
+            .build()
+    }
 
     var exoPlayer: ExoPlayer? by mutableStateOf(null)
 
@@ -89,6 +127,7 @@ class VideoViewModel(
     val batteryInformation by lazy { BatteryInformation2(context) }
 
     init {
+        Log.d(TAG, "subtitles=${subtitles.map { it.lang + "|" + it.url }} default=$defaultSubtitle")
         viewModelScope.launch(Dispatchers.IO) {
             batteryInformation.composeSetupFlow(
                 Color.White
@@ -181,6 +220,10 @@ enum class VideoPlayerVisibility {
     }
 }
 
+data class TextTrackOption(val group: Tracks.Group, val label: String, val selected: Boolean)
+
+private const val TAG = "AnimeWorldPlayer"
+
 data class VideoInfo(val currentPosition: Long, val duration: Long, val buffered: Long)
 
 class SSLTrustManager : X509TrustManager {
@@ -200,62 +243,67 @@ fun Context.getMediaSource(
     url: Uri,
     preview: Boolean,
     bandwidthMeter: BandwidthMeter,
-    header: String,
-): MediaSource =
-    when (Util.inferContentType(url.lastPathSegment.orEmpty().toUri())) {
-        C.CONTENT_TYPE_DASH -> DashMediaSource.Factory(
-            getHttpDataSourceFactory(
-                preview,
-                bandwidthMeter,
-                header
-            )
-        )//.createMediaSource(url)
-        C.CONTENT_TYPE_HLS -> HlsMediaSource.Factory(
-            getHttpDataSourceFactory(
-                preview,
-                bandwidthMeter,
-                header
-            )
-        )//.createMediaSource(uri)
-        C.CONTENT_TYPE_OTHER -> ProgressiveMediaSource.Factory(
-            getHttpDataSourceFactory(
-                preview,
-                bandwidthMeter,
-                header
-            )
-        )//.createMediaSource(uri)
-        else -> DefaultMediaSourceFactory(getHttpDataSourceFactory(preview, bandwidthMeter, header))
-    }.createMediaSource(MediaItem.fromUri(url))
+    headers: Map<String, String>,
+    subtitles: List<KmpSubtitle> = emptyList(),
+    mimeType: String? = null,
+    defaultSubtitle: Int? = null,
+): MediaSource {
+    val subtitleHeaders = subtitles.filter { it.headers.isNotEmpty() }.associate { it.url to it.headers }
+    val httpFactory = getHttpDataSourceFactory(preview, bandwidthMeter, headers)
+    // Subtitle-specific headers (e.g. CloudStream SubtitleFile.headers) layered over the shared ones.
+    val dataSourceFactory = if (subtitleHeaders.isEmpty()) {
+        httpFactory
+    } else {
+        ResolvingDataSource.Factory(httpFactory) { spec ->
+            subtitleHeaders[spec.uri.toString()]?.let(spec::withAdditionalHeaders) ?: spec
+        }
+    }
+    val mediaItem = MediaItem.Builder()
+        .setUri(url)
+        .setMimeType(
+            when (mimeType) {
+                "application/x-mpegURL" -> MimeTypes.APPLICATION_M3U8
+                "application/dash+xml" -> MimeTypes.APPLICATION_MPD
+                "video/mp4" -> MimeTypes.VIDEO_MP4
+                else -> null
+            }
+        )
+        .setSubtitleConfigurations(
+            subtitles.mapIndexed { index, it ->
+                MediaItem.SubtitleConfiguration.Builder(it.url.toUri())
+                    .setMimeType(subtitleMime(it.url))
+                    .setLanguage(it.lang)
+                    .setLabel(it.lang)
+                    // Unflagged sidecar tracks whose language doesn't match a preference are never auto-selected.
+                    .setSelectionFlags(if (index == defaultSubtitle) C.SELECTION_FLAG_DEFAULT else 0)
+                    .build()
+            }
+        )
+        .build()
+    // Only DefaultMediaSourceFactory merges sidecar subtitle configurations.
+    return DefaultMediaSourceFactory(dataSourceFactory).createMediaSource(mediaItem)
+}
 
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 private fun Context.getDataSourceFactory(
     preview: Boolean,
     bandwidthMeter: BandwidthMeter,
-    header: String,
+    headers: Map<String, String>,
 ): DataSource.Factory =
     DefaultDataSource.Factory(
         this,
-        getHttpDataSourceFactory(preview, bandwidthMeter, header)
+        getHttpDataSourceFactory(preview, bandwidthMeter, headers)
     )
 
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 private fun Context.getHttpDataSourceFactory(
     preview: Boolean,
     bandwidthMeter: BandwidthMeter,
-    header: String,
+    headers: Map<String, String>,
 ): DataSource.Factory = DefaultHttpDataSource.Factory().apply {
-    setUserAgent(Util.getUserAgent(this@getHttpDataSourceFactory, "AnimeWorld"))
+    if (headers.keys.none { it.equals("user-agent", ignoreCase = true) }) {
+        setUserAgent(Util.getUserAgent(this@getHttpDataSourceFactory, "AnimeWorld"))
+    }
     //setTransferListener(if (preview) null else bandwidthMeter)
-    //header?.let { setDefaultRequestProperties(hashMapOf("Referer" to it)) }
-    setDefaultRequestProperties(
-        mapOf(
-            "referer" to header,
-            "accept" to "*/*",
-            "sec-ch-ua" to "\"Chromium\";v=\"91\", \" Not;A Brand\";v=\"99\"",
-            "sec-ch-ua-mobile" to "?0",
-            "sec-fetch-user" to "?1",
-            "sec-fetch-mode" to "navigate",
-            "sec-fetch-dest" to "video"
-        )
-    )
+    setDefaultRequestProperties(headers)
 }

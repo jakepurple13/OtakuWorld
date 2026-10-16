@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.pm.ActivityInfo
 import android.media.AudioManager
 import android.provider.Settings
+import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.activity.compose.LocalActivity
@@ -34,10 +35,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.BrightnessHigh
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ClosedCaption
+import androidx.compose.material.icons.filled.ClosedCaptionOff
 import androidx.compose.material.icons.filled.FastForward
 import androidx.compose.material.icons.filled.FastRewind
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -57,6 +63,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -88,6 +95,7 @@ import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.common.Tracks
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.MediaSource
@@ -141,8 +149,8 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
     val activity = LocalActivity.current
 
     val audioManager = remember { context.audioManager }
-    val originalAudioLevel = remember { audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) }
-    val originalScreenBrightness = remember { getScreenBrightness(context) }
+    val originalAudioLevel = rememberSaveable { audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) }
+    val originalScreenBrightness = rememberSaveable { getScreenBrightness(context) }
 
     HideSystemBarsWhileOnScreen()
     HideNavBarWhileOnScreen()
@@ -161,20 +169,26 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
     }
 
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
-        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, originalAudioLevel, 0)
-        activity?.let { setWindowBrightness(it, originalScreenBrightness.toFloat()) }
+        if (activity?.isChangingConfigurations != true) {
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, originalAudioLevel, 0)
+            activity?.let { setWindowBrightness(it, originalScreenBrightness.toFloat()) }
+        }
     }
 
-    LifecycleEventEffect(Lifecycle.Event.ON_DESTROY) {
-        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, originalAudioLevel, 0)
-        activity?.let { setWindowBrightness(it, originalScreenBrightness.toFloat()) }
+    DisposableEffect(Unit) {
+        onDispose {
+            if (activity?.isChangingConfigurations != true) {
+                activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, originalAudioLevel, 0)
+                activity?.let { setWindowBrightness(it, originalScreenBrightness.toFloat()) }
+            }
+        }
     }
 
     viewModel.exoPlayer?.let { ExoPlayerAttributes(exoPlayer = it, viewModel = viewModel) }
 
-    val overlayVisibility = viewModel.visibility == VideoPlayerVisibility.Visible || !viewModel.isPlaying
+    val overlayVisibility = viewModel.visibility == VideoPlayerVisibility.Visible || !viewModel.isPlaying || viewModel.subtitleMenuOpen
 
     Scaffold(
         topBar = { VideoTopBar(viewModel, overlayVisibility) },
@@ -211,7 +225,7 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
                             HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.socketFactory)
                         }
 
-                        context.getMediaSource(viewModel.showPath.toUri(), false, DefaultBandwidthMeter.Builder(context).build(), viewModel.headers)
+                        context.getMediaSource(viewModel.showPath.toUri(), false, DefaultBandwidthMeter.Builder(context).build(), viewModel.requestHeaders, viewModel.subtitles, viewModel.mimeType, viewModel.defaultSubtitle)
                     }
                 },
                 viewModel = viewModel
@@ -252,6 +266,11 @@ fun VideoPlayer(
                 playWhenReady = true
                 videoScalingMode = C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
                 repeatMode = Player.REPEAT_MODE_ONE
+                viewModel.defaultSubtitle?.let { viewModel.subtitles[it].lang }?.let { lang ->
+                    trackSelectionParameters = trackSelectionParameters.buildUpon()
+                        .setPreferredTextLanguage(lang)
+                        .build()
+                }
             }
             .also { viewModel.exoPlayer = it }
     }
@@ -269,6 +288,10 @@ fun VideoPlayer(
                         Toast.makeText(context, "Error: ${error.message}", Toast.LENGTH_SHORT).show()
                         navController.popBackStack()
                     }
+
+                    override fun onTracksChanged(tracks: Tracks) {
+                        viewModel.updateTextTracks(tracks)
+                    }
                 }
             )
 
@@ -283,6 +306,19 @@ fun VideoPlayer(
 
                 player = exoPlayer
                 layoutParams = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
+
+                // The stock layout puts the SubtitleView inside the content frame, which RESIZE_MODE_ZOOM
+                // grows past the screen edges, so bottom-anchored cues land off-screen. Pin it to the
+                // view bounds instead; PlayerView keeps feeding cues to the same instance.
+                val subtitles = subtitleView
+                val overlay = overlayFrameLayout
+                if (subtitles != null && overlay != null) {
+                    (subtitles.parent as? ViewGroup)?.removeView(subtitles)
+                    overlay.addView(
+                        subtitles,
+                        FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
+                    )
+                }
             }
         }
     )
@@ -308,6 +344,43 @@ fun VideoTopBar(viewModel: VideoViewModel, visible: Boolean) {
             title = { Text(viewModel.showName.orEmpty()) },
             navigationIcon = { BackButton() },
             actions = {
+                if (viewModel.textTracks.isNotEmpty()) {
+                    Box {
+                        IconButton(onClick = { viewModel.subtitleMenuOpen = true }) {
+                            Icon(
+                                if (viewModel.textTracks.any { it.selected }) Icons.Default.ClosedCaption else Icons.Default.ClosedCaptionOff,
+                                contentDescription = "Subtitles"
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = viewModel.subtitleMenuOpen,
+                            onDismissRequest = { viewModel.subtitleMenuOpen = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Off") },
+                                onClick = {
+                                    viewModel.selectTextTrack(null)
+                                    viewModel.subtitleMenuOpen = false
+                                },
+                                trailingIcon = if (viewModel.textTracks.none { it.selected }) {
+                                    { Icon(Icons.Default.Check, null) }
+                                } else null
+                            )
+                            viewModel.textTracks.forEach { track ->
+                                DropdownMenuItem(
+                                    text = { Text(track.label) },
+                                    onClick = {
+                                        viewModel.selectTextTrack(track)
+                                        viewModel.subtitleMenuOpen = false
+                                    },
+                                    trailingIcon = if (track.selected) {
+                                        { Icon(Icons.Default.Check, null) }
+                                    } else null
+                                )
+                            }
+                        }
+                    }
+                }
                 Row(
                     modifier = Modifier.padding(4.dp),
                     verticalAlignment = Alignment.CenterVertically

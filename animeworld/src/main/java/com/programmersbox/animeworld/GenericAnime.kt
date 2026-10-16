@@ -72,7 +72,9 @@ import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpStorage
+import com.programmersbox.aniyomi.aniyomiModule
 import com.programmersbox.kmpuiviews.SystemAlerter
+import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.ShowWhen
@@ -113,6 +115,10 @@ val appModule = module {
     single { SystemAlerter(get(), get(), BuildConfig.APPLICATION_ID) }
 
     navigation<VideoScreen> { VideoPlayerUi(it) }
+
+    navigation<Screen.SourcePreferences> { SourcePreferencesRoute(it.serviceName) }
+
+    includes(aniyomiModule)
 
     navigation<VideoViewerRoute> {
         val context = LocalContext.current
@@ -161,13 +167,20 @@ class GenericAnime(
 
     override val deepLinkUri: String get() = "animeworld://"
 
+    override fun onResolveFailed(storage: KmpStorage, error: Throwable) {
+        val name = listOfNotNull(storage.source, storage.quality).joinToString(" ").ifBlank { "stream" }
+        runOnUIThread {
+            Toast.makeText(context, "Couldn't load $name: ${error.message ?: error::class.simpleName}", Toast.LENGTH_LONG).show()
+        }
+    }
+
     override fun playOrCast(
         navController: NavigationActions,
         storage: KmpStorage,
         model: KmpChapterModel,
         infoModel: KmpInfoModel,
     ) {
-        if (MainActivity.cast.isCastActive()) {
+        if (MainActivity.cast.isCastActive() && model.source.canCast) {
             MainActivity.cast.loadUrl(
                 storage.link,
                 infoModel.title,
@@ -535,16 +548,7 @@ class GenericAnime(
                 model = it.model,
                 genericInfo = this,
                 navController = navController,
-                isCastActive = { MainActivity.cast.isCastActive() },
-                onCastLoad = { storage ->
-                    MainActivity.cast.loadUrl(
-                        storage.link,
-                        it.infoModel.title,
-                        it.model.name,
-                        it.infoModel.imageUrl,
-                        storage.headers
-                    )
-                }
+                onPlay = { s -> playResolved(navController, s, it.model, it.infoModel) }
             )
         }
     }

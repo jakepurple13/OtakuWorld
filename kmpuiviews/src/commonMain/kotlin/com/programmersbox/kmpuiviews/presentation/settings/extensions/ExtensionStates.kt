@@ -1,11 +1,13 @@
 package com.programmersbox.kmpuiviews.presentation.settings.extensions
 
+import com.programmersbox.kmpmodels.KmpExternalCustomApiServicesCatalog
 import com.programmersbox.kmpmodels.KmpRemoteSources
 import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpmodels.KmpUntrustedApiService
 import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.repository.DownloadAndInstallState
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus
+import kotlin.coroutines.cancellation.CancellationException
 
 sealed interface RemoteItemState {
     data object NotInstalled : RemoteItemState
@@ -124,8 +126,27 @@ fun List<InstalledItem>.filteredBy(filter: InstalledFilter): List<InstalledItem>
 fun List<InstalledItem>.byCatalog(): Map<String?, List<InstalledItem>> = groupBy { it.info.catalog?.name }
 
 /** Download links for every pending update not already downloading/installing; failed ones are retried. */
-fun List<InstalledItem>.updateLinks(): List<String> =
-    filter { it.installing == null || it.installing is DownloadAndInstallStatus.Error }.mapNotNull { it.update?.downloadLink }
+fun List<InstalledItem>.updateLinks(): List<String> = updateRemotes().map { it.downloadLink }
+
+/** Same selection as [updateLinks], but the remote entries themselves. */
+fun List<InstalledItem>.updateRemotes(): List<KmpRemoteSources> =
+    filter { it.installing == null || it.installing is DownloadAndInstallStatus.Error }.mapNotNull { it.update }
+
+/**
+ * Offers [remote] to each catalog in turn; the first that installs it itself wins. False means fall back to the APK installer.
+ * A catalog that throws still counts as the owner (its link is not an APK), so the failure is logged and no fallback happens.
+ */
+suspend fun installViaCatalogs(catalogs: List<KmpExternalCustomApiServicesCatalog>, remote: KmpRemoteSources): Boolean =
+    catalogs.any {
+        try {
+            it.install(remote)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            e.printStackTrace()
+            true
+        }
+    }
 
 /** A catalog group can only be uninstalled as a unit when it is one APK (e.g. a bridge). */
 fun List<KmpSourceInformation>.canUninstallAll(): Boolean = map { it.packageName }.distinct().size == 1
