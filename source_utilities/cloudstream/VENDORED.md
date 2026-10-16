@@ -59,11 +59,16 @@ built against the Android artifact reference those classes.
 ## Dependencies
 
 From upstream `gradle/libs.versions.toml` (catalog aliases `androidLibs.cloudstream*` in
-`gradle/android.versions.toml`): NiceHttp `0.4.18`, jackson-module-kotlin strictly `2.13.1`, rhino
-strictly `1.8.1` (newer releases of both need minSdk 26), ksoup `0.2.6`, whyoleg cryptography
+`gradle/android.versions.toml`): NiceHttp `0.4.18`, jackson-module-kotlin `2.13.1` (required, not strict),
+rhino strictly `1.8.1` (newer releases of both need minSdk 26), ksoup `0.2.6`, whyoleg cryptography
 `0.6.0` (core + provider-optimal), atomicfu `0.33.0`, kotlinx-io-core `0.9.1`, androidx.annotation
 `1.10.0`. jsoup, okhttp, ktor (`ktor-http` via `ktor-client-core`), kotlinx-datetime,
 kotlinx-serialization-json, coroutines and kotlin-reflect use the project's existing versions.
+
+Jackson is not pinned strictly: koog (via `:kmpuiviews:koogintegration`, on every app's classpath)
+needs jackson 2.21.x, so in AnimeWorld it resolves to 2.21.3. Upstream's strict 2.13.1 pin avoids
+crashes on API 25 and lower; AnimeWorld's minSdk is 28. Jackson 2.x stays binary compatible, so
+plugins built against 2.13.1 run on 2.21.
 
 ## Files (copied verbatim unless marked edited)
 
