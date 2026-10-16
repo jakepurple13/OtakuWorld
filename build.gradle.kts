@@ -272,6 +272,19 @@ tasks.register("createModule") {
     }
 }
 
+// Both define eu.kanade.tachiyomi.network.*, so one APK must never contain both runtimes.
+subprojects {
+    afterEvaluate {
+        val declared = listOf("implementation", "api")
+            .mapNotNull { configurations.findByName(it) }
+            .flatMap { it.dependencies.filterIsInstance<ProjectDependency>() }
+            .map { it.path }
+        check(!(":mihonsupport" in declared && ":source_utilities:aniyomi" in declared)) {
+            "$path must not depend on both :mihonsupport and :source_utilities:aniyomi"
+        }
+    }
+}
+
 /*
 projectInfo {
     filter {

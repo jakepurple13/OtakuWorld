@@ -41,6 +41,10 @@ kotlin {
 
         androidMain {
             dependencies {
+                implementation(commonLibs.ktorOkHttp)
+                implementation(projects.datastore)
+                implementation(project.dependencies.platform(commonLibs.koin.bom))
+                implementation(commonLibs.koinCores)
                 // Extension APKs compile against these; the host must provide them.
                 api(androidLibs.nanohttpd)
                 api(androidLibs.preference)

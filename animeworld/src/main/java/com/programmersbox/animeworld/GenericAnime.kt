@@ -72,7 +72,9 @@ import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpStorage
+import com.programmersbox.aniyomi.aniyomiModule
 import com.programmersbox.kmpuiviews.SystemAlerter
+import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.ShowWhen
@@ -113,6 +115,10 @@ val appModule = module {
     single { SystemAlerter(get(), get(), BuildConfig.APPLICATION_ID) }
 
     navigation<VideoScreen> { VideoPlayerUi(it) }
+
+    navigation<Screen.SourcePreferences> { SourcePreferencesRoute(it.serviceName) }
+
+    includes(aniyomiModule)
 
     navigation<VideoViewerRoute> {
         val context = LocalContext.current
