@@ -42,7 +42,7 @@ class PluginStore(
         val name = plugin.internalName
         val dir = File(root, hex(sha256(repoUrl.toByteArray())).take(16)).also { it.mkdirs() }
         val target = File(dir, "$name.cs3")
-        val temp = File.createTempFile(name, ".tmp", dir)
+        val temp = File.createTempFile("cs3-$name", ".tmp", dir)
         try {
             val digest = MessageDigest.getInstance("SHA-256")
             client.newCall(Request.Builder().url(plugin.url).build()).execute().use { response ->
@@ -86,7 +86,7 @@ class PluginStore(
         return record
     }
 
-    suspend fun uninstall(internalName: String) {
+    suspend fun uninstall(internalName: String) = withContext(Dispatchers.IO) {
         nameLock(internalName).withLock {
             synchronized(lock) {
                 val existing = read()

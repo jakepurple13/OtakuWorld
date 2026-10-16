@@ -79,6 +79,12 @@ class PluginStoreTest {
     }
 
     @Test
+    fun oneCharName_installs() = runTest {
+        serve("dex".toByteArray())
+        assertEquals("A", store.install(repo, plugin(name = "A")).internalName)
+    }
+
+    @Test
     fun updateReplacesEntry() = runTest {
         serve("v1".toByteArray())
         store.install(repo, plugin(version = 1))

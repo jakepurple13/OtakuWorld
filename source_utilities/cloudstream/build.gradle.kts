@@ -11,6 +11,9 @@ otakuDependencies {
 kotlin {
     android {
         namespace = "com.programmersbox.cloudstream"
+        androidResources {
+            enable = true
+        }
         withHostTestBuilder {}.configure {
             isReturnDefaultValues = true
         }
@@ -48,6 +51,10 @@ kotlin {
 
         androidMain {
             dependencies {
+                implementation(commonLibs.ktorOkHttp)
+                implementation(projects.datastore)
+                implementation(project.dependencies.platform(commonLibs.koin.bom))
+                implementation(commonLibs.koinCores)
                 // CloudStream plugins compile against these; the host must provide them.
                 api(androidLibs.cloudstreamNiceHttp)
                 api(androidLibs.cloudstreamJackson)
