@@ -28,7 +28,7 @@ gradle = { module = "com.android.tools.build:gradle", version.ref = "gradle" }
 kotlinGp = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlinStLib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 protobuf-gradle-plugin = { module = "com.google.protobuf:protobuf-gradle-plugin", version.ref = "protobufGradlePlugin" }
-androidCore = "androidx.core:core-ktx:1.19.0"
+androidCore = "androidx.core:core-ktx:1.19.1"
 appCompat = "androidx.appcompat:appcompat:1.8.0"
 ksp-symbol-processing-api = { module = "com.google.devtools.ksp:symbol-processing-api", version.ref = "kspVersion" }
 kotlin-compile-testing-core = { module = "dev.zacsweers.kctfork:core", version.ref = "kotlinCompileTestingCore" }
