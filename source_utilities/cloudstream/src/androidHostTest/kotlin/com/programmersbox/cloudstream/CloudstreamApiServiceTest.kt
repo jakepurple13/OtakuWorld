@@ -1,6 +1,7 @@
 package com.programmersbox.cloudstream
 
 import com.lagradost.cloudstream3.DubStatus
+import com.lagradost.cloudstream3.MainAPI
 import com.lagradost.cloudstream3.MainPageData
 import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
@@ -104,6 +105,48 @@ class CloudstreamApiServiceTest {
 
         assertEquals(emptyList(), service(api).recent(1))
         assertEquals(emptyList(), api.searchQueries)
+    }
+
+    /** Upstream defaults: hasMainPage = false, a placeholder mainPage entry, getMainPage throws. */
+    private class SearchOnlyApi : MainAPI() {
+        override var name = "SearchOnly"
+    }
+
+    @Test
+    fun recent_searchOnlyPlugin_returnsEmpty() = runTest {
+        val api = SearchOnlyApi()
+        assertEquals(1, api.mainPage.size)
+
+        assertEquals(emptyList(), CloudstreamApiService(api, "p", "cloudstream:SearchOnly").recent(1))
+    }
+
+    @Test
+    fun allList_searchOnlyPlugin_returnsEmpty() = runTest {
+        assertEquals(emptyList(), CloudstreamApiService(SearchOnlyApi(), "p", "cloudstream:SearchOnly").allList(1))
+    }
+
+    @Test
+    fun noneDubStatusEpisodesIncluded() = runTest {
+        val service = service(
+            FakeMainApi(loadResponse = { url ->
+                newAnimeLoadResponse("Show", url, TvType.Anime) {
+                    addEpisodes(DubStatus.None, listOf(newEpisode("https://fake.test/n1") { name = "Special" }))
+                    addEpisodes(
+                        DubStatus.Subbed,
+                        listOf(
+                            newEpisode("https://fake.test/s1") { name = "Ep 1" },
+                            newEpisode("https://fake.test/s2") { name = "Ep 2" },
+                        )
+                    )
+                    addEpisodes(DubStatus.Dubbed, listOf(newEpisode("https://fake.test/d1") { name = "Ep 1" }))
+                }
+            })
+        )
+
+        assertEquals(
+            listOf("Ep 2 (Sub)", "Ep 1 (Sub)", "Ep 1 (Dub)", "Special"),
+            service.info().chapters.map { it.name },
+        )
     }
 
     @Test

@@ -41,12 +41,13 @@ open class CloudstreamApiService(
     override val language: String get() = api.lang
 
     override suspend fun recent(page: Int): List<KmpItemModel> = withContext(Dispatchers.IO) {
-        val first = api.mainPage.firstOrNull() ?: return@withContext emptyList()
-        mainPage(first, page)
+        if (!hasHomePage()) return@withContext emptyList()
+        mainPage(api.mainPage.first(), page)
     }
 
     /** Every main page section; a failing section is skipped unless all of them fail. */
     override suspend fun allList(page: Int): List<KmpItemModel> = withContext(Dispatchers.IO) {
+        if (!hasHomePage()) return@withContext emptyList()
         var failure: Exception? = null
         val items = api.mainPage.flatMap { section ->
             try {
@@ -96,6 +97,9 @@ open class CloudstreamApiService(
         val response = plugin { api.load(url) } ?: error("${api.name} could not load $url")
         CloudstreamMapper.toItem(response, this@CloudstreamApiService)
     }
+
+    /** Search-only plugins keep upstream's placeholder `mainPage` and a throwing `getMainPage`. */
+    private fun hasHomePage() = api.hasMainPage && api.mainPage.isNotEmpty()
 
     private suspend fun mainPage(section: MainPageData, page: Int): List<KmpItemModel> {
         val request = MainPageRequest(section.name, section.data, horizontalImages = false)

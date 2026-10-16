@@ -15,6 +15,7 @@ import com.lagradost.cloudstream3.utils.ExtractorLink
 class FakeMainApi(
     override var name: String = "Fake",
     override var lang: String = "en",
+    override val hasMainPage: Boolean = true,
     override val mainPage: List<MainPageData> = listOf(MainPageData("Latest", "https://fake.test/latest")),
     private val loadResponse: suspend FakeMainApi.(String) -> LoadResponse? = { null },
     private val links: suspend (String, (SubtitleFile) -> Unit, (ExtractorLink) -> Unit) -> Unit = { _, _, _ -> },

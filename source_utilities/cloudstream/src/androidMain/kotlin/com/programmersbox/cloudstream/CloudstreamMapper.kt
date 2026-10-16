@@ -63,10 +63,12 @@ object CloudstreamMapper {
             is AnimeLoadResponse -> {
                 val sub = response.episodes[DubStatus.Subbed].orEmpty()
                 val dub = response.episodes[DubStatus.Dubbed].orEmpty()
+                val none = response.episodes[DubStatus.None].orEmpty()
                 val both = sub.isNotEmpty() && dub.isNotEmpty()
-                // Newest first, like Aniyomi/Mihon: each block reversed, sub block before dub block.
+                // Newest first, like Aniyomi/Mihon: each block reversed; sub, then dub, then unlabeled.
                 sub.mapIndexed { i, e -> toChapter(e, i, if (both) " (Sub)" else "", response.url, service) }.reversed() +
-                    dub.mapIndexed { i, e -> toChapter(e, i, if (both) " (Dub)" else "", response.url, service) }.reversed()
+                    dub.mapIndexed { i, e -> toChapter(e, i, if (both) " (Dub)" else "", response.url, service) }.reversed() +
+                    none.mapIndexed { i, e -> toChapter(e, i, "", response.url, service) }.reversed()
             }
 
             is TvSeriesLoadResponse ->
