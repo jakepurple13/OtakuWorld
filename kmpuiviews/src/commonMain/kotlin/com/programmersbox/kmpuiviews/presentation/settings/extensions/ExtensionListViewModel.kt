@@ -161,8 +161,10 @@ class ExtensionListViewModel(
 
     fun trust(source: KmpSourceInformation) {
         viewModelScope.launch {
-            (source.apiService as? KmpUntrustedApiService)?.trust()
-            sourceLoader.blockingLoad()
+            logFailures {
+                (source.apiService as? KmpUntrustedApiService)?.trust()
+                sourceLoader.blockingLoad()
+            }
         }
     }
 
