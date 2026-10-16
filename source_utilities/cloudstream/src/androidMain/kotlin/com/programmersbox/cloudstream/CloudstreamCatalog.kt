@@ -73,7 +73,13 @@ class CloudstreamCatalog(
     override suspend fun getRemoteSources(customUrls: List<String>): List<KmpRemoteSources> = repoClient.fetch(customUrls)
 
     override suspend fun install(remote: KmpRemoteSources): Boolean {
-        val (repoUrl, plugin) = repoClient.pluginFor(remote.downloadLink) ?: return false
+        val (repoUrl, plugin) = repoClient.pluginFor(remote.downloadLink) ?: run {
+            // Claim .cs3 links by throwing, so the APK installer never receives one.
+            check(!remote.downloadLink.substringBefore('?').substringBefore('#').endsWith(".cs3", ignoreCase = true)) {
+                "Unknown CloudStream plugin link; refresh the repo"
+            }
+            return false
+        }
         store.install(repoUrl, plugin)
         return true
     }
