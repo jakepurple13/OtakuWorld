@@ -120,4 +120,17 @@ class PlayerRequestTest {
         assertEquals(0, defaultSubtitleIndex(subs("Spanish", "French"), "ja"))
         assertEquals(0, defaultSubtitleIndex(subs("Spanish", "French"), ""))
     }
+
+    @Test
+    fun preferredLanguageWins() {
+        assertEquals(1, defaultSubtitleIndex(subs("English", "Japanese"), "en", preferredLanguages = listOf("ja")))
+    }
+
+    @Test
+    fun skipSignsOffKeepsOrder() {
+        assertEquals(
+            0,
+            defaultSubtitleIndex(subs("English - Signs/Songs", "English Subtitles"), "en", skipSignsAndSongs = false)
+        )
+    }
 }

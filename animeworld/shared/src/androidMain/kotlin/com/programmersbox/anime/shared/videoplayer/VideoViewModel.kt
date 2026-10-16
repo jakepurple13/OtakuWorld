@@ -32,15 +32,18 @@ import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.upstream.BandwidthMeter
 import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.anime.shared.VideoScreen
+import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRepository
 import com.programmersbox.kmpmodels.KmpSubtitle
 import com.programmersbox.helpfulutils.battery
 import com.programmersbox.uiviews.utils.BatteryInformation2
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.security.cert.X509Certificate
 import java.util.Formatter
 import java.util.Locale
@@ -50,6 +53,7 @@ class VideoViewModel(
     videoScreen: VideoScreen,
     context: Context,
     private val storageHolder: StorageHolder,
+    val subtitleSettings: SubtitleSettingsRepository,
 ) : ViewModel() {
 
     val showPath = storageHolder.storageModel?.link ?: videoScreen.showPath
@@ -58,10 +62,14 @@ class VideoViewModel(
     val requestHeaders = playerHeaders(storageHolder.storageModel?.headers.orEmpty(), videoScreen.referer)
     val subtitles = storageHolder.storageModel?.subtitles.orEmpty()
     val mimeType = storageHolder.storageModel?.let(::streamMime)
+    /** Style as of player start; later changes arrive through [subtitleSettings]. */
+    val initialSubtitleStyle = runBlocking { subtitleSettings.style.first() }
     val defaultSubtitle = defaultSubtitleIndex(
         subtitles,
         Locale.getDefault().language,
         Locale.getDefault().getDisplayLanguage(Locale.ENGLISH),
+        initialSubtitleStyle.preferredLanguages,
+        initialSubtitleStyle.skipSignsAndSongs,
     )
 
     /** Text tracks the player currently exposes; drives the CC menu. */

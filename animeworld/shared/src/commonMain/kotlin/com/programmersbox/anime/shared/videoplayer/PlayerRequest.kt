@@ -44,6 +44,14 @@ fun streamMime(storage: KmpStorage): String? = storage.mimeType
 /** Label fragments marking a track that only covers part of the dialogue. */
 private val PARTIAL_SUBTITLE_MARKERS = listOf("sign", "song", "forced", "dubtitle", "cc only")
 
+/** English names for common language codes, so a preferred code also matches a "Japanese"-style label. */
+private val LANGUAGE_NAMES = mapOf(
+    "ja" to "Japanese", "en" to "English", "es" to "Spanish", "fr" to "French", "de" to "German",
+    "pt" to "Portuguese", "it" to "Italian", "ru" to "Russian", "ko" to "Korean", "zh" to "Chinese",
+    "ar" to "Arabic", "id" to "Indonesian", "tr" to "Turkish", "vi" to "Vietnamese", "th" to "Thai",
+    "pl" to "Polish", "hi" to "Hindi",
+)
+
 /** Lowercase runs of letters; everything else separates tokens ("0_en" -> ["en"]). */
 private fun letterTokens(text: String): List<String> {
     val tokens = mutableListOf<String>()
@@ -65,18 +73,21 @@ private fun letterTokens(text: String): List<String> {
  *
  * A lang matches when [deviceLanguage] (a code like "en"; any region suffix is dropped) or
  * [deviceLanguageName] (like "English") appears in it as whole words, case-insensitively.
- * Tries the device language, then English, then any track. Within each step, full-dialogue
+ * Tries each of [preferredLanguages] in order, then the device language, then English, then any track. Within each step, full-dialogue
  * tracks win over partial ones (signs/songs, forced, dubtitles, "CC only"); a partial track is
- * picked only when it is the only match.
+ * picked only when it is the only match
+ * (or never demoted when [skipSignsAndSongs] is false).
  */
 fun defaultSubtitleIndex(
     subtitles: List<KmpSubtitle>,
     deviceLanguage: String,
     deviceLanguageName: String = "",
+    preferredLanguages: List<String> = emptyList(),
+    skipSignsAndSongs: Boolean = true,
 ): Int? {
     if (subtitles.isEmpty()) return null
     val labels = subtitles.map { letterTokens(it.lang) }
-    val partial = subtitles.map { s -> PARTIAL_SUBTITLE_MARKERS.any { s.lang.contains(it, ignoreCase = true) } }
+    val partial = subtitles.map { s -> skipSignsAndSongs && PARTIAL_SUBTITLE_MARKERS.any { s.lang.contains(it, ignoreCase = true) } }
 
     fun pick(candidates: List<Int>): Int? = candidates.firstOrNull { !partial[it] } ?: candidates.firstOrNull()
 
@@ -88,5 +99,9 @@ fun defaultSubtitleIndex(
     }
 
     val code = deviceLanguage.trim().substringBefore('-').substringBefore('_')
+    for (preferred in preferredLanguages) {
+        val preferredCode = preferred.trim().substringBefore('-').substringBefore('_').lowercase()
+        matching(preferredCode, LANGUAGE_NAMES[preferredCode].orEmpty())?.let { return it }
+    }
     return matching(code, deviceLanguageName) ?: matching("en", "english") ?: pick(subtitles.indices.toList())
 }

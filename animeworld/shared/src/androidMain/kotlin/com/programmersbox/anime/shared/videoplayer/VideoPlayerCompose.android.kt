@@ -103,8 +103,12 @@ import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
+import androidx.media3.ui.SubtitleView
 import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.anime.shared.VideoScreen
+import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRepository
+import com.programmersbox.anime.shared.subtitles.apply
+import com.programmersbox.anime.shared.subtitles.toCaptionSpec
 import com.programmersbox.datastore.otakuDataStore
 import com.programmersbox.helpfulutils.audioManager
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
@@ -145,7 +149,8 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
     val context = LocalContext.current
     val genericInfo = koinInject<GenericInfo>()
     val storageHolder = koinInject<StorageHolder>()
-    val viewModel: VideoViewModel = viewModel { VideoViewModel(videoScreen, context, storageHolder) }
+    val subtitleSettings = koinInject<SubtitleSettingsRepository>()
+    val viewModel: VideoViewModel = viewModel { VideoViewModel(videoScreen, context, storageHolder, subtitleSettings) }
     val activity = LocalActivity.current
 
     val audioManager = remember { context.audioManager }
@@ -271,8 +276,19 @@ fun VideoPlayer(
                         .setPreferredTextLanguage(lang)
                         .build()
                 }
+                if (!viewModel.initialSubtitleStyle.autoEnable) {
+                    trackSelectionParameters = trackSelectionParameters.buildUpon()
+                        .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true)
+                        .build()
+                }
             }
             .also { viewModel.exoPlayer = it }
+    }
+
+    var subtitleView by remember { mutableStateOf<SubtitleView?>(null) }
+    LaunchedEffect(subtitleView) {
+        val view = subtitleView ?: return@LaunchedEffect
+        viewModel.subtitleSettings.style.collect { view.apply(it.toCaptionSpec()) }
     }
 
     AndroidView(
@@ -319,6 +335,7 @@ fun VideoPlayer(
                         FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
                     )
                 }
+                subtitleView = subtitles
             }
         }
     )
