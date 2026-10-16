@@ -27,7 +27,7 @@ fun aniyomiApiService(source: AnimeCatalogueSource, lib: Double): AniyomiApiServ
     if (source is ConfigurableAnimeSource) ConfigurableAniyomiApiService(source, lib) else AniyomiApiService(source, lib)
 
 open class AniyomiApiService(val source: AnimeCatalogueSource, val lib: Double) : KmpApiService {
-    override val baseUrl: String = (source as? AnimeHttpSource)?.baseUrl.orEmpty()
+    override val baseUrl: String get() = (source as? AnimeHttpSource)?.baseUrl.orEmpty()
     override val serviceName: String = "aniyomi:${source.id}"
     override val canScroll: Boolean = true
     override val canDownload: Boolean = false
