@@ -12,3 +12,9 @@
 -keep class kotlinx.serialization.** { *; }
 -dontwarn rx.**
 -dontwarn fi.iki.elonen.**
+
+# If the consuming app enables minify, extensions also bind to these runtime libraries by name.
+-keep class kotlin.** { *; }
+-keep class kotlinx.coroutines.** { *; }
+-keep class okio.** { *; }
+-keep class androidx.preference.** { *; }
