@@ -166,10 +166,12 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
         activity?.let { setWindowBrightness(it, originalScreenBrightness.toFloat()) }
     }
 
-    LifecycleEventEffect(Lifecycle.Event.ON_DESTROY) {
-        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, originalAudioLevel, 0)
-        activity?.let { setWindowBrightness(it, originalScreenBrightness.toFloat()) }
+    DisposableEffect(Unit) {
+        onDispose {
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, originalAudioLevel, 0)
+            activity?.let { setWindowBrightness(it, originalScreenBrightness.toFloat()) }
+        }
     }
 
     viewModel.exoPlayer?.let { ExoPlayerAttributes(exoPlayer = it, viewModel = viewModel) }
