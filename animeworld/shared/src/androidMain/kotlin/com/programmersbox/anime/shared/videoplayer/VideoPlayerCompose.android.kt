@@ -211,7 +211,7 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
                             HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.socketFactory)
                         }
 
-                        context.getMediaSource(viewModel.showPath.toUri(), false, DefaultBandwidthMeter.Builder(context).build(), viewModel.headers)
+                        context.getMediaSource(viewModel.showPath.toUri(), false, DefaultBandwidthMeter.Builder(context).build(), viewModel.requestHeaders, viewModel.subtitles, viewModel.mimeType)
                     }
                 },
                 viewModel = viewModel

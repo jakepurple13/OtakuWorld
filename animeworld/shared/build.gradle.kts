@@ -55,6 +55,10 @@ kotlin {
             implementation(androidLibs.coilVideo)
         }
 
+        commonTest.dependencies {
+            implementation(commonLibs.kotlin.test)
+        }
+
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(desktopLibs.kotlinx.coroutines.swing)

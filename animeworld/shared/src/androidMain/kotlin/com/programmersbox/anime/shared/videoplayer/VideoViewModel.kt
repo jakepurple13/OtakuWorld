@@ -30,6 +30,7 @@ import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.exoplayer.upstream.BandwidthMeter
 import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.anime.shared.VideoScreen
+import com.programmersbox.kmpmodels.KmpSubtitle
 import com.programmersbox.helpfulutils.battery
 import com.programmersbox.uiviews.utils.BatteryInformation2
 import kotlinx.coroutines.Dispatchers
@@ -52,7 +53,9 @@ class VideoViewModel(
     val showPath = storageHolder.storageModel?.link ?: videoScreen.showPath
     val showName = videoScreen.showName
     val downloadOrStream = videoScreen.downloadOrStream
-    val headers = videoScreen.referer ?: ""
+    val requestHeaders = playerHeaders(storageHolder.storageModel?.headers.orEmpty(), videoScreen.referer)
+    val subtitles = storageHolder.storageModel?.subtitles.orEmpty()
+    val mimeType = storageHolder.storageModel?.let(::streamMime)
 
     var exoPlayer: ExoPlayer? by mutableStateOf(null)
 
@@ -200,62 +203,57 @@ fun Context.getMediaSource(
     url: Uri,
     preview: Boolean,
     bandwidthMeter: BandwidthMeter,
-    header: String,
-): MediaSource =
-    when (Util.inferContentType(url.lastPathSegment.orEmpty().toUri())) {
-        C.CONTENT_TYPE_DASH -> DashMediaSource.Factory(
-            getHttpDataSourceFactory(
-                preview,
-                bandwidthMeter,
-                header
-            )
-        )//.createMediaSource(url)
-        C.CONTENT_TYPE_HLS -> HlsMediaSource.Factory(
-            getHttpDataSourceFactory(
-                preview,
-                bandwidthMeter,
-                header
-            )
-        )//.createMediaSource(uri)
-        C.CONTENT_TYPE_OTHER -> ProgressiveMediaSource.Factory(
-            getHttpDataSourceFactory(
-                preview,
-                bandwidthMeter,
-                header
-            )
-        )//.createMediaSource(uri)
-        else -> DefaultMediaSourceFactory(getHttpDataSourceFactory(preview, bandwidthMeter, header))
-    }.createMediaSource(MediaItem.fromUri(url))
+    headers: Map<String, String>,
+    subtitles: List<KmpSubtitle> = emptyList(),
+    mimeType: String? = null,
+): MediaSource {
+    val dataSourceFactory = getHttpDataSourceFactory(preview, bandwidthMeter, headers)
+    val factory = when (mimeType) {
+        "application/x-mpegURL" -> HlsMediaSource.Factory(dataSourceFactory)
+        "application/dash+xml" -> DashMediaSource.Factory(dataSourceFactory)
+        "video/mp4" -> ProgressiveMediaSource.Factory(dataSourceFactory)
+        else -> when (Util.inferContentType(url.lastPathSegment.orEmpty().toUri())) {
+            C.CONTENT_TYPE_DASH -> DashMediaSource.Factory(dataSourceFactory)
+            C.CONTENT_TYPE_HLS -> HlsMediaSource.Factory(dataSourceFactory)
+            C.CONTENT_TYPE_OTHER -> ProgressiveMediaSource.Factory(dataSourceFactory)
+            else -> DefaultMediaSourceFactory(dataSourceFactory)
+        }
+    }
+    val mediaItem = MediaItem.Builder()
+        .setUri(url)
+        .setSubtitleConfigurations(
+            subtitles.map {
+                MediaItem.SubtitleConfiguration.Builder(it.url.toUri())
+                    .setMimeType(subtitleMime(it.url))
+                    .setLanguage(it.lang)
+                    .setLabel(it.lang)
+                    .build()
+            }
+        )
+        .build()
+    return factory.createMediaSource(mediaItem)
+}
 
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 private fun Context.getDataSourceFactory(
     preview: Boolean,
     bandwidthMeter: BandwidthMeter,
-    header: String,
+    headers: Map<String, String>,
 ): DataSource.Factory =
     DefaultDataSource.Factory(
         this,
-        getHttpDataSourceFactory(preview, bandwidthMeter, header)
+        getHttpDataSourceFactory(preview, bandwidthMeter, headers)
     )
 
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 private fun Context.getHttpDataSourceFactory(
     preview: Boolean,
     bandwidthMeter: BandwidthMeter,
-    header: String,
+    headers: Map<String, String>,
 ): DataSource.Factory = DefaultHttpDataSource.Factory().apply {
-    setUserAgent(Util.getUserAgent(this@getHttpDataSourceFactory, "AnimeWorld"))
+    if (headers.keys.none { it.equals("user-agent", ignoreCase = true) }) {
+        setUserAgent(Util.getUserAgent(this@getHttpDataSourceFactory, "AnimeWorld"))
+    }
     //setTransferListener(if (preview) null else bandwidthMeter)
-    //header?.let { setDefaultRequestProperties(hashMapOf("Referer" to it)) }
-    setDefaultRequestProperties(
-        mapOf(
-            "referer" to header,
-            "accept" to "*/*",
-            "sec-ch-ua" to "\"Chromium\";v=\"91\", \" Not;A Brand\";v=\"99\"",
-            "sec-ch-ua-mobile" to "?0",
-            "sec-fetch-user" to "?1",
-            "sec-fetch-mode" to "navigate",
-            "sec-fetch-dest" to "video"
-        )
-    )
+    setDefaultRequestProperties(headers)
 }
