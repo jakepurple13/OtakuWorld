@@ -78,6 +78,7 @@ kotlin {
                 implementation(commonLibs.kotlin.test)
                 implementation(commonLibs.coroutinesTest)
                 implementation(commonLibs.ktorMock)
+                implementation(androidLibs.okhttpMockWebServer)
             }
         }
     }
