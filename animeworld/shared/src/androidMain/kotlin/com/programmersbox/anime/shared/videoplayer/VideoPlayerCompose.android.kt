@@ -285,9 +285,9 @@ fun VideoPlayer(
             .also { viewModel.exoPlayer = it }
     }
 
-    var subtitleView by remember { mutableStateOf<SubtitleView?>(null) }
-    LaunchedEffect(subtitleView) {
-        val view = subtitleView ?: return@LaunchedEffect
+    var styledSubtitleView by remember { mutableStateOf<SubtitleView?>(null) }
+    LaunchedEffect(styledSubtitleView) {
+        val view = styledSubtitleView ?: return@LaunchedEffect
         viewModel.subtitleSettings.style.collect { view.apply(it.toCaptionSpec()) }
     }
 
@@ -326,7 +326,7 @@ fun VideoPlayer(
                 // The stock layout puts the SubtitleView inside the content frame, which RESIZE_MODE_ZOOM
                 // grows past the screen edges, so bottom-anchored cues land off-screen. Pin it to the
                 // view bounds instead; PlayerView keeps feeding cues to the same instance.
-                val subtitles = subtitleView
+                val subtitles = this.subtitleView
                 val overlay = overlayFrameLayout
                 if (subtitles != null && overlay != null) {
                     (subtitles.parent as? ViewGroup)?.removeView(subtitles)
@@ -335,7 +335,7 @@ fun VideoPlayer(
                         FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
                     )
                 }
-                subtitleView = subtitles
+                styledSubtitleView = subtitles
             }
         }
     )

@@ -133,4 +133,17 @@ class PlayerRequestTest {
             defaultSubtitleIndex(subs("English - Signs/Songs", "English Subtitles"), "en", skipSignsAndSongs = false)
         )
     }
+
+    @Test
+    fun preferredRegionalCodeMatches() {
+        assertEquals(1, defaultSubtitleIndex(subs("English", "Portuguese"), "en", preferredLanguages = listOf("pt-BR")))
+    }
+
+    @Test
+    fun secondPreferenceUsedWhenFirstAbsent() {
+        assertEquals(
+            2,
+            defaultSubtitleIndex(subs("English", "French", "Japanese"), "en", preferredLanguages = listOf("de", "ja"))
+        )
+    }
 }
