@@ -167,7 +167,7 @@ class GenericAnime(
         model: KmpChapterModel,
         infoModel: KmpInfoModel,
     ) {
-        if (MainActivity.cast.isCastActive()) {
+        if (MainActivity.cast.isCastActive() && model.source.canCast) {
             MainActivity.cast.loadUrl(
                 storage.link,
                 infoModel.title,
@@ -544,7 +544,8 @@ class GenericAnime(
                         it.infoModel.imageUrl,
                         storage.headers
                     )
-                }
+                },
+                onPlay = { s -> playResolved(navController, s, it.model, it.infoModel) }
             )
         }
     }

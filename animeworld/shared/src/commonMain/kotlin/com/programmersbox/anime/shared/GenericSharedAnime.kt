@@ -44,6 +44,7 @@ import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.composables.modifiers.combineClickableWithIndication
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.firstOrNull
 
 abstract class GenericSharedAnime(
@@ -77,7 +78,7 @@ abstract class GenericSharedAnime(
         }
 
         when {
-            storages.size == 1 -> playOrCast(navController, storages.first(), model, infoModel)
+            storages.size == 1 -> playResolved(navController, storages.first(), model, infoModel)
             storages.isNotEmpty() -> VideoSourceModel.showVideoSources = VideoSourceModel(
                 c = storages,
                 infoModel = infoModel,
@@ -86,6 +87,24 @@ abstract class GenericSharedAnime(
             )
             else -> Unit
         }
+    }
+
+    /** Lets the source resolve a lazily-described stream first; on failure nothing plays. */
+    suspend fun playResolved(
+        navController: NavigationActions,
+        storage: KmpStorage,
+        model: KmpChapterModel,
+        infoModel: KmpInfoModel,
+    ) {
+        val resolved = try {
+            model.source.resolve(storage)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return
+        }
+        playOrCast(navController, resolved, model, infoModel)
     }
 
     abstract fun playOrCast(

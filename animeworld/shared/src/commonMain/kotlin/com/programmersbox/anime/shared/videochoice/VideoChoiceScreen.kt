@@ -12,7 +12,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.runtime.Composable
-import com.programmersbox.anime.shared.VideoScreen
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpStorage
@@ -20,6 +21,7 @@ import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomScreen
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomSheetItemModel
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
+import kotlinx.coroutines.launch
 
 enum class Qualities(var value: Int) {
     Unknown(0),
@@ -56,21 +58,22 @@ fun VideoChoiceScreen(
     navController: NavigationActions,
     isCastActive: () -> Boolean = { false },
     onCastLoad: (KmpStorage) -> Unit = {},
+    onPlay: suspend (KmpStorage) -> Unit,
 ) {
+    val scope = rememberCoroutineScope()
+    val groups = remember(items) { items.groupedByServer() }
+    val ordered = remember(groups) { groups.flatMap { it.second } }
+    val serverStarts = remember(groups) {
+        if (groups.size > 1) groups.mapNotNull { (server, list) -> server?.let { list.first() to it } }.toMap() else emptyMap()
+    }
+
     val onAction: (KmpStorage) -> Unit = {
         VideoSourceModel.showVideoSources = null
         if (isStreaming) {
-            if (isCastActive()) {
+            if (isCastActive() && model.source.canCast) {
                 onCastLoad(it)
             } else {
-                navController.navigate(
-                    VideoScreen(
-                        showPath = it.link.orEmpty(),
-                        showName = model.name,
-                        downloadOrStream = false,
-                        referer = it.headers["referer"] ?: it.source.orEmpty()
-                    )
-                )
+                scope.launch { onPlay(it) }
             }
         } else {
             genericInfo.downloadChapter(model, listOf(model), infoModel, navController)
@@ -84,11 +87,12 @@ fun VideoChoiceScreen(
         ListBottomScreen(
             includeInsetPadding = false,
             title = "Choose quality for ${model.name}",
-            list = items,
+            list = ordered,
             onClick = { onAction(it) }
         ) {
             ListBottomSheetItemModel(
                 primaryText = it.quality.orEmpty(),
+                overlineText = serverStarts[it],
                 icon = when (getQualityFromName(it.quality.orEmpty())) {
                     Qualities.Unknown -> Icons.Default.DeviceUnknown
                     Qualities.P360 -> Icons.AutoMirrored.Filled._360
