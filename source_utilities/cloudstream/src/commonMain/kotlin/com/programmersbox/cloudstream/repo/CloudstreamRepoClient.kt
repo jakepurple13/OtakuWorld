@@ -11,7 +11,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.JsonObject
 import kotlin.concurrent.Volatile
 
 class CloudstreamRepoClient(private val httpClient: HttpClient) {
@@ -59,8 +59,8 @@ class CloudstreamRepoClient(private val httpClient: HttpClient) {
 
     private suspend fun fetchRepo(repoUrl: String): List<CsPlugin> = try {
         val repoText = getText(repoUrl)
-        // Aniyomi repos share the repo.json name but have no plugin lists.
-        if ("pluginLists" !in json.parseToJsonElement(repoText).jsonObject) {
+        // Not a CloudStream repo (an Aniyomi repo object, or an index array): skip silently.
+        if ((json.parseToJsonElement(repoText) as? JsonObject)?.containsKey("pluginLists") != true) {
             emptyList()
         } else {
             val repo = json.decodeFromString<CsRepo>(repoText)
@@ -71,7 +71,7 @@ class CloudstreamRepoClient(private val httpClient: HttpClient) {
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        e.printStackTrace()
+        println("CloudstreamRepoClient: $repoUrl: ${e.message}")
         emptyList()
     }
 
@@ -83,7 +83,7 @@ class CloudstreamRepoClient(private val httpClient: HttpClient) {
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        e.printStackTrace()
+        println("CloudstreamRepoClient: $listUrl: ${e.message}")
         emptyList()
     }
 

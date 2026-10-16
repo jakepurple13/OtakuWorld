@@ -85,6 +85,24 @@ class CloudstreamRepoClientTest {
     }
 
     @Test
+    fun arrayJsonSkippedQuietly() = runTest {
+        val repo = CloudstreamRepoClient(client(repo = """[{"name":"x","pkg":"y"}]"""))
+        assertEquals(emptyList(), repo.fetch(listOf("https://repo.example")))
+    }
+
+    @Test
+    fun nullTvTypesDropped() = runTest {
+        val noTypes = HttpClient(MockEngine { request ->
+            when (request.url.toString()) {
+                REPO_URL -> respond(REPO)
+                LIST_URL -> respond("""[{"url":"$BUILDS/N.cs3","status":1,"version":1,"name":"N","internalName":"N","apiVersion":1}]""")
+                else -> respondError(HttpStatusCode.NotFound)
+            }
+        })
+        assertEquals(emptyList(), CloudstreamRepoClient(noTypes).fetch(listOf("https://repo.example")))
+    }
+
+    @Test
     fun failingPluginListSkipped() = runTest {
         assertEquals(emptyList(), CloudstreamRepoClient(client(failList = true)).fetch(listOf("https://repo.example")))
         val result = CloudstreamRepoClient(client(failHost = "bad.example"))
