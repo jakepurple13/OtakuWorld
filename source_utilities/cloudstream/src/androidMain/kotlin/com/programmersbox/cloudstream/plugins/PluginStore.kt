@@ -35,6 +35,8 @@ class PluginStore(
         val name = plugin.internalName
         // A hostile plugins.json must not be able to write outside root.
         require(SAFE_NAME.matches(name) && !name.startsWith(".")) { "Unsafe internalName: $name" }
+        // Plugin code is executed, so a cleartext download (swappable in transit) is refused.
+        require(plugin.url.startsWith("https://", ignoreCase = true)) { "Refusing non-https plugin url: ${plugin.url}" }
         nameLock(name).withLock { installLocked(repoUrl, plugin) }
     }
 

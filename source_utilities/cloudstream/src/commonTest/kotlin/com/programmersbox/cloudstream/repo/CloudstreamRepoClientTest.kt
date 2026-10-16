@@ -111,6 +111,24 @@ class CloudstreamRepoClientTest {
     }
 
     @Test
+    fun httpPluginUrlDropped() = runTest {
+        val list = """[
+         {"url":"http://insecure.example/Evil.cs3","status":1,"version":1,"name":"Evil","internalName":"Evil","tvTypes":["Anime"],"apiVersion":1},
+         {"url":"$BUILDS/Good.cs3","status":1,"version":1,"name":"Good","internalName":"Good","tvTypes":["Anime"],"apiVersion":1}
+        ]"""
+        val http = HttpClient(MockEngine { request ->
+            val url = request.url.toString()
+            when {
+                url.endsWith("/repo.json") -> respond(REPO)
+                url == LIST_URL -> respond(list)
+                else -> respondError(HttpStatusCode.NotFound)
+            }
+        })
+        val result = CloudstreamRepoClient(http).fetch(listOf("https://repo.example"))
+        assertEquals(listOf("Good"), result.map { it.name })
+    }
+
+    @Test
     fun httpRepoIsIgnored() = runTest {
         assertEquals(emptyList(), CloudstreamRepoClient(client()).fetch(listOf("http://repo.example")))
     }

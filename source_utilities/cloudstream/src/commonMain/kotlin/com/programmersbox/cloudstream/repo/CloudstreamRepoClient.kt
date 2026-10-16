@@ -79,7 +79,9 @@ class CloudstreamRepoClient(private val httpClient: HttpClient) {
         val url = listUrl.trim()
         // Plugins are downloaded from these entries and executed, so plain http is refused.
         require(url.startsWith("https://", ignoreCase = true)) { "Ignoring non-https CloudStream plugin list: $url" }
-        json.decodeFromString<List<CsPlugin>>(getText(url)).filter { it.status != 0 && it.isAnime() }
+        // A cleartext .cs3 download could be swapped in transit (fileHash is optional), so drop those entries.
+        json.decodeFromString<List<CsPlugin>>(getText(url))
+            .filter { it.status != 0 && it.isAnime() && it.url.startsWith("https://", ignoreCase = true) }
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {

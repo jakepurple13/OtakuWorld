@@ -31,8 +31,15 @@ class PluginStoreTest {
     fun setUp() {
         server = MockWebServer().apply { start() }
         root = Files.createTempDirectory("csstore").toFile()
-        store = PluginStore(root, OkHttpClient())
+        store = PluginStore(root, httpsToServer())
     }
+
+    // Plugin urls must be https, so tests use a fake https host that is redirected to the plain-http MockWebServer.
+    private fun httpsToServer() = OkHttpClient.Builder().addInterceptor { chain ->
+        val req = chain.request()
+        val url = req.url.newBuilder().scheme("http").host(server.hostName).port(server.port).build()
+        chain.proceed(req.newBuilder().url(url).build())
+    }.build()
 
     @AfterTest
     fun tearDown() {
@@ -47,7 +54,7 @@ class PluginStoreTest {
         MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
 
     private fun plugin(name: String = "Foo", version: Int = 1, hash: String? = null) = CsPlugin(
-        url = server.url("/plugin.cs3").toString(), status = 1, version = version,
+        url = "https://plugins.test/plugin.cs3", status = 1, version = version,
         apiVersion = 1, name = name, internalName = name, fileHash = hash,
     )
 
@@ -69,6 +76,16 @@ class PluginStoreTest {
         serve("dex".toByteArray())
         assertFailsWith<IOException> { store.install(repo, plugin(hash = "sha256-" + "0".repeat(64))) }
         assertTrue(root.walkTopDown().none { it.isFile && it.name != "installed.json" })
+        assertTrue(store.installed().isEmpty())
+    }
+
+    @Test
+    fun httpPluginUrlRejected() = runTest {
+        serve("dex".toByteArray())
+        assertFailsWith<IllegalArgumentException> {
+            store.install(repo, plugin().copy(url = server.url("/plugin.cs3").toString()))
+        }
+        assertEquals(0, server.requestCount)
         assertTrue(store.installed().isEmpty())
     }
 
