@@ -137,7 +137,8 @@ object AniyomiSourceMapper {
         }
 
     private fun isHls(url: String): Boolean =
-        url.substringBefore('#').substringBefore('?').endsWith(".m3u8", ignoreCase = true)
+        url.substringBefore('#').substringBefore('?').endsWith(".m3u8", ignoreCase = true) ||
+                url.contains("m3u8", ignoreCase = true)
 
     private fun Headers.toMap(): Map<String, String> = names().associateWith { get(it).orEmpty() }
 

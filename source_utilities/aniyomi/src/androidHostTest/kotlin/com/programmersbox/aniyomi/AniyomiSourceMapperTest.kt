@@ -74,4 +74,14 @@ class AniyomiSourceMapperTest {
         assertEquals("application/x-mpegURL", storage.mimeType)
         assertNull(AniyomiSourceMapper.toStorage(video("mp4"), FakeAnimeHttpSource(), null).mimeType)
     }
+
+    @Test
+    fun hlsDetectedFromQueryOrMixedCase() {
+        fun mime(url: String) = AniyomiSourceMapper.toStorage(
+            Video(videoUrl = url, videoTitle = "q"), FakeAnimeHttpSource(), null,
+        ).mimeType
+        assertEquals("application/x-mpegURL", mime("https://v/play?file=/a/master.M3U8&t=1"))
+        assertEquals("application/x-mpegURL", mime("https://v/hls/index.m3u8/seg"))
+        assertNull(mime("https://v/video.mp4"))
+    }
 }
