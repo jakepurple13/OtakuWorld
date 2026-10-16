@@ -12,8 +12,11 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpStorage
@@ -67,15 +70,26 @@ fun VideoChoiceScreen(
         if (groups.size > 1) groups.mapNotNull { (server, list) -> server?.let { list.first() to it } }.toMap() else emptyMap()
     }
 
+    var playing by remember { mutableStateOf(false) }
+
     val onAction: (KmpStorage) -> Unit = {
-        VideoSourceModel.showVideoSources = null
-        if (isStreaming) {
-            if (isCastActive() && model.source.canCast) {
-                onCastLoad(it)
-            } else {
-                scope.launch { onPlay(it) }
+        if (isStreaming && !(isCastActive() && model.source.canCast)) {
+            // Keep the sheet (and this scope) alive until resolve/play finishes.
+            if (!playing) {
+                playing = true
+                scope.launch {
+                    try {
+                        onPlay(it)
+                    } finally {
+                        VideoSourceModel.showVideoSources = null
+                    }
+                }
             }
+        } else if (isStreaming) {
+            VideoSourceModel.showVideoSources = null
+            onCastLoad(it)
         } else {
+            VideoSourceModel.showVideoSources = null
             genericInfo.downloadChapter(model, listOf(model), infoModel, navController)
         }
     }
