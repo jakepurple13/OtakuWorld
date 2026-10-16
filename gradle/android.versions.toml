@@ -282,7 +282,8 @@ ziplineLoader = { module = "app.cash.zipline:zipline-loader", version.ref = "zip
 ziplineProfiler = { module = "app.cash.zipline:zipline-profiler", version.ref = "ziplineVersion" }
 
 # CloudStream (:source_utilities:cloudstream). Versions follow recloudstream/cloudstream's catalog;
-# jackson and rhino are pinned strictly there because newer releases need minSdk 26.
+# Upstream pins jackson and rhino strictly because newer releases need minSdk 26. Here only rhino is
+# strict; jackson is `require 2.13.1` and resolves to 2.21.x because koog needs it (our minSdk is 28).
 cloudstreamAnnotation = "androidx.annotation:annotation:1.10.0"
 cloudstreamAtomicfu = "org.jetbrains.kotlinx:atomicfu:0.33.0"
 cloudstreamCryptographyCore = { module = "dev.whyoleg.cryptography:cryptography-core", version.ref = "cloudstreamCryptography" }

@@ -60,7 +60,7 @@ built against the Android artifact reference those classes.
 
 From upstream `gradle/libs.versions.toml` (catalog aliases `androidLibs.cloudstream*` in
 `gradle/android.versions.toml`): NiceHttp `0.4.18`, jackson-module-kotlin `2.13.1` (required, not strict),
-rhino strictly `1.8.1` (newer releases of both need minSdk 26), ksoup `0.2.6`, whyoleg cryptography
+rhino strictly `1.8.1` (upstream pins both strictly for minSdk 26; see below for jackson), ksoup `0.2.6`, whyoleg cryptography
 `0.6.0` (core + provider-optimal), atomicfu `0.33.0`, kotlinx-io-core `0.9.1`, androidx.annotation
 `1.10.0`. jsoup, okhttp, ktor (`ktor-http` via `ktor-client-core`), kotlinx-datetime,
 kotlinx-serialization-json, coroutines and kotlin-reflect use the project's existing versions.
