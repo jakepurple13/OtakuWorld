@@ -148,6 +148,29 @@ suspend fun installViaCatalogs(catalogs: List<KmpExternalCustomApiServicesCatalo
         }
     }
 
+/**
+ * Runs [installViaCatalogs] for every remote in order; ones no catalog claims go to [fallback].
+ * True if any was claimed, so the caller reloads sources once.
+ */
+suspend fun installAllViaCatalogs(
+    catalogs: List<KmpExternalCustomApiServicesCatalog>,
+    remotes: List<KmpRemoteSources>,
+    fallback: (KmpRemoteSources) -> Unit,
+): Boolean = remotes
+    .map { remote -> installViaCatalogs(catalogs, remote).also { claimed -> if (!claimed) fallback(remote) } }
+    .any { it }
+
+/** Runs [block], logging an exception instead of letting it crash the caller; cancellation still propagates. */
+suspend fun logFailures(block: suspend () -> Unit) {
+    try {
+        block()
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+}
+
 /** A catalog group can only be uninstalled as a unit when it is one APK (e.g. a bridge). */
 fun List<KmpSourceInformation>.canUninstallAll(): Boolean = map { it.packageName }.distinct().size == 1
 

@@ -79,18 +79,17 @@ class ExtensionListViewModel(
             installedSources.any { it.catalog is KmpExternalCustomApiServicesCatalog && it.name == "Custom Tachiyomi Bridge" }
     }
 
-    fun install(remote: KmpRemoteSources) {
+    fun install(remote: KmpRemoteSources) = installAll(listOf(remote))
+
+    fun updateAll() = installAll(installedItems.updateRemotes())
+
+    /** Catalog installs all finish before a single reload; the rest go to the APK downloader. */
+    private fun installAll(remotes: List<KmpRemoteSources>) {
         viewModelScope.launch {
-            if (installViaCatalogs(nativeCatalogs.catalogs, remote)) {
-                sourceLoader.blockingLoad()
-            } else {
-                request(remote.downloadLink)
+            if (installAllViaCatalogs(nativeCatalogs.catalogs, remotes) { request(it.downloadLink) }) {
+                logFailures { sourceLoader.blockingLoad() }
             }
         }
-    }
-
-    fun updateAll() {
-        installedItems.updateRemotes().forEach(::install)
     }
 
     private fun request(link: String) {
@@ -114,10 +113,12 @@ class ExtensionListViewModel(
                 e.printStackTrace()
                 return@launch
             }
-            if (catalogUninstalled) {
-                sourceLoader.blockingLoad()
-            } else {
-                sourceInfoRepository.uninstall(source)
+            logFailures {
+                if (catalogUninstalled) {
+                    sourceLoader.blockingLoad()
+                } else {
+                    sourceInfoRepository.uninstall(source)
+                }
             }
         }
     }

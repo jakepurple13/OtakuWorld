@@ -91,6 +91,50 @@ class CatalogInstallTest {
     }
 
     @Test
+    fun installAll_installsEveryRemoteAndSendsUnclaimedToFallback() = runTest {
+        val catalog = object : KmpExternalCustomApiServicesCatalog {
+            val installed = mutableListOf<String>()
+            override val name = "c"
+            override val hasRemoteSources = true
+            override suspend fun initialize() = Unit
+            override fun getSources(): List<KmpSourceInformation> = emptyList()
+            override suspend fun install(remote: KmpRemoteSources): Boolean =
+                (remote.downloadLink != "apk").also { if (it) installed += remote.downloadLink }
+        }
+        val fallback = mutableListOf<String>()
+
+        val claimed = installAllViaCatalogs(listOf(catalog), listOf(remote("x"), remote("apk"), remote("y"))) {
+            fallback += it.downloadLink
+        }
+
+        assertTrue(claimed)
+        assertEquals(listOf("x", "y"), catalog.installed)
+        assertEquals(listOf("apk"), fallback)
+    }
+
+    @Test
+    fun installAll_noneClaimed_returnsFalse() = runTest {
+        val fallback = mutableListOf<String>()
+
+        val claimed = installAllViaCatalogs(listOf(FakeCatalog("a", false, mutableListOf())), listOf(remote("x"))) {
+            fallback += it.downloadLink
+        }
+
+        assertFalse(claimed)
+        assertEquals(listOf("x"), fallback)
+    }
+
+    @Test
+    fun logFailures_swallowsExceptions() = runTest {
+        logFailures { throw IllegalStateException("reload failed") }
+    }
+
+    @Test
+    fun logFailures_rethrowsCancellation() = runTest {
+        assertFailsWith<CancellationException> { logFailures { throw CancellationException("cancelled") } }
+    }
+
+    @Test
     fun updateRemotes_matchesUpdateLinks() {
         val items = listOf(
             InstalledItem(info("one"), "1.0", remote("l1", "2.0"), null),
