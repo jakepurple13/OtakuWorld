@@ -55,6 +55,8 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.obsez.android.lib.filechooser.ChooserDialog
 import com.programmersbox.anime.shared.GenericSharedAnime
 import com.programmersbox.anime.shared.StorageHolder
+import com.programmersbox.anime.shared.subtitles.DataStoreSubtitleSettingsRepository
+import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRepository
 import com.programmersbox.anime.shared.VideoScreen
 import com.programmersbox.anime.shared.videochoice.VideoChoiceScreen
 import com.programmersbox.anime.shared.videochoice.VideoSourceModel
@@ -109,6 +111,7 @@ val appModule = module {
     singleOf(::GenericAnime) { bindsGenericInfo() }
     single { NotificationLogo(R.mipmap.ic_launcher_foreground) }
     single { StorageHolder() }
+    single<SubtitleSettingsRepository> { DataStoreSubtitleSettingsRepository(get<Context>()) }
     singleOf(::VideoLibrarySource)
     single { AnimeDataStoreHandling() }
     singleOf(::Backup)

@@ -3,6 +3,8 @@ package com.programmersbox.desktop
 import ca.gosyer.appdirs.AppDirs
 import com.programmersbox.anime.shared.AnimeDesktopSettings
 import com.programmersbox.anime.shared.StorageHolder
+import com.programmersbox.anime.shared.subtitles.InMemorySubtitleSettingsRepository
+import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRepository
 import com.programmersbox.anime.shared.VideoScreen
 import com.programmersbox.anime.shared.downloads.AnimeDownloadManager
 import com.programmersbox.anime.shared.videoplayer.VideoPlayerUi
@@ -43,6 +45,7 @@ fun main(args: Array<String>) {
         moduleBlock = {
             singleOf(::AnimeDesktopSettings)
             singleOf(::StorageHolder)
+            single<SubtitleSettingsRepository> { InMemorySubtitleSettingsRepository() }
             singleOf(::VideoLibrarySource)
             single {
                 ExtensionWatcher(

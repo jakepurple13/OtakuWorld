@@ -44,6 +44,7 @@ kotlin {
             implementation(projects.datastore)
             implementation(projects.kmpmodels)
             implementation(commonLibs.bundles.datastoreLibs)
+            implementation(commonLibs.kotlinxSerialization)
 
             implementation(commonLibs.androidx.navigation3.runtime)
         }
