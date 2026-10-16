@@ -64,11 +64,13 @@ object CloudstreamMapper {
                 val sub = response.episodes[DubStatus.Subbed].orEmpty()
                 val dub = response.episodes[DubStatus.Dubbed].orEmpty()
                 val both = sub.isNotEmpty() && dub.isNotEmpty()
-                sub.mapIndexed { i, e -> toChapter(e, i, if (both) " (Sub)" else "", response.url, service) } +
-                    dub.mapIndexed { i, e -> toChapter(e, i, if (both) " (Dub)" else "", response.url, service) }
+                // Newest first, like Aniyomi/Mihon: each block reversed, sub block before dub block.
+                sub.mapIndexed { i, e -> toChapter(e, i, if (both) " (Sub)" else "", response.url, service) }.reversed() +
+                    dub.mapIndexed { i, e -> toChapter(e, i, if (both) " (Dub)" else "", response.url, service) }.reversed()
             }
 
-            is TvSeriesLoadResponse -> response.episodes.mapIndexed { i, e -> toChapter(e, i, "", response.url, service) }
+            is TvSeriesLoadResponse ->
+                response.episodes.mapIndexed { i, e -> toChapter(e, i, "", response.url, service) }.reversed()
 
             is MovieLoadResponse -> listOf(
                 KmpChapterModel(
@@ -111,7 +113,7 @@ object CloudstreamMapper {
         }
         return KmpStorage(
             link = link.url,
-            quality = Qualities.getStringByInt(link.quality),
+            quality = listOf(link.name, Qualities.getStringByInt(link.quality)).filter { it.isNotBlank() }.joinToString(" - "),
             subtitles = subtitles.map { KmpSubtitle(it.url, it.lang, it.headers.orEmpty()) },
             server = link.source,
             mimeType = mimeType,

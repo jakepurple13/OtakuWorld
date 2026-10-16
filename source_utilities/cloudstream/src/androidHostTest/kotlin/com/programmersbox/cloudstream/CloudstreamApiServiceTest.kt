@@ -47,7 +47,7 @@ class CloudstreamApiServiceTest {
     )
 
     private suspend fun link(url: String, type: ExtractorLinkType, quality: Int = Qualities.P720.value) =
-        newExtractorLink("Server", "Server $url", url, type) {
+        newExtractorLink("Server", "Vidstream", url, type) {
             this.quality = quality
             referer = "https://fake.test/"
         }
@@ -126,9 +126,10 @@ class CloudstreamApiServiceTest {
 
         val chapters = service.info().chapters
 
-        assertEquals(listOf("Ep 1 (Sub)", "Episode 2 (Sub)", "Ep 1 (Dub)"), chapters.map { it.name })
+        // Newest first within each block; sub block before dub block.
+        assertEquals(listOf("Episode 2 (Sub)", "Ep 1 (Sub)", "Ep 1 (Dub)"), chapters.map { it.name })
         assertEquals(
-            listOf("https://fake.test/s1", "https://fake.test/s2", "https://fake.test/d1"),
+            listOf("https://fake.test/s2", "https://fake.test/s1", "https://fake.test/d1"),
             chapters.map { it.extras[CloudstreamMapper.CS_DATA] },
         )
     }
@@ -230,7 +231,7 @@ class CloudstreamApiServiceTest {
         val storages = service.chapterInfo(service.firstEpisode())
 
         assertEquals(listOf("application/x-mpegURL", "application/dash+xml", null), storages.map { it.mimeType })
-        assertEquals(listOf("1080p", "720p", ""), storages.map { it.quality })
+        assertEquals(listOf("Vidstream - 1080p", "Vidstream - 720p", "Vidstream"), storages.map { it.quality })
         assertEquals("Server", storages.first().server)
         assertEquals("https://fake.test/", storages.first().headers["referer"])
     }
