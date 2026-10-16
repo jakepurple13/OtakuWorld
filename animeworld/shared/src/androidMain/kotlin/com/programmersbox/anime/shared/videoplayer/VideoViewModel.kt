@@ -2,6 +2,7 @@ package com.programmersbox.anime.shared.videoplayer
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -15,12 +16,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
+import androidx.media3.common.TrackSelectionOverride
+import androidx.media3.common.Tracks
 import androidx.media3.common.util.Util
 import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.DefaultHttpDataSource
+import androidx.media3.datasource.ResolvingDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.source.MediaSource
@@ -53,6 +58,35 @@ class VideoViewModel(
     val requestHeaders = playerHeaders(storageHolder.storageModel?.headers.orEmpty(), videoScreen.referer)
     val subtitles = storageHolder.storageModel?.subtitles.orEmpty()
     val mimeType = storageHolder.storageModel?.let(::streamMime)
+    val defaultSubtitle = defaultSubtitleIndex(subtitles, Locale.getDefault().language)
+
+    /** Text tracks the player currently exposes; drives the CC menu. */
+    var textTracks by mutableStateOf<List<TextTrackOption>>(emptyList())
+    var subtitleMenuOpen by mutableStateOf(false)
+
+    fun updateTextTracks(tracks: Tracks) {
+        textTracks = tracks.groups
+            .filter { it.type == C.TRACK_TYPE_TEXT }
+            .map { group ->
+                val format = group.getTrackFormat(0)
+                TextTrackOption(group, format.label ?: format.language ?: "Unknown", group.isSelected)
+            }
+        Log.d(TAG, "textTracks=${textTracks.map { "${it.group.getTrackFormat(0).language}|${it.label}|selected=${it.selected}" }}")
+    }
+
+    fun selectTextTrack(option: TextTrackOption?) {
+        val player = exoPlayer ?: return
+        player.trackSelectionParameters = player.trackSelectionParameters.buildUpon()
+            .apply {
+                if (option == null) {
+                    setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true)
+                } else {
+                    setTrackTypeDisabled(C.TRACK_TYPE_TEXT, false)
+                    setOverrideForType(TrackSelectionOverride(option.group.mediaTrackGroup, 0))
+                }
+            }
+            .build()
+    }
 
     var exoPlayer: ExoPlayer? by mutableStateOf(null)
 
@@ -89,6 +123,7 @@ class VideoViewModel(
     val batteryInformation by lazy { BatteryInformation2(context) }
 
     init {
+        Log.d(TAG, "subtitles=${subtitles.map { it.lang + "|" + it.url }} default=$defaultSubtitle")
         viewModelScope.launch(Dispatchers.IO) {
             batteryInformation.composeSetupFlow(
                 Color.White
@@ -181,6 +216,10 @@ enum class VideoPlayerVisibility {
     }
 }
 
+data class TextTrackOption(val group: Tracks.Group, val label: String, val selected: Boolean)
+
+private const val TAG = "AnimeWorldPlayer"
+
 data class VideoInfo(val currentPosition: Long, val duration: Long, val buffered: Long)
 
 class SSLTrustManager : X509TrustManager {
@@ -203,8 +242,18 @@ fun Context.getMediaSource(
     headers: Map<String, String>,
     subtitles: List<KmpSubtitle> = emptyList(),
     mimeType: String? = null,
+    defaultSubtitle: Int? = null,
 ): MediaSource {
-    val dataSourceFactory = getHttpDataSourceFactory(preview, bandwidthMeter, headers)
+    val subtitleHeaders = subtitles.filter { it.headers.isNotEmpty() }.associate { it.url to it.headers }
+    val httpFactory = getHttpDataSourceFactory(preview, bandwidthMeter, headers)
+    // Subtitle-specific headers (e.g. CloudStream SubtitleFile.headers) layered over the shared ones.
+    val dataSourceFactory = if (subtitleHeaders.isEmpty()) {
+        httpFactory
+    } else {
+        ResolvingDataSource.Factory(httpFactory) { spec ->
+            subtitleHeaders[spec.uri.toString()]?.let(spec::withAdditionalHeaders) ?: spec
+        }
+    }
     val mediaItem = MediaItem.Builder()
         .setUri(url)
         .setMimeType(
@@ -216,11 +265,13 @@ fun Context.getMediaSource(
             }
         )
         .setSubtitleConfigurations(
-            subtitles.map {
+            subtitles.mapIndexed { index, it ->
                 MediaItem.SubtitleConfiguration.Builder(it.url.toUri())
                     .setMimeType(subtitleMime(it.url))
                     .setLanguage(it.lang)
                     .setLabel(it.lang)
+                    // Unflagged sidecar tracks whose language doesn't match a preference are never auto-selected.
+                    .setSelectionFlags(if (index == defaultSubtitle) C.SELECTION_FLAG_DEFAULT else 0)
                     .build()
             }
         )
