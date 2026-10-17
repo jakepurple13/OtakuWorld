@@ -3,30 +3,22 @@ package com.programmersbox.anime.shared.videos
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Pages
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -59,9 +51,7 @@ import com.programmersbox.anime.shared.VideoScreen
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.BottomSheetDeleteScaffold
-import com.programmersbox.kmpuiviews.presentation.components.ImageFlushListItem
 import com.programmersbox.kmpuiviews.theme.Emerald
-import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import dev.chrisbanes.haze.HazeInput
@@ -70,6 +60,12 @@ import dev.chrisbanes.haze.blur.HazeBlurStyle
 import dev.chrisbanes.haze.blur.hazeBlur
 import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.runtime.saveable.rememberSaveable
+import com.programmersbox.anime.shared.downloads.DownloadQueueSource
 import kotlinx.serialization.Serializable
 import org.koin.compose.koinInject
 
@@ -91,16 +87,6 @@ internal expect fun VideoPermissionGate(content: @Composable () -> Unit)
  */
 @Composable
 internal expect fun VideoThumbnail(path: String, modifier: Modifier)
-
-private fun Long.toDurationText(): String {
-    val totalSeconds = this / 1000
-    val hours = totalSeconds / 3600
-    val minutes = (totalSeconds % 3600) / 60
-    val seconds = totalSeconds % 60
-    val mm = minutes.toString().padStart(2, '0')
-    val ss = seconds.toString().padStart(2, '0')
-    return if (hours > 0) "${hours.toString().padStart(2, '0')}:$mm:$ss" else "$mm:$ss"
-}
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -137,7 +123,12 @@ private fun VideoLoad(
 
     val hazeState = remember { HazeState() }
 
+    val downloadQueueSource = koinInject<DownloadQueueSource>()
+
     val items by videoLibrarySource.observeVideos().collectAsStateWithLifecycle(emptyList())
+    val queue by downloadQueueSource.observe().collectAsStateWithLifecycle(emptyList())
+
+    var otherExpanded by rememberSaveable { mutableStateOf(false) }
 
     val state = rememberBottomSheetScaffoldState()
     val scope = rememberCoroutineScope()
@@ -164,7 +155,7 @@ private fun VideoLoad(
             topBar = {
                 TopAppBar(
                     navigationIcon = { BackButton() },
-                    title = { Text("Downloaded Videos") },
+                    title = { Text("Downloads") },
                     actions = {
                         castButton()
                         IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) }
@@ -192,49 +183,41 @@ private fun VideoLoad(
                 downloadedItems.forEach { videoLibrarySource.delete(it) }
                 downloadedItems.clear()
             },
-            itemUi = { item ->
-                ImageFlushListItem(
-                    leadingContent = {
-                        Box {
-                            val runTimeString = remember(item.duration) { item.duration.toDurationText() }
-
-                            VideoThumbnail(
-                                path = item.path,
-                                modifier = Modifier
-                                    .align(Alignment.Center)
-                                    .size(ComposableUtils.IMAGE_HEIGHT, ComposableUtils.IMAGE_WIDTH)
-                            )
-
-                            Text(
-                                runTimeString,
-                                color = Color.White,
-                                modifier = Modifier
-                                    .align(Alignment.BottomEnd)
-                                    .background(Color(0x99000000))
-                                    .border(BorderStroke(1.dp, Color(0x00000000)), shape = RoundedCornerShape(4.dp))
-                            )
-                        }
-                    },
-                    overlineContent = {
-                        if (item.lastPlayedPositionMs > 0) Text(item.lastPlayedPositionMs.toDurationText())
-                    },
-                    headlineContent = { Text(item.videoName) },
-                    supportingContent = { Text(item.path) }
-                )
-            },
+            itemUi = { item -> VideoRowContent(item = item) },
         ) { p, itemList ->
-            if (itemList.isEmpty()) {
+            if (itemList.isEmpty() && queue.isEmpty()) {
                 EmptyState(p)
             } else {
+                val (downloaded, other) = remember(itemList) { itemList.partition { it.isDownload } }
                 LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
                     contentPadding = p,
                     modifier = Modifier
                         .fillMaxSize()
                         .hazeSource(hazeState)
                 ) {
+                    if (queue.isNotEmpty()) {
+                        item(key = "header_downloading") {
+                            SectionHeader("Downloading · ${queue.size}", Modifier.animateItem())
+                        }
+                        items(
+                            items = queue,
+                            key = { "queue_${it.key}" }
+                        ) {
+                            QueuedDownloadRow(
+                                item = it,
+                                onCancel = { downloadQueueSource.cancel(it.key) },
+                                onRetry = { downloadQueueSource.retry(it.key) },
+                                onRemove = { downloadQueueSource.remove(it.key) },
+                                modifier = Modifier.animateItem()
+                            )
+                        }
+                    }
+
+                    item(key = "header_downloaded") {
+                        SectionHeader("Downloaded · ${downloaded.size}", Modifier.animateItem())
+                    }
                     items(
-                        items = itemList,
+                        items = downloaded,
                         key = { it.path }
                     ) {
                         VideoContentView(
@@ -244,6 +227,43 @@ private fun VideoLoad(
                             deleteDialog = deleteDialog,
                             modifier = Modifier.animateItem()
                         )
+                    }
+
+                    if (other.isNotEmpty()) {
+                        item(key = "header_other") {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .animateItem()
+                                    .fillMaxWidth()
+                                    .clickable { otherExpanded = !otherExpanded }
+                                    .padding(end = 16.dp)
+                            ) {
+                                SectionHeader(
+                                    "Other videos on this phone · ${other.size}",
+                                    Modifier.weight(1f)
+                                )
+                                Icon(
+                                    if (otherExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                    contentDescription = if (otherExpanded) "Collapse" else "Expand",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                        if (otherExpanded) {
+                            items(
+                                items = other,
+                                key = { it.path }
+                            ) {
+                                VideoContentView(
+                                    item = it,
+                                    isCastActive = isCastActive,
+                                    onCastLoad = onCastLoad,
+                                    deleteDialog = deleteDialog,
+                                    modifier = Modifier.animateItem()
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -375,7 +395,8 @@ private fun VideoContentView(
             }
         },
         content = {
-            ElevatedCard(
+            VideoRow(
+                item = item,
                 onClick = {
                     if (isCastActive()) {
                         onCastLoad(item)
@@ -390,61 +411,8 @@ private fun VideoContentView(
                         )
                     }
                 },
-                modifier = Modifier.fillMaxSize()
-            ) {
-                ImageFlushListItem(
-                    leadingContent = {
-                        Box {
-                            val runTimeString = remember(item.duration) { item.duration.toDurationText() }
-
-                            VideoThumbnail(
-                                path = item.path,
-                                modifier = Modifier
-                                    .align(Alignment.Center)
-                                    .size(ComposableUtils.IMAGE_HEIGHT, ComposableUtils.IMAGE_WIDTH)
-                            )
-
-                            Text(
-                                runTimeString,
-                                color = Color.White,
-                                modifier = Modifier
-                                    .align(Alignment.BottomEnd)
-                                    .background(Color(0x99000000))
-                                    .border(BorderStroke(1.dp, Color(0x00000000)), shape = RoundedCornerShape(bottomEnd = 4.dp))
-                            )
-                        }
-                    },
-                    overlineContent = {
-                        if (item.lastPlayedPositionMs > 0) Text(item.lastPlayedPositionMs.toDurationText())
-                    },
-                    headlineContent = {
-                        Text(item.videoName)
-                    },
-                    supportingContent = {
-                        Text(item.path)
-                    },
-                    trailingContent = {
-                        var showDropDown by remember { mutableStateOf(false) }
-
-                        val dropDownDismiss = { showDropDown = false }
-
-                        DropdownMenu(
-                            expanded = showDropDown,
-                            onDismissRequest = dropDownDismiss
-                        ) {
-                            DropdownMenuItem(
-                                onClick = {
-                                    dropDownDismiss()
-                                    showDeleteDialog = true
-                                },
-                                text = { Text("Remove") }
-                            )
-                        }
-
-                        IconButton(onClick = { showDropDown = true }) { Icon(Icons.Default.MoreVert, null) }
-                    }
-                )
-            }
+                onRemove = { showDeleteDialog = true },
+            )
         },
         modifier = modifier
     )
