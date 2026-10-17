@@ -265,9 +265,9 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
                 tracks = viewModel.textTracks.map { SubtitleTrackItem(it.label, it.selected) },
                 onSelectTrack = { index -> viewModel.selectTextTrack(index?.let { viewModel.textTracks[it] }) },
                 style = subtitleStyle,
-                onStyleChange = { new ->
+                onStyleChange = { transform ->
                     sheetScope.launch {
-                        viewModel.subtitleSettings.update { it.copy(sizePercent = new.sizePercent, backgroundPercent = new.backgroundPercent) }
+                        viewModel.subtitleSettings.update(transform)
                     }
                 },
                 onOpenSettings = {

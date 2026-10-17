@@ -59,7 +59,7 @@ fun SubtitleQuickSheet(
     tracks: List<SubtitleTrackItem>,
     onSelectTrack: (Int?) -> Unit,
     style: SubtitleStyle,
-    onStyleChange: (SubtitleStyle) -> Unit,
+    onStyleChange: ((SubtitleStyle) -> SubtitleStyle) -> Unit,
     onOpenSettings: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -124,7 +124,7 @@ private fun SubtitleQuickSheetContent(
     tracks: List<SubtitleTrackItem>,
     onSelectTrack: (Int?) -> Unit,
     style: SubtitleStyle,
-    onStyleChange: (SubtitleStyle) -> Unit,
+    onStyleChange: ((SubtitleStyle) -> SubtitleStyle) -> Unit,
     onOpenSettings: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
@@ -174,7 +174,7 @@ private fun SubtitleQuickSheetContent(
                 modifier = Modifier.width(44.dp),
             )
             OutlinedIconButton(
-                onClick = { onStyleChange(style.copy(sizePercent = (style.sizePercent - 10).coerceAtLeast(50))) },
+                onClick = { onStyleChange { it.copy(sizePercent = (it.sizePercent - 10).coerceAtLeast(50)) } },
                 enabled = style.sizePercent > 50,
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                 modifier = Modifier.size(40.dp),
@@ -186,7 +186,7 @@ private fun SubtitleQuickSheetContent(
                 modifier = Modifier.width(48.dp),
             )
             OutlinedIconButton(
-                onClick = { onStyleChange(style.copy(sizePercent = (style.sizePercent + 10).coerceAtMost(200))) },
+                onClick = { onStyleChange { it.copy(sizePercent = (it.sizePercent + 10).coerceAtMost(200)) } },
                 enabled = style.sizePercent < 200,
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                 modifier = Modifier.size(40.dp),
@@ -195,7 +195,7 @@ private fun SubtitleQuickSheetContent(
             val boxOn = style.backgroundPercent > 0
             FilterChip(
                 selected = boxOn,
-                onClick = { onStyleChange(style.copy(backgroundPercent = if (boxOn) 0 else 60)) },
+                onClick = { onStyleChange { it.copy(backgroundPercent = if (it.backgroundPercent > 0) 0 else 60) } },
                 label = { Text("Box") },
             )
         }

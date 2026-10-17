@@ -41,4 +41,11 @@ class DownloadNamingTest {
         assertEquals("Ep1.0.English.vtt", sidecarName("Ep1", 0, "English", SubtitleFormat.Vtt))
         assertFalse(sidecarName("Ep1", 2, "Br/Pt?", SubtitleFormat.Srt).contains("/"))
     }
+
+    @Test
+    fun containersShareNoBase() {
+        assertEquals("x (2)", uniqueBaseName("x") { isBaseTaken(it) { f -> f == "x.mp4" } })
+        assertEquals("x (2)", uniqueBaseName("x") { isBaseTaken(it) { f -> f == "x.ts.part" } })
+        assertEquals("x", uniqueBaseName("x") { isBaseTaken(it) { false } })
+    }
 }

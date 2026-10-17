@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Notification
 import android.content.Context
+import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.media.MediaScannerConnection
 import android.os.Build
@@ -11,7 +12,9 @@ import android.os.Environment
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
+import androidx.work.BackoffPolicy
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingWorkPolicy
@@ -61,6 +64,7 @@ fun enqueueEpisodeDownload(context: Context, request: EpisodeDownloadRequest) {
             OneTimeWorkRequestBuilder<EpisodeDownloadWorker>()
                 .setInputData(workDataOf(KEY_REQUEST_FILE to requestFile.absolutePath))
                 .addTag("episodeDownload")
+                .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
                 .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
                 .setConstraints(
                     Constraints.Builder()
@@ -85,13 +89,23 @@ class EpisodeDownloadWorker(
 
     override suspend fun doWork(): Result {
         val request = request ?: return Result.failure().also { requestFile?.delete() }
-        runCatching { setForeground(getForegroundInfo()) }
-            .onFailure { Log.w(TAG, "Could not start foreground download", it) }
+        val foregroundFailure = runCatching { setForeground(getForegroundInfo()) }.exceptionOrNull()
+        if (foregroundFailure is CancellationException) throw foregroundFailure
+        if (foregroundFailure != null) {
+            // Without a foreground service a long HLS download is killed after ~10 minutes; retry instead of restarting silently.
+            Log.w(TAG, "Could not start foreground download", foregroundFailure)
+            return Result.retry()
+        }
 
         var lastPercent = -1
         return try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
                 throw IllegalStateException("All files access is needed to save downloads")
+            }
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R &&
+                ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+            ) {
+                throw IllegalStateException("Storage permission is needed to save downloads")
             }
             val file = EpisodeDownloader(client).download(request) { progress ->
                 val percent = (progress * 100).toInt()

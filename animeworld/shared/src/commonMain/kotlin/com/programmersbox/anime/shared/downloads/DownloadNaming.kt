@@ -50,6 +50,12 @@ fun uniqueBaseName(base: String, exists: (String) -> Boolean): String {
     return "$base ($n)"
 }
 
+private val videoExtensions = listOf("mp4", "ts", "mkv", "webm")
+
+/** True when [base] is used by any video container (or its `.part`), so containers never share a sidecar base. */
+fun isBaseTaken(base: String, exists: (String) -> Boolean): Boolean =
+    videoExtensions.any { exists("$base.$it") || exists("$base.$it.part") } || exists(sidecarIndexName(base))
+
 enum class SubtitleFormat(val ext: String, val mime: String) {
     Vtt("vtt", "text/vtt"),
     Srt("srt", "application/x-subrip"),

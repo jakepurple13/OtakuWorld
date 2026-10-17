@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -42,6 +43,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -179,7 +181,7 @@ class GenericAnime(
 
     override val deepLinkUri: String get() = "animeworld://"
 
-    private var showAllFilesAccessDialog by mutableStateOf(false)
+    private var storageAccessDialog by mutableStateOf<StorageAccessPrompt?>(null)
 
     override fun onResolveFailed(storage: KmpStorage, error: Throwable) {
         val name = listOfNotNull(storage.source, storage.quality).joinToString(" ").ifBlank { "stream" }
@@ -239,8 +241,13 @@ class GenericAnime(
 
     /** Lets the source resolve a lazily-described stream first, then hands it to the episode downloader. */
     suspend fun downloadResolved(model: KmpChapterModel, infoModel: KmpInfoModel, storage: KmpStorage) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
-            showAllFilesAccessDialog = true
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (!Environment.isExternalStorageManager()) {
+                storageAccessDialog = StorageAccessPrompt.AllFiles
+                return
+            }
+        } else if (ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            storageAccessDialog = StorageAccessPrompt.Storage
             return
         }
         val resolved = try {
@@ -493,26 +500,24 @@ class GenericAnime(
 
     @Composable
     override fun DialogSetups() {
-        if (showAllFilesAccessDialog) {
+        storageAccessDialog?.let { prompt ->
             AlertDialog(
-                onDismissRequest = { showAllFilesAccessDialog = false },
-                title = { Text("Allow file access") },
-                text = { Text("AnimeWorld needs All files access to save episodes and their subtitles to your download folder.") },
+                onDismissRequest = { storageAccessDialog = null },
+                title = { Text(prompt.title) },
+                text = { Text(prompt.message) },
                 confirmButton = {
                     TextButton(
                         onClick = {
-                            showAllFilesAccessDialog = false
+                            storageAccessDialog = null
                             context.startActivity(
-                                Intent(
-                                    Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
-                                    Uri.parse("package:" + context.packageName)
-                                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                Intent(prompt.action, Uri.parse("package:" + context.packageName))
+                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                             )
                         }
                     ) { Text("Open settings") }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showAllFilesAccessDialog = false }) { Text("Cancel") }
+                    TextButton(onClick = { storageAccessDialog = null }) { Text("Cancel") }
                 }
             )
         }
@@ -547,4 +552,17 @@ class GenericAnime(
             activity = MainActivity::class.java
         )
     }
+}
+
+private enum class StorageAccessPrompt(val title: String, val message: String, val action: String) {
+    AllFiles(
+        "Allow file access",
+        "AnimeWorld needs All files access to save episodes and their subtitles to your download folder.",
+        Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+    ),
+    Storage(
+        "Allow storage access",
+        "AnimeWorld needs storage permission to save episodes and their subtitles.",
+        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+    ),
 }

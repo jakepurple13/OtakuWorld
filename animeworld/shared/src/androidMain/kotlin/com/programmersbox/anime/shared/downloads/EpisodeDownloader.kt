@@ -87,12 +87,8 @@ class EpisodeDownloader(
         return "mpegurl" in mime || path.endsWith(".m3u8")
     }
 
-    private fun reserveBase(folder: File, title: String, ext: String): String =
-        uniqueBaseName(sanitizeFileName(title)) { base ->
-            File(folder, "$base.$ext").exists() ||
-                File(folder, "$base.$ext.part").exists() ||
-                File(folder, sidecarIndexName(base)).exists()
-        }
+    private fun reserveBase(folder: File, title: String): String =
+        uniqueBaseName(sanitizeFileName(title)) { base -> isBaseTaken(base) { File(folder, it).exists() } }
 
     // region progressive
 
@@ -104,7 +100,7 @@ class EpisodeDownloader(
         onProgress: (Float) -> Unit,
     ): File = response.use {
         val ext = progressiveExtension(request.url, response.header("Content-Type"))
-        val base = reserveBase(folder, request.title, ext)
+        val base = reserveBase(folder, request.title)
         val part = File(folder, "$base.$ext.part").also(written::add)
         val total = response.body.contentLength()
         part.outputStream().use { out ->
@@ -169,7 +165,7 @@ class EpisodeDownloader(
         val fmp4 = media.map != null || media.segments.first().uri
             .substringBefore('?').lowercase().let { it.endsWith(".m4s") || it.endsWith(".mp4") }
         val ext = if (fmp4) "mp4" else "ts"
-        val base = reserveBase(folder, request.title, ext)
+        val base = reserveBase(folder, request.title)
         val part = File(folder, "$base.$ext.part").also(written::add)
         val keys = mutableMapOf<String, ByteArray>()
 

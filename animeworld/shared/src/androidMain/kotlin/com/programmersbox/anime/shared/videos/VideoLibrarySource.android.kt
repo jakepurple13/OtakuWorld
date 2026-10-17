@@ -39,7 +39,7 @@ actual class VideoLibrarySource(private val context: Context) {
             projections,
             null,
             null,
-            "LOWER (${MediaStore.Video.Media.DATE_TAKEN}) DESC"
+            "COALESCE(${MediaStore.Video.Media.DATE_TAKEN}, ${MediaStore.Video.Media.DATE_ADDED} * 1000) DESC"
         )?.use { cursor ->
             while (cursor.moveToNext()) {
                 try {
@@ -83,14 +83,14 @@ actual class VideoLibrarySource(private val context: Context) {
         try {
             // Resolve before the MediaStore row (and its DATA path) is gone; clean sidecars only after it succeeds.
             val videoFile = OfflineSubtitles.resolveVideoFile(context, content.path)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                content.path.toUri()?.let {
-                    context.contentResolver.delete(it, null, null)
-                }
-            } else {
-                java.io.File(content.path).delete()
+            val uri = content.path.toUri()
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+                // content.path is a content:// URI, so delete the resolved file itself, then drop the MediaStore row.
+                videoFile?.delete()
             }
-            videoFile?.let(OfflineSubtitles::deleteFor)
+            uri?.let { context.contentResolver.delete(it, null, null) }
+            // Only drop sidecars once the video is really gone (a 0-row delete must keep its subtitles).
+            if (videoFile?.exists() == false) OfflineSubtitles.deleteFor(videoFile)
         } catch (e: Exception) {
             e.printStackTrace()
         }
