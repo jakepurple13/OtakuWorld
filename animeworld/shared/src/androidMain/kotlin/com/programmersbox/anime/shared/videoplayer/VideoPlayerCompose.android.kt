@@ -35,15 +35,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.BrightnessHigh
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ClosedCaption
 import androidx.compose.material.icons.filled.ClosedCaptionOff
 import androidx.compose.material.icons.filled.FastForward
 import androidx.compose.material.icons.filled.FastRewind
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -84,6 +81,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
@@ -106,7 +104,10 @@ import androidx.media3.ui.PlayerView
 import androidx.media3.ui.SubtitleView
 import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.anime.shared.VideoScreen
+import com.programmersbox.anime.shared.subtitles.SubtitleQuickSheet
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRepository
+import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRoute
+import com.programmersbox.anime.shared.subtitles.SubtitleTrackItem
 import com.programmersbox.anime.shared.subtitles.apply
 import com.programmersbox.anime.shared.subtitles.toCaptionSpec
 import com.programmersbox.datastore.otakuDataStore
@@ -152,6 +153,7 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
     val subtitleSettings = koinInject<SubtitleSettingsRepository>()
     val viewModel: VideoViewModel = viewModel { VideoViewModel(videoScreen, context, storageHolder, subtitleSettings) }
     val activity = LocalActivity.current
+    val navController = LocalNavActions.current
 
     val audioManager = remember { context.audioManager }
     val originalAudioLevel = rememberSaveable { audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) }
@@ -193,7 +195,7 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
 
     viewModel.exoPlayer?.let { ExoPlayerAttributes(exoPlayer = it, viewModel = viewModel) }
 
-    val overlayVisibility = viewModel.visibility == VideoPlayerVisibility.Visible || !viewModel.isPlaying || viewModel.subtitleMenuOpen
+    val overlayVisibility = viewModel.visibility == VideoPlayerVisibility.Visible || !viewModel.isPlaying || viewModel.subtitleSheetOpen
 
     Scaffold(
         topBar = { VideoTopBar(viewModel, overlayVisibility) },
@@ -247,6 +249,26 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
                 onDraggingProgressChange = { draggingProgress = it },
                 viewModel = viewModel
             )
+            if (viewModel.subtitleSheetOpen) {
+                val subtitleStyle by viewModel.subtitleSettings.style
+                    .collectAsStateWithLifecycle(viewModel.initialSubtitleStyle)
+                val sheetScope = rememberCoroutineScope()
+                SubtitleQuickSheet(
+                    tracks = viewModel.textTracks.map { SubtitleTrackItem(it.label, it.selected) },
+                    onSelectTrack = { index -> viewModel.selectTextTrack(index?.let { viewModel.textTracks[it] }) },
+                    style = subtitleStyle,
+                    onStyleChange = { new ->
+                        sheetScope.launch {
+                            viewModel.subtitleSettings.update { it.copy(sizePercent = new.sizePercent, backgroundPercent = new.backgroundPercent) }
+                        }
+                    },
+                    onOpenSettings = {
+                        viewModel.subtitleSheetOpen = false
+                        navController.navigate(SubtitleSettingsRoute)
+                    },
+                    onDismiss = { viewModel.subtitleSheetOpen = false },
+                )
+            }
         }
     }
 }
@@ -362,40 +384,11 @@ fun VideoTopBar(viewModel: VideoViewModel, visible: Boolean) {
             navigationIcon = { BackButton() },
             actions = {
                 if (viewModel.textTracks.isNotEmpty()) {
-                    Box {
-                        IconButton(onClick = { viewModel.subtitleMenuOpen = true }) {
-                            Icon(
-                                if (viewModel.textTracks.any { it.selected }) Icons.Default.ClosedCaption else Icons.Default.ClosedCaptionOff,
-                                contentDescription = "Subtitles"
-                            )
-                        }
-                        DropdownMenu(
-                            expanded = viewModel.subtitleMenuOpen,
-                            onDismissRequest = { viewModel.subtitleMenuOpen = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("Off") },
-                                onClick = {
-                                    viewModel.selectTextTrack(null)
-                                    viewModel.subtitleMenuOpen = false
-                                },
-                                trailingIcon = if (viewModel.textTracks.none { it.selected }) {
-                                    { Icon(Icons.Default.Check, null) }
-                                } else null
-                            )
-                            viewModel.textTracks.forEach { track ->
-                                DropdownMenuItem(
-                                    text = { Text(track.label) },
-                                    onClick = {
-                                        viewModel.selectTextTrack(track)
-                                        viewModel.subtitleMenuOpen = false
-                                    },
-                                    trailingIcon = if (track.selected) {
-                                        { Icon(Icons.Default.Check, null) }
-                                    } else null
-                                )
-                            }
-                        }
+                    IconButton(onClick = { viewModel.subtitleSheetOpen = true }) {
+                        Icon(
+                            if (viewModel.textTracks.any { it.selected }) Icons.Default.ClosedCaption else Icons.Default.ClosedCaptionOff,
+                            contentDescription = "Subtitles"
+                        )
                     }
                 }
                 Row(
@@ -656,6 +649,7 @@ fun GestureBox(
 ) {
     val context = LocalContext.current
     val activity = LocalActivity.current
+    val navController = LocalNavActions.current
 
     val audioManager = remember { context.audioManager }
 

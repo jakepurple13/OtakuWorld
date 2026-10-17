@@ -74,7 +74,7 @@ class VideoViewModel(
 
     /** Text tracks the player currently exposes; drives the CC menu. */
     var textTracks by mutableStateOf<List<TextTrackOption>>(emptyList())
-    var subtitleMenuOpen by mutableStateOf(false)
+    var subtitleSheetOpen by mutableStateOf(false)
 
     fun updateTextTracks(tracks: Tracks) {
         textTracks = tracks.groups
