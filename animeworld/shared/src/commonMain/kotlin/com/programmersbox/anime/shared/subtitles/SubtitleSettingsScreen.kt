@@ -19,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,6 +42,10 @@ data object SubtitleSettingsRoute : NavKey
 fun SubtitleSettingsScreen(viewModel: SubtitleSettingsViewModel = koinViewModel()) {
     val style by viewModel.style.collectAsStateWithLifecycle()
     var showLanguages by remember { mutableStateOf(false) }
+    // In-progress slider value, shown until the committed change comes back from the store.
+    var draft by remember { mutableStateOf<SubtitleStyle?>(null) }
+    LaunchedEffect(style) { draft = null }
+    val shown = draft ?: style
 
     SettingsScaffold(
         title = "Subtitles",
@@ -57,10 +62,11 @@ fun SubtitleSettingsScreen(viewModel: SubtitleSettingsViewModel = koinViewModel(
             verticalArrangement = Arrangement.spacedBy(20.dp),
             modifier = Modifier.padding(horizontal = 16.dp)
         ) {
-            SubtitlePreview(style)
+            SubtitlePreview(shown)
             SubtitleStyleControls(
-                style = style,
-                onChange = { new -> viewModel.update { new } },
+                style = shown,
+                onChange = viewModel::update,
+                onDraft = { transform -> draft = transform(draft ?: style).coerced() },
                 compact = false,
             )
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)

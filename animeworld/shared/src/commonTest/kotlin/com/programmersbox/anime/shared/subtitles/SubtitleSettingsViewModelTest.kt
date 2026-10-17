@@ -49,6 +49,19 @@ class SubtitleSettingsViewModelTest {
     }
 
     @Test
+    fun updateChangesOnlyTheTransformedField() {
+        val repo = FakeRepository()
+        val viewModel = SubtitleSettingsViewModel(repo)
+        // A change the caller has not seen yet, e.g. from another control or screen.
+        repo.stored.value = repo.stored.value.copy(edge = SubtitleEdge.Shadow)
+
+        viewModel.update { it.copy(sizePercent = 150) }
+
+        assertEquals(150, repo.stored.value.sizePercent)
+        assertEquals(SubtitleEdge.Shadow, repo.stored.value.edge)
+    }
+
+    @Test
     fun resetRestoresDefaults() {
         val repo = FakeRepository()
         repo.stored.value = SubtitleStyle(sizePercent = 150, edge = SubtitleEdge.Shadow, autoEnable = false)

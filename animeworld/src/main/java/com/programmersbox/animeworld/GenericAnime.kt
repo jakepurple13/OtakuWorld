@@ -484,7 +484,7 @@ class GenericAnime(
                 item {
                     val navController = LocalNavActions.current
                     PreferenceSetting(
-                        settingTitle = { Text("Subtitles") },
+                        settingTitle = { Text(stringResource(R.string.subtitles)) },
                         settingIcon = { Icon(Icons.Default.Subtitles, null, modifier = Modifier.fillMaxSize()) },
                         modifier = Modifier.clickable(
                             indication = ripple(),

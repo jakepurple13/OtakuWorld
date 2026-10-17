@@ -23,6 +23,10 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -35,14 +39,21 @@ import kotlin.math.roundToInt
 /**
  * Size, font, color, edge, background and raise controls.
  *
+ * Every change is emitted as a field-wise transform, so it applies to the latest stored style
+ * instead of overwriting it with the snapshot this composition saw.
+ *
+ * [onChange] persists a change. Sliders only call it when a drag ends; while dragging they call
+ * [onDraft], which callers can use to show the in-progress value (it defaults to [onChange]).
+ *
  * [compact] drops the section headers and dividers and tightens spacing, for tight containers.
  */
 @Composable
 fun SubtitleStyleControls(
     style: SubtitleStyle,
-    onChange: (SubtitleStyle) -> Unit,
+    onChange: (transform: (SubtitleStyle) -> SubtitleStyle) -> Unit,
     compact: Boolean,
     modifier: Modifier = Modifier,
+    onDraft: (transform: (SubtitleStyle) -> SubtitleStyle) -> Unit = onChange,
 ) {
     val sectionGap = if (compact) 12.dp else 20.dp
     Column(
@@ -56,23 +67,25 @@ fun SubtitleStyleControls(
                 value = style.sizePercent,
                 range = 50..200,
                 step = 10,
-                onValueChange = { onChange(style.copy(sizePercent = it)) },
+                onDraft = { v -> onDraft { it.copy(sizePercent = v) } },
+                onCommit = { v -> onChange { it.copy(sizePercent = v) } },
             )
-            FontChips(selected = style.font, onSelect = { onChange(style.copy(font = it)) })
-            ColorSwatches(selected = style.textColor, onSelect = { onChange(style.copy(textColor = it)) })
+            FontChips(selected = style.font, onSelect = { f -> onChange { it.copy(font = f) } })
+            ColorSwatches(selected = style.textColor, onSelect = { c -> onChange { it.copy(textColor = c) } })
         }
 
         if (!compact) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
         ControlSection(title = "Outline and background", compact = compact) {
-            EdgeSegments(selected = style.edge, onSelect = { onChange(style.copy(edge = it)) })
+            EdgeSegments(selected = style.edge, onSelect = { e -> onChange { it.copy(edge = e) } })
             StepSlider(
                 label = "Background",
                 valueLabel = if (style.backgroundPercent == 0) "Off" else "${style.backgroundPercent}%",
                 value = style.backgroundPercent,
                 range = 0..100,
                 step = 5,
-                onValueChange = { onChange(style.copy(backgroundPercent = it)) },
+                onDraft = { v -> onDraft { it.copy(backgroundPercent = v) } },
+                onCommit = { v -> onChange { it.copy(backgroundPercent = v) } },
             )
         }
 
@@ -85,7 +98,8 @@ fun SubtitleStyleControls(
                 value = style.raisePercent,
                 range = 0..30,
                 step = 1,
-                onValueChange = { onChange(style.copy(raisePercent = it)) },
+                onDraft = { v -> onDraft { it.copy(raisePercent = v) } },
+                onCommit = { v -> onChange { it.copy(raisePercent = v) } },
             )
         }
     }
@@ -120,8 +134,11 @@ private fun StepSlider(
     value: Int,
     range: IntRange,
     step: Int,
-    onValueChange: (Int) -> Unit,
+    onDraft: (Int) -> Unit,
+    onCommit: (Int) -> Unit,
 ) {
+    // Last value reached during the current drag; committed once when the drag ends.
+    var dragged by remember { mutableStateOf<Int?>(null) }
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(Modifier.fillMaxWidth()) {
             Text(label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
@@ -134,8 +151,16 @@ private fun StepSlider(
         Slider(
             value = value.toFloat(),
             onValueChange = { new ->
-                val snapped = (new / step).roundToInt() * step
-                if (snapped != value) onValueChange(snapped.coerceIn(range))
+                val snapped = ((new / step).roundToInt() * step)
+                    .coerceIn(range)
+                if (snapped != value) {
+                    dragged = snapped
+                    onDraft(snapped)
+                }
+            },
+            onValueChangeFinished = {
+                dragged?.let(onCommit)
+                dragged = null
             },
             valueRange = range.first.toFloat()..range.last.toFloat(),
             steps = (range.last - range.first) / step - 1,

@@ -20,6 +20,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -34,6 +35,9 @@ private val SceneSky = Color(0xFF2B3A4A)
 private val SceneGround = Color(0xFF3E5A3A)
 private val SceneSun = Color(0xFFE8C66A)
 private val SceneHill = Color(0xFF4C6B46)
+
+// Highlight of the raised edge; part of the caption itself, so not a theme role.
+private val RaisedHighlight = Color(0xFF9A9A9A)
 
 private val sampleCues = listOf("Hello, Dr. Arinsu.", "You're looking as beautiful as ever.")
 
@@ -100,8 +104,19 @@ private fun CaptionCue(text: String, spec: CaptionSpec) {
             .background(Color(spec.backgroundArgb.toInt()), RoundedCornerShape(3.dp))
             .padding(horizontal = 6.dp)
     ) {
-        if (spec.edge == SubtitleEdge.Outline) {
-            Text(text, style = base.copy(color = Color.Black, drawStyle = Stroke(width = 4f)))
+        when (spec.edge) {
+            // Stroke is centered on the glyph outline, so half of it shows outside the fill.
+            SubtitleEdge.Outline -> {
+                val strokeWidth = with(LocalDensity.current) { 3.dp.toPx() } * spec.textScale
+                Text(text, style = base.copy(color = Color.Black, drawStyle = Stroke(width = strokeWidth)))
+            }
+            // Media3 raised edge: a light copy up-left; the base text adds the dark edge down-right.
+            SubtitleEdge.Raised -> Text(
+                text,
+                style = base.copy(color = RaisedHighlight, shadow = null),
+                modifier = Modifier.offset(x = (-1).dp, y = (-1).dp)
+            )
+            else -> Unit
         }
         Text(text, style = base)
     }
@@ -116,7 +131,7 @@ private fun CaptionSpec.textStyle(): TextStyle = TextStyle(
         SubtitleFont.Serif -> FontFamily.Serif
         SubtitleFont.Mono -> FontFamily.Monospace
     },
-    fontWeight = if (font == SubtitleFont.Bold) FontWeight.Bold else FontWeight.Medium,
+    fontWeight = if (font == SubtitleFont.Bold) FontWeight.Bold else FontWeight.Normal,
     textAlign = TextAlign.Center,
     shadow = when (edge) {
         SubtitleEdge.None, SubtitleEdge.Outline -> null
