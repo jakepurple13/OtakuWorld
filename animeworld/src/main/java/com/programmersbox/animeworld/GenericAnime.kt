@@ -57,6 +57,7 @@ import com.google.android.gms.cast.framework.CastContext
 import com.obsez.android.lib.filechooser.ChooserDialog
 import com.programmersbox.anime.shared.GenericSharedAnime
 import com.programmersbox.anime.shared.StorageHolder
+import com.programmersbox.anime.shared.downloads.DownloadQueueSource
 import com.programmersbox.anime.shared.downloads.EpisodeDownloadRequest
 import com.programmersbox.anime.shared.downloads.enqueueEpisodeDownload
 import com.programmersbox.anime.shared.videoplayer.playerHeaders
@@ -119,7 +120,8 @@ val appModule = module {
     single { StorageHolder() }
     single<SubtitleSettingsRepository> { DataStoreSubtitleSettingsRepository(get<Context>()) }
     viewModelOf(::SubtitleSettingsViewModel)
-    singleOf(::VideoLibrarySource)
+    single { VideoLibrarySource(get(), downloadFolder = { get<Context>().folderLocation }) }
+    singleOf(::DownloadQueueSource)
     single { AnimeDataStoreHandling() }
     singleOf(::Backup)
     factory { Zipper(get(), getAll<BackupProcessor>(), get()) }

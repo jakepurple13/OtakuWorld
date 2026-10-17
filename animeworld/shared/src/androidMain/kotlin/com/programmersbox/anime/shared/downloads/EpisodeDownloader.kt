@@ -38,23 +38,46 @@ data class EpisodeDownloadRequest(
     val folder: String,
 )
 
+/**
+ * [fraction] is null when the length is unknown (progressive without Content-Length); [totalBytes] is
+ * null when the size is unknown (HLS or no Content-Length); [bytes] is bytes written so far.
+ */
+data class DownloadProgress(val fraction: Float?, val bytes: Long, val totalBytes: Long?)
+
 private const val TAG = "EpisodeDownloader"
 private const val SEGMENT_RETRIES = 3
 private const val BUFFER_SIZE = 64 * 1024
+private const val UNKNOWN_LENGTH_PROGRESS_STEP = 1_000_000L
+
+/** The files a run writes; each one is appended to [record] (when set) before it is created. */
+private class WrittenFiles(private val record: File?) : ArrayList<File>() {
+    override fun add(element: File): Boolean {
+        record?.appendText(element.absolutePath + "\n")
+        return super.add(element)
+    }
+}
 
 /**
  * Downloads an episode (HLS or progressive) into [EpisodeDownloadRequest.folder], followed by its
  * subtitle sidecars. Data is written to `<name>.part` and renamed only on success; on failure or
  * cancellation every file written by this call is deleted.
+ *
+ * When [download] gets a `partsRecord`, every path is listed there as it is written, so a run killed
+ * with the process can be cleaned up: the next run (or Remove) deletes the recorded `.part` files.
  */
 class EpisodeDownloader(
     private val client: OkHttpClient,
     private val retryDelayMillis: Long = 1_000,
 ) {
 
-    suspend fun download(request: EpisodeDownloadRequest, onProgress: (Float) -> Unit): File = withContext(Dispatchers.IO) {
+    suspend fun download(
+        request: EpisodeDownloadRequest,
+        partsRecord: File? = null,
+        onProgress: (DownloadProgress) -> Unit,
+    ): File = withContext(Dispatchers.IO) {
         val folder = File(request.folder).apply { mkdirs() }
-        val written = mutableListOf<File>()
+        partsRecord?.let(::discardPartsRecord)
+        val written = WrittenFiles(partsRecord)
         try {
             val video = if (isHlsHint(request)) {
                 downloadHls(request, fetchText(request.url, request.headers), folder, written, onProgress)
@@ -74,9 +97,11 @@ class EpisodeDownloader(
                 }
             }
             downloadSubtitles(request, video, written)
+            partsRecord?.delete()
             video
         } catch (t: Throwable) {
             written.forEach { it.delete() }
+            partsRecord?.delete()
             throw t
         }
     }
@@ -97,7 +122,7 @@ class EpisodeDownloader(
         response: Response,
         folder: File,
         written: MutableList<File>,
-        onProgress: (Float) -> Unit,
+        onProgress: (DownloadProgress) -> Unit,
     ): File = response.use {
         val ext = progressiveExtension(request.url, response.header("Content-Type"))
         val base = reserveBase(folder, request.title)
@@ -107,13 +132,19 @@ class EpisodeDownloader(
             response.body.byteStream().use { input ->
                 val buffer = ByteArray(BUFFER_SIZE)
                 var read = 0L
+                var reported = 0L
                 while (true) {
                     currentCoroutineContext().ensureActive()
                     val n = input.read(buffer)
                     if (n < 0) break
                     out.write(buffer, 0, n)
                     read += n
-                    if (total > 0) onProgress((read.toFloat() / total).coerceAtMost(1f))
+                    if (total > 0) {
+                        onProgress(DownloadProgress((read.toFloat() / total).coerceAtMost(1f), read, total))
+                    } else if (read - reported >= UNKNOWN_LENGTH_PROGRESS_STEP) {
+                        reported = read
+                        onProgress(DownloadProgress(null, read, null))
+                    }
                 }
             }
         }
@@ -139,7 +170,7 @@ class EpisodeDownloader(
         text: String,
         folder: File,
         written: MutableList<File>,
-        onProgress: (Float) -> Unit,
+        onProgress: (DownloadProgress) -> Unit,
     ): File {
         val media = when (val playlist = parseHlsPlaylist(text, request.url)) {
             is HlsPlaylist.Media -> playlist
@@ -179,7 +210,8 @@ class EpisodeDownloader(
                 currentCoroutineContext().ensureActive()
                 val decrypt = segment.key?.let { key -> keyBytes(key, request.headers, keys) to aesIv(segment) }
                 streamWithRetry(segment.uri, request.headers, decrypt, out, file)
-                onProgress((index + 1).toFloat() / media.segments.size)
+                out.flush()
+                onProgress(DownloadProgress((index + 1).toFloat() / media.segments.size, file.channel.position(), null))
             }
             out.flush()
         }
