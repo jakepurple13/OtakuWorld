@@ -10,6 +10,9 @@ plugins {
 kotlin {
     android {
         namespace = "com.programmersbox.anime.shared"
+        withHostTestBuilder {}.configure {
+            isReturnDefaultValues = true
+        }
         androidResources {
             enable = true
         }
@@ -54,11 +57,21 @@ kotlin {
             implementation(projects.uiViews)
             implementation(Deps.helpfulutils)
             implementation(androidLibs.coilVideo)
+            implementation(androidLibs.workRuntimeKtx)
+            implementation(androidLibs.okhttpLib)
         }
 
         commonTest.dependencies {
             implementation(commonLibs.kotlin.test)
             implementation(commonLibs.coroutinesTest)
+        }
+
+        getByName("androidHostTest") {
+            dependencies {
+                implementation(commonLibs.kotlin.test)
+                implementation(commonLibs.coroutinesTest)
+                implementation(androidLibs.okhttpMockWebServer)
+            }
         }
 
         jvmMain.dependencies {
