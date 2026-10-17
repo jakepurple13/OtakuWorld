@@ -125,8 +125,8 @@ private fun VideoLoad(
 
     val downloadQueueSource = koinInject<DownloadQueueSource>()
 
-    val items by videoLibrarySource.observeVideos().collectAsStateWithLifecycle(emptyList())
-    val queue by downloadQueueSource.observe().collectAsStateWithLifecycle(emptyList())
+    val items by remember(videoLibrarySource) { videoLibrarySource.observeVideos() }.collectAsStateWithLifecycle(emptyList())
+    val queue by remember(downloadQueueSource) { downloadQueueSource.observe() }.collectAsStateWithLifecycle(emptyList())
 
     var otherExpanded by rememberSaveable { mutableStateOf(false) }
 

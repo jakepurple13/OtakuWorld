@@ -157,20 +157,30 @@ internal fun VideoRowContent(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (item.subtitleLabels.isNotEmpty()) CcTag()
-                    val meta = remember(item.subtitleLabels, item.sizeBytes) {
-                        listOfNotNull(
-                            item.subtitleLabels.takeIf { it.isNotEmpty() }?.joinToString(", "),
-                            item.sizeBytes.takeIf { it > 0 }?.let(::formatBytes)
-                        ).joinToString(" · ")
+                    val labels = item.subtitleLabels
+                    if (labels.isNotEmpty()) {
+                        CcTag()
+                        val shown = remember(labels) {
+                            labels.take(2).joinToString(", ") + if (labels.size > 2) " +${labels.size - 2}" else ""
+                        }
+                        Text(
+                            shown,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false)
+                        )
                     }
-                    Text(
-                        meta,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                    // Unweighted so the size stays visible however long the labels are.
+                    if (item.sizeBytes > 0) {
+                        Text(
+                            (if (labels.isNotEmpty()) "· " else "") + formatBytes(item.sizeBytes),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1
+                        )
+                    }
                 }
             } else {
                 Text(
