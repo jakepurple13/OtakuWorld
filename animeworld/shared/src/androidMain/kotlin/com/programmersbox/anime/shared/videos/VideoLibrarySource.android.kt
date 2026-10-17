@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
+import com.programmersbox.anime.shared.downloads.OfflineSubtitles
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -80,6 +81,8 @@ actual class VideoLibrarySource(private val context: Context) {
 
     actual fun delete(content: SharedVideoContent) {
         try {
+            // Resolve before the MediaStore row (and its DATA path) is gone.
+            OfflineSubtitles.resolveVideoFile(context, content.path)?.let(OfflineSubtitles::deleteFor)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 content.path.toUri()?.let {
                     context.contentResolver.delete(it, null, null)

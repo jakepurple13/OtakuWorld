@@ -32,6 +32,7 @@ import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.upstream.BandwidthMeter
 import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.anime.shared.VideoScreen
+import com.programmersbox.anime.shared.downloads.OfflineSubtitles
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRepository
 import com.programmersbox.kmpmodels.KmpSubtitle
 import com.programmersbox.helpfulutils.battery
@@ -60,7 +61,11 @@ class VideoViewModel(
     val showName = videoScreen.showName
     val downloadOrStream = videoScreen.downloadOrStream
     val requestHeaders = playerHeaders(storageHolder.storageModel?.headers.orEmpty(), videoScreen.referer)
-    val subtitles = storageHolder.storageModel?.subtitles.orEmpty()
+    val subtitles = if (downloadOrStream) {
+        OfflineSubtitles.resolveVideoFile(context, showPath)?.let(OfflineSubtitles::find).orEmpty()
+    } else {
+        storageHolder.storageModel?.subtitles.orEmpty()
+    }
     val mimeType = storageHolder.storageModel?.let(::streamMime)
     /** Style as of player start; later changes arrive through [subtitleSettings]. */
     val initialSubtitleStyle = runBlocking { subtitleSettings.style.first() }
@@ -259,10 +264,11 @@ fun Context.getMediaSource(
     val subtitleHeaders = subtitles.filter { it.headers.isNotEmpty() }.associate { it.url to it.headers }
     val httpFactory = getHttpDataSourceFactory(preview, bandwidthMeter, headers)
     // Subtitle-specific headers (e.g. CloudStream SubtitleFile.headers) layered over the shared ones.
+    // DefaultDataSource routes file:// and content:// (local sidecars) as well as http(s).
     val dataSourceFactory = if (subtitleHeaders.isEmpty()) {
-        httpFactory
+        DefaultDataSource.Factory(this, httpFactory)
     } else {
-        ResolvingDataSource.Factory(httpFactory) { spec ->
+        ResolvingDataSource.Factory(DefaultDataSource.Factory(this, httpFactory)) { spec ->
             subtitleHeaders[spec.uri.toString()]?.let(spec::withAdditionalHeaders) ?: spec
         }
     }

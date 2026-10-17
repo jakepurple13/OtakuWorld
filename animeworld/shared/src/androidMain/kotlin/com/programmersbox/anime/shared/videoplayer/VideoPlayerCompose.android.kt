@@ -91,14 +91,11 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.C
-import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.Tracks
-import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.MediaSource
-import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
@@ -221,9 +218,15 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
                     source = remember {
                         if (viewModel.downloadOrStream) {
                             //download
-                            val dataSourceFactory = DefaultDataSource.Factory(context)
-                            ProgressiveMediaSource.Factory(dataSourceFactory)
-                                .createMediaSource(MediaItem.fromUri(viewModel.showPath.toUri()))
+                            context.getMediaSource(
+                                viewModel.showPath.toUri(),
+                                false,
+                                DefaultBandwidthMeter.Builder(context).build(),
+                                emptyMap(),
+                                viewModel.subtitles,
+                                null,
+                                viewModel.defaultSubtitle,
+                            )
                         } else {
                             //stream
                             if (runBlocking { context.ignoreSsl.first() }) {
