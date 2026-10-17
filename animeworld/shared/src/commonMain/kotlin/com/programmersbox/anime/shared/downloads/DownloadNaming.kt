@@ -2,17 +2,45 @@ package com.programmersbox.anime.shared.downloads
 
 import kotlinx.serialization.Serializable
 
-private val illegalFileChars = Regex("""[\\/:*?"<>|\u0000-\u001F]""")
+private val illegalFileChars = Regex("""[\\/:*?"<>|\u0000-\u001F\u007F]""")
 
-fun sanitizeFileName(name: String, maxLength: Int = 120): String {
+private fun Int.utf8Size() = when {
+    this < 0x80 -> 1
+    this < 0x800 -> 2
+    this < 0x10000 -> 3
+    else -> 4
+}
+
+/** Truncates to at most [maxBytes] UTF-8 bytes without splitting a code point. */
+private fun String.takeUtf8Bytes(maxBytes: Int): String {
+    var bytes = 0
+    var i = 0
+    while (i < length) {
+        val cp = codePointAtCompat(i)
+        val size = cp.utf8Size()
+        if (bytes + size > maxBytes) break
+        bytes += size
+        i += if (cp >= 0x10000) 2 else 1
+    }
+    return substring(0, i)
+}
+
+private fun String.codePointAtCompat(i: Int): Int {
+    val c = this[i]
+    if (c.isHighSurrogate() && i + 1 < length && this[i + 1].isLowSurrogate()) {
+        return 0x10000 + ((c.code - 0xD800) shl 10) + (this[i + 1].code - 0xDC00)
+    }
+    return c.code
+}
+
+fun sanitizeFileName(name: String, maxBytes: Int = 180): String {
     val cleaned = name
         .replace(illegalFileChars, " ")
         .replace(Regex("\\s+"), " ")
         .trim()
-        .take(maxLength)
-        .trim()
-        .trimEnd('.')
-    return cleaned.ifEmpty { "download" }
+        .takeUtf8Bytes(maxBytes)
+        .trimEnd { it == '.' || it.isWhitespace() }
+    return cleaned.trimStart().ifEmpty { "download" }
 }
 
 fun uniqueBaseName(base: String, exists: (String) -> Boolean): String {

@@ -162,7 +162,7 @@ WorkManager, DataStore, Koin.
   - `fun parseHlsPlaylist(text: String, baseUrl: String): HlsPlaylist` — resolves relative URIs against `baseUrl`; key applies to following segments until replaced; `METHOD=NONE` → null key.
   - `fun HlsPlaylist.Master.chooseVariant(qualityHint: String?): HlsVariant` — match a height in the hint (`"1080p"`, `"1920x1080"`, `"... 720p ..."`), else highest bandwidth.
   - `fun aesIv(segment: HlsSegment): ByteArray` — explicit IV, else 16-byte big-endian `sequence`.
-  - `fun sanitizeFileName(name: String, maxLength: Int = 120): String`; `fun uniqueBaseName(base: String, exists: (String) -> Boolean): String` (`base`, `base (2)`, …).
+  - `fun sanitizeFileName(name: String, maxBytes: Int = 180): String`; `fun uniqueBaseName(base: String, exists: (String) -> Boolean): String` (`base`, `base (2)`, …).
   - `enum class SubtitleFormat(val ext: String, val mime: String) { Vtt("vtt","text/vtt"), Srt("srt","application/x-subrip"), Ass("ass","text/x-ssa") }`; `fun subtitleFormat(url: String, firstBytes: String): SubtitleFormat` (extension first; else `WEBVTT` → Vtt, `[Script Info]` → Ass, else Srt).
   - `fun sidecarName(videoBase: String, index: Int, label: String, format: SubtitleFormat): String`.
   - `@Serializable data class SidecarEntry(val file: String, val lang: String, val label: String)` and json file name `"$videoBase.subtitles.json"`.

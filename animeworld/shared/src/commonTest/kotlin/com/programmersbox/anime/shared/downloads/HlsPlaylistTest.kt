@@ -4,7 +4,10 @@ import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlin.test.assertFalse
 
 class HlsPlaylistTest {
     private val base = "https://cdn.example.com/a/b/master.m3u8?token=1#frag"
@@ -121,5 +124,90 @@ class HlsPlaylistTest {
         assertContentEquals(ByteArray(15) + byteArrayOf(5), iv)
         val explicit = ByteArray(16) { 1 }
         assertContentEquals(explicit, aesIv(HlsSegment("u", HlsKey("AES-128", "k", explicit), 5)))
+    }
+
+    private fun mediaOf(vararg body: String) = (listOf("#EXTM3U") + body + "#EXT-X-ENDLIST").joinToString("\n")
+
+    @Test
+    fun rejectsByteRangeAndIFramesOnly() {
+        assertFailsWith<UnsupportedHlsException> {
+            parseHlsPlaylist(mediaOf("#EXTINF:4,", "#EXT-X-BYTERANGE:100@0", "a.ts"), base)
+        }
+        assertFailsWith<UnsupportedHlsException> {
+            parseHlsPlaylist(mediaOf("#EXT-X-MAP:URI=\"i.mp4\",BYTERANGE=\"10@0\"", "#EXTINF:4,", "a.ts"), base)
+        }
+        assertFailsWith<UnsupportedHlsException> {
+            parseHlsPlaylist(mediaOf("#EXT-X-I-FRAMES-ONLY", "#EXTINF:4,", "a.ts"), base)
+        }
+    }
+
+    @Test
+    fun secondDifferentMapFailsButDiscontinuityWorks() {
+        assertFailsWith<UnsupportedHlsException> {
+            parseHlsPlaylist(
+                mediaOf("#EXT-X-MAP:URI=\"i1.mp4\"", "#EXTINF:4,", "a.m4s", "#EXT-X-DISCONTINUITY",
+                    "#EXT-X-MAP:URI=\"i2.mp4\"", "#EXTINF:4,", "b.m4s"), base
+            )
+        }
+        val ok = assertIs<HlsPlaylist.Media>(
+            parseHlsPlaylist(
+                mediaOf("#EXT-X-MAP:URI=\"i1.mp4\"", "#EXTINF:4,", "a.m4s", "#EXT-X-DISCONTINUITY",
+                    "#EXT-X-MAP:URI=\"i1.mp4\"", "#EXTINF:4,", "b.m4s"), base
+            )
+        )
+        assertEquals(2, ok.segments.size)
+        val ts = assertIs<HlsPlaylist.Media>(
+            parseHlsPlaylist(mediaOf("#EXTINF:4,", "a.ts", "#EXT-X-DISCONTINUITY", "#EXTINF:4,", "b.ts"), base)
+        )
+        assertEquals(2, ts.segments.size)
+    }
+
+    @Test
+    fun malformedIvThrows() {
+        assertFailsWith<UnsupportedHlsException> {
+            parseHlsPlaylist(mediaOf("#EXT-X-KEY:METHOD=AES-128,URI=\"k\",IV=0xZZ", "#EXTINF:4,", "a.ts"), base)
+        }
+    }
+
+    @Test
+    fun nonIdentityKeyFormatIgnored() {
+        val media = assertIs<HlsPlaylist.Media>(
+            parseHlsPlaylist(
+                mediaOf("#EXT-X-KEY:METHOD=SAMPLE-AES,URI=\"skd://x\",KEYFORMAT=\"com.apple.streamingkeydelivery\"",
+                    "#EXTINF:4,", "a.ts"), base
+            )
+        )
+        assertNull(media.segments[0].key)
+    }
+
+    @Test
+    fun masterAudioGroups() {
+        val text = """
+            #EXTM3U
+            #EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="aud",NAME="en",URI="audio.m3u8"
+            #EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="muxed",NAME="en"
+            #EXT-X-STREAM-INF:BANDWIDTH=1000,AUDIO="aud"
+            v.m3u8
+        """.trimIndent()
+        val master = assertIs<HlsPlaylist.Master>(parseHlsPlaylist(text, base))
+        assertEquals(setOf("aud"), master.audioGroupsWithUri)
+        assertEquals("aud", master.variants[0].audioGroup)
+    }
+
+    @Test
+    fun requiresExtM3uAndSegments() {
+        assertFailsWith<UnsupportedHlsException> { parseHlsPlaylist("<html>", base) }
+        assertFailsWith<UnsupportedHlsException> { parseHlsPlaylist("#EXTM3U\n#EXT-X-ENDLIST", base) }
+    }
+
+    @Test
+    fun liveFlagAndCrlfBom() {
+        val live = assertIs<HlsPlaylist.Media>(parseHlsPlaylist("#EXTM3U\n#EXTINF:4,\na.ts\n", base))
+        assertTrue(live.live)
+        val vod = assertIs<HlsPlaylist.Media>(
+            parseHlsPlaylist("\uFEFF#EXTM3U\r\n#EXTINF:4,\r\na.ts\r\n#EXT-X-ENDLIST\r\n", base)
+        )
+        assertFalse(vod.live)
+        assertEquals("https://cdn.example.com/a/b/a.ts", vod.segments[0].uri)
     }
 }
