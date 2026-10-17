@@ -26,6 +26,7 @@ class DownloadsDisplayTest {
 
     @Test fun runningKnownTotal() = assertEquals("42% · 39 of 92 MB", QueuedDownload("k", "t", QueuedDownloadState.Running, 0.42f, 39_000_000, 92_000_000).statusLabel())
     @Test fun runningUnknownTotal() = assertEquals("42% · 39 MB", QueuedDownload("k", "t", QueuedDownloadState.Running, 0.42f, 39_000_000, null).statusLabel())
+    @Test fun runningUnknownLength() = assertEquals("39 MB", QueuedDownload("k", "t", QueuedDownloadState.Running, null, 39_000_000, null).statusLabel())
     @Test fun runningNoBytesYet() = assertEquals("0%", QueuedDownload("k", "t", QueuedDownloadState.Running, 0f, null, null).statusLabel())
     @Test fun waiting() = assertEquals("Waiting", QueuedDownload("k", "t", QueuedDownloadState.Waiting).statusLabel())
     @Test fun failed() = assertEquals("Failed: All files access is needed to save downloads", QueuedDownload("k", "t", QueuedDownloadState.Failed, error = "All files access is needed to save downloads").statusLabel())

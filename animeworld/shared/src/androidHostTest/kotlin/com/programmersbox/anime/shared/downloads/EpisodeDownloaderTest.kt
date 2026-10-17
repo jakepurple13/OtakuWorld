@@ -122,6 +122,56 @@ class EpisodeDownloaderTest {
     }
 
     @Test
+    fun staleRecordedPartIsDeletedAndBaseReused() = runTest {
+        route("/video.mp4", "video/mp4", byteArrayOf(1, 2, 3))
+        val stale = File(folder, "Ep 1.ts.part").apply { writeText("stale") }
+        val record = File(folder.parentFile, folder.name + ".parts").apply { writeText(stale.absolutePath + "\n") }
+        try {
+            val file = downloader.download(request("/video.mp4"), partsRecord = record) {}
+
+            assertEquals("Ep 1.mp4", file.name)
+            assertEquals(setOf("Ep 1.mp4"), fileNames())
+            assertTrue(!record.exists())
+        } finally {
+            record.delete()
+        }
+    }
+
+    @Test
+    fun recordListsWrittenPathsUntilRunEnds() = runTest {
+        route("/video.mp4", "video/mp4", ByteArray(100))
+        val record = File(folder.parentFile, folder.name + ".parts")
+        var recorded = emptyList<String>()
+        try {
+            downloader.download(request("/video.mp4"), partsRecord = record) { recorded = record.readLines() }
+
+            assertEquals(listOf(File(folder, "Ep 1.mp4.part").absolutePath), recorded)
+            assertTrue(!record.exists())
+        } finally {
+            record.delete()
+        }
+    }
+
+    @Test
+    fun progressiveUnknownLengthReportsBytes() = runTest {
+        val video = ByteArray(2_500_000) { it.toByte() }
+        routes["/unknown.mp4"] = {
+            MockResponse.Builder()
+                .chunkedBody(Buffer().write(video), 64 * 1024)
+                .setHeader("Content-Type", "video/mp4")
+                .build()
+        }
+
+        val progress = mutableListOf<DownloadProgress>()
+        val file = downloader.download(request("/unknown.mp4")) { progress += it }
+
+        assertContentEquals(video, file.readBytes())
+        assertTrue(progress.size >= 2)
+        assertTrue(progress.all { it.fraction == null && it.totalBytes == null })
+        assertTrue(progress.zipWithNext().all { (a, b) -> b.bytes - a.bytes >= 1_000_000 })
+    }
+
+    @Test
     fun progressiveExtensionFromContentType() = runTest {
         route("/stream", "video/x-matroska", byteArrayOf(1, 2, 3))
         assertEquals("Ep 1.mkv", downloader.download(request("/stream")) {}.name)

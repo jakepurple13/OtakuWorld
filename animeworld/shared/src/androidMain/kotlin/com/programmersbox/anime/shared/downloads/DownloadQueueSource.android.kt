@@ -28,6 +28,7 @@ internal fun WorkInfo.toQueuedDownload(): QueuedDownload? {
 }
 
 private fun Data.toQueuedDownload(key: String, title: String, state: QueuedDownloadState): QueuedDownload {
+    // A negative fraction marks a download of unknown length (indeterminate bar).
     val fraction = getFloat(PROGRESS_KEY, 0f)
     val bytes = getLong(BYTES_KEY, -1L)
     val total = getLong(TOTAL_KEY, -1L)
@@ -35,7 +36,11 @@ private fun Data.toQueuedDownload(key: String, title: String, state: QueuedDownl
         key = key,
         title = title,
         state = state,
-        progress = if (fraction.isNaN()) 0f else fraction.coerceIn(0f, 1f),
+        progress = when {
+            fraction.isNaN() -> 0f
+            fraction < 0f -> null
+            else -> fraction.coerceIn(0f, 1f)
+        },
         bytesDownloaded = bytes.takeIf { it > 0 },
         totalBytes = total.takeIf { it > 0 },
     )
@@ -60,6 +65,11 @@ actual class DownloadQueueSource(private val context: Context) {
 
     actual fun cancel(key: String) {
         WorkManager.getInstance(context).cancelUniqueWork(key)
+        // A Waiting row never runs, so its worker cannot delete the request; a running worker deletes it too.
+        scope.launch {
+            removeDownload(dir, key)
+            refresh.update { it + 1 }
+        }
     }
 
     actual fun retry(key: String) {
@@ -73,8 +83,7 @@ actual class DownloadQueueSource(private val context: Context) {
 
     actual fun remove(key: String) {
         scope.launch {
-            clearFailure(dir, key)
-            requestFileFor(dir, key).delete()
+            removeDownload(dir, key)
             refresh.update { it + 1 }
         }
     }

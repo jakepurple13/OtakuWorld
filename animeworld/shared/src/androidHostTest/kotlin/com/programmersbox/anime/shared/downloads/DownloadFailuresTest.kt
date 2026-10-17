@@ -108,4 +108,22 @@ class DownloadFailuresTest {
         assertFalse(o.deleteRequest)
         assertFalse(o.writeFailure)
     }
+
+    @Test
+    fun removeDownloadDeletesRecordedPart() {
+        val folder = File(dir, "videos").apply { mkdirs() }
+        val part = File(folder, "Ep 1.ts.part").apply { writeText("x") }
+        val done = File(folder, "Ep 0.ts").apply { writeText("x") }
+        val requestFile = fail("k")
+        val record = partsRecordFor(requestFile)
+        record.writeText(part.absolutePath + "\n" + done.absolutePath + "\n")
+
+        removeDownload(dir, "k")
+
+        assertFalse(part.exists())
+        assertTrue(done.exists())
+        assertFalse(record.exists())
+        assertFalse(requestFile.exists())
+        assertTrue(listFailures(dir).isEmpty())
+    }
 }

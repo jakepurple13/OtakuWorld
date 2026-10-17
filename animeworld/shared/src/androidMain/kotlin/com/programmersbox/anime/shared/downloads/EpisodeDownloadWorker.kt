@@ -134,13 +134,24 @@ class EpisodeDownloadWorker(
             ) {
                 throw IllegalStateException("Storage permission is needed to save downloads")
             }
-            val file = EpisodeDownloader(client).download(request) { progress ->
-                val percent = (progress.fraction * 100).toInt()
+            val partsRecord = requestFile?.let(::partsRecordFor)
+            val file = EpisodeDownloader(client).download(request, partsRecord) { progress ->
+                val fraction = progress.fraction
+                if (fraction == null) {
+                    // Unknown length: the downloader already throttles these, publish each one.
+                    setProgressAsync(workDataOf(PROGRESS_KEY to -1f, BYTES_KEY to progress.bytes, TOTAL_KEY to -1L))
+                    notify(
+                        notificationId,
+                        progressNotification(request.title, 0, "Downloading… ${formatBytes(progress.bytes)}"),
+                    )
+                    return@download
+                }
+                val percent = (fraction * 100).toInt()
                 if (percent != lastPercent) {
                     lastPercent = percent
                     setProgressAsync(
                         workDataOf(
-                            PROGRESS_KEY to progress.fraction,
+                            PROGRESS_KEY to fraction,
                             BYTES_KEY to progress.bytes,
                             TOTAL_KEY to (progress.totalBytes ?: -1L),
                         )
@@ -195,11 +206,11 @@ class EpisodeDownloadWorker(
         }
     }
 
-    private fun progressNotification(title: String, percent: Int): Notification =
+    private fun progressNotification(title: String, percent: Int, text: String = "Downloading… $percent%"): Notification =
         NotificationCompat.Builder(applicationContext, NotificationChannels.Download.id)
             .setSmallIcon(smallIcon)
             .setContentTitle(title)
-            .setContentText("Downloading… $percent%")
+            .setContentText(text)
             .setProgress(100, percent, percent <= 0)
             .setOngoing(true)
             .setOnlyAlertOnce(true)

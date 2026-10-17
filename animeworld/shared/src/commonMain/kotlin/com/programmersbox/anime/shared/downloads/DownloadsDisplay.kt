@@ -67,6 +67,8 @@ fun QueuedDownload.statusLabel(): String = when (state) {
     QueuedDownloadState.Waiting -> "Waiting"
     QueuedDownloadState.Failed -> error?.let { "Failed: $it" } ?: "Failed"
     QueuedDownloadState.Running -> {
+        val downloadedSoFar = bytesDownloaded
+        if (progress == null && downloadedSoFar != null) return formatBytes(downloadedSoFar)
         val percent = "${((progress ?: 0f) * 100).roundToInt()}%"
         val downloaded = bytesDownloaded
         val total = totalBytes

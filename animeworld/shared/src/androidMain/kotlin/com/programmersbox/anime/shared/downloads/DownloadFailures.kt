@@ -36,6 +36,30 @@ fun clearFailure(dir: File, key: String) {
 fun requestFileFor(dir: File, key: String): File =
     File(dir, UUID.nameUUIDFromBytes(key.encodeToByteArray()).toString() + ".json")
 
+/** The record beside [requestFile] listing every path its download run writes (one per line). */
+fun partsRecordFor(requestFile: File): File =
+    File(requestFile.parentFile, requestFile.nameWithoutExtension + ".parts")
+
+/**
+ * Deletes the `.part` files listed in [record], then the record. Finished files (a renamed video or
+ * sidecar) are kept: only a still-partial path is safe to drop.
+ */
+fun discardPartsRecord(record: File) {
+    if (!record.exists()) return
+    runCatching { record.readLines() }.getOrDefault(emptyList())
+        .filter { it.endsWith(".part") }
+        .forEach { File(it).delete() }
+    record.delete()
+}
+
+/** Forgets the download for [key]: failure marker, recorded `.part` files, and the request file. */
+fun removeDownload(dir: File, key: String) {
+    val requestFile = requestFileFor(dir, key)
+    clearFailure(dir, key)
+    discardPartsRecord(partsRecordFor(requestFile))
+    requestFile.delete()
+}
+
 /** What the worker does with the request file and failure marker at the end of a run. */
 internal data class RequestOutcome(val deleteRequest: Boolean, val writeFailure: Boolean)
 
