@@ -120,7 +120,7 @@ val appModule = module {
     single { StorageHolder() }
     single<SubtitleSettingsRepository> { DataStoreSubtitleSettingsRepository(get<Context>()) }
     viewModelOf(::SubtitleSettingsViewModel)
-    singleOf(::VideoLibrarySource)
+    single { VideoLibrarySource(get(), downloadFolder = { get<Context>().folderLocation }) }
     singleOf(::DownloadQueueSource)
     single { AnimeDataStoreHandling() }
     singleOf(::Backup)
