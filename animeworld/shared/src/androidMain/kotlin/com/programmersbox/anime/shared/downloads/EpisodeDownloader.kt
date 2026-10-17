@@ -38,6 +38,9 @@ data class EpisodeDownloadRequest(
     val folder: String,
 )
 
+/** [totalBytes] is null when the size is unknown (HLS); [bytes] is bytes written so far. */
+data class DownloadProgress(val fraction: Float, val bytes: Long, val totalBytes: Long?)
+
 private const val TAG = "EpisodeDownloader"
 private const val SEGMENT_RETRIES = 3
 private const val BUFFER_SIZE = 64 * 1024
@@ -52,7 +55,7 @@ class EpisodeDownloader(
     private val retryDelayMillis: Long = 1_000,
 ) {
 
-    suspend fun download(request: EpisodeDownloadRequest, onProgress: (Float) -> Unit): File = withContext(Dispatchers.IO) {
+    suspend fun download(request: EpisodeDownloadRequest, onProgress: (DownloadProgress) -> Unit): File = withContext(Dispatchers.IO) {
         val folder = File(request.folder).apply { mkdirs() }
         val written = mutableListOf<File>()
         try {
@@ -97,7 +100,7 @@ class EpisodeDownloader(
         response: Response,
         folder: File,
         written: MutableList<File>,
-        onProgress: (Float) -> Unit,
+        onProgress: (DownloadProgress) -> Unit,
     ): File = response.use {
         val ext = progressiveExtension(request.url, response.header("Content-Type"))
         val base = reserveBase(folder, request.title)
@@ -113,7 +116,7 @@ class EpisodeDownloader(
                     if (n < 0) break
                     out.write(buffer, 0, n)
                     read += n
-                    if (total > 0) onProgress((read.toFloat() / total).coerceAtMost(1f))
+                    if (total > 0) onProgress(DownloadProgress((read.toFloat() / total).coerceAtMost(1f), read, total))
                 }
             }
         }
@@ -139,7 +142,7 @@ class EpisodeDownloader(
         text: String,
         folder: File,
         written: MutableList<File>,
-        onProgress: (Float) -> Unit,
+        onProgress: (DownloadProgress) -> Unit,
     ): File {
         val media = when (val playlist = parseHlsPlaylist(text, request.url)) {
             is HlsPlaylist.Media -> playlist
@@ -179,7 +182,8 @@ class EpisodeDownloader(
                 currentCoroutineContext().ensureActive()
                 val decrypt = segment.key?.let { key -> keyBytes(key, request.headers, keys) to aesIv(segment) }
                 streamWithRetry(segment.uri, request.headers, decrypt, out, file)
-                onProgress((index + 1).toFloat() / media.segments.size)
+                out.flush()
+                onProgress(DownloadProgress((index + 1).toFloat() / media.segments.size, file.channel.position(), null))
             }
             out.flush()
         }

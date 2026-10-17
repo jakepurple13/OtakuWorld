@@ -105,7 +105,7 @@ class EpisodeDownloaderTest {
         route("/video.mp4", "video/mp4", video)
         route("/subs/en.vtt", vtt)
 
-        val progress = mutableListOf<Float>()
+        val progress = mutableListOf<DownloadProgress>()
         val file = downloader.download(
             request("/video.mp4", subtitles = listOf(KmpSubtitle(url("/subs/en.vtt"), "English"))),
         ) { progress += it }
@@ -116,7 +116,9 @@ class EpisodeDownloaderTest {
         assertEquals(vtt, File(folder, "Ep 1.0.English.vtt").readText())
         val entries = Json.decodeFromString<List<SidecarEntry>>(File(folder, "Ep 1.subtitles.json").readText())
         assertEquals(listOf(SidecarEntry("Ep 1.0.English.vtt", "English", "English")), entries)
-        assertEquals(1f, progress.last())
+        assertEquals(1f, progress.last().fraction)
+        assertEquals(video.size.toLong(), progress.last().bytes)
+        assertEquals(video.size.toLong(), progress.last().totalBytes)
     }
 
     @Test

@@ -36,6 +36,13 @@ import java.io.File
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
+const val DOWNLOAD_TAG = "episodeDownload"
+const val TITLE_TAG_PREFIX = "episodeTitle:"
+const val KEY_TAG_PREFIX = "episodeKey:"
+const val PROGRESS_KEY = "progress"
+const val BYTES_KEY = "bytes"
+const val TOTAL_KEY = "total"
+
 private const val KEY_REQUEST_FILE = "episodeDownloadRequestFile"
 private const val TAG = "EpisodeDownloadWorker"
 private const val MAX_FOREGROUND_ATTEMPTS = 5
@@ -55,16 +62,24 @@ internal fun writeRequestFile(dir: File, uniqueName: String, request: EpisodeDow
 internal fun readRequestFile(file: File): EpisodeDownloadRequest? =
     runCatching { Json.decodeFromString<EpisodeDownloadRequest>(file.readText()) }.getOrNull()
 
-fun enqueueEpisodeDownload(context: Context, request: EpisodeDownloadRequest) {
+fun episodeDownloadsDir(context: Context): File = File(context.noBackupFilesDir, "episode-downloads")
+
+fun enqueueEpisodeDownload(
+    context: Context,
+    request: EpisodeDownloadRequest,
+    policy: ExistingWorkPolicy = ExistingWorkPolicy.KEEP,
+) {
     val uniqueName = request.folder + request.title
-    val requestFile = writeRequestFile(File(context.noBackupFilesDir, "episode-downloads"), uniqueName, request)
+    val requestFile = writeRequestFile(episodeDownloadsDir(context), uniqueName, request)
     WorkManager.getInstance(context)
         .enqueueUniqueWork(
             uniqueName,
-            ExistingWorkPolicy.KEEP,
+            policy,
             OneTimeWorkRequestBuilder<EpisodeDownloadWorker>()
                 .setInputData(workDataOf(KEY_REQUEST_FILE to requestFile.absolutePath))
-                .addTag("episodeDownload")
+                .addTag(DOWNLOAD_TAG)
+                .addTag(TITLE_TAG_PREFIX + request.title)
+                .addTag(KEY_TAG_PREFIX + uniqueName)
                 .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
                 .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
                 .setConstraints(
@@ -83,6 +98,7 @@ class EpisodeDownloadWorker(
 
     private val requestFile by lazy { inputData.getString(KEY_REQUEST_FILE)?.let(::File) }
     private val request by lazy { requestFile?.let(::readRequestFile) }
+    private val key get() = request?.let { it.folder + it.title }.orEmpty()
     private val notificationId get() = (request?.let { it.folder + it.title } ?: id.toString()).hashCode()
     private val smallIcon by lazy {
         getKoin().getOrNull<NotificationLogo>()?.notificationId ?: applicationContext.applicationInfo.icon
@@ -96,7 +112,8 @@ class EpisodeDownloadWorker(
             // Without a foreground service a long HLS download is killed after ~10 minutes; retry instead of restarting silently.
             Log.w(TAG, "Could not start foreground download", foregroundFailure)
             if (runAttemptCount < MAX_FOREGROUND_ATTEMPTS) return Result.retry()
-            requestFile?.delete()
+            val reason = "Could not start in the background"
+            requestFile?.let { writeFailure(it, DownloadFailure(key, request.title, reason, System.currentTimeMillis())) }
             notify(
                 notificationId + 1,
                 resultNotification(request.title, "Download failed: could not start in the background").build(),
@@ -105,7 +122,10 @@ class EpisodeDownloadWorker(
         }
 
         var lastPercent = -1
+        var succeeded = false
+        var failureMessage: String? = null
         return try {
+            clearFailure(episodeDownloadsDir(applicationContext), key)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
                 throw IllegalStateException("All files access is needed to save downloads")
             }
@@ -115,10 +135,16 @@ class EpisodeDownloadWorker(
                 throw IllegalStateException("Storage permission is needed to save downloads")
             }
             val file = EpisodeDownloader(client).download(request) { progress ->
-                val percent = (progress * 100).toInt()
+                val percent = (progress.fraction * 100).toInt()
                 if (percent != lastPercent) {
                     lastPercent = percent
-                    setProgressAsync(workDataOf("progress" to progress))
+                    setProgressAsync(
+                        workDataOf(
+                            PROGRESS_KEY to progress.fraction,
+                            BYTES_KEY to progress.bytes,
+                            TOTAL_KEY to (progress.totalBytes ?: -1L),
+                        )
+                    )
                     notify(notificationId, progressNotification(request.title, percent))
                 }
             }
@@ -127,12 +153,14 @@ class EpisodeDownloadWorker(
                 notificationId + 1,
                 resultNotification(request.title, "Download complete").setTimeoutAfter(5000).build(),
             )
+            succeeded = true
             Result.success(workDataOf("file" to file.absolutePath))
         } catch (e: CancellationException) {
             throw e
         } catch (t: Throwable) {
             Log.e(TAG, "Episode download failed: ${request.title}", t)
             val message = t.message ?: t::class.java.simpleName
+            failureMessage = message
             notify(
                 notificationId + 1,
                 resultNotification(request.title, "Download failed: $message")
@@ -142,8 +170,19 @@ class EpisodeDownloadWorker(
             Result.failure(workDataOf("error" to message))
         } finally {
             NotificationManagerCompat.from(applicationContext).cancel(notificationId)
-            // Keep the request when the system stopped us (constraints, quota): WorkManager reruns the work.
-            if (!isStopped || stopReason == WorkInfo.STOP_REASON_CANCELLED_BY_APP) requestFile?.delete()
+            // Keep the request when the system stopped us (constraints, quota) or the download failed (Retry).
+            val outcome = requestOutcome(
+                succeeded = succeeded,
+                failed = failureMessage != null,
+                isStopped = isStopped,
+                cancelledByApp = isStopped && stopReason == WorkInfo.STOP_REASON_CANCELLED_BY_APP,
+            )
+            if (outcome.writeFailure) {
+                requestFile?.let {
+                    writeFailure(it, DownloadFailure(key, request.title, failureMessage.orEmpty(), System.currentTimeMillis()))
+                }
+            }
+            if (outcome.deleteRequest) requestFile?.delete()
         }
     }
 
