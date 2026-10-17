@@ -8,6 +8,7 @@ import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRepository
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsViewModel
 import com.programmersbox.anime.shared.VideoScreen
 import com.programmersbox.anime.shared.downloads.AnimeDownloadManager
+import com.programmersbox.anime.shared.downloads.DownloadQueueSource
 import com.programmersbox.anime.shared.videoplayer.VideoPlayerUi
 import com.programmersbox.anime.shared.videos.VideoLibrarySource
 import com.programmersbox.anime.shared.videos.VideoViewerRoute
@@ -50,6 +51,7 @@ fun main(args: Array<String>) {
             single<SubtitleSettingsRepository> { InMemorySubtitleSettingsRepository() }
             viewModelOf(::SubtitleSettingsViewModel)
             singleOf(::VideoLibrarySource)
+            singleOf(::DownloadQueueSource)
             single {
                 ExtensionWatcher(
                     extensionsDir = get<MangaDesktopSettings>()
