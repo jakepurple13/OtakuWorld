@@ -72,7 +72,7 @@ class VideoViewModel(
         initialSubtitleStyle.skipSignsAndSongs,
     )
 
-    /** Text tracks the player currently exposes; drives the CC menu. */
+    /** Text tracks the player currently exposes; drives the CC sheet. */
     var textTracks by mutableStateOf<List<TextTrackOption>>(emptyList())
     var subtitleSheetOpen by mutableStateOf(false)
 

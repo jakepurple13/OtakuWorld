@@ -9,6 +9,7 @@ import android.provider.Settings
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -81,13 +82,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
@@ -197,78 +198,81 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
 
     val overlayVisibility = viewModel.visibility == VideoPlayerVisibility.Visible || !viewModel.isPlaying || viewModel.subtitleSheetOpen
 
-    Scaffold(
-        topBar = { VideoTopBar(viewModel, overlayVisibility) },
-        bottomBar = {
-            VideoBottomBar(
-                visible = overlayVisibility,
-                currentTime = viewModel.currentTime,
-                totalTime = viewModel.totalTime,
-                totalDuration = viewModel.videoInfo.duration,
-                currentPosition = viewModel.videoInfo.currentPosition,
-                isPlaying = viewModel.isPlaying,
-                playPauseToggle = viewModel::playPause,
-                seekTo = { viewModel.exoPlayer?.seekTo(it) },
-                rewind = viewModel::rewind,
-                fastForward = viewModel::fastForward
-            )
-        }
-    ) { _ ->
-        Box {
-            VideoPlayer(
-                source = remember {
-                    if (viewModel.downloadOrStream) {
-                        //download
-                        val dataSourceFactory = DefaultDataSource.Factory(context)
-                        ProgressiveMediaSource.Factory(dataSourceFactory)
-                            .createMediaSource(MediaItem.fromUri(viewModel.showPath.toUri()))
-                    } else {
-                        //stream
-                        if (runBlocking { context.ignoreSsl.first() }) {
-                            val sslContext: SSLContext = SSLContext.getInstance("TLS")
-                            sslContext.init(null, arrayOf(SSLTrustManager()), SecureRandom())
-                            sslContext.createSSLEngine()
-                            HttpsURLConnection.setDefaultHostnameVerifier { _: String, _: SSLSession -> true }
-                            HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.socketFactory)
-                        }
-
-                        context.getMediaSource(viewModel.showPath.toUri(), false, DefaultBandwidthMeter.Builder(context).build(), viewModel.requestHeaders, viewModel.subtitles, viewModel.mimeType, viewModel.defaultSubtitle)
-                    }
-                },
-                viewModel = viewModel
-            )
-            var draggingProgress: DraggingProgress? by remember { mutableStateOf(null) }
-            MediaControlGestures(
-                modifier = Modifier.fillMaxSize(),
-                visible = true,
-                enabled = true,
-                gesturesEnabled = true,
-                quickSeekDirection = viewModel.quickSeekAction.direction,
-                onQuickSeekDirectionChange = { viewModel.quickSeekAction = it },
-                draggingProgress = draggingProgress,
-                onDraggingProgressChange = { draggingProgress = it },
-                viewModel = viewModel
-            )
-            if (viewModel.subtitleSheetOpen) {
-                val subtitleStyle by viewModel.subtitleSettings.style
-                    .collectAsStateWithLifecycle(viewModel.initialSubtitleStyle)
-                val sheetScope = rememberCoroutineScope()
-                SubtitleQuickSheet(
-                    tracks = viewModel.textTracks.map { SubtitleTrackItem(it.label, it.selected) },
-                    onSelectTrack = { index -> viewModel.selectTextTrack(index?.let { viewModel.textTracks[it] }) },
-                    style = subtitleStyle,
-                    onStyleChange = { new ->
-                        sheetScope.launch {
-                            viewModel.subtitleSettings.update { it.copy(sizePercent = new.sizePercent, backgroundPercent = new.backgroundPercent) }
-                        }
-                    },
-                    onOpenSettings = {
-                        viewModel.subtitleSheetOpen = false
-                        navController.navigate(SubtitleSettingsRoute)
-                    },
-                    onDismiss = { viewModel.subtitleSheetOpen = false },
+    Box {
+        Scaffold(
+            topBar = { VideoTopBar(viewModel, overlayVisibility) },
+            bottomBar = {
+                VideoBottomBar(
+                    visible = overlayVisibility,
+                    currentTime = viewModel.currentTime,
+                    totalTime = viewModel.totalTime,
+                    totalDuration = viewModel.videoInfo.duration,
+                    currentPosition = viewModel.videoInfo.currentPosition,
+                    isPlaying = viewModel.isPlaying,
+                    playPauseToggle = viewModel::playPause,
+                    seekTo = { viewModel.exoPlayer?.seekTo(it) },
+                    rewind = viewModel::rewind,
+                    fastForward = viewModel::fastForward
                 )
             }
+        ) { _ ->
+            Box {
+                VideoPlayer(
+                    source = remember {
+                        if (viewModel.downloadOrStream) {
+                            //download
+                            val dataSourceFactory = DefaultDataSource.Factory(context)
+                            ProgressiveMediaSource.Factory(dataSourceFactory)
+                                .createMediaSource(MediaItem.fromUri(viewModel.showPath.toUri()))
+                        } else {
+                            //stream
+                            if (runBlocking { context.ignoreSsl.first() }) {
+                                val sslContext: SSLContext = SSLContext.getInstance("TLS")
+                                sslContext.init(null, arrayOf(SSLTrustManager()), SecureRandom())
+                                sslContext.createSSLEngine()
+                                HttpsURLConnection.setDefaultHostnameVerifier { _: String, _: SSLSession -> true }
+                                HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.socketFactory)
+                            }
+
+                            context.getMediaSource(viewModel.showPath.toUri(), false, DefaultBandwidthMeter.Builder(context).build(), viewModel.requestHeaders, viewModel.subtitles, viewModel.mimeType, viewModel.defaultSubtitle)
+                        }
+                    },
+                    viewModel = viewModel
+                )
+                var draggingProgress: DraggingProgress? by remember { mutableStateOf(null) }
+                MediaControlGestures(
+                    modifier = Modifier.fillMaxSize(),
+                    visible = true,
+                    enabled = true,
+                    gesturesEnabled = true,
+                    quickSeekDirection = viewModel.quickSeekAction.direction,
+                    onQuickSeekDirectionChange = { viewModel.quickSeekAction = it },
+                    draggingProgress = draggingProgress,
+                    onDraggingProgressChange = { draggingProgress = it },
+                    viewModel = viewModel
+                )
+            }
+        }
+        if (viewModel.subtitleSheetOpen) {
+            BackHandler { viewModel.subtitleSheetOpen = false }
+            val subtitleStyle by viewModel.subtitleSettings.style
+                .collectAsStateWithLifecycle(viewModel.initialSubtitleStyle)
+            val sheetScope = rememberCoroutineScope()
+            SubtitleQuickSheet(
+                tracks = viewModel.textTracks.map { SubtitleTrackItem(it.label, it.selected) },
+                onSelectTrack = { index -> viewModel.selectTextTrack(index?.let { viewModel.textTracks[it] }) },
+                style = subtitleStyle,
+                onStyleChange = { new ->
+                    sheetScope.launch {
+                        viewModel.subtitleSettings.update { it.copy(sizePercent = new.sizePercent, backgroundPercent = new.backgroundPercent) }
+                    }
+                },
+                onOpenSettings = {
+                    viewModel.subtitleSheetOpen = false
+                    navController.navigate(SubtitleSettingsRoute)
+                },
+                onDismiss = { viewModel.subtitleSheetOpen = false },
+            )
         }
     }
 }
@@ -649,7 +653,6 @@ fun GestureBox(
 ) {
     val context = LocalContext.current
     val activity = LocalActivity.current
-    val navController = LocalNavActions.current
 
     val audioManager = remember { context.audioManager }
 
