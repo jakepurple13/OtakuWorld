@@ -38,6 +38,7 @@ import java.util.concurrent.TimeUnit
 
 private const val KEY_REQUEST_FILE = "episodeDownloadRequestFile"
 private const val TAG = "EpisodeDownloadWorker"
+private const val MAX_FOREGROUND_ATTEMPTS = 5
 
 /**
  * Writes [request] as JSON into [dir] (WorkManager `Data` is capped at 10 KB, too small for sources
@@ -94,7 +95,13 @@ class EpisodeDownloadWorker(
         if (foregroundFailure != null) {
             // Without a foreground service a long HLS download is killed after ~10 minutes; retry instead of restarting silently.
             Log.w(TAG, "Could not start foreground download", foregroundFailure)
-            return Result.retry()
+            if (runAttemptCount < MAX_FOREGROUND_ATTEMPTS) return Result.retry()
+            requestFile?.delete()
+            notify(
+                notificationId + 1,
+                resultNotification(request.title, "Download failed: could not start in the background").build(),
+            )
+            return Result.failure()
         }
 
         var lastPercent = -1
