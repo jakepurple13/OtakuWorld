@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.CastConnected
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.PersonalVideo
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Subtitles
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -57,6 +58,9 @@ import com.programmersbox.anime.shared.GenericSharedAnime
 import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.anime.shared.subtitles.DataStoreSubtitleSettingsRepository
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRepository
+import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRoute
+import com.programmersbox.anime.shared.subtitles.SubtitleSettingsScreen
+import com.programmersbox.anime.shared.subtitles.SubtitleSettingsViewModel
 import com.programmersbox.anime.shared.VideoScreen
 import com.programmersbox.anime.shared.videochoice.VideoChoiceScreen
 import com.programmersbox.anime.shared.videochoice.VideoSourceModel
@@ -103,6 +107,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import org.koin.dsl.navigation3.navigation
 import java.io.File
@@ -112,6 +117,7 @@ val appModule = module {
     single { NotificationLogo(R.mipmap.ic_launcher_foreground) }
     single { StorageHolder() }
     single<SubtitleSettingsRepository> { DataStoreSubtitleSettingsRepository(get<Context>()) }
+    viewModelOf(::SubtitleSettingsViewModel)
     singleOf(::VideoLibrarySource)
     single { AnimeDataStoreHandling() }
     singleOf(::Backup)
@@ -476,6 +482,18 @@ class GenericAnime(
 
             CategoryGroup {
                 item {
+                    val navController = LocalNavActions.current
+                    PreferenceSetting(
+                        settingTitle = { Text("Subtitles") },
+                        settingIcon = { Icon(Icons.Default.Subtitles, null, modifier = Modifier.fillMaxSize()) },
+                        modifier = Modifier.clickable(
+                            indication = ripple(),
+                            interactionSource = null
+                        ) { navController.navigate(SubtitleSettingsRoute) }
+                    )
+                }
+
+                item {
                     SwitchSetting(
                         settingTitle = { Text(stringResource(R.string.use_new_player)) },
                         summaryValue = { Text(stringResource(R.string.use_new_player_description)) },
@@ -505,6 +523,8 @@ class GenericAnime(
 
     context(navGraph: EntryProviderScope<NavKey>)
     override fun settingsNav3Setup() {
+        navGraph.entry<SubtitleSettingsRoute> { SubtitleSettingsScreen() }
+
         navGraph.entry<VideoViewerRoute> {
             ViewVideoScreen(
                 isCastActive = { MainActivity.cast.isCastActive() },
