@@ -4,6 +4,10 @@ import android.Manifest
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.os.Environment
+import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
@@ -175,6 +179,8 @@ class GenericAnime(
 
     override val deepLinkUri: String get() = "animeworld://"
 
+    private var showAllFilesAccessDialog by mutableStateOf(false)
+
     override fun onResolveFailed(storage: KmpStorage, error: Throwable) {
         val name = listOfNotNull(storage.source, storage.quality).joinToString(" ").ifBlank { "stream" }
         runOnUIThread {
@@ -233,6 +239,10 @@ class GenericAnime(
 
     /** Lets the source resolve a lazily-described stream first, then hands it to the episode downloader. */
     suspend fun downloadResolved(model: KmpChapterModel, infoModel: KmpInfoModel, storage: KmpStorage) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
+            showAllFilesAccessDialog = true
+            return
+        }
         val resolved = try {
             withContext(Dispatchers.IO) { model.source.resolve(storage) }.also { r ->
                 if (r !== storage) {
@@ -483,6 +493,29 @@ class GenericAnime(
 
     @Composable
     override fun DialogSetups() {
+        if (showAllFilesAccessDialog) {
+            AlertDialog(
+                onDismissRequest = { showAllFilesAccessDialog = false },
+                title = { Text("Allow file access") },
+                text = { Text("AnimeWorld needs All files access to save episodes and their subtitles to your download folder.") },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            showAllFilesAccessDialog = false
+                            context.startActivity(
+                                Intent(
+                                    Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+                                    Uri.parse("package:" + context.packageName)
+                                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            )
+                        }
+                    ) { Text("Open settings") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showAllFilesAccessDialog = false }) { Text("Cancel") }
+                }
+            )
+        }
         VideoSourceModel.showVideoSources?.let {
             val navController = LocalNavActions.current
             VideoChoiceScreen(

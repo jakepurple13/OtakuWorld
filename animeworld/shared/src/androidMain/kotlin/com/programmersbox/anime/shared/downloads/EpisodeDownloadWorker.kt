@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.pm.ServiceInfo
 import android.media.MediaScannerConnection
 import android.os.Build
+import android.os.Environment
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -89,6 +90,9 @@ class EpisodeDownloadWorker(
 
         var lastPercent = -1
         return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
+                throw IllegalStateException("All files access is needed to save downloads")
+            }
             val file = EpisodeDownloader(client).download(request) { progress ->
                 val percent = (progress * 100).toInt()
                 if (percent != lastPercent) {
