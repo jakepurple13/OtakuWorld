@@ -126,6 +126,8 @@ val appModule = module {
 
     navigation<VideoScreen> { VideoPlayerUi(it) }
 
+    navigation<SubtitleSettingsRoute> { SubtitleSettingsScreen() }
+
     navigation<Screen.SourcePreferences> { SourcePreferencesRoute(it.serviceName) }
 
     includes(aniyomiModule)
@@ -494,8 +496,6 @@ class GenericAnime(
 
     context(navGraph: EntryProviderScope<NavKey>)
     override fun settingsNav3Setup() {
-        navGraph.entry<SubtitleSettingsRoute> { SubtitleSettingsScreen() }
-
         navGraph.entry<VideoViewerRoute> {
             ViewVideoScreen(
                 isCastActive = { MainActivity.cast.isCastActive() },
