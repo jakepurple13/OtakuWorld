@@ -4,7 +4,6 @@ import android.Manifest
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
@@ -49,7 +48,6 @@ import androidx.mediarouter.app.MediaRouteDialogFactory
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.google.android.gms.cast.framework.CastContext
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.obsez.android.lib.filechooser.ChooserDialog
 import com.programmersbox.anime.shared.GenericSharedAnime
 import com.programmersbox.anime.shared.StorageHolder
@@ -99,11 +97,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.module.dsl.singleOf
@@ -220,14 +215,19 @@ class GenericAnime(
         infoModel: KmpInfoModel,
         navController: NavigationActions,
     ) {
-        getEpisodes(
-            errorId = R.string.source_no_download,
-            model = model,
-            infoModel = infoModel,
-            context = context,
-            isStreaming = false
-        ) {
-            CoroutineScope(Job() + Dispatchers.IO).launch { downloadResolved(model, infoModel, it) }
+        CoroutineScope(Job() + Dispatchers.Main).launch {
+            downloadOnClick(
+                model = model,
+                infoModel = infoModel,
+                onNone = {
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.source_no_download, model.source.serviceName),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                },
+                download = { downloadResolved(model, infoModel, it) },
+            )
         }
     }
 
@@ -266,58 +266,6 @@ class GenericAnime(
         )
         withContext(Dispatchers.Main) {
             Toast.makeText(context, R.string.downloading_dots_no_percent, Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun getEpisodes(
-        errorId: Int,
-        model: KmpChapterModel,
-        infoModel: KmpInfoModel,
-        context: Context,
-        filter: (KmpStorage) -> Boolean = { true },
-        isStreaming: Boolean,
-        onAction: (KmpStorage) -> Unit,
-    ) {
-        val dialog = MaterialAlertDialogBuilder(context)
-            .setTitle(R.string.loading_please_wait)
-            .setView(ProgressBar(context))
-            .setIcon(R.mipmap.ic_launcher)
-            .setCancelable(false)
-            .create()
-        CoroutineScope(Job() + Dispatchers.IO).launch {
-            model.getChapterInfo()
-                .onStart { withContext(Dispatchers.Main) { dialog.show() } }
-                .catch {
-                    runOnUIThread {
-                        Toast.makeText(context, R.string.something_went_wrong, Toast.LENGTH_SHORT).show()
-                        dialog.dismiss()
-                    }
-                    emit(emptyList())
-                }
-                .map { it.filter(filter) }
-                .collect { c ->
-                    dialog.dismiss()
-                    when {
-                        c.size == 1 -> {
-                            when (model.source) {
-                                else -> c.firstOrNull()?.let { onAction(it) }
-                            }
-                        }
-
-                        c.isNotEmpty() -> {
-                            VideoSourceModel.showVideoSources = VideoSourceModel(
-                                c = c,
-                                infoModel = infoModel,
-                                isStreaming = isStreaming,
-                                model = model
-                            )
-                        }
-
-                        else -> {
-                            Toast.makeText(context, context.getString(errorId, model.source.serviceName), Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                }
         }
     }
 
