@@ -81,8 +81,8 @@ actual class VideoLibrarySource(private val context: Context) {
 
     actual fun delete(content: SharedVideoContent) {
         try {
-            // Resolve before the MediaStore row (and its DATA path) is gone.
-            OfflineSubtitles.resolveVideoFile(context, content.path)?.let(OfflineSubtitles::deleteFor)
+            // Resolve before the MediaStore row (and its DATA path) is gone; clean sidecars only after it succeeds.
+            val videoFile = OfflineSubtitles.resolveVideoFile(context, content.path)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 content.path.toUri()?.let {
                     context.contentResolver.delete(it, null, null)
@@ -90,6 +90,7 @@ actual class VideoLibrarySource(private val context: Context) {
             } else {
                 java.io.File(content.path).delete()
             }
+            videoFile?.let(OfflineSubtitles::deleteFor)
         } catch (e: Exception) {
             e.printStackTrace()
         }

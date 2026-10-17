@@ -98,4 +98,54 @@ class OfflineSubtitlesTest {
         assertTrue(File(folder, "Ep 1 (2).subtitles.json").exists())
         assertTrue(video.exists())
     }
+
+    @Test
+    fun deleteForDoesNotTouchPrefixSiblingEpisode() {
+        val video = file("Episode 12.mp4")
+        file("Episode 12.0.English.vtt")
+        file("Episode 12.5.mp4")
+        file("Episode 12.5.0.English.vtt")
+
+        OfflineSubtitles.deleteFor(video)
+
+        assertFalse(File(folder, "Episode 12.0.English.vtt").exists())
+        assertTrue(File(folder, "Episode 12.5.0.English.vtt").exists())
+        assertEquals(1, OfflineSubtitles.find(File(folder, "Episode 12.5.mp4")).size)
+        assertTrue(OfflineSubtitles.find(video).isEmpty())
+    }
+
+    @Test
+    fun deleteForWithIndexDoesNotTouchPrefixSiblingEpisode() {
+        val video = file("Episode 12.mp4")
+        file("Episode 12.0.English.vtt")
+        writeIndex("Episode 12", SidecarEntry("Episode 12.0.English.vtt", "en", "English"))
+        file("Episode 12.5.mp4")
+        file("Episode 12.5.0.English.vtt")
+        writeIndex("Episode 12.5", SidecarEntry("Episode 12.5.0.English.vtt", "en", "English"))
+
+        OfflineSubtitles.deleteFor(video)
+
+        assertFalse(File(folder, "Episode 12.0.English.vtt").exists())
+        assertFalse(File(folder, "Episode 12.subtitles.json").exists())
+        assertTrue(File(folder, "Episode 12.5.0.English.vtt").exists())
+        assertTrue(File(folder, "Episode 12.5.subtitles.json").exists())
+    }
+
+    @Test
+    fun corruptIndexFallsBackToGlob() {
+        val video = file("Ep 1.mp4")
+        file("Ep 1.0.English.vtt")
+        File(folder, "Ep 1.subtitles.json").writeText("{not json")
+
+        assertEquals(listOf("English"), OfflineSubtitles.find(video).map { it.lang })
+    }
+
+    @Test
+    fun resolveVideoFileFileSchemeAndBarePath() {
+        val f = File(folder, "a b.mp4")
+        assertEquals(f.absoluteFile, OfflineSubtitles.resolveVideoFile(f.absoluteFile.toURI().toString()) { null }?.absoluteFile)
+        assertEquals(f, OfflineSubtitles.resolveVideoFile(f.path) { null })
+        assertEquals(File("/x/y.mp4"), OfflineSubtitles.resolveVideoFile("content://media/1") { "/x/y.mp4" })
+        assertEquals(null, OfflineSubtitles.resolveVideoFile("content://media/1") { null })
+    }
 }
