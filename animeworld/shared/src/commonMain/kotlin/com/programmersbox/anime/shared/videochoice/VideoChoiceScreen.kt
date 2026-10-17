@@ -58,7 +58,6 @@ fun getQualityFromName(qualityName: String): Qualities {
 fun VideoChoiceScreen(
     items: List<KmpStorage>,
     infoModel: KmpInfoModel,
-    isStreaming: Boolean,
     model: KmpChapterModel,
     genericInfo: KmpGenericInfo,
     navController: NavigationActions,
@@ -72,21 +71,16 @@ fun VideoChoiceScreen(
     var playing by remember { mutableStateOf(false) }
 
     val onAction: (KmpStorage) -> Unit = {
-        if (isStreaming) {
-            // Keep the sheet (and this scope) alive until resolve/play finishes.
-            if (!playing) {
-                playing = true
-                scope.launch {
-                    try {
-                        onPlay(it)
-                    } finally {
-                        VideoSourceModel.showVideoSources = null
-                    }
+        // Keep the sheet (and this scope) alive until resolve/play (or resolve/enqueue) finishes.
+        if (!playing) {
+            playing = true
+            scope.launch {
+                try {
+                    onPlay(it)
+                } finally {
+                    VideoSourceModel.showVideoSources = null
                 }
             }
-        } else {
-            VideoSourceModel.showVideoSources = null
-            genericInfo.downloadChapter(model, listOf(model), infoModel, navController)
         }
     }
 

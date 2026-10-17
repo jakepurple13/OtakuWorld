@@ -35,7 +35,7 @@ open class CloudstreamApiService(
 ) : KmpApiService {
     override val baseUrl: String get() = api.mainUrl
     override val canScroll: Boolean = true
-    override val canDownload: Boolean = false
+    override val canDownload: Boolean = true
     override val canCast: Boolean = false
     override val displayName: String get() = "${api.name} (${api.lang})"
     override val language: String get() = api.lang

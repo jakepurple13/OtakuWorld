@@ -1,11 +1,9 @@
 package com.programmersbox.animeworld
 
 import android.Manifest
-import android.app.DownloadManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.activity.compose.LocalActivity
@@ -41,7 +39,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.net.toUri
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -56,6 +53,9 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.obsez.android.lib.filechooser.ChooserDialog
 import com.programmersbox.anime.shared.GenericSharedAnime
 import com.programmersbox.anime.shared.StorageHolder
+import com.programmersbox.anime.shared.downloads.EpisodeDownloadRequest
+import com.programmersbox.anime.shared.downloads.enqueueEpisodeDownload
+import com.programmersbox.anime.shared.videoplayer.playerHeaders
 import com.programmersbox.anime.shared.subtitles.DataStoreSubtitleSettingsRepository
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRepository
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRoute
@@ -71,7 +71,6 @@ import com.programmersbox.anime.shared.videos.VideoViewerRoute
 import com.programmersbox.anime.shared.videos.ViewVideoScreen
 import com.programmersbox.animeworld.cast.ExpandedControlsActivity
 import com.programmersbox.datastore.asState
-import com.programmersbox.helpfulutils.downloadManager
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.helpfulutils.runOnUIThread
 import com.programmersbox.kmpmodels.KmpChapterModel
@@ -96,6 +95,7 @@ import com.programmersbox.kmpuiviews.utils.Zipper
 import com.programmersbox.sharedtools.BackupProcessor
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.bindsGenericInfo
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -218,49 +218,52 @@ class GenericAnime(
         infoModel: KmpInfoModel,
         navController: NavigationActions,
     ) {
-        /* if ((model.source as? ShowApi)?.canDownload == false) {
-             Toast.makeText(
-                 context,
-                 context.getString(R.string.source_no_download, model.source.serviceName),
-                 Toast.LENGTH_SHORT
-             ).show()
-             return
-         }*/
-        /*activity.requestPermissions(
-            *if (Build.VERSION.SDK_INT >= 33)
-                arrayOf(Manifest.permission.READ_MEDIA_VIDEO)
-            else arrayOf(
-                Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                Manifest.permission.READ_EXTERNAL_STORAGE,
-            )
-        ) { p ->
-            if (p.isGranted) {
-                Toast.makeText(context, R.string.downloading_dots_no_percent, Toast.LENGTH_SHORT).show()
-                getEpisodes(
-                    errorId = R.string.source_no_download,
-                    model = model,
-                    infoModel = infoModel,
-                    context = context,
-                    filter = { !it.link.orEmpty().endsWith(".m3u8") },
-                    navController = navController,
-                    isStreaming = false
-                ) {
-                    //fetchIt(it, model, activity)
-                    downloadVideo(context, model, it)
-                }
-            }
-        }*/
-        Toast.makeText(context, R.string.downloading_dots_no_percent, Toast.LENGTH_SHORT).show()
         getEpisodes(
             errorId = R.string.source_no_download,
             model = model,
             infoModel = infoModel,
             context = context,
-            filter = { !it.link.orEmpty().endsWith(".m3u8") },
             isStreaming = false
         ) {
-            //fetchIt(it, model, activity)
-            downloadVideo(context, model, it)
+            CoroutineScope(Job() + Dispatchers.IO).launch { downloadResolved(model, infoModel, it) }
+        }
+    }
+
+    /** Lets the source resolve a lazily-described stream first, then hands it to the episode downloader. */
+    suspend fun downloadResolved(model: KmpChapterModel, infoModel: KmpInfoModel, storage: KmpStorage) {
+        val resolved = try {
+            withContext(Dispatchers.IO) { model.source.resolve(storage) }.also { r ->
+                if (r !== storage) {
+                    if (r.headers.isEmpty()) r.headers.putAll(storage.headers)
+                    if (r.extras.isEmpty()) r.extras.putAll(storage.extras)
+                }
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            e.printStackTrace()
+            onResolveFailed(storage, e)
+            return
+        }
+        val link = resolved.link
+        if (link.isNullOrBlank()) {
+            onResolveFailed(storage, IllegalStateException("No link"))
+            return
+        }
+        enqueueEpisodeDownload(
+            context,
+            EpisodeDownloadRequest(
+                url = link,
+                headers = playerHeaders(resolved.headers, resolved.headers["referer"] ?: resolved.source),
+                mimeType = resolved.mimeType,
+                qualityHint = resolved.quality,
+                subtitles = resolved.subtitles,
+                title = "${infoModel.title} - ${model.name}",
+                folder = context.folderLocation,
+            )
+        )
+        withContext(Dispatchers.Main) {
+            Toast.makeText(context, R.string.downloading_dots_no_percent, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -314,38 +317,6 @@ class GenericAnime(
                     }
                 }
         }
-    }
-
-    fun downloadVideo(context: Context, model: KmpChapterModel, storage: KmpStorage) {
-        fun getNameFromUrl(url: String): String {
-            return Uri.parse(url).lastPathSegment?.let { it.ifEmpty { model.name } } ?: model.name
-        }
-
-        val d = DownloadManager.Request(storage.link!!.toUri())
-            .setDestinationUri((context.folderLocation + getNameFromUrl(storage.link!!) + "${model.name}.mp4").toUri())
-            .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-            .setAllowedOverRoaming(true)
-            .setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE or DownloadManager.Request.NETWORK_WIFI)
-            .setMimeType("image/*")
-            .setTitle(model.name)
-            .addRequestHeader("Accept-Language", "en-US,en;q=0.5")
-            .addRequestHeader("User-Agent", "\"Mozilla/5.0 (Windows NT 10.0; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0\"")
-            .addRequestHeader("Accept", "text/html,video/mp4,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-            .addRequestHeader("Access-Control-Allow-Origin", "*")
-            .addRequestHeader("Referer", storage.headers["referer"] ?: "http://thewebsite.com")
-            .addRequestHeader("Connection", "keep-alive")
-            .apply {
-                storage.headers.forEach { (t, u) ->
-                    addRequestHeader(t, u)
-                }
-            }
-
-        runCatching { context.downloadManager.enqueue(d) }
-            .onSuccess { Toast.makeText(context, "Downloading...", Toast.LENGTH_SHORT).show() }
-            .onFailure {
-                it.printStackTrace()
-                Toast.makeText(context, "Something went wrong...", Toast.LENGTH_SHORT).show()
-            }
     }
 
     @Composable
@@ -569,11 +540,13 @@ class GenericAnime(
             VideoChoiceScreen(
                 items = it.c,
                 infoModel = it.infoModel,
-                isStreaming = it.isStreaming,
                 model = it.model,
                 genericInfo = this,
                 navController = navController,
-                onPlay = { s -> playResolved(navController, s, it.model, it.infoModel) }
+                onPlay = { s ->
+                    if (it.isStreaming) playResolved(navController, s, it.model, it.infoModel)
+                    else downloadResolved(it.model, it.infoModel, s)
+                }
             )
         }
     }
