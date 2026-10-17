@@ -90,6 +90,43 @@ abstract class GenericSharedAnime(
         }
     }
 
+    /**
+     * Download counterpart of [chapterOnClick]: same loading guard, one storage downloads directly,
+     * several go to the picker, none or an error calls [onNone].
+     */
+    suspend fun downloadOnClick(
+        model: KmpChapterModel,
+        infoModel: KmpInfoModel,
+        onNone: suspend () -> Unit,
+        download: suspend (KmpStorage) -> Unit,
+    ) {
+        if (isLoadingChapter) return
+        isLoadingChapter = true
+        try {
+            val storages = try {
+                model.getChapterInfo().firstOrNull().orEmpty()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                e.printStackTrace()
+                emptyList()
+            }
+
+            when {
+                storages.size == 1 -> download(storages.first())
+                storages.isNotEmpty() -> VideoSourceModel.showVideoSources = VideoSourceModel(
+                    c = storages,
+                    infoModel = infoModel,
+                    isStreaming = false,
+                    model = model,
+                )
+                else -> onNone()
+            }
+        } finally {
+            isLoadingChapter = false
+        }
+    }
+
     /** Lets the source resolve a lazily-described stream first; on failure nothing plays. */
     suspend fun playResolved(
         navController: NavigationActions,

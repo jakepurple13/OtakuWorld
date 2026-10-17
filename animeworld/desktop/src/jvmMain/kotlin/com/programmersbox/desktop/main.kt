@@ -3,6 +3,9 @@ package com.programmersbox.desktop
 import ca.gosyer.appdirs.AppDirs
 import com.programmersbox.anime.shared.AnimeDesktopSettings
 import com.programmersbox.anime.shared.StorageHolder
+import com.programmersbox.anime.shared.subtitles.InMemorySubtitleSettingsRepository
+import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRepository
+import com.programmersbox.anime.shared.subtitles.SubtitleSettingsViewModel
 import com.programmersbox.anime.shared.VideoScreen
 import com.programmersbox.anime.shared.downloads.AnimeDownloadManager
 import com.programmersbox.anime.shared.videoplayer.VideoPlayerUi
@@ -20,6 +23,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.navigation3.navigation
 
 fun main(args: Array<String>) {
@@ -43,6 +47,8 @@ fun main(args: Array<String>) {
         moduleBlock = {
             singleOf(::AnimeDesktopSettings)
             singleOf(::StorageHolder)
+            single<SubtitleSettingsRepository> { InMemorySubtitleSettingsRepository() }
+            viewModelOf(::SubtitleSettingsViewModel)
             singleOf(::VideoLibrarySource)
             single {
                 ExtensionWatcher(

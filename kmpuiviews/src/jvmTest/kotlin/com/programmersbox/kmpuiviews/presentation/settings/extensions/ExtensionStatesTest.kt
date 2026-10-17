@@ -1,6 +1,8 @@
 package com.programmersbox.kmpuiviews.presentation.settings.extensions
 
 import com.programmersbox.kmpmodels.KmpApiService
+import com.programmersbox.kmpmodels.KmpApiServicesCatalog
+import com.programmersbox.kmpmodels.KmpExternalCustomApiServicesCatalog
 import com.programmersbox.kmpmodels.KmpRemoteSources
 import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpmodels.KmpSources
@@ -52,6 +54,32 @@ class ExtensionStatesTest {
         val installed = info("legacy.pkg", url = "https://dex.example")
         assertEquals(installed, remote("dex").findInstalled(listOf(installed)))
         assertEquals(remote("dex"), installed.findRemote(listOf(remote("dex"))))
+    }
+
+    private class NativeCatalog(override val name: String) : KmpExternalCustomApiServicesCatalog {
+        override suspend fun initialize() = Unit
+        override fun getSources(): List<KmpSourceInformation> = emptyList()
+        override val hasRemoteSources = true
+        override suspend fun install(remote: KmpRemoteSources) = false
+    }
+
+    private class PlainCatalog(override val name: String) : KmpApiServicesCatalog {
+        override fun createSources(): List<KmpApiService> = emptyList()
+    }
+
+    @Test
+    fun crossCatalogNameDoesNotMarkInstalled() {
+        val cloudStream = KmpSourceInformation(service("https://anizone.to"), "Anizone", null, "cs.anizone", NativeCatalog("CloudStream"))
+        val aniyomiRemote = remote("aniyomi.anizone", url = "https://anizone.to", name = "AniZone")
+        assertNull(aniyomiRemote.findInstalled(listOf(cloudStream), "Aniyomi"))
+        assertNull(cloudStream.findRemote(listOf(aniyomiRemote), "Aniyomi"))
+    }
+
+    @Test
+    fun legacyBaseUrlFallbackStillWorks() {
+        val installed = KmpSourceInformation(service("https://dex.example"), "legacy", null, "legacy.pkg", PlainCatalog("Aniyomi"))
+        assertEquals(installed, remote("dex").findInstalled(listOf(installed), "Aniyomi"))
+        assertEquals(remote("dex"), installed.findRemote(listOf(remote("dex")), "Aniyomi"))
     }
 
     @Test

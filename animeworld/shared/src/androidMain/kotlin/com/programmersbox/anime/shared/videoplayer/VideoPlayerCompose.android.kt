@@ -9,6 +9,7 @@ import android.provider.Settings
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -35,15 +36,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.BrightnessHigh
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ClosedCaption
 import androidx.compose.material.icons.filled.ClosedCaptionOff
 import androidx.compose.material.icons.filled.FastForward
 import androidx.compose.material.icons.filled.FastRewind
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -90,21 +88,26 @@ import androidx.core.net.toUri
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.C
-import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.Tracks
-import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.MediaSource
-import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
+import androidx.media3.ui.SubtitleView
 import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.anime.shared.VideoScreen
+import com.programmersbox.anime.shared.subtitles.SubtitleQuickSheet
+import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRepository
+import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRoute
+import com.programmersbox.anime.shared.subtitles.SubtitleTrackItem
+import com.programmersbox.anime.shared.subtitles.apply
+import com.programmersbox.anime.shared.subtitles.toCaptionSpec
 import com.programmersbox.datastore.otakuDataStore
 import com.programmersbox.helpfulutils.audioManager
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
@@ -145,8 +148,10 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
     val context = LocalContext.current
     val genericInfo = koinInject<GenericInfo>()
     val storageHolder = koinInject<StorageHolder>()
-    val viewModel: VideoViewModel = viewModel { VideoViewModel(videoScreen, context, storageHolder) }
+    val subtitleSettings = koinInject<SubtitleSettingsRepository>()
+    val viewModel: VideoViewModel = viewModel { VideoViewModel(videoScreen, context, storageHolder, subtitleSettings) }
     val activity = LocalActivity.current
+    val navController = LocalNavActions.current
 
     val audioManager = remember { context.audioManager }
     val originalAudioLevel = rememberSaveable { audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) }
@@ -188,59 +193,88 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
 
     viewModel.exoPlayer?.let { ExoPlayerAttributes(exoPlayer = it, viewModel = viewModel) }
 
-    val overlayVisibility = viewModel.visibility == VideoPlayerVisibility.Visible || !viewModel.isPlaying || viewModel.subtitleMenuOpen
+    val overlayVisibility = viewModel.visibility == VideoPlayerVisibility.Visible || !viewModel.isPlaying || viewModel.subtitleSheetOpen
 
-    Scaffold(
-        topBar = { VideoTopBar(viewModel, overlayVisibility) },
-        bottomBar = {
-            VideoBottomBar(
-                visible = overlayVisibility,
-                currentTime = viewModel.currentTime,
-                totalTime = viewModel.totalTime,
-                totalDuration = viewModel.videoInfo.duration,
-                currentPosition = viewModel.videoInfo.currentPosition,
-                isPlaying = viewModel.isPlaying,
-                playPauseToggle = viewModel::playPause,
-                seekTo = { viewModel.exoPlayer?.seekTo(it) },
-                rewind = viewModel::rewind,
-                fastForward = viewModel::fastForward
-            )
-        }
-    ) { _ ->
-        Box {
-            VideoPlayer(
-                source = remember {
-                    if (viewModel.downloadOrStream) {
-                        //download
-                        val dataSourceFactory = DefaultDataSource.Factory(context)
-                        ProgressiveMediaSource.Factory(dataSourceFactory)
-                            .createMediaSource(MediaItem.fromUri(viewModel.showPath.toUri()))
-                    } else {
-                        //stream
-                        if (runBlocking { context.ignoreSsl.first() }) {
-                            val sslContext: SSLContext = SSLContext.getInstance("TLS")
-                            sslContext.init(null, arrayOf(SSLTrustManager()), SecureRandom())
-                            sslContext.createSSLEngine()
-                            HttpsURLConnection.setDefaultHostnameVerifier { _: String, _: SSLSession -> true }
-                            HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.socketFactory)
+    Box {
+        Scaffold(
+            topBar = { VideoTopBar(viewModel, overlayVisibility) },
+            bottomBar = {
+                VideoBottomBar(
+                    visible = overlayVisibility,
+                    currentTime = viewModel.currentTime,
+                    totalTime = viewModel.totalTime,
+                    totalDuration = viewModel.videoInfo.duration,
+                    currentPosition = viewModel.videoInfo.currentPosition,
+                    isPlaying = viewModel.isPlaying,
+                    playPauseToggle = viewModel::playPause,
+                    seekTo = { viewModel.exoPlayer?.seekTo(it) },
+                    rewind = viewModel::rewind,
+                    fastForward = viewModel::fastForward
+                )
+            }
+        ) { _ ->
+            Box {
+                VideoPlayer(
+                    source = remember {
+                        if (viewModel.downloadOrStream) {
+                            //download
+                            context.getMediaSource(
+                                viewModel.showPath.toUri(),
+                                false,
+                                DefaultBandwidthMeter.Builder(context).build(),
+                                emptyMap(),
+                                viewModel.subtitles,
+                                null,
+                                viewModel.defaultSubtitle,
+                            )
+                        } else {
+                            //stream
+                            if (runBlocking { context.ignoreSsl.first() }) {
+                                val sslContext: SSLContext = SSLContext.getInstance("TLS")
+                                sslContext.init(null, arrayOf(SSLTrustManager()), SecureRandom())
+                                sslContext.createSSLEngine()
+                                HttpsURLConnection.setDefaultHostnameVerifier { _: String, _: SSLSession -> true }
+                                HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.socketFactory)
+                            }
+
+                            context.getMediaSource(viewModel.showPath.toUri(), false, DefaultBandwidthMeter.Builder(context).build(), viewModel.requestHeaders, viewModel.subtitles, viewModel.mimeType, viewModel.defaultSubtitle)
                         }
-
-                        context.getMediaSource(viewModel.showPath.toUri(), false, DefaultBandwidthMeter.Builder(context).build(), viewModel.requestHeaders, viewModel.subtitles, viewModel.mimeType, viewModel.defaultSubtitle)
+                    },
+                    viewModel = viewModel
+                )
+                var draggingProgress: DraggingProgress? by remember { mutableStateOf(null) }
+                MediaControlGestures(
+                    modifier = Modifier.fillMaxSize(),
+                    visible = true,
+                    enabled = true,
+                    gesturesEnabled = true,
+                    quickSeekDirection = viewModel.quickSeekAction.direction,
+                    onQuickSeekDirectionChange = { viewModel.quickSeekAction = it },
+                    draggingProgress = draggingProgress,
+                    onDraggingProgressChange = { draggingProgress = it },
+                    viewModel = viewModel
+                )
+            }
+        }
+        if (viewModel.subtitleSheetOpen) {
+            BackHandler { viewModel.subtitleSheetOpen = false }
+            val subtitleStyle by viewModel.subtitleSettings.style
+                .collectAsStateWithLifecycle(viewModel.initialSubtitleStyle)
+            val sheetScope = rememberCoroutineScope()
+            SubtitleQuickSheet(
+                tracks = viewModel.textTracks.map { SubtitleTrackItem(it.label, it.selected) },
+                onSelectTrack = { index -> viewModel.selectTextTrack(index?.let { viewModel.textTracks[it] }) },
+                style = subtitleStyle,
+                onStyleChange = { transform ->
+                    sheetScope.launch {
+                        viewModel.subtitleSettings.update(transform)
                     }
                 },
-                viewModel = viewModel
-            )
-            var draggingProgress: DraggingProgress? by remember { mutableStateOf(null) }
-            MediaControlGestures(
-                modifier = Modifier.fillMaxSize(),
-                visible = true,
-                enabled = true,
-                gesturesEnabled = true,
-                quickSeekDirection = viewModel.quickSeekAction.direction,
-                onQuickSeekDirectionChange = { viewModel.quickSeekAction = it },
-                draggingProgress = draggingProgress,
-                onDraggingProgressChange = { draggingProgress = it },
-                viewModel = viewModel
+                onOpenSettings = {
+                    viewModel.subtitleSheetOpen = false
+                    navController.navigate(SubtitleSettingsRoute)
+                },
+                onDismiss = { viewModel.subtitleSheetOpen = false },
             )
         }
     }
@@ -271,8 +305,19 @@ fun VideoPlayer(
                         .setPreferredTextLanguage(lang)
                         .build()
                 }
+                if (!viewModel.initialSubtitleStyle.autoEnable) {
+                    trackSelectionParameters = trackSelectionParameters.buildUpon()
+                        .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true)
+                        .build()
+                }
             }
             .also { viewModel.exoPlayer = it }
+    }
+
+    var styledSubtitleView by remember { mutableStateOf<SubtitleView?>(null) }
+    LaunchedEffect(styledSubtitleView) {
+        val view = styledSubtitleView ?: return@LaunchedEffect
+        viewModel.subtitleSettings.style.collect { view.apply(it.toCaptionSpec()) }
     }
 
     AndroidView(
@@ -310,7 +355,7 @@ fun VideoPlayer(
                 // The stock layout puts the SubtitleView inside the content frame, which RESIZE_MODE_ZOOM
                 // grows past the screen edges, so bottom-anchored cues land off-screen. Pin it to the
                 // view bounds instead; PlayerView keeps feeding cues to the same instance.
-                val subtitles = subtitleView
+                val subtitles = this.subtitleView
                 val overlay = overlayFrameLayout
                 if (subtitles != null && overlay != null) {
                     (subtitles.parent as? ViewGroup)?.removeView(subtitles)
@@ -319,6 +364,7 @@ fun VideoPlayer(
                         FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
                     )
                 }
+                styledSubtitleView = subtitles
             }
         }
     )
@@ -345,40 +391,11 @@ fun VideoTopBar(viewModel: VideoViewModel, visible: Boolean) {
             navigationIcon = { BackButton() },
             actions = {
                 if (viewModel.textTracks.isNotEmpty()) {
-                    Box {
-                        IconButton(onClick = { viewModel.subtitleMenuOpen = true }) {
-                            Icon(
-                                if (viewModel.textTracks.any { it.selected }) Icons.Default.ClosedCaption else Icons.Default.ClosedCaptionOff,
-                                contentDescription = "Subtitles"
-                            )
-                        }
-                        DropdownMenu(
-                            expanded = viewModel.subtitleMenuOpen,
-                            onDismissRequest = { viewModel.subtitleMenuOpen = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("Off") },
-                                onClick = {
-                                    viewModel.selectTextTrack(null)
-                                    viewModel.subtitleMenuOpen = false
-                                },
-                                trailingIcon = if (viewModel.textTracks.none { it.selected }) {
-                                    { Icon(Icons.Default.Check, null) }
-                                } else null
-                            )
-                            viewModel.textTracks.forEach { track ->
-                                DropdownMenuItem(
-                                    text = { Text(track.label) },
-                                    onClick = {
-                                        viewModel.selectTextTrack(track)
-                                        viewModel.subtitleMenuOpen = false
-                                    },
-                                    trailingIcon = if (track.selected) {
-                                        { Icon(Icons.Default.Check, null) }
-                                    } else null
-                                )
-                            }
-                        }
+                    IconButton(onClick = { viewModel.subtitleSheetOpen = true }) {
+                        Icon(
+                            if (viewModel.textTracks.any { it.selected }) Icons.Default.ClosedCaption else Icons.Default.ClosedCaptionOff,
+                            contentDescription = "Subtitles"
+                        )
                     }
                 }
                 Row(

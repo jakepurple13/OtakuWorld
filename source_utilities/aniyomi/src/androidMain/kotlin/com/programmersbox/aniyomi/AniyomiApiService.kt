@@ -30,7 +30,7 @@ open class AniyomiApiService(val source: AnimeCatalogueSource, val lib: Double) 
     override val baseUrl: String get() = (source as? AnimeHttpSource)?.baseUrl.orEmpty()
     override val serviceName: String = "aniyomi:${source.id}"
     override val canScroll: Boolean = true
-    override val canDownload: Boolean = false
+    override val canDownload: Boolean = true
     override val canCast: Boolean = false
     override val displayName: String = "${source.name} (${source.lang})"
     override val language: String = source.lang

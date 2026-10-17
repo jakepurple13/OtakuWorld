@@ -32,15 +32,19 @@ import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.upstream.BandwidthMeter
 import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.anime.shared.VideoScreen
+import com.programmersbox.anime.shared.downloads.OfflineSubtitles
+import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRepository
 import com.programmersbox.kmpmodels.KmpSubtitle
 import com.programmersbox.helpfulutils.battery
 import com.programmersbox.uiviews.utils.BatteryInformation2
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.security.cert.X509Certificate
 import java.util.Formatter
 import java.util.Locale
@@ -50,30 +54,39 @@ class VideoViewModel(
     videoScreen: VideoScreen,
     context: Context,
     private val storageHolder: StorageHolder,
+    val subtitleSettings: SubtitleSettingsRepository,
 ) : ViewModel() {
 
     val showPath = storageHolder.storageModel?.link ?: videoScreen.showPath
     val showName = videoScreen.showName
     val downloadOrStream = videoScreen.downloadOrStream
     val requestHeaders = playerHeaders(storageHolder.storageModel?.headers.orEmpty(), videoScreen.referer)
-    val subtitles = storageHolder.storageModel?.subtitles.orEmpty()
+    val subtitles = if (downloadOrStream) {
+        OfflineSubtitles.resolveVideoFile(context, showPath)?.let(OfflineSubtitles::find).orEmpty()
+    } else {
+        storageHolder.storageModel?.subtitles.orEmpty()
+    }
     val mimeType = storageHolder.storageModel?.let(::streamMime)
+    /** Style as of player start; later changes arrive through [subtitleSettings]. */
+    val initialSubtitleStyle = runBlocking { subtitleSettings.style.first() }
     val defaultSubtitle = defaultSubtitleIndex(
         subtitles,
         Locale.getDefault().language,
         Locale.getDefault().getDisplayLanguage(Locale.ENGLISH),
+        initialSubtitleStyle.preferredLanguages,
+        initialSubtitleStyle.skipSignsAndSongs,
     )
 
-    /** Text tracks the player currently exposes; drives the CC menu. */
+    /** Text tracks the player currently exposes; drives the CC sheet. */
     var textTracks by mutableStateOf<List<TextTrackOption>>(emptyList())
-    var subtitleMenuOpen by mutableStateOf(false)
+    var subtitleSheetOpen by mutableStateOf(false)
 
     fun updateTextTracks(tracks: Tracks) {
         textTracks = tracks.groups
             .filter { it.type == C.TRACK_TYPE_TEXT }
             .map { group ->
                 val format = group.getTrackFormat(0)
-                TextTrackOption(group, format.label ?: format.language ?: "Unknown", group.isSelected)
+                TextTrackOption(group, embeddedTrackLabel(format.label, format.language), group.isSelected)
             }
         Log.d(TAG, "textTracks=${textTracks.map { "${it.group.getTrackFormat(0).language}|${it.label}|selected=${it.selected}" }}")
     }
@@ -251,10 +264,11 @@ fun Context.getMediaSource(
     val subtitleHeaders = subtitles.filter { it.headers.isNotEmpty() }.associate { it.url to it.headers }
     val httpFactory = getHttpDataSourceFactory(preview, bandwidthMeter, headers)
     // Subtitle-specific headers (e.g. CloudStream SubtitleFile.headers) layered over the shared ones.
+    // DefaultDataSource routes file:// and content:// (local sidecars) as well as http(s).
     val dataSourceFactory = if (subtitleHeaders.isEmpty()) {
-        httpFactory
+        DefaultDataSource.Factory(this, httpFactory)
     } else {
-        ResolvingDataSource.Factory(httpFactory) { spec ->
+        ResolvingDataSource.Factory(DefaultDataSource.Factory(this, httpFactory)) { spec ->
             subtitleHeaders[spec.uri.toString()]?.let(spec::withAdditionalHeaders) ?: spec
         }
     }

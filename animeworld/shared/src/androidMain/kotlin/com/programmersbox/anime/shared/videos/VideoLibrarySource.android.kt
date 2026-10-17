@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
+import com.programmersbox.anime.shared.downloads.OfflineSubtitles
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -38,7 +39,7 @@ actual class VideoLibrarySource(private val context: Context) {
             projections,
             null,
             null,
-            "LOWER (${MediaStore.Video.Media.DATE_TAKEN}) DESC"
+            "COALESCE(${MediaStore.Video.Media.DATE_TAKEN}, ${MediaStore.Video.Media.DATE_ADDED} * 1000) DESC"
         )?.use { cursor ->
             while (cursor.moveToNext()) {
                 try {
@@ -80,13 +81,16 @@ actual class VideoLibrarySource(private val context: Context) {
 
     actual fun delete(content: SharedVideoContent) {
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                content.path.toUri()?.let {
-                    context.contentResolver.delete(it, null, null)
-                }
-            } else {
-                java.io.File(content.path).delete()
+            // Resolve before the MediaStore row (and its DATA path) is gone; clean sidecars only after it succeeds.
+            val videoFile = OfflineSubtitles.resolveVideoFile(context, content.path)
+            val uri = content.path.toUri()
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+                // content.path is a content:// URI, so delete the resolved file itself, then drop the MediaStore row.
+                videoFile?.delete()
             }
+            uri?.let { context.contentResolver.delete(it, null, null) }
+            // Only drop sidecars once the video is really gone (a 0-row delete must keep its subtitles).
+            if (videoFile?.exists() == false) OfflineSubtitles.deleteFor(videoFile)
         } catch (e: Exception) {
             e.printStackTrace()
         }

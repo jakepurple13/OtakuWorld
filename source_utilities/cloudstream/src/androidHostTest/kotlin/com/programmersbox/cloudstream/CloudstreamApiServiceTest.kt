@@ -61,7 +61,7 @@ class CloudstreamApiServiceTest {
         assertEquals("ja", service.language)
         assertEquals("https://fake.test", service.baseUrl)
         assertTrue(service.canScroll)
-        assertFalse(service.canDownload)
+        assertTrue(service.canDownload)
         assertFalse(service.canCast)
         assertFalse(service is KmpConfigurableApiService)
         assertIs<KmpConfigurableApiService>(
