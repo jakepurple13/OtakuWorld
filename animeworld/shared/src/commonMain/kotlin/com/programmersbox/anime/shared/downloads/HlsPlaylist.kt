@@ -41,7 +41,8 @@ data class HlsKey(val method: String, val uri: String?, val iv: ByteArray?) {
     }
 }
 
-data class HlsMap(val uri: String)
+/** Init section. [key] is the EXT-X-KEY in effect when the EXT-X-MAP tag appeared (null = clear). */
+data class HlsMap(val uri: String, val key: HlsKey? = null)
 
 fun parseHlsPlaylist(text: String, baseUrl: String): HlsPlaylist {
     val lines = text.removePrefix("\uFEFF").lineSequence().map { it.trim() }.filter { it.isNotEmpty() }.toList()
@@ -119,9 +120,9 @@ private fun parseMedia(lines: List<String>, baseUrl: String): HlsPlaylist.Media 
                 if (attrs["BYTERANGE"] != null) throw UnsupportedHlsException("EXT-X-MAP BYTERANGE not supported")
                 val uri = attrs["URI"]
                 if (uri != null) {
-                    val newMap = HlsMap(resolveUrl(baseUrl, uri))
-                    if (map != null && map != newMap) throw UnsupportedHlsException("Multiple EXT-X-MAP init segments not supported")
-                    map = newMap
+                    val newMap = HlsMap(resolveUrl(baseUrl, uri), key)
+                    if (map != null && map.uri != newMap.uri) throw UnsupportedHlsException("Multiple EXT-X-MAP init segments not supported")
+                    if (map == null) map = newMap
                 }
             }
 

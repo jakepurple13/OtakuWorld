@@ -17,9 +17,10 @@ import okhttp3.Headers.Companion.toHeaders
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
+import java.io.BufferedOutputStream
 import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
-import java.io.OutputStream
 import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
@@ -39,6 +40,7 @@ data class EpisodeDownloadRequest(
 
 private const val TAG = "EpisodeDownloader"
 private const val SEGMENT_RETRIES = 3
+private const val BUFFER_SIZE = 64 * 1024
 
 /**
  * Downloads an episode (HLS or progressive) into [EpisodeDownloadRequest.folder], followed by its
@@ -58,7 +60,13 @@ class EpisodeDownloader(
                 downloadHls(request, fetchText(request.url, request.headers), folder, written, onProgress)
             } else {
                 val response = execute(request.url, request.headers)
-                if (response.peekBody(16).string().trimStart('﻿').startsWith("#EXTM3U")) {
+                val isPlaylist = try {
+                    response.peekBody(16).string().trimStart('﻿').startsWith("#EXTM3U")
+                } catch (t: Throwable) {
+                    response.close()
+                    throw t
+                }
+                if (isPlaylist) {
                     val text = response.use { it.body.string() }
                     downloadHls(request, text, folder, written, onProgress)
                 } else {
@@ -101,7 +109,7 @@ class EpisodeDownloader(
         val total = response.body.contentLength()
         part.outputStream().use { out ->
             response.body.byteStream().use { input ->
-                val buffer = ByteArray(DEFAULT_BUFFER_SIZE * 8)
+                val buffer = ByteArray(BUFFER_SIZE)
                 var read = 0L
                 while (true) {
                     currentCoroutineContext().ensureActive()
@@ -149,9 +157,13 @@ class EpisodeDownloader(
             }
         }
         if (media.live) throw UnsupportedHlsException("Live HLS streams cannot be downloaded")
-        media.segments.mapNotNull { it.key }.forEach { key ->
+        (media.segments.mapNotNull { it.key } + listOfNotNull(media.map?.key)).forEach { key ->
             if (key.method != "AES-128") throw IOException("Unsupported HLS encryption: ${key.method}")
             if (key.uri == null) throw IOException("HLS AES-128 key has no URI")
+        }
+        // RFC 8216 §4.3.2.5: an encrypted init section must carry an explicit IV (no sequence number to derive one).
+        if (media.map?.key != null && media.map.key.iv == null) {
+            throw UnsupportedHlsException("Encrypted EXT-X-MAP without an IV is not supported")
         }
 
         val fmp4 = media.map != null || media.segments.first().uri
@@ -161,46 +173,83 @@ class EpisodeDownloader(
         val part = File(folder, "$base.$ext.part").also(written::add)
         val keys = mutableMapOf<String, ByteArray>()
 
-        part.outputStream().buffered().use { out ->
-            media.map?.let { out.write(fetchWithRetry(it.uri, request.headers)) }
+        FileOutputStream(part).use { file ->
+            val out = BufferedOutputStream(file, BUFFER_SIZE)
+            media.map?.let { map ->
+                val decrypt = map.key?.let { key -> keyBytes(key, request.headers, keys) to key.iv!! }
+                streamWithRetry(map.uri, request.headers, decrypt, out, file)
+            }
             media.segments.forEachIndexed { index, segment ->
                 currentCoroutineContext().ensureActive()
-                writeSegment(segment, request.headers, keys, out)
+                val decrypt = segment.key?.let { key -> keyBytes(key, request.headers, keys) to aesIv(segment) }
+                streamWithRetry(segment.uri, request.headers, decrypt, out, file)
                 onProgress((index + 1).toFloat() / media.segments.size)
             }
+            out.flush()
         }
         return finish(part, File(folder, "$base.$ext"), written)
     }
 
-    private suspend fun writeSegment(
-        segment: HlsSegment,
-        headers: Map<String, String>,
-        keys: MutableMap<String, ByteArray>,
-        out: OutputStream,
-    ) {
-        val bytes = fetchWithRetry(segment.uri, headers)
-        val key = segment.key
-        if (key == null) {
-            out.write(bytes)
-            return
+    /** Fetches the AES-128 key once per key URI. */
+    private suspend fun keyBytes(key: HlsKey, headers: Map<String, String>, keys: MutableMap<String, ByteArray>): ByteArray {
+        val uri = key.uri!!
+        return keys.getOrPut(uri) {
+            fetchBytes(uri, headers).also {
+                if (it.size != 16) throw IOException("Invalid HLS AES-128 key length: ${it.size}")
+            }
         }
-        val keyUri = key.uri!!
-        val keyBytes = keys.getOrPut(keyUri) { fetchBytes(keyUri, headers) }
-        if (keyBytes.size != 16) throw IOException("Invalid HLS AES-128 key length: ${keyBytes.size}")
-        val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
-        cipher.init(Cipher.DECRYPT_MODE, SecretKeySpec(keyBytes, "AES"), IvParameterSpec(aesIv(segment)))
-        out.write(cipher.doFinal(bytes))
     }
 
-    private suspend fun fetchWithRetry(url: String, headers: Map<String, String>): ByteArray {
+    /**
+     * Streams [url] into [out] (decrypting with `key to iv` when [decrypt] is set). A failed attempt
+     * is truncated away and retried up to [SEGMENT_RETRIES] times.
+     */
+    private suspend fun streamWithRetry(
+        url: String,
+        headers: Map<String, String>,
+        decrypt: Pair<ByteArray, ByteArray>?,
+        out: BufferedOutputStream,
+        file: FileOutputStream,
+    ) {
+        out.flush()
+        val start = file.channel.position()
         var attempt = 0
         while (true) {
             try {
-                return fetchBytes(url, headers)
+                streamOnce(url, headers, decrypt, out)
+                return
             } catch (e: IOException) {
                 if (attempt >= SEGMENT_RETRIES) throw e
                 attempt++
+                out.flush()
+                file.channel.truncate(start)
+                file.channel.position(start)
                 delay(retryDelayMillis * attempt)
+            }
+        }
+    }
+
+    private suspend fun streamOnce(
+        url: String,
+        headers: Map<String, String>,
+        decrypt: Pair<ByteArray, ByteArray>?,
+        out: BufferedOutputStream,
+    ) {
+        val cipher = decrypt?.let { (key, iv) ->
+            Cipher.getInstance("AES/CBC/PKCS5Padding").apply {
+                init(Cipher.DECRYPT_MODE, SecretKeySpec(key, "AES"), IvParameterSpec(iv))
+            }
+        }
+        execute(url, headers).use { response ->
+            response.body.byteStream().use { input ->
+                val buffer = ByteArray(BUFFER_SIZE)
+                while (true) {
+                    currentCoroutineContext().ensureActive()
+                    val n = input.read(buffer)
+                    if (n < 0) break
+                    if (cipher == null) out.write(buffer, 0, n) else cipher.update(buffer, 0, n)?.let(out::write)
+                }
+                cipher?.doFinal()?.let(out::write)
             }
         }
     }
@@ -239,17 +288,23 @@ class EpisodeDownloader(
         }
     }
 
-    private fun writeAtomically(target: File, bytes: ByteArray, written: MutableList<File>) {
+    internal fun writeAtomically(target: File, bytes: ByteArray, written: MutableList<File>) {
         val part = File(target.parentFile, target.name + ".part").also(written::add)
-        part.writeBytes(bytes)
-        finish(part, target, written)
+        try {
+            part.writeBytes(bytes)
+            finish(part, target, written)
+        } catch (t: Throwable) {
+            part.delete()
+            throw t
+        }
     }
 
     // endregion
 
+    /** Renames [part] to [target]; [target] is tracked for cleanup only once this call created it. */
     private fun finish(part: File, target: File, written: MutableList<File>): File {
-        written += target
         if (!part.renameTo(target)) throw IOException("Could not rename ${part.name} to ${target.name}")
+        written += target
         return target
     }
 

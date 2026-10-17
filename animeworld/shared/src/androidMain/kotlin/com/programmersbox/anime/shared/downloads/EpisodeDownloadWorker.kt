@@ -17,6 +17,8 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.ForegroundInfo
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.OutOfQuotaPolicy
+import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
@@ -26,19 +28,39 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 import org.koin.core.component.KoinComponent
+import java.io.File
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 
-private const val KEY_REQUEST = "episodeDownloadRequest"
+private const val KEY_REQUEST_FILE = "episodeDownloadRequestFile"
 private const val TAG = "EpisodeDownloadWorker"
 
+/**
+ * Writes [request] as JSON into [dir] (WorkManager `Data` is capped at 10 KB, too small for sources
+ * with many subtitle tracks). The name is a UUID derived from [uniqueName], so re-enqueueing the same
+ * episode (dropped by `ExistingWorkPolicy.KEEP`) overwrites the file instead of leaking a new one.
+ */
+internal fun writeRequestFile(dir: File, uniqueName: String, request: EpisodeDownloadRequest): File {
+    dir.mkdirs()
+    val file = File(dir, UUID.nameUUIDFromBytes(uniqueName.encodeToByteArray()).toString() + ".json")
+    file.writeText(Json.encodeToString(request))
+    return file
+}
+
+internal fun readRequestFile(file: File): EpisodeDownloadRequest? =
+    runCatching { Json.decodeFromString<EpisodeDownloadRequest>(file.readText()) }.getOrNull()
+
 fun enqueueEpisodeDownload(context: Context, request: EpisodeDownloadRequest) {
+    val uniqueName = request.folder + request.title
+    val requestFile = writeRequestFile(File(context.noBackupFilesDir, "episode-downloads"), uniqueName, request)
     WorkManager.getInstance(context)
         .enqueueUniqueWork(
-            request.folder + request.title,
+            uniqueName,
             ExistingWorkPolicy.KEEP,
             OneTimeWorkRequestBuilder<EpisodeDownloadWorker>()
-                .setInputData(workDataOf(KEY_REQUEST to Json.encodeToString(request)))
+                .setInputData(workDataOf(KEY_REQUEST_FILE to requestFile.absolutePath))
                 .addTag("episodeDownload")
+                .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
                 .setConstraints(
                     Constraints.Builder()
                         .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -53,17 +75,15 @@ class EpisodeDownloadWorker(
     params: WorkerParameters,
 ) : CoroutineWorker(context, params), KoinComponent {
 
-    private val request by lazy {
-        inputData.getString(KEY_REQUEST)
-            ?.let { runCatching { Json.decodeFromString<EpisodeDownloadRequest>(it) }.getOrNull() }
-    }
+    private val requestFile by lazy { inputData.getString(KEY_REQUEST_FILE)?.let(::File) }
+    private val request by lazy { requestFile?.let(::readRequestFile) }
     private val notificationId get() = (request?.let { it.folder + it.title } ?: id.toString()).hashCode()
     private val smallIcon by lazy {
         getKoin().getOrNull<NotificationLogo>()?.notificationId ?: applicationContext.applicationInfo.icon
     }
 
     override suspend fun doWork(): Result {
-        val request = request ?: return Result.failure()
+        val request = request ?: return Result.failure().also { requestFile?.delete() }
         runCatching { setForeground(getForegroundInfo()) }
             .onFailure { Log.w(TAG, "Could not start foreground download", it) }
 
@@ -85,9 +105,9 @@ class EpisodeDownloadWorker(
             Result.success(workDataOf("file" to file.absolutePath))
         } catch (e: CancellationException) {
             throw e
-        } catch (e: Exception) {
-            Log.e(TAG, "Episode download failed: ${request.title}", e)
-            val message = e.message ?: e::class.java.simpleName
+        } catch (t: Throwable) {
+            Log.e(TAG, "Episode download failed: ${request.title}", t)
+            val message = t.message ?: t::class.java.simpleName
             notify(
                 notificationId + 1,
                 resultNotification(request.title, "Download failed: $message")
@@ -95,6 +115,10 @@ class EpisodeDownloadWorker(
                     .build(),
             )
             Result.failure(workDataOf("error" to message))
+        } finally {
+            NotificationManagerCompat.from(applicationContext).cancel(notificationId)
+            // Keep the request when the system stopped us (constraints, quota): WorkManager reruns the work.
+            if (!isStopped || stopReason == WorkInfo.STOP_REASON_CANCELLED_BY_APP) requestFile?.delete()
         }
     }
 

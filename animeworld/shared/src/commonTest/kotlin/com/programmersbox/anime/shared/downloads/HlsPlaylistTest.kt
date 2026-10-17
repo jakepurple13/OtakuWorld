@@ -88,6 +88,20 @@ class HlsPlaylistTest {
     }
 
     @Test
+    fun mapCarriesKeyInEffect() {
+        val text = """
+            #EXTM3U
+            #EXT-X-KEY:METHOD=AES-128,URI="k",IV=0x1
+            #EXT-X-MAP:URI="init.mp4"
+            #EXTINF:4,
+            s.m4s
+        """.trimIndent()
+        val media = assertIs<HlsPlaylist.Media>(parseHlsPlaylist(text, base))
+        assertEquals("AES-128", media.map?.key?.method)
+        assertEquals("https://cdn.example.com/a/b/k", media.map?.key?.uri)
+    }
+
+    @Test
     fun methodNoneClearsKey() {
         val text = """
             #EXTM3U

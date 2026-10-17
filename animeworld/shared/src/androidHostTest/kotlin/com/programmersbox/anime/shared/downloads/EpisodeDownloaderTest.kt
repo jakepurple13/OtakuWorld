@@ -200,6 +200,56 @@ class EpisodeDownloaderTest {
     }
 
     @Test
+    fun aes128EncryptedInitSectionDecrypted() = runTest {
+        val init = "init-box".encodeToByteArray()
+        val playlist = mediaPlaylist(
+            listOf("s0.m4s"),
+            "#EXT-X-KEY:METHOD=AES-128,URI=\"key.bin\",IV=$explicitIvHex\n#EXT-X-MAP:URI=\"init.mp4\"\n",
+        )
+        route("/em/index.m3u8", playlist)
+        route("/em/key.bin", body = key)
+        route("/em/init.mp4", body = encrypt(key, explicitIv, init))
+        route("/em/s0.m4s", body = encrypt(key, explicitIv, segs[0]))
+
+        val file = downloader.download(request("/em/index.m3u8")) {}
+
+        assertContentEquals(init + segs[0], file.readBytes())
+    }
+
+    @Test
+    fun encryptedInitWithoutIvFails() = runTest {
+        route(
+            "/ei/index.m3u8",
+            mediaPlaylist(listOf("s0.m4s"), "#EXT-X-KEY:METHOD=AES-128,URI=\"key.bin\"\n#EXT-X-MAP:URI=\"init.mp4\"\n"),
+        )
+
+        assertFailsWith<UnsupportedHlsException> { downloader.download(request("/ei/index.m3u8")) {} }
+        assertEquals(emptySet(), fileNames())
+    }
+
+    @Test
+    fun writeAtomicallyDeletesPartOnFailure() {
+        val target = File(folder, "sub.vtt").apply { mkdirs(); File(this, "child").writeText("x") }
+        val written = mutableListOf<File>()
+
+        assertFailsWith<IOException> { downloader.writeAtomically(target, byteArrayOf(1), written) }
+
+        assertEquals(setOf("sub.vtt"), fileNames())
+        assertEquals(emptyList(), written.filter { it.name == "sub.vtt" })
+    }
+
+    @Test
+    fun requestFileRoundTripsLargeRequest() {
+        val subtitles = List(60) { KmpSubtitle("https://cdn.example.com/" + "x".repeat(300) + "/$it.vtt", "lang$it", mapOf("Referer" to "r".repeat(200))) }
+        val req = request("/video.mp4", subtitles = subtitles)
+
+        val file = writeRequestFile(folder, req.folder + req.title, req)
+
+        assertTrue(file.length() > 10_240)
+        assertEquals(req, readRequestFile(file))
+    }
+
+    @Test
     fun sampleAesFails() = runTest {
         route(
             "/sa/index.m3u8",
