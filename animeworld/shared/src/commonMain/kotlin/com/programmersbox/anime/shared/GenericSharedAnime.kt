@@ -3,32 +3,29 @@ package com.programmersbox.anime.shared
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material3.Card
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastAny
 import com.programmersbox.anime.shared.videochoice.VideoSourceModel
+import com.programmersbox.datastore.ColorBlindnessType
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
@@ -37,14 +34,16 @@ import com.programmersbox.kmpmodels.KmpStorage
 import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.domain.AppUpdate
-import com.programmersbox.kmpuiviews.presentation.components.placeholder.PlaceholderHighlight
-import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
-import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
+import com.programmersbox.kmpuiviews.painterLogo
+import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
+import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
+import com.programmersbox.kmpuiviews.presentation.components.placeholder.M3PlaceHolderCoverCard
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComponentState
-import com.programmersbox.kmpuiviews.utils.composables.modifiers.combineClickableWithIndication
+import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
 import kotlinx.coroutines.flow.firstOrNull
+import org.koin.compose.koinInject
 
 abstract class GenericSharedAnime(
     protected val appConfig: AppConfig,
@@ -97,37 +96,12 @@ abstract class GenericSharedAnime(
 
     @Composable
     override fun ComposeShimmerItem() {
-        LazyColumn {
-            items(10) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(4.dp)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .m3placeholder(
-                                true,
-                                highlight = PlaceholderHighlight.shimmer()
-                            )
-                    ) {
-                        Icon(
-                            Icons.Default.FavoriteBorder,
-                            contentDescription = null,
-                            modifier = Modifier.align(Alignment.CenterVertically)
-                        )
-
-                        Text(
-                            "",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(4.dp)
-                        )
-                    }
-                }
-            }
-        }
+        LazyVerticalGrid(
+            columns = adaptiveGridCell(),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.fillMaxSize(),
+        ) { items(10) { M3PlaceHolderCoverCard(placeHolder = painterLogo()) } }
     }
 
     @OptIn(ExperimentalFoundationApi::class)
@@ -141,37 +115,48 @@ abstract class GenericSharedAnime(
         paddingValues: PaddingValues,
         onClick: (KmpItemModel) -> Unit,
     ) {
+        val colorBlindness: ColorBlindnessType by koinInject<NewSettingsHandling>().rememberColorBlindType()
+        val colorFilter by remember { derivedStateOf { colorFilterBlind(colorBlindness) } }
+
         LazyVerticalGrid(
-            columns = GridCells.Fixed(1),
+            columns = adaptiveGridCell(),
             state = listState,
-            verticalArrangement = Arrangement.spacedBy(4.dp),
             contentPadding = paddingValues,
-            modifier = modifier.fillMaxSize()
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = modifier.fillMaxSize(),
         ) {
-            items(list) {
-                ElevatedCard(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp)
-                        .combineClickableWithIndication(
-                            onLongPress = { c -> onLongPress(it, c) },
-                            onClick = { onClick(it) }
-                        )
-                ) {
-                    ListItem(
-                        leadingContent = {
+            itemsIndexed(
+                list,
+                key = { i, it -> "${it.url}$i" },
+                contentType = { _, i -> i }
+            ) { _, it ->
+                M3CoverCard(
+                    onLongPress = { c -> onLongPress(it, c) },
+                    imageUrl = it.imageUrl,
+                    name = it.title,
+                    headers = it.extras,
+                    //placeHolder = { painterLogo() },
+                    placeHolder = { rememberVectorPainter(Icons.Default.BrokenImage) },
+                    favoriteIcon = {
+                        if (favorites.any { f -> f.url == it.url }) {
                             Icon(
-                                if (favorites.fastAny { f -> f.url == it.url }) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                Icons.Default.Favorite,
                                 contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.align(Alignment.TopStart)
                             )
-                        },
-                        headlineContent = { Text(it.title) },
-                        overlineContent = { Text(it.source.displayName) },
-                        supportingContent = if (it.description.isNotEmpty()) {
-                            { Text(it.description) }
-                        } else null
-                    )
-                }
+                            Icon(
+                                Icons.Default.FavoriteBorder,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.align(Alignment.TopStart)
+                            )
+                        }
+                    },
+                    colorFilter = colorFilter,
+                    modifier = Modifier.animateItem()
+                ) { onClick(it) }
             }
         }
     }

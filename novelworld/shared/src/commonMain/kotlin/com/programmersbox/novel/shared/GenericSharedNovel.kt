@@ -5,42 +5,44 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastAny
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
+import com.programmersbox.datastore.ColorBlindnessType
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.KmpGenericInfo
-import com.programmersbox.kmpuiviews.presentation.components.placeholder.PlaceholderHighlight
-import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
-import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
+import com.programmersbox.kmpuiviews.painterLogo
+import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
+import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
+import com.programmersbox.kmpuiviews.presentation.components.placeholder.M3PlaceHolderCoverCard
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.ComponentState
-import com.programmersbox.kmpuiviews.utils.composables.modifiers.combineClickableWithIndication
+import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
 import com.programmersbox.novel.shared.reader.NovelReadView
 import com.programmersbox.novel.shared.reader.ReadViewModel
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -75,35 +77,15 @@ abstract class GenericSharedNovel(
 
     @Composable
     override fun ComposeShimmerItem() {
-        LazyColumn {
-            items(10) {
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(4.dp),
-                    tonalElevation = 4.dp,
-                    shape = MaterialTheme.shapes.medium
-                ) {
-                    Text(
-                        "",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .m3placeholder(
-                                true,
-                                highlight = PlaceholderHighlight.shimmer()
-                            )
-                            .padding(4.dp)
-                    )
-                }
-            }
-        }
+        LazyVerticalGrid(
+            columns = adaptiveGridCell(),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.fillMaxSize(),
+        ) { items(10) { M3PlaceHolderCoverCard(placeHolder = painterLogo()) } }
     }
 
-    @OptIn(
-        ExperimentalAnimationApi::class,
-        ExperimentalFoundationApi::class,
-        ExperimentalMaterial3Api::class
-    )
+    @OptIn(ExperimentalFoundationApi::class)
     @Composable
     override fun ItemListView(
         list: List<KmpItemModel>,
@@ -114,39 +96,48 @@ abstract class GenericSharedNovel(
         paddingValues: PaddingValues,
         onClick: (KmpItemModel) -> Unit,
     ) {
+        val colorBlindness: ColorBlindnessType by koinInject<NewSettingsHandling>().rememberColorBlindType()
+        val colorFilter by remember { derivedStateOf { colorFilterBlind(colorBlindness) } }
+
         LazyVerticalGrid(
-            columns = GridCells.Fixed(1),
+            columns = adaptiveGridCell(),
             state = listState,
-            verticalArrangement = Arrangement.spacedBy(4.dp),
             contentPadding = paddingValues,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
             modifier = modifier.fillMaxSize(),
         ) {
-            items(list) {
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp)
-                        .combineClickableWithIndication(
-                            onLongPress = { c -> onLongPress(it, c) },
-                            onClick = { onClick(it) }
-                        ),
-                    tonalElevation = 4.dp,
-                    shape = MaterialTheme.shapes.medium
-                ) {
-                    ListItem(
-                        leadingContent = {
+            itemsIndexed(
+                list,
+                key = { i, it -> "${it.url}$i" },
+                contentType = { _, i -> i }
+            ) { _, it ->
+                M3CoverCard(
+                    onLongPress = { c -> onLongPress(it, c) },
+                    imageUrl = it.imageUrl,
+                    name = it.title,
+                    headers = it.extras,
+                    //placeHolder = { painterLogo() },
+                    placeHolder = { rememberVectorPainter(Icons.Default.BrokenImage) },
+                    favoriteIcon = {
+                        if (favorites.any { f -> f.url == it.url }) {
                             Icon(
-                                if (favorites.fastAny { f -> f.url == it.url }) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                Icons.Default.Favorite,
                                 contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.align(Alignment.TopStart)
                             )
-                        },
-                        headlineContent = { Text(it.title) },
-                        overlineContent = { Text(it.source.serviceName) },
-                        supportingContent = if (it.description.isNotEmpty()) {
-                            { Text(it.description) }
-                        } else null
-                    )
-                }
+                            Icon(
+                                Icons.Default.FavoriteBorder,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.align(Alignment.TopStart)
+                            )
+                        }
+                    },
+                    colorFilter = colorFilter,
+                    modifier = Modifier.animateItem()
+                ) { onClick(it) }
             }
         }
     }
