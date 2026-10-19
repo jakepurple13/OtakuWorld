@@ -5,6 +5,7 @@ import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpStorage
 import com.programmersbox.kmpmodels.KmpSubtitle
+import com.programmersbox.kmpmodels.cleanSubtitleLabel
 import eu.kanade.tachiyomi.animesource.AnimeCatalogueSource
 import eu.kanade.tachiyomi.animesource.model.AnimesPage
 import eu.kanade.tachiyomi.animesource.model.SAnime
@@ -129,7 +130,7 @@ object AniyomiSourceMapper {
             // Lib 14 videos with a deferred url hold the literal "null" until resolved.
             link = video.videoUrl.takeUnless { it == "null" },
             quality = video.videoTitle,
-            subtitles = video.subtitleTracks.map { KmpSubtitle(it.url, it.lang) },
+            subtitles = video.subtitleTracks.map { KmpSubtitle(it.url, cleanSubtitleLabel(it.lang)) },
             server = server,
             mimeType = HLS.takeIf { isHls(video.videoUrl) },
         ).apply {

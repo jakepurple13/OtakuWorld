@@ -53,6 +53,20 @@ class AniyomiSourceMapperTest {
     }
 
     @Test
+    fun subtitleLabelsUnescaped() {
+        val storage = AniyomiSourceMapper.toStorage(
+            Video(
+                videoUrl = "https://v/a.mp4",
+                videoTitle = "720p",
+                subtitleTracks = listOf(Track("https://s/en.vtt", "English - [BestBob] Signs\\/Songs")),
+            ),
+            FakeAnimeHttpSource(),
+            server = null,
+        )
+        assertEquals("English - [BestBob] Signs/Songs", storage.subtitles.single().lang)
+    }
+
+    @Test
     fun subtitlesMapped() {
         val storage = AniyomiSourceMapper.toStorage(
             Video(

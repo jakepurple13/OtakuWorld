@@ -48,6 +48,33 @@ data class KmpSubtitle(
     val headers: Map<String, String> = emptyMap(),
 )
 
+/** Some sources leak JSON escapes (`\/`, `\"`, `\\`, `\u00XX`) into subtitle labels; undo them and trim. */
+fun cleanSubtitleLabel(label: String): String {
+    val out = StringBuilder(label.length)
+    var i = 0
+    while (i < label.length) {
+        val c = label[i]
+        val next = label.getOrNull(i + 1)
+        val hex = if (next == 'u' && i + 6 <= label.length) label.substring(i + 2, i + 6) else null
+        when {
+            c != '\\' || next == null -> out.append(c)
+            next == '/' || next == '"' || next == '\\' -> {
+                out.append(next)
+                i++
+            }
+
+            hex != null && hex.all { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' } -> {
+                out.append(hex.toInt(16).toChar())
+                i += 5
+            }
+
+            else -> out.append(c)
+        }
+        i++
+    }
+    return out.toString().trim()
+}
+
 @kotlinx.serialization.Serializable
 data class KmpStorage(
     var sub: String? = null,

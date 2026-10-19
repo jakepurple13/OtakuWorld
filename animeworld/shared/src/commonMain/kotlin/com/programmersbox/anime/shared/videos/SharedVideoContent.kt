@@ -7,6 +7,10 @@ data class SharedVideoContent(
     val path: String,
     val duration: Long,
     val lastPlayedPositionMs: Long,
+    val sizeBytes: Long = 0L,
+    val dateAddedMs: Long = 0L,
+    val isDownload: Boolean = false,
+    val subtitleLabels: List<String> = emptyList(),
 )
 
 expect class VideoLibrarySource {

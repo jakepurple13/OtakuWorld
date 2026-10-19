@@ -17,6 +17,7 @@ import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpStorage
 import com.programmersbox.kmpmodels.KmpSubtitle
+import com.programmersbox.kmpmodels.cleanSubtitleLabel
 import java.text.DateFormat
 import java.util.Date
 
@@ -116,7 +117,7 @@ object CloudstreamMapper {
         return KmpStorage(
             link = link.url,
             quality = listOf(link.name, Qualities.getStringByInt(link.quality)).filter { it.isNotBlank() }.joinToString(" - "),
-            subtitles = subtitles.map { KmpSubtitle(it.url, it.lang, it.headers.orEmpty()) },
+            subtitles = subtitles.map { KmpSubtitle(it.url, cleanSubtitleLabel(it.lang), it.headers.orEmpty()) },
             server = link.source,
             mimeType = mimeType,
         ).apply { headers.putAll(link.getAllHeaders()) }

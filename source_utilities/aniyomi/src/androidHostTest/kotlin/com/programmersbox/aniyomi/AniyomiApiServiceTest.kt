@@ -12,6 +12,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class AniyomiApiServiceTest {
 
@@ -24,7 +25,7 @@ class AniyomiApiServiceTest {
         assertEquals("aniyomi:42", service.serviceName)
         assertEquals("Fake (en)", service.displayName)
         assertEquals("en", service.language)
-        assertFalse(service.canDownload)
+        assertTrue(service.canDownload)
         assertFalse(service.canCast)
         assertFalse(service is KmpConfigurableApiService)
     }

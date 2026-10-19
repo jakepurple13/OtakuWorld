@@ -25,6 +25,15 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   ([#2492](https://github.com/jakepurple13/OtakuWorld/pull/2492))
 - **Notifications timeline and Catch-up deck**
   ([#2588](https://github.com/jakepurple13/OtakuWorld/pull/2588))
+- **Native Aniyomi and CloudStream extensions in AnimeWorld (Android).** Aniyomi extension APKs
+  and CloudStream `.cs3` plugins load directly, without a bridge app
+  ([#2611](https://github.com/jakepurple13/OtakuWorld/pull/2611),
+  [#2612](https://github.com/jakepurple13/OtakuWorld/pull/2612))
+- **Subtitle styling and offline subtitles in AnimeWorld.** A subtitle settings screen and an
+  in-player quick sheet, plus HLS episode downloads that keep their subtitles
+  ([#2613](https://github.com/jakepurple13/OtakuWorld/pull/2613))
+- **Redesigned AnimeWorld Downloads screen** with live progress, failed downloads you can retry,
+  and readable episode titles ([#2614](https://github.com/jakepurple13/OtakuWorld/pull/2614))
 
 ---
 
@@ -240,6 +249,12 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   [#2512](https://github.com/jakepurple13/OtakuWorld/pull/2512),
   [#2560](https://github.com/jakepurple13/OtakuWorld/pull/2560))
 - Version bumped to 33.0.0 ([#2486](https://github.com/jakepurple13/OtakuWorld/pull/2486))
+- Source contract additions in `kmpmodels`: `KmpStorage` gains `subtitles`, `server`, `mimeType`,
+  and `extras`; `KmpApiService` gains `canCast` and `resolve()`; external catalogs gain
+  `install`/`uninstall` hooks ([#2611](https://github.com/jakepurple13/OtakuWorld/pull/2611))
+- Build guard: an app can't depend on both `:mihonsupport` and `:source_utilities:aniyomi`,
+  because they share `eu.kanade.tachiyomi.network.*`
+  ([#2611](https://github.com/jakepurple13/OtakuWorld/pull/2611))
 
 ---
 
@@ -325,15 +340,92 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 
 ### Android
 
+#### New Features
+
+- **Native Aniyomi extension support** (`:source_utilities:aniyomi`)
+  ([#2611](https://github.com/jakepurple13/OtakuWorld/pull/2611)):
+  - Aniyomi anime extension APKs load directly, without a bridge app, the same way MangaWorld
+    loads Mihon extensions
+  - Repo client for legacy `index.min.json` and `index_v2`, a signing-key trust gate, and a loader
+    for extension lib versions 14, 16, and 17
+  - Episodes, hosters, and videos map from the extension, including lazy hosters and the
+    extension's local proxy server
+  - Per-extension settings open from the gear on the extension
+  - Aniyomi sources show up on the Extensions screen, in the installed list, global search, and
+    the language sheet
+- **Native CloudStream plugin support** (`:source_utilities:cloudstream`, GPL-3.0; AnimeWorld
+  only) ([#2612](https://github.com/jakepurple13/OtakuWorld/pull/2612)):
+  - CloudStream `.cs3` plugins download from a repo, are checked against their SHA-256, and load
+    from app-private storage
+  - Trust is per repo; plugins from an untrusted repo are stored but never loaded until you trust
+    the repo
+  - A plugin that fails to load becomes a placeholder instead of crashing the app
+  - Plugin settings open from the extension
+- Subtitles for extension streams ([#2611](https://github.com/jakepurple13/OtakuWorld/pull/2611)):
+  - Sidecar subtitle tracks load with the video, and a default track is picked (your device
+    language as a whole word, then English, preferring full dialogue over signs/songs tracks)
+  - CC menu in the player's top bar to switch tracks or turn subtitles off
+- The quality picker groups streams by server and resolves lazy links before playing, with
+  progress and a message if a link can't be resolved
+  ([#2611](https://github.com/jakepurple13/OtakuWorld/pull/2611))
+- **Subtitle settings** (Settings › Player › Subtitles)
+  ([#2613](https://github.com/jakepurple13/OtakuWorld/pull/2613)):
+  - Size, font, text color, edge style, background opacity, and how far subtitles sit above the
+    bottom, with a live preview
+  - Use embedded styles, turn subtitles on automatically, preferred languages, and skip
+    signs/songs tracks
+  - Uses your dynamic theme colors
+- **In-player subtitle sheet**: tap CC to switch tracks, change the size, toggle the background
+  box, or jump to the full settings. A side panel in landscape and a bottom sheet in portrait
+  ([#2613](https://github.com/jakepurple13/OtakuWorld/pull/2613))
+- **Episode downloads for Aniyomi and CloudStream sources**
+  ([#2613](https://github.com/jakepurple13/OtakuWorld/pull/2613)):
+  - HLS streams download, including AES-128 encrypted streams and fMP4 segments. Streams the
+    downloader can't handle fail with a clear message
+  - Subtitle tracks download next to the episode, and offline playback picks them up
+  - Downloads run in the background with a progress notification and a Cancel button
+  - Partial files are never left behind as finished episodes
+  - Deleting a downloaded episode also deletes its subtitle files
+- **Redesigned Downloads screen** ([#2614](https://github.com/jakepurple13/OtakuWorld/pull/2614)):
+  - Each row shows the show, then "Episode N · Name", then a CC tag with subtitle languages and
+    the file size. The raw file path is no longer shown
+  - Downloading section with live progress and Cancel
+  - Failed downloads stay listed, even after restarting the app, with the reason, Retry, and
+    Remove
+  - Your downloads are separate from other videos on the phone, which sit in a collapsible
+    "Other videos on this phone" section
+
 #### Improvements
 
 - Video library, video player, and quality-choice screens moved to shared code. ExoPlayer stays
   the Android player ([#2505](https://github.com/jakepurple13/OtakuWorld/pull/2505))
+- The player sends every header a stream needs and uses the stream's MIME type when the source
+  gives one ([#2611](https://github.com/jakepurple13/OtakuWorld/pull/2611))
+- Installed badges on the Extensions screen match by catalog, so a source installed from one
+  catalog no longer shows as installed in another
+  ([#2613](https://github.com/jakepurple13/OtakuWorld/pull/2613))
+- Downloading asks for All files access first (Android 11+) or storage permission (Android 9–10)
+  instead of failing ([#2613](https://github.com/jakepurple13/OtakuWorld/pull/2613))
+- Newly downloaded episodes appear at the top of the video library
+  ([#2613](https://github.com/jakepurple13/OtakuWorld/pull/2613))
+- The video library loads off the main thread
+  ([#2614](https://github.com/jakepurple13/OtakuWorld/pull/2614))
 
 #### Bug Fixes
 
 - Fixed a possible crash in the video library from `Handler()` Looper use
   ([#2505](https://github.com/jakepurple13/OtakuWorld/pull/2505))
+- Fixed a player crash on close, a rotation loop when the player forces landscape, and the
+  volume/brightness baseline being lost on rotation
+  ([#2611](https://github.com/jakepurple13/OtakuWorld/pull/2611))
+- Subtitles are no longer pushed off-screen in zoom mode
+  ([#2611](https://github.com/jakepurple13/OtakuWorld/pull/2611))
+- Fixed a crash when tapping Download on an episode (the old download dialog needed an AppCompat
+  theme) ([#2613](https://github.com/jakepurple13/OtakuWorld/pull/2613))
+- Deleting a download on Android 9–10 now removes the video, not just its subtitles
+  ([#2613](https://github.com/jakepurple13/OtakuWorld/pull/2613))
+- Download thumbnails no longer crowd out the title (width and height were swapped)
+  ([#2614](https://github.com/jakepurple13/OtakuWorld/pull/2614))
 - Activity time from the legacy player is migrated and synced
   ([#2513](https://github.com/jakepurple13/OtakuWorld/pull/2513))
 
