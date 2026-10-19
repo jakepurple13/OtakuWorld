@@ -51,11 +51,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
 import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpuiviews.IconLoader
 import com.programmersbox.kmpuiviews.SourceIcon
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus
+import io.kamel.image.KamelImage
+import io.kamel.image.asyncPainterResource
 
 /** Letter avatar under the remote icon, so a missing/failed icon still reads. */
 @Composable
@@ -73,7 +74,12 @@ internal fun RemoteIcon(name: String, iconUrl: String, size: Dp, modifier: Modif
             color = MaterialTheme.colorScheme.onSecondaryContainer,
         )
         if (iconUrl.isNotBlank()) {
-            AsyncImage(model = iconUrl, contentDescription = null, modifier = Modifier.fillMaxSize())
+            KamelImage(
+                resource = { asyncPainterResource(iconUrl) },
+                contentDescription = null,
+                onFailure = {},
+                modifier = Modifier.fillMaxSize(),
+            )
         }
     }
 }

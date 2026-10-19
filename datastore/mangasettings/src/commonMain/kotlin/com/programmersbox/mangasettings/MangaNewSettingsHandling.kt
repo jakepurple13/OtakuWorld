@@ -20,7 +20,6 @@ import okio.BufferedSource
 object MangaNewSettingsSerializer : GenericSerializer<MangaSettings> {
     override val defaultValue: MangaSettings
         get() = MangaSettings(
-            useNewReader = true,
             pagePadding = 4,
             readerType = ReaderType.List,
             imageLoaderType = ImageLoaderType.Kamel,
@@ -38,18 +37,6 @@ class MangaNewSettingsHandling(
     val preferences: DataStore<MangaSettings>,
 ) {
     private val all: Flow<MangaSettings> get() = preferences.data
-
-    val useNewReader = SettingInfo(
-        flow = all.map { it.useNewReader },
-        updateValue = { copy(useNewReader = it) }
-    )
-
-    @Composable
-    fun rememberUseNewReader() = preferences.rememberPreference(
-        key = { it.useNewReader },
-        update = { copy(useNewReader = it) },
-        defaultValue = true
-    )
 
     val pagePadding = SettingInfo(
         flow = all.map { it.pagePadding },

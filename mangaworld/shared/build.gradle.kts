@@ -43,7 +43,6 @@ kotlin {
             implementation(commonLibs.multiplatform.lifecycle.runtime.compose)
 
             implementation(commonLibs.zoomableModifier)
-            implementation(commonLibs.coilCompose)
         }
 
         androidMain.dependencies {

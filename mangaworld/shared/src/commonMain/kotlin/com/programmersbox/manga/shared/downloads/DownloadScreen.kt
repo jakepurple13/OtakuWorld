@@ -63,7 +63,6 @@ import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.manga.shared.ChapterHolder
 import com.programmersbox.manga.shared.reader.ReadViewModel
-import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -104,13 +103,7 @@ expect fun PermissionRequester(content: @Composable () -> Unit)
 private fun DownloadViewer(
     viewModel: DownloadViewModel,
     p1: PaddingValues,
-    mangaSettingsHandling: MangaNewSettingsHandling = koinInject(),
 ) {
-    val useNewReader by mangaSettingsHandling
-        .useNewReader
-        .flow
-        .collectAsStateWithLifecycle(initialValue = true)
-
     val fileList by viewModel.fileList.collectAsStateWithLifecycle()
 
     val fileEntries = remember(fileList) { fileList.entries.toList() }
@@ -171,7 +164,6 @@ private fun DownloadViewer(
                 ) { file ->
                     ChapterItem(
                         file = file,
-                        useNewReader = useNewReader,
                         onDeleted = viewModel::delete
                     )
                 }
@@ -279,7 +271,6 @@ private fun EmptyState(p1: PaddingValues) {
 private fun ChapterItem(
     file: Map.Entry<String, Map<String, List<DownloadedChapters>>>,
     onDeleted: (DownloadedChapters) -> Unit,
-    useNewReader: Boolean = true,
 ) {
     val chapterHolder: ChapterHolder = koinInject()
     var expanded by remember { mutableStateOf(false) }

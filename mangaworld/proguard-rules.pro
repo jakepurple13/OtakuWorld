@@ -106,7 +106,8 @@
 # ============================================================
 # Ktor
 # ============================================================
--keep class io.ktor.** { *; }
+# Source plugins call the Ktor client from the host classloader; the server side is never used.
+-keep class !io.ktor.server.**,io.ktor.** { *; }
 -dontwarn io.ktor.**
 -dontwarn io.ktor.utils.io.**
 
@@ -132,7 +133,7 @@
 # ============================================================
 # Kamel (KMP image loading)
 # ============================================================
--keep class media.kamel.** { *; }
+#-keep class media.kamel.** { *; }
 -dontwarn media.kamel.**
 
 # ============================================================
@@ -151,21 +152,21 @@
 # ============================================================
 # DataStore / Protobuf
 # ============================================================
--keep class * extends com.google.protobuf.GeneratedMessageLite { *; }
--keep class * extends com.google.protobuf.MessageLite { *; }
--keep class * extends com.google.protobuf.MessageLiteOrBuilder { *; }
+#-keep class * extends com.google.protobuf.GeneratedMessageLite { *; }
+#-keep class * extends com.google.protobuf.MessageLite { *; }
+#-keep class * extends com.google.protobuf.MessageLiteOrBuilder { *; }
 -dontwarn com.google.protobuf.**
 
 # ============================================================
 # AboutLibraries
 # ============================================================
--keep class com.mikepenz.aboutlibraries.** { *; }
+#-keep class com.mikepenz.aboutlibraries.** { *; }
 -dontwarn com.mikepenz.aboutlibraries.**
 
 # ============================================================
 # Iconics
 # ============================================================
--keep class com.mikepenz.iconics.** { *; }
+#-keep class com.mikepenz.iconics.** { *; }
 -dontwarn com.mikepenz.iconics.**
 
 # ============================================================
@@ -175,33 +176,21 @@
 #-dontwarn com.github.jakepurple13.**
 
 # ============================================================
-# Piasy BigImageViewer
-# ============================================================
--keep class com.github.piasy.** { *; }
--dontwarn com.github.piasy.**
-
-# ============================================================
-# SubsamplingScaleImageView
-# ============================================================
--keep class com.davemorrissey.labs.** { *; }
--dontwarn com.davemorrissey.labs.**
-
-# ============================================================
 # pagecurl
 # ============================================================
--keep class io.github.oleksandrbalan.pagecurl.** { *; }
+#-keep class io.github.oleksandrbalan.pagecurl.** { *; }
 -dontwarn io.github.oleksandrbalan.pagecurl.**
 
 # ============================================================
 # panpf zoomimage
 # ============================================================
--keep class io.github.panpf.zoomimage.** { *; }
+#-keep class io.github.panpf.zoomimage.** { *; }
 -dontwarn io.github.panpf.zoomimage.**
 
 # ============================================================
 # telephoto
 # ============================================================
--keep class me.saket.telephoto.** { *; }
+#-keep class me.saket.telephoto.** { *; }
 -dontwarn me.saket.telephoto.**
 
 # ============================================================
@@ -244,7 +233,8 @@
 
 # Keep common dependencies used in extensions
 -keep,allowoptimization class androidx.preference.** { public protected *; }
--keep,allowoptimization class kotlin.** { public protected *; }
+# kotlin-reflect internals are not part of any extension's API surface.
+-keep,allowoptimization class !kotlin.reflect.jvm.internal.**,kotlin.** { public protected *; }
 -keep,allowoptimization class kotlinx.coroutines.** { public protected *; }
 -keep,allowoptimization class kotlinx.serialization.** { public protected *; }
 -keep,allowoptimization class kotlin.time.** { public protected *; }

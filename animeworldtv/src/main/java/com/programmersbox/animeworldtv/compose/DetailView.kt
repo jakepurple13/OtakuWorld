@@ -33,7 +33,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -48,14 +47,13 @@ import androidx.tv.material3.Card
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
-import coil3.compose.AsyncImage
-import coil3.request.ImageRequest
-import coil3.request.crossfade
 import com.programmersbox.anime_sources.anime.AllAnime.dispatchIo
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
+import com.skydoves.landscapist.ImageOptions
+import com.skydoves.landscapist.glide.GlideImage
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -222,17 +220,15 @@ private fun MovieImageWithGradients(
     movieDetails: InfoModel,
     bringIntoViewRequester: BringIntoViewRequester
 ) {
-    AsyncImage(
-        model = ImageRequest
-            .Builder(LocalContext.current)
-            .data(movieDetails.imageUrl)
-            .crossfade(true)
-            .build(),
-        contentDescription = movieDetails.title,
+    GlideImage(
+        imageModel = { movieDetails.imageUrl },
+        imageOptions = ImageOptions(
+            contentScale = ContentScale.Crop,
+            contentDescription = movieDetails.title,
+        ),
         modifier = Modifier
             .fillMaxSize()
             .bringIntoViewRequester(bringIntoViewRequester),
-        contentScale = ContentScale.Crop
     )
 
     Box(

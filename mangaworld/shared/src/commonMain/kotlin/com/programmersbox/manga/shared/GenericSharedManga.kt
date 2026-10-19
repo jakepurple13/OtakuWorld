@@ -58,7 +58,6 @@ import com.programmersbox.manga.shared.reader.ReadView
 import com.programmersbox.manga.shared.reader.ReadViewModel
 import com.programmersbox.manga.shared.settings.ImageLoaderSettings
 import com.programmersbox.manga.shared.settings.ImageLoaderSettingsRoute
-import com.programmersbox.manga.shared.settings.PlayerSettings
 import com.programmersbox.manga.shared.settings.ReaderSettings
 import com.programmersbox.manga.shared.settings.ReaderSettingsScreen
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
@@ -313,12 +312,6 @@ abstract class GenericSharedManga(
                     )
                 }
             }*/
-        }
-
-        playerSettings {
-            PlayerSettings(
-                mangaSettingsHandling = mangaSettingsHandling,
-            )
         }
 
         onboardingSettings {

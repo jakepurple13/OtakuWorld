@@ -23,14 +23,6 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil3.compose.AsyncImagePainter
-import coil3.compose.LocalPlatformContext
-import coil3.compose.SubcomposeAsyncImage
-import coil3.compose.SubcomposeAsyncImageContent
-import coil3.request.ImageRequest
-import coil3.request.crossfade
-import coil3.size.Size
 import com.programmersbox.datastore.mangasettings.ImageLoaderType
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import io.kamel.image.KamelImage
@@ -49,7 +41,6 @@ internal fun ImageLoaderType.Composed(
     when (this) {
         ImageLoaderType.Kamel -> Kamel(painter, headers, modifier, contentScale, colorFilter, onRefresh)
         ImageLoaderType.Glide -> Glide(painter, headers, modifier, contentScale, onRefresh)
-        ImageLoaderType.Coil -> Coil(painter, headers, modifier, contentScale, colorFilter, onRefresh)
         ImageLoaderType.Telephoto -> Telephoto(painter, headers, modifier, contentScale, onRefresh)
         else -> Image(
             imageVector = Icons.Default.Image,
@@ -134,49 +125,6 @@ internal fun Glide(
             .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
             .clipToBounds()
     )*/
-}
-
-@Composable
-internal fun Coil(
-    painter: String,
-    headers: Map<String, String>,
-    modifier: Modifier = Modifier,
-    contentScale: ContentScale = ContentScale.Fit,
-    colorFilter: ColorFilter? = null,
-    onRefresh: () -> Unit,
-) {
-    SubcomposeAsyncImage(
-        model = ImageRequest.Builder(LocalPlatformContext.current)
-            .data(painter)
-            .crossfade(true)
-            /*.httpHeaders(
-                NetworkHeaders.Builder()
-                    .apply { headers.forEach { (t, u) -> add(t, u) } }
-                    .build()
-            )*/
-            .size(Size.ORIGINAL)
-            .build(),
-        contentDescription = null,
-        contentScale = contentScale,
-        colorFilter = colorFilter,
-        modifier = modifier
-            .fillMaxSize()
-            .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
-            .clipToBounds()
-    ) {
-        val state by this.painter.state.collectAsStateWithLifecycle()
-        when (state) {
-            is AsyncImagePainter.State.Error -> Text(
-                "Press to refresh",
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .clickable { onRefresh() }
-            )
-
-            is AsyncImagePainter.State.Loading, AsyncImagePainter.State.Empty -> CircularProgressIndicator()
-            is AsyncImagePainter.State.Success -> SubcomposeAsyncImageContent()
-        }
-    }
 }
 
 @Composable

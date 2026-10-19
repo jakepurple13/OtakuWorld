@@ -69,7 +69,6 @@ kotlin {
                 api(commonLibs.kamel.decoder.image.bitmap)
                 api(commonLibs.kamel.decoder.image.vector)
                 api(commonLibs.kamel.decoder.svg.std)
-                api(commonLibs.coilCompose)
                 api(commonLibs.kotlinxSerialization)
                 api(commonLibs.ktorCore)
                 implementation(commonLibs.ktorAuth)
