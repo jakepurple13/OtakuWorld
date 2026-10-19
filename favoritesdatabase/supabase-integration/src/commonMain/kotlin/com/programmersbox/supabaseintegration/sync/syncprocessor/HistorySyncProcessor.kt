@@ -37,8 +37,8 @@ class HistorySyncProcessor(
     override fun getLocalUpdatedAt(local: HistoryItem): Long =
         local.updatedAt
 
-    override fun toRemoteRow(local: HistoryItem, uid: String, timestamp: Long): HistoryItemRow =
-        local.toHistoryItemRow(uid, timestamp)
+    override fun toRemoteRow(local: HistoryItem, uid: String, app: String, timestamp: Long): HistoryItemRow =
+        local.toHistoryItemRow(uid, app, timestamp)
 
     override suspend fun markLocalSynced(local: HistoryItem, timestamp: Long) {
         historyDao.markHistorySynced(local.searchText, timestamp)
@@ -48,9 +48,11 @@ class HistorySyncProcessor(
         historyDao.deleteHistory(local)
     }
 
+    override suspend fun markAllDirty() = historyDao.markAllHistoryDirty()
+
     override suspend fun performUpsert(client: SupabaseClient, items: List<HistoryItemRow>) {
         client.postgrest[tableName].upsert(items) {
-            onConflict = "user_id,search_text"
+            onConflict = "user_id,app,search_text"
         }
     }
 

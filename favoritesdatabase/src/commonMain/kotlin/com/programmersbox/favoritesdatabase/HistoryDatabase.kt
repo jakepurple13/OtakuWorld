@@ -136,6 +136,9 @@ interface HistoryDao {
     @Query("UPDATE History SET updated_at = :timestamp, is_dirty = 0 WHERE search_text = :key")
     suspend fun markHistorySynced(key: String, timestamp: Long)
 
+    @Query("UPDATE History SET is_dirty = 1")
+    suspend fun markAllHistoryDirty()
+
     @Query("UPDATE RecentlyViewed SET updated_at = :timestamp, is_dirty = 0 WHERE url = :url")
     suspend fun markRecentSynced(url: String, timestamp: Long)
 

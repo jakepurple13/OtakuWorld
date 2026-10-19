@@ -113,6 +113,9 @@ interface BookmarkDao {
     @Query("UPDATE bookmarked_chapters SET updated_at = :timestamp, is_dirty = 0 WHERE chapterUrl = :chapterUrl")
     suspend fun markBookmarkSynced(chapterUrl: String, timestamp: Long)
 
+    @Query("UPDATE bookmarked_chapters SET is_dirty = 1")
+    suspend fun markAllBookmarksDirty()
+
     @Query("UPDATE bookmarked_chapters SET is_deleted = 0")
     suspend fun resetAllBookmarksIsDeleted()
 

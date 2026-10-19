@@ -67,6 +67,8 @@ private object UnimplementedListDao : ListDao {
     override suspend fun softDeleteCustomListInfo(uniqueId: String, timestamp: Long) = unsupported()
     override suspend fun markCustomListItemSynced(uuid: String, timestamp: Long) = unsupported()
     override suspend fun markCustomListInfoSynced(uniqueId: String, timestamp: Long) = unsupported()
+    override suspend fun markAllCustomListItemsDirty() = unsupported()
+    override suspend fun markAllCustomListInfoDirty() = unsupported()
     override suspend fun getAllCustomListItemsSync() = unsupported()
     override suspend fun resetAllCustomListItemsIsDeleted() = unsupported()
     override suspend fun deleteAllDeletedCustomListItems() = unsupported()

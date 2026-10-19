@@ -33,9 +33,10 @@ private class TestSyncProcessor(
     override fun observeDirtyItems(): Flow<Int> = flowOf(0)
     override fun isLocalDeleted(local: String) = false
     override fun getLocalUpdatedAt(local: String) = 0L
-    override fun toRemoteRow(local: String, uid: String, timestamp: Long) = local
+    override fun toRemoteRow(local: String, uid: String, app: String, timestamp: Long) = local
     override suspend fun markLocalSynced(local: String, timestamp: Long) {}
     override suspend fun deleteLocal(local: String) {}
+    override suspend fun markAllDirty() {}
     override suspend fun performUpsert(client: SupabaseClient, items: List<String>) {}
     override fun isRemoteDeleted(remote: String) = false
     override fun getRemoteUpdatedAt(remote: String) = 0L
@@ -80,7 +81,7 @@ class SyncProcessorBackupGuardTest {
     fun `push skips work when backup disabled for this table`() = runTest {
         repository.setBackupEnabled("test_table", false)
 
-        processor.push(client, uid = "user-1")
+        processor.push(client, uid = "user-1", app = "test")
 
         assertEquals(0, processor.getDirtyItemsCallCount)
     }
@@ -89,14 +90,14 @@ class SyncProcessorBackupGuardTest {
     fun `push runs when backup enabled for this table`() = runTest {
         repository.setBackupEnabled("test_table", true)
 
-        processor.push(client, uid = "user-1")
+        processor.push(client, uid = "user-1", app = "test")
 
         assertEquals(1, processor.getDirtyItemsCallCount)
     }
 
     @Test
     fun `push runs by default when no preference is stored`() = runTest {
-        processor.push(client, uid = "user-1")
+        processor.push(client, uid = "user-1", app = "test")
 
         assertEquals(1, processor.getDirtyItemsCallCount)
     }
@@ -105,7 +106,7 @@ class SyncProcessorBackupGuardTest {
     fun `pull skips work when backup disabled for this table`() = runTest {
         repository.setBackupEnabled("test_table", false)
 
-        processor.pull(client, uid = "user-1", since = 0L)
+        processor.pull(client, uid = "user-1", app = "test", since = 0L)
 
         assertEquals(0, processor.performSelectCallCount)
     }

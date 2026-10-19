@@ -17,6 +17,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.accountst
 import com.programmersbox.kmpuiviews.presentation.settings.search.DefaultSettingsItems
 import com.programmersbox.kmpuiviews.presentation.settings.search.SettingsSearchViewModel
 import com.programmersbox.kmpuiviews.repository.JsExtensionSourceBridge
+import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.Backup
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.backupproccesor.ActivityBackupProcessor
@@ -39,6 +40,7 @@ import com.programmersbox.sharedcomponents.qrcode.qrCodeModule
 import com.programmersbox.sharedcomponents.stats.StatisticsProvider
 import com.programmersbox.sharedtools.SearchRegistryItem
 import com.programmersbox.supabaseintegration.di.supabaseModule
+import com.programmersbox.supabaseintegration.sync.SupabaseAppId
 import com.programmersbox.supabaseintegration.sync.SyncConfigDataStore
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
@@ -101,6 +103,9 @@ val appModule = module {
             setMaxBackoffMs = { maxBackOffDataStore.set(it) },
         )
     }
+
+    // Keeps each app's Supabase rows separate when apps share an account
+    single { SupabaseAppId(get<AppConfig>().appName.lowercase()) }
 
     viewModel { SettingsSearchViewModel(getAll()) }
     singleOf(::DefaultSettingsItems) bind SearchRegistryItem::class

@@ -1,6 +1,6 @@
 package com.programmersbox.supabaseintegration.migration
 
-import com.programmersbox.supabaseintegration.sync.SyncEngine
+import com.programmersbox.supabaseintegration.sync.syncprocessor.SyncProcessor
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -11,10 +11,12 @@ interface MigrationPrefs {
     fun markMigrationComplete()
 }
 
-expect fun createMigrationPrefs(context: Any?): MigrationPrefs
-
+/**
+ * Rows pushed before the `app` column existed have `app = NULL` and are invisible to pulls.
+ * Marking every local row dirty once makes the next push re-upload them tagged with this app.
+ */
 class MigrationManager(
-    private val syncEngine: SyncEngine,
+    private val syncProcessors: List<SyncProcessor<*, *>>,
     private val prefs: MigrationPrefs,
 ) {
     private val _migrationState = MutableStateFlow(MigrationState.Unknown)
@@ -27,7 +29,7 @@ class MigrationManager(
         }
         _migrationState.value = MigrationState.Running
         runCatching {
-            syncEngine.fullSync()
+            syncProcessors.forEach { it.markAllDirty() }
             prefs.markMigrationComplete()
             _migrationState.value = MigrationState.Complete
         }.onFailure {

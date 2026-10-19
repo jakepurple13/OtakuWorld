@@ -33,8 +33,8 @@ class CustomListInfoSyncProcessor(
     override fun isLocalDeleted(local: CustomListInfo): Boolean = local.isDeleted
     override fun getLocalUpdatedAt(local: CustomListInfo): Long = local.updatedAt
 
-    override fun toRemoteRow(local: CustomListInfo, uid: String, timestamp: Long): CustomListInfoRow =
-        local.toCustomListInfoRow(uid, timestamp)
+    override fun toRemoteRow(local: CustomListInfo, uid: String, app: String, timestamp: Long): CustomListInfoRow =
+        local.toCustomListInfoRow(uid, app, timestamp)
 
     override suspend fun markLocalSynced(local: CustomListInfo, timestamp: Long) {
         listDao.markCustomListInfoSynced(local.uniqueId, timestamp)
@@ -44,9 +44,11 @@ class CustomListInfoSyncProcessor(
         listDao.removeItem(local)
     }
 
+    override suspend fun markAllDirty() = listDao.markAllCustomListInfoDirty()
+
     override suspend fun performUpsert(client: SupabaseClient, items: List<CustomListInfoRow>) {
         client.postgrest[tableName].upsert(items) {
-            onConflict = "user_id,unique_id"
+            onConflict = "user_id,app,unique_id"
         }
     }
 
@@ -91,8 +93,8 @@ class CustomListItemSyncProcessor(
     override fun isLocalDeleted(local: CustomListItem): Boolean = local.isDeleted
     override fun getLocalUpdatedAt(local: CustomListItem): Long = local.updatedAt
 
-    override fun toRemoteRow(local: CustomListItem, uid: String, timestamp: Long): CustomListItemRow =
-        local.toCustomListItemRow(uid, timestamp)
+    override fun toRemoteRow(local: CustomListItem, uid: String, app: String, timestamp: Long): CustomListItemRow =
+        local.toCustomListItemRow(uid, app, timestamp)
 
     override suspend fun markLocalSynced(local: CustomListItem, timestamp: Long) {
         listDao.markCustomListItemSynced(local.uuid, timestamp)
@@ -102,9 +104,11 @@ class CustomListItemSyncProcessor(
         listDao.removeList(local)
     }
 
+    override suspend fun markAllDirty() = listDao.markAllCustomListItemsDirty()
+
     override suspend fun performUpsert(client: SupabaseClient, items: List<CustomListItemRow>) {
         client.postgrest[tableName].upsert(items) {
-            onConflict = "user_id,uuid"
+            onConflict = "user_id,app,uuid"
         }
     }
 

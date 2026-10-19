@@ -233,6 +233,13 @@ interface ItemDao {
     @Query("UPDATE ChapterWatched SET updated_at = :timestamp, is_dirty = 0 WHERE url = :url")
     suspend fun markChapterSynced(url: String, timestamp: Long)
 
+    // Re-push every row, e.g. to tag existing remote rows with this app
+    @Query("UPDATE FavoriteItem SET is_dirty = 1")
+    suspend fun markAllFavoritesDirty()
+
+    @Query("UPDATE ChapterWatched SET is_dirty = 1")
+    suspend fun markAllChaptersDirty()
+
     @Query("UPDATE FavoriteItem SET is_deleted = 0")
     suspend fun resetAllIsDeleted()
 

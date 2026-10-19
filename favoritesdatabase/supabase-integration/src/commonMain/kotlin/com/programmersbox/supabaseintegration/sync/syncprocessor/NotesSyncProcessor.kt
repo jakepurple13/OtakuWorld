@@ -37,8 +37,8 @@ class NotesSyncProcessor(
     override fun getLocalUpdatedAt(local: NoteItem): Long =
         local.updatedAt
 
-    override fun toRemoteRow(local: NoteItem, uid: String, timestamp: Long): NoteItemRow =
-        local.toNoteItemRow(uid, timestamp)
+    override fun toRemoteRow(local: NoteItem, uid: String, app: String, timestamp: Long): NoteItemRow =
+        local.toNoteItemRow(uid, app, timestamp)
 
     override suspend fun markLocalSynced(local: NoteItem, timestamp: Long) {
         notesDao.markNoteSynced(local.itemUrl, timestamp)
@@ -48,9 +48,11 @@ class NotesSyncProcessor(
         notesDao.deleteNote(local.itemUrl)
     }
 
+    override suspend fun markAllDirty() = notesDao.markAllNotesDirty()
+
     override suspend fun performUpsert(client: SupabaseClient, items: List<NoteItemRow>) {
         client.postgrest[tableName].upsert(items) {
-            onConflict = "user_id,item_url"
+            onConflict = "user_id,app,item_url"
         }
     }
 

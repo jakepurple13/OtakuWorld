@@ -16,6 +16,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class FavoriteItemRow(
     @SerialName("user_id") val userId: String,
+    val app: String? = null,
     val url: String,
     val title: String,
     val description: String,
@@ -37,8 +38,8 @@ fun FavoriteItemRow.toDbModel() = DbModel(
     isDeleted = isDeleted, isDirty = false,
 )
 
-fun DbModel.toFavoriteRow(userId: String, timestamp: Long = updatedAt) = FavoriteItemRow(
-    userId = userId, url = url, title = title, description = description,
+fun DbModel.toFavoriteRow(userId: String, app: String, timestamp: Long = updatedAt) = FavoriteItemRow(
+    userId = userId, app = app, url = url, title = title, description = description,
     imageUrl = imageUrl, source = source, numChapters = numChapters,
     shouldCheckForUpdate = shouldCheckForUpdate,
     supabaseId = supabaseId, createdAt = createdAt, updatedAt = timestamp,
@@ -48,6 +49,7 @@ fun DbModel.toFavoriteRow(userId: String, timestamp: Long = updatedAt) = Favorit
 @Serializable
 data class ChapterWatchedRow(
     @SerialName("user_id") val userId: String,
+    val app: String? = null,
     val url: String,
     val name: String,
     @SerialName("favorite_url") val favoriteUrl: String,
@@ -63,8 +65,8 @@ fun ChapterWatchedRow.toChapterWatched() = ChapterWatched(
     isDeleted = isDeleted, isDirty = false,
 )
 
-fun ChapterWatched.toChapterRow(userId: String, timestamp: Long = updatedAt) = ChapterWatchedRow(
-    userId = userId, url = url, name = name, favoriteUrl = favoriteUrl,
+fun ChapterWatched.toChapterRow(userId: String, app: String, timestamp: Long = updatedAt) = ChapterWatchedRow(
+    userId = userId, app = app, url = url, name = name, favoriteUrl = favoriteUrl,
     supabaseId = supabaseId, createdAt = createdAt, updatedAt = timestamp,
     isDeleted = isDeleted,
 )
@@ -72,6 +74,7 @@ fun ChapterWatched.toChapterRow(userId: String, timestamp: Long = updatedAt) = C
 @Serializable
 data class BookmarkedChapterRow(
     @SerialName("user_id") val userId: String,
+    val app: String? = null,
     @SerialName("chapter_url") val chapterUrl: String,
     @SerialName("chapter_name") val chapterName: String,
     @SerialName("parent_url") val parentUrl: String,
@@ -100,8 +103,9 @@ fun BookmarkedChapterRow.toBookmarkedChapter() = BookmarkedChapter(
     isDirty = false,
 )
 
-fun BookmarkedChapter.toBookmarkedChapterRow(userId: String, timestamp: Long = updatedAt) = BookmarkedChapterRow(
+fun BookmarkedChapter.toBookmarkedChapterRow(userId: String, app: String, timestamp: Long = updatedAt) = BookmarkedChapterRow(
     userId = userId,
+    app = app,
     chapterUrl = chapterUrl,
     chapterName = chapterName,
     parentUrl = parentUrl,
@@ -118,6 +122,7 @@ fun BookmarkedChapter.toBookmarkedChapterRow(userId: String, timestamp: Long = u
 @Serializable
 data class NoteItemRow(
     @SerialName("user_id") val userId: String,
+    val app: String? = null,
     @SerialName("item_url") val itemUrl: String,
     @SerialName("item_title") val itemTitle: String,
     val content: String,
@@ -140,8 +145,9 @@ fun NoteItemRow.toNoteItem() = NoteItem(
     isDirty = false,
 )
 
-fun NoteItem.toNoteItemRow(userId: String, timestamp: Long = updatedAt) = NoteItemRow(
+fun NoteItem.toNoteItemRow(userId: String, app: String, timestamp: Long = updatedAt) = NoteItemRow(
     userId = userId,
+    app = app,
     itemUrl = itemUrl,
     itemTitle = itemTitle,
     content = content,
@@ -155,6 +161,7 @@ fun NoteItem.toNoteItemRow(userId: String, timestamp: Long = updatedAt) = NoteIt
 @Serializable
 data class HistoryItemRow(
     @SerialName("user_id") val userId: String,
+    val app: String? = null,
     @SerialName("search_text") val searchText: String,
     val time: Long = 0L,
     @SerialName("supabase_id") val supabaseId: String? = null,
@@ -173,8 +180,9 @@ fun HistoryItemRow.toHistoryItem() = HistoryItem(
     isDirty = false,
 )
 
-fun HistoryItem.toHistoryItemRow(userId: String, timestamp: Long = updatedAt) = HistoryItemRow(
+fun HistoryItem.toHistoryItemRow(userId: String, app: String, timestamp: Long = updatedAt) = HistoryItemRow(
     userId = userId,
+    app = app,
     searchText = searchText,
     time = time,
     supabaseId = supabaseId,
@@ -186,6 +194,7 @@ fun HistoryItem.toHistoryItemRow(userId: String, timestamp: Long = updatedAt) = 
 @Serializable
 data class CustomListItemRow(
     @SerialName("user_id") val userId: String,
+    val app: String? = null,
     val uuid: String,
     val name: String,
     val time: Long = 0L,
@@ -212,8 +221,9 @@ fun CustomListItemRow.toCustomListItem() = CustomListItem(
     isDirty = false,
 )
 
-fun CustomListItem.toCustomListItemRow(userId: String, timestamp: Long = updatedAt) = CustomListItemRow(
+fun CustomListItem.toCustomListItemRow(userId: String, app: String, timestamp: Long = updatedAt) = CustomListItemRow(
     userId = userId,
+    app = app,
     uuid = uuid,
     name = name,
     time = time,
@@ -229,6 +239,7 @@ fun CustomListItem.toCustomListItemRow(userId: String, timestamp: Long = updated
 @Serializable
 data class CustomListInfoRow(
     @SerialName("user_id") val userId: String,
+    val app: String? = null,
     @SerialName("unique_id") val uniqueId: String,
     val uuid: String,
     val title: String = "",
@@ -257,8 +268,9 @@ fun CustomListInfoRow.toCustomListInfo() = CustomListInfo(
     isDirty = false,
 )
 
-fun CustomListInfo.toCustomListInfoRow(userId: String, timestamp: Long = updatedAt) = CustomListInfoRow(
+fun CustomListInfo.toCustomListInfoRow(userId: String, app: String, timestamp: Long = updatedAt) = CustomListInfoRow(
     userId = userId,
+    app = app,
     uniqueId = uniqueId,
     uuid = uuid,
     title = title,
@@ -275,6 +287,7 @@ fun CustomListInfo.toCustomListInfoRow(userId: String, timestamp: Long = updated
 @Serializable
 data class HeatMapItemRow(
     @SerialName("user_id") val userId: String,
+    val app: String? = null,
     val time: String,
     @SerialName("day_count") val dayCount: Int = 0,
     @SerialName("supabase_id") val supabaseId: String? = null,
@@ -293,8 +306,9 @@ fun HeatMapItemRow.toHeatMapItem() = HeatMapItem(
     isDirty = false,
 )
 
-fun HeatMapItem.toHeatMapItemRow(userId: String, timestamp: Long = updatedAt) = HeatMapItemRow(
+fun HeatMapItem.toHeatMapItemRow(userId: String, app: String, timestamp: Long = updatedAt) = HeatMapItemRow(
     userId = userId,
+    app = app,
     time = time.toString(),
     dayCount = count,
     supabaseId = supabaseId,
@@ -306,12 +320,14 @@ fun HeatMapItem.toHeatMapItemRow(userId: String, timestamp: Long = updatedAt) = 
 @Serializable
 data class ActivityRow(
     @SerialName("user_id") val userId: String,
+    val app: String? = null,
     @SerialName("cumulative_seconds") val cumulativeSeconds: Long = 0L,
     @SerialName("updated_at") val updatedAt: Long = 0L,
 )
 
-fun ActivityTable.toActivityRow(userId: String, timestamp: Long = updatedAt) = ActivityRow(
+fun ActivityTable.toActivityRow(userId: String, app: String, timestamp: Long = updatedAt) = ActivityRow(
     userId = userId,
+    app = app,
     cumulativeSeconds = cumulativeSeconds,
     updatedAt = timestamp,
 )
