@@ -3,5 +3,21 @@
   "extends": [
     "config:base"
   ],
+  "schedule": ["every weekend"],
+  "prConcurrentLimit": 5,
+  "rebaseWhen": "conflicted",
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["patch"],
+      "groupName": "all patch dependencies",
+      "groupSlug": "all-patch",
+      "automerge": true
+    },
+    {
+      "matchUpdateTypes": ["minor"],
+      "groupName": "all minor dependencies",
+      "groupSlug": "all-minor"
+    }
+  ],
   "ignoreDeps": ["app.cash.zipline:zipline-profiler", "app.cash.zipline:zipline-loader"]
 }
