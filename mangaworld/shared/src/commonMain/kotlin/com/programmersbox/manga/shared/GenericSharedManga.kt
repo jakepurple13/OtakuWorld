@@ -175,7 +175,7 @@ abstract class GenericSharedManga(
             itemsIndexed(
                 list,
                 key = { i, it -> "${it.url}$i" },
-                contentType = { _, i -> i }
+                contentType = { _, _ -> "item" }
             ) { _, it ->
                 M3CoverCard(
                     onLongPress = { c -> onLongPress(it, c) },
