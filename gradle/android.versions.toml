@@ -57,7 +57,7 @@ glance-material3 = { module = "androidx.glance:glance-material3", version.ref = 
 
 # Android Foundation
 androidBrowserHelper = "com.google.androidbrowserhelper:androidbrowserhelper:2.7.3"
-androidCore = "androidx.core:core-ktx:1.19.0"
+androidCore = "androidx.core:core-ktx:1.19.1"
 androidxBrowser = "androidx.browser:browser:1.10.0"
 androidxLegacySupport = "androidx.legacy:legacy-support-v4:1.0.0"
 androidxWebkit = "androidx.webkit:webkit:1.17.0"
