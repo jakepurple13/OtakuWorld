@@ -68,7 +68,7 @@ androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref
 androidx-core-performance = { module = "androidx.core:core-performance", version.ref = "corePerformance" }
 constraintlayout = "androidx.constraintlayout:constraintlayout:2.2.2"
 coreLibraryDesugaring = { module = "com.android.tools:desugar_jdk_libs", version = "2.1.5" }
-fragmentKtx = "androidx.fragment:fragment-ktx:1.9.0"
+fragmentKtx = "androidx.fragment:fragment-ktx:1.9.1"
 iconicsCore = "com.mikepenz:iconics-core:5.6.0"
 material = "com.google.android.material:material:1.14.0"
 preference = "androidx.preference:preference-ktx:1.2.1"
