@@ -9,9 +9,16 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
+import com.programmersbox.anime.shared.downloads.OfflineSubtitles
+import com.programmersbox.anime.shared.downloads.isInFolder
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import java.io.File
 
 private val externalContentUri: Uri
     get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -20,7 +27,10 @@ private val externalContentUri: Uri
         MediaStore.Video.Media.EXTERNAL_CONTENT_URI
     }
 
-actual class VideoLibrarySource(private val context: Context) {
+actual class VideoLibrarySource(
+    private val context: Context,
+    private val downloadFolder: () -> String,
+) {
 
     private val prefs: SharedPreferences
         get() = context.getSharedPreferences("videos", Context.MODE_PRIVATE)
@@ -31,26 +41,39 @@ actual class VideoLibrarySource(private val context: Context) {
             MediaStore.Video.Media.DISPLAY_NAME,
             MediaStore.Video.Media.DURATION,
             MediaStore.Video.Media._ID,
+            MediaStore.Video.Media.SIZE,
+            MediaStore.Video.Media.DATE_ADDED,
         )
+        val folder = downloadFolder()
         val results = mutableListOf<SharedVideoContent>()
         context.contentResolver.query(
             externalContentUri,
             projections,
             null,
             null,
-            "LOWER (${MediaStore.Video.Media.DATE_TAKEN}) DESC"
+            "COALESCE(${MediaStore.Video.Media.DATE_TAKEN}, ${MediaStore.Video.Media.DATE_ADDED} * 1000) DESC"
         )?.use { cursor ->
             while (cursor.moveToNext()) {
                 try {
                     val id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Video.Media._ID))
                     val contentUri = ContentUris.withAppendedId(externalContentUri, id)
                     val path = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA))
+                    if (path?.endsWith(".part") == true) continue
+                    val isDownload = isInFolder(path, folder)
                     results.add(
                         SharedVideoContent(
                             videoName = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DISPLAY_NAME)).orEmpty(),
                             path = contentUri.toString(),
                             duration = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DURATION)),
                             lastPlayedPositionMs = prefs.getLong(path.orEmpty(), 0L),
+                            sizeBytes = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.SIZE)),
+                            dateAddedMs = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATE_ADDED)) * 1000L,
+                            isDownload = isDownload,
+                            subtitleLabels = if (isDownload && path != null) {
+                                OfflineSubtitles.find(File(path)).map { it.lang }
+                            } else {
+                                emptyList()
+                            },
                         )
                     )
                 } catch (e: Exception) {
@@ -62,15 +85,19 @@ actual class VideoLibrarySource(private val context: Context) {
     }
 
     actual fun observeVideos(): Flow<List<SharedVideoContent>> = callbackFlow {
-        trySend(queryVideos())
+        trySend(Unit)
         val observer = object : ContentObserver(Handler(Looper.getMainLooper())) {
             override fun onChange(selfChange: Boolean) {
-                trySend(queryVideos())
+                // Signal only; the query runs on the flow's IO dispatcher below.
+                trySend(Unit)
             }
         }
         context.contentResolver.registerContentObserver(externalContentUri, true, observer)
         awaitClose { context.contentResolver.unregisterContentObserver(observer) }
     }
+        .conflate()
+        .map { queryVideos() }
+        .flowOn(Dispatchers.IO)
 
     actual fun getResumePosition(path: String): Long = prefs.getLong(path, 0L)
 
@@ -80,13 +107,16 @@ actual class VideoLibrarySource(private val context: Context) {
 
     actual fun delete(content: SharedVideoContent) {
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                content.path.toUri()?.let {
-                    context.contentResolver.delete(it, null, null)
-                }
-            } else {
-                java.io.File(content.path).delete()
+            // Resolve before the MediaStore row (and its DATA path) is gone; clean sidecars only after it succeeds.
+            val videoFile = OfflineSubtitles.resolveVideoFile(context, content.path)
+            val uri = content.path.toUri()
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+                // content.path is a content:// URI, so delete the resolved file itself, then drop the MediaStore row.
+                videoFile?.delete()
             }
+            uri?.let { context.contentResolver.delete(it, null, null) }
+            // Only drop sidecars once the video is really gone (a 0-row delete must keep its subtitles).
+            if (videoFile?.exists() == false) OfflineSubtitles.deleteFor(videoFile)
         } catch (e: Exception) {
             e.printStackTrace()
         }

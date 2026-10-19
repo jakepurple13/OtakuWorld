@@ -1,0 +1,79 @@
+// Copied from recloudstream/cloudstream d9c55e2e5b020dde8e28c12a3e7802df962265ac, GPL-3.0
+package com.lagradost.cloudstream3.extractors
+
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.lagradost.cloudstream3.APIHolder.getCaptchaToken
+import com.lagradost.cloudstream3.ErrorLoadingException
+import com.lagradost.cloudstream3.SubtitleFile
+import com.lagradost.cloudstream3.app
+import com.lagradost.cloudstream3.utils.*
+import com.lagradost.cloudstream3.utils.AppUtils.tryParseJson
+import io.ktor.http.Url
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+open class Streamplay : ExtractorApi() {
+    override val name = "Streamplay"
+    override val mainUrl = "https://streamplay.to"
+    override val requiresReferer = true
+
+    override suspend fun getUrl(
+        url: String,
+        referer: String?,
+        subtitleCallback: (SubtitleFile) -> Unit,
+        callback: (ExtractorLink) -> Unit,
+    ) {
+        val request = app.get(url, referer = referer)
+        val redirectUrl = request.url
+        val mainServer = Url(redirectUrl).let { "${it.protocol.name}://${it.host}" }
+        val key = redirectUrl.substringAfter("embed-").substringBefore(".html")
+        val token = request.document.select("script").find { it.data().contains("sitekey:") }?.data()
+            ?.substringAfterLast("sitekey: '")?.substringBefore("',")?.let { captchaKey ->
+                getCaptchaToken(
+                    redirectUrl,
+                    captchaKey,
+                    referer = "$mainServer/",
+                )
+            } ?: throw ErrorLoadingException("can't bypass captcha")
+
+        app.post(
+            "$mainServer/player-$key-488x286.html", data = mapOf(
+                "op" to "embed",
+                "token" to token,
+            ),
+            referer = redirectUrl,
+            headers = mapOf(
+                "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+                "Content-Type" to "application/x-www-form-urlencoded",
+            ),
+        ).document.select("script").find { script ->
+            script.data().contains("eval(function(p,a,c,k,e,d)")
+        }?.let {
+            val data = getAndUnpack(it.data()).substringAfter("sources=[").substringBefore(",desc")
+                .replace("file", "\"file\"").replace("label", "\"label\"")
+            tryParseJson<List<Source>>("[$data}]")?.map { res ->
+                callback.invoke(
+                    newExtractorLink(
+                        this.name,
+                        this.name,
+                        res.file ?: return@map null,
+                    ) {
+                        this.referer = "$mainServer/"
+                        this.headers = mapOf("Range" to "bytes=0-")
+                        this.quality = when (res.label) {
+                            "HD" -> Qualities.P720.value
+                            "SD" -> Qualities.P480.value
+                            else -> Qualities.Unknown.value
+                        }
+                    }
+                )
+            }
+        }
+    }
+
+    @Serializable
+    data class Source(
+        @JsonProperty("file") @SerialName("file") val file: String? = null,
+        @JsonProperty("label") @SerialName("label") val label: String? = null,
+    )
+}

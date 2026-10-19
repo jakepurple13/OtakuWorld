@@ -8,11 +8,18 @@ import androidx.compose.material.icons.filled._1k
 import androidx.compose.material.icons.filled._4k
 import androidx.compose.material.icons.filled._4mp
 import androidx.compose.material.icons.filled._7mp
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.runtime.Composable
-import com.programmersbox.anime.shared.VideoScreen
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpStorage
@@ -20,6 +27,7 @@ import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomScreen
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomSheetItemModel
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
+import kotlinx.coroutines.launch
 
 enum class Qualities(var value: Int) {
     Unknown(0),
@@ -50,30 +58,29 @@ fun getQualityFromName(qualityName: String): Qualities {
 fun VideoChoiceScreen(
     items: List<KmpStorage>,
     infoModel: KmpInfoModel,
-    isStreaming: Boolean,
     model: KmpChapterModel,
     genericInfo: KmpGenericInfo,
     navController: NavigationActions,
-    isCastActive: () -> Boolean = { false },
-    onCastLoad: (KmpStorage) -> Unit = {},
+    onPlay: suspend (KmpStorage) -> Unit,
 ) {
+    val scope = rememberCoroutineScope()
+    val groups = remember(items) { items.groupedByServer() }
+    val ordered = remember(groups) { groups.flatMap { it.second } }
+    val serverStarts = remember(groups) { groups.serverLabels() }
+
+    var playing by remember { mutableStateOf(false) }
+
     val onAction: (KmpStorage) -> Unit = {
-        VideoSourceModel.showVideoSources = null
-        if (isStreaming) {
-            if (isCastActive()) {
-                onCastLoad(it)
-            } else {
-                navController.navigate(
-                    VideoScreen(
-                        showPath = it.link.orEmpty(),
-                        showName = model.name,
-                        downloadOrStream = false,
-                        referer = it.headers["referer"] ?: it.source.orEmpty()
-                    )
-                )
+        // Keep the sheet (and this scope) alive until resolve/play (or resolve/enqueue) finishes.
+        if (!playing) {
+            playing = true
+            scope.launch {
+                try {
+                    onPlay(it)
+                } finally {
+                    VideoSourceModel.showVideoSources = null
+                }
             }
-        } else {
-            genericInfo.downloadChapter(model, listOf(model), infoModel, navController)
         }
     }
 
@@ -84,11 +91,15 @@ fun VideoChoiceScreen(
         ListBottomScreen(
             includeInsetPadding = false,
             title = "Choose quality for ${model.name}",
-            list = items,
-            onClick = { onAction(it) }
+            list = ordered,
+            onClick = { onAction(it) },
+            lazyListContent = {
+                if (playing) item { LinearProgressIndicator(modifier = Modifier.fillMaxWidth()) }
+            }
         ) {
             ListBottomSheetItemModel(
                 primaryText = it.quality.orEmpty(),
+                overlineText = serverStarts[it],
                 icon = when (getQualityFromName(it.quality.orEmpty())) {
                     Qualities.Unknown -> Icons.Default.DeviceUnknown
                     Qualities.P360 -> Icons.AutoMirrored.Filled._360

@@ -24,6 +24,9 @@ actual class VideoLibrarySource(private val animeDesktopSettings: AnimeDesktopSe
                     path = it.absolutePath,
                     duration = 0L,
                     lastPlayedPositionMs = resumePositions.getLong(it.absolutePath, 0L),
+                    sizeBytes = it.length(),
+                    dateAddedMs = it.lastModified(),
+                    isDownload = true,
                 )
             }
             .toList()

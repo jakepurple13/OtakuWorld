@@ -16,6 +16,7 @@ interface KmpApiService {
     val canScrollAll: Boolean get() = canScroll
     val canPlay: Boolean get() = true
     val canDownload: Boolean get() = true
+    val canCast: Boolean get() = true
     val notWorking: Boolean get() = false
     fun getRecentFlow(page: Int = 1): Flow<List<KmpItemModel>> = flow { emit(recent(page)) }.dispatchIo()
     suspend fun recent(page: Int = 1): List<KmpItemModel> = emptyList()
@@ -61,6 +62,9 @@ interface KmpApiService {
         .dispatchIo()
 
     suspend fun chapterInfo(chapterModel: KmpChapterModel): List<KmpStorage> = emptyList()
+
+    /** Resolves a lazily-described stream into a playable one. Default: already resolved. */
+    suspend fun resolve(storage: KmpStorage): KmpStorage = storage
 
     fun getSourceByUrlFlow(url: String): Flow<KmpItemModel> = flow { emit(sourceByUrl(url)) }
         .dispatchIo()
@@ -118,6 +122,10 @@ interface KmpExternalCustomApiServicesCatalog : KmpApiServicesCatalog {
     fun shouldReload(packageName: String): Boolean = false
 
     suspend fun getRemoteSources(customUrls: List<String>): List<KmpRemoteSources> = emptyList()
+
+    suspend fun install(remote: KmpRemoteSources): Boolean = false
+
+    suspend fun uninstall(source: KmpSourceInformation): Boolean = false
 }
 
 @Serializable
