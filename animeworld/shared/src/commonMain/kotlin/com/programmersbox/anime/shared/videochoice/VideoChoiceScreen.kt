@@ -58,7 +58,6 @@ fun getQualityFromName(qualityName: String): Qualities {
 fun VideoChoiceScreen(
     items: List<KmpStorage>,
     infoModel: KmpInfoModel,
-    isStreaming: Boolean,
     model: KmpChapterModel,
     genericInfo: KmpGenericInfo,
     navController: NavigationActions,
@@ -67,28 +66,21 @@ fun VideoChoiceScreen(
     val scope = rememberCoroutineScope()
     val groups = remember(items) { items.groupedByServer() }
     val ordered = remember(groups) { groups.flatMap { it.second } }
-    val serverStarts = remember(groups) {
-        if (groups.size > 1) groups.mapNotNull { (server, list) -> server?.let { list.first() to it } }.toMap() else emptyMap()
-    }
+    val serverStarts = remember(groups) { groups.serverLabels() }
 
     var playing by remember { mutableStateOf(false) }
 
     val onAction: (KmpStorage) -> Unit = {
-        if (isStreaming) {
-            // Keep the sheet (and this scope) alive until resolve/play finishes.
-            if (!playing) {
-                playing = true
-                scope.launch {
-                    try {
-                        onPlay(it)
-                    } finally {
-                        VideoSourceModel.showVideoSources = null
-                    }
+        // Keep the sheet (and this scope) alive until resolve/play (or resolve/enqueue) finishes.
+        if (!playing) {
+            playing = true
+            scope.launch {
+                try {
+                    onPlay(it)
+                } finally {
+                    VideoSourceModel.showVideoSources = null
                 }
             }
-        } else {
-            VideoSourceModel.showVideoSources = null
-            genericInfo.downloadChapter(model, listOf(model), infoModel, navController)
         }
     }
 

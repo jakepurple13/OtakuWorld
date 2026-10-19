@@ -48,14 +48,29 @@ sealed interface CatalogUi {
     data class Loaded(val items: List<RemoteItem>) : CatalogUi
 }
 
-/** Package name first; falls back to the legacy rule of a shared source base URL. Blank keys never match. */
-fun KmpRemoteSources.findInstalled(installed: List<KmpSourceInformation>): KmpSourceInformation? =
-    installed.find { packageName.isNotBlank() && it.packageName == packageName }
-        ?: installed.find { i -> i.apiService.baseUrl.isNotBlank() && sources.any { it.baseUrl == i.apiService.baseUrl } }
+/**
+ * Package name first; falls back to the legacy rule of a shared source base URL. Blank keys never match.
+ * With [catalogName], installed sources owned by a different catalog never match, and the base-URL fallback is skipped for
+ * sources owned by a native catalog (two catalogs can ship a source for the same site).
+ */
+fun KmpRemoteSources.findInstalled(installed: List<KmpSourceInformation>, catalogName: String? = null): KmpSourceInformation? {
+    val candidates = if (catalogName == null) installed else installed.filter { it.catalog == null || it.catalog?.name == catalogName }
+    return candidates.find { packageName.isNotBlank() && it.packageName == packageName }
+        ?: candidates.find { i ->
+            i.catalog !is KmpExternalCustomApiServicesCatalog &&
+                    i.apiService.baseUrl.isNotBlank() && sources.any { it.baseUrl == i.apiService.baseUrl }
+        }
+}
 
-fun KmpSourceInformation.findRemote(remotes: List<KmpRemoteSources>): KmpRemoteSources? =
-    remotes.find { packageName.isNotBlank() && it.packageName == packageName }
-        ?: remotes.find { r -> apiService.baseUrl.isNotBlank() && r.sources.any { it.baseUrl == apiService.baseUrl } }
+/** Same rule as [findInstalled], applied to this installed source's catalog. */
+fun KmpSourceInformation.findRemote(remotes: List<KmpRemoteSources>, catalogName: String? = null): KmpRemoteSources? {
+    if (catalogName != null && catalog != null && catalog?.name != catalogName) return null
+    return remotes.find { packageName.isNotBlank() && it.packageName == packageName }
+        ?: remotes.find { r ->
+            catalog !is KmpExternalCustomApiServicesCatalog &&
+                    apiService.baseUrl.isNotBlank() && r.sources.any { it.baseUrl == apiService.baseUrl }
+        }
+}
 
 /** Latest download entry for [url], unless it already finished or was cancelled. Errors stay visible. */
 fun List<DownloadAndInstallState>.statusFor(url: String): DownloadAndInstallStatus? =
@@ -83,10 +98,11 @@ fun resolveState(
     versionOf: (KmpSourceInformation) -> String,
     downloads: List<DownloadAndInstallState>,
     requested: Set<String> = emptySet(),
+    catalogName: String? = null,
 ): RemoteItemState {
     downloads.statusFor(remote.downloadLink)?.let { return RemoteItemState.Installing(it) }
     val queued = remote.downloadLink in requested
-    val match = remote.findInstalled(installed)
+    val match = remote.findInstalled(installed, catalogName)
         ?: return if (queued) RemoteItemState.Installing(Queued) else RemoteItemState.NotInstalled
     val version = versionOf(match)
     return when {
@@ -148,6 +164,29 @@ suspend fun installViaCatalogs(catalogs: List<KmpExternalCustomApiServicesCatalo
         }
     }
 
+/**
+ * Runs [installViaCatalogs] for every remote in order; ones no catalog claims go to [fallback].
+ * True if any was claimed, so the caller reloads sources once.
+ */
+suspend fun installAllViaCatalogs(
+    catalogs: List<KmpExternalCustomApiServicesCatalog>,
+    remotes: List<KmpRemoteSources>,
+    fallback: (KmpRemoteSources) -> Unit,
+): Boolean = remotes
+    .map { remote -> installViaCatalogs(catalogs, remote).also { claimed -> if (!claimed) fallback(remote) } }
+    .any { it }
+
+/** Runs [block], logging an exception instead of letting it crash the caller; cancellation still propagates. */
+suspend fun logFailures(block: suspend () -> Unit) {
+    try {
+        block()
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+}
+
 /** A catalog group can only be uninstalled as a unit when it is one APK (e.g. a bridge). */
 fun List<KmpSourceInformation>.canUninstallAll(): Boolean = map { it.packageName }.distinct().size == 1
 
@@ -162,7 +201,7 @@ fun catalogUi(
         is RemoteViewState -> CatalogUi.Loaded(
             state.sources
                 .newestPerPackage()
-                .map { RemoteItem(it, name, resolveState(it, installed, versionOf, downloads, requested)) }
+                .map { RemoteItem(it, name, resolveState(it, installed, versionOf, downloads, requested, name)) }
                 .shelfOrder()
         )
 

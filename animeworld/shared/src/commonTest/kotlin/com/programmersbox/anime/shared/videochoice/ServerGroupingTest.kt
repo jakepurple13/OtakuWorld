@@ -27,4 +27,21 @@ class ServerGroupingTest {
 
         assertEquals(listOf<Pair<String?, List<KmpStorage>>>(null to items), result)
     }
+
+    @Test
+    fun serverLabels_markFirstOfEachGroupAndCallNullServerOther() {
+        val a1 = s("1", "A")
+        val n = s("2", null)
+        val a2 = s("3", "A")
+
+        val result = listOf(a1, n, a2).groupedByServer().serverLabels()
+
+        assertEquals(mapOf(a1 to "A", n to "Other"), result)
+    }
+
+    @Test
+    fun serverLabels_singleGroupIsUnlabeled() {
+        assertEquals(emptyMap(), listOf(s("1", "A"), s("2", "A")).groupedByServer().serverLabels())
+        assertEquals(emptyMap(), listOf(s("1", null)).groupedByServer().serverLabels())
+    }
 }

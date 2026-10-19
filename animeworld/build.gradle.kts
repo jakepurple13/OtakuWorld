@@ -49,6 +49,7 @@ dependencies {
     implementation(projects.uiViews)
     implementation(projects.kmpmodels)
     implementation(projects.sourceUtilities.aniyomi)
+    implementation(projects.sourceUtilities.cloudstream)
     implementation(androidLibs.fragmentCompose)
     implementation(projects.favoritesdatabase)
     implementation(projects.favoritesdatabase.supabaseIntegration)
