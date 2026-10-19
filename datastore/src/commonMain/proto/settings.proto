@@ -41,6 +41,9 @@ message Settings {
   repeated string globalSearchLanguages = 38;
   // Keyed by extension package name.
   map<string, GlobalSearchLanguageOverride> globalSearchLanguageOverrides = 39;
+  repeated string trustedAniyomiExtensions = 40;
+  // Keyed by the full repo.json URL.
+  repeated string trustedCloudstreamRepos = 41;
 }
 
 message GlobalSearchLanguageOverride {

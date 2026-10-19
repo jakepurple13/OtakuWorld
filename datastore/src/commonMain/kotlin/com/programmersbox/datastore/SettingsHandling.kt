@@ -169,6 +169,18 @@ class NewSettingsHandling(
         if (id in it.trustedMihonExtensions) it else it.copy(trustedMihonExtensions = it.trustedMihonExtensions + id)
     }
 
+    val trustedAniyomiExtensions = all.map { it.trustedAniyomiExtensions }
+
+    suspend fun addTrustedAniyomiExtension(id: String) = preferences.updateData {
+        if (id in it.trustedAniyomiExtensions) it else it.copy(trustedAniyomiExtensions = it.trustedAniyomiExtensions + id)
+    }
+
+    val trustedCloudstreamRepos = all.map { it.trustedCloudstreamRepos }
+
+    suspend fun addTrustedCloudstreamRepo(url: String) = preferences.updateData {
+        if (url in it.trustedCloudstreamRepos) it else it.copy(trustedCloudstreamRepos = it.trustedCloudstreamRepos + url)
+    }
+
     val globalSearchLanguages = all.map { it.globalSearchLanguages }
 
     suspend fun setGlobalSearchLanguages(languages: List<String>) = preferences.updateData {

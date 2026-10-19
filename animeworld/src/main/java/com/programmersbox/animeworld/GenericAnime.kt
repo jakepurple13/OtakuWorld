@@ -1,12 +1,14 @@
 package com.programmersbox.animeworld
 
 import android.Manifest
-import android.app.DownloadManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
-import android.widget.ProgressBar
+import android.os.Build
+import android.os.Environment
+import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
@@ -23,6 +25,7 @@ import androidx.compose.material.icons.filled.CastConnected
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.PersonalVideo
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Subtitles
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -40,7 +43,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.net.toUri
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -51,10 +54,18 @@ import androidx.mediarouter.app.MediaRouteDialogFactory
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.google.android.gms.cast.framework.CastContext
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.obsez.android.lib.filechooser.ChooserDialog
 import com.programmersbox.anime.shared.GenericSharedAnime
 import com.programmersbox.anime.shared.StorageHolder
+import com.programmersbox.anime.shared.downloads.DownloadQueueSource
+import com.programmersbox.anime.shared.downloads.EpisodeDownloadRequest
+import com.programmersbox.anime.shared.downloads.enqueueEpisodeDownload
+import com.programmersbox.anime.shared.videoplayer.playerHeaders
+import com.programmersbox.anime.shared.subtitles.DataStoreSubtitleSettingsRepository
+import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRepository
+import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRoute
+import com.programmersbox.anime.shared.subtitles.SubtitleSettingsScreen
+import com.programmersbox.anime.shared.subtitles.SubtitleSettingsViewModel
 import com.programmersbox.anime.shared.VideoScreen
 import com.programmersbox.anime.shared.videochoice.VideoChoiceScreen
 import com.programmersbox.anime.shared.videochoice.VideoSourceModel
@@ -65,14 +76,16 @@ import com.programmersbox.anime.shared.videos.VideoViewerRoute
 import com.programmersbox.anime.shared.videos.ViewVideoScreen
 import com.programmersbox.animeworld.cast.ExpandedControlsActivity
 import com.programmersbox.datastore.asState
-import com.programmersbox.helpfulutils.downloadManager
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.helpfulutils.runOnUIThread
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpStorage
+import com.programmersbox.aniyomi.aniyomiModule
+import com.programmersbox.cloudstream.cloudstreamModule
 import com.programmersbox.kmpuiviews.SystemAlerter
+import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.ShowWhen
@@ -87,17 +100,16 @@ import com.programmersbox.kmpuiviews.utils.Zipper
 import com.programmersbox.sharedtools.BackupProcessor
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.bindsGenericInfo
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import org.koin.dsl.navigation3.navigation
 import java.io.File
@@ -106,13 +118,23 @@ val appModule = module {
     singleOf(::GenericAnime) { bindsGenericInfo() }
     single { NotificationLogo(R.mipmap.ic_launcher_foreground) }
     single { StorageHolder() }
-    singleOf(::VideoLibrarySource)
+    single<SubtitleSettingsRepository> { DataStoreSubtitleSettingsRepository(get<Context>()) }
+    viewModelOf(::SubtitleSettingsViewModel)
+    single { VideoLibrarySource(get(), downloadFolder = { get<Context>().folderLocation }) }
+    singleOf(::DownloadQueueSource)
     single { AnimeDataStoreHandling() }
     singleOf(::Backup)
     factory { Zipper(get(), getAll<BackupProcessor>(), get()) }
     single { SystemAlerter(get(), get(), BuildConfig.APPLICATION_ID) }
 
     navigation<VideoScreen> { VideoPlayerUi(it) }
+
+    navigation<SubtitleSettingsRoute> { SubtitleSettingsScreen() }
+
+    navigation<Screen.SourcePreferences> { SourcePreferencesRoute(it.serviceName) }
+
+    includes(aniyomiModule)
+    includes(cloudstreamModule)
 
     navigation<VideoViewerRoute> {
         val context = LocalContext.current
@@ -161,13 +183,22 @@ class GenericAnime(
 
     override val deepLinkUri: String get() = "animeworld://"
 
+    private var storageAccessDialog by mutableStateOf<StorageAccessPrompt?>(null)
+
+    override fun onResolveFailed(storage: KmpStorage, error: Throwable) {
+        val name = listOfNotNull(storage.source, storage.quality).joinToString(" ").ifBlank { "stream" }
+        runOnUIThread {
+            Toast.makeText(context, "Couldn't load $name: ${error.message ?: error::class.simpleName}", Toast.LENGTH_LONG).show()
+        }
+    }
+
     override fun playOrCast(
         navController: NavigationActions,
         storage: KmpStorage,
         model: KmpChapterModel,
         infoModel: KmpInfoModel,
     ) {
-        if (MainActivity.cast.isCastActive()) {
+        if (MainActivity.cast.isCastActive() && model.source.canCast) {
             MainActivity.cast.loadUrl(
                 storage.link,
                 infoModel.title,
@@ -194,134 +225,67 @@ class GenericAnime(
         infoModel: KmpInfoModel,
         navController: NavigationActions,
     ) {
-        /* if ((model.source as? ShowApi)?.canDownload == false) {
-             Toast.makeText(
-                 context,
-                 context.getString(R.string.source_no_download, model.source.serviceName),
-                 Toast.LENGTH_SHORT
-             ).show()
-             return
-         }*/
-        /*activity.requestPermissions(
-            *if (Build.VERSION.SDK_INT >= 33)
-                arrayOf(Manifest.permission.READ_MEDIA_VIDEO)
-            else arrayOf(
-                Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                Manifest.permission.READ_EXTERNAL_STORAGE,
+        CoroutineScope(Job() + Dispatchers.Main).launch {
+            downloadOnClick(
+                model = model,
+                infoModel = infoModel,
+                onNone = {
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.source_no_download, model.source.serviceName),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                },
+                download = { downloadResolved(model, infoModel, it) },
             )
-        ) { p ->
-            if (p.isGranted) {
-                Toast.makeText(context, R.string.downloading_dots_no_percent, Toast.LENGTH_SHORT).show()
-                getEpisodes(
-                    errorId = R.string.source_no_download,
-                    model = model,
-                    infoModel = infoModel,
-                    context = context,
-                    filter = { !it.link.orEmpty().endsWith(".m3u8") },
-                    navController = navController,
-                    isStreaming = false
-                ) {
-                    //fetchIt(it, model, activity)
-                    downloadVideo(context, model, it)
-                }
-            }
-        }*/
-        Toast.makeText(context, R.string.downloading_dots_no_percent, Toast.LENGTH_SHORT).show()
-        getEpisodes(
-            errorId = R.string.source_no_download,
-            model = model,
-            infoModel = infoModel,
-            context = context,
-            filter = { !it.link.orEmpty().endsWith(".m3u8") },
-            isStreaming = false
-        ) {
-            //fetchIt(it, model, activity)
-            downloadVideo(context, model, it)
         }
     }
 
-    private fun getEpisodes(
-        errorId: Int,
-        model: KmpChapterModel,
-        infoModel: KmpInfoModel,
-        context: Context,
-        filter: (KmpStorage) -> Boolean = { true },
-        isStreaming: Boolean,
-        onAction: (KmpStorage) -> Unit,
-    ) {
-        val dialog = MaterialAlertDialogBuilder(context)
-            .setTitle(R.string.loading_please_wait)
-            .setView(ProgressBar(context))
-            .setIcon(R.mipmap.ic_launcher)
-            .setCancelable(false)
-            .create()
-        CoroutineScope(Job() + Dispatchers.IO).launch {
-            model.getChapterInfo()
-                .onStart { withContext(Dispatchers.Main) { dialog.show() } }
-                .catch {
-                    runOnUIThread {
-                        Toast.makeText(context, R.string.something_went_wrong, Toast.LENGTH_SHORT).show()
-                        dialog.dismiss()
-                    }
-                    emit(emptyList())
-                }
-                .map { it.filter(filter) }
-                .collect { c ->
-                    dialog.dismiss()
-                    when {
-                        c.size == 1 -> {
-                            when (model.source) {
-                                else -> c.firstOrNull()?.let { onAction(it) }
-                            }
-                        }
-
-                        c.isNotEmpty() -> {
-                            VideoSourceModel.showVideoSources = VideoSourceModel(
-                                c = c,
-                                infoModel = infoModel,
-                                isStreaming = isStreaming,
-                                model = model
-                            )
-                        }
-
-                        else -> {
-                            Toast.makeText(context, context.getString(errorId, model.source.serviceName), Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                }
+    /** Lets the source resolve a lazily-described stream first, then hands it to the episode downloader. */
+    suspend fun downloadResolved(model: KmpChapterModel, infoModel: KmpInfoModel, storage: KmpStorage) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (!Environment.isExternalStorageManager()) {
+                storageAccessDialog = StorageAccessPrompt.AllFiles
+                return
+            }
+        } else if (ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            storageAccessDialog = StorageAccessPrompt.Storage
+            return
         }
-    }
-
-    fun downloadVideo(context: Context, model: KmpChapterModel, storage: KmpStorage) {
-        fun getNameFromUrl(url: String): String {
-            return Uri.parse(url).lastPathSegment?.let { it.ifEmpty { model.name } } ?: model.name
-        }
-
-        val d = DownloadManager.Request(storage.link!!.toUri())
-            .setDestinationUri((context.folderLocation + getNameFromUrl(storage.link!!) + "${model.name}.mp4").toUri())
-            .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-            .setAllowedOverRoaming(true)
-            .setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE or DownloadManager.Request.NETWORK_WIFI)
-            .setMimeType("image/*")
-            .setTitle(model.name)
-            .addRequestHeader("Accept-Language", "en-US,en;q=0.5")
-            .addRequestHeader("User-Agent", "\"Mozilla/5.0 (Windows NT 10.0; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0\"")
-            .addRequestHeader("Accept", "text/html,video/mp4,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-            .addRequestHeader("Access-Control-Allow-Origin", "*")
-            .addRequestHeader("Referer", storage.headers["referer"] ?: "http://thewebsite.com")
-            .addRequestHeader("Connection", "keep-alive")
-            .apply {
-                storage.headers.forEach { (t, u) ->
-                    addRequestHeader(t, u)
+        val resolved = try {
+            withContext(Dispatchers.IO) { model.source.resolve(storage) }.also { r ->
+                if (r !== storage) {
+                    if (r.headers.isEmpty()) r.headers.putAll(storage.headers)
+                    if (r.extras.isEmpty()) r.extras.putAll(storage.extras)
                 }
             }
-
-        runCatching { context.downloadManager.enqueue(d) }
-            .onSuccess { Toast.makeText(context, "Downloading...", Toast.LENGTH_SHORT).show() }
-            .onFailure {
-                it.printStackTrace()
-                Toast.makeText(context, "Something went wrong...", Toast.LENGTH_SHORT).show()
-            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            e.printStackTrace()
+            onResolveFailed(storage, e)
+            return
+        }
+        val link = resolved.link
+        if (link.isNullOrBlank()) {
+            onResolveFailed(storage, IllegalStateException("No link"))
+            return
+        }
+        enqueueEpisodeDownload(
+            context,
+            EpisodeDownloadRequest(
+                url = link,
+                headers = playerHeaders(resolved.headers, resolved.headers["referer"] ?: resolved.source),
+                mimeType = resolved.mimeType,
+                qualityHint = resolved.quality,
+                subtitles = resolved.subtitles,
+                title = "${infoModel.title} - ${model.name}",
+                folder = context.folderLocation,
+            )
+        )
+        withContext(Dispatchers.Main) {
+            Toast.makeText(context, R.string.downloading_dots_no_percent, Toast.LENGTH_SHORT).show()
+        }
     }
 
     @Composable
@@ -458,6 +422,18 @@ class GenericAnime(
 
             CategoryGroup {
                 item {
+                    val navController = LocalNavActions.current
+                    PreferenceSetting(
+                        settingTitle = { Text(stringResource(R.string.subtitles)) },
+                        settingIcon = { Icon(Icons.Default.Subtitles, null, modifier = Modifier.fillMaxSize()) },
+                        modifier = Modifier.clickable(
+                            indication = ripple(),
+                            interactionSource = null
+                        ) { navController.navigate(SubtitleSettingsRoute) }
+                    )
+                }
+
+                item {
                     SwitchSetting(
                         settingTitle = { Text(stringResource(R.string.use_new_player)) },
                         summaryValue = { Text(stringResource(R.string.use_new_player_description)) },
@@ -526,24 +502,38 @@ class GenericAnime(
 
     @Composable
     override fun DialogSetups() {
+        storageAccessDialog?.let { prompt ->
+            AlertDialog(
+                onDismissRequest = { storageAccessDialog = null },
+                title = { Text(prompt.title) },
+                text = { Text(prompt.message) },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            storageAccessDialog = null
+                            context.startActivity(
+                                Intent(prompt.action, Uri.parse("package:" + context.packageName))
+                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            )
+                        }
+                    ) { Text("Open settings") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { storageAccessDialog = null }) { Text("Cancel") }
+                }
+            )
+        }
         VideoSourceModel.showVideoSources?.let {
             val navController = LocalNavActions.current
             VideoChoiceScreen(
                 items = it.c,
                 infoModel = it.infoModel,
-                isStreaming = it.isStreaming,
                 model = it.model,
                 genericInfo = this,
                 navController = navController,
-                isCastActive = { MainActivity.cast.isCastActive() },
-                onCastLoad = { storage ->
-                    MainActivity.cast.loadUrl(
-                        storage.link,
-                        it.infoModel.title,
-                        it.model.name,
-                        it.infoModel.imageUrl,
-                        storage.headers
-                    )
+                onPlay = { s ->
+                    if (it.isStreaming) playResolved(navController, s, it.model, it.infoModel)
+                    else downloadResolved(it.model, it.infoModel, s)
                 }
             )
         }
@@ -564,4 +554,17 @@ class GenericAnime(
             activity = MainActivity::class.java
         )
     }
+}
+
+private enum class StorageAccessPrompt(val title: String, val message: String, val action: String) {
+    AllFiles(
+        "Allow file access",
+        "AnimeWorld needs All files access to save episodes and their subtitles to your download folder.",
+        Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+    ),
+    Storage(
+        "Allow storage access",
+        "AnimeWorld needs storage permission to save episodes and their subtitles.",
+        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+    ),
 }

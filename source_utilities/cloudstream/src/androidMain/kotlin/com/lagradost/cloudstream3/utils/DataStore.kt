@@ -1,0 +1,244 @@
+// Copied from recloudstream/cloudstream d9c55e2e5b020dde8e28c12a3e7802df962265ac, GPL-3.0
+package com.lagradost.cloudstream3.utils
+
+import android.content.Context
+import android.content.SharedPreferences
+import androidx.core.content.edit
+import com.lagradost.cloudstream3.CloudStreamApp.Companion.getKeyClass
+import com.lagradost.cloudstream3.CloudStreamApp.Companion.removeKey
+import com.lagradost.cloudstream3.CloudStreamApp.Companion.setKeyClass
+import com.lagradost.cloudstream3.mvvm.logError
+import com.lagradost.cloudstream3.utils.AppUtils.parseJson
+import com.lagradost.cloudstream3.utils.AppUtils.toJsonLiteral
+import kotlin.reflect.KClass
+import kotlin.reflect.KProperty
+
+/** Used to display metadata about downloads and resume watching */
+const val DOWNLOAD_HEADER_CACHE = "download_header_cache"
+const val DOWNLOAD_HEADER_CACHE_BACKUP = "BACKUP_download_header_cache"
+
+//const val WATCH_HEADER_CACHE = "watch_header_cache"
+const val DOWNLOAD_EPISODE_CACHE = "download_episode_cache"
+const val DOWNLOAD_EPISODE_CACHE_BACKUP = "BACKUP_download_episode_cache"
+const val VIDEO_PLAYER_BRIGHTNESS = "video_player_alpha_key"
+const val USER_SELECTED_HOMEPAGE_API = "home_api_used"
+const val USER_PROVIDER_API = "user_custom_sites"
+
+// OTAKU: upstream "rebuild_preference"; a separate file keeps plugin data out of the host app's.
+const val PREFERENCES_NAME = "cloudstream_data"
+
+// TODO degelgate by value for get & set
+
+class PreferenceDelegate<T : Any>(
+    val key: String, val default: T //, private val klass: KClass<T>
+) {
+    private val klass: KClass<out T> = default::class
+
+    // simple cache to make it not get the key every time it is accessed, however this requires
+    // that ONLY this changes the key
+    private var cache: T? = null
+
+    operator fun getValue(self: Any?, property: KProperty<*>) =
+        cache ?: getKeyClass(key, klass.java).also { newCache -> cache = newCache } ?: default
+
+    operator fun setValue(
+        self: Any?,
+        property: KProperty<*>,
+        t: T?
+    ) {
+        cache = t
+        if (t == null) {
+            removeKey(key)
+        } else {
+            setKeyClass(key, t)
+        }
+    }
+}
+
+/** When inserting many keys use this function, this is because apply for every key is very expensive on memory */
+data class Editor(
+    val editor: SharedPreferences.Editor
+) {
+    /** Always remember to call apply after */
+    fun <T> setKeyRaw(path: String, value: T) {
+        @Suppress("UNCHECKED_CAST")
+        if (isStringSet(value)) {
+            editor.putStringSet(path, value as Set<String>)
+        } else {
+            when (value) {
+                is Boolean -> editor.putBoolean(path, value)
+                is Int -> editor.putInt(path, value)
+                is String -> editor.putString(path, value)
+                is Float -> editor.putFloat(path, value)
+                is Long -> editor.putLong(path, value)
+            }
+        }
+    }
+
+    private fun isStringSet(value: Any?): Boolean {
+        if (value is Set<*>) {
+            return value.filterIsInstance<String>().size == value.size
+        }
+        return false
+    }
+
+    fun apply() {
+        editor.apply()
+        System.gc()
+    }
+}
+
+object DataStore {
+    // Extensions shouldn't have really been using this version of it, but it seems
+    // some have. Since there has always been a very easy alternative, we won't
+    // need to deprecate it that long, and should be able to fully remove it
+    // once extensions at least use the other version.
+    @Deprecated(
+        "Please do not use the mapper version from DataStore. Preferably use methods from AppUtils " +
+            "to parse JSON. However, you can use the stable-API version of the mapper at " +
+            "com.lagradost.cloudstream3.mapper to access the mapper directly if necessary.",
+        level = DeprecationLevel.ERROR,
+        replaceWith = ReplaceWith("com.lagradost.cloudstream3.mapper"),
+    )
+    val mapper = com.lagradost.cloudstream3.mapper
+
+    private fun getPreferences(context: Context): SharedPreferences {
+        return context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
+    }
+
+    fun Context.getSharedPrefs(): SharedPreferences {
+        return getPreferences(this)
+    }
+
+    fun getFolderName(folder: String, path: String): String {
+        return "${folder}/${path}"
+    }
+
+    fun editor(context: Context, isEditingAppSettings: Boolean = false): Editor {
+        val editor: SharedPreferences.Editor =
+            if (isEditingAppSettings) context.getDefaultSharedPrefs()
+                .edit() else context.getSharedPrefs().edit()
+        return Editor(editor)
+    }
+
+    fun Context.getDefaultSharedPrefs(): SharedPreferences {
+        // OTAKU: same file PreferenceManager.getDefaultSharedPreferences uses, without androidx.preference.
+        return getSharedPreferences("${packageName}_preferences", Context.MODE_PRIVATE)
+    }
+
+    fun Context.getKeys(folder: String): List<String> {
+        // Ensure that the folder ends with "/" to prevent matching with other folders
+        val fixedFolder = folder.trimEnd('/') + "/"
+        return this.getSharedPrefs().all.keys.filter { it.startsWith(fixedFolder) }
+    }
+
+    fun Context.removeKey(folder: String, path: String) {
+        removeKey(getFolderName(folder, path))
+    }
+
+    fun Context.containsKey(folder: String, path: String): Boolean {
+        return containsKey(getFolderName(folder, path))
+    }
+
+    fun Context.containsKey(path: String): Boolean {
+        val prefs = getSharedPrefs()
+        return prefs.contains(path)
+    }
+
+    fun Context.removeKey(path: String) {
+        try {
+            val prefs = getSharedPrefs()
+            if (prefs.contains(path)) {
+                prefs.edit {
+                    remove(path)
+                }
+            }
+        } catch (e: Exception) {
+            logError(e)
+        }
+    }
+
+    fun Context.removeKeys(folder: String): Int {
+        val keys = getKeys("$folder/")
+        try {
+            getSharedPrefs().edit {
+                keys.forEach { value ->
+                    remove(value)
+                }
+            }
+            return keys.size
+        } catch (e: Exception) {
+            logError(e)
+            return 0
+        }
+    }
+
+    fun <T> Context.setKey(path: String, value: T) {
+        try {
+            getSharedPrefs().edit {
+                putString(path, value?.toJsonLiteral())
+            }
+        } catch (e: Exception) {
+            logError(e)
+        }
+    }
+
+    fun <T : Any> Context.getKey(path: String, valueType: Class<T>): T? {
+        return try {
+            val json: String = getSharedPrefs().getString(path, null) ?: return null
+            parseJson(json, valueType.kotlin)
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    fun <T> Context.setKey(folder: String, path: String, value: T) {
+        setKey(getFolderName(folder, path), value)
+    }
+
+    @Deprecated(
+        message = "Use parseJson<T>(this) directly instead.",
+        level = DeprecationLevel.WARNING,
+        replaceWith = ReplaceWith(
+            expression = "parseJson<T>(this)",
+            imports = ["com.lagradost.cloudstream3.utils.AppUtils.parseJson"],
+        ),
+    )
+    inline fun <reified T : Any> String.toKotlinObject(): T {
+        return parseJson(this)
+    }
+
+    @Deprecated(
+        message = "Use parseJson<T>(this) directly instead.",
+        level = DeprecationLevel.WARNING,
+        replaceWith = ReplaceWith(
+            expression = "parseJson<T>(this)",
+            imports = ["com.lagradost.cloudstream3.utils.AppUtils.parseJson"],
+        ),
+    )
+    fun <T : Any> String.toKotlinObject(valueType: Class<T>): T {
+        return parseJson(this, valueType.kotlin)
+    }
+
+    // GET KEY GIVEN PATH AND DEFAULT VALUE, NULL IF ERROR
+    inline fun <reified T : Any> Context.getKey(path: String, defVal: T?): T? {
+        return try {
+            val json: String = getSharedPrefs().getString(path, null) ?: return defVal
+            parseJson<T>(json)
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    inline fun <reified T : Any> Context.getKey(path: String): T? {
+        return getKey(path, null)
+    }
+
+    inline fun <reified T : Any> Context.getKey(folder: String, path: String): T? {
+        return getKey(getFolderName(folder, path), null)
+    }
+
+    inline fun <reified T : Any> Context.getKey(folder: String, path: String, defVal: T?): T? {
+        return getKey(getFolderName(folder, path), defVal) ?: defVal
+    }
+}

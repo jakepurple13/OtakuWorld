@@ -41,6 +41,8 @@ import com.programmersbox.kmpuiviews.presentation.components.placeholder.M3Place
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComponentState
+import com.programmersbox.kmpuiviews.utils.composables.modifiers.combineClickableWithIndication
+import kotlinx.coroutines.CancellationException
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
 import kotlinx.coroutines.flow.firstOrNull
 import org.koin.compose.koinInject
@@ -68,24 +70,84 @@ abstract class GenericSharedAnime(
         infoModel: KmpInfoModel,
         navController: NavigationActions,
     ) {
+        if (isLoadingChapter) return
         isLoadingChapter = true
-        val storages = try {
-            model.getChapterInfo().firstOrNull().orEmpty()
+        try {
+            val storages = model.getChapterInfo().firstOrNull().orEmpty()
+
+            when {
+                storages.size == 1 -> playResolved(navController, storages.first(), model, infoModel)
+                storages.isNotEmpty() -> VideoSourceModel.showVideoSources = VideoSourceModel(
+                    c = storages,
+                    infoModel = infoModel,
+                    isStreaming = true,
+                    model = model,
+                )
+                else -> Unit
+            }
         } finally {
             isLoadingChapter = false
         }
+    }
 
-        when {
-            storages.size == 1 -> playOrCast(navController, storages.first(), model, infoModel)
-            storages.isNotEmpty() -> VideoSourceModel.showVideoSources = VideoSourceModel(
-                c = storages,
-                infoModel = infoModel,
-                isStreaming = true,
-                model = model,
-            )
-            else -> Unit
+    /**
+     * Download counterpart of [chapterOnClick]: same loading guard, one storage downloads directly,
+     * several go to the picker, none or an error calls [onNone].
+     */
+    suspend fun downloadOnClick(
+        model: KmpChapterModel,
+        infoModel: KmpInfoModel,
+        onNone: suspend () -> Unit,
+        download: suspend (KmpStorage) -> Unit,
+    ) {
+        if (isLoadingChapter) return
+        isLoadingChapter = true
+        try {
+            val storages = try {
+                model.getChapterInfo().firstOrNull().orEmpty()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                e.printStackTrace()
+                emptyList()
+            }
+
+            when {
+                storages.size == 1 -> download(storages.first())
+                storages.isNotEmpty() -> VideoSourceModel.showVideoSources = VideoSourceModel(
+                    c = storages,
+                    infoModel = infoModel,
+                    isStreaming = false,
+                    model = model,
+                )
+                else -> onNone()
+            }
+        } finally {
+            isLoadingChapter = false
         }
     }
+
+    /** Lets the source resolve a lazily-described stream first; on failure nothing plays. */
+    suspend fun playResolved(
+        navController: NavigationActions,
+        storage: KmpStorage,
+        model: KmpChapterModel,
+        infoModel: KmpInfoModel,
+    ) {
+        val resolved = try {
+            model.source.resolve(storage)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            e.printStackTrace()
+            onResolveFailed(storage, e)
+            return
+        }
+        playOrCast(navController, resolved, model, infoModel)
+    }
+
+    /** Called when resolving a stream fails, so the platform can tell the user. */
+    open fun onResolveFailed(storage: KmpStorage, error: Throwable) {}
 
     abstract fun playOrCast(
         navController: NavigationActions,

@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlin.coroutines.cancellation.CancellationException
 
 class ExtensionListViewModel(
     private val sourceRepository: SourceRepository,
@@ -78,12 +79,17 @@ class ExtensionListViewModel(
             installedSources.any { it.catalog is KmpExternalCustomApiServicesCatalog && it.name == "Custom Tachiyomi Bridge" }
     }
 
-    fun install(remote: KmpRemoteSources) {
-        request(remote.downloadLink)
-    }
+    fun install(remote: KmpRemoteSources) = installAll(listOf(remote))
 
-    fun updateAll() {
-        installedItems.updateLinks().forEach(::request)
+    fun updateAll() = installAll(installedItems.updateRemotes())
+
+    /** Catalog installs all finish before a single reload; the rest go to the APK downloader. */
+    private fun installAll(remotes: List<KmpRemoteSources>) {
+        viewModelScope.launch {
+            if (installAllViaCatalogs(nativeCatalogs.catalogs, remotes) { request(it.downloadLink) }) {
+                logFailures { sourceLoader.blockingLoad() }
+            }
+        }
     }
 
     private fun request(link: String) {
@@ -97,7 +103,24 @@ class ExtensionListViewModel(
     }
 
     fun uninstall(source: KmpSourceInformation) {
-        sourceInfoRepository.uninstall(source)
+        viewModelScope.launch {
+            val catalogUninstalled = try {
+                (source.catalog as? KmpExternalCustomApiServicesCatalog)?.uninstall(source) == true
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // The catalog owns this source; a failed uninstall must not fall through to the APK path.
+                e.printStackTrace()
+                return@launch
+            }
+            logFailures {
+                if (catalogUninstalled) {
+                    sourceLoader.blockingLoad()
+                } else {
+                    sourceInfoRepository.uninstall(source)
+                }
+            }
+        }
     }
 
     init {
@@ -138,8 +161,10 @@ class ExtensionListViewModel(
 
     fun trust(source: KmpSourceInformation) {
         viewModelScope.launch {
-            (source.apiService as? KmpUntrustedApiService)?.trust()
-            sourceLoader.blockingLoad()
+            logFailures {
+                (source.apiService as? KmpUntrustedApiService)?.trust()
+                sourceLoader.blockingLoad()
+            }
         }
     }
 
