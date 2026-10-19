@@ -5,12 +5,22 @@ env:
 
 on:
   workflow_dispatch:
+    inputs:
+      ALL_OS:
+        description: 'Build on ubuntu, macos, and windows? (false = ubuntu only)'
+        required: false
+        type: boolean
+        default: true
   workflow_call:
     inputs:
       IS_PRERELEASE:
         required: false
         type: boolean
         default: false
+      ALL_OS:
+        required: false
+        type: boolean
+        default: true
 
 defaults:
   run:
@@ -27,7 +37,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        os: ${{ fromJSON(inputs.ALL_OS && '["ubuntu-latest", "macos-latest", "windows-latest"]' || '["ubuntu-latest"]') }}
         jdk: [ 21 ]
 
     steps:

@@ -8,10 +8,14 @@ on:
   #  paths-ignore:
   #    - '.github/**'
   pull_request:
-    types: [ assigned, opened, synchronize, reopened ]
+    types: [ opened, synchronize, reopened ]
     branches:
       - develop
       - master
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'misc/**'
   workflow_dispatch:
     inputs:
       build_animeworld:
@@ -35,6 +39,10 @@ on:
         required: true
         default: 'true'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   mangaworld:
     uses: ./.github/workflows/mangaworld_build.yaml
@@ -45,6 +53,8 @@ jobs:
     uses: ./.github/workflows/mangaworld_desktop_build.yaml
     if: github.event.inputs.build_mangaworld == 'true' || github.event_name == 'pull_request'
     secrets: inherit # pass all secrets
+    with:
+      ALL_OS: false
 
   animeworld:
     uses: ./.github/workflows/animeworld_build.yaml
@@ -55,6 +65,8 @@ jobs:
     uses: ./.github/workflows/animeworld_desktop_build.yaml
     if: github.event.inputs.build_animeworld == 'true' || github.event_name == 'pull_request'
     secrets: inherit # pass all secrets
+    with:
+      ALL_OS: false
 
   #  animeworldtv:
   #    uses: ./.github/workflows/animeworldtv_build.yaml
@@ -70,6 +82,8 @@ jobs:
     uses: ./.github/workflows/novelworld_desktop_build.yaml
     if: github.event.inputs.build_novelworld == 'true' || github.event_name == 'pull_request'
     secrets: inherit # pass all secrets
+    with:
+      ALL_OS: false
 
   unit_tests:
     uses: ./.github/workflows/unit_tests.yaml
