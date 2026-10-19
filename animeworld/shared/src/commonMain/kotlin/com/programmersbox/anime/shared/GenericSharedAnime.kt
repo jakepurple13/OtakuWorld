@@ -41,9 +41,8 @@ import com.programmersbox.kmpuiviews.presentation.components.placeholder.M3Place
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComponentState
-import com.programmersbox.kmpuiviews.utils.composables.modifiers.combineClickableWithIndication
-import kotlinx.coroutines.CancellationException
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.firstOrNull
 import org.koin.compose.koinInject
 
@@ -191,7 +190,7 @@ abstract class GenericSharedAnime(
             itemsIndexed(
                 list,
                 key = { i, it -> "${it.url}$i" },
-                contentType = { _, i -> i }
+                contentType = { _, _ -> "item" }
             ) { _, it ->
                 M3CoverCard(
                     onLongPress = { c -> onLongPress(it, c) },
