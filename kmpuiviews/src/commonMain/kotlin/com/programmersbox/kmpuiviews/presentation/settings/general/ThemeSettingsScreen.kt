@@ -113,7 +113,15 @@ fun ThemeSetting(
                                     null
                                 )
                             },
-                            label = { Text(systemThemeMode.name) },
+                            label = {
+                                Text(
+                                    when (systemThemeMode) {
+                                        SystemThemeMode.FollowSystem -> "System"
+                                        SystemThemeMode.Day -> "Light"
+                                        SystemThemeMode.Night -> "Dark"
+                                    }
+                                )
+                            },
                             shape = SegmentedButtonDefaults.itemShape(
                                 index = index,
                                 count = SystemThemeMode.entries.size
