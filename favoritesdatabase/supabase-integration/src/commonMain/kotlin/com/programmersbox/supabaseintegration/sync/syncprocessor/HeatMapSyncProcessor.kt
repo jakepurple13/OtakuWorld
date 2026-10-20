@@ -38,8 +38,8 @@ class HeatMapSyncProcessor(
     override fun getLocalUpdatedAt(local: HeatMapItem): Long =
         local.updatedAt
 
-    override fun toRemoteRow(local: HeatMapItem, uid: String, timestamp: Long): HeatMapItemRow =
-        local.toHeatMapItemRow(uid, timestamp)
+    override fun toRemoteRow(local: HeatMapItem, uid: String, app: String, timestamp: Long): HeatMapItemRow =
+        local.toHeatMapItemRow(uid, app, timestamp)
 
     override suspend fun markLocalSynced(local: HeatMapItem, timestamp: Long) {
         heatMapDao.markHeatMapItemSynced(local.time, timestamp)
@@ -49,9 +49,11 @@ class HeatMapSyncProcessor(
         heatMapDao.deleteHeatMap(local)
     }
 
+    override suspend fun markAllDirty() = heatMapDao.markAllHeatMapItemsDirty()
+
     override suspend fun performUpsert(client: SupabaseClient, items: List<HeatMapItemRow>) {
         client.postgrest[tableName].upsert(items) {
-            onConflict = "user_id,time"
+            onConflict = "user_id,app,time"
         }
     }
 

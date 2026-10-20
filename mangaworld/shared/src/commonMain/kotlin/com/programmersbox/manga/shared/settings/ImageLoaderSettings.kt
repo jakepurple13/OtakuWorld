@@ -26,10 +26,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
-import coil3.compose.AsyncImage
-import coil3.compose.LocalPlatformContext
-import coil3.request.ImageRequest
-import coil3.request.crossfade
 import com.programmersbox.datastore.mangasettings.ImageLoaderType
 import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
@@ -122,7 +118,6 @@ fun ImageLoaderType.Composed(
     when (this) {
         ImageLoaderType.Kamel -> Kamel(url, modifier, contentScale)
         ImageLoaderType.Glide -> Glide(url, modifier, contentScale)
-        ImageLoaderType.Coil -> Coil(url, modifier, contentScale)
         ImageLoaderType.Panpf -> Panpf(url, modifier, contentScale)
         ImageLoaderType.Telephoto -> Telephoto(url, modifier, contentScale)
     }
@@ -157,23 +152,6 @@ private fun Glide(
         contentScale = contentScale,
         modifier = modifier
     )*/
-}
-
-@Composable
-private fun Coil(
-    url: String,
-    modifier: Modifier = Modifier,
-    contentScale: ContentScale = ContentScale.Fit,
-) {
-    AsyncImage(
-        model = ImageRequest.Builder(LocalPlatformContext.current)
-            .data(url)
-            .crossfade(true)
-            .build(),
-        contentDescription = null,
-        contentScale = contentScale,
-        modifier = modifier
-    )
 }
 
 @Composable

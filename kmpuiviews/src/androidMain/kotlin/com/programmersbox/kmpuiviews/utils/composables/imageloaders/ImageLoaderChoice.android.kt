@@ -10,6 +10,8 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import com.bumptech.glide.load.model.GlideUrl
 import com.skydoves.landscapist.ImageOptions
+import com.skydoves.landscapist.components.rememberImageComponent
+import com.skydoves.landscapist.crossfade.CrossfadePlugin
 import com.skydoves.landscapist.glide.GlideImage
 import com.skydoves.landscapist.glide.GlideImageState
 
@@ -44,6 +46,9 @@ actual fun CustomImageChoice(
             if (it is GlideImageState.Success) {
                 it.imageBitmap?.let(onImageSet)
             }
+        },
+        component = rememberImageComponent {
+            +CrossfadePlugin()
         },
         loading = { Image(painter = placeHolder(), contentDescription = name) },
         failure = { Image(painter = onError(), contentDescription = name) },

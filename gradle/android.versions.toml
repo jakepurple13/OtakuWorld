@@ -7,7 +7,6 @@ barcodeScanning = "17.3.0"
 benchmark-macro-junit4 = "1.4.1"
 biometricVersion = "1.4.0-alpha07"
 cloudstreamCryptography = "0.6.0"
-coil = "3.5.0"
 composeBomVersion = "2026.09.00"
 composeCollapsable = "0.4.0"
 composeXr = "1.0.0-alpha13"
@@ -95,11 +94,6 @@ barcode-scanning = { module = "com.google.mlkit:barcode-scanning", version.ref =
 # Biometric
 biometric = { module = "androidx.biometric:biometric", version.ref = "biometricVersion" }
 
-# Coil Android (duplicated from commonLibs for compose bundle)
-coilCompose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
-coilGif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coil" }
-coilOkHttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
-coilVideo = { module = "io.coil-kt.coil3:coil-video", version.ref = "coil" }
 
 # Compose BOM + Android Compose
 adaptive-layout-android = { group = "androidx.compose.material3.adaptive", name = "adaptive-layout-android" }
@@ -304,7 +298,6 @@ compose = [
     "composeActivity", "composeLifecycle", "composeLifecycleRuntime",
     "composeRuntimeLivedata",
     "landscapist-bom", "landscapistGlide", "landscapistPalette", "landscapistPlaceholder",
-    "coilCompose", "coilOkHttp",
     "composeConstraintLayout",
     "drawablePainter", "uiUtil",
     "materialYou",
@@ -317,7 +310,6 @@ composeTv = [
     "composeActivity", "composeLifecycle", "composeLifecycleRuntime",
     "composeRuntimeLivedata",
     "landscapist-bom", "landscapistGlide", "landscapistPalette", "landscapistPlaceholder",
-    "coilCompose",
     "composeConstraintLayout",
     "drawablePainter", "uiUtil",
 ]

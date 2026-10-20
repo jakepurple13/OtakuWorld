@@ -45,7 +45,6 @@ dependencies {
 
     implementation(platform(androidLibs.composePlatform))
     implementation(androidLibs.bundles.composeTv)
-    implementation(androidLibs.coilGif)
     implementation(androidLibs.tv.foundation)
     implementation(androidLibs.tv.material)
 }

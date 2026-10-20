@@ -7,5 +7,3 @@ class AndroidMigrationPrefs(context: Context) : MigrationPrefs {
     override fun isMigrationComplete() = prefs.getBoolean("complete", false)
     override fun markMigrationComplete() { prefs.edit().putBoolean("complete", true).apply() }
 }
-
-actual fun createMigrationPrefs(context: Any?): MigrationPrefs = AndroidMigrationPrefs(context as Context)

@@ -256,6 +256,12 @@ interface ListDao {
     @Query("UPDATE CustomListInfo SET updated_at = :timestamp, is_dirty = 0 WHERE uniqueId = :uniqueId")
     suspend fun markCustomListInfoSynced(uniqueId: String, timestamp: Long)
 
+    @Query("UPDATE CustomListItem SET is_dirty = 1")
+    suspend fun markAllCustomListItemsDirty()
+
+    @Query("UPDATE CustomListInfo SET is_dirty = 1")
+    suspend fun markAllCustomListInfoDirty()
+
     @Query("SELECT * FROM CustomListItem")
     suspend fun getAllCustomListItemsSync(): List<CustomListItem>
 

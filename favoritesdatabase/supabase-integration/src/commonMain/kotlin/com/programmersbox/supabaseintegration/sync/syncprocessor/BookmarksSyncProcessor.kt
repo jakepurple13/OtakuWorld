@@ -37,8 +37,8 @@ class BookmarksSyncProcessor(
     override fun getLocalUpdatedAt(local: BookmarkedChapter): Long =
         local.updatedAt
 
-    override fun toRemoteRow(local: BookmarkedChapter, uid: String, timestamp: Long): BookmarkedChapterRow =
-        local.toBookmarkedChapterRow(uid, timestamp)
+    override fun toRemoteRow(local: BookmarkedChapter, uid: String, app: String, timestamp: Long): BookmarkedChapterRow =
+        local.toBookmarkedChapterRow(uid, app, timestamp)
 
     override suspend fun markLocalSynced(local: BookmarkedChapter, timestamp: Long) {
         bookmarkDao.markBookmarkSynced(local.chapterUrl, timestamp)
@@ -48,9 +48,11 @@ class BookmarksSyncProcessor(
         bookmarkDao.deleteBookmark(local)
     }
 
+    override suspend fun markAllDirty() = bookmarkDao.markAllBookmarksDirty()
+
     override suspend fun performUpsert(client: SupabaseClient, items: List<BookmarkedChapterRow>) {
         client.postgrest[tableName].upsert(items) {
-            onConflict = "user_id,chapter_url"
+            onConflict = "user_id,app,chapter_url"
         }
     }
 

@@ -83,7 +83,7 @@ internal expect fun VideoPermissionGate(content: @Composable () -> Unit)
 /**
  * Renders a thumbnail for the video at [path]. Android extracts a real video frame; other
  * platforms fall back to a generic placeholder (see the design doc for this move — video-frame
- * extraction relies on Android-only Coil/`MediaMetadataRetriever` support).
+ * extraction relies on Android-only Glide/`MediaMetadataRetriever` support).
  */
 @Composable
 internal expect fun VideoThumbnail(path: String, modifier: Modifier)

@@ -24,9 +24,12 @@ abstract class SyncProcessor<LocalModel, RemoteModel : Any>(
     abstract fun observeDirtyItems(): Flow<Int>
     abstract fun isLocalDeleted(local: LocalModel): Boolean
     abstract fun getLocalUpdatedAt(local: LocalModel): Long
-    abstract fun toRemoteRow(local: LocalModel, uid: String, timestamp: Long): RemoteModel
+    abstract fun toRemoteRow(local: LocalModel, uid: String, app: String, timestamp: Long): RemoteModel
     abstract suspend fun markLocalSynced(local: LocalModel, timestamp: Long)
     abstract suspend fun deleteLocal(local: LocalModel)
+
+    // Flags every local row for re-push (used to tag pre-existing remote rows with this app)
+    abstract suspend fun markAllDirty()
 
     // The concrete class knows its type, so it handles the actual Supabase upsert call
     abstract suspend fun performUpsert(client: SupabaseClient, items: List<RemoteModel>)
@@ -50,7 +53,7 @@ abstract class SyncProcessor<LocalModel, RemoteModel : Any>(
     // Shared Sync Logic
     // ==========================================
 
-    open suspend fun push(client: SupabaseClient, uid: String) {
+    open suspend fun push(client: SupabaseClient, uid: String, app: String) {
         if (!isBackupEnabled()) return
 
         val dirty = getDirtyItems()
@@ -64,7 +67,7 @@ abstract class SyncProcessor<LocalModel, RemoteModel : Any>(
                 val rowsToUpsert = chunk.map { model ->
                     val updatedAt = getLocalUpdatedAt(model)
                     val timestamp = if (updatedAt == 0L) Clock.System.now().toEpochMilliseconds() else updatedAt
-                    toRemoteRow(model, uid, timestamp)
+                    toRemoteRow(model, uid, app, timestamp)
                 }
 
                 // Delegate to subclass to bypass the reified type error
@@ -85,10 +88,10 @@ abstract class SyncProcessor<LocalModel, RemoteModel : Any>(
         if (errors.isNotEmpty()) throw errors.first()
     }
 
-    open suspend fun pull(client: SupabaseClient, uid: String, since: Long) {
+    open suspend fun pull(client: SupabaseClient, uid: String, app: String, since: Long) {
         if (!isBackupEnabled()) return
 
-        val allRecords = fetchAllRecords(client, uid, since)
+        val allRecords = fetchAllRecords(client, uid, app, since)
         if (allRecords.isEmpty()) return
 
         println("Pulling ${allRecords.size} items from $tableName")
@@ -107,7 +110,7 @@ abstract class SyncProcessor<LocalModel, RemoteModel : Any>(
         }
     }
 
-    private suspend inline fun fetchAllRecords(client: SupabaseClient, uid: String, since: Long): List<RemoteModel> {
+    private suspend inline fun fetchAllRecords(client: SupabaseClient, uid: String, app: String, since: Long): List<RemoteModel> {
         val allRecords = mutableListOf<RemoteModel>()
         val pageSize = 1000L
         var offset = 0L
@@ -121,6 +124,7 @@ abstract class SyncProcessor<LocalModel, RemoteModel : Any>(
                     range(offset, toIndex)
                     filter {
                         eq("user_id", uid)
+                        eq("app", app)
                         gt("updated_at", since)
                     }
                 }

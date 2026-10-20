@@ -24,27 +24,27 @@ class ActivitySyncProcessor(
     override val displayName: String = "Activity Timer"
 
     // Higher-value-wins push: fetch remote, compare, upsert the winner both places.
-    override suspend fun push(client: SupabaseClient, uid: String) {
+    override suspend fun push(client: SupabaseClient, uid: String, app: String) {
         if (!isBackupEnabled()) return
         val local = activityDao.getActivity() ?: return
         if (!local.isDirty) return
 
-        val remote = client.postgrest[tableName].select { filter { eq("user_id", uid) } }
+        val remote = client.postgrest[tableName].select { filter { eq("user_id", uid); eq("app", app) } }
             .decodeSingleOrNull<ActivityRow>()
         val winner = maxOf(local.cumulativeSeconds, remote?.cumulativeSeconds ?: 0L)
         val timestamp = Clock.System.now().toEpochMilliseconds()
 
         client.postgrest[tableName].upsert(
-            local.toActivityRow(uid, timestamp).copy(cumulativeSeconds = winner)
-        ) { onConflict = "user_id" }
+            local.toActivityRow(uid, app, timestamp).copy(cumulativeSeconds = winner)
+        ) { onConflict = "user_id,app" }
 
         activityDao.upsertSynced(winner, timestamp)
     }
 
     // Higher-value-wins pull: only overwrite local if remote is strictly greater.
-    override suspend fun pull(client: SupabaseClient, uid: String, since: Long) {
+    override suspend fun pull(client: SupabaseClient, uid: String, app: String, since: Long) {
         if (!isBackupEnabled()) return
-        val remote = client.postgrest[tableName].select { filter { eq("user_id", uid) } }
+        val remote = client.postgrest[tableName].select { filter { eq("user_id", uid); eq("app", app) } }
             .decodeSingleOrNull<ActivityRow>() ?: return
         val local = activityDao.getActivity()
         if (remote.cumulativeSeconds > (local?.cumulativeSeconds ?: 0L)) {
@@ -64,8 +64,8 @@ class ActivitySyncProcessor(
 
     override fun getLocalUpdatedAt(local: ActivityTable): Long = local.updatedAt
 
-    override fun toRemoteRow(local: ActivityTable, uid: String, timestamp: Long): ActivityRow =
-        local.toActivityRow(uid, timestamp)
+    override fun toRemoteRow(local: ActivityTable, uid: String, app: String, timestamp: Long): ActivityRow =
+        local.toActivityRow(uid, app, timestamp)
 
     override suspend fun markLocalSynced(local: ActivityTable, timestamp: Long) {
         activityDao.upsertSynced(local.cumulativeSeconds, timestamp)
@@ -73,8 +73,10 @@ class ActivitySyncProcessor(
 
     override suspend fun deleteLocal(local: ActivityTable) = Unit
 
+    override suspend fun markAllDirty() = activityDao.markDirtyNow(Clock.System.now().toEpochMilliseconds())
+
     override suspend fun performUpsert(client: SupabaseClient, items: List<ActivityRow>) {
-        client.postgrest[tableName].upsert(items) { onConflict = "user_id" }
+        client.postgrest[tableName].upsert(items) { onConflict = "user_id,app" }
     }
 
     override fun isRemoteDeleted(remote: ActivityRow): Boolean = false

@@ -10,6 +10,7 @@ import com.programmersbox.supabaseintegration.migration.MigrationPrefs
 import com.programmersbox.supabaseintegration.sync.ConnectivityMonitor
 import com.programmersbox.supabaseintegration.sync.FullSyncHandler
 import com.programmersbox.supabaseintegration.sync.JvmConnectivityMonitor
+import com.programmersbox.supabaseintegration.sync.SupabaseAppId
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
@@ -18,7 +19,7 @@ actual fun platformModule(): Module = module {
     single<CredentialManager> { JvmCredentialManager(get()) }
     single<CredentialSignIn> { createCredentialSignIn() }
     single<ConnectivityMonitor> { JvmConnectivityMonitor() }
-    single<MigrationPrefs> { JvmMigrationPrefs() }
+    single<MigrationPrefs> { JvmMigrationPrefs(get<SupabaseAppId>().value) }
     single { SupabaseClientEngine() }
     singleOf(::FullSyncHandler)
 }

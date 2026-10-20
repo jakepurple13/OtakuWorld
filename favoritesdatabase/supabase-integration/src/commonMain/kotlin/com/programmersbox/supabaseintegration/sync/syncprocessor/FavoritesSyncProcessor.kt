@@ -24,8 +24,8 @@ class FavoritesSyncer(
     override fun isLocalDeleted(local: DbModel) = local.isDeleted
     override fun getLocalUpdatedAt(local: DbModel) = local.updatedAt
 
-    override fun toRemoteRow(local: DbModel, uid: String, timestamp: Long) =
-        local.toFavoriteRow(uid, timestamp)
+    override fun toRemoteRow(local: DbModel, uid: String, app: String, timestamp: Long) =
+        local.toFavoriteRow(uid, app, timestamp)
 
     override suspend fun markLocalSynced(local: DbModel, timestamp: Long) =
         itemDao.markFavoriteSynced(local.url, timestamp)
@@ -33,10 +33,12 @@ class FavoritesSyncer(
     override suspend fun deleteLocal(local: DbModel) =
         itemDao.deleteFavorite(local)
 
+    override suspend fun markAllDirty() = itemDao.markAllFavoritesDirty()
+
     // NEW: Handle the upsert with the reified type here
     override suspend fun performUpsert(client: SupabaseClient, items: List<FavoriteItemRow>) {
         client.postgrest[tableName].upsert(items) {
-            onConflict = "user_id,url"
+            onConflict = "user_id,app,url"
         }
     }
 

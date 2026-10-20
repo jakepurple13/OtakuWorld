@@ -41,9 +41,10 @@ private class FakeSyncProcessor(
     override fun observeDirtyItems(): Flow<Int> = flowOf(0)
     override fun isLocalDeleted(local: String) = false
     override fun getLocalUpdatedAt(local: String) = 0L
-    override fun toRemoteRow(local: String, uid: String, timestamp: Long) = local
+    override fun toRemoteRow(local: String, uid: String, app: String, timestamp: Long) = local
     override suspend fun markLocalSynced(local: String, timestamp: Long) {}
     override suspend fun deleteLocal(local: String) {}
+    override suspend fun markAllDirty() {}
     override suspend fun performUpsert(client: SupabaseClient, items: List<String>) {}
     override fun isRemoteDeleted(remote: String) = false
     override fun getRemoteUpdatedAt(remote: String) = 0L

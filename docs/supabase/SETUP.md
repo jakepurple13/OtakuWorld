@@ -33,6 +33,20 @@ A storage bucket named `otakuworld-backups` is also created for JSON backups.
 
 > `recommendations` sync is **not yet implemented** due to a `genre: List<String>` type mapping issue. The table schema is included for future use.
 
+### Per-app data (`app` column)
+
+Every synced table has an `app` column (`mangaworld`, `animeworld`, `novelworld`). MangaWorld,
+AnimeWorld and NovelWorld can sign into the same account and project, and each one only reads
+and writes its own rows. Cloud backups are stored per app under `backups/<user_id>/<app>/`.
+
+**Upgrading an existing project:** update every app first, then run
+`docs/supabase/migration_add_app_column.sql` once in the SQL Editor. Until you run it, updated
+apps show a "Supabase schema is out of date" sync error. Older app versions can't sync after
+the migration runs. Rows from before the migration have `app = NULL`. On its first sync after
+updating, each app re-uploads its local data tagged with its name. The migration file has an
+optional cleanup for the leftover untagged rows. Backups made before this change are no longer
+listed in the app.
+
 ---
 
 ## Step 2 — Gradle dependency

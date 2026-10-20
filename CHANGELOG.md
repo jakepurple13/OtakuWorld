@@ -34,6 +34,9 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   ([#2613](https://github.com/jakepurple13/OtakuWorld/pull/2613))
 - **Redesigned AnimeWorld Downloads screen** with live progress, failed downloads you can retry,
   and readable episode titles ([#2614](https://github.com/jakepurple13/OtakuWorld/pull/2614))
+- **Cloud sync keeps each app's data separate.** Requires running a one-time SQL migration on
+  existing Supabase projects; see `docs/supabase/SETUP.md`
+  ([#2616](https://github.com/jakepurple13/OtakuWorld/pull/2616))
 
 ---
 
@@ -144,6 +147,12 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   ([6e4048f4d](https://github.com/jakepurple13/OtakuWorld/commit/6e4048f4d),
   [266d1fc8c](https://github.com/jakepurple13/OtakuWorld/commit/266d1fc8c))
 - Fixed Settings deep links ([#2507](https://github.com/jakepurple13/OtakuWorld/pull/2507))
+- Cloud sync: MangaWorld, AnimeWorld, and NovelWorld signed into the same account no longer share
+  favorites, history, lists, and other synced data. Each app now keeps its own data and its own
+  cloud backups. Existing projects must run `docs/supabase/migration_add_app_column.sql` after
+  updating every app; until then sync shows a "schema is out of date" error. Each app re-uploads
+  its local data on its first sync after the migration. Cloud backups made before this change no
+  longer appear in restore ([#2616](https://github.com/jakepurple13/OtakuWorld/pull/2616))
 
 #### Removed
 

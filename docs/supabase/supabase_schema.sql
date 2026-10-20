@@ -1,5 +1,7 @@
 -- Run this in your Supabase project SQL Editor once.
 -- Requires: Authentication enabled in your Supabase project.
+-- Projects created before the `app` column existed: run migration_add_app_column.sql instead.
+-- `app` holds the owning app (e.g. mangaworld) so apps sharing an account keep separate data.
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
@@ -7,6 +9,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE IF NOT EXISTS favorite_items (
     id                      UUID    DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id                 UUID    NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    app                     TEXT,
     url                     TEXT    NOT NULL,
     title                   TEXT    NOT NULL DEFAULT '',
     description             TEXT    NOT NULL DEFAULT '',
@@ -19,16 +22,17 @@ CREATE TABLE IF NOT EXISTS favorite_items (
     updated_at              BIGINT  NOT NULL DEFAULT 0,
     is_deleted              BOOLEAN NOT NULL DEFAULT false,
     is_dirty                BOOLEAN NOT NULL DEFAULT true,
-    UNIQUE(user_id, url)
+    UNIQUE(user_id, app, url)
 );
 ALTER TABLE favorite_items ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "own_favorites" ON favorite_items FOR ALL USING (auth.uid() = user_id);
-CREATE INDEX idx_favorites_updated ON favorite_items(user_id, updated_at);
+CREATE INDEX idx_favorites_updated ON favorite_items(user_id, app, updated_at);
 
 -- ─── CHAPTERS WATCHED ─────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS chapters_watched (
     id           UUID   DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id      UUID   NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    app          TEXT,
     url          TEXT   NOT NULL,
     name         TEXT   NOT NULL DEFAULT '',
     favorite_url TEXT   NOT NULL DEFAULT '',
@@ -37,16 +41,17 @@ CREATE TABLE IF NOT EXISTS chapters_watched (
     updated_at   BIGINT NOT NULL DEFAULT 0,
     is_deleted   BOOLEAN NOT NULL DEFAULT false,
     is_dirty     BOOLEAN NOT NULL DEFAULT true,
-    UNIQUE(user_id, url)
+    UNIQUE(user_id, app, url)
 );
 ALTER TABLE chapters_watched ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "own_chapters" ON chapters_watched FOR ALL USING (auth.uid() = user_id);
-CREATE INDEX idx_chapters_updated ON chapters_watched(user_id, updated_at);
+CREATE INDEX idx_chapters_updated ON chapters_watched(user_id, app, updated_at);
 
 -- ─── BOOKMARKED CHAPTERS ──────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS bookmarked_chapters (
     id               UUID   DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id          UUID   NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    app              TEXT,
     chapter_url      TEXT   NOT NULL,
     chapter_name     TEXT   NOT NULL DEFAULT '',
     parent_url       TEXT   NOT NULL DEFAULT '',
@@ -59,16 +64,17 @@ CREATE TABLE IF NOT EXISTS bookmarked_chapters (
     updated_at       BIGINT NOT NULL DEFAULT 0,
     is_deleted       BOOLEAN NOT NULL DEFAULT false,
     is_dirty         BOOLEAN NOT NULL DEFAULT true,
-    UNIQUE(user_id, chapter_url)
+    UNIQUE(user_id, app, chapter_url)
 );
 ALTER TABLE bookmarked_chapters ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "own_bookmarks" ON bookmarked_chapters FOR ALL USING (auth.uid() = user_id);
-CREATE INDEX idx_bookmarks_updated ON bookmarked_chapters(user_id, updated_at);
+CREATE INDEX idx_bookmarks_updated ON bookmarked_chapters(user_id, app, updated_at);
 
 -- ─── NOTES ────────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS notes (
     id          UUID   DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id     UUID   NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    app         TEXT,
     item_url    TEXT   NOT NULL,
     item_title  TEXT   NOT NULL DEFAULT '',
     content     TEXT   NOT NULL DEFAULT '',
@@ -78,16 +84,17 @@ CREATE TABLE IF NOT EXISTS notes (
     updated_at  BIGINT NOT NULL DEFAULT 0,
     is_deleted  BOOLEAN NOT NULL DEFAULT false,
     is_dirty    BOOLEAN NOT NULL DEFAULT true,
-    UNIQUE(user_id, item_url)
+    UNIQUE(user_id, app, item_url)
 );
 ALTER TABLE notes ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "own_notes" ON notes FOR ALL USING (auth.uid() = user_id);
-CREATE INDEX idx_notes_updated ON notes(user_id, updated_at);
+CREATE INDEX idx_notes_updated ON notes(user_id, app, updated_at);
 
 -- ─── HISTORY ──────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS history (
     id          UUID   DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id     UUID   NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    app         TEXT,
     search_text TEXT   NOT NULL,
     time        BIGINT NOT NULL DEFAULT 0,
     supabase_id TEXT   NOT NULL DEFAULT '',
@@ -95,16 +102,17 @@ CREATE TABLE IF NOT EXISTS history (
     updated_at  BIGINT NOT NULL DEFAULT 0,
     is_deleted  BOOLEAN NOT NULL DEFAULT false,
     is_dirty    BOOLEAN NOT NULL DEFAULT true,
-    UNIQUE(user_id, search_text)
+    UNIQUE(user_id, app, search_text)
 );
 ALTER TABLE history ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "own_history" ON history FOR ALL USING (auth.uid() = user_id);
-CREATE INDEX idx_history_updated ON history(user_id, updated_at);
+CREATE INDEX idx_history_updated ON history(user_id, app, updated_at);
 
 -- ─── CUSTOM LIST ITEMS ────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS custom_list_items (
     id            UUID    DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id       UUID    NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    app           TEXT,
     uuid          TEXT    NOT NULL,
     name          TEXT    NOT NULL DEFAULT '',
     time          BIGINT  NOT NULL DEFAULT 0,
@@ -116,11 +124,11 @@ CREATE TABLE IF NOT EXISTS custom_list_items (
     updated_at    BIGINT  NOT NULL DEFAULT 0,
     is_deleted    BOOLEAN NOT NULL DEFAULT false,
     is_dirty      BOOLEAN NOT NULL DEFAULT true,
-    UNIQUE(user_id, uuid)
+    UNIQUE(user_id, app, uuid)
 );
 ALTER TABLE custom_list_items ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "own_custom_list_items" ON custom_list_items FOR ALL USING (auth.uid() = user_id);
-CREATE INDEX idx_custom_list_items_updated ON custom_list_items(user_id, updated_at);
+CREATE INDEX idx_custom_list_items_updated ON custom_list_items(user_id, app, updated_at);
 
 -- Migration for already-provisioned databases:
 -- ALTER TABLE custom_list_items ADD COLUMN IF NOT EXISTS cover_image_url TEXT;
@@ -129,6 +137,7 @@ CREATE INDEX idx_custom_list_items_updated ON custom_list_items(user_id, updated
 CREATE TABLE IF NOT EXISTS custom_list_info (
     id          UUID   DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id     UUID   NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    app         TEXT,
     unique_id   TEXT   NOT NULL,
     uuid        TEXT   NOT NULL,
     title       TEXT   NOT NULL DEFAULT '',
@@ -141,11 +150,11 @@ CREATE TABLE IF NOT EXISTS custom_list_info (
     updated_at  BIGINT NOT NULL DEFAULT 0,
     is_deleted  BOOLEAN NOT NULL DEFAULT false,
     is_dirty    BOOLEAN NOT NULL DEFAULT true,
-    UNIQUE(user_id, unique_id)
+    UNIQUE(user_id, app, unique_id)
 );
 ALTER TABLE custom_list_info ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "own_custom_list_info" ON custom_list_info FOR ALL USING (auth.uid() = user_id);
-CREATE INDEX idx_custom_list_info_updated ON custom_list_info(user_id, updated_at);
+CREATE INDEX idx_custom_list_info_updated ON custom_list_info(user_id, app, updated_at);
 
 -- ─── RECOMMENDATIONS ──────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS recommendations (
@@ -171,6 +180,7 @@ CREATE INDEX idx_recommendations_updated ON recommendations(user_id, updated_at)
 CREATE TABLE IF NOT EXISTS heatmap_items (
     id          UUID    DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id     UUID    NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    app         TEXT,
     time        TEXT    NOT NULL,  -- ISO-8601 date string e.g. "2026-06-17"
     day_count   INTEGER NOT NULL DEFAULT 0,
     supabase_id TEXT    NOT NULL DEFAULT '',
@@ -178,17 +188,20 @@ CREATE TABLE IF NOT EXISTS heatmap_items (
     updated_at  BIGINT  NOT NULL DEFAULT 0,
     is_deleted  BOOLEAN NOT NULL DEFAULT false,
     is_dirty    BOOLEAN NOT NULL DEFAULT true,
-    UNIQUE(user_id, time)
+    UNIQUE(user_id, app, time)
 );
 ALTER TABLE heatmap_items ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "own_heatmap" ON heatmap_items FOR ALL USING (auth.uid() = user_id);
-CREATE INDEX idx_heatmap_updated ON heatmap_items(user_id, updated_at);
+CREATE INDEX idx_heatmap_updated ON heatmap_items(user_id, app, updated_at);
 
 -- ─── ACTIVITY TIMER ───────────────────────────────────────────────────────────
 CREATE TABLE activity_timer (
-    user_id UUID PRIMARY KEY REFERENCES auth.users(id),
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES auth.users(id),
+    app TEXT,
     cumulative_seconds BIGINT NOT NULL DEFAULT 0,
-    updated_at BIGINT NOT NULL DEFAULT 0
+    updated_at BIGINT NOT NULL DEFAULT 0,
+    UNIQUE(user_id, app)
 );
 
 ALTER TABLE activity_timer ENABLE ROW LEVEL SECURITY;

@@ -6,7 +6,6 @@ cmpLifecycle = "2.11.0"
 cmp-nav3 = "1.2.0-beta01"
 cmp-navevent = "1.1.0"
 cmp-nav3-material3 = "1.3.0-rc01"
-coil = "3.5.0"
 compose-multiplatform = "1.13.0-alpha02"
 cmpMaterial3 = "1.12.0-alpha03"
 composeWebviewMultiplatform = "2.0.3"
@@ -65,9 +64,6 @@ koog-agents-additions = { module = "ai.koog:koog-agents-additions", version.ref 
 koog-http = { module = "ai.koog:http-client-ktor", version.ref = "koog" }
 koog-memory = { module = "ai.koog:agents-features-memory", version.ref = "koog" }
 
-# Coil (KMP)
-coilCompose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
-coilOkHttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
 
 # Compose Multiplatform
 compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "cmpMaterial3" }

@@ -71,6 +71,8 @@ fun supabaseModule() = module {
             clientProvider = get(),
             authManager = get(),
             connectivityMonitor = get(),
+            appId = get(),
+            migrationManager = get(),
             syncProcessors = getAll()
         )
     } bind SyncEngine::class
@@ -83,9 +85,9 @@ fun supabaseModule() = module {
             configFlow = getOrNull<SyncConfigRepository>()?.listenForChanges() ?: flowOf(SyncConfig())
         )
     }
-    single<BackupManager> { BackupManagerImpl(get(), get()) }
-    single<RestoreManager> { RestoreManagerImpl(get(), get()) }
-    singleOf(::MigrationManager)
+    single<BackupManager> { BackupManagerImpl(get(), get(), get()) }
+    single<RestoreManager> { RestoreManagerImpl(get(), get(), get()) }
+    single { MigrationManager(getAll(), get()) }
     singleOf(::ActivityRepository)
     single { DatabaseRepository(getAll()) }
 

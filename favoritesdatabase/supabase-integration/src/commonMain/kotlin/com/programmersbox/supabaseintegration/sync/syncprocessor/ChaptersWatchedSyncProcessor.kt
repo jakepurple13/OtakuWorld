@@ -35,8 +35,8 @@ class ChaptersWatchedSyncProcessor(
     override fun getLocalUpdatedAt(local: ChapterWatched): Long =
         local.updatedAt
 
-    override fun toRemoteRow(local: ChapterWatched, uid: String, timestamp: Long): ChapterWatchedRow =
-        local.toChapterRow(uid, timestamp)
+    override fun toRemoteRow(local: ChapterWatched, uid: String, app: String, timestamp: Long): ChapterWatchedRow =
+        local.toChapterRow(uid, app, timestamp)
 
     override suspend fun markLocalSynced(local: ChapterWatched, timestamp: Long) {
         itemDao.markChapterSynced(local.url, timestamp)
@@ -46,9 +46,11 @@ class ChaptersWatchedSyncProcessor(
         itemDao.deleteChapter(local)
     }
 
+    override suspend fun markAllDirty() = itemDao.markAllChaptersDirty()
+
     override suspend fun performUpsert(client: SupabaseClient, items: List<ChapterWatchedRow>) {
         client.postgrest[tableName].upsert(items) {
-            onConflict = "user_id,url"
+            onConflict = "user_id,app,url"
         }
     }
 
