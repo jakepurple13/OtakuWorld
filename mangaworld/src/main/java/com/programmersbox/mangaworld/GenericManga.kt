@@ -2,10 +2,8 @@ package com.programmersbox.mangaworld
 
 import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.createProtobuf
-import com.programmersbox.gsonutils.toJson
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
@@ -26,14 +24,11 @@ import com.programmersbox.manga.shared.mangaSharedModule
 import com.programmersbox.manga.shared.reader.ReadViewModel
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangasettings.MangaNewSettingsSerializer
-import com.programmersbox.mangaworld.reader.ReadActivity
 import com.programmersbox.mihon.mihonModule
 import com.programmersbox.sharedtools.BackupProcessor
 import com.programmersbox.source_utilities.NetworkHelper
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import com.programmersbox.uiviews.utils.bindsGenericInfo
-import kotlinx.coroutines.flow.first
 import org.koin.androidx.workmanager.dsl.workerOf
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
@@ -91,25 +86,13 @@ class GenericManga(
         navController: NavigationActions,
     ) {
         chapterHolder.chapters = allChapters
-        if (mangaSettingsHandling.useNewReader.flow.first()) {
-            chapterHolder.chapterModel = model
-            ReadViewModel.navigateToMangaReader(
-                navController,
-                infoModel.title,
-                model.url,
-                model.sourceUrl
-            )
-        } else {
-            context.startActivity(
-                Intent(context, ReadActivity::class.java).apply {
-                    putExtra("currentChapter", model.toJson(KmpChapterModel::class.java to ChapterModelSerializer()))
-                    putExtra("allChapters", allChapters.toJson(KmpChapterModel::class.java to ChapterModelSerializer()))
-                    putExtra("mangaTitle", infoModel.title)
-                    putExtra("mangaUrl", model.url)
-                    putExtra("mangaInfoUrl", model.sourceUrl)
-                }
-            )
-        }
+        chapterHolder.chapterModel = model
+        ReadViewModel.navigateToMangaReader(
+            navController,
+            infoModel.title,
+            model.url,
+            model.sourceUrl
+        )
     }
 
     override fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit {

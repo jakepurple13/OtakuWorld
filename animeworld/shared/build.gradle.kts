@@ -56,7 +56,8 @@ kotlin {
             implementation(androidLibs.bundles.media3)
             implementation(projects.uiViews)
             implementation(Deps.helpfulutils)
-            implementation(androidLibs.coilVideo)
+            implementation(androidLibs.glide)
+            implementation(androidLibs.glideCompose)
             implementation(androidLibs.workRuntimeKtx)
             implementation(androidLibs.okhttpLib)
         }

@@ -77,7 +77,6 @@ dependencies {
     val composeBom = platform(androidLibs.composePlatform)
     implementation(composeBom)
     implementation(androidLibs.bundles.compose)
-    implementation(androidLibs.coilVideo)
     implementation(androidLibs.composeViewBinding)
     implementation(commonLibs.bundles.datastoreLibs)
 

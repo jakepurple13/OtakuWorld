@@ -38,7 +38,7 @@ jobs:
 
       - name: Build MangaWorld artifacts
         id: buildMangaApks
-        run: ./gradlew mangaworld:assembleRelease
+        run: ./gradlew mangaworld:assembleRelease -PreleaseAbis=arm64-v8a,armeabi-v7a
 
       - uses: kevin-david/zipalign-sign-android-release@v2.0.2
         name: Sign app APK

@@ -14,11 +14,10 @@ android {
 
     defaultConfig {
         applicationId = "com.programmersbox.mangaworld"
-    }
-
-    buildFeatures {
-        dataBinding = true
-        viewBinding = true
+        // Published APKs pass -PreleaseAbis to drop emulator ABIs; local builds keep them all.
+        providers.gradleProperty("releaseAbis").orNull?.let { abis ->
+            ndk { abiFilters += abis.split(",") }
+        }
     }
 
     buildTypes {
@@ -41,10 +40,6 @@ android {
 }
 
 dependencies {
-    implementation(androidLibs.material)
-    implementation(androidx.constraintlayout.constraintlayout)
-    implementation(androidx.swiperefreshlayout.swiperefreshlayout)
-    implementation(androidx.recyclerview.recyclerview)
     implementation(androidx.preference.preferenceKtx)
     implementation(androidx.profileinstaller.profileinstaller)
     testImplementation(TestDeps.junit)
@@ -52,8 +47,6 @@ dependencies {
     androidTestImplementation(TestDeps.androidEspresso)
     implementation(platform(androidLibs.firebasePlatform))
     implementation(androidLibs.bundles.firebaseCrashLibs)
-
-    implementation(androidLibs.fileChooser)
 
     implementation(projects.uiViews)
     implementation(projects.kmpmodels)
@@ -74,14 +67,6 @@ dependencies {
     implementation(androidLibs.glide)
     baselineProfile(projects.mangaWorldbaselineprofile)
     ksp(androidLibs.glideCompiler)
-    // Excludes the support library because it"s already included by Glide.
-    implementation(androidLibs.glideRecyclerview) { isTransitive = false }
-
-    implementation(androidLibs.bundles.piasyLibs)
-    implementation(androidLibs.subsamplingImageView)
-
-    implementation(androidLibs.iconicsCore)
-    implementation(Deps.materialTypeface)
 
     implementation(commonLibs.coroutinesCore)
     implementation(androidLibs.coroutinesAndroid)
@@ -94,7 +79,6 @@ dependencies {
 
     implementation(platform(androidLibs.composePlatform))
     implementation(androidLibs.bundles.compose)
-    implementation(androidLibs.coilGif)
 
     implementation(androidx.datastore.datastore)
     implementation(androidx.datastore.datastorePreferences)

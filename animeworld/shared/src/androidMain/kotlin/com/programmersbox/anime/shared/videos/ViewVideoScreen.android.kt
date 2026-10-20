@@ -2,7 +2,6 @@ package com.programmersbox.anime.shared.videos
 
 import android.Manifest
 import android.os.Build
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -14,18 +13,12 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil3.ImageLoader
-import coil3.compose.AsyncImagePainter
-import coil3.compose.rememberAsyncImagePainter
-import coil3.request.ImageRequest
-import coil3.request.crossfade
-import coil3.video.VideoFrameDecoder
-import coil3.video.videoFramePercent
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.PermissionRequest
+import java.io.File
 
 @Composable
 internal actual fun VideoPermissionGate(content: @Composable () -> Unit) {
@@ -40,51 +33,35 @@ internal actual fun VideoPermissionGate(content: @Composable () -> Unit) {
     )
 }
 
+@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 internal actual fun VideoThumbnail(path: String, modifier: Modifier) {
-    val context = LocalContext.current
+    // Glide decodes a video frame for local file paths via MediaMetadataRetriever.
+    val model = remember(path) { File(path) }
 
-    val coilImageLoader = remember {
-        ImageLoader(context).newBuilder()
-            .components {
-                add(VideoFrameDecoder.Factory())
-            }
-            .build()
-    }
-
-    val model = rememberAsyncImagePainter(
-        model = ImageRequest.Builder(context)
-            .data(path)
-            .crossfade(true)
-            .size(ComposableUtils.IMAGE_HEIGHT_PX, ComposableUtils.IMAGE_WIDTH_PX)
-            .videoFramePercent(.1)
-            .build(),
-        imageLoader = coilImageLoader
-    )
-
-    // Inlined from com.programmersbox.uiviews.presentation.components.CoilGradientImage
+    // Inlined from com.programmersbox.uiviews.presentation.components.GlideGradientImage
     // (UIViews module) rather than depending on it directly - UIViews is a flavored
     // (noFirebase/full) Android library module, and this unflavored KMP module's androidMain
     // can't unambiguously resolve which flavor variant to depend on.
     Box {
-        if (model.state.collectAsStateWithLifecycle().value is AsyncImagePainter.State.Success) {
-            Image(
-                painter = model,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                colorFilter = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(3f) }),
-                modifier = Modifier
-                    .scale(1.5f)
-                    .blur(70.dp, BlurredEdgeTreatment.Unbounded)
-                    .alpha(.5f)
-                    .then(modifier)
-            )
-        }
-
-        Image(
-            painter = model,
+        GlideImage(
+            model = model,
             contentDescription = null,
             contentScale = ContentScale.Crop,
+            colorFilter = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(3f) }),
+            requestBuilderTransform = { it.override(ComposableUtils.IMAGE_HEIGHT_PX, ComposableUtils.IMAGE_WIDTH_PX) },
+            modifier = Modifier
+                .scale(1.5f)
+                .blur(70.dp, BlurredEdgeTreatment.Unbounded)
+                .alpha(.5f)
+                .then(modifier)
+        )
+
+        GlideImage(
+            model = model,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            requestBuilderTransform = { it.override(ComposableUtils.IMAGE_HEIGHT_PX, ComposableUtils.IMAGE_WIDTH_PX) },
             modifier = modifier
         )
     }

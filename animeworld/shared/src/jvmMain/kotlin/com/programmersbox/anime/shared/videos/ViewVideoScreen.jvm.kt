@@ -19,7 +19,7 @@ internal actual fun VideoPermissionGate(content: @Composable () -> Unit) {
 
 @Composable
 internal actual fun VideoThumbnail(path: String, modifier: Modifier) {
-    // Video-frame thumbnail extraction relies on Android-only Coil/MediaMetadataRetriever
+    // Video-frame thumbnail extraction relies on Android-only Glide/MediaMetadataRetriever
     // support (see the design doc for this move) - show a generic placeholder instead.
     Box(
         modifier = modifier.background(MaterialTheme.colorScheme.surfaceVariant),
