@@ -13,6 +13,10 @@ android {
 
     defaultConfig {
         applicationId = "com.programmersbox.animeworld"
+
+        providers.gradleProperty("releaseAbis").orNull?.let { abis ->
+            ndk { abiFilters += abis.split(",") }
+        }
     }
 
     buildFeatures {
