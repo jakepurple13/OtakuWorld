@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.NoAdultContent
 import androidx.compose.material.icons.filled.WatchLater
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
@@ -338,14 +339,7 @@ fun OtakuListView(
                 }
 
                 val time = remember { dateTimeFormatter.format(it.item.time.toLocalDateTime()) }
-                //TODO: Also, add a way to allow user to choose the cover
-                // defaults to first item in the list cover
-                // but we could allow user to:
-                // choose a cover from items in list
-                // enter a url themselves
-                // choose an image from device
-                // if the choice is an image from device, exporting will be a problem.
-                // Might use the image loaders ability to show an error image
+
                 ListItem(
                     overlineContent = { Text(stringResource(Res.string.custom_list_updated_at, time)) },
                     trailingContent = { Text("(${it.list.size})") },
@@ -357,7 +351,19 @@ fun OtakuListView(
                         containerColor = MaterialTheme.colorScheme.surfaceContainer,
                     ),
                     leadingContent = if (it.item.uuid == AppConfig.forLaterUuid) {
-                        { Icon(Icons.Default.WatchLater, null) }
+                        {
+                            Icon(
+                                Icons.Default.WatchLater,
+                                null
+                            )
+                        }
+                    } else if (it.item.useBiometric) {
+                        {
+                            Icon(
+                                Icons.Default.NoAdultContent,
+                                null
+                            )
+                        }
                     } else {
                         {
                             ImageLoaderChoice(
