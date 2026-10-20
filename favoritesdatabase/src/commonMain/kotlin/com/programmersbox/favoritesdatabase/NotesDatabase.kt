@@ -91,6 +91,9 @@ interface NotesDao {
     @Query("UPDATE notes SET updated_at = :timestamp, is_dirty = 0 WHERE itemUrl = :itemUrl")
     suspend fun markNoteSynced(itemUrl: String, timestamp: Long)
 
+    @Query("UPDATE notes SET is_dirty = 1")
+    suspend fun markAllNotesDirty()
+
     @Query("UPDATE notes SET is_deleted = 0")
     suspend fun resetAllNotesIsDeleted()
 
