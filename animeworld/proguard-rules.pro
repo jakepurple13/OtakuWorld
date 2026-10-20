@@ -52,7 +52,7 @@
 # ============================================================
 # Ktor
 # ============================================================
--keep class io.ktor.** { *; }
+-keep class !io.ktor.server.**,io.ktor.** { *; }
 -dontwarn io.ktor.**
 
 # ============================================================
@@ -82,7 +82,6 @@
 # ============================================================
 # AboutLibraries / Iconics
 # ============================================================
--keep class com.mikepenz.aboutlibraries.** { *; }
 -dontwarn com.mikepenz.aboutlibraries.**
 -keep class com.mikepenz.iconics.** { *; }
 -dontwarn com.mikepenz.iconics.**
