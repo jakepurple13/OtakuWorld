@@ -69,8 +69,15 @@
 # ============================================================
 # DataStore / Protobuf
 # ============================================================
--keep class * extends com.google.protobuf.GeneratedMessageLite { *; }
+#-keep class * extends com.google.protobuf.GeneratedMessageLite { *; }
 -dontwarn com.google.protobuf.**
+
+# Firebase
+-keep class com.google.firebase.installations.** { *; }
+-keep interface com.google.firebase.installations.** { *; }
+
+-keep class org.json.** { *; }
+-dontwarn org.json.**
 
 # ============================================================
 # AboutLibraries / Iconics
