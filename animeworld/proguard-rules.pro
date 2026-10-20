@@ -22,3 +22,87 @@
 
 # PackageInstaller broadcast receiver — instantiated by the OS via manifest registration
 -keep class com.programmersbox.kmpuiviews.receivers.PackageInstallReceiver { public <init>(); }
+
+# ============================================================
+# Extension / source-loading contract (kmpmodels)
+# External plugins implement these at runtime, so they must survive
+# shrinking/obfuscation with their original names.
+# ============================================================
+-keep interface com.programmersbox.kmpmodels.** { *; }
+-keep class com.programmersbox.kmpmodels.** { *; }
+-keep class * implements com.programmersbox.kmpmodels.KmpApiService { *; }
+-dontwarn com.programmersbox.kmpmodels.**
+-keep class com.programmersbox.models.** { *; }
+-keep class com.programmersbox.kmpextensionloader.** { *; }
+-keep class com.programmersbox.source_utilities.** { *; }
+
+-keepclassmembers class androidx.core.content.ContextCompat {
+    public static java.util.concurrent.Executor getMainExecutor(android.content.Context);
+}
+
+# ============================================================
+# Koin
+# ============================================================
+-keep class org.koin.** { *; }
+-keepnames class * {
+    @org.koin.core.annotation.* *;
+}
+-dontwarn org.koin.**
+
+# ============================================================
+# Ktor
+# ============================================================
+-keep class !io.ktor.server.**,io.ktor.** { *; }
+-dontwarn io.ktor.**
+
+# ============================================================
+# Glide
+# ============================================================
+-keep public class * implements com.bumptech.glide.module.GlideModule
+-keep class * extends com.bumptech.glide.module.AppGlideModule { *; }
+-keep public enum com.bumptech.glide.load.ImageHeaderParser$** {
+    **[] $VALUES;
+    public *;
+}
+-dontwarn com.bumptech.glide.**
+
+# ============================================================
+# DataStore / Protobuf
+# ============================================================
+#-keep class * extends com.google.protobuf.GeneratedMessageLite { *; }
+-dontwarn com.google.protobuf.**
+
+# Firebase
+-keep class com.google.firebase.installations.** { *; }
+-keep interface com.google.firebase.installations.** { *; }
+
+-keep class org.json.** { *; }
+-dontwarn org.json.**
+
+# ============================================================
+# AboutLibraries / Iconics
+# ============================================================
+-dontwarn com.mikepenz.aboutlibraries.**
+-keep class com.mikepenz.iconics.** { *; }
+-dontwarn com.mikepenz.iconics.**
+
+# ============================================================
+# kotlinx.serialization
+# ============================================================
+-keepattributes *Annotation*, InnerClasses
+-dontnote kotlinx.serialization.**
+
+-assumenosideeffects class * {
+    @com.programmersbox.showcase.annotations.ShowcaseComponent <methods>;
+}
+
+# ============================================================
+# R8 missing classes (transitive deps not present on Android;
+# see animeworld/build/outputs/mapping/noFirebaseRelease/missing_rules.txt)
+# ============================================================
+-dontwarn io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogram
+-dontwarn io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder
+-dontwarn io.opentelemetry.api.incubator.metrics.ExtendedLongCounter
+-dontwarn io.opentelemetry.api.incubator.metrics.ExtendedLongCounterBuilder
+-dontwarn java.awt.geom.Rectangle2D
+-dontwarn javax.imageio.event.IIOWriteWarningListener

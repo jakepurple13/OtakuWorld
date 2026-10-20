@@ -13,11 +13,32 @@ android {
 
     defaultConfig {
         applicationId = "com.programmersbox.animeworld"
+
+        providers.gradleProperty("releaseAbis").orNull?.let { abis ->
+            ndk { abiFilters += abis.split(",") }
+        }
     }
 
     buildFeatures {
         dataBinding = true
         viewBinding = true
+    }
+
+    buildTypes {
+        getByName("release") {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            //For testing
+            if (System.getenv("CI") == null)
+                signingConfig = signingConfigs.getByName("debug")
+        }
+    }
+
+    // The APK is sideloaded from GitHub, so compress dex and native libs to shrink the download.
+    // Costs extra install-time extraction and on-disk space.
+    packaging {
+        dex.useLegacyPackaging = true
+        jniLibs.useLegacyPackaging = true
     }
 }
 

@@ -5,16 +5,17 @@
 -keep class mihon.** { *; }
 -keep class app.cash.quickjs.** { *; }
 -keep class uy.kohesive.injekt.** { *; }
--keep class rx.** { *; }
 -keep class fi.iki.elonen.** { *; }
--keep class org.jsoup.** { *; }
--keep class okhttp3.** { *; }
--keep class kotlinx.serialization.** { *; }
 -dontwarn rx.**
 -dontwarn fi.iki.elonen.**
 
 # If the consuming app enables minify, extensions also bind to these runtime libraries by name.
--keep class kotlin.** { *; }
--keep class kotlinx.coroutines.** { *; }
--keep class okio.** { *; }
--keep class androidx.preference.** { *; }
+# Only their public API needs to survive; allowoptimization lets R8 still optimize bodies.
+-keep,allowoptimization class rx.** { public protected *; }
+-keep,allowoptimization class org.jsoup.** { public protected *; }
+-keep,allowoptimization class okhttp3.** { public protected *; }
+-keep,allowoptimization class kotlinx.serialization.** { public protected *; }
+-keep,allowoptimization class !kotlin.reflect.jvm.internal.**,kotlin.** { public protected *; }
+-keep,allowoptimization class kotlinx.coroutines.** { public protected *; }
+-keep,allowoptimization class okio.** { public protected *; }
+-keep,allowoptimization class androidx.preference.** { public protected *; }
