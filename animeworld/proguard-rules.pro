@@ -86,10 +86,6 @@
 -keepattributes *Annotation*, InnerClasses
 -dontnote kotlinx.serialization.**
 
-# Firebase
--keep class com.google.firebase.installations.** { *; }
--keep interface com.google.firebase.installations.** { *; }
-
 -assumenosideeffects class * {
     @com.programmersbox.showcase.annotations.ShowcaseComponent <methods>;
 }
