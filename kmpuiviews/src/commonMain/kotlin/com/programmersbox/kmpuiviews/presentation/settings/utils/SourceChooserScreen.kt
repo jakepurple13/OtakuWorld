@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -30,13 +31,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.datastore.DataStoreHandling
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.kmpmodels.KmpSourceInformation
+import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomScreen
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomSheetItemModel
+import com.programmersbox.kmpuiviews.presentation.globalsearch.SearchLanguages
+import com.programmersbox.kmpuiviews.presentation.settings.languageorder.LanguageOrderSheet
+import com.programmersbox.kmpuiviews.presentation.settings.languageorder.LanguageOrderState
+import com.programmersbox.kmpuiviews.presentation.settings.languageorder.languageDisplayName
+import com.programmersbox.kmpuiviews.presentation.settings.languageorder.languageOrderState
 import com.programmersbox.kmpuiviews.utils.LocalItemDao
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
@@ -88,7 +95,7 @@ fun SourceChooserScreen(
 
     var showChooser by remember { mutableStateOf<List<KmpSourceInformation>?>(null) }
 
-    val languageCode = remember { Locale.current.language }
+    val languageOrder = rememberLanguageOrder()
 
     showChooser?.let { list ->
         ModalBottomSheet(
@@ -97,8 +104,8 @@ fun SourceChooserScreen(
         ) {
             ListBottomScreen(
                 includeInsetPadding = false,
-                title = stringResource(Res.string.chooseASource),
-                list = list,
+                title = languageOrder.groupName(list) ?: stringResource(Res.string.chooseASource),
+                list = languageOrder.sort(list),
                 navigationIcon = {
                     IconButton(
                         onClick = onChosen
@@ -108,33 +115,11 @@ fun SourceChooserScreen(
                     onChosen()
                     scope.launch { dataStoreHandling.currentService.set(service.apiService.serviceName) }
                 },
-                lazyListContent = {
-                    list
-                        .find { it.apiService.serviceName == "${it.name}$languageCode" }
-                        ?.let {
-                            ListBottomSheetItemModel(
-                                primaryText = it.apiService.displayName,
-                                icon = if (it.apiService.serviceName == currentService) Icons.Default.Check else null
-                            ) to it.apiService.serviceName
-                        }
-                        ?.let { (c, serviceKey) ->
-                            item {
-                                ListItem(
-                                    modifier = Modifier.clickable {
-                                        onChosen()
-                                        scope.launch { dataStoreHandling.currentService.set(serviceKey) }
-                                    },
-                                    leadingContent = c.icon?.let { i -> { Icon(i, null) } },
-                                    headlineContent = { Text("Current Language Source") },
-                                    supportingContent = { Text(c.primaryText) }
-                                )
-                                HorizontalDivider()
-                            }
-                        }
-                }
+                actions = { languageOrder.ReorderButton(list) },
             ) {
                 ListBottomSheetItemModel(
                     primaryText = it.apiService.displayName,
+                    secondaryText = it.languageName(),
                     icon = if (it.apiService.serviceName == currentService) Icons.Default.Check else null
                 )
             }
@@ -174,7 +159,7 @@ fun SourceChooserScreen(
         }
     ) {
         ListBottomSheetItemModel(
-            primaryText = "${it.firstOrNull()?.name ?: "Nothing"} (${it.size})",
+            primaryText = "${languageOrder.groupName(it) ?: it.firstOrNull()?.name ?: "Nothing"} (${it.size})",
             icon = if (it.firstOrNull()?.apiService?.serviceName == currentService) Icons.Default.Check else null,
             overlineText = it.firstOrNull()?.packageName
         )
@@ -229,7 +214,7 @@ private fun SourceChooserScreen(
 
     var showChooser by remember { mutableStateOf<List<KmpSourceInformation>?>(null) }
 
-    val languageCode = remember { Locale.current.language }
+    val languageOrder = rememberLanguageOrder()
 
     showChooser?.let { list ->
         ModalBottomSheet(
@@ -238,8 +223,8 @@ private fun SourceChooserScreen(
         ) {
             ListBottomScreen(
                 includeInsetPadding = false,
-                title = stringResource(Res.string.chooseASource),
-                list = list,
+                title = languageOrder.groupName(list) ?: stringResource(Res.string.chooseASource),
+                list = languageOrder.sort(list),
                 navigationIcon = {
                     IconButton(
                         onClick = onClose
@@ -248,30 +233,11 @@ private fun SourceChooserScreen(
                 onClick = { service ->
                     onChosen(service)
                 },
-                lazyListContent = {
-                    list
-                        .find { it.apiService.serviceName == "${it.name}$languageCode" }
-                        ?.let {
-                            ListBottomSheetItemModel(
-                                primaryText = it.apiService.displayName,
-                                icon = if (it.apiService.serviceName == currentService) Icons.Default.Check else null
-                            ) to it
-                        }
-                        ?.let { (c, item) ->
-                            item {
-                                ListItem(
-                                    leadingContent = c.icon?.let { i -> { Icon(i, null) } },
-                                    headlineContent = { Text("Current Language Source") },
-                                    supportingContent = { Text(c.primaryText) },
-                                    modifier = Modifier.clickable { onChosen(item) }
-                                )
-                                HorizontalDivider()
-                            }
-                        }
-                }
+                actions = { languageOrder.ReorderButton(list) },
             ) {
                 ListBottomSheetItemModel(
                     primaryText = it.apiService.displayName,
+                    secondaryText = it.languageName(),
                     icon = if (it.apiService.serviceName == currentService) Icons.Default.Check else null
                 )
             }
@@ -303,11 +269,50 @@ private fun SourceChooserScreen(
         }
     ) {
         ListBottomSheetItemModel(
-            primaryText = "${it.firstOrNull()?.name ?: "Nothing"} (${it.size})",
+            primaryText = "${languageOrder.groupName(it) ?: it.firstOrNull()?.name ?: "Nothing"} (${it.size})",
             icon = if (it.firstOrNull()?.apiService?.serviceName == currentService) Icons.Default.Check else null,
             overlineText = it.firstOrNull()?.packageName
         )
     }
+}
+
+/** Sorts an extension's sources by the user's language order and opens the order editor. */
+private class LanguageOrderController(
+    private val state: LanguageOrderState?,
+    private val onEdit: (String) -> Unit,
+) {
+    fun sort(list: List<KmpSourceInformation>) = state?.sort(list) ?: list
+
+    fun groupName(list: List<KmpSourceInformation>) = group(list)?.name
+
+    private fun group(list: List<KmpSourceInformation>) =
+        state?.groups?.find { it.packageName == list.firstOrNull()?.packageName }
+
+    @Composable
+    fun ReorderButton(list: List<KmpSourceInformation>) {
+        val group = group(list) ?: return
+        IconButton(onClick = { onEdit(group.packageName) }) {
+            Icon(Icons.AutoMirrored.Filled.Sort, "Language order")
+        }
+    }
+}
+
+@Composable
+private fun rememberLanguageOrder(
+    sourceRepository: SourceRepository = koinInject(),
+    settings: NewSettingsHandling = koinInject(),
+): LanguageOrderController {
+    val state by remember { languageOrderState(sourceRepository, settings) }
+        .collectAsStateWithLifecycle(null)
+    var editing by remember { mutableStateOf<String?>(null) }
+
+    editing?.let { LanguageOrderSheet(onDismiss = { editing = null }, startAt = it) }
+
+    return LanguageOrderController(state) { editing = it }
+}
+
+private fun KmpSourceInformation.languageName() = apiService.language?.let {
+    if (it == SearchLanguages.ALL) "All languages" else languageDisplayName(it)
 }
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)

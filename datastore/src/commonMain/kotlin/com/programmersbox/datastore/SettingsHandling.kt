@@ -201,6 +201,26 @@ class NewSettingsHandling(
             )
         }
 
+    val sourceLanguageOrder = all.map { it.sourceLanguageOrder }
+
+    suspend fun setSourceLanguageOrder(languages: List<String>) = preferences.updateData {
+        it.copy(sourceLanguageOrder = languages)
+    }
+
+    val sourceLanguageOrderOverrides = all.map { it.sourceLanguageOrderOverrides }
+
+    /** A null [order] removes it, so the extension goes back to the default order. */
+    suspend fun setSourceLanguageOrderOverride(packageName: String, order: SourceLanguageOrder?) =
+        preferences.updateData {
+            it.copy(
+                sourceLanguageOrderOverrides = if (order == null) {
+                    it.sourceLanguageOrderOverrides - packageName
+                } else {
+                    it.sourceLanguageOrderOverrides + (packageName to order)
+                }
+            )
+        }
+
     @Composable
     fun rememberShowDownload() = preferences.rememberPreference(
         key = { it.showDownload },

@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircleOutline
 import androidx.compose.material.icons.filled.Close
@@ -73,6 +74,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.globalsearch.SearchLanguagesSheet
+import com.programmersbox.kmpuiviews.presentation.settings.languageorder.LanguageOrderSheet
 import com.programmersbox.kmpuiviews.presentation.components.LoadingDialog
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
@@ -120,6 +122,11 @@ fun ExtensionList(
     var showLanguages by remember { mutableStateOf(false) }
     if (showLanguages) {
         SearchLanguagesSheet(onDismiss = { showLanguages = false })
+    }
+
+    var showLanguageOrder by remember { mutableStateOf(false) }
+    if (showLanguageOrder) {
+        LanguageOrderSheet(onDismiss = { showLanguageOrder = false })
     }
 
     var showUrlDialog by remember { mutableStateOf(false) }
@@ -199,6 +206,15 @@ fun ExtensionList(
                                 showLanguages = true
                             },
                             leadingIcon = { Icon(Icons.Default.Language, null) }
+                        )
+
+                        DropdownMenuItem(
+                            text = { Text("Language order") },
+                            onClick = {
+                                showDropDown = false
+                                showLanguageOrder = true
+                            },
+                            leadingIcon = { Icon(Icons.AutoMirrored.Filled.Sort, null) }
                         )
 
                         DropdownMenuItem(
