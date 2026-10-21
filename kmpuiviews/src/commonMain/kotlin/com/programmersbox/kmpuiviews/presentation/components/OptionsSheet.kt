@@ -4,6 +4,7 @@ package com.programmersbox.kmpuiviews.presentation.components
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -132,7 +133,10 @@ interface OptionsSheetScope {
 @Composable
 fun optionsSheet(
     scope: CoroutineScope = rememberCoroutineScope(),
-    sheet: SheetState = rememberBottomSheetState(SheetValue.Expanded),
+    sheet: SheetState = rememberBottomSheetState(
+        SheetValue.Expanded,
+        enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded)
+    ),
     verticalArrangement: Arrangement.Vertical = Arrangement.Top,
     moreContent: @Composable OptionsSheetScope.() -> Unit = {},
 ): MutableState<Boolean> {
@@ -191,7 +195,10 @@ class KmpItemModelOptionsSheet(
 fun optionsKmpSheet(
     scope: CoroutineScope = rememberCoroutineScope(),
     navController: NavigationActions = LocalNavActions.current,
-    sheetState: SheetState = rememberBottomSheetState(SheetValue.Expanded),
+    sheetState: SheetState = rememberBottomSheetState(
+        SheetValue.Expanded,
+        enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded)
+    ),
 ): MutableState<KmpItemModel?> {
     val itemInfo = remember { mutableStateOf<KmpItemModel?>(null) }
 
@@ -217,7 +224,10 @@ fun optionsKmpSheet(
 fun optionsKmpSheetList(
     scope: CoroutineScope = rememberCoroutineScope(),
     navController: NavigationActions = LocalNavActions.current,
-    sheetState: SheetState = rememberBottomSheetState(SheetValue.Expanded),
+    sheetState: SheetState = rememberBottomSheetState(
+        SheetValue.Expanded,
+        enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded)
+    ),
     utilities: @Composable FlowRowScope.(KmpItemModelOptionsSheet, OptionsSheetScope) -> Unit = { _, _ ->
         Spacer(modifier = Modifier.weight(1f))
     },
@@ -248,7 +258,10 @@ fun <T : OptionsSheetValues> optionsSheetList(
     onOpen: (T) -> Unit,
     scope: CoroutineScope = rememberCoroutineScope(),
     navController: NavigationActions = LocalNavActions.current,
-    sheetState: SheetState = rememberBottomSheetState(SheetValue.Expanded),
+    sheetState: SheetState = rememberBottomSheetState(
+        SheetValue.Expanded,
+        enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded)
+    ),
     utilities: @Composable FlowRowScope.(T, OptionsSheetScope) -> Unit = { _, _ ->
         Spacer(modifier = Modifier.weight(1f))
     },
@@ -275,7 +288,10 @@ fun <T : OptionsSheetValues> optionsSheetList(
 fun <T : OptionsSheetValues> optionsSheet(
     scope: CoroutineScope = rememberCoroutineScope(),
     navController: NavigationActions = LocalNavActions.current,
-    sheetState: SheetState = rememberBottomSheetState(SheetValue.Expanded),
+    sheetState: SheetState = rememberBottomSheetState(
+        SheetValue.Expanded,
+        enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded)
+    ),
     onOpen: (T) -> Unit,
     utilities: @Composable FlowRowScope.(T, OptionsSheetScope) -> Unit = { _, _ ->
         Spacer(modifier = Modifier.weight(1f))
@@ -306,7 +322,10 @@ fun <T : OptionsSheetValues> OptionsSheet(
     onGlobalSearch: (String) -> Unit,
     onDismiss: () -> Unit,
     scope: CoroutineScope = rememberCoroutineScope(),
-    sheet: SheetState = rememberBottomSheetState(SheetValue.Expanded),
+    sheet: SheetState = rememberBottomSheetState(
+        SheetValue.Expanded,
+        enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded)
+    ),
     dao: ItemDao = koinInject(),
     utilities: @Composable FlowRowScope.(T, OptionsSheetScope) -> Unit = { _, _ ->
         Spacer(modifier = Modifier.weight(1f))
@@ -355,7 +374,10 @@ fun <T : OptionsSheetValues> OptionsSheet(
     onGlobalSearch: (String) -> Unit,
     onDismiss: () -> Unit,
     scope: CoroutineScope = rememberCoroutineScope(),
-    sheet: SheetState = rememberBottomSheetState(SheetValue.Expanded),
+    sheet: SheetState = rememberBottomSheetState(
+        SheetValue.Expanded,
+        enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded)
+    ),
     dao: ItemDao = koinInject(),
     utilities: @Composable FlowRowScope.(T, OptionsSheetScope) -> Unit = { _, _ ->
         Spacer(modifier = Modifier.weight(1f))
@@ -596,33 +618,40 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.NewOptionsItems(
         Text("Quick Actions")
 
         Row( // Changed from FlowRow to standard Row
-            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp), // Added spacing
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Crossfade(
-                dbModel,
-                modifier = Modifier.weight(1f)
-            ) { target ->
-                if (target != null) {
-                    QuickActionCard(
-                        onClick = { scope.launch { favoritesRepository.removeFavorite(target) } },
-                        icon = Icons.Default.Favorite,
-                        title = "Favorite",
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                } else {
-                    QuickActionCard(
-                        onClick = {
-                            scope.launch {
-                                //TODO: For the add, it needs to be a dbModel
-                                optionsSheetValues.itemModel?.let { favoritesRepository.addFavorite(it.toDbModel()) }
-                            }
-                        },
-                        icon = Icons.Default.FavoriteBorder,
-                        title = "Favorite",
-                        modifier = Modifier.fillMaxWidth()
-                    )
+            val isVisible = optionsSheetValues.itemModel != null || dbModel != null
+            val weight by animateFloatAsState(
+                targetValue = if (isVisible) 1f else 0f,
+                label = "favoriteWeight"
+            )
+
+            if (weight > 0f) {
+                Crossfade(
+                    dbModel,
+                    modifier = Modifier.weight(weight)
+                ) { target ->
+                    if (target != null) {
+                        QuickActionCard(
+                            onClick = { scope.launch { favoritesRepository.removeFavorite(target) } },
+                            icon = Icons.Default.Favorite,
+                            title = "Favorite",
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    } else {
+                        QuickActionCard(
+                            onClick = {
+                                scope.launch {
+                                    optionsSheetValues.itemModel?.let { favoritesRepository.addFavorite(it.toDbModel()) }
+                                }
+                            },
+                            icon = Icons.Default.FavoriteBorder,
+                            title = "Favorite",
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 }
             }
 
