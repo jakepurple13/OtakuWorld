@@ -34,13 +34,14 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.NotificationAdd
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.NotificationsNone
+import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.SelectAll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -50,13 +51,10 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FloatingToolbarDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SelectableDates
@@ -116,6 +114,7 @@ import com.programmersbox.kmpuiviews.presentation.components.GradientImage
 import com.programmersbox.kmpuiviews.presentation.components.LoadingDialog
 import com.programmersbox.kmpuiviews.presentation.components.OptionsSheetValues
 import com.programmersbox.kmpuiviews.presentation.components.SourceNotInstalledModal
+import com.programmersbox.kmpuiviews.presentation.components.UtilityCard
 import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.presentation.components.optionsSheet
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
@@ -500,6 +499,7 @@ private fun NotificationTimeline(
 @Composable
 private fun FilterRow(vm: NotificationScreenViewModel) {
     val sourceRepository = LocalSourcesRepository.current
+
     @Composable
     fun Chip(filter: NotificationFilter, label: String, count: Int) {
         val selected = vm.filter == filter
@@ -857,59 +857,45 @@ private fun notificationOptionsSheet(
             }
             ?.launchIn(scope) ?: onError(i)
     }
-) {
+) { it, optionsSheetScope ->
     val notificationScreenInterface: NotificationScreenInterface = koinInject()
     if (!it.item.isShowing) {
-        Card(
+        UtilityCard(
+            title = stringResource(Res.string.notify),
             onClick = {
                 scope.launch(Dispatchers.IO) {
                     notificationScreenInterface.notifyItem(i)
-                }.invokeOnCompletion { dismiss() }
+                }.invokeOnCompletion { optionsSheetScope.dismiss() }
             },
-            colors = CardDefaults.cardColors(
-                containerColor = Color.Transparent
-            )
-        ) {
-            ListItem(
-                headlineContent = { Text(stringResource(Res.string.notify)) },
-                colors = ListItemDefaults.colors(
-                    containerColor = Color.Transparent
-                )
-            )
-        }
-
-        HorizontalDivider()
+            icon = Icons.Default.NotificationsActive,
+            modifier = Modifier.weight(1f)
+        )
 
         NotifyAt(
             items = listOf(i),
             notificationScreenInterface = notificationScreenInterface
         ) { dateShow ->
-            Card(
-                onClick = { dateShow() },
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.Transparent
-                )
-            ) {
-                ListItem(
-                    headlineContent = { Text(stringResource(Res.string.notifyAtTime)) },
-                    colors = ListItemDefaults.colors(
-                        containerColor = Color.Transparent
-                    )
-                )
-            }
+            UtilityCard(
+                onClick = dateShow,
+                icon = Icons.Default.NotificationAdd,
+                title = stringResource(Res.string.notifyAtTime),
+                modifier = Modifier.weight(1f)
+            )
         }
 
-        HorizontalDivider()
+        Spacer(Modifier.weight(1f))
     } else {
-        OptionsItem(
+        UtilityCard(
+            icon = Icons.Default.NotificationsOff,
             title = "Dismiss Notification",
             onClick = {
                 scope.launch {
                     itemDao.updateNotification(i.url, false)
                     notificationRepository.cancelById(i.id)
-                    dismiss()
+                    optionsSheetScope.dismiss()
                 }
-            }
+            },
+            modifier = Modifier.weight(1f)
         )
     }
 }

@@ -281,7 +281,7 @@ sealed class OtakuListState {
         ) : this(
             customList
                 .visible(searchQuery, filtered)
-                .groupBy { it.title }
+                .groupBy { it.url }
                 .entries
                 .toList()
                 .sortedForList(sort, customList.insertionOrder())

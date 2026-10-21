@@ -6,6 +6,8 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.FlowRowScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -47,7 +49,6 @@ import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetState
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.Stable
@@ -59,7 +60,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -92,12 +92,7 @@ import com.programmersbox.kmpuiviews.utils.rememberBiometricPrompting
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
-import otakuworld.kmpuiviews.generated.resources.Res
-import otakuworld.kmpuiviews.generated.resources.add_to_list
-import otakuworld.kmpuiviews.generated.resources.global_search_by_name
-import otakuworld.kmpuiviews.generated.resources.save_for_later
 
 interface OptionsSheetScope {
     fun dismiss()
@@ -197,7 +192,6 @@ fun optionsKmpSheet(
     scope: CoroutineScope = rememberCoroutineScope(),
     navController: NavigationActions = LocalNavActions.current,
     sheetState: SheetState = rememberBottomSheetState(SheetValue.Expanded),
-    moreContent: @Composable OptionsSheetScope.(KmpItemModelOptionsSheet) -> Unit = {},
 ): MutableState<KmpItemModel?> {
     val itemInfo = remember { mutableStateOf<KmpItemModel?>(null) }
 
@@ -212,7 +206,6 @@ fun optionsKmpSheet(
                 onOpen = { navController.details(item.itemModel) },
                 onGlobalSearch = { navController.globalSearch(it) },
                 onDismiss = { itemInfo.value = null },
-                moreContent = moreContent
             )
         }
 
@@ -224,8 +217,10 @@ fun optionsKmpSheet(
 fun optionsKmpSheetList(
     scope: CoroutineScope = rememberCoroutineScope(),
     navController: NavigationActions = LocalNavActions.current,
-    sheetState: SheetState = rememberModalBottomSheetState(true),
-    moreContent: @Composable OptionsSheetScope.(KmpItemModelOptionsSheet) -> Unit = {},
+    sheetState: SheetState = rememberBottomSheetState(SheetValue.Expanded),
+    utilities: @Composable FlowRowScope.(KmpItemModelOptionsSheet, OptionsSheetScope) -> Unit = { _, _ ->
+        Spacer(modifier = Modifier.weight(1f))
+    },
 ): MutableState<List<KmpItemModel>?> {
     val itemInfo = remember { mutableStateOf<List<KmpItemModel>?>(null) }
 
@@ -240,7 +235,7 @@ fun optionsKmpSheetList(
                 onOpen = { navController.details(it.itemModel) },
                 onGlobalSearch = { navController.globalSearch(it) },
                 onDismiss = { itemInfo.value = null },
-                moreContent = moreContent
+                utilities = utilities
             )
         }
 
@@ -254,7 +249,9 @@ fun <T : OptionsSheetValues> optionsSheetList(
     scope: CoroutineScope = rememberCoroutineScope(),
     navController: NavigationActions = LocalNavActions.current,
     sheetState: SheetState = rememberBottomSheetState(SheetValue.Expanded),
-    moreContent: @Composable OptionsSheetScope.(T) -> Unit = {},
+    utilities: @Composable FlowRowScope.(T, OptionsSheetScope) -> Unit = { _, _ ->
+        Spacer(modifier = Modifier.weight(1f))
+    },
 ): MutableState<List<T>?> {
     val itemInfo = remember { mutableStateOf<List<T>?>(null) }
 
@@ -266,7 +263,7 @@ fun <T : OptionsSheetValues> optionsSheetList(
             onOpen = { onOpen(it) },
             onGlobalSearch = { navController.globalSearch(it) },
             onDismiss = { itemInfo.value = null },
-            moreContent = moreContent
+            utilities = utilities
         )
     }
 
@@ -280,7 +277,9 @@ fun <T : OptionsSheetValues> optionsSheet(
     navController: NavigationActions = LocalNavActions.current,
     sheetState: SheetState = rememberBottomSheetState(SheetValue.Expanded),
     onOpen: (T) -> Unit,
-    moreContent: @Composable OptionsSheetScope.(T) -> Unit = {},
+    utilities: @Composable FlowRowScope.(T, OptionsSheetScope) -> Unit = { _, _ ->
+        Spacer(modifier = Modifier.weight(1f))
+    },
 ): MutableState<T?> {
     val itemInfo = remember { mutableStateOf<T?>(null) }
 
@@ -292,7 +291,7 @@ fun <T : OptionsSheetValues> optionsSheet(
             onOpen = { onOpen(item) },
             onGlobalSearch = { navController.globalSearch(it) },
             onDismiss = { itemInfo.value = null },
-            moreContent = moreContent
+            utilities = utilities
         )
     }
 
@@ -309,7 +308,9 @@ fun <T : OptionsSheetValues> OptionsSheet(
     scope: CoroutineScope = rememberCoroutineScope(),
     sheet: SheetState = rememberBottomSheetState(SheetValue.Expanded),
     dao: ItemDao = koinInject(),
-    moreContent: @Composable OptionsSheetScope.(T) -> Unit = {},
+    utilities: @Composable FlowRowScope.(T, OptionsSheetScope) -> Unit = { _, _ ->
+        Spacer(modifier = Modifier.weight(1f))
+    },
 ) {
     val optionsSheetScope = remember(onDismiss) {
         object : OptionsSheetScope {
@@ -339,7 +340,7 @@ fun <T : OptionsSheetValues> OptionsSheet(
                     sheet = sheet,
                     dao = dao,
                     scope = scope,
-                    //moreContent = moreContent
+                    utilities = utilities
                 )
             }
         }
@@ -356,7 +357,9 @@ fun <T : OptionsSheetValues> OptionsSheet(
     scope: CoroutineScope = rememberCoroutineScope(),
     sheet: SheetState = rememberBottomSheetState(SheetValue.Expanded),
     dao: ItemDao = koinInject(),
-    moreContent: @Composable OptionsSheetScope.(T) -> Unit = {},
+    utilities: @Composable FlowRowScope.(T, OptionsSheetScope) -> Unit = { _, _ ->
+        Spacer(modifier = Modifier.weight(1f))
+    },
 ) {
     val optionsSheetScope = remember(onDismiss) {
         object : OptionsSheetScope {
@@ -401,7 +404,7 @@ fun <T : OptionsSheetValues> OptionsSheet(
                     }
                     if (showInfo) {
                         with(optionsSheetScope) {
-                            OptionsItems(
+                            NewOptionsItems(
                                 optionsSheetValues = it,
                                 onOpen = { onOpen(it) },
                                 onGlobalSearch = onGlobalSearch,
@@ -409,288 +412,10 @@ fun <T : OptionsSheetValues> OptionsSheet(
                                 sheet = sheet,
                                 dao = dao,
                                 scope = scope,
-                                moreContent = moreContent
+                                utilities = utilities
                             )
                         }
                     }
-                }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
-    optionsSheetValues: T,
-    onOpen: () -> Unit,
-    onGlobalSearch: (String) -> Unit,
-    onDismiss: () -> Unit,
-    sheet: SheetState,
-    dao: ItemDao = koinInject(),
-    incognitoRepository: IncognitoRepository = koinInject(),
-    listDao: ListRepository = koinInject(),
-    platformRepository: PlatformRepository = koinInject(),
-    notificationRepository: NotificationRepository = koinInject(),
-    favoritesRepository: FavoritesRepository = koinInject(),
-    scope: CoroutineScope = rememberCoroutineScope(),
-    moreContent: @Composable OptionsSheetScope.(T) -> Unit = {},
-) {
-    val imageUrl = optionsSheetValues.imageUrl
-    val title = optionsSheetValues.title
-    val description = optionsSheetValues.description
-    val serviceName = optionsSheetValues.serviceName
-    val url = optionsSheetValues.url
-
-    val biometric = rememberBiometricPrompting()
-    val isIncognito by dao
-        .getIncognitoSource(url)
-        .collectAsStateWithLifecycle(null)
-
-    val isSaved by dao
-        .doesNotificationExistFlow(url)
-        .collectAsStateWithLifecycle(false)
-
-    val dbModel by dao
-        .getDbModel(url)
-        .collectAsStateWithLifecycle(null)
-
-    val shouldCheck by koinInject<NewSettingsHandling>()
-        .mediaCheckerSettings
-        .rememberPreference()
-
-    val colorBlindness: ColorBlindnessType by koinInject<NewSettingsHandling>().rememberColorBlindType()
-    val colorFilter by remember { derivedStateOf { colorFilterBlind(colorBlindness) } }
-
-    val listItemColors = ListItemDefaults.colors()
-
-    TextFlow(
-        text = buildAnnotatedString {
-            withStyle(
-                MaterialTheme.typography.labelSmall
-                    .copy(color = listItemColors.overlineContentColor)
-                    .toSpanStyle()
-            ) { appendLine(LocalSourcesRepository.current.displayNameFor(serviceName)) }
-
-            withStyle(
-                MaterialTheme.typography.bodyLarge
-                    .copy(color = listItemColors.contentColor)
-                    .toSpanStyle()
-            ) { appendLine(title) }
-
-            withStyle(
-                MaterialTheme.typography.bodySmall
-                    .copy(color = listItemColors.supportingContentColor)
-                    .toSpanStyle()
-            ) { appendLine(description.trimIndent()) }
-        },
-        lineHeight = MaterialTheme.typography.bodyMedium.lineHeight,
-        obstacleContent = {
-            ImageLoaderChoice(
-                imageUrl = imageUrl,
-                name = title,
-                placeHolder = { painterLogo() },
-                colorFilter = colorFilter,
-                modifier = Modifier
-                    .padding(end = 16.dp)
-                    .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                    .clip(MaterialTheme.shapes.small)
-            )
-        },
-        modifier = Modifier.padding(16.dp)
-    )
-
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        HorizontalDivider()
-
-        OptionsItem(
-            title = "Open",
-            onClick = {
-                scope.launch { sheet.hide() }
-                    .invokeOnCompletion {
-                        onDismiss()
-                        if (isIncognito != null) {
-                            biometric.authenticate(
-                                onAuthenticationSucceeded = { onOpen() },
-                                title = "Authentication required",
-                                subtitle = "In order to open ${title}, please authenticate",
-                                negativeButtonText = "Never Mind"
-                            )
-                        } else {
-                            onOpen()
-                        }
-                    }
-            }
-        )
-
-        Crossfade(isSaved) { target ->
-            if (!target) {
-                OptionsItem(
-                    title = stringResource(Res.string.save_for_later),
-                    onClick = {
-                        scope.launch {
-                            dao.insertNotification(
-                                NotificationItem(
-                                    id = "$title$url$imageUrl$serviceName$description".hashCode(),
-                                    url = url,
-                                    summaryText = "$title had an update",
-                                    notiTitle = title,
-                                    imageUrl = imageUrl,
-                                    source = serviceName,
-                                    contentTitle = title
-                                )
-                            )
-                        }
-                    }
-                )
-            } else {
-                OptionsItem(
-                    title = "Remove from Saved",
-                    onClick = {
-                        scope.launch {
-                            dao.getNotificationItemFlow(url)
-                                .firstOrNull()
-                                ?.let {
-                                    notificationRepository.cancelNotification(it)
-                                    dao.deleteNotification(it)
-                                }
-                        }
-                    }
-                )
-            }
-        }
-
-        val updateParams by remember {
-            derivedStateOf {
-                CheckForUpdateParams(
-                    isFavorite = dbModel != null,
-                    deviceCheckForUpdate = shouldCheck.shouldRun,
-                    shouldCheckForUpdate = dbModel?.shouldCheckForUpdate == true
-                )
-            }
-        }
-
-        Crossfade(updateParams) { target ->
-            if (target.isFavorite && target.deviceCheckForUpdate) {
-                OptionsItem(
-                    title = if (target.shouldCheckForUpdate) "Check for updates" else "Do not check for updates",
-                    onClick = {
-                        scope.launch {
-                            dbModel
-                                ?.let { it.copy(shouldCheckForUpdate = !it.shouldCheckForUpdate) }
-                                ?.let { favoritesRepository.toggleNotify(it) }
-                        }
-                    }
-                )
-            } else {
-                OptionsItem(
-                    title = "Cannot change update status without being a favorite",
-                    onClick = {},
-                    modifier = Modifier.alpha(.5f)
-                )
-            }
-        }
-
-        OptionsItem(
-            title = stringResource(Res.string.global_search_by_name),
-            onClick = {
-                scope.launch { sheet.hide() }
-                    .invokeOnCompletion { onGlobalSearch(title) }
-            }
-        )
-
-        var showLists by remember { mutableStateOf(false) }
-        val listState = rememberModalBottomSheetState(true)
-
-        if (showLists) {
-            ModalBottomSheet(
-                onDismissRequest = { showLists = false },
-                containerColor = MaterialTheme.colorScheme.surface,
-                sheetState = listState
-            ) {
-                ListChoiceScreen(
-                    url = url,
-                    onClick = { item ->
-                        scope.launch {
-                            listDao.addToList(
-                                item.item.uuid,
-                                title,
-                                description,
-                                url,
-                                imageUrl,
-                                serviceName
-                            )
-                            listState.hide()
-                        }.invokeOnCompletion { showLists = false }
-                    },
-                    navigationIcon = {
-                        IconButton(
-                            onClick = { showLists = false }
-                        ) { Icon(Icons.Default.Close, null) }
-                    },
-                )
-            }
-        }
-
-        OptionsItem(
-            title = stringResource(Res.string.add_to_list),
-            onClick = { showLists = true }
-        )
-
-        var showQr by remember { mutableStateOf(false) }
-        if (showQr) {
-            ShareViaQrCode(
-                url = url,
-                title = title,
-                imageUrl = imageUrl,
-                apiService = serviceName,
-                onClose = { showQr = false }
-            )
-        }
-
-        OptionsItem(
-            title = "Share via QR Code",
-            onClick = { showQr = true }
-        )
-
-        moreContent(optionsSheetValues)
-
-        if (remember { platformRepository.hasBiometric() }) {
-            Crossfade(isIncognito) { target ->
-                if (target == null) {
-                    OptionsItem(
-                        title = "Add to Incognito",
-                        onClick = {
-                            biometric.authenticate(
-                                onAuthenticationSucceeded = {
-                                    scope.launch {
-                                        incognitoRepository.addIncognito(
-                                            url = url,
-                                            title = title,
-                                        )
-                                    }.invokeOnCompletion { dismiss() }
-                                },
-                                title = "Authentication required",
-                                subtitle = "In order to add ${title}, please authenticate",
-                                negativeButtonText = "Never Mind"
-                            )
-                        }
-                    )
-                } else {
-                    OptionsItem(
-                        title = "Remove from Incognito",
-                        onClick = {
-                            biometric.authenticate(
-                                onAuthenticationSucceeded = {
-                                    scope.launch { incognitoRepository.removeIncognito(url) }
-                                        .invokeOnCompletion { dismiss() }
-                                },
-                                title = "Authentication required",
-                                subtitle = "In order to remove ${title}, please authenticate",
-                                negativeButtonText = "Never Mind"
-                            )
-                        }
-                    )
                 }
             }
         }
@@ -712,6 +437,9 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.NewOptionsItems(
     notificationRepository: NotificationRepository = koinInject(),
     favoritesRepository: FavoritesRepository = koinInject(),
     scope: CoroutineScope = rememberCoroutineScope(),
+    utilities: @Composable FlowRowScope.(T, OptionsSheetScope) -> Unit = { _, _ ->
+        Spacer(modifier = Modifier.weight(1f))
+    },
 ) {
     val imageUrl = optionsSheetValues.imageUrl
     val title = optionsSheetValues.title
@@ -887,8 +615,8 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.NewOptionsItems(
                     QuickActionCard(
                         onClick = {
                             scope.launch {
+                                //TODO: For the add, it needs to be a dbModel
                                 optionsSheetValues.itemModel?.let { favoritesRepository.addFavorite(it.toDbModel()) }
-
                             }
                         },
                         icon = Icons.Default.FavoriteBorder,
@@ -959,99 +687,90 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.NewOptionsItems(
 
         Text("Utilities")
 
-        Column {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                UtilityCard(
-                    onClick = {
-                        scope.launch { sheet.hide() }
-                            .invokeOnCompletion { onGlobalSearch(title) }
-                    },
-                    icon = Icons.Default.Search,
-                    title = "Global Search",
-                    modifier = Modifier.weight(1f)
-                )
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            maxItemsInEachRow = 2,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            UtilityCard(
+                onClick = {
+                    scope.launch { sheet.hide() }
+                        .invokeOnCompletion { onGlobalSearch(title) }
+                },
+                icon = Icons.Default.Search,
+                title = "Global Search",
+                modifier = Modifier.weight(1f)
+            )
 
-                UtilityCard(
-                    onClick = {
-                        scope.launch {
-                            dbModel
-                                ?.let { it.copy(shouldCheckForUpdate = !it.shouldCheckForUpdate) }
-                                ?.let { favoritesRepository.toggleNotify(it) }
-                        }
-                    },
-                    enabled = updateParams.isFavorite && updateParams.deviceCheckForUpdate,
-                    additionalIcon = {
-                        if (!(updateParams.isFavorite && updateParams.deviceCheckForUpdate)) {
-                            Icon(
-                                Icons.Default.Lock,
-                                null,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    },
-                    icon = Icons.Default.Refresh,
-                    title = if (updateParams.shouldCheckForUpdate) "Will check for updates" else "Will not check for updates",
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            Row(
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                if (remember { platformRepository.hasBiometric() }) {
-                    Crossfade(isIncognito) { target ->
-                        if (target == null) {
-                            UtilityCard(
-                                title = "Add to Incognito",
-                                onClick = {
-                                    biometric.authenticate(
-                                        onAuthenticationSucceeded = {
-                                            scope.launch {
-                                                incognitoRepository.addIncognito(
-                                                    url = url,
-                                                    title = title,
-                                                )
-                                            }.invokeOnCompletion { dismiss() }
-                                        },
-                                        title = "Authentication required",
-                                        subtitle = "In order to add ${title}, please authenticate",
-                                        negativeButtonText = "Never Mind"
-                                    )
-                                },
-                                icon = Icons.Default.HideSource,
-                                modifier = Modifier.weight(1f)
-                            )
-                        } else {
-                            UtilityCard(
-                                title = "Remove from Incognito",
-                                onClick = {
-                                    biometric.authenticate(
-                                        onAuthenticationSucceeded = {
-                                            scope.launch { incognitoRepository.removeIncognito(url) }
-                                                .invokeOnCompletion { dismiss() }
-                                        },
-                                        title = "Authentication required",
-                                        subtitle = "In order to remove ${title}, please authenticate",
-                                        negativeButtonText = "Never Mind"
-                                    )
-                                },
-                                icon = Icons.Default.HideSource,
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
+            UtilityCard(
+                onClick = {
+                    scope.launch {
+                        dbModel
+                            ?.let { it.copy(shouldCheckForUpdate = !it.shouldCheckForUpdate) }
+                            ?.let { favoritesRepository.toggleNotify(it) }
                     }
-                } else {
-                    // If biometric isn't available, we still need a weight(1f) spacer here
-                    // to maintain alignment, just in case.
-                    Spacer(modifier = Modifier.weight(1f))
-                }
+                },
+                enabled = updateParams.isFavorite && updateParams.deviceCheckForUpdate,
+                additionalIcon = {
+                    if (!(updateParams.isFavorite && updateParams.deviceCheckForUpdate)) {
+                        Icon(
+                            Icons.Default.Lock,
+                            null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                },
+                icon = Icons.Default.Refresh,
+                title = if (updateParams.shouldCheckForUpdate) "Will check for updates" else "Will not check for updates",
+                modifier = Modifier.weight(1f)
+            )
 
-                Spacer(modifier = Modifier.weight(1f))
+            if (remember { platformRepository.hasBiometric() }) {
+                Crossfade(isIncognito) { target ->
+                    if (target == null) {
+                        UtilityCard(
+                            title = "Add to Incognito",
+                            onClick = {
+                                biometric.authenticate(
+                                    onAuthenticationSucceeded = {
+                                        scope.launch {
+                                            incognitoRepository.addIncognito(
+                                                url = url,
+                                                title = title,
+                                            )
+                                        }.invokeOnCompletion { dismiss() }
+                                    },
+                                    title = "Authentication required",
+                                    subtitle = "In order to add ${title}, please authenticate",
+                                    negativeButtonText = "Never Mind"
+                                )
+                            },
+                            icon = Icons.Default.HideSource,
+                            modifier = Modifier.weight(1f)
+                        )
+                    } else {
+                        UtilityCard(
+                            title = "Remove from Incognito",
+                            onClick = {
+                                biometric.authenticate(
+                                    onAuthenticationSucceeded = {
+                                        scope.launch { incognitoRepository.removeIncognito(url) }
+                                            .invokeOnCompletion { dismiss() }
+                                    },
+                                    title = "Authentication required",
+                                    subtitle = "In order to remove ${title}, please authenticate",
+                                    negativeButtonText = "Never Mind"
+                                )
+                            },
+                            icon = Icons.Default.HideSource,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
             }
+
+            utilities(optionsSheetValues, this@NewOptionsItems)
         }
     }
 }
@@ -1091,7 +810,7 @@ private fun QuickActionCard(
 }
 
 @Composable
-private fun UtilityCard(
+fun UtilityCard(
     onClick: () -> Unit,
     icon: ImageVector,
     title: String,

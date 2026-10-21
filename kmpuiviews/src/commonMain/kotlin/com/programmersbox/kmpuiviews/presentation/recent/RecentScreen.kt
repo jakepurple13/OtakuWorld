@@ -2,7 +2,6 @@ package com.programmersbox.kmpuiviews.presentation.recent
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -63,8 +62,6 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import otakuworld.kmpuiviews.generated.resources.Res
-import otakuworld.kmpuiviews.generated.resources.addToFavorites
-import otakuworld.kmpuiviews.generated.resources.removeFromFavorites
 import otakuworld.kmpuiviews.generated.resources.you_re_offline
 
 @OptIn(
@@ -111,25 +108,7 @@ fun RecentView(
             }
     }
 
-    var optionsSheet by optionsKmpSheet(
-        moreContent = {
-            Crossfade(
-                viewModel.favoriteList.any { f -> f.url == it.url }
-            ) { target ->
-                if (target) {
-                    OptionsItem(
-                        title = stringResource(Res.string.removeFromFavorites),
-                        onClick = { viewModel.favoriteAction(RecentViewModel.FavoriteAction.Remove(it.itemModel)) }
-                    )
-                } else {
-                    OptionsItem(
-                        title = stringResource(Res.string.addToFavorites),
-                        onClick = { viewModel.favoriteAction(RecentViewModel.FavoriteAction.Add(it.itemModel)) }
-                    )
-                }
-            }
-        }
-    )
+    var optionsSheet by optionsKmpSheet()
 
     var showSourceChooser by showSourceChooser()
 

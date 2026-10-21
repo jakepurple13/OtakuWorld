@@ -46,6 +46,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
@@ -110,6 +111,7 @@ import com.programmersbox.kmpuiviews.presentation.components.LoadingDialog
 import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
 import com.programmersbox.kmpuiviews.presentation.components.OptionsSheetValues
 import com.programmersbox.kmpuiviews.presentation.components.SecureScreenWrapper
+import com.programmersbox.kmpuiviews.presentation.components.UtilityCard
 import com.programmersbox.kmpuiviews.presentation.components.blurkind.rememberBlurKindState
 import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKind
 import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKindSource
@@ -353,7 +355,7 @@ fun OtakuCustomListScreen(
                 ?.onCompletion { showLoadingDialog = false }
                 ?.launchIn(scope)
         }
-    ) { model ->
+    ) { model, optionsSheetScope ->
         var showDeleteDialog by remember { mutableStateOf(false) }
 
         if (showDeleteDialog) {
@@ -370,7 +372,7 @@ fun OtakuCustomListScreen(
                             }.invokeOnCompletion {
                                 showDeleteDialog = false
                                 // The item is gone, so the sheet has nothing left to show.
-                                dismiss()
+                                optionsSheetScope.dismiss()
                             }
                         }
                     ) { Text(stringResource(Res.string.confirm)) }
@@ -379,9 +381,11 @@ fun OtakuCustomListScreen(
             )
         }
 
-        OptionsItem(
-            "Remove",
-            onClick = { showDeleteDialog = true }
+        UtilityCard(
+            onClick = { showDeleteDialog = true },
+            icon = Icons.Default.Delete,
+            title = "Remove",
+            modifier = Modifier.weight(1f)
         )
     }
 
