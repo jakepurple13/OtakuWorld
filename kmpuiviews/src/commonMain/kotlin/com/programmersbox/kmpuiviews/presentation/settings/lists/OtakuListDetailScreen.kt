@@ -623,17 +623,17 @@ fun OtakuCustomListScreen(
                 is OtakuListState.ByTitle if state.items.isNotEmpty() -> {
                     items(
                         items = state.items,
-                        key = { it.key },
+                        key = { it.uniqueId },
                         contentType = { it }
                     ) { item ->
                         CustomItemVertical(
-                            items = item.value,
-                            title = item.key,
+                            items = listOf(item),
+                            title = item.title,
                             showLoadingDialog = { showLoadingDialog = it },
                             onError = { showMessage("Something went wrong. Source might not be installed") },
                             selectionMode = viewModel.inSelectionMode,
-                            selected = viewModel.isSelected(item.value),
-                            onToggleSelection = { viewModel.toggleSelection(item.value) },
+                            selected = viewModel.isSelected(listOf(item)),
+                            onToggleSelection = { viewModel.toggleSelection(listOf(item)) },
                             colorFilter = colorFilter,
                             modifier = Modifier.animateItem()
                         )
