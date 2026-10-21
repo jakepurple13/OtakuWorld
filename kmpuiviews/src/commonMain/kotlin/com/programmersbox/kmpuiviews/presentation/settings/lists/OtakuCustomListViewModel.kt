@@ -154,7 +154,7 @@ class OtakuCustomListViewModel(
     }
 
     private fun visibleItems(): List<CustomListInfo> = when (val state = items) {
-        is OtakuListState.ByTitle -> state.items.flatMap { it.value }
+        is OtakuListState.ByTitle -> state.items
         is OtakuListState.BySource -> state.items.flatMap { it.value }
         OtakuListState.Empty -> emptyList()
     }
@@ -191,9 +191,9 @@ class OtakuCustomListViewModel(
             .also { clearSelection() }
     }
 
-    /** A random title from what is currently visible, as all of its source entries. */
+    /** A random item from what is currently visible. */
     fun randomPick(): List<CustomListInfo>? = when (val state = items) {
-        is OtakuListState.ByTitle -> state.items.randomOrNull()?.value
+        is OtakuListState.ByTitle -> state.items.randomOrNull()?.let(::listOf)
         is OtakuListState.BySource -> state.items.flatMap { it.value }.randomOrNull()?.let(::listOf)
         OtakuListState.Empty -> null
     }
@@ -249,19 +249,19 @@ enum class ListViewMode { Grid, BySource }
  * Items added before createdAt was recorded have 0, so they fall back to list order,
  * which is insertion order. Either way, newest comes first.
  */
-private fun List<Map.Entry<String, List<CustomListInfo>>>.sortedForList(
+private fun List<CustomListInfo>.sortedForList(
     sort: ListSort,
     order: Map<String, Int>,
-): List<Map.Entry<String, List<CustomListInfo>>> = when (sort) {
+): List<CustomListInfo> = when (sort) {
     ListSort.RecentlyAdded -> sortedWith(
-        compareByDescending<Map.Entry<String, List<CustomListInfo>>> { e -> e.value.maxOf { it.createdAt } }
-            .thenByDescending { e -> e.value.maxOf { order[it.uniqueId] ?: 0 } }
+        compareByDescending<CustomListInfo> { it.createdAt }
+            .thenByDescending { order[it.uniqueId] ?: 0 }
     )
 
-    ListSort.Title -> sortedBy { it.key.lowercase() }
+    ListSort.Title -> sortedBy { it.title.lowercase() }
     ListSort.Source -> sortedWith(
-        compareBy<Map.Entry<String, List<CustomListInfo>>> { e -> e.value.minOf { it.source.lowercase() } }
-            .thenBy { it.key.lowercase() }
+        compareBy<CustomListInfo> { it.source.lowercase() }
+            .thenBy { it.title.lowercase() }
     )
 }
 
@@ -272,7 +272,7 @@ private fun CustomList.visible(searchQuery: String, filtered: List<String>) = li
     .filter { filtered.contains(it.source) }
 
 sealed class OtakuListState {
-    data class ByTitle(val items: List<Map.Entry<String, List<CustomListInfo>>>) : OtakuListState() {
+    data class ByTitle(val items: List<CustomListInfo>) : OtakuListState() {
         constructor(
             customList: CustomList,
             searchQuery: String,
@@ -281,9 +281,6 @@ sealed class OtakuListState {
         ) : this(
             customList
                 .visible(searchQuery, filtered)
-                .groupBy { it.title }
-                .entries
-                .toList()
                 .sortedForList(sort, customList.insertionOrder())
         )
     }
@@ -303,12 +300,7 @@ sealed class OtakuListState {
                 .visible(searchQuery, filtered)
                 .groupBy { it.source }
                 .mapValues { (_, sourceItems) ->
-                    sourceItems
-                        .groupBy { it.uniqueId }
-                        .entries
-                        .toList()
-                        .sortedForList(sort, customList.insertionOrder())
-                        .flatMap { it.value }
+                    sourceItems.sortedForList(sort, customList.insertionOrder())
                 }
                 .entries
                 .toList()
