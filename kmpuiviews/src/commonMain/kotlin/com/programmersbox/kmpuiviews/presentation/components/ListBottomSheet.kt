@@ -3,6 +3,7 @@ package com.programmersbox.kmpuiviews.presentation.components
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBars
@@ -44,6 +45,7 @@ fun <T> ListBottomScreen(
         IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.Close, null) }
     },
     lazyListContent: LazyListScope.() -> Unit = {},
+    actions: @Composable RowScope.() -> Unit = {},
     itemContent: (T) -> ListBottomSheetItemModel,
 ) {
     LazyColumn(
@@ -55,7 +57,10 @@ fun <T> ListBottomScreen(
                 windowInsets = if (includeInsetPadding) WindowInsets.statusBars else WindowInsets(0.dp),
                 title = { Text(title) },
                 navigationIcon = navigationIcon,
-                actions = { if (list.isNotEmpty()) Text("(${list.size})") }
+                actions = {
+                    actions()
+                    if (list.isNotEmpty()) Text("(${list.size})")
+                }
             )
             HorizontalDivider()
         }

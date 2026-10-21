@@ -44,11 +44,19 @@ message Settings {
   repeated string trustedAniyomiExtensions = 40;
   // Keyed by the full repo.json URL.
   repeated string trustedCloudstreamRepos = 41;
+  // Order of languages in the source chooser. Empty means "device language first".
+  repeated string sourceLanguageOrder = 42;
+  // Keyed by extension package name.
+  map<string, SourceLanguageOrder> sourceLanguageOrderOverrides = 43;
 }
 
 message GlobalSearchLanguageOverride {
   bool searchAll = 1;
   repeated string languages = 2;
+}
+
+message SourceLanguageOrder {
+  repeated string languages = 1;
 }
 
 enum ScreensaverType {
