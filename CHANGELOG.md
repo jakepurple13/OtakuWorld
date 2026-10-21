@@ -102,6 +102,8 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   ([08ff7d137](https://github.com/jakepurple13/OtakuWorld/commit/08ff7d137))
 - AI chat: manage local LLM models from a new model management screen
   ([#2512](https://github.com/jakepurple13/OtakuWorld/pull/2512))
+- New Options Sheet UI to allow for better accessibility
+  ([#2620](https://github.com/jakepurple13/OtakuWorld/pull/2620))
 
 #### Improvements
 
