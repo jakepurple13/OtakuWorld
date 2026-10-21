@@ -4,7 +4,6 @@ package com.programmersbox.kmpuiviews.presentation.components
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -71,9 +70,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.datastore.ColorBlindnessType
 import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.NotificationItem
-import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.components.textflow.TextFlow
@@ -178,11 +177,10 @@ interface OptionsSheetValues {
     val description: String
     val serviceName: String
     val url: String
-    val itemModel: KmpItemModel? get() = null
 }
 
 class KmpItemModelOptionsSheet(
-    override val itemModel: KmpItemModel,
+    val itemModel: KmpItemModel,
     override val imageUrl: String = itemModel.imageUrl,
     override val title: String = itemModel.title,
     override val description: String = itemModel.description,
@@ -622,36 +620,36 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.NewOptionsItems(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
-            val isVisible = optionsSheetValues.itemModel != null || dbModel != null
-            val weight by animateFloatAsState(
-                targetValue = if (isVisible) 1f else 0f,
-                label = "favoriteWeight"
-            )
-
-            if (weight > 0f) {
-                Crossfade(
-                    dbModel,
-                    modifier = Modifier.weight(weight)
-                ) { target ->
-                    if (target != null) {
-                        QuickActionCard(
-                            onClick = { scope.launch { favoritesRepository.removeFavorite(target) } },
-                            icon = Icons.Default.Favorite,
-                            title = "Favorite",
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    } else {
-                        QuickActionCard(
-                            onClick = {
-                                scope.launch {
-                                    optionsSheetValues.itemModel?.let { favoritesRepository.addFavorite(it.toDbModel()) }
-                                }
-                            },
-                            icon = Icons.Default.FavoriteBorder,
-                            title = "Favorite",
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
+            Crossfade(
+                dbModel,
+                modifier = Modifier.weight(1f)
+            ) { target ->
+                if (target != null) {
+                    QuickActionCard(
+                        onClick = { scope.launch { favoritesRepository.removeFavorite(target) } },
+                        icon = Icons.Default.Favorite,
+                        title = "Favorite",
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                } else {
+                    QuickActionCard(
+                        onClick = {
+                            scope.launch {
+                                favoritesRepository.addFavorite(
+                                    DbModel(
+                                        title = optionsSheetValues.title,
+                                        description = optionsSheetValues.description,
+                                        url = optionsSheetValues.url,
+                                        imageUrl = optionsSheetValues.imageUrl,
+                                        source = optionsSheetValues.serviceName,
+                                    )
+                                )
+                            }
+                        },
+                        icon = Icons.Default.FavoriteBorder,
+                        title = "Favorite",
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
 
