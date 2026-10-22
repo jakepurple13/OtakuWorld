@@ -107,6 +107,10 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   ([#2512](https://github.com/jakepurple13/OtakuWorld/pull/2512))
 - New Options Sheet UI to allow for better accessibility
   ([#2620](https://github.com/jakepurple13/OtakuWorld/pull/2620))
+- Refreshed onboarding: a Sources page that explains extensions and sets preferred languages, more
+  appearance options, chapter swipe actions, a biometric lock shortcut, and a Tips & Gestures page
+  where you can try hidden gestures. The tips also live under Settings › Discover, and each app
+  adds its own (MangaWorld reader, AnimeWorld player, NovelWorld reader)
 
 #### Improvements
 

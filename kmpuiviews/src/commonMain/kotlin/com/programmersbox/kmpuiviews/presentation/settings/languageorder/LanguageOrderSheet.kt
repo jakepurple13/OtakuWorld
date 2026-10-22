@@ -241,7 +241,7 @@ private fun OverrideContent(
 
 /** Draggable, numbered list of languages. */
 @Composable
-private fun LanguageList(
+internal fun LanguageList(
     languages: List<String>,
     onReorder: (List<String>) -> Unit,
     onRemove: ((String) -> Unit)? = null,
@@ -292,7 +292,7 @@ private fun LanguageList(
 }
 
 @Composable
-private fun SectionLabel(text: String) {
+internal fun SectionLabel(text: String) {
     Text(
         text,
         style = MaterialTheme.typography.labelLarge,

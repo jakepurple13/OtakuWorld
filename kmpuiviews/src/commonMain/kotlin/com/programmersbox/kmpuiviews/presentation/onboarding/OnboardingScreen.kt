@@ -3,6 +3,7 @@ package com.programmersbox.kmpuiviews.presentation.onboarding
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.AlertDialog
@@ -11,6 +12,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -29,8 +31,10 @@ import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.onboarding.composables.AccountContent
 import com.programmersbox.kmpuiviews.presentation.onboarding.composables.FinishContent
 import com.programmersbox.kmpuiviews.presentation.onboarding.composables.GeneralContent
+import com.programmersbox.kmpuiviews.presentation.onboarding.composables.SourcesContent
 import com.programmersbox.kmpuiviews.presentation.onboarding.composables.ThemeContent
 import com.programmersbox.kmpuiviews.presentation.onboarding.composables.WelcomeContent
+import com.programmersbox.kmpuiviews.presentation.tips.TipsContent
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
@@ -48,10 +52,15 @@ fun OnboardingScreen(
 ) {
     HideNavBarWhileOnScreen()
 
+    // While a tip's practice view is open, the pager stops swiping so the demo gets the gestures.
+    var practicingTip by remember { mutableStateOf(false) }
+
     val onboardingScope = rememberOnboardingScope {
         item { WelcomeContent() }
 
         item { ThemeContent() }
+
+        item { SourcesContent() }
 
         item {
             AccountContent(
@@ -64,6 +73,18 @@ fun OnboardingScreen(
         }
 
         apply(customPreferences.onboardingSettings)
+
+        item {
+            TipsContent(
+                onPracticeChange = { practicingTip = it },
+                header = {
+                    ListItem(
+                        headlineContent = { Text("Tips & gestures") },
+                        supportingContent = { Text("Some actions are hidden behind a press or a swipe. Tap Try to practice one.") },
+                    )
+                }
+            )
+        }
 
         //This should ALWAYS be last
         item { FinishContent() }
@@ -142,9 +163,9 @@ fun OnboardingScreen(
                         }
                     ) {
                         if (pagerState.canScrollForward) {
-                            Text("Next")
+                            Text("Next", modifier = Modifier.padding(horizontal = 16.dp))
                         } else {
-                            Text("Finish!")
+                            Text("Get started", modifier = Modifier.padding(horizontal = 16.dp))
                         }
                     }
                 }
@@ -155,6 +176,7 @@ fun OnboardingScreen(
             onboardingScope = onboardingScope,
             state = pagerState,
             contentPadding = padding,
+            userScrollEnabled = !practicingTip,
             modifier = Modifier.fillMaxSize()
         )
     }

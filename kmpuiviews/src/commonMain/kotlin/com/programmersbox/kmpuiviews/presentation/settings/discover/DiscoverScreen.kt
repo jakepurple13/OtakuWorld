@@ -3,6 +3,7 @@ package com.programmersbox.kmpuiviews.presentation.settings.discover
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Web
+import androidx.compose.material.icons.outlined.BackHand
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -36,6 +37,12 @@ fun DiscoverScreen(
                 content = { Text("URL Opener") },
                 leadingContent = { Icon(Icons.Default.Web, null) },
                 onClick = { navActions.navigate(Screen.UrlOpener) },
+            )
+            segmentedListItem(
+                content = { Text("Tips & Gestures") },
+                supportingContent = { Text("Hidden presses and swipes") },
+                leadingContent = { Icon(Icons.Outlined.BackHand, null) },
+                onClick = { navActions.navigate(Screen.TipsScreen) },
             )
             apply(composeSettingsDsl.discoverSettings)
         }

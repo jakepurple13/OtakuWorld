@@ -3,6 +3,7 @@ package com.programmersbox.kmpuiviews.utils
 import androidx.compose.runtime.Composable
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroupScope
 import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingScope
+import com.programmersbox.kmpuiviews.presentation.tips.TipsScope
 
 class ComposeSettingsDsl {
     var generalSettings: @Composable () -> Unit = {}
@@ -41,6 +42,17 @@ class ComposeSettingsDsl {
     fun onboardingSettings(block: OnboardingScope.() -> Unit) {
         val previous = onboardingSettings
         onboardingSettings = {
+            previous()
+            block()
+        }
+    }
+
+    var tips: TipsScope.() -> Unit = {}
+        private set
+
+    fun tips(block: TipsScope.() -> Unit) {
+        val previous = tips
+        tips = {
             previous()
             block()
         }
