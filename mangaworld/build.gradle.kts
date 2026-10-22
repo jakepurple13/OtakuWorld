@@ -37,6 +37,15 @@ android {
                 signingConfig = signingConfigs.getByName("debug")
         }
     }
+
+    // The APK is sideloaded from GitHub, so compress dex and native libs to shrink the download.
+    // Costs extra install-time extraction and on-disk space.
+    packaging {
+        dex.useLegacyPackaging = true
+        jniLibs.useLegacyPackaging = true
+        // Windows console DLLs from jansi (pulled in by koog's ktor-server-sse); never loaded on Android.
+        resources.excludes += "org/fusesource/jansi/**"
+    }
 }
 
 dependencies {

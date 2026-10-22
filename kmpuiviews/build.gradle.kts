@@ -167,7 +167,6 @@ kotlin {
             dependencies {
                 implementation(commonLibs.heatmap)
                 implementation(commonLibs.kamel.decoder.image.bitmap.resizing)
-                implementation(commonLibs.kamel.decoder.svg.batik)
                 implementation(commonLibs.ktorAndroid)
                 implementation(androidx.browser.browser)
                 implementation(androidLibs.androidBrowserHelper)
