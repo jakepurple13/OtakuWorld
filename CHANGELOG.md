@@ -296,6 +296,9 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 - Beta builds use R8 minification and resource shrinking
   ([#2522](https://github.com/jakepurple13/OtakuWorld/pull/2522),
   [#2571](https://github.com/jakepurple13/OtakuWorld/pull/2571))
+- Smaller release APK, from 73.2 MB to 32.6 MB: code and native libraries are compressed, and
+  unused desktop-only libraries are no longer bundled
+  ([#2624](https://github.com/jakepurple13/OtakuWorld/pull/2624))
 - OkHttp Brotli support for extensions, plus ProGuard rules for extension loading
   ([9caabf48f](https://github.com/jakepurple13/OtakuWorld/commit/9caabf48f))
 

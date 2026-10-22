@@ -223,7 +223,6 @@ kamel = [
     "kamel-decoder-image-bitmap",
     "kamel-decoder-image-bitmap-resizing",
     "kamel-decoder-image-vector",
-    "kamel-decoder-svg-batik",
     "kamel-decoder-svg-std"
 ]
 koinKmp = [
