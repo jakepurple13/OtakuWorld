@@ -447,6 +447,17 @@ class GenericAnime(
                 }
             }
         }
+
+        onboardingSettings {
+            item {
+                PlayerOnboarding(
+                    animeDataStoreHandling = animeDataStoreHandling,
+                    onSubtitlesClick = { navController.navigate(SubtitleSettingsRoute) },
+                )
+            }
+        }
+
+        tips(animeTips)
     }
 
     context(navGraph: EntryProviderScope<NavKey>)

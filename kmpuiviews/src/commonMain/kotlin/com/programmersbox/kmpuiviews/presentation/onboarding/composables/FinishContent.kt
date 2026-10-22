@@ -10,7 +10,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Replay
+import androidx.compose.material.icons.outlined.BackHand
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -66,8 +71,18 @@ internal fun FinishContent() {
             )
 
             Text("Remember you can change all of these settings at any time.")
-
-            Text("Press finish to start using the app!")
         }
+
+        ListItem(
+            headlineContent = { Text("All tips & gestures") },
+            supportingContent = { Text("Settings › Discover › Tips & Gestures") },
+            leadingContent = { Icon(Icons.Outlined.BackHand, null) },
+        )
+
+        ListItem(
+            headlineContent = { Text("Run setup again") },
+            supportingContent = { Text("Settings › About › View Onboarding Again") },
+            leadingContent = { Icon(Icons.Default.Replay, null) },
+        )
     }
 }

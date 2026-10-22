@@ -18,6 +18,8 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.SwipeLeft
+import androidx.compose.material.icons.filled.SwipeRight
 import androidx.compose.material.icons.filled.Timelapse
 import androidx.compose.material.icons.filled.UnfoldLess
 import androidx.compose.material.icons.filled.Wifi
@@ -43,7 +45,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.programmersbox.datastore.DetailsChapterSwipeBehavior
 import com.programmersbox.datastore.MediaCheckerNetworkType
 import com.programmersbox.datastore.MiddleNavigationAction
 import com.programmersbox.datastore.NewSettingsHandling
@@ -55,6 +59,7 @@ import com.programmersbox.kmpuiviews.presentation.components.settings.ListSettin
 import com.programmersbox.kmpuiviews.presentation.components.settings.ShowWhen
 import com.programmersbox.kmpuiviews.presentation.components.settings.SliderSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
+import com.programmersbox.kmpuiviews.presentation.components.settings.categorySetting
 import com.programmersbox.kmpuiviews.presentation.components.visibleName
 import com.programmersbox.kmpuiviews.presentation.settings.general.BlurSetting
 import com.programmersbox.kmpuiviews.presentation.settings.general.ShareChapterSettings
@@ -79,24 +84,26 @@ internal fun GeneralContent() {
         verticalArrangement = Arrangement.spacedBy(16.dp),
         modifier = Modifier
             .fillMaxSize()
-            .padding(bottom = 16.dp)
             .verticalScroll(rememberScrollState())
     ) {
         ListItem(
-            headlineContent = { Text("General Settings") },
+            headlineContent = { Text("General") },
+            supportingContent = { Text("How details, navigation and update checks behave.") },
         )
 
         CategoryGroup {
+            categorySetting { Text("Look") }
+
             item {
                 BlurSetting(handling = handling)
             }
         }
 
-        ListItem(
-            headlineContent = { Text("Detail Settings") },
-        )
+        var swipeBehavior by handling.detailsChapterSwipeBehavior.rememberPreference()
 
         CategoryGroup {
+            categorySetting { Text("Details") }
+
             item {
                 ShowDownloadSettings(handling = handling)
             }
@@ -104,21 +111,33 @@ internal fun GeneralContent() {
             item {
                 ShareChapterSettings(handling = handling)
             }
+
+            item {
+                ChapterSwipeSetting(
+                    title = "Swipe a chapter right",
+                    icon = Icons.Default.SwipeRight,
+                    value = swipeBehavior.detailsChapterSwipeBehaviorStartToEnd,
+                    onValueChange = { swipeBehavior = swipeBehavior.copy(detailsChapterSwipeBehaviorStartToEnd = it) },
+                )
+            }
+
+            item {
+                ChapterSwipeSetting(
+                    title = "Swipe a chapter left",
+                    icon = Icons.Default.SwipeLeft,
+                    value = swipeBehavior.detailsChapterSwipeBehaviorEndToStart,
+                    onValueChange = { swipeBehavior = swipeBehavior.copy(detailsChapterSwipeBehaviorEndToStart = it) },
+                )
+            }
         }
 
-        ListItem(
-            headlineContent = { Text("Navigation Settings") },
-        )
-
         CategoryGroup {
+            categorySetting { Text("Navigation") }
+
             item {
                 NavigationBarSettings(handling = handling)
             }
         }
-
-        ListItem(
-            headlineContent = { Text("Notification Settings") },
-        )
 
         var notifyOnBoot by handling.notifyOnReboot.rememberPreference()
         var mediaCheckerSettings by handling
@@ -126,6 +145,8 @@ internal fun GeneralContent() {
             .rememberPreference()
 
         CategoryGroup {
+            categorySetting { Text("Updates") }
+
             item {
                 SwitchSetting(
                     settingTitle = { Text("Notify on Boot") },
@@ -411,4 +432,34 @@ private fun MultipleActionsSetting(
             }
         }
     }
+}
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@Composable
+private fun ChapterSwipeSetting(
+    title: String,
+    icon: ImageVector,
+    value: DetailsChapterSwipeBehavior,
+    onValueChange: (DetailsChapterSwipeBehavior) -> Unit,
+) {
+    fun label(behavior: DetailsChapterSwipeBehavior) = when (behavior) {
+        DetailsChapterSwipeBehavior.MarkAsRead -> "Mark as read"
+        DetailsChapterSwipeBehavior.Read -> "Open the chapter"
+        DetailsChapterSwipeBehavior.Nothing -> "Nothing"
+    }
+
+    ListSetting(
+        settingTitle = { Text(title) },
+        settingIcon = { Icon(icon, null, modifier = Modifier.fillMaxSize()) },
+        dialogIcon = { Icon(icon, null) },
+        dialogTitle = { Text(title) },
+        summaryValue = { Text(label(value)) },
+        confirmText = { TextButton(onClick = { it.value = false }) { Text(stringResource(Res.string.cancel)) } },
+        value = value,
+        options = DetailsChapterSwipeBehavior.entries,
+        viewText = { label(it) },
+        updateValue = { it, d ->
+            d.value = false
+            onValueChange(it)
+        }
+    )
 }

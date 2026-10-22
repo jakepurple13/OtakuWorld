@@ -18,6 +18,7 @@ object SettingsScreenDisplayNames {
         Screen.ExceptionScreen -> "Exceptions"
         Screen.PrereleaseScreen -> "Pre-release Builds"
         Screen.ColorHelper -> "Color Helper"
+        Screen.TipsScreen -> "Tips & Gestures"
         Screen.IncognitoScreen -> "Incognito Sources"
         Screen.DebugScreen -> "Debug Menu"
         Screen.OtherSettings -> "Player"

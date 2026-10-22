@@ -47,6 +47,8 @@ import com.programmersbox.kmpuiviews.presentation.components.placeholder.M3Place
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComponentState
+import com.programmersbox.kmpuiviews.presentation.tips.TapBarsDemo
+import com.programmersbox.kmpuiviews.presentation.tips.TipGesture
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
 import com.programmersbox.manga.shared.downloads.DownloadRoute
@@ -54,6 +56,7 @@ import com.programmersbox.manga.shared.downloads.DownloadScreen
 import com.programmersbox.manga.shared.downloads.DownloadState
 import com.programmersbox.manga.shared.downloads.MangaDownloadManager
 import com.programmersbox.manga.shared.onboarding.ReaderOnboarding
+import com.programmersbox.manga.shared.onboarding.SampleMangaPage
 import com.programmersbox.manga.shared.reader.ReadView
 import com.programmersbox.manga.shared.reader.ReadViewModel
 import com.programmersbox.manga.shared.settings.ImageLoaderSettings
@@ -314,12 +317,41 @@ abstract class GenericSharedManga(
             }*/
         }
 
+        onboardingAndTips()
+    }
+
+    /** Onboarding page and tips; desktop adds these on top of its own preferences. */
+    protected fun ComposeSettingsDsl.onboardingAndTips() {
         onboardingSettings {
             item {
                 ReaderOnboarding(
                     mangaSettingsHandling = mangaSettingsHandling,
                 )
             }
+        }
+
+        tips {
+            tip(
+                title = "Tap a page",
+                description = "Shows or hides the reader bars.",
+                gesture = TipGesture.Tap,
+                demo = { onDone -> TapBarsDemo(onDone = onDone) { SampleMangaPage() } },
+            )
+            tip(
+                title = "Pinch or double-tap a page",
+                description = "Zooms in the reader.",
+                gesture = TipGesture.Tap,
+            )
+            tip(
+                title = "Swipe in from the edge",
+                description = "Opens the chapter list, when edge swipe is turned on in reader settings.",
+                gesture = TipGesture.Swipe,
+            )
+            tip(
+                title = "Swipe a download",
+                description = "Swipe left on a downloaded chapter to delete it.",
+                gesture = TipGesture.Swipe,
+            )
         }
     }
 

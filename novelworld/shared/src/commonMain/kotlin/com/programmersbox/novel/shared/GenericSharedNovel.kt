@@ -39,6 +39,7 @@ import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.M3PlaceHolderCoverCard
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.ComponentState
+import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
 import com.programmersbox.novel.shared.reader.NovelReadView
 import com.programmersbox.novel.shared.reader.ReadViewModel
@@ -51,6 +52,10 @@ abstract class GenericSharedNovel(
 ) : KmpGenericInfo {
 
     override val sourceType: String get() = "novel"
+
+    override fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit = {
+        tips(novelTips)
+    }
 
     override suspend fun chapterOnClick(
         model: KmpChapterModel,

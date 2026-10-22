@@ -198,6 +198,9 @@ sealed class Screen(val route: String) : NavKey {
     data object UrlOpener : Screen("url_opener")
 
     @Serializable
+    data object TipsScreen : Screen("tips")
+
+    @Serializable
     data object ColorHelper : Screen("color_helper")
 
     @Serializable

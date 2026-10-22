@@ -115,6 +115,8 @@ class GenericMangaDesktop(
                     onClick = { navigationActions.navigate(PlatformSettings) }
                 )
             }
+
+            onboardingAndTips()
         }
     }
 }

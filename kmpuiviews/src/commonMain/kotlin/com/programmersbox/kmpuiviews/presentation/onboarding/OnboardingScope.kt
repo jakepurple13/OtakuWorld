@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.presentation.onboarding
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.OverscrollEffect
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
@@ -109,7 +110,8 @@ fun OnboardingIndicator(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        horizontalArrangement = Arrangement.SpaceEvenly,
+        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+        verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
             .wrapContentHeight()
             .fillMaxWidth()
@@ -118,17 +120,18 @@ fun OnboardingIndicator(
             val color by animateColorAsState(
                 when {
                     pagerState.currentPage == iteration -> MaterialTheme.colorScheme.primary
-                    pagerState.currentPage > iteration -> MaterialTheme.colorScheme.tertiary
-                    else -> MaterialTheme.colorScheme.secondary
+                    pagerState.currentPage > iteration -> MaterialTheme.colorScheme.primaryContainer
+                    else -> MaterialTheme.colorScheme.surfaceVariant
                 }
             )
+            // The current page stretches into a pill so 8+ pages still fit.
+            val width by animateDpAsState(if (pagerState.currentPage == iteration) 20.dp else 8.dp)
 
             Box(
                 modifier = Modifier
-                    .padding(2.dp)
                     .clip(CircleShape)
                     .background(color)
-                    .size(16.dp)
+                    .size(width = width, height = 8.dp)
             )
         }
     }

@@ -71,6 +71,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.sourceorder.SourceOrd
 import com.programmersbox.kmpuiviews.presentation.settings.sources.SourcesScreen
 import com.programmersbox.kmpuiviews.presentation.settings.utils.ColorHelperScreen
 import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfoScreen
+import com.programmersbox.kmpuiviews.presentation.tips.TipsScreen
 import com.programmersbox.kmpuiviews.presentation.urlopener.UrlOpenerScreen
 import com.programmersbox.kmpuiviews.presentation.webview.WebViewScreen
 import com.programmersbox.kmpuiviews.utils.AppConfig
@@ -297,6 +298,7 @@ fun buildKmpGraph(): Module = module {
     }
 
     navigation<Screen.UrlOpener> { UrlOpenerScreen() }
+    navigation<Screen.TipsScreen> { TipsScreen() }
     navigation<Screen.ColorHelper> { ColorHelperScreen() }
     twoPaneEntry<Screen.ThemeSettings> { ThemeSettingsScreen() }
     twoPaneEntry<Screen.Settings.Blur> { BlurSettingsScreen() }

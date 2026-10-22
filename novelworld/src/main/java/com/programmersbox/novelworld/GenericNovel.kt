@@ -8,8 +8,10 @@ import com.programmersbox.kmpuiviews.SystemAlerter
 import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.Backup
+import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.NotificationLogo
 import com.programmersbox.kmpuiviews.utils.Zipper
+import com.programmersbox.kmpuiviews.utils.plus
 import com.programmersbox.novel.shared.ChapterHolder
 import com.programmersbox.novel.shared.GenericSharedNovel
 import com.programmersbox.novel.shared.novelSharedModule
@@ -36,6 +38,10 @@ class GenericNovel(
 ) : GenericSharedNovel(chapterHolder = chapterHolder), GenericInfo {
 
     override val deepLinkUri: String get() = "novelworld://"
+
+    override fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit {
+        return super<GenericSharedNovel>.composeCustomPreferences() + super<GenericInfo>.composeCustomPreferences()
+    }
 
     override val apkString: AppUpdate.AppUpdates.() -> String?
         get() = {

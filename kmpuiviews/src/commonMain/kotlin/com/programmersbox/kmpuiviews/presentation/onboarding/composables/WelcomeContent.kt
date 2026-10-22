@@ -10,7 +10,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Extension
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.outlined.BackHand
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -52,5 +58,20 @@ internal fun WelcomeContent() {
             stringResource(Res.string.welcome_description, appName),
             modifier = Modifier.padding(16.dp)
         )
+
+        ListItem(
+            headlineContent = { Text("In the next few minutes") },
+        )
+
+        listOf(
+            Icons.Default.Palette to "Pick a look",
+            Icons.Default.Extension to "Learn where sources come from",
+            Icons.Outlined.BackHand to "Try a few hidden gestures",
+        ).forEach { (icon, text) ->
+            ListItem(
+                headlineContent = { Text(text) },
+                leadingContent = { Icon(icon, null) },
+            )
+        }
     }
 }
