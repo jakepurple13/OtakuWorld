@@ -28,8 +28,9 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.HideSource
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.QrCode
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -748,7 +749,10 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.NewOptionsItems(
                         )
                     }
                 },
-                icon = Icons.Default.Refresh,
+                icon = if (updateParams.shouldCheckForUpdate)
+                    Icons.Default.NotificationsActive
+                else
+                    Icons.Default.NotificationsOff,
                 title = if (updateParams.shouldCheckForUpdate) "Will check for updates" else "Will not check for updates",
                 modifier = Modifier.weight(1f)
             )
