@@ -148,6 +148,8 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 - Fixed update status transition and disabled state in the options sheet
   ([6e4048f4d](https://github.com/jakepurple13/OtakuWorld/commit/6e4048f4d),
   [266d1fc8c](https://github.com/jakepurple13/OtakuWorld/commit/266d1fc8c))
+- The options sheet now slides up the first time it opens instead of appearing instantly
+  ([#2626](https://github.com/jakepurple13/OtakuWorld/pull/2626))
 - Fixed Settings deep links ([#2507](https://github.com/jakepurple13/OtakuWorld/pull/2507))
 - Cloud sync: MangaWorld, AnimeWorld, and NovelWorld signed into the same account no longer share
   favorites, history, lists, and other synced data. Each app now keeps its own data and its own
