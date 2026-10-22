@@ -599,17 +599,20 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.NewOptionsItems(
             sheetState = listState
         ) {
             ListChoiceScreen(
-                url = url,
-                onClick = { item ->
+                urls = setOf(url),
+                subtitle = title,
+                onConfirm = { lists ->
                     scope.launch {
-                        listDao.addToList(
-                            item.item.uuid,
-                            title,
-                            description,
-                            url,
-                            imageUrl,
-                            serviceName
-                        )
+                        lists.forEach { item ->
+                            listDao.addToList(
+                                item.item.uuid,
+                                title,
+                                description,
+                                url,
+                                imageUrl,
+                                serviceName
+                            )
+                        }
                         listState.hide()
                     }.invokeOnCompletion { showLists = false }
                 },

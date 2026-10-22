@@ -201,6 +201,27 @@
     <string name="choose_list_title">Choose List</string>
     <string name="create_new_list_option">Create New</string>
     <string name="create_new_list">Create New List</string>
+    <string name="add_to_lists_title">Add to lists</string>
+    <string name="new_list">New list</string>
+    <string name="create">Create</string>
+    <string name="current_list">Current list</string>
+    <string name="already_in_this_list">Already in this list</string>
+    <string name="some_already_here">%1$d of %2$d already here</string>
+    <string name="pick_lists_hint">Pick one or more lists</string>
+    <string name="added_to_lists">Added to %1$s</string>
+    <string name="already_in_lists">Already in those lists</string>
+    <plurals name="add_to_lists_button">
+        <item quantity="one">Add to %1$d list</item>
+        <item quantity="other">Add to %1$d lists</item>
+    </plurals>
+    <plurals name="lists_selected">
+        <item quantity="one">%1$d selected</item>
+        <item quantity="other">%1$d selected</item>
+    </plurals>
+    <plurals name="added_to_n_lists">
+        <item quantity="one">Added to %1$d list</item>
+        <item quantity="other">Added to %1$d lists</item>
+    </plurals>
     <string name="custom_list_updated_at">Updated at %1$s</string>
     <string name="importing_import_list">Importing!</string>
     <string name="import_import_list">Import</string>

@@ -175,18 +175,20 @@ class OtakuCustomListViewModel(
 
     suspend fun removeSelected(): Result<Boolean> = removeItems(selectedItems).onSuccess { clearSelection() }
 
-    /** Copies the selected items into [target]. Returns how many were new there. */
-    suspend fun addSelectedTo(target: CustomList): Result<Int> = runCatching {
-        selectedItems
-            .count { item ->
-                listRepository.addToList(
-                    uuid = target.item.uuid,
-                    title = item.title,
-                    description = item.description,
-                    url = item.url,
-                    imageUrl = item.imageUrl,
-                    source = item.source,
-                )
+    /** Copies the selected items into each of [targets]. Returns how many were new across them. */
+    suspend fun addSelectedTo(targets: List<CustomList>): Result<Int> = runCatching {
+        targets
+            .sumOf { target ->
+                selectedItems.count { item ->
+                    listRepository.addToList(
+                        uuid = target.item.uuid,
+                        title = item.title,
+                        description = item.description,
+                        url = item.url,
+                        imageUrl = item.imageUrl,
+                        source = item.source,
+                    )
+                }
             }
             .also { clearSelection() }
     }

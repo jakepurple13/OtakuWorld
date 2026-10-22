@@ -63,6 +63,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetState
@@ -462,25 +463,27 @@ fun OtakuCustomListScreen(
         ModalBottomSheet(
             onDismissRequest = { showAddToListSheet = false },
             containerColor = MaterialTheme.colorScheme.surface,
+            sheetState = rememberModalBottomSheetState(true),
         ) {
+            val selectedCount = viewModel.selectedItems.size
             ListChoiceScreen(
+                urls = remember { viewModel.selectedItems.map { it.url }.toSet() },
+                subtitle = "$selectedCount ${if (selectedCount == 1) "title" else "titles"} from ${customItem.item.name}",
+                currentListUuid = customItem.item.uuid,
                 navigationIcon = {
                     IconButton(onClick = { showAddToListSheet = false }) { Icon(Icons.Default.Close, null) }
                 },
-                onClick = { target ->
-                    if (target.item.uuid == customItem.item.uuid) {
-                        showMessage("Already in ${target.item.name}")
-                    } else {
-                        scope.launch {
-                            viewModel.addSelectedTo(target)
-                                .onSuccess { added ->
-                                    showMessage(
-                                        if (added == 0) "Already in ${target.item.name}"
-                                        else "Added $added to ${target.item.name}"
-                                    )
-                                }
-                                .onFailure { showMessage("Couldn't add those titles") }
-                        }
+                onConfirm = { targets ->
+                    scope.launch {
+                        viewModel.addSelectedTo(targets)
+                            .onSuccess { added ->
+                                val where = if (targets.size == 1) targets.first().item.name else "${targets.size} lists"
+                                showMessage(
+                                    if (added == 0) "Already in $where"
+                                    else "Added $added to $where"
+                                )
+                            }
+                            .onFailure { showMessage("Couldn't add those titles") }
                     }
                     showAddToListSheet = false
                 }
