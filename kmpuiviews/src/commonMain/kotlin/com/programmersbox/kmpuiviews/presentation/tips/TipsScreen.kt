@@ -120,7 +120,6 @@ fun TipsContent(
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
                     .padding(contentPadding)
-                    .padding(bottom = 16.dp)
             ) {
                 header()
                 TipGroup("Everywhere", sharedTips) { practicing = it }

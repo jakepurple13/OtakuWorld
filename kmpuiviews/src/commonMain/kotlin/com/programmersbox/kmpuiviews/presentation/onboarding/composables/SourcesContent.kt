@@ -45,7 +45,6 @@ internal fun SourcesContent(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         modifier = Modifier
             .fillMaxSize()
-            .padding(bottom = 16.dp)
             .verticalScroll(rememberScrollState())
     ) {
         ListItem(

@@ -1,10 +1,10 @@
 package com.programmersbox.kmpuiviews.presentation.onboarding
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.plus
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
@@ -134,7 +134,6 @@ fun OnboardingScreen(
                     }
                 )
                 HorizontalDivider()
-                Spacer(Modifier.size(4.dp))
             }
         },
         bottomBar = {
@@ -175,7 +174,7 @@ fun OnboardingScreen(
         Onboarding(
             onboardingScope = onboardingScope,
             state = pagerState,
-            contentPadding = padding,
+            contentPadding = padding + PaddingValues(vertical = 4.dp),
             userScrollEnabled = !practicingTip,
             modifier = Modifier.fillMaxSize()
         )
