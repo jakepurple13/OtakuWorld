@@ -151,7 +151,7 @@ class OtakuCustomListViewModelTest {
         awaitCondition { vm.customList?.list?.size == 3 }
 
         assertEquals(ListSort.RecentlyAdded, vm.sort)
-        assertEquals(listOf("New", "Middle", "Old"), (vm.items as OtakuListState.ByTitle).items.map { it.key })
+        assertEquals(listOf("New", "Middle", "Old"), (vm.items as OtakuListState.ByTitle).items.map { it.title })
     }
 
     @Test fun `recently added puts items without createdAt last in reverse insertion order`() = runTest {
@@ -164,7 +164,7 @@ class OtakuCustomListViewModelTest {
         val vm = viewModel(uuid)
         awaitCondition { vm.customList?.list?.size == 3 }
 
-        assertEquals(listOf("Fresh", "Legacy2", "Legacy1"), (vm.items as OtakuListState.ByTitle).items.map { it.key })
+        assertEquals(listOf("Fresh", "Legacy2", "Legacy1"), (vm.items as OtakuListState.ByTitle).items.map { it.title })
     }
 
     @Test fun `title sort orders alphabetically ignoring case`() = runTest {
@@ -174,7 +174,7 @@ class OtakuCustomListViewModelTest {
         awaitCondition { vm.customList?.list?.size == 3 }
         vm.sort = ListSort.Title
 
-        assertEquals(listOf("Alpha", "beta", "Gamma"), (vm.items as OtakuListState.ByTitle).items.map { it.key })
+        assertEquals(listOf("Alpha", "beta", "Gamma"), (vm.items as OtakuListState.ByTitle).items.map { it.title })
     }
 
     @Test fun `source sort orders by source then title`() = runTest {
@@ -184,7 +184,7 @@ class OtakuCustomListViewModelTest {
         awaitCondition { vm.customList?.list?.size == 3 }
         vm.sort = ListSort.Source
 
-        assertEquals(listOf("Zed", "Ant", "Bee"), (vm.items as OtakuListState.ByTitle).items.map { it.key })
+        assertEquals(listOf("Zed", "Ant", "Bee"), (vm.items as OtakuListState.ByTitle).items.map { it.title })
     }
 
     @Test fun `selectSource narrows to one source then toggles and resets when empty`() = runTest {
@@ -298,7 +298,7 @@ class OtakuCustomListViewModelTest {
         awaitCondition { vm.customList?.list?.size == 2 }
         vm.toggleSelection(vm.customList!!.list.filter { it.title == "Copied" })
 
-        val result = vm.addSelectedTo(target)
+        val result = vm.addSelectedTo(listOf(target))
         awaitCondition { dao().getCustomListItem(target.item.uuid).list.size == 1 }
 
         assertEquals(1, result.getOrNull())
@@ -317,7 +317,24 @@ class OtakuCustomListViewModelTest {
         awaitCondition { vm.customList?.list?.size == 1 }
         vm.toggleSelection(vm.customList!!.list)
 
-        assertEquals(0, vm.addSelectedTo(target).getOrNull())
+        assertEquals(0, vm.addSelectedTo(listOf(target)).getOrNull())
+    }
+
+    @Test fun `addSelectedTo adds items to every target and skips ones already there`() = runTest {
+        val uuid = listWith("One" to "A", "Two" to "A")
+        dao().create("First")
+        dao().create("Second")
+        val first = dao().getAllListsSync().first { it.item.name == "First" }
+        val second = dao().getAllListsSync().first { it.item.name == "Second" }
+        dao().addToList(second.item.uuid, "One", "", "https://example.com/0", "", "A")
+
+        val vm = viewModel(uuid)
+        awaitCondition { vm.customList?.list?.size == 2 }
+        vm.toggleSelection(vm.customList!!.list)
+
+        assertEquals(3, vm.addSelectedTo(listOf(first, second)).getOrNull())
+        assertEquals(setOf("One", "Two"), dao().getCustomListItem(first.item.uuid).list.map { it.title }.toSet())
+        assertEquals(setOf("One", "Two"), dao().getCustomListItem(second.item.uuid).list.map { it.title }.toSet())
     }
 
     @Test fun `updateDetails saves name and description`() = runTest {

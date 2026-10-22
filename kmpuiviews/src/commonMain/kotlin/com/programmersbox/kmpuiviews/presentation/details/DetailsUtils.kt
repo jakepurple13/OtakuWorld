@@ -81,6 +81,7 @@ import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.presentation.components.ToolTipWrapper
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.settings.lists.addtolist.ListChoiceScreen
+import com.programmersbox.kmpuiviews.presentation.settings.lists.addtolist.addedToListsMessage
 import com.programmersbox.kmpuiviews.presentation.settings.qrcode.ShareViaQrCode
 import com.programmersbox.kmpuiviews.repository.ListRepository
 import kotlinx.coroutines.CoroutineScope
@@ -95,8 +96,6 @@ import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.addToFavorites
 import otakuworld.kmpuiviews.generated.resources.add_to_for_later_list
 import otakuworld.kmpuiviews.generated.resources.add_to_list
-import otakuworld.kmpuiviews.generated.resources.added_to_list
-import otakuworld.kmpuiviews.generated.resources.already_in_list
 import otakuworld.kmpuiviews.generated.resources.global_search_by_name
 import otakuworld.kmpuiviews.generated.resources.hadAnUpdate
 import otakuworld.kmpuiviews.generated.resources.markAs
@@ -125,27 +124,23 @@ internal fun AddToList(
             sheetState = sheetState
         ) {
             ListChoiceScreen(
-                url = info.url,
-                onClick = { item ->
+                urls = setOf(info.url),
+                subtitle = info.title,
+                onConfirm = { lists ->
                     scope.launch {
-                        val result = listDao.addToList(
-                            item.item.uuid,
-                            info.title,
-                            info.description,
-                            info.url,
-                            info.imageUrl,
-                            info.source.serviceName
-                        )
+                        val added = lists.filter { item ->
+                            listDao.addToList(
+                                item.item.uuid,
+                                info.title,
+                                info.description,
+                                info.url,
+                                info.imageUrl,
+                                info.source.serviceName
+                            )
+                        }
                         sheetState.hide()
                         hostState?.showSnackbar(
-                            getString(
-                                if (result) {
-                                    Res.string.added_to_list
-                                } else {
-                                    Res.string.already_in_list
-                                },
-                                item.item.name
-                            ),
+                            addedToListsMessage(added),
                             withDismissAction = true
                         )
                     }.invokeOnCompletion { showListsChange(false) }
