@@ -78,6 +78,9 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   ([4cf4d57c6](https://github.com/jakepurple13/OtakuWorld/commit/4cf4d57c6))
 - Pick a cover image for a custom list
   ([#2570](https://github.com/jakepurple13/OtakuWorld/pull/2570))
+- Add to List: pick several lists at once. Lists that already have the title are disabled, and a
+  new list can be created and checked right in the sheet
+  ([#2625](https://github.com/jakepurple13/OtakuWorld/pull/2625))
 - Cloud sync: choose which tables back up to the cloud, per device
   ([#2490](https://github.com/jakepurple13/OtakuWorld/pull/2490))
 - Sign-out now shows a sheet where you choose what happens to local data (favorites, chapters
