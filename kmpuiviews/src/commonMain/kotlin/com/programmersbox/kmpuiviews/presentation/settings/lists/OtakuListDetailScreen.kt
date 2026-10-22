@@ -111,7 +111,6 @@ import com.programmersbox.kmpuiviews.presentation.components.LoadingDialog
 import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
 import com.programmersbox.kmpuiviews.presentation.components.OptionsSheetValues
 import com.programmersbox.kmpuiviews.presentation.components.SecureScreenWrapper
-import com.programmersbox.kmpuiviews.presentation.components.UtilityCard
 import com.programmersbox.kmpuiviews.presentation.components.blurkind.rememberBlurKindState
 import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKind
 import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKindSource
@@ -355,7 +354,7 @@ fun OtakuCustomListScreen(
                 ?.onCompletion { showLoadingDialog = false }
                 ?.launchIn(scope)
         }
-    ) { model, optionsSheetScope ->
+    ) { model ->
         var showDeleteDialog by remember { mutableStateOf(false) }
 
         if (showDeleteDialog) {
@@ -372,7 +371,7 @@ fun OtakuCustomListScreen(
                             }.invokeOnCompletion {
                                 showDeleteDialog = false
                                 // The item is gone, so the sheet has nothing left to show.
-                                optionsSheetScope.dismiss()
+                                dismiss()
                             }
                         }
                     ) { Text(stringResource(Res.string.confirm)) }

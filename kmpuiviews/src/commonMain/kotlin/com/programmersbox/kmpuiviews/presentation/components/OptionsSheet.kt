@@ -127,6 +127,84 @@ interface OptionsSheetScope {
             HorizontalDivider()
         }
     }
+
+    @Composable
+    fun QuickActionCard(
+        onClick: () -> Unit,
+        icon: ImageVector,
+        title: String,
+        modifier: Modifier = Modifier,
+    ) {
+        Card(
+            onClick = onClick,
+            modifier = modifier // Receives weight(1f) from parent
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+            ) {
+                Icon(
+                    icon,
+                    null,
+                    modifier = Modifier.size(28.dp) // Adjusted slightly for 4-item row scaling
+                )
+
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.labelSmall, // Use a smaller typography
+                    maxLines = 1, // Prevent it from stretching height
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+
+    @Composable
+    fun UtilityCard(
+        onClick: () -> Unit,
+        icon: ImageVector,
+        title: String,
+        modifier: Modifier = Modifier,
+        additionalIcon: @Composable () -> Unit = {},
+        enabled: Boolean = true,
+    ) {
+        Card(
+            onClick = onClick,
+            enabled = enabled,
+            modifier = modifier.height(100.dp) // CRITICAL FIX: Fixed height so they all match perfectly
+        ) {
+            Column(
+                verticalArrangement = Arrangement.SpaceBetween, // Pushes the top row and bottom text apart
+                modifier = Modifier
+                    .padding(12.dp)
+                    .fillMaxSize() // Fill the new 100.dp height
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        icon,
+                        null,
+                        modifier = Modifier.size(28.dp)
+                    )
+
+                    additionalIcon()
+                }
+
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -227,7 +305,7 @@ fun optionsKmpSheetList(
         SheetValue.Expanded,
         enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded)
     ),
-    utilities: @Composable FlowRowScope.(KmpItemModelOptionsSheet, OptionsSheetScope) -> Unit = { _, _ ->
+    utilities: @Composable FlowRowScopeOptionsSheet.(KmpItemModelOptionsSheet) -> Unit = {
         Spacer(modifier = Modifier.weight(1f))
     },
 ): MutableState<List<KmpItemModel>?> {
@@ -261,7 +339,7 @@ fun <T : OptionsSheetValues> optionsSheetList(
         SheetValue.Expanded,
         enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded)
     ),
-    utilities: @Composable FlowRowScope.(T, OptionsSheetScope) -> Unit = { _, _ ->
+    utilities: @Composable FlowRowScopeOptionsSheet.(T) -> Unit = {
         Spacer(modifier = Modifier.weight(1f))
     },
 ): MutableState<List<T>?> {
@@ -292,7 +370,7 @@ fun <T : OptionsSheetValues> optionsSheet(
         enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded)
     ),
     onOpen: (T) -> Unit,
-    utilities: @Composable FlowRowScope.(T, OptionsSheetScope) -> Unit = { _, _ ->
+    utilities: @Composable FlowRowScopeOptionsSheet.(T) -> Unit = {
         Spacer(modifier = Modifier.weight(1f))
     },
 ): MutableState<T?> {
@@ -326,7 +404,7 @@ fun <T : OptionsSheetValues> OptionsSheet(
         enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded)
     ),
     dao: ItemDao = koinInject(),
-    utilities: @Composable FlowRowScope.(T, OptionsSheetScope) -> Unit = { _, _ ->
+    utilities: @Composable FlowRowScopeOptionsSheet.(T) -> Unit = {
         Spacer(modifier = Modifier.weight(1f))
     },
 ) {
@@ -378,7 +456,7 @@ fun <T : OptionsSheetValues> OptionsSheet(
         enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded)
     ),
     dao: ItemDao = koinInject(),
-    utilities: @Composable FlowRowScope.(T, OptionsSheetScope) -> Unit = { _, _ ->
+    utilities: @Composable FlowRowScopeOptionsSheet.(T) -> Unit = {
         Spacer(modifier = Modifier.weight(1f))
     },
 ) {
@@ -458,7 +536,7 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.NewOptionsItems(
     notificationRepository: NotificationRepository = koinInject(),
     favoritesRepository: FavoritesRepository = koinInject(),
     scope: CoroutineScope = rememberCoroutineScope(),
-    utilities: @Composable FlowRowScope.(T, OptionsSheetScope) -> Unit = { _, _ ->
+    utilities: @Composable FlowRowScopeOptionsSheet.(T) -> Unit = {
         Spacer(modifier = Modifier.weight(1f))
     },
 ) {
@@ -801,88 +879,26 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.NewOptionsItems(
                 }
             }
 
-            utilities(optionsSheetValues, this@NewOptionsItems)
-        }
-    }
-}
-
-@Composable
-private fun QuickActionCard(
-    onClick: () -> Unit,
-    icon: ImageVector,
-    title: String,
-    modifier: Modifier = Modifier,
-) {
-    Card(
-        onClick = onClick,
-        modifier = modifier // Receives weight(1f) from parent
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp)
-        ) {
-            Icon(
-                icon,
-                null,
-                modifier = Modifier.size(28.dp) // Adjusted slightly for 4-item row scaling
-            )
-
-            Text(
-                text = title,
-                style = MaterialTheme.typography.labelSmall, // Use a smaller typography
-                maxLines = 1, // Prevent it from stretching height
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-    }
-}
-
-@Composable
-fun UtilityCard(
-    onClick: () -> Unit,
-    icon: ImageVector,
-    title: String,
-    modifier: Modifier = Modifier,
-    additionalIcon: @Composable () -> Unit = {},
-    enabled: Boolean = true,
-) {
-    Card(
-        onClick = onClick,
-        enabled = enabled,
-        modifier = modifier.height(100.dp) // CRITICAL FIX: Fixed height so they all match perfectly
-    ) {
-        Column(
-            verticalArrangement = Arrangement.SpaceBetween, // Pushes the top row and bottom text apart
-            modifier = Modifier
-                .padding(12.dp)
-                .fillMaxSize() // Fill the new 100.dp height
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(
-                    icon,
-                    null,
-                    modifier = Modifier.size(28.dp)
+            val flowRowScopeOptionsSheet = remember(this@NewOptionsItems, this) {
+                FlowRowScopeOptionsSheetImpl(
+                    flowRowScope = this,
+                    optionsSheetScope = this@NewOptionsItems
                 )
-
-                additionalIcon()
             }
 
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
+            flowRowScopeOptionsSheet.utilities(optionsSheetValues)
         }
     }
 }
+
+interface FlowRowScopeOptionsSheet : OptionsSheetScope, FlowRowScope
+
+private class FlowRowScopeOptionsSheetImpl(
+    flowRowScope: FlowRowScope,
+    optionsSheetScope: OptionsSheetScope,
+) : FlowRowScopeOptionsSheet,
+    FlowRowScope by flowRowScope,          // Delegates all FlowRowScope methods here
+    OptionsSheetScope by optionsSheetScope
 
 @Stable
 private data class CheckForUpdateParams(
