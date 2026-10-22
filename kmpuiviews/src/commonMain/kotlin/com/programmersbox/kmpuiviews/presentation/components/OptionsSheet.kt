@@ -212,7 +212,7 @@ interface OptionsSheetScope {
 fun optionsSheet(
     scope: CoroutineScope = rememberCoroutineScope(),
     sheet: SheetState = rememberBottomSheetState(
-        SheetValue.Expanded,
+        SheetValue.Hidden,
         enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded)
     ),
     verticalArrangement: Arrangement.Vertical = Arrangement.Top,
@@ -273,7 +273,7 @@ fun optionsKmpSheet(
     scope: CoroutineScope = rememberCoroutineScope(),
     navController: NavigationActions = LocalNavActions.current,
     sheetState: SheetState = rememberBottomSheetState(
-        SheetValue.Expanded,
+        SheetValue.Hidden,
         enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded)
     ),
 ): MutableState<KmpItemModel?> {
@@ -302,7 +302,7 @@ fun optionsKmpSheetList(
     scope: CoroutineScope = rememberCoroutineScope(),
     navController: NavigationActions = LocalNavActions.current,
     sheetState: SheetState = rememberBottomSheetState(
-        SheetValue.Expanded,
+        SheetValue.Hidden,
         enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded)
     ),
     utilities: @Composable FlowRowScopeOptionsSheet.(KmpItemModelOptionsSheet) -> Unit = {
@@ -336,7 +336,7 @@ fun <T : OptionsSheetValues> optionsSheetList(
     scope: CoroutineScope = rememberCoroutineScope(),
     navController: NavigationActions = LocalNavActions.current,
     sheetState: SheetState = rememberBottomSheetState(
-        SheetValue.Expanded,
+        SheetValue.Hidden,
         enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded)
     ),
     utilities: @Composable FlowRowScopeOptionsSheet.(T) -> Unit = {
@@ -366,7 +366,7 @@ fun <T : OptionsSheetValues> optionsSheet(
     scope: CoroutineScope = rememberCoroutineScope(),
     navController: NavigationActions = LocalNavActions.current,
     sheetState: SheetState = rememberBottomSheetState(
-        SheetValue.Expanded,
+        SheetValue.Hidden,
         enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded)
     ),
     onOpen: (T) -> Unit,
@@ -400,7 +400,7 @@ fun <T : OptionsSheetValues> OptionsSheet(
     onDismiss: () -> Unit,
     scope: CoroutineScope = rememberCoroutineScope(),
     sheet: SheetState = rememberBottomSheetState(
-        SheetValue.Expanded,
+        SheetValue.Hidden,
         enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded)
     ),
     dao: ItemDao = koinInject(),
@@ -452,7 +452,7 @@ fun <T : OptionsSheetValues> OptionsSheet(
     onDismiss: () -> Unit,
     scope: CoroutineScope = rememberCoroutineScope(),
     sheet: SheetState = rememberBottomSheetState(
-        SheetValue.Expanded,
+        SheetValue.Hidden,
         enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded)
     ),
     dao: ItemDao = koinInject(),
