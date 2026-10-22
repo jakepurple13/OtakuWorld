@@ -114,7 +114,6 @@ import com.programmersbox.kmpuiviews.presentation.components.GradientImage
 import com.programmersbox.kmpuiviews.presentation.components.LoadingDialog
 import com.programmersbox.kmpuiviews.presentation.components.OptionsSheetValues
 import com.programmersbox.kmpuiviews.presentation.components.SourceNotInstalledModal
-import com.programmersbox.kmpuiviews.presentation.components.UtilityCard
 import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.presentation.components.optionsSheet
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
@@ -857,7 +856,7 @@ private fun notificationOptionsSheet(
             }
             ?.launchIn(scope) ?: onError(i)
     }
-) { it, optionsSheetScope ->
+) {
     val notificationScreenInterface: NotificationScreenInterface = koinInject()
     if (!it.item.isShowing) {
         UtilityCard(
@@ -865,7 +864,7 @@ private fun notificationOptionsSheet(
             onClick = {
                 scope.launch(Dispatchers.IO) {
                     notificationScreenInterface.notifyItem(i)
-                }.invokeOnCompletion { optionsSheetScope.dismiss() }
+                }.invokeOnCompletion { dismiss() }
             },
             icon = Icons.Default.NotificationsActive,
             modifier = Modifier.weight(1f)
@@ -892,7 +891,7 @@ private fun notificationOptionsSheet(
                 scope.launch {
                     itemDao.updateNotification(i.url, false)
                     notificationRepository.cancelById(i.id)
-                    optionsSheetScope.dismiss()
+                    dismiss()
                 }
             },
             modifier = Modifier.weight(1f)
