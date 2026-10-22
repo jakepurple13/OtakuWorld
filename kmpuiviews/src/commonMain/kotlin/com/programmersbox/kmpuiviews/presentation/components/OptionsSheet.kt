@@ -580,7 +580,10 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.NewOptionsItems(
     }
 
     var showLists by remember { mutableStateOf(false) }
-    val listState = rememberBottomSheetState(SheetValue.Expanded)
+    val listState = rememberBottomSheetState(
+        SheetValue.Hidden,
+        enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded)
+    )
 
     val updateParams by remember {
         derivedStateOf {

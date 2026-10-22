@@ -18,7 +18,9 @@ import androidx.compose.animation.expandIn
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkOut
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -237,7 +239,15 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
                                 HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.socketFactory)
                             }
 
-                            context.getMediaSource(viewModel.showPath.toUri(), false, DefaultBandwidthMeter.Builder(context).build(), viewModel.requestHeaders, viewModel.subtitles, viewModel.mimeType, viewModel.defaultSubtitle)
+                            context.getMediaSource(
+                                viewModel.showPath.toUri(),
+                                false,
+                                DefaultBandwidthMeter.Builder(context).build(),
+                                viewModel.requestHeaders,
+                                viewModel.subtitles,
+                                viewModel.mimeType,
+                                viewModel.defaultSubtitle
+                            )
                         }
                     },
                     viewModel = viewModel
@@ -256,7 +266,11 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
                 )
             }
         }
-        if (viewModel.subtitleSheetOpen) {
+        AnimatedVisibility(
+            viewModel.subtitleSheetOpen,
+            enter = fadeIn() + slideInHorizontally { it },
+            exit = fadeOut() + slideOutHorizontally { it }
+        ) {
             BackHandler { viewModel.subtitleSheetOpen = false }
             val subtitleStyle by viewModel.subtitleSettings.style
                 .collectAsStateWithLifecycle(viewModel.initialSubtitleStyle)
@@ -661,7 +675,8 @@ fun GestureBox(
 
     val coroutineScope = rememberCoroutineScope()
 
-    Box(modifier = Modifier
+    Box(
+        modifier = Modifier
         .fillMaxSize()
         .pointerInput(Unit) {
             var wasPlaying = true

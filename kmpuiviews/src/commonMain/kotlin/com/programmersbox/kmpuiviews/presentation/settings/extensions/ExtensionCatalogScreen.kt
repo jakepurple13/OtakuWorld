@@ -88,7 +88,12 @@ fun ExtensionCatalogScreen(
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(shown, key = { it.key }, contentType = { "tile" }) { item ->
-                        ExtensionTile(item, showCatalog = false, onClick = { sheetKey = item.key })
+                        ExtensionTile(
+                            item = item,
+                            showCatalog = false,
+                            onClick = { sheetKey = item.key },
+                            modifier = Modifier.animateItem()
+                        )
                     }
                 }
             }

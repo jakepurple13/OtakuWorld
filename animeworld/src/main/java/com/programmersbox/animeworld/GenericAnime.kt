@@ -5,7 +5,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.Settings
@@ -44,6 +43,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -57,24 +57,26 @@ import com.google.android.gms.cast.framework.CastContext
 import com.obsez.android.lib.filechooser.ChooserDialog
 import com.programmersbox.anime.shared.GenericSharedAnime
 import com.programmersbox.anime.shared.StorageHolder
+import com.programmersbox.anime.shared.VideoScreen
 import com.programmersbox.anime.shared.downloads.DownloadQueueSource
 import com.programmersbox.anime.shared.downloads.EpisodeDownloadRequest
 import com.programmersbox.anime.shared.downloads.enqueueEpisodeDownload
-import com.programmersbox.anime.shared.videoplayer.playerHeaders
 import com.programmersbox.anime.shared.subtitles.DataStoreSubtitleSettingsRepository
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRepository
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRoute
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsScreen
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsViewModel
-import com.programmersbox.anime.shared.VideoScreen
 import com.programmersbox.anime.shared.videochoice.VideoChoiceScreen
 import com.programmersbox.anime.shared.videochoice.VideoSourceModel
 import com.programmersbox.anime.shared.videoplayer.VideoPlayerUi
+import com.programmersbox.anime.shared.videoplayer.playerHeaders
 import com.programmersbox.anime.shared.videos.SharedVideoContent
 import com.programmersbox.anime.shared.videos.VideoLibrarySource
 import com.programmersbox.anime.shared.videos.VideoViewerRoute
 import com.programmersbox.anime.shared.videos.ViewVideoScreen
 import com.programmersbox.animeworld.cast.ExpandedControlsActivity
+import com.programmersbox.aniyomi.aniyomiModule
+import com.programmersbox.cloudstream.cloudstreamModule
 import com.programmersbox.datastore.asState
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.helpfulutils.runOnUIThread
@@ -82,8 +84,6 @@ import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpStorage
-import com.programmersbox.aniyomi.aniyomiModule
-import com.programmersbox.cloudstream.cloudstreamModule
 import com.programmersbox.kmpuiviews.SystemAlerter
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
@@ -179,7 +179,10 @@ class GenericAnime(
     val storageHolder: StorageHolder,
     val animeDataStoreHandling: AnimeDataStoreHandling,
     appConfig: AppConfig,
+    private val navController: NavigationActions,
 ) : GenericSharedAnime(appConfig = appConfig), GenericInfo {
+
+    private val scope = CoroutineScope(Job() + Dispatchers.Main)
 
     override val deepLinkUri: String get() = "animeworld://"
 
@@ -225,7 +228,7 @@ class GenericAnime(
         infoModel: KmpInfoModel,
         navController: NavigationActions,
     ) {
-        CoroutineScope(Job() + Dispatchers.Main).launch {
+        scope.launch {
             downloadOnClick(
                 model = model,
                 infoModel = infoModel,
@@ -323,53 +326,11 @@ class GenericAnime(
 
     override fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit = {
         viewSettings {
-
-            item {
-                val navController = LocalNavActions.current
-                PreferenceSetting(
-                    settingTitle = { Text(stringResource(R.string.video_menu_title)) },
-                    settingIcon = { Icon(Icons.Default.VideoLibrary, null, modifier = Modifier.fillMaxSize()) },
-                    modifier = Modifier.clickable(
-                        indication = ripple(),
-                        interactionSource = null
-                    ) { navController.navigate(VideoViewerRoute) }
-                )
-            }
-
-
-            item {
-                val context = LocalContext.current
-                val castingViewModel: CastingViewModel = viewModel()
-                val activity = LocalActivity.current
-                ShowWhen(castingViewModel.connection) {
-                    PreferenceSetting(
-                        settingTitle = { Text(stringResource(R.string.cast_menu_title)) },
-                        settingIcon = {
-                            Icon(
-                                if (castingViewModel.session) Icons.Default.CastConnected else Icons.Default.Cast,
-                                null,
-                                modifier = Modifier.fillMaxSize()
-                            )
-                        },
-                        modifier = Modifier.clickable(
-                            indication = ripple(),
-                            interactionSource = null
-                        ) {
-                            if (MainActivity.cast.isCastActive()) {
-                                context.startActivity(Intent(context, ExpandedControlsActivity::class.java))
-                            } else {
-                                (activity as? FragmentActivity)?.supportFragmentManager?.let {
-                                    MediaRouteDialogFactory.getDefault().onCreateChooserDialogFragment()
-                                        .also { m ->
-                                            CastContext.getSharedInstance(context) {}.result.mergedSelector?.let { m.routeSelector = it }
-                                        }
-                                        .show(it, "media_chooser")
-                                }
-                            }
-                        }
-                    )
-                }
-            }
+            segmentedListItem(
+                onClick = { navController.navigate(VideoViewerRoute) },
+                leadingContent = { Icon(Icons.Default.VideoLibrary, null) },
+                content = { Text(stringResource(R.string.video_menu_title)) },
+            )
         }
 
         generalSettings {
@@ -378,6 +339,40 @@ class GenericAnime(
             val activity = LocalActivity.current
 
             CategoryGroup {
+                item {
+                    val context = LocalContext.current
+                    val castingViewModel: CastingViewModel = viewModel()
+                    val activity = LocalActivity.current
+                    ShowWhen(castingViewModel.connection) {
+                        PreferenceSetting(
+                            settingTitle = { Text(stringResource(R.string.cast_menu_title)) },
+                            settingIcon = {
+                                Icon(
+                                    if (castingViewModel.session) Icons.Default.CastConnected else Icons.Default.Cast,
+                                    null,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            },
+                            modifier = Modifier.clickable(
+                                indication = ripple(),
+                                interactionSource = null
+                            ) {
+                                if (MainActivity.cast.isCastActive()) {
+                                    context.startActivity(Intent(context, ExpandedControlsActivity::class.java))
+                                } else {
+                                    (activity as? FragmentActivity)?.supportFragmentManager?.let {
+                                        MediaRouteDialogFactory.getDefault().onCreateChooserDialogFragment()
+                                            .also { m ->
+                                                CastContext.getSharedInstance(context) {}.result.mergedSelector?.let { m.routeSelector = it }
+                                            }
+                                            .show(it, "media_chooser")
+                                    }
+                                }
+                            }
+                        )
+                    }
+                }
+
                 item {
                     PreferenceSetting(
                         settingTitle = { Text(stringResource(R.string.folder_location)) },
@@ -512,7 +507,7 @@ class GenericAnime(
                         onClick = {
                             storageAccessDialog = null
                             context.startActivity(
-                                Intent(prompt.action, Uri.parse("package:" + context.packageName))
+                                Intent(prompt.action, "package:${context.packageName}".toUri())
                                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                             )
                         }
