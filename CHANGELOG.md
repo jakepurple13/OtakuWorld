@@ -111,6 +111,7 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   appearance options, chapter swipe actions, a biometric lock shortcut, and a Tips & Gestures page
   where you can try hidden gestures. The tips also live under Settings › Discover, and each app
   adds its own (MangaWorld reader, AnimeWorld player, NovelWorld reader)
+  ([#2627](https://github.com/jakepurple13/OtakuWorld/pull/2627))
 
 #### Improvements
 
