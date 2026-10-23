@@ -8,7 +8,13 @@ class JvmMihonExtensionLoader(
     private val store: MihonApkStore,
     private val parentClassLoader: ClassLoader = MihonCatalog::class.java.classLoader,
 ) {
-    private val classLoaders = mutableListOf<ChildFirstClassLoader>()
+    private class LoadedJar(val classLoader: ChildFirstClassLoader, val services: List<MihonApiService>)
+
+    /**
+     * Keyed by jar path. Jar names are content hashes, so an unchanged jar keeps its loader and services
+     * across loads: services handed out earlier stay usable, and their unloaded classes can still load.
+     */
+    private val loadedJars = mutableMapOf<String, LoadedJar>()
 
     @Synchronized
     fun load(
@@ -17,18 +23,21 @@ class JvmMihonExtensionLoader(
         trustedIds: Set<String>,
         onTrust: suspend (String) -> Unit,
     ): List<KmpSourceInformation> {
-        close()
-        val sources = store.installed()
-            .filter { it.info.isExtension }
-            .flatMap {
-                // One broken package must not abort loading the rest.
-                try {
-                    loadPackage(it, catalog, repoSigningKeys, trustedIds, onTrust)
-                } catch (t: Throwable) {
-                    t.printStackTrace()
-                    emptyList()
-                }
+        val installed = store.installed().filter { it.info.isExtension }
+        // Close loaders only for jars that are gone (uninstalled or updated), before their files are deleted.
+        val liveJars = installed.mapNotNull { it.jar?.absolutePath }.toSet()
+        (loadedJars.keys - liveJars).forEach { path ->
+            loadedJars.remove(path)?.let { runCatching { it.classLoader.close() } }
+        }
+        val sources = installed.flatMap {
+            // One broken package must not abort loading the rest.
+            try {
+                loadPackage(it, catalog, repoSigningKeys, trustedIds, onTrust)
+            } catch (t: Throwable) {
+                t.printStackTrace()
+                emptyList()
             }
+        }
         store.cleanupStaleJars()
         return sources
     }
@@ -36,11 +45,11 @@ class JvmMihonExtensionLoader(
     // The store only accepts Mihon extensions, so any installed, readable APK is one.
     fun isExtension(packageName: String): Boolean = store.versionName(packageName) != null
 
-    /** Closes the class loaders from the previous [load]. */
+    /** Closes every class loader; sources from earlier loads stop working. */
     @Synchronized
     fun close() {
-        classLoaders.forEach { runCatching { it.close() } }
-        classLoaders.clear()
+        loadedJars.values.forEach { runCatching { it.classLoader.close() } }
+        loadedJars.clear()
     }
 
     private fun loadPackage(
@@ -67,6 +76,8 @@ class JvmMihonExtensionLoader(
             )
         )
 
+        if (!info.hasMetadata) return notLoaded("Malformed")
+
         val lib = info.libVersion
         if (!MihonLib.isSupported(lib)) return notLoaded("Unsupported lib $lib")
 
@@ -78,11 +89,23 @@ class JvmMihonExtensionLoader(
         val classNames = info.sourceClasses
         if (classNames.isEmpty()) return notLoaded("Malformed")
 
+        val jar = installed.jar ?: return notLoaded("Failed to convert")
+
         // Building the service reads extension-supplied id/baseUrl/name, so it is guarded too.
-        val classLoader = ChildFirstClassLoader(arrayOf(installed.jar.toURI().toURL()), parentClassLoader)
         return try {
-            MihonSourceInstantiator.instantiate(classNames, classLoader).getOrThrow().map { source ->
-                val service = mihonApiService(source)
+            val services = loadedJars.getOrPut(jar.absolutePath) {
+                val classLoader = ChildFirstClassLoader(arrayOf(jar.toURI().toURL()), parentClassLoader)
+                try {
+                    LoadedJar(
+                        classLoader,
+                        MihonSourceInstantiator.instantiate(classNames, classLoader).getOrThrow().map(::mihonApiService),
+                    )
+                } catch (t: Throwable) {
+                    runCatching { classLoader.close() }
+                    throw t
+                }
+            }.services
+            services.map { service ->
                 KmpSourceInformation(
                     apiService = service,
                     name = service.displayName,
@@ -90,10 +113,9 @@ class JvmMihonExtensionLoader(
                     packageName = pkg,
                     catalog = catalog,
                 )
-            }.also { classLoaders += classLoader }
+            }
         } catch (t: Throwable) {
             t.printStackTrace()
-            runCatching { classLoader.close() }
             notLoaded("Failed to load: ${t.message}")
         }
     }

@@ -11,10 +11,14 @@ import kotlinx.coroutines.test.runTest
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
+import java.util.zip.ZipFile
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 class JvmMihonExtensionLoaderTest {
@@ -80,6 +84,7 @@ class JvmMihonExtensionLoaderTest {
             versionCode = 1,
             label = "Broken",
             isExtension = true,
+            hasMetadata = true,
             libVersion = 1.6,
             sourceClasses = listOf("$brokenPkg.Missing"),
             nsfw = false,
@@ -103,6 +108,71 @@ class JvmMihonExtensionLoaderTest {
         } finally {
             seamLoader.close()
         }
+    }
+
+    private fun fixtureClassNames(jar: File): List<String> = ZipFile(jar).use { zip ->
+        zip.entries().toList().filter { it.name.endsWith(".class") }.map { it.name.removeSuffix(".class").replace('/', '.') }
+    }
+
+    @Test fun reloadKeepsEarlierSourcesUsable() {
+        val keys = setOf(MihonFixture.REPO_FINGERPRINT)
+        val first = assertIs<MihonApiService>(loader.load(catalog, keys, emptySet()) {}.first().apiService)
+        val second = assertIs<MihonApiService>(loader.load(catalog, keys, emptySet()) {}.first().apiService)
+        assertSame(first, second, "unchanged jar should reuse its sources")
+
+        // Classes the first load never touched must still load through the original loader.
+        val classLoader = first.source.javaClass.classLoader
+        val others = fixtureClassNames(assertNotNull(store.installed().single().jar)) - MihonFixture.SOURCE_CLASS
+        assertTrue(others.isNotEmpty())
+        others.forEach { Class.forName(it, true, classLoader) }
+    }
+
+    @Test fun loaderIsClosedOnceItsJarIsNoLongerInstalled() {
+        var convertOk = true
+        val seamStore = MihonApkStore(apkDir, jarDir, convert = { apk, dir -> if (convertOk) DexConverter.convert(apk, dir) else null })
+        val seamLoader = JvmMihonExtensionLoader(seamStore)
+        try {
+            val keys = setOf(MihonFixture.REPO_FINGERPRINT)
+            val service = assertIs<MihonApiService>(seamLoader.load(catalog, keys, emptySet()) {}.first().apiService)
+            val classLoader = service.source.javaClass.classLoader
+            val generated = MihonFixture.SOURCE_CLASS.replace('.', '/') + ".class"
+            assertNotNull(classLoader.getResource(generated))
+
+            // The jar file stays on disk (the APK is still installed), so a null resource means the loader was closed.
+            convertOk = false
+            seamLoader.load(catalog, keys, emptySet()) {}
+            assertNull(classLoader.getResource(generated))
+        } finally {
+            seamLoader.close()
+        }
+    }
+
+    @Test fun uninstallThenLoadDropsTheSource() = runTest {
+        loader.load(catalog, setOf(MihonFixture.REPO_FINGERPRINT), emptySet()) {}
+        assertTrue(store.uninstall(MihonFixture.PACKAGE))
+        assertTrue(loader.load(catalog, setOf(MihonFixture.REPO_FINGERPRINT), emptySet()) {}.isEmpty())
+    }
+
+    @Test fun conversionFailureIsVisibleOnceTrusted() {
+        val seamStore = MihonApkStore(apkDir, jarDir, convert = { _, _ -> null })
+        val seamLoader = JvmMihonExtensionLoader(seamStore)
+        val trusted = assertIs<UntrustedMihonApiService>(
+            seamLoader.load(catalog, setOf(MihonFixture.REPO_FINGERPRINT), emptySet()) {}.single().apiService
+        )
+        assertEquals("Failed to convert", trusted.reason)
+        val untrusted = assertIs<UntrustedMihonApiService>(seamLoader.load(catalog, emptySet(), emptySet()) {}.single().apiService)
+        assertEquals("Untrusted", untrusted.reason)
+    }
+
+    @Test fun missingMetadataIsMalformedBeforeLibCheck() {
+        val seamStore = MihonApkStore(
+            apkDir, jarDir,
+            inspect = { MihonApkInspector.inspect(it).copy(hasMetadata = false, libVersion = null) },
+        )
+        val api = assertIs<UntrustedMihonApiService>(
+            JvmMihonExtensionLoader(seamStore).load(catalog, setOf(MihonFixture.REPO_FINGERPRINT), emptySet()) {}.single().apiService
+        )
+        assertEquals("Malformed", api.reason)
     }
 }
 

@@ -35,6 +35,7 @@ class MihonApkStoreTest {
         versionCode = MihonFixture.VERSION_CODE,
         label = "Mangapill",
         isExtension = true,
+        hasMetadata = true,
         libVersion = 1.6,
         sourceClasses = listOf(MihonFixture.SOURCE_CLASS),
         nsfw = false,
@@ -46,7 +47,7 @@ class MihonApkStoreTest {
         assertEquals(MihonFixture.PACKAGE, store.install(tempFixture()))
         val installed = store.installed()
         assertEquals(1, installed.size)
-        assertTrue(installed.single().jar.exists())
+        assertTrue(installed.single().jar!!.exists())
         assertEquals(MihonFixture.VERSION_NAME, store.versionName(MihonFixture.PACKAGE))
     }
 
@@ -72,7 +73,7 @@ class MihonApkStoreTest {
     @Test fun uninstallDeletesApkAndJar() = runTest {
         val store = store()
         store.install(tempFixture())
-        val jar = store.installed().single().jar
+        val jar = store.installed().single().jar!!
         assertTrue(store.uninstall(MihonFixture.PACKAGE))
         assertTrue(store.installed().isEmpty())
         assertNull(store.versionName(MihonFixture.PACKAGE))
@@ -88,10 +89,10 @@ class MihonApkStoreTest {
             convert = { apk, dir -> DexConverter.jarFor(apk, dir).also { dir.mkdirs(); it.writeText("jar") } },
         )
         store.install(tempFixture())
-        val oldJar = store.installed().single().jar
+        val oldJar = store.installed().single().jar!!
         version = "2"
         store.install(tempFixture().also { it.appendBytes(byteArrayOf(0)) })
-        val newJar = store.installed().single().jar
+        val newJar = store.installed().single().jar!!
         assertEquals(1, apkDir.listFiles()!!.size)
         assertEquals("2", store.versionName(MihonFixture.PACKAGE))
         assertTrue(oldJar.exists() && newJar.exists() && oldJar != newJar)
@@ -119,5 +120,13 @@ class MihonApkStoreTest {
         apkDir.mkdirs()
         MihonFixture.apk.copyTo(File(root, "evil.apk"))
         assertNull(store().versionName("../evil"))
+    }
+
+    @Test fun installedListsPackageWhoseConversionFails() = runTest {
+        store().install(tempFixture())
+        val failing = MihonApkStore(apkDir, jarDir, convert = { _, _ -> null })
+        val entry = failing.installed().single()
+        assertEquals(MihonFixture.PACKAGE, entry.info.packageName)
+        assertNull(entry.jar)
     }
 }

@@ -12,7 +12,8 @@ import java.nio.file.AtomicMoveNotSupportedException
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
-data class InstalledMihonApk(val apk: File, val jar: File, val info: MihonApkInfo)
+/** [jar] is null when dex conversion failed; the package is still listed so the failure is visible. */
+data class InstalledMihonApk(val apk: File, val jar: File?, val info: MihonApkInfo)
 
 class MihonApkStore(
     private val apkDir: File,
@@ -68,7 +69,8 @@ class MihonApkStore(
     fun installed(): List<InstalledMihonApk> = apkFiles().mapNotNull { apk ->
         runCatching {
             val info = inspect(apk)
-            val jar = convert(apk, jarCacheDir) ?: error("conversion failed")
+            val jar = runCatching { convert(apk, jarCacheDir) }.getOrNull()
+            if (jar == null) println("MihonApkStore: could not convert ${apk.name}")
             InstalledMihonApk(apk, jar, info)
         }.onFailure { println("MihonApkStore: skipping ${apk.name}: ${it.message}") }.getOrNull()
     }

@@ -13,6 +13,8 @@ data class MihonApkInfo(
     val versionCode: Long,
     val label: String,
     val isExtension: Boolean,
+    /** False when the manifest has no <meta-data>; Android reports such packages as "Malformed". */
+    val hasMetadata: Boolean,
     val libVersion: Double?,
     val sourceClasses: List<String>,
     val nsfw: Boolean,
@@ -37,6 +39,7 @@ object MihonApkInspector {
             label = meta[METADATA_NAME]?.takeIf { it.isNotBlank() }
                 ?: manifest.packageName.substringAfterLast('.'),
             isExtension = FEATURE_EXTENSION in manifest.features,
+            hasMetadata = meta.isNotEmpty(),
             libVersion = MihonLib.libVersion(meta[METADATA_EXTENSION_LIB]?.toFloatOrNull() ?: 0f, manifest.versionName),
             sourceClasses = MihonSourceInstantiator.classNames(manifest.packageName, meta[METADATA_SOURCE_CLASS]),
             nsfw = meta[METADATA_NSFW] == "1",
