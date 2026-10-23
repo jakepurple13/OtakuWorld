@@ -129,4 +129,45 @@ class CastMediaServerTest {
         assertFalse(noWifi.start())
         assertNull(noWifi.baseUrl)
     }
+
+    @Test
+    fun hlsWithCharsetContentTypeIsRewritten() {
+        upstream.enqueue(
+            MockResponse.Builder()
+                .addHeader("Content-Type", "application/vnd.apple.mpegurl; charset=UTF-8")
+                .body("#EXTM3U\n#EXTINF:4,\nseg1.ts\n")
+                .build()
+        )
+
+        val playlist = get(server.registerStream(upstream.url("/playlist").toString(), emptyMap())).use { it.body.string() }
+
+        assertTrue(playlist.lines().any { it.startsWith(server.baseUrl!! + "/p/") })
+    }
+
+    @Test
+    fun startFailsWhenPortBusy() {
+        val busyPort = server.baseUrl!!.substringAfterLast(':').toInt()
+        val second = CastMediaServer(client, { "127.0.0.1" }, port = busyPort)
+
+        assertFalse(second.start())
+        assertNull(second.baseUrl)
+    }
+
+    @Test
+    fun refetchingPlaylistReusesChildUrls() {
+        repeat(2) {
+            upstream.enqueue(
+                MockResponse.Builder()
+                    .addHeader("Content-Type", "application/vnd.apple.mpegurl")
+                    .body("#EXTM3U\n#EXTINF:4,\nseg1.ts\n")
+                    .build()
+            )
+        }
+        val proxied = server.registerStream(upstream.url("/index.m3u8").toString(), mapOf("Referer" to "r"))
+
+        val first = get(proxied).use { it.body.string() }
+        val second = get(proxied).use { it.body.string() }
+
+        assertEquals(first, second)
+    }
 }

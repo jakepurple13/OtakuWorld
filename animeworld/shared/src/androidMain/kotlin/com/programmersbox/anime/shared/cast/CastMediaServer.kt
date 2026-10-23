@@ -3,6 +3,7 @@ package com.programmersbox.anime.shared.cast
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.util.Log
 import com.programmersbox.kmpmodels.KmpSubtitle
 import fi.iki.elonen.NanoHTTPD
 import kotlinx.coroutines.CancellationException
@@ -12,6 +13,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
 import java.io.FileInputStream
+import java.io.IOException
 import java.net.Inet4Address
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -42,10 +44,13 @@ class CastMediaServer(
     private val hostProvider: () -> String?,
     private val port: Int = 8081,
 ) {
+    private class UpstreamException(cause: Throwable) : Exception(cause)
+
     private class ProxyTarget(val url: String, val headers: Map<String, String>)
 
     private val subtitles = ConcurrentHashMap<Int, String>()
     private val proxies = ConcurrentHashMap<String, ProxyTarget>()
+    private val proxyTokens = ConcurrentHashMap<Pair<String, Map<String, String>>, String>()
     private val files = ConcurrentHashMap<String, File>()
     private val nextId = AtomicInteger()
 
@@ -60,7 +65,12 @@ class CastMediaServer(
         if (server != null) return true
         val host = hostProvider() ?: return false
         val s = Server()
-        s.start(NanoHTTPD.SOCKET_READ_TIMEOUT, true)
+        try {
+            s.start(NanoHTTPD.SOCKET_READ_TIMEOUT, true)
+        } catch (e: IOException) {
+            Log.w(TAG, "Could not start cast server on port $port", e)
+            return false
+        }
         server = s
         baseUrl = "http://$host:${s.listeningPort}"
         return true
@@ -70,6 +80,10 @@ class CastMediaServer(
         server?.stop()
         server = null
         baseUrl = null
+        subtitles.clear()
+        proxies.clear()
+        proxyTokens.clear()
+        files.clear()
     }
 
     suspend fun registerSubtitle(sub: KmpSubtitle): RegisteredSubtitle? {
@@ -101,7 +115,9 @@ class CastMediaServer(
     }
 
     private fun newProxyToken(url: String, headers: Map<String, String>): String =
-        UUID.randomUUID().toString().also { proxies[it] = ProxyTarget(url, headers) }
+        proxyTokens.getOrPut(url to headers) {
+            UUID.randomUUID().toString().also { proxies[it] = ProxyTarget(url, headers) }
+        }
 
     private inner class Server : NanoHTTPD(port) {
         override fun serve(session: IHTTPSession): Response {
@@ -116,7 +132,11 @@ class CastMediaServer(
                     path.startsWith("/f/") -> files[path.removePrefix("/f/")]?.let { serveFile(it, range) }
                     else -> null
                 }
-            } catch (_: Exception) {
+            } catch (e: UpstreamException) {
+                Log.w(TAG, "Upstream request failed for $path", e)
+                newFixedLengthResponse(upstreamStatus(502), "text/plain", "bad gateway")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to serve $path", e)
                 newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", "error")
             } ?: newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "not found")
             return response.also { it.addHeader("Access-Control-Allow-Origin", "*") }
@@ -127,9 +147,22 @@ class CastMediaServer(
                 target.headers.forEach { (k, v) -> header(k, v) }
                 range?.let { header("Range", it) }
             }.build()
-            val upstream = okHttp.newCall(request).execute()
+            val upstream = try {
+                okHttp.newCall(request).execute()
+            } catch (e: IOException) {
+                throw UpstreamException(e)
+            }
+            try {
+                return proxyResponse(target, upstream)
+            } catch (e: Exception) {
+                upstream.close()
+                throw e
+            }
+        }
+
+        private fun proxyResponse(target: ProxyTarget, upstream: okhttp3.Response): Response {
             val type = upstream.header("Content-Type").orEmpty()
-            val isHls = type.lowercase() in hlsTypes || upstream.request.url.encodedPath.endsWith(".m3u8", ignoreCase = true)
+            val isHls = type.substringBefore(';').trim().lowercase() in hlsTypes || upstream.request.url.encodedPath.endsWith(".m3u8", ignoreCase = true)
             if (isHls && upstream.isSuccessful) {
                 val body = upstream.use { it.body.string() }
                 val rewritten = rewriteHlsPlaylist(body, upstream.request.url.toString()) { child ->
@@ -175,6 +208,7 @@ class CastMediaServer(
     }
 
     private companion object {
+        const val TAG = "CastMediaServer"
         val hlsTypes = setOf("application/vnd.apple.mpegurl", "application/x-mpegurl")
 
         fun upstreamStatus(code: Int): NanoHTTPD.Response.IStatus = object : NanoHTTPD.Response.IStatus {
