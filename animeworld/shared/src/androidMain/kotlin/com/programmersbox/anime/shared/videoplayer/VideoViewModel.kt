@@ -122,6 +122,11 @@ class VideoViewModel(
         quickSeekAction = QuickSeekAction.forward()
     }
 
+    fun skipAhead() {
+        exoPlayer?.let { p -> p.seekTo(p.currentPosition + 90_000) }
+        quickSeekAction = QuickSeekAction.forward()
+    }
+
     fun rewind() {
         exoPlayer?.let { p -> p.seekTo(p.currentPosition - 30000) }
         quickSeekAction = QuickSeekAction.rewind()

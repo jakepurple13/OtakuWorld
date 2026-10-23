@@ -65,7 +65,8 @@ actual class VideoLibrarySource(
                             videoName = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DISPLAY_NAME)).orEmpty(),
                             path = contentUri.toString(),
                             duration = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DURATION)),
-                            lastPlayedPositionMs = prefs.getLong(path.orEmpty(), 0L),
+                            // The player saves by the content URI it was opened with; older saves used the file path.
+                            lastPlayedPositionMs = prefs.getLong(contentUri.toString(), prefs.getLong(path.orEmpty(), 0L)),
                             sizeBytes = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.SIZE)),
                             dateAddedMs = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATE_ADDED)) * 1000L,
                             isDownload = isDownload,
@@ -92,8 +93,15 @@ actual class VideoLibrarySource(
                 trySend(Unit)
             }
         }
+        // Resume positions live in prefs, not MediaStore, so re-query when the player saves one.
+        val prefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> trySend(Unit) }
+        val videoPrefs = prefs
         context.contentResolver.registerContentObserver(externalContentUri, true, observer)
-        awaitClose { context.contentResolver.unregisterContentObserver(observer) }
+        videoPrefs.registerOnSharedPreferenceChangeListener(prefsListener)
+        awaitClose {
+            context.contentResolver.unregisterContentObserver(observer)
+            videoPrefs.unregisterOnSharedPreferenceChangeListener(prefsListener)
+        }
     }
         .conflate()
         .map { queryVideos() }

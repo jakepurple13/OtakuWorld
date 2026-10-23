@@ -418,6 +418,10 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
     Remove
   - Your downloads are separate from other videos on the phone, which sit in a collapsible
     "Other videos on this phone" section
+- Watch progress on the Downloads screen: a border traces each thumbnail clockwise as you watch
+  ([#PR])
+- **+1:30 button** in the player's controls to skip ahead a minute and a half, e.g. past an
+  opening ([#PR])
 
 #### Improvements
 
@@ -434,6 +438,9 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   ([#2613](https://github.com/jakepurple13/OtakuWorld/pull/2613))
 - The video library loads off the main thread
   ([#2614](https://github.com/jakepurple13/OtakuWorld/pull/2614))
+- The screen stays on while the video player is open ([#PR])
+- Brightness and volume swipes are finer: a full-height swipe covers the whole range, and the
+  on-screen bars show the real level ([#PR])
 
 #### Bug Fixes
 
@@ -448,6 +455,12 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   theme) ([#2613](https://github.com/jakepurple13/OtakuWorld/pull/2613))
 - Deleting a download on Android 9–10 now removes the video, not just its subtitles
   ([#2613](https://github.com/jakepurple13/OtakuWorld/pull/2613))
+- Thumbnails on the Downloads screen load again ([#PR])
+- Saved watch progress now shows on the Downloads screen and refreshes after you leave the player
+  ([#PR])
+- The player no longer zooms in a moment after a video starts; the whole frame stays visible
+  ([#PR])
+- Brightness and volume swipes no longer jump straight from 0 to 100 ([#PR])
 - Download thumbnails no longer crowd out the title (width and height were swapped)
   ([#2614](https://github.com/jakepurple13/OtakuWorld/pull/2614))
 - Activity time from the legacy player is migrated and synced

@@ -18,7 +18,7 @@ import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.PermissionRequest
-import java.io.File
+import androidx.core.net.toUri
 
 @Composable
 internal actual fun VideoPermissionGate(content: @Composable () -> Unit) {
@@ -36,8 +36,9 @@ internal actual fun VideoPermissionGate(content: @Composable () -> Unit) {
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 internal actual fun VideoThumbnail(path: String, modifier: Modifier) {
-    // Glide decodes a video frame for local file paths via MediaMetadataRetriever.
-    val model = remember(path) { File(path) }
+    // Library paths are MediaStore content:// URIs; Glide decodes a frame from them via MediaMetadataRetriever.
+    // Wrapping one in File() pointed Glide at a file that doesn't exist, so no thumbnail ever loaded.
+    val model = remember(path) { path.toUri() }
 
     // Inlined from com.programmersbox.uiviews.presentation.components.GlideGradientImage
     // (UIViews module) rather than depending on it directly - UIViews is a flavored
