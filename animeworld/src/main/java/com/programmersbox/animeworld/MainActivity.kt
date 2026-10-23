@@ -12,7 +12,6 @@ import com.programmersbox.anime.shared.cast.CastConnection
 import com.programmersbox.anime.shared.cast.CastController
 import com.programmersbox.anime.shared.cast.CastMiniBar
 import com.programmersbox.anime.shared.cast.CastRemoteRoute
-import com.programmersbox.animeworld.cast.CastHelper
 import com.programmersbox.anime.shared.videos.VideoViewerRoute
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
@@ -34,16 +33,9 @@ class MainActivity : BaseMainActivity() {
     companion object {
         val VIEW_VIDEOS = "animeworld://$VideoViewerRoute"
         val CAST_REMOTE = "animeworld://$CastRemoteRoute"
-        val cast: CastHelper = CastHelper()
     }
 
     override fun onCreate() {
-        try {
-            cast.init(this)
-        } catch (e: Exception) {
-
-        }
-
         // Android 17+ hides LAN devices (Chromecast/Google TV) from cast discovery without this
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN &&
             checkSelfPermission(Manifest.permission.ACCESS_LOCAL_NETWORK) != PackageManager.PERMISSION_GRANTED

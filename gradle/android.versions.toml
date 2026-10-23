@@ -81,7 +81,6 @@ androidx-credentials-play-services-auth = { module = "androidx.credentials:crede
 autoBindings = { module = "io.github.kaustubhpatange:autobindings", version.ref = "autoBinding" }
 autoBindingsCompiler = { module = "io.github.kaustubhpatange:autobindings-compiler", version.ref = "autoBinding" }
 castFramework = "com.google.android.gms:play-services-cast-framework:22.3.1"
-localCast = "com.github.KaustubhPatange:Android-Cast-Local-Sample:0.01"
 mediaRouter = "androidx.mediarouter:mediarouter:1.8.1"
 slideToAct = "com.ncorti:slidetoact:0.11.0"
 superForwardView = "com.github.ertugrulkaragoz:SuperForwardView:0.2"
