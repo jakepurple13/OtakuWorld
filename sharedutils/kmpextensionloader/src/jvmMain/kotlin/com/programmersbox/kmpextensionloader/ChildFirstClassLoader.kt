@@ -35,4 +35,13 @@ class ChildFirstClassLoader(
     }
 
     private fun isParentFirst(name: String): Boolean = parentFirst.any { name.startsWith(it) }
+
+    companion object {
+        /** The JDK, Kotlin, and the Tachiyomi-family extension ABI every host provides. */
+        val BASE_PARENT_FIRST: List<String> = listOf(
+            "java.", "javax.", "jdk.", "sun.", "kotlin.", "kotlinx.",
+            "android.", "androidx.", "eu.kanade.tachiyomi.", "tachiyomi.", "mihon.",
+            "okhttp3.", "okio.", "org.jsoup.", "uy.kohesive.injekt.", "rx.", "app.cash.quickjs.",
+        )
+    }
 }

@@ -144,7 +144,7 @@ class MihonExtensionScanTest {
 
         var verified = 0
         val failures = mutableListOf<String>()
-        ChildFirstClassLoader(arrayOf(jar.toURI().toURL()), host, JvmMihonExtensionLoader.MIHON_PARENT_FIRST).use { loader ->
+        ChildFirstClassLoader(arrayOf(jar.toURI().toURL()), host, ChildFirstClassLoader.BASE_PARENT_FIRST).use { loader ->
             readers.map { it.className }.filterNot(::isActivity).forEach { name ->
                 runCatching { Class.forName(name.replace('/', '.'), true, loader) }
                     .onSuccess { verified++ }

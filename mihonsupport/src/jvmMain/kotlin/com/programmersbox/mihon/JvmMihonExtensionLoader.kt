@@ -1,6 +1,7 @@
 package com.programmersbox.mihon
 
 import com.programmersbox.kmpextensionloader.ChildFirstClassLoader
+import com.programmersbox.kmpextensionloader.JarLoaderCache
 import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.mihon.loader.MihonSourceInstantiator
 
@@ -9,13 +10,7 @@ class JvmMihonExtensionLoader(
     private val store: MihonApkStore,
     private val parentClassLoader: ClassLoader = MihonCatalog::class.java.classLoader,
 ) {
-    private class LoadedJar(val classLoader: ChildFirstClassLoader, val services: List<MihonApiService>)
-
-    /**
-     * Keyed by jar path. Jar names are content hashes, so an unchanged jar keeps its loader and services
-     * across loads: services handed out earlier stay usable, and their unloaded classes can still load.
-     */
-    private val loadedJars = mutableMapOf<String, LoadedJar>()
+    private val jars = JarLoaderCache<List<MihonApiService>>(parentClassLoader, ChildFirstClassLoader.BASE_PARENT_FIRST)
 
     @Synchronized
     fun load(
@@ -27,9 +22,7 @@ class JvmMihonExtensionLoader(
         val installed = store.installed().filter { it.info.isExtension }
         // Close loaders only for jars that are gone (uninstalled or updated), before their files are deleted.
         val liveJars = installed.mapNotNull { it.jar?.absolutePath }.toSet()
-        (loadedJars.keys - liveJars).forEach { path ->
-            loadedJars.remove(path)?.let { runCatching { it.classLoader.close() } }
-        }
+        jars.retain(liveJars)
         val sources = installed.flatMap {
             // One broken package must not abort loading the rest.
             try {
@@ -49,8 +42,7 @@ class JvmMihonExtensionLoader(
     /** Closes every class loader; sources from earlier loads stop working. */
     @Synchronized
     fun close() {
-        loadedJars.values.forEach { runCatching { it.classLoader.close() } }
-        loadedJars.clear()
+        jars.close()
     }
 
     private fun loadPackage(
@@ -94,18 +86,9 @@ class JvmMihonExtensionLoader(
 
         // Building the service reads extension-supplied id/baseUrl/name, so it is guarded too.
         return try {
-            val services = loadedJars.getOrPut(jar.absolutePath) {
-                val classLoader = ChildFirstClassLoader(arrayOf(jar.toURI().toURL()), parentClassLoader, MIHON_PARENT_FIRST)
-                try {
-                    LoadedJar(
-                        classLoader,
-                        MihonSourceInstantiator.instantiate(classNames, classLoader).getOrThrow().map(::mihonApiService),
-                    )
-                } catch (t: Throwable) {
-                    runCatching { classLoader.close() }
-                    throw t
-                }
-            }.services
+            val services = jars.getOrLoad(jar) { classLoader ->
+                MihonSourceInstantiator.instantiate(classNames, classLoader).getOrThrow().map(::mihonApiService)
+            }
             services.map { service ->
                 KmpSourceInformation(
                     apiService = service,
@@ -119,14 +102,5 @@ class JvmMihonExtensionLoader(
             t.printStackTrace()
             notLoaded("Failed to load: ${t.message}")
         }
-    }
-
-    internal companion object {
-        /** The extension ABI the host provides; see [ChildFirstClassLoader]. */
-        val MIHON_PARENT_FIRST = listOf(
-            "java.", "javax.", "jdk.", "sun.", "kotlin.", "kotlinx.",
-            "android.", "androidx.", "eu.kanade.tachiyomi.", "tachiyomi.", "mihon.",
-            "okhttp3.", "okio.", "org.jsoup.", "uy.kohesive.injekt.", "rx.", "app.cash.quickjs.",
-        )
     }
 }
