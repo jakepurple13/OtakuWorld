@@ -1,0 +1,30 @@
+plugins {
+    kotlin("jvm") version "2.4.20"
+    id("org.jetbrains.kotlin.plugin.compose") version "2.4.20"
+    id("org.jetbrains.compose") version "1.13.0-alpha02"
+}
+
+dependencies {
+    implementation(compose.desktop.currentOs)
+    implementation(compose.material3)
+    implementation("uk.co.caprica:vlcj:4.12.1")
+    implementation("org.nanohttpd:nanohttpd:2.3.1")
+    implementation("com.squareup.okhttp3:okhttp:5.4.0")
+}
+
+kotlin { jvmToolchain(21) }
+
+compose.desktop {
+    application {
+        mainClass = "spike.MainKt"
+    }
+}
+
+// Spike knobs: -Pstream=<url> to override the stream.
+tasks.withType<JavaExec>().configureEach {
+    val natives = layout.projectDirectory.dir("natives/macos-arm64").asFile.absolutePath
+    systemProperty("spike.natives", natives)
+    (project.findProperty("stream") as String?)?.let { systemProperty("spike.stream", it) }
+    (project.findProperty("shotDir") as String?)?.let { systemProperty("spike.shotDir", it) }
+    (project.findProperty("shotName") as String?)?.let { systemProperty("spike.shotName", it) }
+}

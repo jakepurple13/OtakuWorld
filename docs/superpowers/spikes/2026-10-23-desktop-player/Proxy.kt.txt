@@ -1,0 +1,124 @@
+package spike
+
+import fi.iki.elonen.NanoHTTPD
+import okhttp3.Headers.Companion.toHeaders
+import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import java.security.SecureRandom
+import java.util.Base64
+import java.util.concurrent.atomic.AtomicLong
+
+/**
+ * Localhost header-injecting proxy.
+ *
+ * Routes: /{token}/r/{b64url(upstream "directory" URL)}/{rest-of-path}?{query}
+ *   upstream = dir + rest + query
+ * Path-based routing means relative URIs inside playlists/MPDs resolve back through the proxy
+ * on their own; we still rewrite every URI in HLS playlists explicitly (absolute + relative).
+ */
+class HeaderProxy(private val headers: Map<String, String>) : NanoHTTPD("127.0.0.1", 0) {
+    private val token = ByteArray(12).also { SecureRandom().nextBytes(it) }
+        .let { Base64.getUrlEncoder().withoutPadding().encodeToString(it) }
+    private val client = OkHttpClient.Builder().followRedirects(true).build()
+    private val reqCount = AtomicLong()
+    val bytes = AtomicLong()
+
+    fun base() = "http://127.0.0.1:$listeningPort/$token"
+
+    fun proxied(upstream: String): String {
+        val u = upstream.toHttpUrl()
+        val path = u.encodedPath
+        val dir = u.scheme + "://" + u.host + (if (u.port != okhttp3.HttpUrl.defaultPort(u.scheme)) ":${u.port}" else "") +
+            path.substring(0, path.lastIndexOf('/') + 1)
+        val rest = path.substring(path.lastIndexOf('/') + 1)
+        val q = u.encodedQuery?.let { "?$it" } ?: ""
+        return "${base()}/r/${b64(dir)}/$rest$q"
+    }
+
+    private fun b64(s: String) = Base64.getUrlEncoder().withoutPadding().encodeToString(s.toByteArray())
+    private fun unb64(s: String) = String(Base64.getUrlDecoder().decode(s))
+
+    override fun serve(session: IHTTPSession): Response {
+        val parts = session.uri.removePrefix("/").split("/", limit = 4)
+        if (parts.size < 4 || parts[0] != token || parts[1] != "r") {
+            return newFixedLengthResponse(Response.Status.FORBIDDEN, "text/plain", "no")
+        }
+        val dir = unb64(parts[2])
+        val q = session.queryParameterString?.let { "?$it" } ?: ""
+        val upstream = dir + parts[3] + q
+        val n = reqCount.incrementAndGet()
+        val reqHeaders = HashMap(headers)
+        // Don't forward Range for manifests: we rewrite the body, so byte ranges would be wrong.
+        val looksLikeManifest = upstream.substringBefore('?').let { it.endsWith(".m3u8") || it.endsWith(".mpd") }
+        if (!looksLikeManifest) session.headers["range"]?.let { reqHeaders["Range"] = it }
+        val t0 = System.nanoTime()
+        val resp = client.newCall(Request.Builder().url(upstream).headers(reqHeaders.toHeaders()).build()).execute()
+        val ct = resp.header("Content-Type") ?: "application/octet-stream"
+        val sentHeaders = resp.request.headers.filter { it.first in headers.keys }.joinToString { "${it.first}=${it.second}" }
+        val isHls = upstream.substringBefore('?').endsWith(".m3u8") || ct.contains("mpegurl", true)
+        val isMpd = upstream.substringBefore('?').endsWith(".mpd") || ct.contains("dash+xml", true)
+        val status = Response.Status.lookup(resp.code) ?: Response.Status.OK
+        if (isHls || isMpd) {
+            val body = resp.body.string()
+            val out = if (isHls) rewriteHls(body, resp.request.url.toString()) else rewriteMpd(body, resp.request.url.toString())
+            bytes.addAndGet(out.length.toLong())
+            log("#$n ${resp.code} ${if (isHls) "HLS" else "MPD"} $upstream [$sentHeaders] ${(System.nanoTime() - t0) / 1_000_000}ms")
+            return newFixedLengthResponse(if (resp.code == 206) Response.Status.OK else status, ct, out)
+        }
+        val len = resp.body.contentLength()
+        log("#$n ${resp.code} SEG $upstream [$sentHeaders] len=$len ttfb=${(System.nanoTime() - t0) / 1_000_000}ms")
+        val stream = CountingStream(resp.body.byteStream(), bytes)
+        val r = if (len >= 0) newFixedLengthResponse(status, ct, stream, len) else newChunkedResponse(status, ct, stream)
+        resp.header("Content-Range")?.let { r.addHeader("Content-Range", it) }
+        r.addHeader("Accept-Ranges", "bytes")
+        return r
+    }
+
+    private val uriAttr = Regex("URI=\"([^\"]+)\"")
+
+    fun rewriteHls(body: String, baseUrl: String): String {
+        val base = baseUrl.toHttpUrl()
+        return body.lineSequence().joinToString("\n") { line ->
+            val t = line.trim()
+            when {
+                t.isEmpty() -> line
+                t.startsWith("#") -> uriAttr.replace(line) { m ->
+                    "URI=\"" + proxied(base.resolve(m.groupValues[1])!!.toString()) + "\""
+                }
+                else -> proxied(base.resolve(t)!!.toString())
+            }
+        }
+    }
+
+    private val baseUrlTag = Regex("<BaseURL>([^<]*)</BaseURL>")
+    private val mpdOpen = Regex("<MPD[^>]*>")
+
+    /** DASH: rewrite any BaseURL to proxied form; if none at MPD level, inject one pointing at the MPD's dir. */
+    fun rewriteMpd(body: String, baseUrl: String): String {
+        val base = baseUrl.toHttpUrl()
+        var out = baseUrlTag.replace(body) { m ->
+            val abs = base.resolve(m.groupValues[1].trim())!!.toString()
+            // proxied() of a directory URL keeps the trailing slash -> rest is empty
+            "<BaseURL>" + proxied(abs) + "</BaseURL>"
+        }
+        if (!baseUrlTag.containsMatchIn(body)) {
+            val mpdDir = proxied(baseUrl).substringBeforeLast('/') + "/"
+            out = mpdOpen.find(out)!!.let { m -> out.replaceRange(m.range, m.value + "<BaseURL>$mpdDir</BaseURL>") }
+        }
+        // absolute http(s) URLs in SegmentTemplate media/initialization attributes
+        out = Regex("(media|initialization|sourceURL)=\"(https?://[^\"]+)\"").replace(out) { m ->
+            m.groupValues[1] + "=\"" + proxied(m.groupValues[2]) + "\""
+        }
+        return out
+    }
+
+    companion object {
+        fun log(s: String) = println("[proxy] $s")
+    }
+}
+
+private class CountingStream(private val inner: java.io.InputStream, private val c: AtomicLong) : java.io.FilterInputStream(inner) {
+    override fun read(): Int = super.read().also { if (it >= 0) c.incrementAndGet() }
+    override fun read(b: ByteArray, off: Int, len: Int): Int = super.read(b, off, len).also { if (it > 0) c.addAndGet(it.toLong()) }
+}
