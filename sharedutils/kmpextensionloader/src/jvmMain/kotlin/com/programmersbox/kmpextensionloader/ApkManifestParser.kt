@@ -11,6 +11,7 @@ data class ApkManifest(
     val versionName: String?,
     val features: Set<String>,
     val metaData: Map<String, String>,
+    val versionCode: Long = 0L,
 )
 
 object ApkManifestParser {
@@ -25,6 +26,7 @@ object ApkManifestParser {
                 versionName = meta.versionName,
                 features = features,
                 metaData = metaData,
+                versionCode = meta.versionCode ?: 0L,
             )
         }
     }
