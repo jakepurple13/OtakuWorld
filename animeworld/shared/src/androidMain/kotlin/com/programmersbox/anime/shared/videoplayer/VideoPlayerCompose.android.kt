@@ -105,6 +105,7 @@ import androidx.media3.ui.SubtitleView
 import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.anime.shared.VideoScreen
 import com.programmersbox.anime.shared.cast.CastButton
+import com.programmersbox.anime.shared.cast.CastConnection
 import com.programmersbox.anime.shared.cast.CastController
 import com.programmersbox.anime.shared.cast.CastDevicePickerSheet
 import com.programmersbox.anime.shared.cast.CastRemoteRoute
@@ -206,14 +207,14 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
     val castController = koinInject<CastController>()
     val castScope = rememberCoroutineScope()
     var castPickerOpen by remember { mutableStateOf(false) }
-    if (castPickerOpen) {
-        CastDevicePickerSheet(
-            onDismiss = { castPickerOpen = false },
-            onConnected = {
-                castPickerOpen = false
-                val request = viewModel.castRequest()
-                viewModel.exoPlayer?.pause()
-                castScope.launch {
+    var castInFlight by remember { mutableStateOf(false) }
+    val startCast = {
+        if (!castInFlight) {
+            castInFlight = true
+            val request = viewModel.castRequest()
+            viewModel.exoPlayer?.pause()
+            castScope.launch {
+                try {
                     val result = castController.cast(request)
                     if (result == CastResult.Started) {
                         navController.popBackStack()
@@ -221,14 +222,32 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
                     } else {
                         result.errorMessage()?.let { Toast.makeText(context, it, Toast.LENGTH_LONG).show() }
                     }
+                } finally {
+                    castInFlight = false
                 }
+            }
+        }
+    }
+    if (castPickerOpen) {
+        CastDevicePickerSheet(
+            onDismiss = { castPickerOpen = false },
+            onConnected = {
+                castPickerOpen = false
+                startCast()
             },
         )
     }
 
     Box {
         Scaffold(
-            topBar = { VideoTopBar(viewModel, overlayVisibility, onCastClick = { castPickerOpen = true }) },
+            topBar = { VideoTopBar(
+                    viewModel,
+                    overlayVisibility,
+                    onCastClick = {
+                        // Already connected: send this episode straight to the TV (also the retry path after a failure).
+                        if (castController.state.value.connection == CastConnection.Connected) startCast() else castPickerOpen = true
+                    },
+                ) },
             bottomBar = {
                 VideoBottomBar(
                     visible = overlayVisibility,

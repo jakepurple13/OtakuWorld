@@ -45,27 +45,21 @@ import com.obsez.android.lib.filechooser.ChooserDialog
 import com.programmersbox.anime.shared.GenericSharedAnime
 import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.anime.shared.VideoScreen
-import com.programmersbox.anime.shared.downloads.DownloadQueueSource
-import com.programmersbox.anime.shared.downloads.EpisodeDownloadRequest
-import com.programmersbox.anime.shared.downloads.enqueueEpisodeDownload
 import com.programmersbox.anime.shared.cast.CastButton
 import com.programmersbox.anime.shared.cast.CastConnection
 import com.programmersbox.anime.shared.cast.CastController
 import com.programmersbox.anime.shared.cast.CastDevicePickerSheet
-import com.programmersbox.anime.shared.cast.CastRequest
-import com.programmersbox.anime.shared.cast.CastResult
-import com.programmersbox.anime.shared.cast.errorMessage
-import com.programmersbox.anime.shared.downloads.OfflineSubtitles
-import com.programmersbox.anime.shared.videoplayer.defaultSubtitleIndex
-import com.programmersbox.anime.shared.videoplayer.streamMime
-import com.programmersbox.kmpmodels.KmpSubtitle
-import kotlinx.coroutines.flow.first
-import org.koin.compose.koinInject
-import java.util.Locale
 import com.programmersbox.anime.shared.cast.CastMediaServer
 import com.programmersbox.anime.shared.cast.CastRemoteRoute
 import com.programmersbox.anime.shared.cast.CastRemoteScreen
+import com.programmersbox.anime.shared.cast.CastRequest
+import com.programmersbox.anime.shared.cast.CastResult
+import com.programmersbox.anime.shared.cast.errorMessage
 import com.programmersbox.anime.shared.cast.wifiIpv4
+import com.programmersbox.anime.shared.downloads.DownloadQueueSource
+import com.programmersbox.anime.shared.downloads.EpisodeDownloadRequest
+import com.programmersbox.anime.shared.downloads.OfflineSubtitles
+import com.programmersbox.anime.shared.downloads.enqueueEpisodeDownload
 import com.programmersbox.anime.shared.subtitles.DataStoreSubtitleSettingsRepository
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRepository
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRoute
@@ -74,7 +68,9 @@ import com.programmersbox.anime.shared.subtitles.SubtitleSettingsViewModel
 import com.programmersbox.anime.shared.videochoice.VideoChoiceScreen
 import com.programmersbox.anime.shared.videochoice.VideoSourceModel
 import com.programmersbox.anime.shared.videoplayer.VideoPlayerUi
+import com.programmersbox.anime.shared.videoplayer.defaultSubtitleIndex
 import com.programmersbox.anime.shared.videoplayer.playerHeaders
+import com.programmersbox.anime.shared.videoplayer.streamMime
 import com.programmersbox.anime.shared.videos.SharedVideoContent
 import com.programmersbox.anime.shared.videos.VideoLibrarySource
 import com.programmersbox.anime.shared.videos.VideoViewerRoute
@@ -88,6 +84,7 @@ import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpStorage
+import com.programmersbox.kmpmodels.KmpSubtitle
 import com.programmersbox.kmpuiviews.SystemAlerter
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
@@ -109,14 +106,18 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
+import org.koin.compose.koinInject
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import org.koin.dsl.navigation3.navigation
 import java.io.File
+import java.util.Locale
+import java.util.concurrent.atomic.AtomicBoolean
 
 val appModule = module {
     singleOf(::GenericAnime) { bindsGenericInfo() }
@@ -197,7 +198,7 @@ class GenericAnime(
         infoModel: KmpInfoModel,
     ) {
         if (isCasting()) {
-            scope.launch {
+            launchCast {
                 startCast(
                     CastRequest(
                         showTitle = infoModel.title,
@@ -231,7 +232,7 @@ class GenericAnime(
 
     /** Casts a downloaded episode from the Videos screen, replacing whatever is on the TV. */
     fun castDownload(content: SharedVideoContent) {
-        scope.launch {
+        launchCast {
             val (file, subtitles) = withContext(Dispatchers.IO) {
                 val file = OfflineSubtitles.resolveVideoFile(context, content.path) ?: File(content.path)
                 file to OfflineSubtitles.find(file)
@@ -265,6 +266,20 @@ class GenericAnime(
             style.preferredLanguages,
             style.skipSignsAndSongs,
         )
+    }
+
+    private val castInFlight = AtomicBoolean(false)
+
+    /** Runs [block] unless a cast is already starting, so a double tap doesn't load twice. */
+    private fun launchCast(block: suspend () -> Unit) {
+        if (!castInFlight.compareAndSet(false, true)) return
+        scope.launch {
+            try {
+                block()
+            } finally {
+                castInFlight.set(false)
+            }
+        }
     }
 
     private suspend fun startCast(request: CastRequest) {
