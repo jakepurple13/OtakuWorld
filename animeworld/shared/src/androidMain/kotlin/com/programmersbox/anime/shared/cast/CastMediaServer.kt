@@ -1,0 +1,202 @@
+package com.programmersbox.anime.shared.cast
+
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import com.programmersbox.kmpmodels.KmpSubtitle
+import fi.iki.elonen.NanoHTTPD
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import java.io.File
+import java.io.FileInputStream
+import java.net.Inet4Address
+import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
+
+data class RegisteredSubtitle(val id: Int, val url: String, val cues: List<VttCue>)
+
+/** IPv4 of the active network when it is Wi-Fi or Ethernet; null otherwise (the Chromecast cannot reach us). */
+fun wifiIpv4(context: Context): String? {
+    val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager ?: return null
+    val network = cm.activeNetwork ?: return null
+    val caps = cm.getNetworkCapabilities(network) ?: return null
+    if (!caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) &&
+        !caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
+    ) return null
+    return cm.getLinkProperties(network)?.linkAddresses
+        ?.map { it.address }
+        ?.firstOrNull { it is Inet4Address && !it.isLoopbackAddress }
+        ?.hostAddress
+}
+
+/**
+ * Phone-side HTTP server the Chromecast pulls from: converted subtitles (`/sub`), header-requiring
+ * streams proxied through us (`/p`), and downloaded files (`/f`).
+ */
+class CastMediaServer(
+    private val okHttp: OkHttpClient,
+    private val hostProvider: () -> String?,
+    private val port: Int = 8081,
+) {
+    private class ProxyTarget(val url: String, val headers: Map<String, String>)
+
+    private val subtitles = ConcurrentHashMap<Int, String>()
+    private val proxies = ConcurrentHashMap<String, ProxyTarget>()
+    private val files = ConcurrentHashMap<String, File>()
+    private val nextId = AtomicInteger()
+
+    @Volatile
+    private var server: Server? = null
+
+    @Volatile
+    var baseUrl: String? = null
+        private set
+
+    fun start(): Boolean {
+        if (server != null) return true
+        val host = hostProvider() ?: return false
+        val s = Server()
+        s.start(NanoHTTPD.SOCKET_READ_TIMEOUT, true)
+        server = s
+        baseUrl = "http://$host:${s.listeningPort}"
+        return true
+    }
+
+    fun stop() {
+        server?.stop()
+        server = null
+        baseUrl = null
+    }
+
+    suspend fun registerSubtitle(sub: KmpSubtitle): RegisteredSubtitle? {
+        val base = baseUrl ?: return null
+        return try {
+            val text = withContext(Dispatchers.IO) {
+                okHttp.newCall(Request.Builder().url(sub.url).apply { sub.headers.forEach { (k, v) -> header(k, v) } }.build())
+                    .execute()
+                    .use { if (it.isSuccessful) it.body.string() else null }
+            } ?: return null
+            val vtt = toWebVtt(text, SubtitleFormat.fromUrl(sub.url))
+            val id = nextId.incrementAndGet()
+            subtitles[id] = vtt
+            RegisteredSubtitle(id, "$base/sub/$id.vtt", parseVttCues(vtt))
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    fun registerStream(url: String, headers: Map<String, String>): String =
+        "${baseUrl.orEmpty()}/p/${newProxyToken(url, headers)}"
+
+    fun registerFile(file: File): String {
+        val token = UUID.randomUUID().toString()
+        files[token] = file
+        return "${baseUrl.orEmpty()}/f/$token"
+    }
+
+    private fun newProxyToken(url: String, headers: Map<String, String>): String =
+        UUID.randomUUID().toString().also { proxies[it] = ProxyTarget(url, headers) }
+
+    private inner class Server : NanoHTTPD(port) {
+        override fun serve(session: IHTTPSession): Response {
+            val path = session.uri
+            val range = session.headers["range"]
+            val response = try {
+                when {
+                    path.startsWith("/sub/") ->
+                        subtitles[path.removePrefix("/sub/").removeSuffix(".vtt").toIntOrNull()]
+                            ?.let { newFixedLengthResponse(Response.Status.OK, "text/vtt; charset=utf-8", it) }
+                    path.startsWith("/p/") -> proxies[path.removePrefix("/p/")]?.let { proxy(it, range) }
+                    path.startsWith("/f/") -> files[path.removePrefix("/f/")]?.let { serveFile(it, range) }
+                    else -> null
+                }
+            } catch (_: Exception) {
+                newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", "error")
+            } ?: newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "not found")
+            return response.also { it.addHeader("Access-Control-Allow-Origin", "*") }
+        }
+
+        private fun proxy(target: ProxyTarget, range: String?): Response {
+            val request = Request.Builder().url(target.url).apply {
+                target.headers.forEach { (k, v) -> header(k, v) }
+                range?.let { header("Range", it) }
+            }.build()
+            val upstream = okHttp.newCall(request).execute()
+            val type = upstream.header("Content-Type").orEmpty()
+            val isHls = type.lowercase() in hlsTypes || upstream.request.url.encodedPath.endsWith(".m3u8", ignoreCase = true)
+            if (isHls && upstream.isSuccessful) {
+                val body = upstream.use { it.body.string() }
+                val rewritten = rewriteHlsPlaylist(body, upstream.request.url.toString()) { child ->
+                    "${baseUrl.orEmpty()}/p/${newProxyToken(child, target.headers)}"
+                }
+                return newFixedLengthResponse(Response.Status.OK, "application/vnd.apple.mpegurl", rewritten)
+            }
+            val status = upstreamStatus(upstream.code)
+            val body = upstream.body
+            val length = body.contentLength()
+            val mime = type.ifEmpty { "application/octet-stream" }
+            val response =
+                if (length >= 0) newFixedLengthResponse(status, mime, body.byteStream(), length)
+                else newChunkedResponse(status, mime, body.byteStream())
+            response.addHeader("Accept-Ranges", "bytes")
+            upstream.header("Content-Range")?.let { response.addHeader("Content-Range", it) }
+            return response
+        }
+
+        private fun serveFile(file: File, range: String?): Response {
+            if (!file.isFile) return newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "not found")
+            val total = file.length()
+            val mime = if (file.extension.equals("mkv", true)) "video/x-matroska" else "video/mp4"
+            val bounds = range?.let { parseRange(it, total) }
+            if (range != null && bounds == null) {
+                return newFixedLengthResponse(Response.Status.RANGE_NOT_SATISFIABLE, "text/plain", "").also {
+                    it.addHeader("Content-Range", "bytes */$total")
+                }
+            }
+            val (start, end) = bounds ?: (0L to total - 1)
+            val stream = FileInputStream(file).also { it.channel.position(start) }
+            val length = end - start + 1
+            val response = newFixedLengthResponse(
+                if (bounds == null) Response.Status.OK else Response.Status.PARTIAL_CONTENT,
+                mime,
+                stream,
+                length,
+            )
+            response.addHeader("Accept-Ranges", "bytes")
+            if (bounds != null) response.addHeader("Content-Range", "bytes $start-$end/$total")
+            return response
+        }
+    }
+
+    private companion object {
+        val hlsTypes = setOf("application/vnd.apple.mpegurl", "application/x-mpegurl")
+
+        fun upstreamStatus(code: Int): NanoHTTPD.Response.IStatus = object : NanoHTTPD.Response.IStatus {
+            override fun getRequestStatus() = code
+            override fun getDescription() = "$code"
+        }
+
+        /** Parses `bytes=a-b`, `bytes=a-` and `bytes=-n` into an inclusive range, or null when unsatisfiable. */
+        fun parseRange(header: String, total: Long): Pair<Long, Long>? {
+            val spec = header.removePrefix("bytes=").substringBefore(',').trim()
+            val (from, to) = spec.split('-', limit = 2).takeIf { it.size == 2 } ?: return null
+            val start: Long
+            val end: Long
+            if (from.isEmpty()) {
+                val suffix = to.toLongOrNull() ?: return null
+                start = (total - suffix).coerceAtLeast(0)
+                end = total - 1
+            } else {
+                start = from.toLongOrNull() ?: return null
+                end = if (to.isEmpty()) total - 1 else (to.toLongOrNull() ?: return null).coerceAtMost(total - 1)
+            }
+            return if (start in 0..end) start to end else null
+        }
+    }
+}
