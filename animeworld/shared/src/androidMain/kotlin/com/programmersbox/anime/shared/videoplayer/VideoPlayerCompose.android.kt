@@ -211,6 +211,7 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
     val startCast = {
         if (!castInFlight) {
             castInFlight = true
+            Toast.makeText(context, "Casting…", Toast.LENGTH_SHORT).show()
             val request = viewModel.castRequest()
             viewModel.exoPlayer?.pause()
             castScope.launch {
