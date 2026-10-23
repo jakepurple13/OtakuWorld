@@ -29,7 +29,7 @@ jobs:
           echo "IS_PRERELEASE=${{ inputs.IS_PRERELEASE }}" >> $GITHUB_ENV
 
       - name: Setup JDK
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: adopt
           java-version: 21
