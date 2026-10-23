@@ -57,6 +57,14 @@ sealed interface CastResult {
     data class Failed(val message: String) : CastResult
 }
 
+/** Toast text for a result that did not start casting; null for [CastResult.Started]. */
+fun CastResult.errorMessage(): String? = when (this) {
+    CastResult.Started -> null
+    CastResult.Unsupported -> "This episode can't be cast"
+    CastResult.NoWifi -> "Connect to the same Wi-Fi as your TV"
+    is CastResult.Failed -> "Couldn't cast: $message"
+}
+
 /** Drives a Google Cast session through [RemoteMediaClient]. All Cast SDK calls happen on the main thread. */
 class CastController(
     context: Context,
@@ -196,7 +204,7 @@ class CastController(
             .takeIf { it >= 0 }?.let { it + 1L }
 
         val metadata = MediaMetadata(MediaMetadata.MEDIA_TYPE_TV_SHOW).apply {
-            putString(MediaMetadata.KEY_SERIES_TITLE, request.showTitle)
+            if (request.showTitle.isNotBlank()) putString(MediaMetadata.KEY_SERIES_TITLE, request.showTitle)
             putString(MediaMetadata.KEY_TITLE, request.episodeName)
             request.posterUrl?.let { addImage(WebImage(Uri.parse(it))) }
         }

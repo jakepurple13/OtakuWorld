@@ -62,7 +62,7 @@ class CloudstreamApiServiceTest {
         assertEquals("https://fake.test", service.baseUrl)
         assertTrue(service.canScroll)
         assertTrue(service.canDownload)
-        assertFalse(service.canCast)
+        assertTrue(service.canCast)
         assertFalse(service is KmpConfigurableApiService)
         assertIs<KmpConfigurableApiService>(
             ConfigurableCloudstreamApiService(FakeMainApi(), "fakeplugin", "cloudstream:Fake") {}

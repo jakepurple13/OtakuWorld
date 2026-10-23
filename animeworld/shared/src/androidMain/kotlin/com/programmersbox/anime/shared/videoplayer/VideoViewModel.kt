@@ -32,6 +32,8 @@ import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.upstream.BandwidthMeter
 import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.anime.shared.VideoScreen
+import com.programmersbox.anime.shared.cast.CastRequest
+import com.programmersbox.anime.shared.cast.closestSubtitleIndex
 import com.programmersbox.anime.shared.downloads.OfflineSubtitles
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRepository
 import com.programmersbox.kmpmodels.KmpSubtitle
@@ -61,8 +63,9 @@ class VideoViewModel(
     val showName = videoScreen.showName
     val downloadOrStream = videoScreen.downloadOrStream
     val requestHeaders = playerHeaders(storageHolder.storageModel?.headers.orEmpty(), videoScreen.referer)
+    private val localFile = if (downloadOrStream) OfflineSubtitles.resolveVideoFile(context, showPath) else null
     val subtitles = if (downloadOrStream) {
-        OfflineSubtitles.resolveVideoFile(context, showPath)?.let(OfflineSubtitles::find).orEmpty()
+        localFile?.let(OfflineSubtitles::find).orEmpty()
     } else {
         storageHolder.storageModel?.subtitles.orEmpty()
     }
@@ -106,6 +109,34 @@ class VideoViewModel(
     }
 
     var exoPlayer: ExoPlayer? by mutableStateOf(null)
+
+    /** What is playing now, at the current position, with the selected subtitle carried over. Main thread only. */
+    fun castRequest(): CastRequest {
+        val selected = textTracks.firstOrNull { it.selected }?.group?.getTrackFormat(0)?.let { format ->
+            // Sidecar tracks are labelled with their KmpSubtitle.lang; anything else is embedded in the video.
+            subtitles.indexOfFirst { it.lang == format.label }.takeIf { it >= 0 }
+                ?: closestSubtitleIndex(
+                    format.language,
+                    format.label,
+                    subtitles,
+                    format.language?.let { Locale.forLanguageTag(it).getDisplayLanguage(Locale.ENGLISH) }?.ifBlank { null },
+                )
+                ?: defaultSubtitle
+        }
+        return CastRequest(
+            showTitle = storageHolder.showTitle.orEmpty(),
+            episodeName = showName,
+            posterUrl = storageHolder.posterUrl,
+            url = localFile?.path ?: showPath,
+            mimeType = mimeType,
+            headers = if (downloadOrStream) emptyMap() else requestHeaders,
+            subtitles = subtitles,
+            selectedSubtitle = selected,
+            startPositionMs = exoPlayer?.currentPosition ?: 0L,
+            localFile = localFile,
+            subtitleOrigin = if (downloadOrStream) "downloaded" else "source",
+        )
+    }
 
     fun playPause() {
         quickSeekAction = if (exoPlayer?.isPlaying == true) {
@@ -176,6 +207,8 @@ class VideoViewModel(
     override fun onCleared() {
         super.onCleared()
         storageHolder.storageModel = null
+        storageHolder.showTitle = null
+        storageHolder.posterUrl = null
     }
 }
 

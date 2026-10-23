@@ -104,6 +104,12 @@ import androidx.media3.ui.PlayerView
 import androidx.media3.ui.SubtitleView
 import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.anime.shared.VideoScreen
+import com.programmersbox.anime.shared.cast.CastButton
+import com.programmersbox.anime.shared.cast.CastController
+import com.programmersbox.anime.shared.cast.CastDevicePickerSheet
+import com.programmersbox.anime.shared.cast.CastRemoteRoute
+import com.programmersbox.anime.shared.cast.CastResult
+import com.programmersbox.anime.shared.cast.errorMessage
 import com.programmersbox.anime.shared.subtitles.SubtitleQuickSheet
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRepository
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRoute
@@ -197,9 +203,32 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
 
     val overlayVisibility = viewModel.visibility == VideoPlayerVisibility.Visible || !viewModel.isPlaying || viewModel.subtitleSheetOpen
 
+    val castController = koinInject<CastController>()
+    val castScope = rememberCoroutineScope()
+    var castPickerOpen by remember { mutableStateOf(false) }
+    if (castPickerOpen) {
+        CastDevicePickerSheet(
+            onDismiss = { castPickerOpen = false },
+            onConnected = {
+                castPickerOpen = false
+                val request = viewModel.castRequest()
+                viewModel.exoPlayer?.pause()
+                castScope.launch {
+                    val result = castController.cast(request)
+                    if (result == CastResult.Started) {
+                        navController.popBackStack()
+                        navController.navigate(CastRemoteRoute)
+                    } else {
+                        result.errorMessage()?.let { Toast.makeText(context, it, Toast.LENGTH_LONG).show() }
+                    }
+                }
+            },
+        )
+    }
+
     Box {
         Scaffold(
-            topBar = { VideoTopBar(viewModel, overlayVisibility) },
+            topBar = { VideoTopBar(viewModel, overlayVisibility, onCastClick = { castPickerOpen = true }) },
             bottomBar = {
                 VideoBottomBar(
                     visible = overlayVisibility,
@@ -394,7 +423,7 @@ fun VideoPlayer(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun VideoTopBar(viewModel: VideoViewModel, visible: Boolean) {
+fun VideoTopBar(viewModel: VideoViewModel, visible: Boolean, onCastClick: () -> Unit) {
     AnimatedVisibility(
         visible = visible,
         enter = slideInVertically() + fadeIn(),
@@ -404,6 +433,7 @@ fun VideoTopBar(viewModel: VideoViewModel, visible: Boolean) {
             title = { Text(viewModel.showName.orEmpty()) },
             navigationIcon = { BackButton() },
             actions = {
+                CastButton(onClick = onCastClick)
                 if (viewModel.textTracks.isNotEmpty()) {
                     IconButton(onClick = { viewModel.subtitleSheetOpen = true }) {
                         Icon(
