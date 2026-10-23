@@ -46,6 +46,7 @@ kotlin {
             implementation(projects.datastore)
             implementation(projects.kmpmodels)
             implementation(projects.animeworld.shared)
+            implementation(projects.sourceUtilities.aniyomi)
             implementation(commonLibs.bundles.datastoreLibs)
             implementation(commonLibs.coroutinesCore)
             implementation(desktopLibs.kotlinx.coroutines.swing)
