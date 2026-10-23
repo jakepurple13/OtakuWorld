@@ -18,6 +18,7 @@ object DexConverter {
                 *arrayOf(apkFile.absolutePath, "-o", tmp.absolutePath, "--force")
             )
             if (tmp.exists() && tmp.length() > 0) {
+                StackMapFrames.addTo(tmp)
                 java.nio.file.Files.move(
                     tmp.toPath(),
                     cachedJar.toPath(),

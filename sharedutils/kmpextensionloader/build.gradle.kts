@@ -31,6 +31,7 @@ kotlin {
                 implementation("net.dongliu:apk-parser:2.6.10")
                 implementation("com.github.ThexXTURBOXx.dex2jar:dex-tools:v76")
                 implementation("com.github.ThexXTURBOXx.dex2jar:d2j-base-cmd:v76")
+                implementation("org.ow2.asm:asm:9.6")
                 implementation(desktopLibs.kotlin.multiplatform.appdirs)
             }
         }
