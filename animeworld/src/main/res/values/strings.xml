@@ -104,6 +104,8 @@
     <string name="use_new_player">Use The New Video Player</string>
     <string name="subtitles">Subtitles</string>
     <string name="use_new_player_description">The new player is made using a new UI framework!</string>
+    <string name="video_player_blur">Blur Player Controls</string>
+    <string name="video_player_blur_description">Use your selected blur kind behind the video player controls</string>
     <string name="anime_favorites_provider">Anime Favorites</string>
     <string name="anime_lists_provider">Anime Lists</string>
     <string name="anime_incognito_provider">Anime Incognito</string>

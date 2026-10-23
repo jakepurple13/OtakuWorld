@@ -422,6 +422,9 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   ([#2629](https://github.com/jakepurple13/OtakuWorld/pull/2629))
 - **+1:30 button** in the player's controls to skip ahead a minute and a half, e.g. past an
   opening ([#2629](https://github.com/jakepurple13/OtakuWorld/pull/2629))
+- **Blurred player controls**: the video player's top and bottom bars use your selected blur
+  kind. Turn it off with Settings › Player › Blur Player Controls
+  ([#2630](https://github.com/jakepurple13/OtakuWorld/pull/2630))
 
 #### Improvements
 
