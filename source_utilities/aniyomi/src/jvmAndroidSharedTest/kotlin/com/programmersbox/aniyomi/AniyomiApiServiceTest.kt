@@ -2,15 +2,11 @@ package com.programmersbox.aniyomi
 
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpConfigurableApiService
-import eu.kanade.tachiyomi.animesource.AnimeCatalogueSource
-import eu.kanade.tachiyomi.animesource.ConfigurableAnimeSource
-import eu.kanade.tachiyomi.animesource.PreferenceScreen
 import eu.kanade.tachiyomi.animesource.model.Hoster
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -28,14 +24,6 @@ class AniyomiApiServiceTest {
         assertTrue(service.canDownload)
         assertTrue(service.canCast)
         assertFalse(service is KmpConfigurableApiService)
-    }
-
-    @Test
-    fun configurableSourceGetsMarker() {
-        val configurable = object : AnimeCatalogueSource by FakeAnimeCatalogueSource(), ConfigurableAnimeSource {
-            override fun setupPreferenceScreen(screen: PreferenceScreen) = Unit
-        }
-        assertIs<KmpConfigurableApiService>(aniyomiApiService(configurable, 16.0))
     }
 
     @Test

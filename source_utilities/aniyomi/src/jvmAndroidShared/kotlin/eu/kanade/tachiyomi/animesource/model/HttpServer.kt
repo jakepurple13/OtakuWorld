@@ -1,9 +1,8 @@
 // Copied from aniyomiorg/aniyomi 97414446b8a95994c72dd33c41c971a89d4d25b8, Apache-2.0. Local edits marked with "OTAKU:".
 package eu.kanade.tachiyomi.animesource.model
 
+import android.util.Log
 import fi.iki.elonen.NanoHTTPD
-import logcat.LogPriority
-import tachiyomi.core.common.util.system.logcat
 
 open class HttpServer : NanoHTTPD(0) {
     val url: String
@@ -21,7 +20,8 @@ open class HttpServer : NanoHTTPD(0) {
             super.start()
             isRunning = true
         } catch (e: Exception) {
-            logcat(LogPriority.DEBUG, e) { "Failed to start http server" }
+            // OTAKU: android.util.Log instead of logcat (LogcatExtensions is Android-only; the JVM has a Log stub).
+            Log.d("HttpServer", "Failed to start http server", e)
         }
     }
 
