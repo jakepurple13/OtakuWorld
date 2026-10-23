@@ -8,8 +8,9 @@ import android.os.Bundle
 import android.view.KeyEvent
 import android.widget.Toast
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.programmersbox.anime.shared.cast.CastConnection
 import com.programmersbox.anime.shared.cast.CastController
 import com.programmersbox.anime.shared.cast.CastMiniBar
@@ -23,6 +24,7 @@ import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.datastore.updatePref
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
 class MainActivity : BaseMainActivity() {
@@ -56,6 +58,15 @@ class MainActivity : BaseMainActivity() {
             .asFlow()
             .onEach { updatePref(IGNORE_SSL, it) }
             .launchIn(lifecycleScope)
+
+        // The one collector of receiver playback errors; active whatever navigation style hosts the mini bar.
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                castController.playbackErrors.collect {
+                    Toast.makeText(this@MainActivity, it, Toast.LENGTH_LONG).show()
+                }
+            }
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -103,12 +114,6 @@ class MainActivity : BaseMainActivity() {
         val navActions = LocalNavActions.current
         // The bottom bar renders on every screen, including the remote itself.
         val onRemote = (navActions as? Navigation3Actions)?.backStack?.lastOrNull() == CastRemoteRoute
-        // The one collector of receiver playback errors, covering the remote and the mini bar alike.
-        LaunchedEffect(Unit) {
-            castController.playbackErrors.collect {
-                Toast.makeText(this@MainActivity, it, Toast.LENGTH_LONG).show()
-            }
-        }
         if (!onRemote) {
             CastMiniBar(
                 onOpen = {

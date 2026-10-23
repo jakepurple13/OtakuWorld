@@ -214,26 +214,29 @@ fun HomeNav(
                                     )
                                 } else {
                                     val shape = MaterialTheme.shapes.extraLarge
-                                    HomeNavigationBar(
-                                        showNavBar = showNavBar,
-                                        navType = navType,
-                                        showBlur = showBlur,
-                                        isAmoledMode = isAmoledMode,
-                                        middleNavItem = middleNavItem,
-                                        //scrollBehavior = null,
-                                        multipleActions = multipleActions,
-                                        navActions = navigationActions,
-                                        modifier = Modifier
-                                            .padding(horizontal = 24.dp)
-                                            .windowInsetsPadding(WindowInsets.navigationBars)
-                                            .clip(shape)
-                                            .setBlurKind(
-                                                blurKindState = blurKindState,
-                                                liquidGlassShape = { shape }
-                                            )
-                                            .fillMaxWidth()
-                                        //.renderInSharedTransitionScopeOverlay()
-                                    )
+                                    Column {
+                                        bottomBarAdditions()
+                                        HomeNavigationBar(
+                                            showNavBar = showNavBar,
+                                            navType = navType,
+                                            showBlur = showBlur,
+                                            isAmoledMode = isAmoledMode,
+                                            middleNavItem = middleNavItem,
+                                            //scrollBehavior = null,
+                                            multipleActions = multipleActions,
+                                            navActions = navigationActions,
+                                            modifier = Modifier
+                                                .padding(horizontal = 24.dp)
+                                                .windowInsetsPadding(WindowInsets.navigationBars)
+                                                .clip(shape)
+                                                .setBlurKind(
+                                                    blurKindState = blurKindState,
+                                                    liquidGlassShape = { shape }
+                                                )
+                                                .fillMaxWidth()
+                                            //.renderInSharedTransitionScopeOverlay()
+                                        )
+                                    }
                                 }
                             },
                             contentWindowInsets = WindowInsets(0.dp),
