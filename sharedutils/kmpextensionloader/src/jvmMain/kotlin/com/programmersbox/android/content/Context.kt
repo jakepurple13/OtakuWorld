@@ -1,6 +1,7 @@
 package android.content
 
 import android.content.pm.PackageManager
+import com.programmersbox.kmpextensionloader.FileSharedPreferences
 import java.io.File
 
 abstract class Context {
@@ -11,7 +12,7 @@ abstract class Context {
 
     open fun getSharedPreferences(name: String, mode: Int): SharedPreferences =
         prefsCache.getOrPut(name) {
-            SharedPreferences(File(dataDir, "prefs/$name.properties"))
+            FileSharedPreferences(File(dataDir, "prefs/$name.properties"))
         }
 
     open fun getFilesDir(): File = File(dataDir, "files").also { it.mkdirs() }
