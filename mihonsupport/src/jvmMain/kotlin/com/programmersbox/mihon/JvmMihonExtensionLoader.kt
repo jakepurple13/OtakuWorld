@@ -1,5 +1,6 @@
 package com.programmersbox.mihon
 
+import com.programmersbox.kmpextensionloader.ChildFirstClassLoader
 import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.mihon.loader.MihonSourceInstantiator
 
@@ -94,7 +95,7 @@ class JvmMihonExtensionLoader(
         // Building the service reads extension-supplied id/baseUrl/name, so it is guarded too.
         return try {
             val services = loadedJars.getOrPut(jar.absolutePath) {
-                val classLoader = ChildFirstClassLoader(arrayOf(jar.toURI().toURL()), parentClassLoader)
+                val classLoader = ChildFirstClassLoader(arrayOf(jar.toURI().toURL()), parentClassLoader, MIHON_PARENT_FIRST)
                 try {
                     LoadedJar(
                         classLoader,
@@ -118,5 +119,14 @@ class JvmMihonExtensionLoader(
             t.printStackTrace()
             notLoaded("Failed to load: ${t.message}")
         }
+    }
+
+    internal companion object {
+        /** The extension ABI the host provides; see [ChildFirstClassLoader]. */
+        val MIHON_PARENT_FIRST = listOf(
+            "java.", "javax.", "jdk.", "sun.", "kotlin.", "kotlinx.",
+            "android.", "androidx.", "eu.kanade.tachiyomi.", "tachiyomi.", "mihon.",
+            "okhttp3.", "okio.", "org.jsoup.", "uy.kohesive.injekt.", "rx.", "app.cash.quickjs.",
+        )
     }
 }

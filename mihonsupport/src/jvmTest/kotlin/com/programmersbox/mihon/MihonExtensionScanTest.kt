@@ -1,6 +1,7 @@
 package com.programmersbox.mihon
 
 import android.app.Application
+import com.programmersbox.kmpextensionloader.ChildFirstClassLoader
 import com.programmersbox.kmpextensionloader.DexConverter
 import com.programmersbox.mihon.repo.MihonRepoClient
 import io.ktor.client.HttpClient
@@ -143,7 +144,7 @@ class MihonExtensionScanTest {
 
         var verified = 0
         val failures = mutableListOf<String>()
-        ChildFirstClassLoader(arrayOf(jar.toURI().toURL()), host).use { loader ->
+        ChildFirstClassLoader(arrayOf(jar.toURI().toURL()), host, JvmMihonExtensionLoader.MIHON_PARENT_FIRST).use { loader ->
             readers.map { it.className }.filterNot(::isActivity).forEach { name ->
                 runCatching { Class.forName(name.replace('/', '.'), true, loader) }
                     .onSuccess { verified++ }
