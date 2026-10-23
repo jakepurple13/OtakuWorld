@@ -54,6 +54,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -77,7 +78,10 @@ import com.programmersbox.anime.shared.subtitles.SubtitleStyle
 import com.programmersbox.anime.shared.subtitles.coerced
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.math.abs
 import org.koin.compose.koinInject
 
 /** Full-screen remote for the active cast session. Pops itself once a connected session ends. */
@@ -89,17 +93,13 @@ fun CastRemoteScreen() {
     val navActions = LocalNavActions.current
     var showStyle by remember { mutableStateOf(false) }
 
-    // Only pop after the session was seen connected, so a cold start from the notification
-    // is not popped while the Cast SDK is still resuming the session.
+    // A cold start from the notification gets a grace period while the Cast SDK resumes the session;
+    // after that, or once a connected session ends, the screen closes itself.
     LaunchedEffect(Unit) {
-        var wasConnected = false
-        snapshotFlow { state.connection }.collect { connection ->
-            if (connection == CastConnection.Connected) {
-                wasConnected = true
-            } else if (wasConnected) {
-                navActions.remove(CastRemoteRoute)
-            }
-        }
+        val connections = snapshotFlow { state.connection }
+        val connected = withTimeoutOrNull(CONNECT_GRACE_MS) { connections.first { it == CastConnection.Connected } }
+        if (connected != null) connections.first { it != CastConnection.Connected }
+        navActions.remove(CastRemoteRoute)
     }
 
     Scaffold(
@@ -249,14 +249,27 @@ private fun NowPlayingArt(state: CastUiState) {
 private fun SeekBar(positionMs: Long, durationMs: Long, onSeek: (Long) -> Unit) {
     // Local value while dragging; the seek is sent once on release.
     var dragging by remember { mutableStateOf<Float?>(null) }
+    // Seek target held after release until the receiver reports a nearby position, so the thumb doesn't snap back.
+    var pending by remember { mutableStateOf<Long?>(null) }
+    val currentPosition by rememberUpdatedState(positionMs)
+    LaunchedEffect(pending) {
+        val target = pending ?: return@LaunchedEffect
+        withTimeoutOrNull(SEEK_SETTLE_TIMEOUT_MS) {
+            snapshotFlow { currentPosition }.first { abs(it - target) <= SEEK_SETTLE_TOLERANCE_MS }
+        }
+        pending = null
+    }
     val max = durationMs.coerceAtLeast(1).toFloat()
-    val shown = (dragging ?: positionMs.toFloat()).coerceIn(0f, max)
+    val shown = (dragging ?: pending?.toFloat() ?: positionMs.toFloat()).coerceIn(0f, max)
     Column {
         Slider(
             value = shown,
             onValueChange = { dragging = it },
             onValueChangeFinished = {
-                dragging?.let { onSeek(it.toLong()) }
+                dragging?.let {
+                    onSeek(it.toLong())
+                    pending = it.toLong()
+                }
                 dragging = null
             },
             valueRange = 0f..max,
@@ -445,6 +458,10 @@ private fun CastSubtitleStyleSheet(onDismiss: () -> Unit) {
         }
     }
 }
+
+private const val CONNECT_GRACE_MS = 5_000L
+private const val SEEK_SETTLE_TIMEOUT_MS = 2_000L
+private const val SEEK_SETTLE_TOLERANCE_MS = 1_500L
 
 internal fun formatCastTime(ms: Long): String {
     val totalSeconds = ms / 1000

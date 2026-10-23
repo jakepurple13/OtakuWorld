@@ -38,7 +38,10 @@ fun CastMiniBar(onOpen: () -> Unit) {
     Surface(
         onClick = onOpen,
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 10.dp),
     ) {
         Column {
             Row(

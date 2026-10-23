@@ -15,6 +15,7 @@ import com.programmersbox.anime.shared.cast.CastRemoteRoute
 import com.programmersbox.animeworld.cast.CastHelper
 import com.programmersbox.anime.shared.videos.VideoViewerRoute
 import com.programmersbox.helpfulutils.requestPermissions
+import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.uiviews.BaseMainActivity
@@ -77,6 +78,8 @@ class MainActivity : BaseMainActivity() {
     // BaseMainActivity's deep link matchers don't cover CastRemoteRoute, so it is handled here.
     private fun openCastRemoteIfRequested(intent: Intent) {
         if (intent.data?.toString() != CAST_REMOTE) return
+        // Relaunching from recents replays the task's root intent; don't reopen the remote for it.
+        if (intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY != 0) return
         navigationActions.remove(CastRemoteRoute)
         navigationActions.navigate(CastRemoteRoute)
     }
@@ -104,7 +107,16 @@ class MainActivity : BaseMainActivity() {
     @Composable
     override fun BottomBarAdditions() {
         val navActions = LocalNavActions.current
-        CastMiniBar(onOpen = { navActions.navigate(CastRemoteRoute) })
+        // The bottom bar renders on every screen, including the remote itself.
+        val onRemote = (navActions as? Navigation3Actions)?.backStack?.lastOrNull() == CastRemoteRoute
+        if (!onRemote) {
+            CastMiniBar(
+                onOpen = {
+                    navActions.remove(CastRemoteRoute)
+                    navActions.navigate(CastRemoteRoute)
+                }
+            )
+        }
     }
 
 }
