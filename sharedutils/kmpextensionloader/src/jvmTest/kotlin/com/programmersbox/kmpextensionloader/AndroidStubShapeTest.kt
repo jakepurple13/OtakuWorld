@@ -23,4 +23,23 @@ class AndroidStubShapeTest {
         assertEquals("b.jpg", uri.lastPathSegment)
         assertEquals("1", uri.getQueryParameter("x"))
     }
+
+    @Test fun uriParseNeverThrowsOnIllegalChars() {
+        val raw = "https://example.com/a b/c|d.jpg?q=x y"
+        val uri = android.net.Uri.parse(raw)
+        assertEquals("example.com", uri.host)
+        assertEquals("c|d.jpg", uri.lastPathSegment)
+        assertEquals("x y", uri.getQueryParameter("q"))
+        assertEquals(raw, uri.toString())
+    }
+
+    @Test fun uriUnderscoreHost() {
+        assertEquals("my_host.example.com", android.net.Uri.parse("https://my_host.example.com/p").host)
+    }
+
+    @Test fun uriWithoutPath() {
+        val uri = android.net.Uri.parse("https://example.com")
+        assertTrue(uri.path.isNullOrEmpty())
+        assertEquals(null, uri.lastPathSegment)
+    }
 }
