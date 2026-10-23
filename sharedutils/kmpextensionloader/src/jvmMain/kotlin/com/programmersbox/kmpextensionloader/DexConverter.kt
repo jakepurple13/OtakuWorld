@@ -8,7 +8,7 @@ object DexConverter {
 
     fun convert(apkFile: File, cacheDir: File): File? {
         val hash = sha256(apkFile)
-        val cachedJar = File(cacheDir, "$hash.jar")
+        val cachedJar = jarFor(apkFile, cacheDir)
         if (cachedJar.exists()) return cachedJar
 
         return runCatching {
@@ -35,6 +35,9 @@ object DexConverter {
             it.printStackTrace()
         }.getOrNull()
     }
+
+    /** The cache location [convert] uses for [apkFile]'s jar (may not exist yet). */
+    fun jarFor(apkFile: File, cacheDir: File): File = File(cacheDir, "${sha256(apkFile)}.jar")
 
     private fun sha256(file: File): String {
         val digest = MessageDigest.getInstance("SHA-256")
