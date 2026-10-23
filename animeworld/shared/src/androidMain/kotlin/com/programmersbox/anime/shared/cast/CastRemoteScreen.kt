@@ -77,6 +77,7 @@ import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRepository
 import com.programmersbox.anime.shared.subtitles.SubtitleStyle
 import com.programmersbox.anime.shared.subtitles.coerced
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
+import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -136,13 +137,14 @@ fun CastRemoteScreen() {
             )
         },
     ) { padding ->
+        val navBottom = LocalNavHostPadding.current.calculateBottomPadding()
         Column(
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .padding(horizontal = 16.dp)
-                .padding(bottom = 12.dp),
+                .padding(bottom = 12.dp + navBottom),
         ) {
             NowPlayingArt(state)
             Column {
