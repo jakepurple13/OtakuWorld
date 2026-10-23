@@ -31,6 +31,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -38,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.mediarouter.media.MediaRouter
 import com.google.android.gms.cast.framework.CastContext
+import kotlinx.coroutines.flow.drop
 import org.koin.compose.koinInject
 
 @Composable
@@ -53,6 +55,10 @@ fun CastButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     }
 }
 
+/**
+ * "Cast to" sheet. [onConnected] fires only when the connection becomes `Connected` after the sheet
+ * opened; if already connected on open, the sheet shows "Connected to <device>" and "Stop casting" instead.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CastDevicePickerSheet(onDismiss: () -> Unit, onConnected: () -> Unit) {
@@ -61,8 +67,10 @@ fun CastDevicePickerSheet(onDismiss: () -> Unit, onConnected: () -> Unit) {
     val state by controller.state.collectAsStateWithLifecycle()
     val currentOnConnected by rememberUpdatedState(onConnected)
 
-    LaunchedEffect(state.connection) {
-        if (state.connection == CastConnection.Connected) currentOnConnected()
+    LaunchedEffect(Unit) {
+        snapshotFlow { state.connection }
+            .drop(1)
+            .collect { if (it == CastConnection.Connected) currentOnConnected() }
     }
 
     val router = remember(context) { MediaRouter.getInstance(context) }
@@ -135,7 +143,7 @@ fun CastDevicePickerSheet(onDismiss: () -> Unit, onConnected: () -> Unit) {
                         }
                     ) { Text("Wi-Fi settings") }
                 }
-                Row(
+                if (selector != null) Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.padding(vertical = 8.dp),
