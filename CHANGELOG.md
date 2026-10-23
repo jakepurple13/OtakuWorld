@@ -329,6 +329,11 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 
 ### Desktop
 
+#### New Features
+
+- MangaWorld Desktop: install and use Mihon extensions from Mihon repos (non-Cloudflare sources;
+  source settings not yet available on desktop)
+
 #### Improvements
 
 - Distinct package name and per-platform app icons for Windows, macOS, and Linux installers

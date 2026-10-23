@@ -4,6 +4,7 @@ import com.googlecode.d2j.Method
 import com.googlecode.d2j.dex.BaseDexExceptionHandler
 import com.googlecode.d2j.dex.Dex2jar
 import com.googlecode.d2j.node.DexMethodNode
+import com.googlecode.d2j.reader.MultiDexFileReader
 import org.objectweb.asm.MethodVisitor
 import java.io.File
 import java.security.MessageDigest
@@ -12,7 +13,7 @@ import java.util.zip.ZipFile
 object DexConverter {
 
     /** Bump when conversion output changes so jars from an older converter are not reused. */
-    private const val CONVERTER_VERSION = 2
+    private const val CONVERTER_VERSION = 3
 
     fun convert(apkFile: File, cacheDir: File): File? {
         val hash = sha256(apkFile)
@@ -23,7 +24,7 @@ object DexConverter {
         return runCatching {
             cacheDir.mkdirs()
             val handler = StubbingExceptionHandler(apkFile.name)
-            Dex2jar.from(apkFile)
+            Dex2jar.from(ElidedConstructorFix.wrap(MultiDexFileReader.open(apkFile.readBytes())))
                 .withExceptionHandler(handler)
                 .reUseReg(false)
                 .topoLogicalSort()

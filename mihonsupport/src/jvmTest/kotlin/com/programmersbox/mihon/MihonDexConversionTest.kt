@@ -2,6 +2,9 @@ package com.programmersbox.mihon
 
 import android.app.Application
 import com.programmersbox.kmpextensionloader.DexConverter
+import eu.kanade.tachiyomi.source.online.HttpSource
+import kotlinx.coroutines.runBlocking
+import okhttp3.Interceptor
 import java.io.File
 import java.nio.file.Files
 import java.util.zip.ZipFile
@@ -9,6 +12,7 @@ import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -49,6 +53,25 @@ class MihonDexConversionTest {
     }
 
     @Test fun cacheKeyCarriesConverterVersion() {
-        assertTrue(DexConverter.jarFor(MihonFixture.apk, root).name.endsWith("-v2.jar"))
+        assertTrue(DexConverter.jarFor(MihonFixture.apk, root).name.endsWith("-v3.jar"))
+    }
+
+    // R8 drops the fixture's trivial interceptor constructor (new-instance La; + invoke-direct Object.<init>).
+    @Test fun instancesOfClassesWithElidedConstructorsKeepTheirType() {
+        val store = MihonApkStore(File(root, "apks"), File(root, "jars")).also { s ->
+            runBlocking { s.install(File(root, "dl.apk").also { MihonFixture.apk.copyTo(it) }) }
+        }
+        val loader = JvmMihonExtensionLoader(store)
+        try {
+            val api = assertIs<MihonApiService>(
+                loader.load(testCatalog(store), setOf(MihonFixture.REPO_FINGERPRINT), emptySet()) {}.first().apiService
+            )
+            val client = assertIs<HttpSource>(api.source).client
+            val interceptors: List<Any> = client.interceptors + client.networkInterceptors
+            assertTrue(interceptors.isNotEmpty())
+            interceptors.forEach { assertIs<Interceptor>(it) }
+        } finally {
+            loader.close()
+        }
     }
 }
