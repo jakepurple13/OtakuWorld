@@ -27,8 +27,8 @@ class CastMediaServerTest {
     @BeforeTest
     fun setUp() {
         upstream = MockWebServer().also { it.start() }
-        server = CastMediaServer(client, { "127.0.0.1" }, port = 0)
-        assertTrue(server.start())
+        server = CastMediaServer(client, { "127.0.0.1" }, port = 0, userAgent = "AnimeWorld/test")
+        assertEquals(CastResult.Started, server.start())
         folder = createTempDirectory("cast-server").toFile()
     }
 
@@ -126,7 +126,7 @@ class CastMediaServerTest {
     fun startFailsWithoutWifiHost() {
         val noWifi = CastMediaServer(client, { null }, port = 0)
 
-        assertFalse(noWifi.start())
+        assertEquals(CastResult.NoWifi, noWifi.start())
         assertNull(noWifi.baseUrl)
     }
 
@@ -149,8 +149,49 @@ class CastMediaServerTest {
         val busyPort = server.baseUrl!!.substringAfterLast(':').toInt()
         val second = CastMediaServer(client, { "127.0.0.1" }, port = busyPort)
 
-        assertFalse(second.start())
+        assertEquals(CastResult.Failed("Couldn't start local server"), second.start())
         assertNull(second.baseUrl)
+    }
+
+    @Test
+    fun downloadedFileSubtitleIsServed() = runTest {
+        val srt = File(folder, "Ep 1.en.srt").also { it.writeText("1\n00:00:01,000 --> 00:00:02,000\nOffline\n") }
+
+        val reg = assertNotNull(server.registerSubtitle(KmpSubtitle(srt.toURI().toString(), "English")))
+
+        assertEquals(listOf("Offline"), reg.cues.map { it.text })
+        get(reg.url).use { assertTrue(it.body.string().startsWith("WEBVTT")) }
+    }
+
+    @Test
+    fun optionsPreflightAnswered() {
+        val request = Request.Builder().url(server.baseUrl!! + "/p/anything").method("OPTIONS", null).build()
+
+        client.newCall(request).execute().use {
+            assertEquals(204, it.code)
+            assertEquals("*", it.header("Access-Control-Allow-Origin"))
+            assertEquals("GET, HEAD, OPTIONS", it.header("Access-Control-Allow-Methods"))
+            assertEquals("Range, Content-Type", it.header("Access-Control-Allow-Headers"))
+        }
+    }
+
+    @Test
+    fun proxySendsPlayerUserAgentUnlessSourceSetsOne() {
+        upstream.enqueue(MockResponse.Builder().body("a").build())
+        upstream.enqueue(MockResponse.Builder().body("b").build())
+
+        get(server.registerStream(upstream.url("/a.mp4").toString(), mapOf("Referer" to "r"))).use { it.body.string() }
+        get(server.registerStream(upstream.url("/b.mp4").toString(), mapOf("user-agent" to "Source/1"))).use { it.body.string() }
+
+        assertEquals("AnimeWorld/test", upstream.takeRequest().headers["User-Agent"])
+        assertEquals("Source/1", upstream.takeRequest().headers["User-Agent"])
+    }
+
+    @Test
+    fun webmFileServedAsWebm() {
+        val url = server.registerFile(File(folder, "ep.webm").also { it.writeText("webm") })
+
+        get(url).use { assertEquals("video/webm", it.header("Content-Type")) }
     }
 
     @Test

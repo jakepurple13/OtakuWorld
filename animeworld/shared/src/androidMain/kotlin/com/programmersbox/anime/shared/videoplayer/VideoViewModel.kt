@@ -33,6 +33,7 @@ import androidx.media3.exoplayer.upstream.BandwidthMeter
 import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.anime.shared.VideoScreen
 import com.programmersbox.anime.shared.cast.CastRequest
+import com.programmersbox.anime.shared.cast.castSourceHeaders
 import com.programmersbox.anime.shared.cast.closestSubtitleIndex
 import com.programmersbox.anime.shared.downloads.OfflineSubtitles
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRepository
@@ -63,6 +64,7 @@ class VideoViewModel(
     val showName = videoScreen.showName
     val downloadOrStream = videoScreen.downloadOrStream
     val requestHeaders = playerHeaders(storageHolder.storageModel?.headers.orEmpty(), videoScreen.referer)
+    private val sourceOnlyHeaders = castSourceHeaders(storageHolder.storageModel?.headers.orEmpty(), videoScreen.referer)
     private val localFile = if (downloadOrStream) OfflineSubtitles.resolveVideoFile(context, showPath) else null
     val subtitles = if (downloadOrStream) {
         localFile?.let(OfflineSubtitles::find).orEmpty()
@@ -130,6 +132,7 @@ class VideoViewModel(
             url = localFile?.path ?: showPath,
             mimeType = mimeType,
             headers = if (downloadOrStream) emptyMap() else requestHeaders,
+            sourceHeaders = if (downloadOrStream) emptyMap() else sourceOnlyHeaders,
             subtitles = subtitles,
             selectedSubtitle = selected,
             startPositionMs = exoPlayer?.currentPosition ?: 0L,

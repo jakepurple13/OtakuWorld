@@ -15,24 +15,31 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
 import java.net.Inet4Address
+import java.net.URI
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
 data class RegisteredSubtitle(val id: Int, val url: String, val cues: List<VttCue>)
 
-/** IPv4 of the active network when it is Wi-Fi or Ethernet; null otherwise (the Chromecast cannot reach us). */
+/**
+ * IPv4 of a Wi-Fi or Ethernet network that is not a VPN; null otherwise (the Chromecast cannot reach us).
+ * Looks past the active network, which is the VPN when one is up.
+ */
+@Suppress("DEPRECATION") // allNetworks: the callback-based replacement can't answer synchronously.
 fun wifiIpv4(context: Context): String? {
     val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager ?: return null
-    val network = cm.activeNetwork ?: return null
-    val caps = cm.getNetworkCapabilities(network) ?: return null
-    if (!caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) &&
-        !caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
-    ) return null
-    return cm.getLinkProperties(network)?.linkAddresses
-        ?.map { it.address }
-        ?.firstOrNull { it is Inet4Address && !it.isLoopbackAddress }
-        ?.hostAddress
+    return cm.allNetworks.firstNotNullOfOrNull { network ->
+        val caps = cm.getNetworkCapabilities(network) ?: return@firstNotNullOfOrNull null
+        val local = caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+            caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
+        if (!local || caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) return@firstNotNullOfOrNull null
+        cm.getLinkProperties(network)?.linkAddresses
+            ?.map { it.address }
+            ?.firstOrNull { it is Inet4Address && !it.isLoopbackAddress }
+            ?.hostAddress
+    }
 }
 
 /**
@@ -42,7 +49,9 @@ fun wifiIpv4(context: Context): String? {
 class CastMediaServer(
     private val okHttp: OkHttpClient,
     private val hostProvider: () -> String?,
-    private val port: Int = 8081,
+    private val port: Int = 0,
+    /** Sent upstream by the proxy unless the stream's own headers set a User-Agent. */
+    private val userAgent: String? = null,
 ) {
     private class UpstreamException(cause: Throwable) : Exception(cause)
 
@@ -61,19 +70,22 @@ class CastMediaServer(
     var baseUrl: String? = null
         private set
 
-    fun start(): Boolean {
-        if (server != null) return true
-        val host = hostProvider() ?: return false
+    private val subtitleClient by lazy { okHttp.newBuilder().callTimeout(SUBTITLE_TIMEOUT_S, TimeUnit.SECONDS).build() }
+
+    /** [CastResult.Started] once serving; [CastResult.NoWifi] without a Wi-Fi host; [CastResult.Failed] when the port won't bind. */
+    fun start(): CastResult {
+        if (server != null) return CastResult.Started
+        val host = hostProvider() ?: return CastResult.NoWifi
         val s = Server()
         try {
             s.start(NanoHTTPD.SOCKET_READ_TIMEOUT, true)
         } catch (e: IOException) {
             Log.w(TAG, "Could not start cast server on port $port", e)
-            return false
+            return CastResult.Failed("Couldn't start local server")
         }
         server = s
         baseUrl = "http://$host:${s.listeningPort}"
-        return true
+        return CastResult.Started
     }
 
     fun stop() {
@@ -90,9 +102,14 @@ class CastMediaServer(
         val base = baseUrl ?: return null
         return try {
             val text = withContext(Dispatchers.IO) {
-                okHttp.newCall(Request.Builder().url(sub.url).apply { sub.headers.forEach { (k, v) -> header(k, v) } }.build())
-                    .execute()
-                    .use { if (it.isSuccessful) it.body.string() else null }
+                if (sub.url.startsWith("file:")) {
+                    // Downloaded episodes keep their subtitles next to the video, referenced as file: URIs.
+                    File(URI(sub.url)).readText()
+                } else {
+                    subtitleClient.newCall(Request.Builder().url(sub.url).apply { sub.headers.forEach { (k, v) -> header(k, v) } }.build())
+                        .execute()
+                        .use { if (it.isSuccessful) it.body.string() else null }
+                }
             } ?: return null
             val vtt = toWebVtt(text, SubtitleFormat.fromUrl(sub.url))
             val id = nextId.incrementAndGet()
@@ -121,6 +138,13 @@ class CastMediaServer(
 
     private inner class Server : NanoHTTPD(port) {
         override fun serve(session: IHTTPSession): Response {
+            if (session.method == Method.OPTIONS) {
+                return newFixedLengthResponse(Response.Status.NO_CONTENT, null, "").also {
+                    it.addHeader("Access-Control-Allow-Origin", "*")
+                    it.addHeader("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS")
+                    it.addHeader("Access-Control-Allow-Headers", "Range, Content-Type")
+                }
+            }
             val path = session.uri
             val range = session.headers["range"]
             val response = try {
@@ -145,6 +169,9 @@ class CastMediaServer(
         private fun proxy(target: ProxyTarget, range: String?): Response {
             val request = Request.Builder().url(target.url).apply {
                 target.headers.forEach { (k, v) -> header(k, v) }
+                if (userAgent != null && target.headers.keys.none { it.equals("user-agent", ignoreCase = true) }) {
+                    header("User-Agent", userAgent)
+                }
                 range?.let { header("Range", it) }
             }.build()
             val upstream = try {
@@ -185,7 +212,11 @@ class CastMediaServer(
         private fun serveFile(file: File, range: String?): Response {
             if (!file.isFile) return newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "not found")
             val total = file.length()
-            val mime = if (file.extension.equals("mkv", true)) "video/x-matroska" else "video/mp4"
+            val mime = when (file.extension.lowercase()) {
+                "mkv" -> "video/x-matroska"
+                "webm" -> "video/webm"
+                else -> "video/mp4"
+            }
             val bounds = range?.let { parseRange(it, total) }
             if (range != null && bounds == null) {
                 return newFixedLengthResponse(Response.Status.RANGE_NOT_SATISFIABLE, "text/plain", "").also {
@@ -209,6 +240,7 @@ class CastMediaServer(
 
     private companion object {
         const val TAG = "CastMediaServer"
+        const val SUBTITLE_TIMEOUT_S = 5L
         val hlsTypes = setOf("application/vnd.apple.mpegurl", "application/x-mpegurl")
 
         fun upstreamStatus(code: Int): NanoHTTPD.Response.IStatus = object : NanoHTTPD.Response.IStatus {

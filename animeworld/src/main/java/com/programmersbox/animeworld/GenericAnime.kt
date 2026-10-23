@@ -54,6 +54,7 @@ import com.programmersbox.anime.shared.cast.CastRemoteRoute
 import com.programmersbox.anime.shared.cast.CastRemoteScreen
 import com.programmersbox.anime.shared.cast.CastRequest
 import com.programmersbox.anime.shared.cast.CastResult
+import com.programmersbox.anime.shared.cast.castSourceHeaders
 import com.programmersbox.anime.shared.cast.errorMessage
 import com.programmersbox.anime.shared.cast.wifiIpv4
 import com.programmersbox.anime.shared.downloads.DownloadQueueSource
@@ -124,7 +125,12 @@ val appModule = module {
     single { NotificationLogo(R.mipmap.ic_launcher_foreground) }
     single { StorageHolder() }
     single<SubtitleSettingsRepository> { DataStoreSubtitleSettingsRepository(get<Context>()) }
-    single { CastMediaServer(OkHttpClient(), { wifiIpv4(get<Context>()) }) }
+    single {
+        // Same User-Agent the phone player sends, so proxied requests look like local playback.
+        @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
+        val userAgent = androidx.media3.common.util.Util.getUserAgent(get<Context>(), "AnimeWorld")
+        CastMediaServer(OkHttpClient(), { wifiIpv4(get<Context>()) }, userAgent = userAgent)
+    }
     single { CastController(get<Context>(), get(), get(), CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)) }
     viewModelOf(::SubtitleSettingsViewModel)
     single { VideoLibrarySource(get(), downloadFolder = { get<Context>().folderLocation }) }
@@ -207,6 +213,7 @@ class GenericAnime(
                         url = storage.link.orEmpty(),
                         mimeType = streamMime(storage),
                         headers = playerHeaders(storage.headers, storage.headers["referer"] ?: storage.source.orEmpty()),
+                        sourceHeaders = castSourceHeaders(storage.headers, storage.headers["referer"] ?: storage.source),
                         subtitles = storage.subtitles,
                         selectedSubtitle = defaultCastSubtitle(storage.subtitles),
                         startPositionMs = context.getSharedPreferences("videos", Context.MODE_PRIVATE).getLong(storage.link, 0L),
@@ -245,6 +252,7 @@ class GenericAnime(
                     url = file.path,
                     mimeType = null,
                     headers = emptyMap(),
+                    sourceHeaders = emptyMap(),
                     subtitles = subtitles,
                     selectedSubtitle = defaultCastSubtitle(subtitles),
                     startPositionMs = context.getSharedPreferences("videos", Context.MODE_PRIVATE).getLong(content.path, 0L),
@@ -275,6 +283,7 @@ class GenericAnime(
         if (!castInFlight.compareAndSet(false, true)) return
         scope.launch {
             try {
+                Toast.makeText(context, "Casting…", Toast.LENGTH_SHORT).show()
                 block()
             } finally {
                 castInFlight.set(false)

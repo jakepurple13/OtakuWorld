@@ -25,7 +25,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
@@ -36,6 +38,10 @@ import java.io.File
 import java.io.IOException
 import kotlin.coroutines.resume
 
+/**
+ * [headers] are everything the proxy sends upstream (player defaults included); [sourceHeaders] are only the
+ * source's own, and decide whether a non-HLS stream needs the proxy at all ([castSourceHeaders]).
+ */
 data class CastRequest(
     val showTitle: String,
     val episodeName: String,
@@ -43,6 +49,7 @@ data class CastRequest(
     val url: String,
     val mimeType: String?,
     val headers: Map<String, String>,
+    val sourceHeaders: Map<String, String>,
     val subtitles: List<KmpSubtitle>,
     val selectedSubtitle: Int?,
     val startPositionMs: Long,
@@ -89,6 +96,13 @@ class CastController(
     private var session: CastSession? = null
     private var loadedTracks: List<LoadedTrack> = emptyList()
     private var styleJob: Job? = null
+    private var errorReported = false
+    private var loadInFlight = false
+
+    private val _playbackErrors = MutableSharedFlow<String>(extraBufferCapacity = 1)
+
+    /** One message each time the receiver stops on a playback error after the load succeeded. */
+    val playbackErrors: SharedFlow<String> = _playbackErrors
 
     private val mediaCallback = object : RemoteMediaClient.Callback() {
         override fun onStatusUpdated() = publishStatus()
@@ -178,11 +192,11 @@ class CastController(
         castContext() ?: return CastResult.Failed("Google Play services unavailable")
         if (castCompatibility(request.url, request.mimeType) == CastCompat.Blocked) return CastResult.Unsupported
         val current = session?.takeIf { it.isConnected } ?: return CastResult.Failed("No cast device connected")
-        if (!server.start()) return CastResult.NoWifi
+        server.start().takeIf { it != CastResult.Started }?.let { return it }
 
         val mediaUrl = when {
             request.localFile != null -> server.registerFile(request.localFile)
-            needsProxy(request.url, request.mimeType, request.headers) -> server.registerStream(request.url, request.headers)
+            needsProxy(request.url, request.mimeType, request.sourceHeaders) -> server.registerStream(request.url, request.headers)
             else -> request.url
         }
         val registered = coroutineScope {
@@ -190,10 +204,10 @@ class CastController(
         }.withIndex().mapNotNull { (index, pair) -> pair.second?.let { Triple(index, pair.first, it) } }
 
         val tracks = registered.mapIndexed { i, (_, sub, reg) ->
-            LoadedTrack(CastTrack(i + 1L, sub.lang, null, request.subtitleOrigin), reg.cues)
+            LoadedTrack(CastTrack(OWN_TRACK_BASE + i, sub.lang, null, request.subtitleOrigin), reg.cues)
         }
         val mediaTracks = registered.mapIndexed { i, (_, sub, reg) ->
-            MediaTrack.Builder(i + 1L, MediaTrack.TYPE_TEXT)
+            MediaTrack.Builder(OWN_TRACK_BASE + i, MediaTrack.TYPE_TEXT)
                 .setName(sub.lang)
                 .setSubtype(MediaTrack.SUBTYPE_SUBTITLES)
                 .setContentId(reg.url)
@@ -201,7 +215,7 @@ class CastController(
                 .build()
         }
         val selectedId = registered.indexOfFirst { it.first == request.selectedSubtitle }
-            .takeIf { it >= 0 }?.let { it + 1L }
+            .takeIf { it >= 0 }?.let { OWN_TRACK_BASE + it }
 
         val metadata = MediaMetadata(MediaMetadata.MEDIA_TYPE_TV_SHOW).apply {
             if (request.showTitle.isNotBlank()) putString(MediaMetadata.KEY_SERIES_TITLE, request.showTitle)
@@ -225,14 +239,21 @@ class CastController(
         return withContext(Dispatchers.Main.immediate) {
             val client = current.remoteMediaClient ?: return@withContext CastResult.Failed("Receiver not ready")
             loadedTracks = tracks
-            val error = suspendCancellableCoroutine { cont ->
-                client.load(loadRequest).setResultCallback { result ->
-                    val status = result.status
-                    cont.resume(if (status.isSuccess) null else status.statusMessage ?: "Load failed (${status.statusCode})")
+            loadInFlight = true
+            val error = try {
+                suspendCancellableCoroutine { cont ->
+                    client.load(loadRequest).setResultCallback { result ->
+                        val status = result.status
+                        cont.resume(if (status.isSuccess) null else status.statusMessage ?: "Load failed (${status.statusCode})")
+                    }
                 }
+            } finally {
+                loadInFlight = false
             }
             if (error != null) {
                 loadedTracks = emptyList()
+                // The caller reports a failed load; don't also report the receiver's idle-error status.
+                errorReported = true
                 return@withContext CastResult.Failed(error)
             }
             client.setTextTrackStyle(style)
@@ -284,14 +305,21 @@ class CastController(
         val current = session ?: return
         val client = current.remoteMediaClient ?: return
         val status: MediaStatus = client.mediaStatus ?: return
+        val failed = status.playerState == MediaStatus.PLAYER_STATE_IDLE && status.idleReason == MediaStatus.IDLE_REASON_ERROR
+        // Only errors after a successful load; a failing load is reported by cast()'s result.
+        if (failed && !errorReported && !loadInFlight) _playbackErrors.tryEmit(PLAYBACK_ERROR)
+        errorReported = failed
         val info = client.mediaInfo
         val position = client.approximateStreamPosition
-        val ownIds = loadedTracks.map { it.track.id }.toSet()
-        val streamTracks = info?.mediaTracks.orEmpty()
-            .filter { it.type == MediaTrack.TYPE_TEXT && it.id !in ownIds }
-            .map { CastTrack(it.id, it.name ?: it.language ?: "Track ${it.id}", it.language, "stream") }
+        val baseUrl = server.baseUrl
+        val (ownMedia, streamMedia) = info?.mediaTracks.orEmpty()
+            .filter { it.type == MediaTrack.TYPE_TEXT }
+            .partition { isOwnTrack(it.id, it.contentId, baseUrl) }
+        val loadedById = loadedTracks.associateBy { it.track.id }
+        val ownTracks = ownMedia.map { loadedById[it.id]?.track ?: CastTrack(it.id, it.name ?: "Track ${it.id}", it.language, "source") }
+        val streamTracks = streamMedia.map { CastTrack(it.id, it.name ?: it.language ?: "Track ${it.id}", it.language, "stream") }
         val activeId = status.activeTrackIds?.firstOrNull { id ->
-            id in ownIds || streamTracks.any { it.id == id }
+            ownTracks.any { it.id == id } || streamTracks.any { it.id == id }
         }
         val metadata = info?.metadata
         _state.update {
@@ -304,10 +332,10 @@ class CastController(
                     positionMs = position,
                     durationMs = client.streamDuration.coerceAtLeast(0),
                     playing = status.playerState == MediaStatus.PLAYER_STATE_PLAYING,
-                    tracks = loadedTracks.map { t -> t.track } + streamTracks,
+                    tracks = ownTracks + streamTracks,
                     activeTrackId = activeId,
                     volume = current.volume.toFloat(),
-                    currentCue = loadedTracks.firstOrNull { t -> t.track.id == activeId }?.cues?.cueAt(position),
+                    currentCue = activeId?.let(loadedById::get)?.cues?.cueAt(position),
                 ),
             )
         }
@@ -316,6 +344,7 @@ class CastController(
     private companion object {
         const val TAG = "CastController"
         const val PROGRESS_INTERVAL_MS = 500L
+        const val PLAYBACK_ERROR = "Couldn't play on TV"
     }
 }
 
