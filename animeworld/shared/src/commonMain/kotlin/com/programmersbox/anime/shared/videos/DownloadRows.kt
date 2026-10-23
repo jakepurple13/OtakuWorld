@@ -9,9 +9,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -34,6 +33,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathMeasure
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -234,28 +239,55 @@ private fun LibraryThumbnail(item: SharedVideoContent) {
                 .padding(horizontal = 5.dp, vertical = 1.dp)
         )
 
-        if (item.lastPlayedPositionMs > 0) {
-            val fraction = if (item.duration > 0) {
-                (item.lastPlayedPositionMs.toFloat() / item.duration).coerceIn(0f, 1f)
-            } else {
-                0f
-            }
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .fillMaxWidth()
-                    .height(3.dp)
-                    .background(Color(0x80000000))
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(fraction)
-                        .fillMaxHeight()
-                        .background(MaterialTheme.colorScheme.primary)
-                )
-            }
+        if (item.lastPlayedPositionMs > 0 && item.duration > 0) {
+            val fraction = (item.lastPlayedPositionMs.toFloat() / item.duration).coerceIn(0f, 1f)
+            ProgressBorder(
+                fraction = fraction,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.matchParentSize()
+            )
         }
     }
+}
+
+/** Watch progress as a border that traces the thumbnail clockwise from its top-left corner. */
+@Composable
+private fun ProgressBorder(
+    fraction: Float,
+    color: Color,
+    modifier: Modifier = Modifier,
+) {
+    Spacer(
+        modifier = modifier.drawWithCache {
+            val strokeWidth = 3.dp.toPx()
+            val inset = strokeWidth / 2
+            val radius = 12.dp.toPx() - inset
+            val left = inset
+            val top = inset
+            val right = size.width - inset
+            val bottom = size.height - inset
+            // Built by hand so the path starts at the top-left and runs clockwise.
+            val outline = Path().apply {
+                moveTo(left + radius, top)
+                lineTo(right - radius, top)
+                arcTo(Rect(right - 2 * radius, top, right, top + 2 * radius), -90f, 90f, false)
+                lineTo(right, bottom - radius)
+                arcTo(Rect(right - 2 * radius, bottom - 2 * radius, right, bottom), 0f, 90f, false)
+                lineTo(left + radius, bottom)
+                arcTo(Rect(left, bottom - 2 * radius, left + 2 * radius, bottom), 90f, 90f, false)
+                lineTo(left, top + radius)
+                arcTo(Rect(left, top, left + 2 * radius, top + 2 * radius), 180f, 90f, false)
+                close()
+            }
+            val measure = PathMeasure().apply { setPath(outline, false) }
+            val progress = Path().apply { measure.getSegment(0f, measure.length * fraction, this, true) }
+            val stroke = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+            onDrawBehind {
+                drawPath(outline, Color.White.copy(alpha = 0.14f), style = Stroke(width = strokeWidth))
+                drawPath(progress, color, style = stroke)
+            }
+        }
+    )
 }
 
 @Composable

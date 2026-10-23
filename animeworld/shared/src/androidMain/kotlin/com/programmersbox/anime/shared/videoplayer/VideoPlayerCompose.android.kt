@@ -52,6 +52,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -134,6 +135,7 @@ import javax.net.ssl.HttpsURLConnection
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSession
 import kotlin.math.abs
+import kotlin.math.roundToInt
 
 // `Context.ignoreSsl` (com.programmersbox.animeworld.ignoreSsl in the animeworld app module) can't be
 // imported here: :animeworld:shared's androidMain does not (and must not) depend on the animeworld
@@ -211,7 +213,8 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
                     playPauseToggle = viewModel::playPause,
                     seekTo = { viewModel.exoPlayer?.seekTo(it) },
                     rewind = viewModel::rewind,
-                    fastForward = viewModel::fastForward
+                    fastForward = viewModel::fastForward,
+                    skipAhead = viewModel::skipAhead,
                 )
             }
         ) { _ ->
@@ -361,13 +364,16 @@ fun VideoPlayer(
                 useController = false
                 setShowBuffering(PlayerView.SHOW_BUFFERING_ALWAYS)
 
-                resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                // FIT keeps the whole frame visible. ZOOM filled the screen by cropping, which kicked in
+                // once the video size was known and looked like the player zooming in after a moment.
+                resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+                keepScreenOn = true
 
                 player = exoPlayer
                 layoutParams = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
 
-                // The stock layout puts the SubtitleView inside the content frame, which RESIZE_MODE_ZOOM
-                // grows past the screen edges, so bottom-anchored cues land off-screen. Pin it to the
+                // The stock layout puts the SubtitleView inside the content frame, which a cropping resize
+                // mode grows past the screen edges, so bottom-anchored cues land off-screen. Pin it to the
                 // view bounds instead; PlayerView keeps feeding cues to the same instance.
                 val subtitles = this.subtitleView
                 val overlay = overlayFrameLayout
@@ -447,6 +453,7 @@ fun VideoBottomBar(
     seekTo: (Long) -> Unit,
     rewind: () -> Unit,
     fastForward: () -> Unit,
+    skipAhead: () -> Unit,
 ) {
     AnimatedVisibility(
         visible = visible,
@@ -518,6 +525,9 @@ fun VideoBottomBar(
                             contentDescription = null
                         )
                     }
+                    TextButton(onClick = skipAhead) {
+                        Text("+1:30")
+                    }
                 }
             }
         }
@@ -584,7 +594,7 @@ fun MediaControlGestures(
                     showBrightness = true
                 },
                 onVerticalDragRight = { volume ->
-                    volumeLevel = (volume * 4).coerceIn(0, 100)
+                    volumeLevel = volume.coerceIn(0, 100)
                     showVolume = true
                 },
                 onSeek = {
@@ -630,9 +640,6 @@ fun MediaControlGestures(
                     .padding(10.dp)
                     .align(Alignment.CenterEnd)
             ) {
-                val context = LocalContext.current
-                val audioManager = remember { context.audioManager }
-                val maxVolume = remember { audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC) }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         text = "$volumeLevel%",
@@ -644,7 +651,6 @@ fun MediaControlGestures(
                         backgroundColor = Color.Black.copy(alpha = .4f),
                         fillColor = Color.White,
                         modifier = Modifier.size(80.dp, 175.dp),
-                        maxValue = maxVolume.toDouble(),
                         icon = { Icon(Icons.AutoMirrored.Filled.VolumeUp, null, tint = MaterialTheme.colorScheme.primary) },
                     )
                 }
@@ -689,7 +695,9 @@ fun GestureBox(
             var mDownX = -1f
             var mDownY = -1f
 
-            var mGestureDownBrightness = getScreenBrightness(context)
+            // Values captured when a vertical drag starts; each drag event applies its total offset to these.
+            var mGestureDownBrightness = 0f
+            var mGestureDownVolume = 0
 
             // When this job completes, it seeks to desired position.
             // It gets cancelled if delay does not complete
@@ -719,34 +727,26 @@ fun GestureBox(
                 onVerticalDrag = { dragAmount: Float, offset ->
                     seekJob?.cancel()
 
-                    val deltaX = offset.position.x - mDownX
-                    var deltaY = offset.position.y - mDownY
+                    // Dragging the full height of the player covers the whole range.
+                    val fraction = -(offset.position.y - mDownY) / size.height
 
                     when {
                         //brightness == start
-                        offset.position.x < size.width * 0.3f -> {
-                            deltaY = -deltaY
-                            val deltaV = (255f * deltaY * 3f / size.height).toInt()
-                            val brightnessValue = mGestureDownBrightness + deltaV
-                            if (brightnessValue in 0..255) {
-                                activity?.let { setWindowBrightness(it, brightnessValue.toFloat()) }
-                            }
-                            val brightnessPercent = (mGestureDownBrightness + deltaY * 255f * 3f / size.height).toInt()
+                        mDownX < size.width * 0.3f -> {
+                            val brightnessValue = (mGestureDownBrightness + fraction * 255f).coerceIn(0f, 255f)
+                            activity?.let { setWindowBrightness(it, brightnessValue) }
                             seekJob = coroutineScope.launch {
-                                onVerticalDragLeft(brightnessPercent)
+                                onVerticalDragLeft((brightnessValue * 100f / 255f).roundToInt())
                             }
                         }
                         //volume == end
-                        offset.position.x > size.width * 0.7f -> {
-                            deltaY = -deltaY
-                            val mGestureDownVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+                        mDownX > size.width * 0.7f -> {
                             val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-                            val deltaV = (maxVolume.toFloat() * deltaY * 3f / size.height).toInt()
-                            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, mGestureDownVolume + deltaV, 0)
-                            //val volumePercent = (mGestureDownVolume * 100 / maxVolume + deltaY * 3f * 100f / size.height).toInt()
+                            val volume = (mGestureDownVolume + fraction * maxVolume).roundToInt().coerceIn(0, maxVolume)
+                            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, volume, 0)
 
                             seekJob = coroutineScope.launch {
-                                onVerticalDragRight(audioManager.getStreamVolume(AudioManager.STREAM_MUSIC))
+                                onVerticalDragRight(volume * 100 / maxVolume)
                             }
                         }
                     }
@@ -759,7 +759,12 @@ fun GestureBox(
                     onVerticalDragStart(it)
                     mDownY = it.y
                     mDownX = it.x
-                    mGestureDownBrightness = getScreenBrightness(context)
+                    // Start from the window override once a drag has set one, else from the system level.
+                    mGestureDownBrightness = activity?.window?.attributes?.screenBrightness
+                        ?.takeIf { b -> b >= 0f }
+                        ?.let { b -> b * 255f }
+                        ?: getScreenBrightness(context).toFloat()
+                    mGestureDownVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
                     resetState()
                 },
                 onDragStart = { offset ->
