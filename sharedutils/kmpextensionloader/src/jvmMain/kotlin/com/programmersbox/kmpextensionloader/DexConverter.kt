@@ -93,7 +93,7 @@ object DexConverter {
                     }
                     classes.entries().asSequence().forEach { copy(classes, it) }
                     apk.entries().asSequence()
-                        .filter { !it.isDirectory && !it.name.endsWith(".dex") && !it.name.startsWith("META-INF/") }
+                        .filter { !it.isDirectory && !it.name.endsWith(".dex") && !it.name.startsWith("META-INF/", ignoreCase = true) }
                         .forEach { copy(apk, it) }
                 }
             }
