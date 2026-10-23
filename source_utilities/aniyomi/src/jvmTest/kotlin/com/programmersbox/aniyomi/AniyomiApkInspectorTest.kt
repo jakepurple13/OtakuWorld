@@ -18,6 +18,7 @@ class AniyomiApkInspectorTest {
         assertEquals(AniyomiFixture.SOURCE_CLASS, info.sourceClasses)
         assertEquals("AnimeOnsen", info.label)
         assertFalse(info.nsfw)
+        assertEquals(AniyomiFixture.LIB_VERSION, info.libVersion)
         assertTrue(AniyomiLib.isSupported(info.libVersion))
         assertEquals(AniyomiFixture.REPO_FINGERPRINT, info.fingerprints.last())
     }

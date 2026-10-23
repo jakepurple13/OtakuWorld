@@ -26,7 +26,6 @@ data class AniyomiApkInfo(
 object AniyomiApkInspector {
     private const val FEATURE_EXTENSION = "tachiyomi.animeextension"
     private const val METADATA_SOURCE_CLASS = "tachiyomi.animeextension.class"
-    private const val METADATA_EXTENSION_LIB = "aniyomix.extensionLib"
     private const val METADATA_NSFW = "tachiyomi.animeextension.nsfw"
     private const val LABEL_PREFIX = "Aniyomi: "
 
@@ -41,7 +40,7 @@ object AniyomiApkInspector {
                 ?: manifest.packageName.substringAfterLast('.'),
             isExtension = FEATURE_EXTENSION in manifest.features,
             hasMetadata = meta.isNotEmpty(),
-            libVersion = AniyomiLib.libVersion(meta[METADATA_EXTENSION_LIB]?.toIntOrNull() ?: 0, manifest.versionName),
+            libVersion = AniyomiLib.libVersion({ meta[it]?.toIntOrNull() }, manifest.versionName),
             sourceClasses = meta[METADATA_SOURCE_CLASS],
             nsfw = meta[METADATA_NSFW] == "1",
             fingerprints = fingerprints(apk),

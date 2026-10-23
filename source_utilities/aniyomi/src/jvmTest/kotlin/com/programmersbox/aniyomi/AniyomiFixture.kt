@@ -9,12 +9,14 @@ import java.io.File
  * sha256 566c861c9fc19caeb34a1418c86821b467688ed9a2f87618b0ec7e8bb5aba1bd
  * Repo signing fingerprint: meta.signingKeyFingerprint in the repo's repo.json
  * (https://raw.githubusercontent.com/yuzono/anime-repo/repo/repo.json).
- * Its lib version comes from the versionName prefix: it declares `tachiyomix.extensionLib`, not `aniyomix.extensionLib`.
+ * It declares its lib as `tachiyomix.extensionLib`.
  */
 object AniyomiFixture {
     const val PACKAGE = "eu.kanade.tachiyomi.animeextension.all.animeonsen"
     const val VERSION_NAME = "14.10"
     const val VERSION_CODE = 10L
+    /** Value of the manifest `tachiyomix.extensionLib` meta-data. */
+    const val LIB_VERSION = 14.0
     const val SOURCE_CLASS = ".AnimeOnsen"
     const val REPO_FINGERPRINT = "cbec121aa82ebb02aaa73806992e0368a97d47b5451ed6524816d03084c45905"
     const val RESOURCE_PATH = "fixtures/aniyomi-all.animeonsen-v14.10.apk"
