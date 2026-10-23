@@ -41,11 +41,11 @@ typealias SimpleCallback = () -> Unit
 class CastOptions : OptionsProvider {
     override fun getCastOptions(context: Context): CastOptions {
         val notificationOptions = NotificationOptions.Builder()
-            .setTargetActivityClassName(ExpandedControlsActivity::class.java.name)
+            .setTargetActivityClassName(CastRemoteTrampolineActivity::class.java.name)
             .build()
         val mediaOptions = CastMediaOptions.Builder()
             .setNotificationOptions(notificationOptions)
-            .setExpandedControllerActivityClassName(ExpandedControlsActivity::class.java.name)
+            .setExpandedControllerActivityClassName(CastRemoteTrampolineActivity::class.java.name)
             .build()
         return CastOptions.Builder()
             .setReceiverApplicationId(CastMediaControlIntent.DEFAULT_MEDIA_RECEIVER_APPLICATION_ID)

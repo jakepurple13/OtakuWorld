@@ -128,7 +128,7 @@ private fun ControlSection(
 }
 
 @Composable
-private fun StepSlider(
+internal fun StepSlider(
     label: String,
     valueLabel: String,
     value: Int,
@@ -188,7 +188,7 @@ private fun FontChips(selected: SubtitleFont, onSelect: (SubtitleFont) -> Unit) 
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ColorSwatches(selected: SubtitleColor, onSelect: (SubtitleColor) -> Unit) {
+internal fun ColorSwatches(selected: SubtitleColor, onSelect: (SubtitleColor) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Color", style = MaterialTheme.typography.bodyLarge)
         FlowRow(
@@ -227,7 +227,7 @@ private fun Swatch(color: SubtitleColor, selected: Boolean, onClick: () -> Unit)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun EdgeSegments(selected: SubtitleEdge, onSelect: (SubtitleEdge) -> Unit) {
+internal fun EdgeSegments(selected: SubtitleEdge, onSelect: (SubtitleEdge) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Edge", style = MaterialTheme.typography.bodyLarge)
         SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {

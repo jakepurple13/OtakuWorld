@@ -63,6 +63,8 @@ import com.programmersbox.anime.shared.downloads.EpisodeDownloadRequest
 import com.programmersbox.anime.shared.downloads.enqueueEpisodeDownload
 import com.programmersbox.anime.shared.cast.CastController
 import com.programmersbox.anime.shared.cast.CastMediaServer
+import com.programmersbox.anime.shared.cast.CastRemoteRoute
+import com.programmersbox.anime.shared.cast.CastRemoteScreen
 import com.programmersbox.anime.shared.cast.wifiIpv4
 import com.programmersbox.anime.shared.subtitles.DataStoreSubtitleSettingsRepository
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRepository
@@ -135,6 +137,8 @@ val appModule = module {
     single { SystemAlerter(get(), get(), BuildConfig.APPLICATION_ID) }
 
     navigation<VideoScreen> { VideoPlayerUi(it) }
+
+    navigation<CastRemoteRoute> { CastRemoteScreen() }
 
     navigation<SubtitleSettingsRoute> { SubtitleSettingsScreen() }
 
