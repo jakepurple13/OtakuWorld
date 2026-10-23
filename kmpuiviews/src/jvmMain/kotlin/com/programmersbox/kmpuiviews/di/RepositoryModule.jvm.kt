@@ -19,6 +19,6 @@ actual fun platformRepositories(): Module = module {
     singleOf(::WorkerRepositoryImpl) { bind<WorkRepository>() }
     singleOf(::DownloadStateRepository) { bind<DownloadStateInterface>() }
     singleOf(::NotificationScreenRepository) { bind<NotificationScreenInterface>() }
-    singleOf(::SourceInfoRepository)
+    single { SourceInfoRepository(getAll()) }
     singleOf(::PlatformRepository)
 }
