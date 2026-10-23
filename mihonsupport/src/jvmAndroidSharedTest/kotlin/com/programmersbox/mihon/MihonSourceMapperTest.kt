@@ -109,6 +109,18 @@ class MihonSourceMapperTest {
     }
 
     @Test
+    fun pageLinkIsTheImageRequestUrl() = runTest {
+        val service = mihonApiService(HostInPageUrlSource())
+        val info = KmpItemModel("A", "", "https://example.org/a", "", service)
+        val chapter = com.programmersbox.kmpmodels.KmpChapterModel("c", "https://example.org/c/1", "", info.url, service)
+
+        val storage = service.chapterInfo(chapter).single()
+
+        assertEquals("https://cdn.example.org/data/hash/1.jpg", storage.link)
+        assertEquals("https://example.org/", storage.headers["Referer"])
+    }
+
+    @Test
     fun itemInfoToleratesUninitializedUrlAndTitle() = runTest {
         val service = mihonApiService(PartialUpdateCatalogueSource())
         val item = service.allList(1).single()

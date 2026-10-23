@@ -9,12 +9,14 @@ import com.googlecode.d2j.reader.MultiDexFileReader
 import org.objectweb.asm.MethodVisitor
 import java.io.File
 import java.security.MessageDigest
+import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
+import java.util.zip.ZipOutputStream
 
 object DexConverter {
 
     /** Bump when conversion output changes so jars from an older converter are not reused. */
-    private const val CONVERTER_VERSION = 4
+    private const val CONVERTER_VERSION = 5
 
     fun convert(apkFile: File, cacheDir: File): File? {
         val hash = sha256(apkFile)
@@ -26,6 +28,7 @@ object DexConverter {
         return runCatching {
             cacheDir.mkdirs()
             translate(MultiDexFileReader.open(apkFile.readBytes()), tmp, apkFile.name)
+            addApkResources(apkFile, tmp)
             java.nio.file.Files.move(
                 tmp.toPath(),
                 cachedJar.toPath(),
@@ -60,6 +63,41 @@ object DexConverter {
         }
         check(jar.exists() && hasClasses(jar)) { "dex2jar produced no classes" }
         StackMapFrames.addTo(jar)
+    }
+
+    /**
+     * Android's class loader serves every APK entry as a resource (e.g. Keiyoushi's i18n reads
+     * `assets/i18n/messages_en.properties` through it), so the jar gets them too. Dex files and META-INF
+     * (APK signatures would make the JVM try to verify the jar) are left out.
+     */
+    private fun addApkResources(apkFile: File, jar: File) {
+        val merged = File(jar.path + ".res")
+        try {
+            mergeInto(merged, jar, apkFile)
+            java.nio.file.Files.move(merged.toPath(), jar.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+        } finally {
+            merged.delete()
+        }
+    }
+
+    private fun mergeInto(merged: File, jar: File, apkFile: File) {
+        ZipFile(jar).use { classes ->
+            ZipFile(apkFile).use { apk ->
+                ZipOutputStream(merged.outputStream().buffered()).use { out ->
+                    val names = mutableSetOf<String>()
+                    fun copy(zip: ZipFile, entry: ZipEntry) {
+                        if (!names.add(entry.name)) return
+                        out.putNextEntry(ZipEntry(entry.name))
+                        zip.getInputStream(entry).use { it.copyTo(out) }
+                        out.closeEntry()
+                    }
+                    classes.entries().asSequence().forEach { copy(classes, it) }
+                    apk.entries().asSequence()
+                        .filter { !it.isDirectory && !it.name.endsWith(".dex") && !it.name.startsWith("META-INF/") }
+                        .forEach { copy(apk, it) }
+                }
+            }
+        }
     }
 
     /** True for a finished jar [convert] wrote (any converter version); false for temp files and anything else. */

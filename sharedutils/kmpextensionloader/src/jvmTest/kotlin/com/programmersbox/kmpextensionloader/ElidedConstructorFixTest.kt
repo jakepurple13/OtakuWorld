@@ -54,13 +54,14 @@ class ElidedConstructorFixTest {
             assertEquals("java.lang.Object", make("makeObject"), "a genuine new Object() is untouched")
             assertEquals("t.Bar", make("makeBar"), "a class with its own constructor is untouched")
             assertEquals("java.lang.Object", make("makeAfterStaleAlias"), "an overwritten register is forgotten")
+            assertEquals("t.Child", make("makeChild"), "a super call that skips an elided constructor verifies")
         }
     }
 
     /** A hand-built dex in the shape R8 emits. */
     private object FakeDex : BaseDexFileReader {
         override fun getDexVersion() = DexConstants.DEX_035
-        override fun getClassNames() = listOf("t.Foo", "t.Sub", "t.Bar", "t.Factory")
+        override fun getClassNames() = listOf("t.Foo", "t.Sub", "t.Bar", "t.Base", "t.Child", "t.Factory")
         override fun accept(dv: DexFileVisitor) = accept(dv, 0)
         override fun accept(dv: DexFileVisitor, classIdx: Int, config: Int) = accept(dv, config)
 
@@ -71,6 +72,18 @@ class ElidedConstructorFixTest {
             dv.visit(DexConstants.ACC_PUBLIC, "Lt/Bar;", OBJECT, null)?.run {
                 method(DexConstants.ACC_PUBLIC or DexConstants.ACC_CONSTRUCTOR, Method("Lt/Bar;", "<init>", arrayOf(), "V"), 1) {
                     visitMethodStmt(Op.INVOKE_DIRECT, intArrayOf(0), OBJECT_INIT)
+                    visitStmt0R(Op.RETURN_VOID)
+                }
+                visitEnd()
+            }
+
+            // R8 dropped Base's trivial constructor, so Child's constructor calls Object.<init> on `this` directly
+            // (kotlinx.serialization's synthetic constructors on a sealed base look like this).
+            dv.visit(DexConstants.ACC_PUBLIC or DexConstants.ACC_ABSTRACT, "Lt/Base;", OBJECT, null)?.visitEnd()
+            dv.visit(DexConstants.ACC_PUBLIC, "Lt/Child;", "Lt/Base;", null)?.run {
+                // 3 registers, 2 ins (this, String): `this` is v1.
+                method(DexConstants.ACC_PUBLIC or DexConstants.ACC_CONSTRUCTOR, CHILD_INIT, 3) {
+                    visitMethodStmt(Op.INVOKE_DIRECT, intArrayOf(1), OBJECT_INIT)
                     visitStmt0R(Op.RETURN_VOID)
                 }
                 visitEnd()
@@ -97,6 +110,11 @@ class ElidedConstructorFixTest {
                 factory("makeBar", 1) {
                     visitTypeStmt(Op.NEW_INSTANCE, 0, -1, "Lt/Bar;")
                     visitMethodStmt(Op.INVOKE_DIRECT, intArrayOf(0), Method("Lt/Bar;", "<init>", arrayOf(), "V"))
+                }
+                factory("makeChild", 2) {
+                    visitTypeStmt(Op.NEW_INSTANCE, 0, -1, "Lt/Child;")
+                    visitConstStmt(Op.CONST_STRING, 1, "x")
+                    visitMethodStmt(Op.INVOKE_DIRECT, intArrayOf(0, 1), CHILD_INIT)
                 }
                 // v0 is tracked as a new Foo, then overwritten by a move before the Object.<init> call.
                 factory("makeAfterStaleAlias", 3) {
@@ -134,5 +152,6 @@ class ElidedConstructorFixTest {
     private companion object {
         const val OBJECT = "Ljava/lang/Object;"
         val OBJECT_INIT = Method(OBJECT, "<init>", arrayOf(), "V")
+        val CHILD_INIT = Method("Lt/Child;", "<init>", arrayOf("Ljava/lang/String;"), "V")
     }
 }

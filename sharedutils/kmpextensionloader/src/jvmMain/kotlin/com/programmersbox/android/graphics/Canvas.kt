@@ -61,6 +61,9 @@ class Canvas(private var bitmap: Bitmap?) {
 
     fun rotate(degrees: Float) = g().rotate(Math.toRadians(degrees.toDouble()))
 
+    /** For other stubs that draw (e.g. text layouts). */
+    internal fun graphics(): Graphics2D = g()
+
     private fun g(): Graphics2D = checkNotNull(graphics) { "Canvas has no bitmap" }
 
     private fun graphicsFor(bitmap: Bitmap): Graphics2D = bitmap.image.createGraphics().apply {

@@ -7,6 +7,10 @@ open class Preference(private val ctx: Context) {
         fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean
     }
 
+    fun interface OnPreferenceClickListener {
+        fun onPreferenceClick(preference: Preference): Boolean
+    }
+
     open var key: String? = null
     open var title: CharSequence? = null
     open var summary: CharSequence? = null
@@ -24,6 +28,13 @@ open class Preference(private val ctx: Context) {
 
     open fun setOnPreferenceChangeListener(listener: OnPreferenceChangeListener?) {
         onPreferenceChangeListener = listener
+    }
+
+    var onPreferenceClickListener: OnPreferenceClickListener? = null
+        private set
+
+    open fun setOnPreferenceClickListener(listener: OnPreferenceClickListener?) {
+        onPreferenceClickListener = listener
     }
 
     open fun getContext(): Context = ctx

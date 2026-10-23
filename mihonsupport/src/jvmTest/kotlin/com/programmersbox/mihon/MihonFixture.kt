@@ -18,5 +18,24 @@ object MihonFixture {
     const val RESOURCE_PATH = "fixtures/tachiyomi-en.mangapill-v1.6.0.apk"
 
     val apk: File
-        get() = File(checkNotNull(MihonFixture::class.java.classLoader.getResource(RESOURCE_PATH)) { "missing $RESOURCE_PATH" }.toURI())
+        get() = resource(RESOURCE_PATH)
+
+    /**
+     * Multi-language Keiyoushi MangaDex (61 sources from one factory). Its settings code references
+     * androidx.preference/android.widget types in signatures the JVM verifier checks when the source
+     * class links, so it guards against missing stub types, not just missing members.
+     * sha256 12fde77601d48c8b231340694db8446fba5a555ced4109b231c9d2e3000915fb, signed with [REPO_FINGERPRINT].
+     */
+    object MangaDex {
+        const val PACKAGE = "eu.kanade.tachiyomi.extension.all.mangadex"
+        const val VERSION_NAME = "1.6.0"
+        const val VERSION_CODE = 106000L
+        const val SOURCE_COUNT = 61
+        const val RESOURCE_PATH = "fixtures/tachiyomi-all.mangadex-v1.6.0.apk"
+
+        val apk: File get() = resource(RESOURCE_PATH)
+    }
+
+    private fun resource(path: String): File =
+        File(checkNotNull(MihonFixture::class.java.classLoader.getResource(path)) { "missing $path" }.toURI())
 }

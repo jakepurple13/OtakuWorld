@@ -56,7 +56,7 @@ class FakeCatalogueSource(
         return SMangaUpdate(details, chs)
     }
 
-    override suspend fun getPageList(chapter: SChapter) = listOf(
+    override suspend fun getPageList(chapter: SChapter): List<Page> = listOf(
         Page(0, url = "/page/0", imageUrl = "https://img.example.org/0.jpg"),
         Page(1, url = "/page/1", imageUrl = null),
     )
@@ -79,7 +79,7 @@ class PartialUpdateCatalogueSource(
 
 /** HttpSource that never touches Injekt/network: overrides headersBuilder and getImageUrl. */
 @Suppress("OVERRIDE_DEPRECATION")
-class FakeHttpSource : HttpSource() {
+open class FakeHttpSource : HttpSource() {
     override val name = "FakeHttp"
     override val lang = "en"
     override val supportsLatest = false
@@ -89,7 +89,7 @@ class FakeHttpSource : HttpSource() {
     override fun headersBuilder(): Headers.Builder = Headers.Builder().add("Referer", "https://example.org/")
 
     override suspend fun getPopularManga(page: Int) = MangasPage(listOf(manga("A", "/a")), hasNextPage = false)
-    override suspend fun getPageList(chapter: SChapter) = listOf(
+    override suspend fun getPageList(chapter: SChapter): List<Page> = listOf(
         Page(0, url = "/page/0", imageUrl = "https://img.example.org/0.jpg"),
         Page(1, url = "/page/1", imageUrl = null),
     )
@@ -108,6 +108,16 @@ class FakeHttpSource : HttpSource() {
     override fun chapterListParse(response: Response): List<SChapter> = throw UnsupportedOperationException()
     override fun pageListParse(response: Response): List<Page> = throw UnsupportedOperationException()
     override fun imageUrlParse(response: Response): String = throw UnsupportedOperationException()
+}
+
+/** MangaDex shape: the image host lives in page.url and imageUrl is a path that imageRequest completes. */
+class HostInPageUrlSource : FakeHttpSource() {
+    override suspend fun getPageList(chapter: SChapter): List<Page> = listOf(
+        Page(0, url = "https://cdn.example.org,https://api.example.org/at-home/1", imageUrl = "/data/hash/1.jpg"),
+    )
+
+    override fun imageRequest(page: Page): Request =
+        okhttp3.Request.Builder().url(page.url.substringBefore(',') + page.imageUrl).headers(headers).build()
 }
 
 fun memoOf(key: String, value: String) = buildJsonObject { put(key, JsonPrimitive(value)) }

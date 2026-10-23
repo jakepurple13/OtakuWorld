@@ -27,15 +27,20 @@ class MihonEndToEndNetworkTest {
         root.deleteRecursively()
     }
 
-    @Test fun keiyoushiExtensionBrowsesToPages() = runBlocking {
+    @Test fun keiyoushiExtensionBrowsesToPages() = browsesToPages(MihonFixture.PACKAGE)
+
+    // Multi-source factory whose settings code needs androidx.preference/android.widget stub types to link.
+    @Test fun mangaDexEnglishBrowsesToPages() = browsesToPages(MihonFixture.MangaDex.PACKAGE, language = "en")
+
+    private fun browsesToPages(packageName: String, language: String? = null) = runBlocking {
         assumeTrue("set MIHON_E2E=1 to run", System.getenv("MIHON_E2E") == "1")
         MihonRuntime.init(Application("mihon-e2e", File(root, "data")))
 
         val http = HttpClient(OkHttp)
         val repoClient = MihonRepoClient(http)
         val remote = repoClient.fetch(listOf(REPO_URL))
-            .firstOrNull { it.packageName == PACKAGE }
-        checkNotNull(remote) { "$PACKAGE not in $REPO_URL" }
+            .firstOrNull { it.packageName == packageName }
+        checkNotNull(remote) { "$packageName not in $REPO_URL" }
         assertTrue(remote.downloadLink.startsWith("https://"), remote.downloadLink)
 
         val response = http.get(remote.downloadLink)
@@ -47,8 +52,9 @@ class MihonEndToEndNetworkTest {
         val loader = JvmMihonExtensionLoader(store)
         try {
             val catalog = testCatalog(store)
+            val sources = loader.load(catalog, repoClient.signingKeys, emptySet()) {}
             val api = assertIs<MihonApiService>(
-                loader.load(catalog, repoClient.signingKeys, emptySet()) {}.first().apiService
+                sources.first { language == null || (it.apiService as? MihonApiService)?.language == language }.apiService
             )
 
             val recent = api.recent(1)
@@ -61,7 +67,7 @@ class MihonEndToEndNetworkTest {
                 pages.all { it.link?.startsWith("http://") == true || it.link?.startsWith("https://") == true },
                 pages.map { it.link }.toString(),
             )
-            println("E2E OK: ${remote.name} ${remote.version}: ${recent.size} recent, ${info.chapters.size} chapters, ${pages.size} pages")
+            println("E2E OK: ${remote.name} ${remote.version} (${api.language}): ${recent.size} recent, ${info.chapters.size} chapters, ${pages.size} pages")
         } finally {
             loader.close()
             http.close()
@@ -70,6 +76,5 @@ class MihonEndToEndNetworkTest {
 
     private companion object {
         const val REPO_URL = "https://raw.githubusercontent.com/keiyoushi/extensions/repo"
-        const val PACKAGE = MihonFixture.PACKAGE
     }
 }

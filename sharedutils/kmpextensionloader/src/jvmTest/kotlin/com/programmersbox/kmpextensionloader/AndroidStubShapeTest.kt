@@ -17,6 +17,123 @@ class AndroidStubShapeTest {
         assertEquals<Class<*>?>(androidx.preference.Preference::class.java, androidx.preference.PreferenceGroup::class.java.superclass)
     }
 
+    // The JVM verifier loads parameter/return types of extension settings code when the source class links
+    // (MangaDex, Komga, Hiperdex), so kind and supertypes must match the SDK even for never-called UI types.
+    @Test fun preferenceListenerTypesAreNestedInterfaces() {
+        val bind = androidx.preference.EditTextPreference.OnBindEditTextListener::class.java
+        assertTrue(bind.isInterface)
+        assertEquals("androidx.preference.EditTextPreference\$OnBindEditTextListener", bind.name)
+        assertEquals(android.widget.EditText::class.java, bind.getMethod("onBindEditText", android.widget.EditText::class.java).parameterTypes.single())
+        assertTrue(androidx.preference.Preference.OnPreferenceClickListener::class.java.isInterface)
+        assertTrue(androidx.preference.Preference.OnPreferenceChangeListener::class.java.isInterface)
+        androidx.preference.EditTextPreference::class.java.getMethod("setOnBindEditTextListener", bind)
+        val list = androidx.preference.ListPreference(android.app.Application("pkg.test", java.nio.file.Files.createTempDirectory("lp").toFile()))
+        list.entryValues = arrayOf("a", "b")
+        assertEquals(1, list.findIndexOfValue("b"))
+        assertEquals(-1, list.findIndexOfValue("c"))
+    }
+
+    @Test fun textTypesMatchSdkShapes() {
+        interfaceExtends(android.text.Spanned::class.java, CharSequence::class.java)
+        interfaceExtends(android.text.Spannable::class.java, android.text.Spanned::class.java)
+        interfaceExtends(android.text.GetChars::class.java, CharSequence::class.java)
+        interfaceExtends(
+            android.text.Editable::class.java,
+            CharSequence::class.java, android.text.GetChars::class.java, android.text.Spannable::class.java, Appendable::class.java,
+        )
+        interfaceExtends(android.text.TextWatcher::class.java, android.text.NoCopySpan::class.java)
+        classExtends(android.text.TextPaint::class.java, android.graphics.Paint::class.java)
+        classExtends(android.text.StaticLayout::class.java, android.text.Layout::class.java)
+        assertTrue(java.lang.reflect.Modifier.isAbstract(android.text.Layout::class.java.modifiers))
+        assertTrue(android.text.Layout.Alignment::class.java.isEnum)
+        assertEquals("a & b\nc", android.text.Html.fromHtml("<b>a</b> &amp; b<br>c", 0).toString())
+    }
+
+    @Test fun viewAndWidgetHierarchyMatchesSdk() {
+        classExtends(android.view.View::class.java, Any::class.java)
+        classExtends(android.view.ViewGroup::class.java, android.view.View::class.java, android.view.ViewManager::class.java, android.view.ViewParent::class.java)
+        assertTrue(java.lang.reflect.Modifier.isAbstract(android.view.ViewGroup::class.java.modifiers))
+        assertTrue(android.view.ViewParent::class.java.isInterface)
+        classExtends(android.widget.TextView::class.java, android.view.View::class.java)
+        classExtends(android.widget.EditText::class.java, android.widget.TextView::class.java)
+        classExtends(android.widget.Button::class.java, android.widget.TextView::class.java)
+        classExtends(android.widget.AbsoluteLayout::class.java, android.view.ViewGroup::class.java)
+        classExtends(android.widget.Toast::class.java, Any::class.java)
+        assertEquals(100 or android.view.View.MeasureSpec.EXACTLY, android.view.View.MeasureSpec.makeMeasureSpec(100, android.view.View.MeasureSpec.EXACTLY))
+        android.view.ViewGroup.LayoutParams::class.java.getConstructor(Int::class.javaPrimitiveType, Int::class.javaPrimitiveType)
+    }
+
+    @Test fun webkitTypesMatchSdkShapes() {
+        classExtends(android.webkit.WebView::class.java, android.widget.AbsoluteLayout::class.java)
+        classExtends(android.webkit.WebViewClient::class.java, Any::class.java)
+        classExtends(android.webkit.WebChromeClient::class.java, Any::class.java)
+        classExtends(android.webkit.WebResourceResponse::class.java, Any::class.java)
+        classExtends(android.webkit.ConsoleMessage::class.java, Any::class.java)
+        assertTrue(android.webkit.ConsoleMessage.MessageLevel::class.java.isEnum)
+        listOf(android.webkit.WebSettings::class.java, android.webkit.CookieManager::class.java, android.webkit.WebResourceError::class.java, android.webkit.RenderProcessGoneDetail::class.java)
+            .forEach { assertTrue(java.lang.reflect.Modifier.isAbstract(it.modifiers) && !it.isInterface, it.name) }
+        assertTrue(android.webkit.WebResourceRequest::class.java.isInterface)
+        assertTrue(android.webkit.ValueCallback::class.java.isInterface)
+        assertTrue(android.webkit.WebView.getWebViewClassLoader() != null)
+    }
+
+    @Test fun contentAndGraphicsTypesMatchSdkShapes() {
+        classExtends(android.content.Intent::class.java, Any::class.java, Cloneable::class.java)
+        classExtends(android.content.ComponentName::class.java, Any::class.java, Cloneable::class.java, Comparable::class.java)
+        classExtends(android.content.ActivityNotFoundException::class.java, RuntimeException::class.java)
+        classExtends(android.graphics.Typeface::class.java, Any::class.java)
+        assertTrue(android.graphics.Typeface.DEFAULT_BOLD.isBold())
+        val dir = java.nio.file.Files.createTempDirectory("startactivity").toFile()
+        try {
+            kotlin.test.assertFailsWith<android.content.ActivityNotFoundException> {
+                android.app.Application("pkg.test", dir).startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW))
+            }
+        } finally {
+            dir.deleteRecursively()
+        }
+    }
+
+    @Test fun cookieManagerStoresCookiesPerDomain() {
+        val cm = android.webkit.CookieManager.getInstance()
+        cm.setCookie("https://www.shape-test.example/path", "a=1; Domain=.shape-test.example; Path=/")
+        cm.setCookie("https://other.shape-test.example", "b=2")
+        assertEquals("a=1", cm.getCookie("https://shape-test.example/x"))
+        assertEquals(setOf("a=1", "b=2"), cm.getCookie("https://other.shape-test.example")!!.split("; ").toSet())
+        cm.setCookie("https://shape-test.example", "a=gone; Domain=shape-test.example; Max-Age=0")
+        assertEquals("b=2", cm.getCookie("https://other.shape-test.example"))
+        cm.setCookie("https://other.shape-test.example", "b=; Expires=Thu, 01 Jan 1970 00:00:00 GMT")
+        assertEquals(null, cm.getCookie("https://other.shape-test.example"))
+    }
+
+    /** A rendered StaticLayout has a height and draws visible pixels. */
+    @Test fun staticLayoutWrapsAndDraws() {
+        val paint = android.text.TextPaint().apply {
+            setColor(0xFF000000.toInt())
+            setTextSize(20f)
+            setTypeface(android.graphics.Typeface.DEFAULT_BOLD)
+        }
+        val text = "word ".repeat(40)
+        val layout = android.text.StaticLayout(text, paint, 200, android.text.Layout.Alignment.ALIGN_NORMAL, 1f, 0f, false)
+        assertTrue(layout.getLineCount() > 1)
+        assertTrue(layout.getHeight() >= layout.getLineCount() * 20)
+        val bitmap = android.graphics.Bitmap.createBitmap(200, layout.getHeight(), android.graphics.Bitmap.Config.ARGB_8888)
+        val canvas = android.graphics.Canvas(bitmap)
+        canvas.drawColor(0xFFFFFFFF.toInt())
+        layout.draw(canvas)
+        assertTrue((0 until 200).any { x -> (0 until layout.getHeight()).any { y -> bitmap.getPixel(x, y) != 0xFFFFFFFF.toInt() } })
+    }
+
+    private fun interfaceExtends(type: Class<*>, vararg supers: Class<*>) {
+        assertTrue(type.isInterface, "${type.name} is an interface")
+        assertEquals(supers.toSet(), type.interfaces.toSet(), "${type.name} superinterfaces")
+    }
+
+    private fun classExtends(type: Class<*>, superclass: Class<*>, vararg interfaces: Class<*>) {
+        assertTrue(!type.isInterface, "${type.name} is a class")
+        assertEquals<Class<*>?>(superclass, type.superclass, "${type.name} superclass")
+        assertEquals(interfaces.toSet(), type.interfaces.toSet(), "${type.name} interfaces")
+    }
+
     @Test fun packageInfoHasLongVersionCodeAccessors() {
         val cls = android.content.pm.PackageInfo::class.java
         assertEquals(Long::class.javaPrimitiveType, cls.getMethod("getLongVersionCode").returnType)

@@ -1,6 +1,6 @@
 package android.graphics
 
-/** Only what bitmap drawing needs; text rendering (Typeface, textSize) is not supported on desktop. */
+/** Only what bitmap drawing needs, plus the text size and typeface [android.text.StaticLayout] reads. */
 open class Paint() {
     private var flags: Int = 0
     private var color: Int = 0xFF000000.toInt()
@@ -27,6 +27,20 @@ open class Paint() {
     fun getColor(): Int = color
     fun setColor(color: Int) {
         this.color = color
+    }
+
+    private var textSize: Float = 12f
+    private var typeface: Typeface? = null
+
+    fun getTextSize(): Float = textSize
+    fun setTextSize(textSize: Float) {
+        this.textSize = textSize
+    }
+
+    fun getTypeface(): Typeface? = typeface
+    fun setTypeface(typeface: Typeface?): Typeface? {
+        this.typeface = typeface
+        return typeface
     }
 
     companion object {

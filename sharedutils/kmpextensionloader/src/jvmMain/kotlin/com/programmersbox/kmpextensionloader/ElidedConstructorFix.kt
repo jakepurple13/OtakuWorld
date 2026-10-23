@@ -19,11 +19,18 @@ import com.googlecode.d2j.visitors.DexMethodVisitor
  * This reader wrapper points such calls at the instantiated class and gives that class (and any
  * in-dex superclasses on the way up) a constructor that only calls its superclass constructor,
  * which is what the removed constructor did.
+ *
+ * The same elision breaks constructors: when R8 drops a superclass's trivial constructor, a subclass
+ * constructor calls `invoke-direct this, Ljava/lang/Object;-><init>()V` (or another ancestor's), which the
+ * JVM rejects ("Bad <init> method call": only the direct superclass constructor may be called on `this`).
+ * Such super calls are pointed at the direct superclass, which gets the same pass-through constructor.
  */
 internal class ElidedConstructorFix private constructor(
     private val reader: BaseDexFileReader,
-    /** (instantiated class, constructor call) pairs to retarget. */
+    /** (class to call the constructor of instead, constructor call) pairs to retarget. */
     private val accepted: Set<Pair<String, Method>>,
+    /** In-dex class descriptor -> superclass descriptor. */
+    private val supers: Map<String, String?>,
     /** Class descriptor -> constructors to add, each as (parameter types, superclass to call). */
     private val additions: Map<String, List<Pair<Array<String>, String>>>,
 ) : BaseDexFileReader by reader {
@@ -40,7 +47,9 @@ internal class ElidedConstructorFix private constructor(
                     val mv = super.visitMethod(accessFlags, method) ?: return null
                     return object : DexMethodVisitor(mv) {
                         override fun visitCode(): DexCodeVisitor? =
-                            super.visitCode()?.let { code -> NewInstanceTracker(code) { type, call -> type to call in accepted } }
+                            super.visitCode()?.let { code ->
+                                NewInstanceTracker(code, superCallOf(className, accessFlags, method, supers)) { type, call -> type to call in accepted }
+                            }
                     }
                 }
 
@@ -64,56 +73,75 @@ internal class ElidedConstructorFix private constructor(
         }
     }
 
+    /** A constructor's own super call: `this` is the first of the last [insSize] registers. */
+    private class SuperCall(val self: String, val directSuper: String, val insSize: Int)
+
     /**
      * Tracks which registers hold a fresh `new-instance` and finds `invoke-direct X.<init>` calls on them
-     * where X is not the instantiated type. [rewrite] decides whether such a call is retargeted; [onCandidate]
-     * sees every one. Any other write to a register forgets it, so stale entries never match.
+     * where X is not the instantiated type. In a constructor ([superCall] set) it also finds `invoke-direct
+     * X.<init>` on `this` where X is not the direct superclass, reported as (direct superclass, call).
+     * [rewrite] decides whether such a call is retargeted to the reported type; [onCandidate] sees every one.
+     * Any other write to a register forgets it (as a fresh instance or as `this`), so stale entries never match.
      */
     private class NewInstanceTracker(
         cv: DexCodeVisitor?,
+        private val superCall: SuperCall? = null,
         private val onCandidate: (type: String, call: Method) -> Unit = { _, _ -> },
         private val rewrite: (type: String, call: Method) -> Boolean,
     ) : DexCodeVisitor(cv) {
         private val newInstances = mutableMapOf<Int, String>()
+        private var thisReg = -1
+
+        /** [reg] is written: it no longer holds a fresh instance, or `this`. */
+        private fun forget(reg: Int) {
+            newInstances.remove(reg)
+            if (reg == thisReg) thisReg = -1
+        }
+
+        override fun visitRegister(total: Int) {
+            if (superCall != null) thisReg = total - superCall.insSize
+            super.visitRegister(total)
+        }
 
         override fun visitTypeStmt(op: Op, a: Int, b: Int, type: String) {
-            if (op == Op.NEW_INSTANCE) newInstances[a] = type else newInstances.remove(a)
+            forget(a)
+            if (op == Op.NEW_INSTANCE) newInstances[a] = type
             super.visitTypeStmt(op, a, b, type)
         }
 
         override fun visitStmt1R(op: Op, reg: Int) {
-            newInstances.remove(reg)
+            forget(reg)
             super.visitStmt1R(op, reg)
         }
 
         override fun visitStmt2R(op: Op, a: Int, b: Int) {
-            newInstances.remove(a)
+            forget(a)
             super.visitStmt2R(op, a, b)
         }
 
         override fun visitStmt2R1N(op: Op, distReg: Int, srcReg: Int, content: Int) {
-            newInstances.remove(distReg)
+            forget(distReg)
             super.visitStmt2R1N(op, distReg, srcReg, content)
         }
 
         override fun visitStmt3R(op: Op, a: Int, b: Int, c: Int) {
-            newInstances.remove(a)
+            forget(a)
             super.visitStmt3R(op, a, b, c)
         }
 
         override fun visitConstStmt(op: Op, ra: Int, value: Any?) {
-            newInstances.remove(ra)
+            forget(ra)
             super.visitConstStmt(op, ra, value)
         }
 
         override fun visitFieldStmt(op: Op, a: Int, b: Int, field: Field) {
-            newInstances.remove(a)
+            forget(a)
             super.visitFieldStmt(op, a, b, field)
         }
 
         override fun visitMethodStmt(op: Op, args: IntArray, method: Method) {
             val type = if ((op == Op.INVOKE_DIRECT || op == Op.INVOKE_DIRECT_RANGE) && method.name == "<init>" && args.isNotEmpty()) {
-                newInstances.remove(args[0])
+                newInstances.remove(args[0]) ?: superCall?.takeIf { args[0] == thisReg && method.owner != it.self }?.directSuper
             } else {
                 null
             }
@@ -130,6 +158,13 @@ internal class ElidedConstructorFix private constructor(
 
     companion object {
         private const val OBJECT = "Ljava/lang/Object;"
+
+        /** For an instance constructor of an in-dex class, what [NewInstanceTracker] needs to spot its super call. */
+        private fun superCallOf(className: String, accessFlags: Int, method: Method, supers: Map<String, String?>): SuperCall? {
+            if (method.name != "<init>" || accessFlags and DexConstants.ACC_STATIC != 0) return null
+            val directSuper = supers[className] ?: return null
+            return SuperCall(className, directSuper, 1 + method.parameterTypes.sumOf { if (it == "J" || it == "D") 2 else 1 })
+        }
 
         /**
          * True when [owner] is a superclass of [type]: walking [supers] (in-dex class -> superclass) from [type]
@@ -159,8 +194,12 @@ internal class ElidedConstructorFix private constructor(
                         override fun visitMethod(accessFlags: Int, method: Method): DexMethodVisitor {
                             if (method.name == "<init>") constructors.getOrPut(className) { mutableSetOf() } += method.desc
                             return object : DexMethodVisitor() {
-                                override fun visitCode(): DexCodeVisitor =
-                                    NewInstanceTracker(null, onCandidate = { type, call -> candidates += type to call }) { _, _ -> false }
+                                // supers is complete for this class: visit() ran before its methods.
+                                override fun visitCode(): DexCodeVisitor = NewInstanceTracker(
+                                    null,
+                                    superCallOf(className, accessFlags, method, supers),
+                                    onCandidate = { type, call -> candidates += type to call },
+                                ) { _, _ -> false }
                             }
                         }
                     }
@@ -196,7 +235,7 @@ internal class ElidedConstructorFix private constructor(
                     current = superName
                 }
             }
-            return ElidedConstructorFix(reader, accepted, additions)
+            return ElidedConstructorFix(reader, accepted, supers, additions)
         }
     }
 }

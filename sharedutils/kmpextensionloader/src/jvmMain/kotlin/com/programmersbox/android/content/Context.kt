@@ -26,6 +26,9 @@ abstract class Context {
         File(dataDir, "databases/$name").also { it.parentFile?.mkdirs() }
     open fun getSystemService(name: String): Any? = null
 
+    /** Desktop has no activities; Android throws the same when nothing handles [intent]. */
+    open fun startActivity(intent: Intent): Unit = throw ActivityNotFoundException("No activity on desktop for $intent")
+
     abstract fun getPackageManager(): PackageManager
 
     companion object {
