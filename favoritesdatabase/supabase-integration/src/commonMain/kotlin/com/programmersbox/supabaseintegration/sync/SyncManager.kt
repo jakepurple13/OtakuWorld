@@ -10,6 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -92,8 +93,10 @@ class SyncManager(
 
     private fun startWifi() {
         println("Starting realtime listening")
-        realtimeJob?.cancel()
+        val previous = realtimeJob
         realtimeJob = scope.launch {
+            // Wait for the old subscription to remove its channel before a new one reuses the same topic.
+            previous?.cancelAndJoin()
             // Immediate full sync, then hand off to Realtime for incremental updates.
             try {
                 withRetry { doSync() }

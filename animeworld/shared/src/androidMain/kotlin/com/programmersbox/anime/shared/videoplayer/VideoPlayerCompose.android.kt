@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.pm.ActivityInfo
 import android.media.AudioManager
 import android.provider.Settings
+import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.Toast
@@ -29,6 +30,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -52,6 +54,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -102,6 +105,7 @@ import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import androidx.media3.ui.SubtitleView
+import com.programmersbox.anime.shared.R
 import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.anime.shared.VideoScreen
 import com.programmersbox.anime.shared.cast.CastButton
@@ -120,6 +124,10 @@ import com.programmersbox.anime.shared.subtitles.toCaptionSpec
 import com.programmersbox.datastore.otakuDataStore
 import com.programmersbox.helpfulutils.audioManager
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
+import com.programmersbox.kmpuiviews.presentation.components.blurkind.BlurKindState
+import com.programmersbox.kmpuiviews.presentation.components.blurkind.rememberBlurKindState
+import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKind
+import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKindSource
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.RecordTimeSpentDoing
 import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
@@ -128,10 +136,8 @@ import com.programmersbox.uiviews.GenericInfo
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.koin.compose.koinInject
 import java.security.SecureRandom
 import java.util.Locale
@@ -141,6 +147,7 @@ import javax.net.ssl.HttpsURLConnection
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSession
 import kotlin.math.abs
+import kotlin.math.roundToInt
 
 // `Context.ignoreSsl` (com.programmersbox.animeworld.ignoreSsl in the animeworld app module) can't be
 // imported here: :animeworld:shared's androidMain does not (and must not) depend on the animeworld
@@ -204,6 +211,12 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
 
     val overlayVisibility = viewModel.visibility == VideoPlayerVisibility.Visible || !viewModel.isPlaying || viewModel.subtitleSheetOpen
 
+    // Null until DataStore emits; the player waits for it since the PlayerView's surface type is fixed when it's created.
+    val useBlur by remember { videoPlayerBlur.asFlow() }.collectAsStateWithLifecycle(null)
+    // Null until DataStore emits; the media source is built once, so it waits for this too.
+    val ignoreSslEnabled by remember { context.ignoreSsl }.collectAsStateWithLifecycle(null)
+    val blurKindState = if (useBlur == true) rememberBlurKindState() else null
+
     val castController = koinInject<CastController>()
     val castScope = rememberCoroutineScope()
     var castPickerOpen by remember { mutableStateOf(false) }
@@ -241,17 +254,21 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
 
     Box {
         Scaffold(
-            topBar = { VideoTopBar(
+            topBar = {
+                VideoTopBar(
                     viewModel,
                     overlayVisibility,
+                    blurKindState,
                     onCastClick = {
                         // Already connected: send this episode straight to the TV (also the retry path after a failure).
                         if (castController.state.value.connection == CastConnection.Connected) startCast() else castPickerOpen = true
                     },
-                ) },
+                )
+            },
             bottomBar = {
                 VideoBottomBar(
                     visible = overlayVisibility,
+                    blurKindState = blurKindState,
                     currentTime = viewModel.currentTime,
                     totalTime = viewModel.totalTime,
                     totalDuration = viewModel.videoInfo.duration,
@@ -260,47 +277,54 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
                     playPauseToggle = viewModel::playPause,
                     seekTo = { viewModel.exoPlayer?.seekTo(it) },
                     rewind = viewModel::rewind,
-                    fastForward = viewModel::fastForward
+                    fastForward = viewModel::fastForward,
+                    skipAhead = viewModel::skipAhead,
                 )
             }
         ) { _ ->
             Box {
-                VideoPlayer(
-                    source = remember {
-                        if (viewModel.downloadOrStream) {
-                            //download
-                            context.getMediaSource(
-                                viewModel.showPath.toUri(),
-                                false,
-                                DefaultBandwidthMeter.Builder(context).build(),
-                                emptyMap(),
-                                viewModel.subtitles,
-                                null,
-                                viewModel.defaultSubtitle,
-                            )
-                        } else {
-                            //stream
-                            if (runBlocking { context.ignoreSsl.first() }) {
-                                val sslContext: SSLContext = SSLContext.getInstance("TLS")
-                                sslContext.init(null, arrayOf(SSLTrustManager()), SecureRandom())
-                                sslContext.createSSLEngine()
-                                HttpsURLConnection.setDefaultHostnameVerifier { _: String, _: SSLSession -> true }
-                                HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.socketFactory)
-                            }
+                val useTextureView = useBlur
+                val ignoreSsl = ignoreSslEnabled
+                if (useTextureView != null && ignoreSsl != null) {
+                    VideoPlayer(
+                        source = remember {
+                            if (viewModel.downloadOrStream) {
+                                //download
+                                context.getMediaSource(
+                                    viewModel.showPath.toUri(),
+                                    false,
+                                    DefaultBandwidthMeter.Builder(context).build(),
+                                    emptyMap(),
+                                    viewModel.subtitles,
+                                    null,
+                                    viewModel.defaultSubtitle,
+                                )
+                            } else {
+                                //stream
+                                if (ignoreSsl) {
+                                    val sslContext: SSLContext = SSLContext.getInstance("TLS")
+                                    sslContext.init(null, arrayOf(SSLTrustManager()), SecureRandom())
+                                    sslContext.createSSLEngine()
+                                    HttpsURLConnection.setDefaultHostnameVerifier { _: String, _: SSLSession -> true }
+                                    HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.socketFactory)
+                                }
 
-                            context.getMediaSource(
-                                viewModel.showPath.toUri(),
-                                false,
-                                DefaultBandwidthMeter.Builder(context).build(),
-                                viewModel.requestHeaders,
-                                viewModel.subtitles,
-                                viewModel.mimeType,
-                                viewModel.defaultSubtitle
-                            )
-                        }
-                    },
-                    viewModel = viewModel
-                )
+                                context.getMediaSource(
+                                    viewModel.showPath.toUri(),
+                                    false,
+                                    DefaultBandwidthMeter.Builder(context).build(),
+                                    viewModel.requestHeaders,
+                                    viewModel.subtitles,
+                                    viewModel.mimeType,
+                                    viewModel.defaultSubtitle
+                                )
+                            }
+                        },
+                        viewModel = viewModel,
+                        useTextureView = useTextureView,
+                        modifier = blurKindState?.let { Modifier.setBlurKindSource(it) } ?: Modifier
+                    )
+                }
                 var draggingProgress: DraggingProgress? by remember { mutableStateOf(null) }
                 MediaControlGestures(
                     modifier = Modifier.fillMaxSize(),
@@ -348,6 +372,7 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
 fun VideoPlayer(
     viewModel: VideoViewModel,
     source: MediaSource,
+    useTextureView: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val navController = LocalNavActions.current
@@ -405,18 +430,26 @@ fun VideoPlayer(
 
             val pos = context.getSharedPreferences("videos", Context.MODE_PRIVATE).getLong(viewModel.showPath, 0)
             exoPlayer.seekTo(pos)
-            PlayerView(context).apply {
+            val playerView = if (useTextureView) {
+                LayoutInflater.from(context).inflate(R.layout.video_player_view, null) as PlayerView
+            } else {
+                PlayerView(context)
+            }
+            playerView.apply {
                 hideController()
                 useController = false
                 setShowBuffering(PlayerView.SHOW_BUFFERING_ALWAYS)
 
-                resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                // FIT keeps the whole frame visible. ZOOM filled the screen by cropping, which kicked in
+                // once the video size was known and looked like the player zooming in after a moment.
+                resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+                keepScreenOn = true
 
                 player = exoPlayer
                 layoutParams = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
 
-                // The stock layout puts the SubtitleView inside the content frame, which RESIZE_MODE_ZOOM
-                // grows past the screen edges, so bottom-anchored cues land off-screen. Pin it to the
+                // The stock layout puts the SubtitleView inside the content frame, which a cropping resize
+                // mode grows past the screen edges, so bottom-anchored cues land off-screen. Pin it to the
                 // view bounds instead; PlayerView keeps feeding cues to the same instance.
                 val subtitles = this.subtitleView
                 val overlay = overlayFrameLayout
@@ -443,13 +476,14 @@ fun VideoPlayer(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun VideoTopBar(viewModel: VideoViewModel, visible: Boolean, onCastClick: () -> Unit) {
+fun VideoTopBar(viewModel: VideoViewModel, visible: Boolean, blurKindState: BlurKindState?, onCastClick: () -> Unit) {
     AnimatedVisibility(
         visible = visible,
         enter = slideInVertically() + fadeIn(),
         exit = slideOutVertically() + fadeOut()
     ) {
         TopAppBar(
+            modifier = blurKindState?.let { Modifier.setBlurKind(it) } ?: Modifier,
             title = { Text(viewModel.showName.orEmpty()) },
             navigationIcon = { BackButton() },
             actions = {
@@ -480,7 +514,9 @@ fun VideoTopBar(viewModel: VideoViewModel, visible: Boolean, onCastClick: () -> 
                     )
                 }
             },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = .5f))
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = if (blurKindState?.showBlur == true) Color.Transparent else MaterialTheme.colorScheme.surface.copy(alpha = .5f)
+            )
         )
     }
 }
@@ -488,6 +524,7 @@ fun VideoTopBar(viewModel: VideoViewModel, visible: Boolean, onCastClick: () -> 
 @Composable
 fun VideoBottomBar(
     visible: Boolean,
+    blurKindState: BlurKindState?,
     currentTime: String,
     totalTime: String,
     currentPosition: Long,
@@ -497,6 +534,7 @@ fun VideoBottomBar(
     seekTo: (Long) -> Unit,
     rewind: () -> Unit,
     fastForward: () -> Unit,
+    skipAhead: () -> Unit,
 ) {
     AnimatedVisibility(
         visible = visible,
@@ -504,7 +542,8 @@ fun VideoBottomBar(
         exit = slideOutVertically { it / 2 } + fadeOut()
     ) {
         Surface(
-            color = MaterialTheme.colorScheme.surface.copy(alpha = .5f),
+            color = if (blurKindState?.showBlur == true) Color.Transparent else MaterialTheme.colorScheme.surface.copy(alpha = .5f),
+            modifier = blurKindState?.let { Modifier.setBlurKind(it) } ?: Modifier,
         ) {
             Column(
                 modifier = Modifier.padding(horizontal = 4.dp)
@@ -550,6 +589,7 @@ fun VideoBottomBar(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
+                    Spacer(modifier = Modifier.size(1.dp))
                     IconButton(onClick = rewind) {
                         Icon(
                             Icons.Default.FastRewind,
@@ -567,6 +607,9 @@ fun VideoBottomBar(
                             Icons.Default.FastForward,
                             contentDescription = null
                         )
+                    }
+                    TextButton(onClick = skipAhead) {
+                        Text("+1:30")
                     }
                 }
             }
@@ -634,7 +677,7 @@ fun MediaControlGestures(
                     showBrightness = true
                 },
                 onVerticalDragRight = { volume ->
-                    volumeLevel = (volume * 4).coerceIn(0, 100)
+                    volumeLevel = volume.coerceIn(0, 100)
                     showVolume = true
                 },
                 onSeek = {
@@ -680,9 +723,6 @@ fun MediaControlGestures(
                     .padding(10.dp)
                     .align(Alignment.CenterEnd)
             ) {
-                val context = LocalContext.current
-                val audioManager = remember { context.audioManager }
-                val maxVolume = remember { audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC) }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         text = "$volumeLevel%",
@@ -694,7 +734,6 @@ fun MediaControlGestures(
                         backgroundColor = Color.Black.copy(alpha = .4f),
                         fillColor = Color.White,
                         modifier = Modifier.size(80.dp, 175.dp),
-                        maxValue = maxVolume.toDouble(),
                         icon = { Icon(Icons.AutoMirrored.Filled.VolumeUp, null, tint = MaterialTheme.colorScheme.primary) },
                     )
                 }
@@ -739,7 +778,9 @@ fun GestureBox(
             var mDownX = -1f
             var mDownY = -1f
 
-            var mGestureDownBrightness = getScreenBrightness(context)
+            // Values captured when a vertical drag starts; each drag event applies its total offset to these.
+            var mGestureDownBrightness = 0f
+            var mGestureDownVolume = 0
 
             // When this job completes, it seeks to desired position.
             // It gets cancelled if delay does not complete
@@ -769,34 +810,26 @@ fun GestureBox(
                 onVerticalDrag = { dragAmount: Float, offset ->
                     seekJob?.cancel()
 
-                    val deltaX = offset.position.x - mDownX
-                    var deltaY = offset.position.y - mDownY
+                    // Dragging the full height of the player covers the whole range.
+                    val fraction = -(offset.position.y - mDownY) / size.height
 
                     when {
                         //brightness == start
-                        offset.position.x < size.width * 0.3f -> {
-                            deltaY = -deltaY
-                            val deltaV = (255f * deltaY * 3f / size.height).toInt()
-                            val brightnessValue = mGestureDownBrightness + deltaV
-                            if (brightnessValue in 0..255) {
-                                activity?.let { setWindowBrightness(it, brightnessValue.toFloat()) }
-                            }
-                            val brightnessPercent = (mGestureDownBrightness + deltaY * 255f * 3f / size.height).toInt()
+                        mDownX < size.width * 0.3f -> {
+                            val brightnessValue = (mGestureDownBrightness + fraction * 255f).coerceIn(0f, 255f)
+                            activity?.let { setWindowBrightness(it, brightnessValue) }
                             seekJob = coroutineScope.launch {
-                                onVerticalDragLeft(brightnessPercent)
+                                onVerticalDragLeft((brightnessValue * 100f / 255f).roundToInt())
                             }
                         }
                         //volume == end
-                        offset.position.x > size.width * 0.7f -> {
-                            deltaY = -deltaY
-                            val mGestureDownVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+                        mDownX > size.width * 0.7f -> {
                             val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-                            val deltaV = (maxVolume.toFloat() * deltaY * 3f / size.height).toInt()
-                            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, mGestureDownVolume + deltaV, 0)
-                            //val volumePercent = (mGestureDownVolume * 100 / maxVolume + deltaY * 3f * 100f / size.height).toInt()
+                            val volume = (mGestureDownVolume + fraction * maxVolume).roundToInt().coerceIn(0, maxVolume)
+                            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, volume, 0)
 
                             seekJob = coroutineScope.launch {
-                                onVerticalDragRight(audioManager.getStreamVolume(AudioManager.STREAM_MUSIC))
+                                onVerticalDragRight(volume * 100 / maxVolume)
                             }
                         }
                     }
@@ -809,7 +842,12 @@ fun GestureBox(
                     onVerticalDragStart(it)
                     mDownY = it.y
                     mDownX = it.x
-                    mGestureDownBrightness = getScreenBrightness(context)
+                    // Start from the window override once a drag has set one, else from the system level.
+                    mGestureDownBrightness = activity?.window?.attributes?.screenBrightness
+                        ?.takeIf { b -> b >= 0f }
+                        ?.let { b -> b * 255f }
+                        ?: getScreenBrightness(context).toFloat()
+                    mGestureDownVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
                     resetState()
                 },
                 onDragStart = { offset ->
