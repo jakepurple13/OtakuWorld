@@ -37,6 +37,9 @@ class MihonApkStore(
                     "Unsupported extension lib version ${info.libVersion}"
                 )
             }
+            if (!isSafePackageName(info.packageName)) {
+                throw ApkInstallException(ApkInstallFailure.INVALID, "Invalid package name: ${info.packageName}")
+            }
             // Convert before moving so a failure leaves apkDir untouched. Jar name is content-hash based.
             convert(apk, jarCacheDir)
                 ?: throw ApkInstallException(ApkInstallFailure.INVALID, "Could not convert ${info.packageName} dex")
@@ -53,6 +56,7 @@ class MihonApkStore(
     }
 
     suspend fun uninstall(packageName: String): Boolean = withContext(Dispatchers.IO) {
+        if (!isSafePackageName(packageName)) return@withContext false
         val apk = File(apkDir, "$packageName.apk")
         if (!apk.exists()) return@withContext false
         val jar = runCatching { DexConverter.jarFor(apk, jarCacheDir) }.getOrNull()
@@ -70,6 +74,7 @@ class MihonApkStore(
     }
 
     override fun versionName(packageName: String): String? {
+        if (!isSafePackageName(packageName)) return null
         val apk = File(apkDir, "$packageName.apk").takeIf { it.isFile } ?: return null
         return runCatching { inspect(apk).versionName }.getOrNull()
     }
@@ -83,6 +88,10 @@ class MihonApkStore(
             ?.forEach { runCatching { it.delete() } }
     }
 
+    private fun isSafePackageName(name: String): Boolean =
+        PACKAGE_REGEX.matches(name) &&
+            File(apkDir, "$name.apk").canonicalFile.parentFile == apkDir.canonicalFile
+
     private fun apkFiles(): List<File> =
         apkDir.listFiles { f -> f.isFile && f.extension == "apk" }?.sortedBy { it.name }.orEmpty()
 
@@ -92,5 +101,9 @@ class MihonApkStore(
         } catch (_: AtomicMoveNotSupportedException) {
             Files.move(from.toPath(), to.toPath(), StandardCopyOption.REPLACE_EXISTING)
         }
+    }
+
+    private companion object {
+        val PACKAGE_REGEX = Regex("^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z][A-Za-z0-9_]*)+$")
     }
 }

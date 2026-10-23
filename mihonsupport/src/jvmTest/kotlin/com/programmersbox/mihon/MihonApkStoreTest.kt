@@ -99,4 +99,25 @@ class MihonApkStoreTest {
         assertFalse(oldJar.exists())
         assertTrue(newJar.exists())
     }
+
+    @Test fun installRejectsTraversalPackageName() = runTest {
+        val store = MihonApkStore(apkDir, jarDir, inspect = { fixtureInfo.copy(packageName = "../evil") })
+        val e = assertFailsWith<ApkInstallException> { store.install(tempFixture()) }
+        assertEquals(ApkInstallFailure.INVALID, e.failure)
+        assertTrue(apkDir.listFiles().isNullOrEmpty())
+        assertFalse(File(root, "evil.apk").exists())
+    }
+
+    @Test fun uninstallRejectsTraversalPackageName() = runTest {
+        apkDir.mkdirs()
+        val sentinel = File(root, "evil.apk").also { it.writeText("x") }
+        assertFalse(store().uninstall("../evil"))
+        assertTrue(sentinel.exists())
+    }
+
+    @Test fun versionNameRejectsTraversal() {
+        apkDir.mkdirs()
+        MihonFixture.apk.copyTo(File(root, "evil.apk"))
+        assertNull(store().versionName("../evil"))
+    }
 }
