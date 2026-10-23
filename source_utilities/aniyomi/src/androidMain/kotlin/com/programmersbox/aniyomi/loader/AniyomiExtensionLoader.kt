@@ -17,7 +17,6 @@ import java.security.MessageDigest
 
 private const val EXTENSION_FEATURE = "tachiyomi.animeextension"
 private const val METADATA_SOURCE_CLASS = "tachiyomi.animeextension.class"
-private const val METADATA_EXTENSION_LIB = "aniyomix.extensionLib"
 
 private const val PACKAGE_FLAGS =
     PackageManager.GET_CONFIGURATIONS or PackageManager.GET_META_DATA or PackageManager.GET_SIGNING_CERTIFICATES
@@ -103,7 +102,7 @@ class AniyomiExtensionLoader(
 
         if (metaData == null) return notLoaded("Malformed")
 
-        val lib = AniyomiLib.libVersion(metaData.getInt(METADATA_EXTENSION_LIB), pkgInfo.versionName)
+        val lib = AniyomiLib.libVersion({ key -> metaData.getInt(key).takeIf { metaData.containsKey(key) } }, pkgInfo.versionName)
         if (lib == null || !AniyomiLib.isSupported(lib)) return notLoaded("Unsupported lib $lib")
 
         if (fingerprints.isEmpty()) return notLoaded("Unsigned")

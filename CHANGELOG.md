@@ -498,6 +498,8 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   - Browse, details, favorites, and the other shared screens
   - Desktop download manager
   - Video playback is not supported yet; a placeholder screen explains this
+- AnimeWorld Desktop: install and use Aniyomi extensions from Aniyomi repos (non-Cloudflare
+  sources; source settings and video playback not yet available on desktop)
 - Packaged installers for Windows, macOS, and Linux with app icons
   ([#2507](https://github.com/jakepurple13/OtakuWorld/pull/2507))
 

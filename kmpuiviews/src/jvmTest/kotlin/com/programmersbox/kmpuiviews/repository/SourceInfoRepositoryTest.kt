@@ -38,6 +38,7 @@ class SourceInfoRepositoryTest {
     }
 
     private class FakeStore(private val versions: Map<String, String>) : ApkExtensionStore {
+        override fun accepts(file: File): Boolean = false
         override suspend fun install(apk: File): String = error("unused")
         override fun versionName(packageName: String): String? = versions[packageName]
     }

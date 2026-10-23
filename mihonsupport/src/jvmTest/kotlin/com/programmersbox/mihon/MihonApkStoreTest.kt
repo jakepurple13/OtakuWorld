@@ -42,6 +42,15 @@ class MihonApkStoreTest {
         fingerprints = emptyList(),
     )
 
+    @Test fun acceptsMihonApk() {
+        assertTrue(store().accepts(MihonFixture.apk))
+    }
+
+    @Test fun rejectsNonApk() {
+        val notZip = File(root, "junk.apk").also { it.writeText("not a zip") }
+        assertFalse(store().accepts(notZip))
+    }
+
     @Test fun installStoresApkAndJar() = runTest {
         val store = store()
         assertEquals(MihonFixture.PACKAGE, store.install(tempFixture()))

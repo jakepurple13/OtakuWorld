@@ -28,4 +28,24 @@ class AniyomiLibTest {
         listOf(13.0, 15.0, 18.0).forEach { assertFalse(AniyomiLib.isSupported(it), "$it") }
         assertFalse(AniyomiLib.isSupported(null))
     }
+
+    private fun lookup(vararg pairs: Pair<String, Int>): (String) -> Int? = pairs.toMap()::get
+
+    @Test
+    fun tachiyomixKeyWinsOverLegacyKeyAndVersionName() {
+        val meta = lookup("tachiyomix.extensionLib" to 17, "aniyomix.extensionLib" to 14)
+        assertEquals(17.0, AniyomiLib.libVersion(meta, "16.1"))
+    }
+
+    @Test
+    fun legacyKeyUsedWhenTachiyomixAbsent() {
+        assertEquals(14.0, AniyomiLib.libVersion(lookup("aniyomix.extensionLib" to 14), "16.1"))
+        assertEquals(14.0, AniyomiLib.libVersion(lookup("tachiyomix.extensionLib" to 0, "aniyomix.extensionLib" to 14), "16.1"))
+    }
+
+    @Test
+    fun versionNameUsedWhenNoKeys() {
+        assertEquals(16.0, AniyomiLib.libVersion(lookup(), "16.55"))
+        assertNull(AniyomiLib.libVersion(lookup(), null))
+    }
 }

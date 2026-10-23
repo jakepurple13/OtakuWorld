@@ -1,6 +1,7 @@
 package com.programmersbox.mihon
 
 import android.app.Application
+import com.programmersbox.kmpextensionloader.ChildFirstClassLoader
 import com.programmersbox.kmpextensionloader.DexConverter
 import eu.kanade.tachiyomi.source.online.HttpSource
 import kotlinx.coroutines.runBlocking
@@ -51,7 +52,7 @@ class MihonDexConversionTest {
     private fun assertEveryClassVerifies(apk: File) {
         val jar = convertFixture(apk)
         val entries = classEntries(jar)
-        ChildFirstClassLoader(arrayOf(jar.toURI().toURL()), javaClass.classLoader).use { loader ->
+        ChildFirstClassLoader(arrayOf(jar.toURI().toURL()), javaClass.classLoader, ChildFirstClassLoader.BASE_PARENT_FIRST).use { loader ->
             val failures = entries.keys.filterNot { isActivity(it, entries) }.mapNotNull { name ->
                 runCatching { Class.forName(name, true, loader) }.exceptionOrNull()?.let { "$name: $it" }
             }
@@ -62,7 +63,7 @@ class MihonDexConversionTest {
     // Android's class loader serves APK entries as resources; Keiyoushi's i18n lib reads assets/i18n/*.properties that way.
     @Test fun apkAssetsAreClassLoaderResources() {
         val jar = convertFixture(MihonFixture.MangaDex.apk)
-        ChildFirstClassLoader(arrayOf(jar.toURI().toURL()), javaClass.classLoader).use { loader ->
+        ChildFirstClassLoader(arrayOf(jar.toURI().toURL()), javaClass.classLoader, ChildFirstClassLoader.BASE_PARENT_FIRST).use { loader ->
             val text = assertNotNull(loader.getResourceAsStream("assets/i18n/messages_en.properties")).use { it.readBytes().decodeToString() }
             assertTrue(text.isNotBlank())
         }

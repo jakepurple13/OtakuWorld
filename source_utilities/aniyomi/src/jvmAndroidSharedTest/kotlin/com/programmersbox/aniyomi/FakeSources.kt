@@ -1,9 +1,12 @@
 package com.programmersbox.aniyomi
 
 import eu.kanade.tachiyomi.animesource.AnimeCatalogueSource
+import eu.kanade.tachiyomi.animesource.ConfigurableAnimeSource
+import eu.kanade.tachiyomi.animesource.PreferenceScreen
 import eu.kanade.tachiyomi.animesource.model.AnimeFilterList
 import eu.kanade.tachiyomi.animesource.model.AnimesPage
 import eu.kanade.tachiyomi.animesource.model.Hoster
+import eu.kanade.tachiyomi.animesource.model.HttpServer
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.animesource.model.SEpisode
 import eu.kanade.tachiyomi.animesource.model.Video
@@ -105,6 +108,16 @@ class FakeHosterAnimeHttpSource(
 
     /** Puts hosters named "Preferred" first, to prove sortHosters() is applied. */
     override fun List<Hoster>.sortHosters(): List<Hoster> = sortedByDescending { it.hosterName == "Preferred" }
+}
+
+/** A source with settings; the factory decides whether it is exposed as configurable. */
+class FakeConfigurableAnimeSource : AnimeCatalogueSource by FakeAnimeCatalogueSource(), ConfigurableAnimeSource {
+    override fun setupPreferenceScreen(screen: PreferenceScreen) = Unit
+}
+
+/** A lib 17 extension that streams through a local [HttpServer]. */
+class FakeHttpServerSource : FakeAnimeHttpSource() {
+    override fun createHttpServer(): HttpServer = HttpServer()
 }
 
 fun video(title: String, url: String = "https://cdn.example.org/$title.mp4", initialized: Boolean = true) =

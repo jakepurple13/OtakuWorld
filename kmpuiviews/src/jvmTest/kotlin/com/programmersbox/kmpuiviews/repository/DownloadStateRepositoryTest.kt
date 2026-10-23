@@ -47,15 +47,27 @@ class DownloadStateRepositoryTest {
         respond(body, HttpStatusCode.OK, headersOf(HttpHeaders.ContentLength, body.size.toString()))
     })
 
-    private fun store(failure: ApkInstallFailure? = null) = object : ApkExtensionStore {
+    private class CountingStore(
+        private val accepting: Boolean,
+        private val failure: ApkInstallFailure?,
+        private val onInstall: (File) -> Unit,
+    ) : ApkExtensionStore {
+        var installCount = 0
+
+        override fun accepts(file: File): Boolean = accepting
+
         override suspend fun install(apk: File): String {
-            installed += apk.length()
+            installCount++
+            onInstall(apk)
             if (failure != null) throw ApkInstallException(failure, "boom-$failure")
             return "pkg"
         }
 
         override fun versionName(packageName: String): String? = null
     }
+
+    private fun store(failure: ApkInstallFailure? = null, accepts: Boolean = true) =
+        CountingStore(accepts, failure) { installed += it.length() }
 
     private fun repo(
         client: HttpClient = okClient(),
@@ -83,6 +95,26 @@ class DownloadStateRepositoryTest {
         assertEquals("ext.apk", final.name)
         assertEquals(listOf(body.size.toLong()), installed)
         assertEquals(1, reloads)
+    }
+
+    @Test
+    fun picksFirstStoreThatAcceptsFile() = runBlocking {
+        val rejecting = store(accepts = false)
+        val accepting = store()
+        val r = repo(stores = listOf(rejecting, accepting))
+        r.start()
+        assertEquals(DownloadAndInstallStatus.Installed, r.terminal().status)
+        assertEquals(0, rejecting.installCount)
+        assertEquals(1, accepting.installCount)
+    }
+
+    @Test
+    fun noStoreAcceptsFileReportsInvalid() = runBlocking {
+        val r = repo(stores = listOf(store(accepts = false)))
+        r.start()
+        val status = r.terminal().status
+        assertEquals(InstallErrorReason.INVALID, (status as DownloadAndInstallStatus.Error).reason)
+        assertEquals(0, reloads)
     }
 
     @Test
@@ -159,6 +191,8 @@ class DownloadStateRepositoryTest {
         val installStarted = CompletableDeferred<Unit>()
         val gate = CompletableDeferred<Unit>()
         val slowStore = object : ApkExtensionStore {
+            override fun accepts(file: File): Boolean = true
+
             override suspend fun install(apk: File): String {
                 installStarted.complete(Unit)
                 gate.await()

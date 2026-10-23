@@ -1,5 +1,6 @@
 package com.programmersbox.aniyomi
 
+import android.util.Log
 import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpConfigurableApiService
@@ -7,7 +8,6 @@ import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpStorage
 import eu.kanade.tachiyomi.animesource.AnimeCatalogueSource
-import eu.kanade.tachiyomi.animesource.ConfigurableAnimeSource
 import eu.kanade.tachiyomi.animesource.model.Hoster
 import eu.kanade.tachiyomi.animesource.model.Hoster.Companion.toHosterList
 import eu.kanade.tachiyomi.animesource.model.SEpisode
@@ -18,13 +18,8 @@ import eu.kanade.tachiyomi.animesource.online.ResolvableAnimeSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import logcat.LogPriority
-import tachiyomi.core.common.util.system.logcat
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
-
-fun aniyomiApiService(source: AnimeCatalogueSource, lib: Double): AniyomiApiService =
-    if (source is ConfigurableAnimeSource) ConfigurableAniyomiApiService(source, lib) else AniyomiApiService(source, lib)
 
 open class AniyomiApiService(val source: AnimeCatalogueSource, val lib: Double) : KmpApiService {
     override val baseUrl: String get() = (source as? AnimeHttpSource)?.baseUrl.orEmpty()
@@ -80,7 +75,7 @@ open class AniyomiApiService(val source: AnimeCatalogueSource, val lib: Double) 
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    logcat(LogPriority.WARN, e) { "${source.name}: hoster ${hoster.hosterName} failed" }
+                    Log.w("AniyomiApiService", "${source.name}: hoster ${hoster.hosterName} failed", e)
                     emptyList()
                 }
             }
