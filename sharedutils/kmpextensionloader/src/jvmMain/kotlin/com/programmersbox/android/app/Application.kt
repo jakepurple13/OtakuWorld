@@ -1,6 +1,6 @@
 package android.app
 
-import android.content.Context
+import android.content.ContextWrapper
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
@@ -11,7 +11,7 @@ open class Application(
     override val packageName: String,
     baseDataDir: File,
     val apkPath: String = "",
-) : Context() {
+) : ContextWrapper() {
 
     override val dataDir: File = File(baseDataDir, packageName).also { it.mkdirs() }
 

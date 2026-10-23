@@ -153,4 +153,29 @@ class DownloadStateRepositoryTest {
         bad.terminal()
         assertTrue(tempDir.listFiles().orEmpty().isEmpty())
     }
+
+    @Test
+    fun cancelWhileInstallingFinishesTheInstall() = runBlocking {
+        val installStarted = CompletableDeferred<Unit>()
+        val gate = CompletableDeferred<Unit>()
+        val slowStore = object : ApkExtensionStore {
+            override suspend fun install(apk: File): String {
+                installStarted.complete(Unit)
+                gate.await()
+                installed += apk.length()
+                return "pkg"
+            }
+
+            override fun versionName(packageName: String): String? = null
+        }
+        val r = repo(stores = listOf(slowStore))
+        r.start()
+        withTimeout(10_000) { installStarted.await() }
+        r.cancelDownload(r.downloadList.first().single().id)
+        assertEquals(DownloadAndInstallStatus.Installing, r.downloadList.first().single().status)
+        gate.complete(Unit)
+        assertEquals(DownloadAndInstallStatus.Installed, r.terminal().status)
+        assertEquals(listOf(body.size.toLong()), installed)
+        assertEquals(1, reloads)
+    }
 }

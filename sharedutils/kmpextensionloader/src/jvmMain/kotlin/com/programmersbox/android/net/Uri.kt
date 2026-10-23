@@ -14,6 +14,24 @@ abstract class Uri {
         /** Never throws, like Android: hand-splits instead of using java.net.URI, which rejects spaces, `|`, `_` hosts. */
         @JvmStatic
         fun parse(uriString: String): Uri = LenientUri(uriString)
+
+        @JvmStatic fun encode(s: String?): String? = encode(s, null)
+
+        /** Percent-encodes UTF-8 like Android: letters, digits, `_-!.~'()*` and [allow] stay as they are. */
+        @JvmStatic
+        fun encode(s: String?, allow: String?): String? {
+            if (s == null) return null
+            val out = StringBuilder()
+            s.toByteArray(Charsets.UTF_8).forEach { b ->
+                val c = (b.toInt() and 0xff).toChar()
+                if (c in 'a'..'z' || c in 'A'..'Z' || c in '0'..'9' || c in "_-!.~'()*" || (allow != null && c in allow)) {
+                    out.append(c)
+                } else {
+                    out.append('%').append("%02X".format(b.toInt() and 0xff))
+                }
+            }
+            return out.toString()
+        }
     }
 }
 

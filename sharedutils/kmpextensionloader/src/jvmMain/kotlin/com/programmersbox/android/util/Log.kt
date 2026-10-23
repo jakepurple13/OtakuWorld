@@ -6,6 +6,14 @@ object Log {
     const val INFO = 4
     const val WARN = 5
     const val ERROR = 6
+    const val ASSERT = 7
+
+    @JvmStatic
+    fun println(priority: Int, tag: String?, msg: String): Int {
+        val line = "${"VDIWEA".getOrElse(priority - VERBOSE) { '?' }}/$tag: $msg"
+        if (priority >= ERROR) System.err.println(line) else kotlin.io.println(line)
+        return 0
+    }
 
     @JvmStatic fun v(tag: String, msg: String): Int { println("V/$tag: $msg"); return 0 }
     @JvmStatic fun v(tag: String, msg: String, tr: Throwable): Int { println("V/$tag: $msg\n${tr.stackTraceToString()}"); return 0 }

@@ -17,6 +17,8 @@ import com.programmersbox.models.SourceInformation
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
 
@@ -141,10 +143,15 @@ actual class SourceLoader(
         )
     }
 
+    // Serializes reloads so a slower, older one cannot publish its list after a newer one.
+    private val reloadMutex = Mutex()
+
     actual suspend fun blockingLoad() {
-        sourceRepository.setSources(
-            (extensionLoader.loadExtensionsBlocking().flatten() + nativeSources())
-                .sortedBy { it.apiService.serviceName }
-        )
+        reloadMutex.withLock {
+            sourceRepository.setSources(
+                (extensionLoader.loadExtensionsBlocking().flatten() + nativeSources())
+                    .sortedBy { it.apiService.serviceName }
+            )
+        }
     }
 }

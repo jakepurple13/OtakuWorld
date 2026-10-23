@@ -21,7 +21,8 @@ object DexConverter {
         val cachedJar = jarFor(apkFile, cacheDir)
         if (cachedJar.exists()) return cachedJar
 
-        val tmp = File(cacheDir, "$hash.tmp.jar")
+        // Not "*.jar", so cache cleanup never mistakes an in-progress conversion for a stale jar.
+        val tmp = File(cacheDir, "$hash.jar.part")
         return runCatching {
             cacheDir.mkdirs()
             translate(MultiDexFileReader.open(apkFile.readBytes()), tmp, apkFile.name)
@@ -60,6 +61,11 @@ object DexConverter {
         check(jar.exists() && hasClasses(jar)) { "dex2jar produced no classes" }
         StackMapFrames.addTo(jar)
     }
+
+    /** True for a finished jar [convert] wrote (any converter version); false for temp files and anything else. */
+    fun isCachedJar(file: File): Boolean = file.isFile && CACHED_JAR.matches(file.name)
+
+    private val CACHED_JAR = Regex("^[0-9a-f]{64}-v[0-9]+\\.jar$")
 
     /** The cache location [convert] uses for [apkFile]'s jar (may not exist yet). */
     fun jarFor(apkFile: File, cacheDir: File): File = File(cacheDir, "${sha256(apkFile)}-v$CONVERTER_VERSION.jar")

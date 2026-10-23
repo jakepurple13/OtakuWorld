@@ -3,15 +3,17 @@ package android.content
 import android.content.pm.PackageManager
 import com.programmersbox.kmpextensionloader.FileSharedPreferences
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 
 abstract class Context {
     abstract val packageName: String
     abstract val dataDir: File
 
-    private val prefsCache = mutableMapOf<String, SharedPreferences>()
+    // One instance per file even when extensions ask concurrently.
+    private val prefsCache = ConcurrentHashMap<String, SharedPreferences>()
 
     open fun getSharedPreferences(name: String, mode: Int): SharedPreferences =
-        prefsCache.getOrPut(name) {
+        prefsCache.computeIfAbsent(name) {
             FileSharedPreferences(File(dataDir, "prefs/$name.properties"))
         }
 

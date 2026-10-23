@@ -6,6 +6,7 @@ object Build {
     const val BRAND = "Desktop"
     const val DEVICE = "Desktop"
     const val PRODUCT = "Desktop"
+    const val ID = "Desktop"
 
     object VERSION {
         const val SDK_INT = 30

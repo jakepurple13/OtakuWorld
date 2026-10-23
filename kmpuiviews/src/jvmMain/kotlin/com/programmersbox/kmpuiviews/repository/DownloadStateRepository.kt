@@ -15,12 +15,14 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
 import java.util.UUID
@@ -38,9 +40,14 @@ class DownloadStateRepository(
 
     override val downloadList: Flow<List<DownloadAndInstallState>> get() = state
 
+    /** Only a download can be cancelled; once installing has started it runs to completion. */
     override fun cancelDownload(id: String) {
         jobs.remove(id)?.cancel()
-        setStatus(id, DownloadAndInstallStatus.Cancelled)
+        state.update { list ->
+            list.map {
+                if (it.id == id && it.status is DownloadAndInstallStatus.Downloading) it.copy(status = DownloadAndInstallStatus.Cancelled) else it
+            }
+        }
     }
 
     override fun install(url: String): Flow<DownloadAndInstallStatus> = emptyFlow()
@@ -55,16 +62,22 @@ class DownloadStateRepository(
         state.update { it + DownloadAndInstallState(url, name, id, DownloadAndInstallStatus.Downloading(0f)) }
         jobs[id] = scope.launch {
             val file = File(tempDir, "${UUID.randomUUID()}.apk")
+            var installed = false
             val result = try {
                 tempDir.mkdirs()
                 download(url, file, id)
-                setStatus(id, DownloadAndInstallStatus.Installing)
-                val store = stores.firstOrNull() ?: throw NoStoreException()
-                store.install(file)
-                reload()
+                // Cancelling mid-install would leave the APK installed with no reload, so finish it.
+                withContext(NonCancellable) {
+                    setStatus(id, DownloadAndInstallStatus.Installing)
+                    val store = stores.firstOrNull() ?: throw NoStoreException()
+                    store.install(file)
+                    reload()
+                    installed = true
+                    setStatus(id, DownloadAndInstallStatus.Installed)
+                }
                 DownloadAndInstallStatus.Installed
             } catch (e: CancellationException) {
-                setStatus(id, DownloadAndInstallStatus.Cancelled)
+                if (!installed) setStatus(id, DownloadAndInstallStatus.Cancelled)
                 throw e
             } catch (e: NoStoreException) {
                 error(InstallErrorReason.UNKNOWN, e.message)

@@ -94,7 +94,8 @@ class MihonApkStoreTest {
         store.install(tempFixture().also { it.appendBytes(byteArrayOf(0)) })
         val newJar = store.installed().single().jar!!
         assertEquals(1, apkDir.listFiles()!!.size)
-        assertEquals("2", store.versionName(MihonFixture.PACKAGE))
+        // versionName reads the manifest, not the inspect seam.
+        assertEquals(MihonFixture.VERSION_NAME, store.versionName(MihonFixture.PACKAGE))
         assertTrue(oldJar.exists() && newJar.exists() && oldJar != newJar)
         store.cleanupStaleJars()
         assertFalse(oldJar.exists())
@@ -128,5 +129,30 @@ class MihonApkStoreTest {
         val entry = failing.installed().single()
         assertEquals(MihonFixture.PACKAGE, entry.info.packageName)
         assertNull(entry.jar)
+    }
+
+    @Test fun cleanupKeepsInProgressConversions() {
+        jarDir.mkdirs()
+        val hash = "a".repeat(64)
+        val inProgress = File(jarDir, "$hash.jar.part").also { it.writeText("partial") }
+        val legacyTemp = File(jarDir, "$hash.tmp.jar").also { it.writeText("partial") }
+        val stale = File(jarDir, "$hash-v1.jar").also { it.writeText("old") }
+        store().cleanupStaleJars()
+        assertTrue(inProgress.exists())
+        assertTrue(legacyTemp.exists())
+        assertFalse(stale.exists())
+    }
+
+    @Test fun conversionTempFileIsNotACachedJar() {
+        val converted = File(root, "conv")
+        assertTrue(DexConverter.convert(MihonFixture.apk, converted) != null)
+        assertTrue(converted.listFiles()!!.all { DexConverter.isCachedJar(it) })
+        assertFalse(DexConverter.isCachedJar(File(converted, "${"a".repeat(64)}.jar.part").also { it.writeText("x") }))
+    }
+
+    @Test fun versionNameSkipsFullInspection() = runTest {
+        store().install(tempFixture())
+        val noInspect = MihonApkStore(apkDir, jarDir, inspect = { error("inspect must not run") })
+        assertEquals(MihonFixture.VERSION_NAME, noInspect.versionName(MihonFixture.PACKAGE))
     }
 }

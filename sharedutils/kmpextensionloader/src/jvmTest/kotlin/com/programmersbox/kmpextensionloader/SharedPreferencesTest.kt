@@ -75,4 +75,17 @@ class SharedPreferencesTest {
         prefs.edit().putString("k", "v").commit()
         assertEquals("k", changed)
     }
+
+    @Test fun concurrentGetSharedPreferencesSharesOneInstance() {
+        val context = android.app.Application("prefs.test", tmpDir)
+        repeat(20) { round ->
+            val start = java.util.concurrent.CountDownLatch(1)
+            val pool = java.util.concurrent.Executors.newFixedThreadPool(8)
+            val futures = (1..8).map { pool.submit<android.content.SharedPreferences> { start.await(); context.getSharedPreferences("p$round", 0) } }
+            start.countDown()
+            val instances = futures.map { it.get() }
+            pool.shutdown()
+            assertEquals(1, instances.distinct().size)
+        }
+    }
 }

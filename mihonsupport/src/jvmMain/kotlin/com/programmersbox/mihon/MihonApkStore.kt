@@ -1,6 +1,7 @@
 package com.programmersbox.mihon
 
 import com.programmersbox.kmpextensionloader.ApkExtensionStore
+import com.programmersbox.kmpextensionloader.ApkManifestParser
 import com.programmersbox.kmpextensionloader.ApkInstallException
 import com.programmersbox.kmpextensionloader.ApkInstallFailure
 import com.programmersbox.kmpextensionloader.DexConverter
@@ -78,14 +79,15 @@ class MihonApkStore(
     override fun versionName(packageName: String): String? {
         if (!isSafePackageName(packageName)) return null
         val apk = File(apkDir, "$packageName.apk").takeIf { it.isFile } ?: return null
-        return runCatching { inspect(apk).versionName }.getOrNull()
+        // Manifest only: full inspect verifies signatures and is too slow for UI callers.
+        return runCatching { ApkManifestParser.parse(apk).versionName }.getOrNull()
     }
 
     fun cleanupStaleJars() {
         val keep = apkFiles()
             .mapNotNull { runCatching { DexConverter.jarFor(it, jarCacheDir).name }.getOrNull() }
             .toSet()
-        jarCacheDir.listFiles { f -> f.isFile && f.extension == "jar" }
+        jarCacheDir.listFiles { f -> DexConverter.isCachedJar(f) }
             ?.filter { it.name !in keep }
             ?.forEach { runCatching { it.delete() } }
     }
