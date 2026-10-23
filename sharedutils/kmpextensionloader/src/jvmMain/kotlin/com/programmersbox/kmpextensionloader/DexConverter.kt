@@ -1,12 +1,13 @@
 package com.programmersbox.kmpextensionloader
 
 import com.googlecode.d2j.Method
+import com.googlecode.d2j.dex.BaseDexExceptionHandler
 import com.googlecode.d2j.dex.Dex2jar
-import com.googlecode.d2j.dex.DexExceptionHandler
 import com.googlecode.d2j.node.DexMethodNode
 import org.objectweb.asm.MethodVisitor
 import java.io.File
 import java.security.MessageDigest
+import java.util.zip.ZipFile
 
 object DexConverter {
 
@@ -21,9 +22,9 @@ object DexConverter {
         val tmp = File(cacheDir, "$hash.tmp.jar")
         return runCatching {
             cacheDir.mkdirs()
-            val errors = RecordingExceptionHandler()
+            val handler = StubbingExceptionHandler(apkFile.name)
             Dex2jar.from(apkFile)
-                .withExceptionHandler(errors)
+                .withExceptionHandler(handler)
                 .reUseReg(false)
                 .topoLogicalSort()
                 .skipDebug(true)
@@ -34,9 +35,11 @@ object DexConverter {
                 // Keep '-' in names: Kotlin mangles value-class APIs with it (e.g. okhttp's maxAge-LRDsOJo).
                 .dontSanitizeNames(true)
                 .to(tmp.toPath())
-            // A partially translated jar fails later in confusing ways; reject it here instead.
-            errors.first?.let { throw IllegalStateException("dex2jar failed: ${it.message}", it) }
-            check(tmp.exists() && tmp.length() > 0) { "dex2jar produced no output" }
+            // Like Suwayomi, untranslatable methods become throwing stubs and the jar is kept.
+            if (handler.failures.isNotEmpty()) {
+                println("DexConverter: ${apkFile.name} converted with ${handler.failures.size} translation failure(s)")
+            }
+            check(tmp.exists() && hasClasses(tmp)) { "dex2jar produced no classes" }
             StackMapFrames.addTo(tmp)
             java.nio.file.Files.move(
                 tmp.toPath(),
@@ -66,17 +69,29 @@ object DexConverter {
         return digest.digest().joinToString("") { "%02x".format(it) }
     }
 
-    /** Records the first translation failure; dex2jar itself only logs or stubs them. */
-    private class RecordingExceptionHandler : DexExceptionHandler {
-        var first: Exception? = null
-            private set
+    private fun hasClasses(jar: File): Boolean =
+        ZipFile(jar).use { zip -> zip.entries().asSequence().any { it.name.endsWith(".class") } }
+}
 
-        override fun handleFileException(e: Exception) {
-            if (first == null) first = e
-        }
+/**
+ * Logs each dex2jar failure. A method that cannot be translated gets dex2jar's stub body
+ * (`throw new RuntimeException("d2j fail translate: ...")`), so only that method fails, and only when called.
+ */
+internal class StubbingExceptionHandler(private val apkName: String) : BaseDexExceptionHandler() {
+    private val recorded = mutableListOf<String>()
+    val failures: List<String> get() = recorded
 
-        override fun handleMethodTranslateException(method: Method, methodNode: DexMethodNode, mv: MethodVisitor, e: Exception) {
-            if (first == null) first = IllegalStateException("Could not translate $method", e)
-        }
+    override fun handleFileException(e: Exception) {
+        record("$apkName: ${e.message ?: e}")
+    }
+
+    override fun handleMethodTranslateException(method: Method, methodNode: DexMethodNode, mv: MethodVisitor, e: Exception) {
+        record("$apkName: ${method.owner}.${method.name}${method.desc}: ${e.message ?: e}")
+        super.handleMethodTranslateException(method, methodNode, mv, e)
+    }
+
+    private fun record(failure: String) {
+        recorded += failure
+        println("DexConverter: translation failure in $failure")
     }
 }
