@@ -19,6 +19,7 @@ import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BlurOn
 import androidx.compose.material.icons.filled.Cast
 import androidx.compose.material.icons.filled.CastConnected
 import androidx.compose.material.icons.filled.Folder
@@ -70,6 +71,7 @@ import com.programmersbox.anime.shared.videochoice.VideoChoiceScreen
 import com.programmersbox.anime.shared.videochoice.VideoSourceModel
 import com.programmersbox.anime.shared.videoplayer.VideoPlayerUi
 import com.programmersbox.anime.shared.videoplayer.playerHeaders
+import com.programmersbox.anime.shared.videoplayer.videoPlayerBlur
 import com.programmersbox.anime.shared.videos.SharedVideoContent
 import com.programmersbox.anime.shared.videos.VideoLibrarySource
 import com.programmersbox.anime.shared.videos.VideoViewerRoute
@@ -414,6 +416,7 @@ class GenericAnime(
             val player by useNewPlayer.asState()
             val ignoreSsl = animeDataStoreHandling.ignoreSsl
             val ignoreSslState by ignoreSsl.asState()
+            var playerBlur by videoPlayerBlur.asState()
 
             CategoryGroup {
                 item {
@@ -444,6 +447,16 @@ class GenericAnime(
                         settingIcon = { Icon(Icons.Default.Security, null, modifier = Modifier.fillMaxSize()) },
                         value = ignoreSslState
                     ) { scope.launch { ignoreSsl.set(it) } }
+                }
+
+                item {
+                    SwitchSetting(
+                        settingTitle = { Text(stringResource(R.string.video_player_blur)) },
+                        summaryValue = { Text(stringResource(R.string.video_player_blur_description)) },
+                        settingIcon = { Icon(Icons.Default.BlurOn, null, modifier = Modifier.fillMaxSize()) },
+                        value = playerBlur,
+                        updateValue = { playerBlur = it }
+                    )
                 }
             }
         }

@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.pm.ActivityInfo
 import android.media.AudioManager
 import android.provider.Settings
+import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.Toast
@@ -103,6 +104,7 @@ import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import androidx.media3.ui.SubtitleView
+import com.programmersbox.anime.shared.R
 import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.anime.shared.VideoScreen
 import com.programmersbox.anime.shared.subtitles.SubtitleQuickSheet
@@ -114,6 +116,10 @@ import com.programmersbox.anime.shared.subtitles.toCaptionSpec
 import com.programmersbox.datastore.otakuDataStore
 import com.programmersbox.helpfulutils.audioManager
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
+import com.programmersbox.kmpuiviews.presentation.components.blurkind.BlurKindState
+import com.programmersbox.kmpuiviews.presentation.components.blurkind.rememberBlurKindState
+import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKind
+import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKindSource
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.RecordTimeSpentDoing
 import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
@@ -122,10 +128,8 @@ import com.programmersbox.uiviews.GenericInfo
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.koin.compose.koinInject
 import java.security.SecureRandom
 import java.util.Locale
@@ -199,12 +203,19 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
 
     val overlayVisibility = viewModel.visibility == VideoPlayerVisibility.Visible || !viewModel.isPlaying || viewModel.subtitleSheetOpen
 
+    // Null until DataStore emits; the player waits for it since the PlayerView's surface type is fixed when it's created.
+    val useBlur by remember { videoPlayerBlur.asFlow() }.collectAsStateWithLifecycle(null)
+    // Null until DataStore emits; the media source is built once, so it waits for this too.
+    val ignoreSslEnabled by remember { context.ignoreSsl }.collectAsStateWithLifecycle(null)
+    val blurKindState = if (useBlur == true) rememberBlurKindState() else null
+
     Box {
         Scaffold(
-            topBar = { VideoTopBar(viewModel, overlayVisibility) },
+            topBar = { VideoTopBar(viewModel, overlayVisibility, blurKindState) },
             bottomBar = {
                 VideoBottomBar(
                     visible = overlayVisibility,
+                    blurKindState = blurKindState,
                     currentTime = viewModel.currentTime,
                     totalTime = viewModel.totalTime,
                     totalDuration = viewModel.videoInfo.duration,
@@ -219,42 +230,48 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
             }
         ) { _ ->
             Box {
-                VideoPlayer(
-                    source = remember {
-                        if (viewModel.downloadOrStream) {
-                            //download
-                            context.getMediaSource(
-                                viewModel.showPath.toUri(),
-                                false,
-                                DefaultBandwidthMeter.Builder(context).build(),
-                                emptyMap(),
-                                viewModel.subtitles,
-                                null,
-                                viewModel.defaultSubtitle,
-                            )
-                        } else {
-                            //stream
-                            if (runBlocking { context.ignoreSsl.first() }) {
-                                val sslContext: SSLContext = SSLContext.getInstance("TLS")
-                                sslContext.init(null, arrayOf(SSLTrustManager()), SecureRandom())
-                                sslContext.createSSLEngine()
-                                HttpsURLConnection.setDefaultHostnameVerifier { _: String, _: SSLSession -> true }
-                                HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.socketFactory)
-                            }
+                val useTextureView = useBlur
+                val ignoreSsl = ignoreSslEnabled
+                if (useTextureView != null && ignoreSsl != null) {
+                    VideoPlayer(
+                        source = remember {
+                            if (viewModel.downloadOrStream) {
+                                //download
+                                context.getMediaSource(
+                                    viewModel.showPath.toUri(),
+                                    false,
+                                    DefaultBandwidthMeter.Builder(context).build(),
+                                    emptyMap(),
+                                    viewModel.subtitles,
+                                    null,
+                                    viewModel.defaultSubtitle,
+                                )
+                            } else {
+                                //stream
+                                if (ignoreSsl) {
+                                    val sslContext: SSLContext = SSLContext.getInstance("TLS")
+                                    sslContext.init(null, arrayOf(SSLTrustManager()), SecureRandom())
+                                    sslContext.createSSLEngine()
+                                    HttpsURLConnection.setDefaultHostnameVerifier { _: String, _: SSLSession -> true }
+                                    HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.socketFactory)
+                                }
 
-                            context.getMediaSource(
-                                viewModel.showPath.toUri(),
-                                false,
-                                DefaultBandwidthMeter.Builder(context).build(),
-                                viewModel.requestHeaders,
-                                viewModel.subtitles,
-                                viewModel.mimeType,
-                                viewModel.defaultSubtitle
-                            )
-                        }
-                    },
-                    viewModel = viewModel
-                )
+                                context.getMediaSource(
+                                    viewModel.showPath.toUri(),
+                                    false,
+                                    DefaultBandwidthMeter.Builder(context).build(),
+                                    viewModel.requestHeaders,
+                                    viewModel.subtitles,
+                                    viewModel.mimeType,
+                                    viewModel.defaultSubtitle
+                                )
+                            }
+                        },
+                        viewModel = viewModel,
+                        useTextureView = useTextureView,
+                        modifier = blurKindState?.let { Modifier.setBlurKindSource(it) } ?: Modifier
+                    )
+                }
                 var draggingProgress: DraggingProgress? by remember { mutableStateOf(null) }
                 MediaControlGestures(
                     modifier = Modifier.fillMaxSize(),
@@ -302,6 +319,7 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
 fun VideoPlayer(
     viewModel: VideoViewModel,
     source: MediaSource,
+    useTextureView: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val navController = LocalNavActions.current
@@ -359,7 +377,12 @@ fun VideoPlayer(
 
             val pos = context.getSharedPreferences("videos", Context.MODE_PRIVATE).getLong(viewModel.showPath, 0)
             exoPlayer.seekTo(pos)
-            PlayerView(context).apply {
+            val playerView = if (useTextureView) {
+                LayoutInflater.from(context).inflate(R.layout.video_player_view, null) as PlayerView
+            } else {
+                PlayerView(context)
+            }
+            playerView.apply {
                 hideController()
                 useController = false
                 setShowBuffering(PlayerView.SHOW_BUFFERING_ALWAYS)
@@ -400,13 +423,14 @@ fun VideoPlayer(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun VideoTopBar(viewModel: VideoViewModel, visible: Boolean) {
+fun VideoTopBar(viewModel: VideoViewModel, visible: Boolean, blurKindState: BlurKindState?) {
     AnimatedVisibility(
         visible = visible,
         enter = slideInVertically() + fadeIn(),
         exit = slideOutVertically() + fadeOut()
     ) {
         TopAppBar(
+            modifier = blurKindState?.let { Modifier.setBlurKind(it) } ?: Modifier,
             title = { Text(viewModel.showName.orEmpty()) },
             navigationIcon = { BackButton() },
             actions = {
@@ -436,7 +460,9 @@ fun VideoTopBar(viewModel: VideoViewModel, visible: Boolean) {
                     )
                 }
             },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = .5f))
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = if (blurKindState?.showBlur == true) Color.Transparent else MaterialTheme.colorScheme.surface.copy(alpha = .5f)
+            )
         )
     }
 }
@@ -444,6 +470,7 @@ fun VideoTopBar(viewModel: VideoViewModel, visible: Boolean) {
 @Composable
 fun VideoBottomBar(
     visible: Boolean,
+    blurKindState: BlurKindState?,
     currentTime: String,
     totalTime: String,
     currentPosition: Long,
@@ -461,7 +488,8 @@ fun VideoBottomBar(
         exit = slideOutVertically { it / 2 } + fadeOut()
     ) {
         Surface(
-            color = MaterialTheme.colorScheme.surface.copy(alpha = .5f),
+            color = if (blurKindState?.showBlur == true) Color.Transparent else MaterialTheme.colorScheme.surface.copy(alpha = .5f),
+            modifier = blurKindState?.let { Modifier.setBlurKind(it) } ?: Modifier,
         ) {
             Column(
                 modifier = Modifier.padding(horizontal = 4.dp)
