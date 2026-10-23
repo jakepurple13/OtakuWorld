@@ -1,11 +1,15 @@
 package com.programmersbox.animeworld
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.viewinterop.AndroidViewBinding
 import androidx.lifecycle.lifecycleScope
 import com.programmersbox.animeworld.cast.CastHelper
 import com.programmersbox.animeworld.databinding.MiniControllerBinding
 import com.programmersbox.anime.shared.videos.VideoViewerRoute
+import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.datastore.updatePref
 import kotlinx.coroutines.flow.launchIn
@@ -26,6 +30,13 @@ class MainActivity : BaseMainActivity() {
             cast.init(this)
         } catch (e: Exception) {
 
+        }
+
+        // Android 17+ hides LAN devices (Chromecast/Google TV) from cast discovery without this
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN &&
+            checkSelfPermission(Manifest.permission.ACCESS_LOCAL_NETWORK) != PackageManager.PERMISSION_GRANTED
+        ) {
+            requestPermissions(Manifest.permission.ACCESS_LOCAL_NETWORK) {}
         }
 
         animeDataStoreHandling
