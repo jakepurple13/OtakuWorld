@@ -80,7 +80,7 @@ Top to bottom:
 - Show title (small) and "Episode N · Name" (larger).
 - Seek slider with elapsed and remaining time.
 - Transport row, **five buttons in this order**: ⟲15 · ⟲10 · play/pause (large,
-  primary) · +85 · 15⟳. +85 matches the phone player's opening skip.
+  primary) · +85 · 15⟳. +85 skips an anime opening (new; the phone player's skip is 30 s).
 - **Subtitle list card**, inline on the screen: header "Subtitles" with a "Style" text
   button on the right; rows "Off" then each track (label + "source"/"downloaded" hint),
   check mark on the active one. Tapping a row switches the TV immediately. Scrolls
