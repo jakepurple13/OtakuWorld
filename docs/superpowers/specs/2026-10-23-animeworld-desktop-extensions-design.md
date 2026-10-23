@@ -1,7 +1,7 @@
 # AnimeWorld Desktop: Aniyomi + CloudStream Extensions and Video Player — Design
 
 Date: 2026-10-23
-Status: Draft, pending approval
+Status: Approved 2026-10-23
 Branch: `feat/animeworld-desktop-extensions`, based on `feat/mangaworld-desktop-mihon-extensions`
 (`95ec75bf3`)
 
