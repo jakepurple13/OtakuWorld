@@ -60,6 +60,9 @@ kotlin {
             implementation(androidLibs.glideCompose)
             implementation(androidLibs.workRuntimeKtx)
             implementation(androidLibs.okhttpLib)
+            implementation(androidLibs.nanohttpd)
+            implementation(androidLibs.castFramework)
+            implementation(androidLibs.mediaRouter)
         }
 
         commonTest.dependencies {

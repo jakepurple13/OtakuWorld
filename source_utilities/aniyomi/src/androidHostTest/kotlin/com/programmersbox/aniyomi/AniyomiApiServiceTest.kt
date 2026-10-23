@@ -26,7 +26,7 @@ class AniyomiApiServiceTest {
         assertEquals("Fake (en)", service.displayName)
         assertEquals("en", service.language)
         assertTrue(service.canDownload)
-        assertFalse(service.canCast)
+        assertTrue(service.canCast)
         assertFalse(service is KmpConfigurableApiService)
     }
 

@@ -418,6 +418,21 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
     Remove
   - Your downloads are separate from other videos on the phone, which sit in a collapsible
     "Other videos on this phone" section
+- **Rebuilt casting to Chromecast and Google TV**:
+  - Cast button in the player's top bar: pick a TV and the episode continues there from the
+    current position, with the selected subtitle track (an embedded track switches to the
+    closest matching subtitle file)
+  - While connected, playing an episode from the details page or the Downloads screen sends it
+    straight to the TV, starting at your saved position
+  - Aniyomi and CloudStream episodes can be cast. Streams that need headers, and downloaded
+    episodes, are served to the TV from the phone over Wi-Fi
+  - Subtitles on the TV use your subtitle style settings
+  - New remote screen with seek, play/pause, subtitle tracks, and volume, plus a mini player
+    bar and a media notification while casting. The phone's volume keys control the TV
+  - MKV episodes and `.ts` downloads show "This episode can't be cast"; other failures show a
+    message
+  - The old cast controls and local file server library were removed
+  ([#2631](https://github.com/jakepurple13/OtakuWorld/pull/2631))
 - Watch progress on the Downloads screen: a border traces each thumbnail clockwise as you watch
   ([#2629](https://github.com/jakepurple13/OtakuWorld/pull/2629))
 - **+1:30 button** in the player's controls to skip ahead a minute and a half, e.g. past an

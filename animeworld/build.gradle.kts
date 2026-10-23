@@ -83,7 +83,6 @@ dependencies {
     kapt(androidLibs.autoBindingsCompiler)
 
     implementation(androidLibs.castFramework)
-    implementation(androidLibs.localCast)
 
     implementation(androidLibs.glide)
     ksp(androidLibs.glideCompiler)

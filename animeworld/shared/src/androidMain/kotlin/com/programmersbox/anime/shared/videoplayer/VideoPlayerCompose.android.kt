@@ -108,6 +108,13 @@ import androidx.media3.ui.SubtitleView
 import com.programmersbox.anime.shared.R
 import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.anime.shared.VideoScreen
+import com.programmersbox.anime.shared.cast.CastButton
+import com.programmersbox.anime.shared.cast.CastConnection
+import com.programmersbox.anime.shared.cast.CastController
+import com.programmersbox.anime.shared.cast.CastDevicePickerSheet
+import com.programmersbox.anime.shared.cast.CastRemoteRoute
+import com.programmersbox.anime.shared.cast.CastResult
+import com.programmersbox.anime.shared.cast.errorMessage
 import com.programmersbox.anime.shared.subtitles.SubtitleQuickSheet
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRepository
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRoute
@@ -210,9 +217,54 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
     val ignoreSslEnabled by remember { context.ignoreSsl }.collectAsStateWithLifecycle(null)
     val blurKindState = if (useBlur == true) rememberBlurKindState() else null
 
+    val castController = koinInject<CastController>()
+    val castScope = rememberCoroutineScope()
+    var castPickerOpen by remember { mutableStateOf(false) }
+    var castInFlight by remember { mutableStateOf(false) }
+    val startCast = {
+        if (!castInFlight) {
+            castInFlight = true
+            Toast.makeText(context, "Casting…", Toast.LENGTH_SHORT).show()
+            val request = viewModel.castRequest()
+            viewModel.exoPlayer?.pause()
+            castScope.launch {
+                try {
+                    val result = castController.cast(request)
+                    if (result == CastResult.Started) {
+                        navController.popBackStack()
+                        navController.navigate(CastRemoteRoute)
+                    } else {
+                        result.errorMessage()?.let { Toast.makeText(context, it, Toast.LENGTH_LONG).show() }
+                    }
+                } finally {
+                    castInFlight = false
+                }
+            }
+        }
+    }
+    if (castPickerOpen) {
+        CastDevicePickerSheet(
+            onDismiss = { castPickerOpen = false },
+            onConnected = {
+                castPickerOpen = false
+                startCast()
+            },
+        )
+    }
+
     Box {
         Scaffold(
-            topBar = { VideoTopBar(viewModel, overlayVisibility, blurKindState) },
+            topBar = {
+                VideoTopBar(
+                    viewModel,
+                    overlayVisibility,
+                    blurKindState,
+                    onCastClick = {
+                        // Already connected: send this episode straight to the TV (also the retry path after a failure).
+                        if (castController.state.value.connection == CastConnection.Connected) startCast() else castPickerOpen = true
+                    },
+                )
+            },
             bottomBar = {
                 VideoBottomBar(
                     visible = overlayVisibility,
@@ -424,7 +476,7 @@ fun VideoPlayer(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun VideoTopBar(viewModel: VideoViewModel, visible: Boolean, blurKindState: BlurKindState?) {
+fun VideoTopBar(viewModel: VideoViewModel, visible: Boolean, blurKindState: BlurKindState?, onCastClick: () -> Unit) {
     AnimatedVisibility(
         visible = visible,
         enter = slideInVertically() + fadeIn(),
@@ -435,6 +487,7 @@ fun VideoTopBar(viewModel: VideoViewModel, visible: Boolean, blurKindState: Blur
             title = { Text(viewModel.showName.orEmpty()) },
             navigationIcon = { BackButton() },
             actions = {
+                CastButton(onClick = onCastClick)
                 if (viewModel.textTracks.isNotEmpty()) {
                     IconButton(onClick = { viewModel.subtitleSheetOpen = true }) {
                         Icon(

@@ -10,12 +10,6 @@ import android.os.Environment
 import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.LocalActivity
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
@@ -42,25 +36,31 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.mediarouter.app.MediaRouteButton
-import androidx.mediarouter.app.MediaRouteDialogFactory
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
-import com.google.android.gms.cast.framework.CastContext
 import com.obsez.android.lib.filechooser.ChooserDialog
 import com.programmersbox.anime.shared.GenericSharedAnime
 import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.anime.shared.VideoScreen
+import com.programmersbox.anime.shared.cast.CastButton
+import com.programmersbox.anime.shared.cast.CastConnection
+import com.programmersbox.anime.shared.cast.CastController
+import com.programmersbox.anime.shared.cast.CastDevicePickerSheet
+import com.programmersbox.anime.shared.cast.CastMediaServer
+import com.programmersbox.anime.shared.cast.CastRemoteRoute
+import com.programmersbox.anime.shared.cast.CastRemoteScreen
+import com.programmersbox.anime.shared.cast.CastRequest
+import com.programmersbox.anime.shared.cast.CastResult
+import com.programmersbox.anime.shared.cast.castSourceHeaders
+import com.programmersbox.anime.shared.cast.errorMessage
+import com.programmersbox.anime.shared.cast.wifiIpv4
 import com.programmersbox.anime.shared.downloads.DownloadQueueSource
 import com.programmersbox.anime.shared.downloads.EpisodeDownloadRequest
+import com.programmersbox.anime.shared.downloads.OfflineSubtitles
 import com.programmersbox.anime.shared.downloads.enqueueEpisodeDownload
 import com.programmersbox.anime.shared.subtitles.DataStoreSubtitleSettingsRepository
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRepository
@@ -70,13 +70,14 @@ import com.programmersbox.anime.shared.subtitles.SubtitleSettingsViewModel
 import com.programmersbox.anime.shared.videochoice.VideoChoiceScreen
 import com.programmersbox.anime.shared.videochoice.VideoSourceModel
 import com.programmersbox.anime.shared.videoplayer.VideoPlayerUi
+import com.programmersbox.anime.shared.videoplayer.defaultSubtitleIndex
 import com.programmersbox.anime.shared.videoplayer.playerHeaders
+import com.programmersbox.anime.shared.videoplayer.streamMime
 import com.programmersbox.anime.shared.videoplayer.videoPlayerBlur
 import com.programmersbox.anime.shared.videos.SharedVideoContent
 import com.programmersbox.anime.shared.videos.VideoLibrarySource
 import com.programmersbox.anime.shared.videos.VideoViewerRoute
 import com.programmersbox.anime.shared.videos.ViewVideoScreen
-import com.programmersbox.animeworld.cast.ExpandedControlsActivity
 import com.programmersbox.aniyomi.aniyomiModule
 import com.programmersbox.cloudstream.cloudstreamModule
 import com.programmersbox.datastore.asState
@@ -86,6 +87,7 @@ import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpStorage
+import com.programmersbox.kmpmodels.KmpSubtitle
 import com.programmersbox.kmpuiviews.SystemAlerter
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
@@ -106,21 +108,32 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import org.koin.compose.koinInject
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import org.koin.dsl.navigation3.navigation
 import java.io.File
+import java.util.Locale
+import java.util.concurrent.atomic.AtomicBoolean
 
 val appModule = module {
     singleOf(::GenericAnime) { bindsGenericInfo() }
     single { NotificationLogo(R.mipmap.ic_launcher_foreground) }
     single { StorageHolder() }
     single<SubtitleSettingsRepository> { DataStoreSubtitleSettingsRepository(get<Context>()) }
+    single {
+        // Same User-Agent the phone player sends, so proxied requests look like local playback.
+        @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
+        val userAgent = androidx.media3.common.util.Util.getUserAgent(get<Context>(), "AnimeWorld")
+        CastMediaServer(OkHttpClient(), { wifiIpv4(get<Context>()) }, userAgent = userAgent)
+    }
+    single { CastController(get<Context>(), get(), get(), CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)) }
     viewModelOf(::SubtitleSettingsViewModel)
     single { VideoLibrarySource(get(), downloadFolder = { get<Context>().folderLocation }) }
     singleOf(::DownloadQueueSource)
@@ -131,6 +144,8 @@ val appModule = module {
 
     navigation<VideoScreen> { VideoPlayerUi(it) }
 
+    navigation<CastRemoteRoute> { CastRemoteScreen() }
+
     navigation<SubtitleSettingsRoute> { SubtitleSettingsScreen() }
 
     navigation<Screen.SourcePreferences> { SourcePreferencesRoute(it.serviceName) }
@@ -139,26 +154,11 @@ val appModule = module {
     includes(cloudstreamModule)
 
     navigation<VideoViewerRoute> {
-        val context = LocalContext.current
+        val genericAnime = koinInject<GenericAnime>()
         ViewVideoScreen(
-            isCastActive = { MainActivity.cast.isCastActive() },
-            onCastLoad = { content: SharedVideoContent ->
-                MainActivity.cast.loadMedia(
-                    File(content.path),
-                    context.getSharedPreferences("videos", Context.MODE_PRIVATE).getLong(content.path, 0L),
-                    null, null
-                )
-            },
-            castButton = {
-                AndroidView(
-                    factory = { ctx ->
-                        MediaRouteButton(ctx).apply {
-                            MainActivity.cast.showIntroductoryOverlay(this)
-                            MainActivity.cast.setMediaRouteMenu(ctx, this)
-                        }
-                    }
-                )
-            },
+            isCastActive = genericAnime::isCasting,
+            onCastLoad = genericAnime::castDownload,
+            castButton = { CastPickerButton() },
             deleteDialog = { content, onResult ->
                 AlertDialog(
                     onDismissRequest = { onResult(false) },
@@ -182,6 +182,8 @@ class GenericAnime(
     val animeDataStoreHandling: AnimeDataStoreHandling,
     appConfig: AppConfig,
     private val navController: NavigationActions,
+    private val castController: CastController,
+    private val subtitleSettings: SubtitleSettingsRepository,
 ) : GenericSharedAnime(appConfig = appConfig), GenericInfo {
 
     private val scope = CoroutineScope(Job() + Dispatchers.Main)
@@ -203,16 +205,27 @@ class GenericAnime(
         model: KmpChapterModel,
         infoModel: KmpInfoModel,
     ) {
-        if (MainActivity.cast.isCastActive() && model.source.canCast) {
-            MainActivity.cast.loadUrl(
-                storage.link,
-                infoModel.title,
-                model.name,
-                infoModel.imageUrl,
-                storage.headers
-            )
+        if (isCasting()) {
+            launchCast {
+                startCast(
+                    CastRequest(
+                        showTitle = infoModel.title,
+                        episodeName = model.name,
+                        posterUrl = infoModel.imageUrl,
+                        url = storage.link.orEmpty(),
+                        mimeType = streamMime(storage),
+                        headers = playerHeaders(storage.headers, storage.headers["referer"] ?: storage.source.orEmpty()),
+                        sourceHeaders = castSourceHeaders(storage.headers, storage.headers["referer"] ?: storage.source),
+                        subtitles = storage.subtitles,
+                        selectedSubtitle = defaultCastSubtitle(storage.subtitles),
+                        startPositionMs = context.getSharedPreferences("videos", Context.MODE_PRIVATE).getLong(storage.link, 0L),
+                    )
+                )
+            }
         } else {
             storageHolder.storageModel = storage
+            storageHolder.showTitle = infoModel.title
+            storageHolder.posterUrl = infoModel.imageUrl
             navController.navigate(
                 VideoScreen(
                     showPath = storage.link.orEmpty(),
@@ -221,6 +234,71 @@ class GenericAnime(
                     referer = storage.headers["referer"] ?: storage.source.orEmpty()
                 )
             )
+        }
+    }
+
+    fun isCasting(): Boolean = castController.state.value.connection == CastConnection.Connected
+
+    /** Casts a downloaded episode from the Videos screen, replacing whatever is on the TV. */
+    fun castDownload(content: SharedVideoContent) {
+        launchCast {
+            val (file, subtitles) = withContext(Dispatchers.IO) {
+                val file = OfflineSubtitles.resolveVideoFile(context, content.path) ?: File(content.path)
+                file to OfflineSubtitles.find(file)
+            }
+            startCast(
+                CastRequest(
+                    showTitle = "",
+                    episodeName = content.videoName,
+                    posterUrl = null,
+                    url = file.path,
+                    mimeType = null,
+                    headers = emptyMap(),
+                    sourceHeaders = emptyMap(),
+                    subtitles = subtitles,
+                    selectedSubtitle = defaultCastSubtitle(subtitles),
+                    startPositionMs = context.getSharedPreferences("videos", Context.MODE_PRIVATE).getLong(content.path, 0L),
+                    localFile = file,
+                    subtitleOrigin = "downloaded",
+                )
+            )
+        }
+    }
+
+    /** Same pick as the phone player: none when auto-enable is off, else [defaultSubtitleIndex]. */
+    private suspend fun defaultCastSubtitle(subtitles: List<KmpSubtitle>): Int? {
+        val style = subtitleSettings.style.first()
+        if (!style.autoEnable) return null
+        return defaultSubtitleIndex(
+            subtitles,
+            Locale.getDefault().language,
+            Locale.getDefault().getDisplayLanguage(Locale.ENGLISH),
+            style.preferredLanguages,
+            style.skipSignsAndSongs,
+        )
+    }
+
+    private val castInFlight = AtomicBoolean(false)
+
+    /** Runs [block] unless a cast is already starting, so a double tap doesn't load twice. */
+    private fun launchCast(block: suspend () -> Unit) {
+        if (!castInFlight.compareAndSet(false, true)) return
+        scope.launch {
+            try {
+                Toast.makeText(context, "Casting…", Toast.LENGTH_SHORT).show()
+                block()
+            } finally {
+                castInFlight.set(false)
+            }
+        }
+    }
+
+    private suspend fun startCast(request: CastRequest) {
+        val result = castController.cast(request)
+        if (result == CastResult.Started) {
+            navController.navigate(CastRemoteRoute)
+        } else {
+            result.errorMessage()?.let { Toast.makeText(context, it, Toast.LENGTH_LONG).show() }
         }
     }
 
@@ -295,35 +373,7 @@ class GenericAnime(
 
     @Composable
     override fun DetailActions(infoModel: KmpInfoModel, tint: Color) {
-        val showCast by MainActivity.cast.sessionConnected()
-            .collectAsStateWithLifecycle(true)
-
-        AnimatedVisibility(
-            visible = showCast,
-            enter = fadeIn() + expandHorizontally(),
-            exit = fadeOut() + shrinkHorizontally()
-        ) {
-            AndroidView(
-                modifier = Modifier.animateContentSize(),
-                factory = { context ->
-                    MediaRouteButton(context).apply {
-                        MainActivity.cast.showIntroductoryOverlay(this)
-                        MainActivity.cast.setMediaRouteMenu(context, this)
-                    }
-                }
-            )
-        }
-    }
-
-    class CastingViewModel : ViewModel() {
-
-        var connection by mutableStateOf(false)
-        var session by mutableStateOf(false)
-
-        init {
-            viewModelScope.launch { MainActivity.cast.sessionConnected().onEach { connection = it }.collect() }
-            viewModelScope.launch { MainActivity.cast.sessionStatus().onEach { session = it }.collect() }
-        }
+        CastPickerButton()
     }
 
     override fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit = {
@@ -342,15 +392,18 @@ class GenericAnime(
 
             CategoryGroup {
                 item {
-                    val context = LocalContext.current
-                    val castingViewModel: CastingViewModel = viewModel()
-                    val activity = LocalActivity.current
-                    ShowWhen(castingViewModel.connection) {
+                    val castState by castController.state.collectAsStateWithLifecycle()
+                    val connected = castState.connection == CastConnection.Connected
+                    var pickerOpen by remember { mutableStateOf(false) }
+                    if (pickerOpen) {
+                        CastDevicePickerSheet(onDismiss = { pickerOpen = false }, onConnected = { pickerOpen = false })
+                    }
+                    ShowWhen(castState.connection != CastConnection.Unavailable && castState.connection != CastConnection.NoDevices) {
                         PreferenceSetting(
                             settingTitle = { Text(stringResource(R.string.cast_menu_title)) },
                             settingIcon = {
                                 Icon(
-                                    if (castingViewModel.session) Icons.Default.CastConnected else Icons.Default.Cast,
+                                    if (connected) Icons.Default.CastConnected else Icons.Default.Cast,
                                     null,
                                     modifier = Modifier.fillMaxSize()
                                 )
@@ -359,17 +412,7 @@ class GenericAnime(
                                 indication = ripple(),
                                 interactionSource = null
                             ) {
-                                if (MainActivity.cast.isCastActive()) {
-                                    context.startActivity(Intent(context, ExpandedControlsActivity::class.java))
-                                } else {
-                                    (activity as? FragmentActivity)?.supportFragmentManager?.let {
-                                        MediaRouteDialogFactory.getDefault().onCreateChooserDialogFragment()
-                                            .also { m ->
-                                                CastContext.getSharedInstance(context) {}.result.mergedSelector?.let { m.routeSelector = it }
-                                            }
-                                            .show(it, "media_chooser")
-                                    }
-                                }
+                                if (connected) navController.navigate(CastRemoteRoute) else pickerOpen = true
                             }
                         )
                     }
@@ -484,24 +527,9 @@ class GenericAnime(
     override fun settingsNav3Setup() {
         navGraph.entry<VideoViewerRoute> {
             ViewVideoScreen(
-                isCastActive = { MainActivity.cast.isCastActive() },
-                onCastLoad = { content: SharedVideoContent ->
-                    MainActivity.cast.loadMedia(
-                        File(content.path),
-                        context.getSharedPreferences("videos", Context.MODE_PRIVATE).getLong(content.path, 0L),
-                        null, null
-                    )
-                },
-                castButton = {
-                    AndroidView(
-                        factory = { ctx ->
-                            MediaRouteButton(ctx).apply {
-                                MainActivity.cast.showIntroductoryOverlay(this)
-                                MainActivity.cast.setMediaRouteMenu(ctx, this)
-                            }
-                        }
-                    )
-                },
+                isCastActive = ::isCasting,
+                onCastLoad = ::castDownload,
+                castButton = { CastPickerButton() },
                 deleteDialog = { content, onResult ->
                     AlertDialog(
                         onDismissRequest = { onResult(false) },
@@ -586,4 +614,14 @@ private enum class StorageAccessPrompt(val title: String, val message: String, v
         "AnimeWorld needs storage permission to save episodes and their subtitles.",
         Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
     ),
+}
+
+/** Cast button that opens the device picker; a new connection just closes the sheet. */
+@Composable
+private fun CastPickerButton() {
+    var pickerOpen by remember { mutableStateOf(false) }
+    CastButton(onClick = { pickerOpen = true })
+    if (pickerOpen) {
+        CastDevicePickerSheet(onDismiss = { pickerOpen = false }, onConnected = { pickerOpen = false })
+    }
 }
