@@ -4,6 +4,7 @@ import com.googlecode.d2j.Method
 import com.googlecode.d2j.dex.BaseDexExceptionHandler
 import com.googlecode.d2j.dex.Dex2jar
 import com.googlecode.d2j.node.DexMethodNode
+import com.googlecode.d2j.reader.BaseDexFileReader
 import com.googlecode.d2j.reader.MultiDexFileReader
 import org.objectweb.asm.MethodVisitor
 import java.io.File
@@ -13,7 +14,7 @@ import java.util.zip.ZipFile
 object DexConverter {
 
     /** Bump when conversion output changes so jars from an older converter are not reused. */
-    private const val CONVERTER_VERSION = 3
+    private const val CONVERTER_VERSION = 4
 
     fun convert(apkFile: File, cacheDir: File): File? {
         val hash = sha256(apkFile)
@@ -23,25 +24,7 @@ object DexConverter {
         val tmp = File(cacheDir, "$hash.tmp.jar")
         return runCatching {
             cacheDir.mkdirs()
-            val handler = StubbingExceptionHandler(apkFile.name)
-            Dex2jar.from(ElidedConstructorFix.wrap(MultiDexFileReader.open(apkFile.readBytes())))
-                .withExceptionHandler(handler)
-                .reUseReg(false)
-                .topoLogicalSort()
-                .skipDebug(true)
-                .optimizeSynchronized(false)
-                .printIR(false)
-                .noCode(false)
-                .skipExceptions(false)
-                // Keep '-' in names: Kotlin mangles value-class APIs with it (e.g. okhttp's maxAge-LRDsOJo).
-                .dontSanitizeNames(true)
-                .to(tmp.toPath())
-            // Like Suwayomi, untranslatable methods become throwing stubs and the jar is kept.
-            if (handler.failures.isNotEmpty()) {
-                println("DexConverter: ${apkFile.name} converted with ${handler.failures.size} translation failure(s)")
-            }
-            check(tmp.exists() && hasClasses(tmp)) { "dex2jar produced no classes" }
-            StackMapFrames.addTo(tmp)
+            translate(MultiDexFileReader.open(apkFile.readBytes()), tmp, apkFile.name)
             java.nio.file.Files.move(
                 tmp.toPath(),
                 cachedJar.toPath(),
@@ -53,6 +36,29 @@ object DexConverter {
             println("DexConverter: failed to convert ${apkFile.name}: ${it.message}")
             it.printStackTrace()
         }.getOrNull()
+    }
+
+    /** Translates the dex in [reader] to [jar]; throws when no classes come out. */
+    internal fun translate(reader: BaseDexFileReader, jar: File, name: String) {
+        val handler = StubbingExceptionHandler(name)
+        Dex2jar.from(ElidedConstructorFix.wrap(reader))
+            .withExceptionHandler(handler)
+            .reUseReg(false)
+            .topoLogicalSort()
+            .skipDebug(true)
+            .optimizeSynchronized(false)
+            .printIR(false)
+            .noCode(false)
+            .skipExceptions(false)
+            // Keep '-' in names: Kotlin mangles value-class APIs with it (e.g. okhttp's maxAge-LRDsOJo).
+            .dontSanitizeNames(true)
+            .to(jar.toPath())
+        // Like Suwayomi, untranslatable methods become throwing stubs and the jar is kept.
+        if (handler.failures.isNotEmpty()) {
+            println("DexConverter: $name converted with ${handler.failures.size} translation failure(s)")
+        }
+        check(jar.exists() && hasClasses(jar)) { "dex2jar produced no classes" }
+        StackMapFrames.addTo(jar)
     }
 
     /** The cache location [convert] uses for [apkFile]'s jar (may not exist yet). */

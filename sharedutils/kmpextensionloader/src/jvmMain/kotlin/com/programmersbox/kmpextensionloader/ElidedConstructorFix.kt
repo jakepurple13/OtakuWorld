@@ -1,6 +1,7 @@
 package com.programmersbox.kmpextensionloader
 
 import com.googlecode.d2j.DexConstants
+import com.googlecode.d2j.Field
 import com.googlecode.d2j.Method
 import com.googlecode.d2j.reader.BaseDexFileReader
 import com.googlecode.d2j.reader.Op
@@ -21,7 +22,8 @@ import com.googlecode.d2j.visitors.DexMethodVisitor
  */
 internal class ElidedConstructorFix private constructor(
     private val reader: BaseDexFileReader,
-    private val classes: Set<String>,
+    /** (instantiated class, constructor call) pairs to retarget. */
+    private val accepted: Set<Pair<String, Method>>,
     /** Class descriptor -> constructors to add, each as (parameter types, superclass to call). */
     private val additions: Map<String, List<Pair<Array<String>, String>>>,
 ) : BaseDexFileReader by reader {
@@ -37,7 +39,8 @@ internal class ElidedConstructorFix private constructor(
                 override fun visitMethod(accessFlags: Int, method: Method): DexMethodVisitor? {
                     val mv = super.visitMethod(accessFlags, method) ?: return null
                     return object : DexMethodVisitor(mv) {
-                        override fun visitCode(): DexCodeVisitor? = super.visitCode()?.let { RewritingCode({ type -> type in classes }, it) }
+                        override fun visitCode(): DexCodeVisitor? =
+                            super.visitCode()?.let { code -> NewInstanceTracker(code) { type, call -> type to call in accepted } }
                     }
                 }
 
@@ -61,17 +64,51 @@ internal class ElidedConstructorFix private constructor(
         }
     }
 
-    /** Rewrites `invoke-direct Super.<init>` on a register that holds a fresh `new-instance` of an in-dex subclass. */
-    private class RewritingCode(
-        private val isDexClass: (String) -> Boolean,
+    /**
+     * Tracks which registers hold a fresh `new-instance` and finds `invoke-direct X.<init>` calls on them
+     * where X is not the instantiated type. [rewrite] decides whether such a call is retargeted; [onCandidate]
+     * sees every one. Any other write to a register forgets it, so stale entries never match.
+     */
+    private class NewInstanceTracker(
         cv: DexCodeVisitor?,
-        private val onRewrite: (type: String, call: Method) -> Unit = { _, _ -> },
+        private val onCandidate: (type: String, call: Method) -> Unit = { _, _ -> },
+        private val rewrite: (type: String, call: Method) -> Boolean,
     ) : DexCodeVisitor(cv) {
         private val newInstances = mutableMapOf<Int, String>()
 
         override fun visitTypeStmt(op: Op, a: Int, b: Int, type: String) {
-            if (op == Op.NEW_INSTANCE) newInstances[a] = type
+            if (op == Op.NEW_INSTANCE) newInstances[a] = type else newInstances.remove(a)
             super.visitTypeStmt(op, a, b, type)
+        }
+
+        override fun visitStmt1R(op: Op, reg: Int) {
+            newInstances.remove(reg)
+            super.visitStmt1R(op, reg)
+        }
+
+        override fun visitStmt2R(op: Op, a: Int, b: Int) {
+            newInstances.remove(a)
+            super.visitStmt2R(op, a, b)
+        }
+
+        override fun visitStmt2R1N(op: Op, distReg: Int, srcReg: Int, content: Int) {
+            newInstances.remove(distReg)
+            super.visitStmt2R1N(op, distReg, srcReg, content)
+        }
+
+        override fun visitStmt3R(op: Op, a: Int, b: Int, c: Int) {
+            newInstances.remove(a)
+            super.visitStmt3R(op, a, b, c)
+        }
+
+        override fun visitConstStmt(op: Op, ra: Int, value: Any?) {
+            newInstances.remove(ra)
+            super.visitConstStmt(op, ra, value)
+        }
+
+        override fun visitFieldStmt(op: Op, a: Int, b: Int, field: Field) {
+            newInstances.remove(a)
+            super.visitFieldStmt(op, a, b, field)
         }
 
         override fun visitMethodStmt(op: Op, args: IntArray, method: Method) {
@@ -80,23 +117,40 @@ internal class ElidedConstructorFix private constructor(
             } else {
                 null
             }
-            val rewrite = type != null && type != method.owner && isDexClass(type) &&
-                method.parameterTypes.none { it == "J" || it == "D" }
-            if (rewrite) {
-                onRewrite(type, method)
-                super.visitMethodStmt(op, args, Method(type, "<init>", method.parameterTypes, "V"))
-            } else {
-                super.visitMethodStmt(op, args, method)
+            if (type != null && type != method.owner) {
+                onCandidate(type, method)
+                if (rewrite(type, method)) {
+                    super.visitMethodStmt(op, args, Method(type, "<init>", method.parameterTypes, "V"))
+                    return
+                }
             }
+            super.visitMethodStmt(op, args, method)
         }
     }
 
     companion object {
+        private const val OBJECT = "Ljava/lang/Object;"
+
+        /**
+         * True when [owner] is a superclass of [type]: walking [supers] (in-dex class -> superclass) from [type]
+         * reaches [owner]. Once the walk leaves the dex, only the first out-of-dex superclass or Object count.
+         */
+        internal fun isAncestor(supers: Map<String, String?>, type: String, owner: String): Boolean {
+            var current = type
+            repeat(supers.size) {
+                val superName = supers[current] ?: return false
+                if (superName == owner) return true
+                if (superName !in supers) return owner == OBJECT
+                current = superName
+            }
+            return false // cycle
+        }
+
         /** Scans [reader] once and returns a reader that applies the fix, or [reader] itself when nothing needs it. */
         fun wrap(reader: BaseDexFileReader): BaseDexFileReader {
             val supers = mutableMapOf<String, String?>()
             val constructors = mutableMapOf<String, MutableSet<String>>()
-            val needed = linkedSetOf<Pair<String, Method>>()
+            val candidates = linkedSetOf<Pair<String, Method>>()
 
             reader.accept(object : DexFileVisitor() {
                 override fun visit(accessFlags: Int, className: String, superClass: String?, interfaceNames: Array<String>?): DexClassVisitor {
@@ -106,18 +160,31 @@ internal class ElidedConstructorFix private constructor(
                             if (method.name == "<init>") constructors.getOrPut(className) { mutableSetOf() } += method.desc
                             return object : DexMethodVisitor() {
                                 override fun visitCode(): DexCodeVisitor =
-                                    RewritingCode({ true }, null) { type, call -> needed += type to call }
+                                    NewInstanceTracker(null, onCandidate = { type, call -> candidates += type to call }) { _, _ -> false }
                             }
                         }
                     }
                 }
             })
-            // Only classes defined in this dex can get a constructor.
-            needed.retainAll { (type, _) -> type in supers }
-            if (needed.isEmpty()) return reader
+
+            val accepted = candidates.filterTo(linkedSetOf()) { (type, call) ->
+                when {
+                    type !in supers -> false // only classes defined in this dex can get a constructor
+                    call.parameterTypes.any { it == "J" || it == "D" } -> {
+                        println("DexConverter: not retargeting $call on new $type: wide parameters")
+                        false
+                    }
+                    !isAncestor(supers, type, call.owner) -> {
+                        println("DexConverter: not retargeting $call on new $type: ${call.owner} is not its superclass")
+                        false
+                    }
+                    else -> true
+                }
+            }
+            if (accepted.isEmpty()) return reader
 
             val additions = mutableMapOf<String, MutableList<Pair<Array<String>, String>>>()
-            needed.forEach { (type, call) ->
+            accepted.forEach { (type, call) ->
                 var current = type
                 while (true) {
                     val superName = supers[current] ?: break
@@ -129,7 +196,7 @@ internal class ElidedConstructorFix private constructor(
                     current = superName
                 }
             }
-            return ElidedConstructorFix(reader, supers.keys, additions)
+            return ElidedConstructorFix(reader, accepted, additions)
         }
     }
 }

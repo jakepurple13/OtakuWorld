@@ -53,7 +53,7 @@ class MihonDexConversionTest {
     }
 
     @Test fun cacheKeyCarriesConverterVersion() {
-        assertTrue(DexConverter.jarFor(MihonFixture.apk, root).name.endsWith("-v3.jar"))
+        assertTrue(DexConverter.jarFor(MihonFixture.apk, root).name.endsWith("-v4.jar"))
     }
 
     // R8 drops the fixture's trivial interceptor constructor (new-instance La; + invoke-direct Object.<init>).
