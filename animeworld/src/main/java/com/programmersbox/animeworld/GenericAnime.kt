@@ -61,6 +61,9 @@ import com.programmersbox.anime.shared.VideoScreen
 import com.programmersbox.anime.shared.downloads.DownloadQueueSource
 import com.programmersbox.anime.shared.downloads.EpisodeDownloadRequest
 import com.programmersbox.anime.shared.downloads.enqueueEpisodeDownload
+import com.programmersbox.anime.shared.cast.CastController
+import com.programmersbox.anime.shared.cast.CastMediaServer
+import com.programmersbox.anime.shared.cast.wifiIpv4
 import com.programmersbox.anime.shared.subtitles.DataStoreSubtitleSettingsRepository
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRepository
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRoute
@@ -104,10 +107,12 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
@@ -119,6 +124,8 @@ val appModule = module {
     single { NotificationLogo(R.mipmap.ic_launcher_foreground) }
     single { StorageHolder() }
     single<SubtitleSettingsRepository> { DataStoreSubtitleSettingsRepository(get<Context>()) }
+    single { CastMediaServer(OkHttpClient(), { wifiIpv4(get<Context>()) }) }
+    single { CastController(get<Context>(), get(), get(), CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)) }
     viewModelOf(::SubtitleSettingsViewModel)
     single { VideoLibrarySource(get(), downloadFolder = { get<Context>().folderLocation }) }
     singleOf(::DownloadQueueSource)
