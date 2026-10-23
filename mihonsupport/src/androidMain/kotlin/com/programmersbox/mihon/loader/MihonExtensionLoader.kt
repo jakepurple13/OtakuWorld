@@ -12,9 +12,6 @@ import com.programmersbox.mihon.MihonTrust
 import com.programmersbox.mihon.UntrustedMihonApiService
 import com.programmersbox.mihon.mihonApiService
 import dalvik.system.DelegateLastClassLoader
-import eu.kanade.tachiyomi.source.CatalogueSource
-import eu.kanade.tachiyomi.source.Source
-import eu.kanade.tachiyomi.source.SourceFactory
 import java.security.MessageDigest
 
 private const val EXTENSION_FEATURE = "tachiyomi.extension"
@@ -24,29 +21,6 @@ private const val METADATA_NAME = "tachiyomix.name"
 
 private const val PACKAGE_FLAGS =
     PackageManager.GET_CONFIGURATIONS or PackageManager.GET_META_DATA or PackageManager.GET_SIGNING_CERTIFICATES
-
-object MihonSourceInstantiator {
-    fun classNames(pkg: String, metadataValue: String?): List<String> = metadataValue.orEmpty()
-        .split(";")
-        .map { it.trim() }
-        .filter { it.isNotEmpty() }
-        .map { if (it.startsWith(".")) pkg + it else it }
-
-    /** Instantiates every class; any failure (including LinkageError) fails the whole package, like Mihon. */
-    fun instantiate(classNames: List<String>, classLoader: ClassLoader): Result<List<CatalogueSource>> = try {
-        Result.success(
-            classNames.flatMap { name ->
-                when (val obj = Class.forName(name, false, classLoader).getDeclaredConstructor().newInstance()) {
-                    is SourceFactory -> obj.createSources()
-                    is Source -> listOf(obj)
-                    else -> error("Unknown source class type: ${obj.javaClass}")
-                }
-            }.filterIsInstance<CatalogueSource>()
-        )
-    } catch (t: Throwable) {
-        Result.failure(t)
-    }
-}
 
 class MihonExtensionLoader(private val context: Context) {
 

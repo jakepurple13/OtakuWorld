@@ -1,17 +1,20 @@
 package android.content
 
 import android.content.pm.PackageManager
+import com.programmersbox.kmpextensionloader.FileSharedPreferences
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 
 abstract class Context {
     abstract val packageName: String
     abstract val dataDir: File
 
-    private val prefsCache = mutableMapOf<String, SharedPreferences>()
+    // One instance per file even when extensions ask concurrently.
+    private val prefsCache = ConcurrentHashMap<String, SharedPreferences>()
 
     open fun getSharedPreferences(name: String, mode: Int): SharedPreferences =
-        prefsCache.getOrPut(name) {
-            SharedPreferences(File(dataDir, "prefs/$name.properties"))
+        prefsCache.computeIfAbsent(name) {
+            FileSharedPreferences(File(dataDir, "prefs/$name.properties"))
         }
 
     open fun getFilesDir(): File = File(dataDir, "files").also { it.mkdirs() }
@@ -22,6 +25,9 @@ abstract class Context {
     open fun getDatabasePath(name: String): File =
         File(dataDir, "databases/$name").also { it.parentFile?.mkdirs() }
     open fun getSystemService(name: String): Any? = null
+
+    /** Desktop has no activities; Android throws the same when nothing handles [intent]. */
+    open fun startActivity(intent: Intent): Unit = throw ActivityNotFoundException("No activity on desktop for $intent")
 
     abstract fun getPackageManager(): PackageManager
 

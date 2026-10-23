@@ -24,7 +24,8 @@ class NetworkHelper(private val context: Context) {
         .connectTimeout(30.seconds)
         .readTimeout(30.seconds)
         .callTimeout(2.minutes)
-        .cache(Cache(directory = File(context.cacheDir, "mihon_network_cache"), maxSize = 5L * 1024 * 1024))
+        // OTAKU: getter call instead of property syntax so the JVM stub Context (Kotlin fun) compiles too.
+        .cache(Cache(directory = File(context.getCacheDir(), "mihon_network_cache"), maxSize = 5L * 1024 * 1024))
         .addInterceptor(UncaughtExceptionInterceptor())
         .addInterceptor(UserAgentInterceptor(::defaultUserAgentProvider))
 

@@ -7,12 +7,19 @@ import com.programmersbox.kmpmodels.KmpApiServicesCatalog
 import com.programmersbox.kmpmodels.KmpExternalApiServicesCatalog
 import com.programmersbox.kmpmodels.KmpExternalCustomApiServicesCatalog
 import com.programmersbox.kmpmodels.KmpSourceInformation
+import com.programmersbox.kmpmodels.NativeCatalogs
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ApiServicesCatalog
 import com.programmersbox.models.ExternalApiServicesCatalog
 import com.programmersbox.models.ExternalCustomApiServicesCatalog
 import com.programmersbox.models.SourceInformation
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import java.io.File
 
 private const val METADATA_NAME = "programmersbox-otaku-name"
@@ -24,6 +31,7 @@ actual class SourceLoader(
     sourceType: String,
     private val sourceRepository: SourceRepository,
     private val appDirs: AppDirs,
+    private val nativeCatalogs: NativeCatalogs = NativeCatalogs(emptyList()),
 ) {
     private val cacheDir = File(appDirs.getUserCacheDir(), "otaku-plugin-cache")
     private val dataDir = File(appDirs.getUserDataDir())
@@ -120,15 +128,30 @@ actual class SourceLoader(
         }
     )
 
+    private suspend fun nativeSources(): List<KmpSourceInformation> = withContext(Dispatchers.IO) {
+        nativeCatalogs.catalogs.flatMap { catalog ->
+            runCatching { catalog.initialize(); catalog.getSources() }
+                .onFailure { if (it is CancellationException) throw it else it.printStackTrace() }
+                .getOrDefault(emptyList())
+        }
+    }
+
     actual fun load() {
         sourceRepository.setSources(
-            extensionLoader.loadExtensions().flatten().sortedBy { it.apiService.serviceName }
+            (extensionLoader.loadExtensions().flatten() + runBlocking { nativeSources() })
+                .sortedBy { it.apiService.serviceName }
         )
     }
 
+    // Serializes reloads so a slower, older one cannot publish its list after a newer one.
+    private val reloadMutex = Mutex()
+
     actual suspend fun blockingLoad() {
-        sourceRepository.setSources(
-            extensionLoader.loadExtensionsBlocking().flatten().sortedBy { it.apiService.serviceName }
-        )
+        reloadMutex.withLock {
+            sourceRepository.setSources(
+                (extensionLoader.loadExtensionsBlocking().flatten() + nativeSources())
+                    .sortedBy { it.apiService.serviceName }
+            )
+        }
     }
 }

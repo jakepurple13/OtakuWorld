@@ -15,5 +15,6 @@ object AppInfo {
     fun getSupportedImageMimeTypes(): List<String> =
         listOf("image/jpeg", "image/png", "image/gif", "image/webp")
 
-    private fun packageInfo() = Injekt.get<Application>().let { it.packageManager.getPackageInfo(it.packageName, 0) }
+    // OTAKU: getter call instead of property syntax so the JVM stub Application (Kotlin fun) compiles too.
+    private fun packageInfo() = Injekt.get<Application>().let { it.getPackageManager().getPackageInfo(it.packageName, 0) }
 }

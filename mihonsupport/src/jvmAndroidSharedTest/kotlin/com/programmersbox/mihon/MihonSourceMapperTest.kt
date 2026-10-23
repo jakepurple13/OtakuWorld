@@ -7,7 +7,6 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -110,12 +109,15 @@ class MihonSourceMapperTest {
     }
 
     @Test
-    fun configurableSourceGetsMarker() {
-        val configurable = object : eu.kanade.tachiyomi.source.CatalogueSource by FakeCatalogueSource(),
-            eu.kanade.tachiyomi.source.ConfigurableSource {
-            override fun setupPreferenceScreen(screen: androidx.preference.PreferenceScreen) = Unit
-        }
-        assertIs<KmpConfigurableApiService>(mihonApiService(configurable))
+    fun pageLinkIsTheImageRequestUrl() = runTest {
+        val service = mihonApiService(HostInPageUrlSource())
+        val info = KmpItemModel("A", "", "https://example.org/a", "", service)
+        val chapter = com.programmersbox.kmpmodels.KmpChapterModel("c", "https://example.org/c/1", "", info.url, service)
+
+        val storage = service.chapterInfo(chapter).single()
+
+        assertEquals("https://cdn.example.org/data/hash/1.jpg", storage.link)
+        assertEquals("https://example.org/", storage.headers["Referer"])
     }
 
     @Test

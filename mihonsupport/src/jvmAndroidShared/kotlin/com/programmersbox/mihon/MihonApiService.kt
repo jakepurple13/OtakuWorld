@@ -7,14 +7,10 @@ import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpStorage
 import eu.kanade.tachiyomi.source.CatalogueSource
-import eu.kanade.tachiyomi.source.ConfigurableSource
 import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.source.online.ResolvableSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-
-fun mihonApiService(source: CatalogueSource): MihonApiService =
-    if (source is ConfigurableSource) ConfigurableMihonApiService(source) else MihonApiService(source)
 
 open class MihonApiService(val source: CatalogueSource) : KmpApiService {
     override val baseUrl: String = (source as? HttpSource)?.baseUrl.orEmpty()

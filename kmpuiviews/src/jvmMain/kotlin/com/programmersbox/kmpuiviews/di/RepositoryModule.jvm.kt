@@ -9,16 +9,28 @@ import com.programmersbox.kmpuiviews.repository.PlatformRepository
 import com.programmersbox.kmpuiviews.repository.SourceInfoRepository
 import com.programmersbox.kmpuiviews.repository.WorkRepository
 import com.programmersbox.kmpuiviews.repository.WorkerRepositoryImpl
+import ca.gosyer.appdirs.AppDirs
+import com.programmersbox.kmpextensionloader.SourceLoader
+import io.ktor.client.HttpClient
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.bind
 import org.koin.dsl.module
+import java.io.File
 
 actual fun platformRepositories(): Module = module {
     singleOf(::NotificationRepository)
     singleOf(::WorkerRepositoryImpl) { bind<WorkRepository>() }
-    singleOf(::DownloadStateRepository) { bind<DownloadStateInterface>() }
+    single {
+        DownloadStateRepository(
+            client = HttpClient(),
+            stores = getAll(),
+            tempDir = File(get<AppDirs>().getUserCacheDir(), "extension-downloads"),
+            reload = { get<SourceLoader>().blockingLoad() },
+        )
+    } bind DownloadStateInterface::class
     singleOf(::NotificationScreenRepository) { bind<NotificationScreenInterface>() }
-    singleOf(::SourceInfoRepository)
+    single { SourceInfoRepository(getAll()) }
     singleOf(::PlatformRepository)
 }

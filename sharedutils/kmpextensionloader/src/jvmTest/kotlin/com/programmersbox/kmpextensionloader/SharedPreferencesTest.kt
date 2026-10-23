@@ -1,6 +1,5 @@
 package com.programmersbox.kmpextensionloader
 
-import android.content.SharedPreferences
 import java.io.File
 import java.nio.file.Files
 import kotlin.test.AfterTest
@@ -13,11 +12,11 @@ import kotlin.test.assertTrue
 
 class SharedPreferencesTest {
     private lateinit var tmpDir: File
-    private lateinit var prefs: SharedPreferences
+    private lateinit var prefs: FileSharedPreferences
 
     @BeforeTest fun setUp() {
         tmpDir = Files.createTempDirectory("prefs-test").toFile()
-        prefs = SharedPreferences(File(tmpDir, "test.properties"))
+        prefs = FileSharedPreferences(File(tmpDir, "test.properties"))
     }
 
     @AfterTest fun tearDown() { tmpDir.deleteRecursively() }
@@ -28,30 +27,30 @@ class SharedPreferencesTest {
 
     @Test fun `putString persists after edit commit`() {
         prefs.edit().putString("name", "alice").commit()
-        val fresh = SharedPreferences(File(tmpDir, "test.properties"))
+        val fresh = FileSharedPreferences(File(tmpDir, "test.properties"))
         assertEquals("alice", fresh.getString("name", null))
     }
 
     @Test fun `putInt round-trips`() {
         prefs.edit().putInt("count", 7).apply()
-        assertEquals(7, SharedPreferences(File(tmpDir, "test.properties")).getInt("count", 0))
+        assertEquals(7, FileSharedPreferences(File(tmpDir, "test.properties")).getInt("count", 0))
     }
 
     @Test fun `putBoolean round-trips`() {
         prefs.edit().putBoolean("flag", true).apply()
-        assertTrue(SharedPreferences(File(tmpDir, "test.properties")).getBoolean("flag", false))
+        assertTrue(FileSharedPreferences(File(tmpDir, "test.properties")).getBoolean("flag", false))
     }
 
     @Test fun `remove deletes key`() {
         prefs.edit().putString("x", "y").commit()
         prefs.edit().remove("x").commit()
-        assertNull(SharedPreferences(File(tmpDir, "test.properties")).getString("x", null))
+        assertNull(FileSharedPreferences(File(tmpDir, "test.properties")).getString("x", null))
     }
 
     @Test fun `clear removes all keys`() {
         prefs.edit().putString("a", "1").putString("b", "2").commit()
         prefs.edit().clear().commit()
-        val fresh = SharedPreferences(File(tmpDir, "test.properties"))
+        val fresh = FileSharedPreferences(File(tmpDir, "test.properties"))
         assertNull(fresh.getString("a", null))
         assertNull(fresh.getString("b", null))
     }
@@ -62,11 +61,31 @@ class SharedPreferencesTest {
 
     @Test fun `contains returns true after put`() {
         prefs.edit().putString("k", "v").commit()
-        assertTrue(SharedPreferences(File(tmpDir, "test.properties")).contains("k"))
+        assertTrue(FileSharedPreferences(File(tmpDir, "test.properties")).contains("k"))
     }
 
     @Test fun `in-memory read reflects committed write without reload`() {
         prefs.edit().putString("x", "hello").commit()
         assertEquals("hello", prefs.getString("x", null))
+    }
+
+    @Test fun listenerFiresOnCommit() {
+        var changed: String? = null
+        prefs.registerOnSharedPreferenceChangeListener { _, key -> changed = key }
+        prefs.edit().putString("k", "v").commit()
+        assertEquals("k", changed)
+    }
+
+    @Test fun concurrentGetSharedPreferencesSharesOneInstance() {
+        val context = android.app.Application("prefs.test", tmpDir)
+        repeat(20) { round ->
+            val start = java.util.concurrent.CountDownLatch(1)
+            val pool = java.util.concurrent.Executors.newFixedThreadPool(8)
+            val futures = (1..8).map { pool.submit<android.content.SharedPreferences> { start.await(); context.getSharedPreferences("p$round", 0) } }
+            start.countDown()
+            val instances = futures.map { it.get() }
+            pool.shutdown()
+            assertEquals(1, instances.distinct().size)
+        }
     }
 }

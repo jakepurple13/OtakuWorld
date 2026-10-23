@@ -4,6 +4,7 @@ class PackageInfo {
     var packageName: String = ""
     var versionName: String? = null
     var versionCode: Int = 0
+    var longVersionCode: Long = 0
     var reqFeatures: Array<FeatureInfo>? = null
 }
 

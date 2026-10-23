@@ -1,4 +1,5 @@
 [versions]
+apksig = "9.4.1"
 accompanist = "0.37.3"
 activity = "1.13.0"
 arcore = "1.0.0-alpha13"
@@ -45,6 +46,7 @@ ziplineVersion = "1.27.0"
 zoomimageComposeGlide = "1.6.0"
 
 [libraries]
+apksig = { module = "com.android.tools.build:apksig", version.ref = "apksig" }
 # Accompanist
 adaptive = { module = "com.google.accompanist:accompanist-adaptive", version.ref = "accompanist" }
 drawablePainter = { module = "com.google.accompanist:accompanist-drawablepainter", version.ref = "accompanist" }

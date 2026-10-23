@@ -227,6 +227,7 @@ kotlin {
 
         jvmTest {
             dependencies {
+                implementation(commonLibs.ktorMock)
                 implementation(commonLibs.turbine)
                 implementation(commonLibs.koin.test)
                 implementation(commonLibs.androidx.room.sqlite)

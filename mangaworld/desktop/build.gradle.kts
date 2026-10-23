@@ -55,6 +55,7 @@ kotlin {
             implementation(projects.datastore.mangasettings)
             implementation(projects.kmpmodels)
             implementation(projects.mangaworld.shared)
+            implementation(projects.mihonsupport)
             implementation(commonLibs.bundles.datastoreLibs)
             implementation(commonLibs.coroutinesCore)
             implementation(desktopLibs.kotlinx.coroutines.swing)

@@ -29,8 +29,11 @@ kotlin {
         jvmMain {
             dependencies {
                 implementation("net.dongliu:apk-parser:2.6.10")
-                implementation("com.github.ThexXTURBOXx.dex2jar:dex-tools:v76")
-                implementation("com.github.ThexXTURBOXx.dex2jar:d2j-base-cmd:v76")
+                // Maven Central release of the ThexXTURBOXx fork; v76 (JitPack) lacks dontSanitizeNames.
+                implementation("de.femtopedia.dex2jar:dex-translator:2.4.38")
+                implementation("org.ow2.asm:asm:9.10.1")
+                // Android ships org.json in the framework; extensions call it directly.
+                implementation("org.json:json:20251224")
                 implementation(desktopLibs.kotlin.multiplatform.appdirs)
             }
         }

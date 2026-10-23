@@ -116,18 +116,24 @@ object MihonSourceMapper {
         (model.extras[MEMO] as? String)?.let { memo = json.decodeFromString<JsonObject>(it) }
     }
 
-    fun toStorage(page: Page, imageUrl: String, source: Any): KmpStorage =
-        KmpStorage(link = imageUrl).apply {
-            if (source is HttpSource) headers.putAll(imageHeaders(source, page).toMap())
+    /** Link and headers come from the source's image request, as Mihon's downloader uses it. */
+    fun toStorage(page: Page, imageUrl: String, source: Any): KmpStorage {
+        val request = (source as? HttpSource)?.let { imageRequest(it, page) }
+        return KmpStorage(link = request?.url?.toString() ?: imageUrl).apply {
+            if (source is HttpSource) headers.putAll((request?.headers ?: source.headers).toMap())
         }
+    }
 
     private val imageRequestMethod by lazy {
         HttpSource::class.java.getDeclaredMethod("imageRequest", Page::class.java).apply { isAccessible = true }
     }
 
-    /** `imageRequest` is protected; extensions override it to add per-image headers. */
-    private fun imageHeaders(source: HttpSource, page: Page): Headers =
-        runCatching { (imageRequestMethod.invoke(source, page) as Request).headers }.getOrElse { source.headers }
+    /**
+     * `imageRequest` is protected; extensions override it to add per-image headers or, like MangaDex, to
+     * build the URL (image host in page.url, path in imageUrl). Null when it fails.
+     */
+    private fun imageRequest(source: HttpSource, page: Page): Request? =
+        runCatching { imageRequestMethod.invoke(source, page) as Request }.getOrNull()
 
     private fun Headers.toMap(): Map<String, String> = names().associateWith { get(it).orEmpty() }
 
