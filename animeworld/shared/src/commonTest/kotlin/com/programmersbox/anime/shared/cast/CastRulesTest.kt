@@ -57,6 +57,41 @@ class CastRulesTest {
     }
 
     @Test
+    fun progressiveTsBlockedByExtensionAndMime() {
+        assertEquals(CastCompat.Blocked, castCompatibility("https://a/v.ts?x=1", null))
+        assertEquals(CastCompat.Blocked, castCompatibility("https://a/v", "video/MP2T"))
+    }
+
+    @Test
+    fun hlsStillAllowed() {
+        assertEquals(CastCompat.Ok, castCompatibility("https://a/index.m3u8", null))
+        assertEquals(CastCompat.Ok, castCompatibility("https://a/v", "application/x-mpegURL"))
+    }
+
+    @Test
+    fun sourceHeadersExcludePlayerDefaults() {
+        assertEquals(emptyMap<String, String>(), castSourceHeaders(emptyMap(), null))
+        // A source name in the referer slot is not a referer.
+        assertEquals(emptyMap<String, String>(), castSourceHeaders(emptyMap(), "Vidstream"))
+        assertFalse(needsProxy("https://a/v.mp4", null, castSourceHeaders(emptyMap(), "")))
+    }
+
+    @Test
+    fun sourceHeadersAddUrlReferer() {
+        assertEquals(mapOf("referer" to "https://r/"), castSourceHeaders(emptyMap(), "https://r/"))
+        assertEquals(mapOf("Referer" to "https://a/"), castSourceHeaders(mapOf("Referer" to "https://a/"), "https://r/"))
+        assertTrue(needsProxy("https://a/v.mp4", null, castSourceHeaders(emptyMap(), "https://r/")))
+    }
+
+    @Test
+    fun ownTrackByServerUrlElseIdRange() {
+        assertTrue(isOwnTrack(1, "http://192.168.1.2:4000/sub/1.vtt", "http://192.168.1.2:4000"))
+        assertFalse(isOwnTrack(OWN_TRACK_BASE, "https://cdn/a.vtt", "http://192.168.1.2:4000"))
+        assertTrue(isOwnTrack(OWN_TRACK_BASE + 2, null, "http://192.168.1.2:4000"))
+        assertFalse(isOwnTrack(3, "http://192.168.1.2:4000/sub/1.vtt", null))
+    }
+
+    @Test
     fun closestMatchesIsoPrefix() {
         val subs = listOf("Español", "English (Signs & Songs)", "English").map { KmpSubtitle("https://a/$it", it) }
         assertEquals(2, closestSubtitleIndex("en", null, subs, languageName = "English"))

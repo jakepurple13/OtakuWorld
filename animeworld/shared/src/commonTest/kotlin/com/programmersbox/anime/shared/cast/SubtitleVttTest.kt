@@ -45,6 +45,20 @@ class SubtitleVttTest {
     }
 
     @Test
+    fun assToVtt_dropsDrawingsAndEmptyCues() {
+        val ass = """
+            [Events]
+            Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+            Dialogue: 0,0:00:01.00,0:00:02.00,Sign,,0,0,0,,{\pos(5,5)\p1}m 0 0 l 100 0 100 100 0 100{\p0}
+            Dialogue: 0,0:00:03.00,0:00:04.00,Default,,0,0,0,,Before {\p2}m 0 0 l 1 1{\p0}after
+        """.trimIndent()
+        val vtt = toWebVtt(ass, SubtitleFormat.Ass)
+        assertTrue("m 0 0" !in vtt)
+        assertTrue("00:00:01.000" !in vtt)
+        assertEquals(listOf("Before after"), parseVttCues(vtt).map { it.text })
+    }
+
+    @Test
     fun vttPassthrough_unchanged() {
         val vtt = "WEBVTT\n\n00:00:01.000 --> 00:00:02.000\nHi\n"
         assertEquals(vtt, toWebVtt(vtt, SubtitleFormat.Vtt))

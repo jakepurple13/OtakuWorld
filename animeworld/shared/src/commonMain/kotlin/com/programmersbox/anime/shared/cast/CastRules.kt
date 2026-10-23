@@ -18,10 +18,11 @@ private fun urlExtension(url: String): String =
 private fun isHls(url: String, mimeType: String?): Boolean =
     urlExtension(url) == "m3u8" || mimeType?.contains("mpegurl", ignoreCase = true) == true
 
-/** Cast receivers cannot play Matroska. */
+/** Cast receivers cannot play Matroska or a progressive MPEG-TS file (TS segments inside HLS are fine). */
 fun castCompatibility(url: String, mimeType: String?): CastCompat {
     val mime = mimeType?.lowercase()
-    return if (mime == "video/x-matroska" || mime == "video/mkv" || urlExtension(url) == "mkv") {
+    val ext = urlExtension(url)
+    return if (mime == "video/x-matroska" || mime == "video/mkv" || mime == "video/mp2t" || ext == "mkv" || ext == "ts") {
         CastCompat.Blocked
     } else {
         CastCompat.Ok
@@ -38,9 +39,27 @@ fun castContentType(url: String, mimeType: String?): String {
     }
 }
 
-/** HLS always goes through the proxy (playlist rewrite); other streams only when headers must be added. */
-fun needsProxy(url: String, mimeType: String?, headers: Map<String, String>): Boolean =
-    isHls(url, mimeType) || headers.isNotEmpty()
+/**
+ * HLS always goes through the proxy (playlist rewrite); other streams only when the source requires headers.
+ * [sourceHeaders] are the source's own headers (see [castSourceHeaders]), not the player's defaults.
+ */
+fun needsProxy(url: String, mimeType: String?, sourceHeaders: Map<String, String>): Boolean =
+    isHls(url, mimeType) || sourceHeaders.isNotEmpty()
+
+/** The source's own [headers] plus [referer] when it is a URL, without the player's default headers. */
+fun castSourceHeaders(headers: Map<String, String>, referer: String?): Map<String, String> =
+    if (referer != null && referer.startsWith("http", ignoreCase = true) && headers.keys.none { it.equals("referer", ignoreCase = true) }) {
+        headers + ("referer" to referer)
+    } else {
+        headers
+    }
+
+/** Subtitle tracks the phone adds get ids from here up, clear of the ids an HLS manifest's own tracks use. */
+const val OWN_TRACK_BASE = 100_000L
+
+/** Whether a receiver text track is one the phone serves: its URL is on our server, or (no URL to compare) its id is in our range. */
+fun isOwnTrack(id: Long, contentId: String?, serverBaseUrl: String?): Boolean =
+    if (serverBaseUrl != null && contentId != null) contentId.startsWith(serverBaseUrl) else id >= OWN_TRACK_BASE
 
 /**
  * Index of the subtitle closest to the active track, or null if none match.

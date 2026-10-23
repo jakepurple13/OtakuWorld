@@ -34,6 +34,19 @@ private fun srtToVtt(text: String): String = buildString {
 }
 
 private val assOverride = Regex("""\{[^}]*}""")
+private val assDrawingMode = Regex("""\\p(\d+)""")
+
+/** Drops override blocks and the vector drawing commands written while `\pN` (N > 0) is active, until `\p0`. */
+private fun stripAssOverrides(text: String): String = buildString {
+    var drawing = false
+    var last = 0
+    for (block in assOverride.findAll(text)) {
+        if (!drawing) append(text, last, block.range.first)
+        assDrawingMode.findAll(block.value).lastOrNull()?.let { drawing = it.groupValues[1].toInt() > 0 }
+        last = block.range.last + 1
+    }
+    if (!drawing) append(text, last, text.length)
+}
 
 private fun assToVtt(text: String): String = buildString {
     append("WEBVTT\n\n")
@@ -57,8 +70,7 @@ private fun assToVtt(text: String): String = buildString {
             if (fields.size <= textColumn) continue
             val startMs = parseTimestamp(fields[start]) ?: continue
             val endMs = parseTimestamp(fields[end]) ?: continue
-            val cueText = fields[textColumn]
-                .replace(assOverride, "")
+            val cueText = stripAssOverrides(fields[textColumn])
                 .replace("\\N", "\n")
                 .replace("\\n", "\n")
                 .replace("\\h", " ")
