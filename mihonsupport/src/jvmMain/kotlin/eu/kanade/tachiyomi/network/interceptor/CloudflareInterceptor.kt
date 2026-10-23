@@ -24,9 +24,9 @@ class CloudflareInterceptor(
         throw IOException("Cloudflare-protected; not supported on desktop yet")
     }
 
+    // Same rule as the Android interceptor: the cf-mitigated header is the official challenge marker.
     private fun shouldIntercept(response: Response): Boolean =
-        response.code in ERROR_CODES && response.header("Server") in SERVER_CHECK
+        response.header("cf-mitigated") == "challenge" && response.header("Server") in SERVER_CHECK
 }
 
-private val ERROR_CODES = listOf(403, 503)
 private val SERVER_CHECK = arrayOf("cloudflare-nginx", "cloudflare")

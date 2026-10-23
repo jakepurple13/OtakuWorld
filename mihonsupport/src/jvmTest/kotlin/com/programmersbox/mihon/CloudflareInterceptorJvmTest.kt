@@ -40,9 +40,21 @@ class CloudflareInterceptorJvmTest {
 
     @Test
     fun cloudflareChallengeFailsWithReadableError() {
-        server.enqueue(MockResponse.Builder().code(403).addHeader("Server", "cloudflare").build())
+        server.enqueue(
+            MockResponse.Builder().code(403)
+                .addHeader("Server", "cloudflare")
+                .addHeader("cf-mitigated", "challenge")
+                .build()
+        )
         val ex = assertFailsWith<IOException> { client.newCall(Request(server.url("/"))).execute() }
         assertEquals("Cloudflare-protected; not supported on desktop yet", ex.message)
+    }
+
+    @Test
+    fun cloudflareErrorWithoutChallengePassesThrough() {
+        server.enqueue(MockResponse.Builder().code(403).addHeader("Server", "cloudflare").build())
+        val code = client.newCall(Request(server.url("/"))).execute().use { it.code }
+        assertEquals(403, code)
     }
 
     @Test
