@@ -17,6 +17,12 @@ class AndroidStubShapeTest {
         assertEquals<Class<*>?>(androidx.preference.Preference::class.java, androidx.preference.PreferenceGroup::class.java.superclass)
     }
 
+    @Test fun packageInfoHasLongVersionCodeAccessors() {
+        val cls = android.content.pm.PackageInfo::class.java
+        assertEquals(Long::class.javaPrimitiveType, cls.getMethod("getLongVersionCode").returnType)
+        cls.getMethod("setLongVersionCode", Long::class.javaPrimitiveType)
+    }
+
     @Test fun uriParses() {
         val uri = android.net.Uri.parse("https://example.com/a/b.jpg?x=1")
         assertEquals("example.com", uri.host)
