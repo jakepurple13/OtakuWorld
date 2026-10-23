@@ -42,7 +42,7 @@ fun embeddedTrackLabel(label: String?, language: String?): String {
 fun streamMime(storage: KmpStorage): String? = storage.mimeType
 
 /** Label fragments marking a track that only covers part of the dialogue. */
-private val PARTIAL_SUBTITLE_MARKERS = listOf("sign", "song", "forced", "dubtitle", "cc only")
+internal val PARTIAL_SUBTITLE_MARKERS = listOf("sign", "song", "forced", "dubtitle", "cc only")
 
 /** English names for common language codes, so a preferred code also matches a "Japanese"-style label. */
 private val LANGUAGE_NAMES = mapOf(
