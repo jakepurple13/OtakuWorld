@@ -429,8 +429,10 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   - Subtitles on the TV use your subtitle style settings
   - New remote screen with seek, play/pause, subtitle tracks, and volume, plus a mini player
     bar and a media notification while casting. The phone's volume keys control the TV
-  - MKV episodes show "This episode can't be cast"; other failures show a message
+  - MKV episodes and `.ts` downloads show "This episode can't be cast"; other failures show a
+    message
   - The old cast controls and local file server library were removed
+  ([#2631](https://github.com/jakepurple13/OtakuWorld/pull/2631))
 
 #### Improvements
 
