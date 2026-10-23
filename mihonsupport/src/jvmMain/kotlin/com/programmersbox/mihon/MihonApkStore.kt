@@ -23,6 +23,9 @@ class MihonApkStore(
     private val convert: (File, File) -> File? = DexConverter::convert,
 ) : ApkExtensionStore {
 
+    override fun accepts(file: File): Boolean =
+        runCatching { "tachiyomi.extension" in ApkManifestParser.parse(file).features }.getOrDefault(false)
+
     override suspend fun install(apk: File): String = withContext(Dispatchers.IO) {
         try {
             val info = try {
