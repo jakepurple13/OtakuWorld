@@ -19,6 +19,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
@@ -30,6 +31,7 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.time.measureTime
 
 class SyncEngineImpl(
@@ -174,8 +176,13 @@ class SyncEngineImpl(
             awaitCancellation()
         } finally {
             trigger.close()
-            channel.unsubscribe()
-            runCatching { client.realtime.removeChannel(channel) }
+            // This job is usually cancelled here, so suspending cleanup must be NonCancellable. Otherwise the
+            // channel stays cached in the client, gets rejoined on reconnect, and the next client.channel()
+            // call returns it already SUBSCRIBED.
+            withContext(NonCancellable) {
+                runCatching { channel.unsubscribe() }
+                runCatching { client.realtime.removeChannel(channel) }
+            }
         }
     }
 }
