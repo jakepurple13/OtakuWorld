@@ -95,6 +95,9 @@ kotlin {
                 implementation(commonLibs.zipline)
                 // android.* and androidx.preference stubs the vendored runtime compiles against.
                 implementation(projects.sharedutils.kmpextensionloader)
+                implementation(androidLibs.apksig)
+                implementation("net.dongliu:apk-parser:2.6.10")
+                implementation(desktopLibs.kotlin.multiplatform.appdirs)
             }
         }
 

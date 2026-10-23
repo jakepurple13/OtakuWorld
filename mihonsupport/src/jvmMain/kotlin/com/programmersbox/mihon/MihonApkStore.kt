@@ -1,6 +1,7 @@
 package com.programmersbox.mihon
 
 import com.programmersbox.kmpextensionloader.ApkExtensionStore
+import com.programmersbox.kmpextensionloader.ApkFiles
 import com.programmersbox.kmpextensionloader.ApkManifestParser
 import com.programmersbox.kmpextensionloader.ApkInstallException
 import com.programmersbox.kmpextensionloader.ApkInstallFailure
@@ -9,9 +10,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
-import java.nio.file.AtomicMoveNotSupportedException
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption
 
 /** [jar] is null when dex conversion failed; the package is still listed so the failure is visible. */
 data class InstalledMihonApk(val apk: File, val jar: File?, val info: MihonApkInfo)
@@ -50,7 +48,7 @@ class MihonApkStore(
                 ?: throw ApkInstallException(ApkInstallFailure.INVALID, "Could not convert ${info.packageName} dex")
             try {
                 apkDir.mkdirs()
-                moveReplacing(apk, File(apkDir, "${info.packageName}.apk"))
+                ApkFiles.moveReplacing(apk, File(apkDir, "${info.packageName}.apk"))
             } catch (e: IOException) {
                 throw ApkInstallException(ApkInstallFailure.STORAGE, "Could not store ${info.packageName}: ${e.message}", e)
             }
@@ -95,22 +93,8 @@ class MihonApkStore(
             ?.forEach { runCatching { it.delete() } }
     }
 
-    private fun isSafePackageName(name: String): Boolean =
-        PACKAGE_REGEX.matches(name) &&
-            File(apkDir, "$name.apk").canonicalFile.parentFile == apkDir.canonicalFile
+    private fun isSafePackageName(name: String): Boolean = ApkFiles.isSafePackageName(apkDir, name)
 
     private fun apkFiles(): List<File> =
         apkDir.listFiles { f -> f.isFile && f.extension == "apk" }?.sortedBy { it.name }.orEmpty()
-
-    private fun moveReplacing(from: File, to: File) {
-        try {
-            Files.move(from.toPath(), to.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
-        } catch (_: AtomicMoveNotSupportedException) {
-            Files.move(from.toPath(), to.toPath(), StandardCopyOption.REPLACE_EXISTING)
-        }
-    }
-
-    private companion object {
-        val PACKAGE_REGEX = Regex("^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z][A-Za-z0-9_]*)+$")
-    }
 }
