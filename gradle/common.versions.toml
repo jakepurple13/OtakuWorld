@@ -20,18 +20,18 @@ haze = "2.0.1"
 heatmap = "1.0.5"
 humanReadable = "1.13.1"
 kamelImage = "1.0.9"
-kfswatch = "1.4.0"
+kfswatch = "1.5.0"
 koin-bom = "4.2.2"
-koog = "1.2.0"
+koog = "1.3.0"
 koog-beta = "1.1.1-beta"
 kotlinTest = "2.4.20"
 kotlinx-coroutines = "1.11.0"
 kotlinxDatetime = "0.8.0"
 kotzilla = "2.3.4"
-ktorVersion = "3.3.3"
-latestAboutLibsRelease = "15.2.0"
+ktorVersion = "3.6.0"
+latestAboutLibsRelease = "15.3.0"
 lifecycleViewmodelNavigation3 = "2.11.0"
-markdown-renderer = "0.45.0"
+markdown-renderer = "0.46.0"
 material3AdaptiveNavigationSuite = "1.10.0-alpha05"
 material3WindowSizeClassVersion = "1.10.0-alpha05"
 materialIconsExtended = "1.7.3"
@@ -39,7 +39,7 @@ materialKolor = "6.0.0-beta01"
 mokoBiometry = "0.4.0"
 nav3Material = "1.3.0"
 navigation3 = "1.2.0-rc01"
-navigationevent = "1.1.2"
+navigationevent = "1.2.0"
 pagingComposeCommon = "3.3.0-alpha02-0.5.1"
 qrose = "1.3.0"
 reorderable = "3.1.0"
@@ -49,9 +49,9 @@ sqlite = "2.7.1"
 turbine = "1.2.1"
 urlencoderLib = "1.6.0"
 kmpalette = "3.1.0"
-materialAdaptiveCmp = "1.2.0"
-supabase = "3.6.0"
-ziplineCoreVersion = "1.27.0"
+materialAdaptiveCmp = "1.3.0"
+supabase = "3.8.0"
+ziplineCoreVersion = "1.28.0"
 
 [libraries]
 # About Libraries (KMP)
@@ -133,9 +133,9 @@ koinNavigation3 = { module = "io.insert-koin:koin-compose-navigation3" }
 koin-test = { module = "io.insert-koin:koin-test" }
 
 # Kotlinx
-kotlinxSerialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version = "1.11.0" }
-kotlinxSerializationOkio = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json-okio", version = "1.11.0" }
-kotlinxSerializationProtobuf = { module = "org.jetbrains.kotlinx:kotlinx-serialization-protobuf", version = "1.11.0" }
+kotlinxSerialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version = "1.12.0" }
+kotlinxSerializationOkio = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json-okio", version = "1.12.0" }
+kotlinxSerializationProtobuf = { module = "org.jetbrains.kotlinx:kotlinx-serialization-protobuf", version = "1.12.0" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
 kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test", version.ref = "kotlinTest" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
@@ -204,7 +204,7 @@ reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reo
 scanner = { module = "io.github.kalinjul.easyqrscan:scanner", version.ref = "scanner" }
 sonner = { module = "io.github.dokar3:sonner", version = "0.4.0" }
 urlencoder-lib = { module = "net.thauvin.erik.urlencoder:urlencoder-lib", version.ref = "urlencoderLib" }
-zoomableModifier = "net.engawapg.lib:zoomable:2.13.0"
+zoomableModifier = "net.engawapg.lib:zoomable:2.16.0"
 
 # Supabase
 supabase-bom = { module = "io.github.jan-tennert.supabase:bom", version.ref = "supabase" }
