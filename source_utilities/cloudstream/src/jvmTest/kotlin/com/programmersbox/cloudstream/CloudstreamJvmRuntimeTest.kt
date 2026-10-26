@@ -65,13 +65,17 @@ class CloudstreamJvmRuntimeTest {
     // Plugins bind to these by name; on desktop they must exist with the same JVM names.
     @Test
     fun pluginFacadeClassesExistOnJvm() {
-        val rows = File("shims.md").readLines()
+        val lines = File("shims.md").readLines()
+        val jvmSection = lines.indexOf(JVM_MISSING_HEADING).also { assertTrue(it >= 0, "no \"$JVM_MISSING_HEADING\" section") }
+        // Types the desktop host deliberately lacks (only touched inside never-run UI code).
+        val jvmMissing = lines.drop(jvmSection).mapNotNull { JVM_MISSING_ROW.find(it)?.groupValues?.get(1) }.toSet()
+        assertTrue(jvmMissing.isNotEmpty(), "\"$JVM_MISSING_HEADING\" table not parsed")
+        val rows = lines.take(jvmSection)
             .mapNotNull { ROW.find(it) }
             .map { it.groupValues[1] to it.groupValues[2] }
             .filterNot { (_, status) -> status == "missing" || status.startsWith("app ") }
-            // Android UI libraries (appcompat, fragment, material) get JVM link-time stubs later.
-            .filterNot { (name, _) -> ANDROID_UI_PREFIXES.any(name::startsWith) }
             .map { it.first }
+            .filterNot { it in jvmMissing }
         assertTrue(rows.size > 20, "shims.md table not parsed: ${rows.size} rows")
 
         val unresolved = (rows + FACADES).filter { name ->
@@ -153,7 +157,8 @@ class CloudstreamJvmRuntimeTest {
 
     private companion object {
         val ROW = Regex("""^\| `([\w.$]+)` \|[^|]*\| ([^|]+?) \|$""")
-        val ANDROID_UI_PREFIXES = listOf("androidx.appcompat.", "androidx.fragment.", "com.google.android.material.")
+        const val JVM_MISSING_HEADING = "## JVM: missing at runtime only"
+        val JVM_MISSING_ROW = Regex("""^\| `([\w.$]+)` \|""")
         val FACADES = listOf(
             "com.lagradost.api.ContextHelper_androidKt",
             "com.lagradost.api.Log",

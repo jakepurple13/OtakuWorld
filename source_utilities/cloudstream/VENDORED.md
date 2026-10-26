@@ -38,7 +38,8 @@ On the JVM, `android.*` / `androidx.*` types resolve to the stubs in
 `:sharedutils:kmpextensionloader` (`src/jvmMain`), and `androidx.annotation` to the real
 `annotation-jvm` jar. Stubs added for this module: `android.app.Activity`,
 `android.view.ContextThemeWrapper`, `androidx.fragment.app.Fragment` and core-ktx's
-`androidx.core.content.edit`.
+`androidx.core.content.edit`, plus the link-time stubs real plugins need (see "Desktop (JVM)" in
+`shims.md`).
 
 ### Desktop (JVM) replacements
 
