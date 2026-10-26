@@ -4,6 +4,7 @@ import android.app.Application
 import com.lagradost.cloudstream3.APIHolder
 import com.programmersbox.cloudstream.plugins.InstalledPlugin
 import com.programmersbox.cloudstream.plugins.PluginLoader
+import com.programmersbox.kmpextensionloader.DexConverter
 import java.io.File
 import kotlin.io.path.createTempDirectory
 import kotlin.test.AfterTest
@@ -93,5 +94,21 @@ class JvmPluginLoaderTest {
 
         loader.unload(second)
         assertNull(classLoader.getResource("manifest.json"), "class loader still open")
+    }
+
+    @Test
+    fun cleanupStaleJarsKeepsOnlyJarsOfInstalledPlugins() {
+        val kept = testPlugin("Kept", TestPlugins.cs3(tempDir, jarCacheDir, "Kept", ConfigurableTestPlugin::class.java))
+        val gone = TestPlugins.cs3(tempDir, jarCacheDir, "Gone", ThrowingTestPlugin::class.java)
+        val keptJar = DexConverter.jarFor(File(kept.path), jarCacheDir)
+        val goneJar = DexConverter.jarFor(gone, jarCacheDir)
+        assertTrue(keptJar.isFile && goneJar.isFile)
+        val unrelated = File(jarCacheDir, "notes.txt").also { it.writeText("x") }
+
+        loader.cleanupStaleJars(listOf(kept))
+
+        assertTrue(keptJar.isFile, "installed plugin's jar was deleted")
+        assertFalse(goneJar.exists(), "stale jar should be cleaned up")
+        assertTrue(unrelated.isFile, "only converted jars are touched")
     }
 }

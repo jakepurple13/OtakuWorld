@@ -85,6 +85,7 @@ class CloudstreamCatalog internal constructor(
                 }
             }
         }
+        loader.cleanupStaleJars(installed)
         sources = loadedSources() + placeholders
     }
 

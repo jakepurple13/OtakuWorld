@@ -40,6 +40,10 @@ class PluginLoader(private val context: Context) {
         PluginRegistrations.remove(loaded.apis, loaded.extractors)
     }
 
+    /** Android loads `.cs3` files directly, so there are no converted jars to clean up. */
+    @Suppress("UNUSED_PARAMETER")
+    fun cleanupStaleJars(installed: List<InstalledPlugin>) = Unit
+
     // As upstream: AssetManager.addAssetPath is hidden API, reached by reflection.
     private fun resourcesFor(file: File): Resources {
         val assets = AssetManager::class.java.getDeclaredConstructor().newInstance()

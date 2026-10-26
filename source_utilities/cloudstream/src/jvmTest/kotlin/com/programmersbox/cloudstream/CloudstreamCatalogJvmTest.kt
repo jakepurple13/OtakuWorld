@@ -8,6 +8,7 @@ import com.programmersbox.cloudstream.plugins.InstalledPlugin
 import com.programmersbox.cloudstream.plugins.PluginLoader
 import com.programmersbox.cloudstream.plugins.PluginStore
 import com.programmersbox.cloudstream.repo.CloudstreamRepoClient
+import com.programmersbox.kmpextensionloader.DexConverter
 import com.programmersbox.kmpmodels.KmpConfigurableApiService
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
@@ -124,6 +125,21 @@ class CloudstreamCatalogJvmTest {
         assertNull(classLoader.getResource("manifest.json"), "class loader still open")
         catalog.initialize()
         assertTrue(catalog.getSources().isEmpty())
+    }
+
+    @Test
+    fun initializeDeletesStaleConvertedJars() = runTest {
+        install(fixture())
+        trusted += CloudstreamFixture.REPO_URL
+        val staleCs3 = TestPlugins.cs3(File(tempDir, "old"), jarCacheDir, "Stale", ConfigurableTestPlugin::class.java)
+        val staleJar = DexConverter.jarFor(staleCs3, jarCacheDir)
+        assertTrue(staleJar.isFile)
+
+        catalog.initialize()
+
+        assertFalse(staleJar.exists(), "stale jar should be cleaned up")
+        val liveJar = DexConverter.jarFor(File(store.installed().single().path), jarCacheDir)
+        assertTrue(liveJar.isFile, "loaded plugin's jar was deleted")
     }
 
     @Test

@@ -67,6 +67,17 @@ class PluginLoader(
         jars.retain(liveJars.values.toSet())
     }
 
+    /** Deletes converted jars that back no [installed] plugin (uninstalled or updated) and no loaded one. */
+    @Synchronized
+    fun cleanupStaleJars(installed: List<InstalledPlugin>) {
+        val keep = installed
+            .mapNotNull { runCatching { DexConverter.jarFor(File(it.path), jarCacheDir).name }.getOrNull() }
+            .toSet() + liveJars.values.map { File(it).name }
+        jarCacheDir.listFiles { f -> DexConverter.isCachedJar(f) }
+            ?.filter { it.name !in keep }
+            ?.forEach { runCatching { it.delete() } }
+    }
+
     private companion object {
         const val NEEDS_RESOURCES = "Needs Android resources (not supported on desktop)"
     }
