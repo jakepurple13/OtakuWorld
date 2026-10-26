@@ -64,9 +64,6 @@ class CloudstreamApiServiceTest {
         assertTrue(service.canDownload)
         assertTrue(service.canCast)
         assertFalse(service is KmpConfigurableApiService)
-        assertIs<KmpConfigurableApiService>(
-            ConfigurableCloudstreamApiService(FakeMainApi(), "fakeplugin", "cloudstream:Fake") {}
-        )
     }
 
     @Test

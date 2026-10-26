@@ -1,5 +1,6 @@
 package com.programmersbox.kmpextensionloader
 
+import androidx.core.content.edit
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -174,6 +175,23 @@ class AndroidStubShapeTest {
         wrapper.getMethod("getSharedPreferences", String::class.java, Int::class.javaPrimitiveType)
         wrapper.getMethod("getCacheDir")
         wrapper.getMethod("getPackageName")
+    }
+
+    @Test fun activityAndFragmentMatchSdkShapes() {
+        classExtends(android.app.Activity::class.java, android.view.ContextThemeWrapper::class.java)
+        classExtends(android.view.ContextThemeWrapper::class.java, android.content.ContextWrapper::class.java)
+        classExtends(androidx.fragment.app.Fragment::class.java, Any::class.java)
+    }
+
+    @Test fun coreKtxEditAppliesChanges() {
+        val dir = java.nio.file.Files.createTempDirectory("edit").toFile()
+        try {
+            val prefs = android.app.Application("pkg.test", dir).getSharedPreferences("p", 0)
+            prefs.edit { putString("k", "v") }
+            assertEquals("v", prefs.getString("k", null))
+        } finally {
+            dir.deleteRecursively()
+        }
     }
 
     @Test fun preferenceManagerDefaultPreferences() {

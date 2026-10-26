@@ -1,6 +1,5 @@
 package com.programmersbox.cloudstream
 
-import android.content.Context
 import com.lagradost.cloudstream3.MainAPI
 import com.lagradost.cloudstream3.MainPageData
 import com.lagradost.cloudstream3.MainPageRequest
@@ -8,7 +7,6 @@ import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.KmpChapterModel
-import com.programmersbox.kmpmodels.KmpConfigurableApiService
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpStorage
@@ -119,10 +117,3 @@ open class CloudstreamApiService(
             throw IllegalStateException("${api.name}: $e", e)
         }
 }
-
-class ConfigurableCloudstreamApiService(
-    api: MainAPI,
-    internalName: String,
-    serviceName: String,
-    val openSettings: (Context) -> Unit,
-) : CloudstreamApiService(api, internalName, serviceName), KmpConfigurableApiService

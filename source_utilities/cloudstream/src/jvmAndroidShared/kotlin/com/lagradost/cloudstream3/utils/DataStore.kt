@@ -129,7 +129,8 @@ object DataStore {
     fun Context.getKeys(folder: String): List<String> {
         // Ensure that the folder ends with "/" to prevent matching with other folders
         val fixedFolder = folder.trimEnd('/') + "/"
-        return this.getSharedPrefs().all.keys.filter { it.startsWith(fixedFolder) }
+        // OTAKU: getAll() instead of `.all`; the desktop SharedPreferences stub is Kotlin (no synthetic property).
+        return this.getSharedPrefs().getAll().keys.filter { it.startsWith(fixedFolder) }
     }
 
     fun Context.removeKey(folder: String, path: String) {

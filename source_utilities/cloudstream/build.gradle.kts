@@ -90,5 +90,46 @@ kotlin {
                 implementation(androidLibs.okhttpMockWebServer)
             }
         }
+
+        jvmMain {
+            kotlin.srcDir("src/jvmAndroidShared/kotlin")
+            dependencies {
+                implementation(commonLibs.ktorOkHttp)
+                implementation(projects.datastore)
+                implementation(project.dependencies.platform(commonLibs.koin.bom))
+                implementation(commonLibs.koinCores)
+                // android.* / androidx.* stubs the vendored library compiles against.
+                implementation(projects.sharedutils.kmpextensionloader)
+                implementation(desktopLibs.kotlin.multiplatform.appdirs)
+                // CloudStream plugins compile against these; the host must provide them.
+                api(androidLibs.cloudstreamNiceHttp)
+                api(androidLibs.cloudstreamJackson)
+                api(androidLibs.cloudstreamRhino)
+                api(androidLibs.cloudstreamKsoup)
+                api(androidLibs.cloudstreamCryptographyCore)
+                api(androidLibs.cloudstreamCryptographyProvider)
+                api(androidLibs.cloudstreamAtomicfu)
+                api(androidLibs.cloudstreamKotlinxIo)
+                api(androidLibs.cloudstreamAnnotation) // resolves to annotation-jvm
+                api(androidLibs.jsoup)
+                api(androidLibs.okhttpLib)
+                api(commonLibs.ktorCore)
+                api(commonLibs.kotlinx.datetime)
+                api(commonLibs.kotlinxSerialization)
+                api(commonLibs.coroutinesCore)
+                api(kotlin("reflect"))
+                api(androidLibs.gson)
+            }
+        }
+
+        jvmTest {
+            kotlin.srcDir("src/jvmAndroidSharedTest/kotlin")
+            dependencies {
+                implementation(commonLibs.kotlin.test)
+                implementation(commonLibs.coroutinesTest)
+                implementation(commonLibs.ktorMock)
+                implementation(androidLibs.okhttpMockWebServer)
+            }
+        }
     }
 }
