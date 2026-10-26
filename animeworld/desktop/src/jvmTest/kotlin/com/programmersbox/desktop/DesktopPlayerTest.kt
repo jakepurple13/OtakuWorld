@@ -15,6 +15,7 @@ import kotlin.concurrent.thread
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.test.fail
@@ -115,6 +116,41 @@ class DesktopPlayerTest {
             player.spuTracks.value.singleOrNull()?.language == "eng"
         }
         assertEquals("Embedded (eng)", player.spuTracks.value.single().label)
+    }
+
+    @Test
+    fun overlayPauseKeepsPositionAndResumes() {
+        val player = newPlayer()
+        player.setVolume(40)
+        player.open(PlayerSource.LocalFile(fixture.absolutePath))
+        awaitTrue("playing") { player.state.value.playing && player.frame.value != null }
+
+        val resume = player.pauseForOverlay()
+        awaitTrue("paused for overlay") { !player.state.value.playing }
+        val pausedAt = player.state.value.positionMs
+        Thread.sleep(400)
+        assertTrue(player.state.value.positionMs - pausedAt < 100, "position moved while the overlay was open")
+
+        resume()
+        awaitTrue("playing again") { player.state.value.playing }
+        val position = player.state.value.positionMs
+        assertTrue(position in (pausedAt - 100)..(pausedAt + 2_000), "resumed at $position, paused at $pausedAt")
+        assertEquals(40, player.state.value.volume)
+        assertEquals(null, player.state.value.error)
+    }
+
+    @Test
+    fun overlayPauseLeavesPausedPlayerPaused() {
+        val player = newPlayer()
+        player.open(PlayerSource.LocalFile(fixture.absolutePath))
+        awaitTrue("playing") { player.state.value.playing && player.frame.value != null }
+        player.playPause()
+        awaitTrue("paused") { !player.state.value.playing }
+
+        val resume = player.pauseForOverlay()
+        resume()
+        Thread.sleep(400)
+        assertFalse(player.state.value.playing, "a paused video started playing after the overlay closed")
     }
 
     @Test

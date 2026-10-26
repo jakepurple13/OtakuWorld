@@ -11,11 +11,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
@@ -36,6 +38,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Surface
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -72,10 +75,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.WindowPlacement
 import com.programmersbox.anime.shared.subtitles.SubtitleQuickSheet
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRepository
-import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRoute
+import com.programmersbox.anime.shared.subtitles.SubtitleSettingsScreen
 import com.programmersbox.anime.shared.subtitles.SubtitleTrackItem
 import com.programmersbox.kmpmodels.KmpSubtitle
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
@@ -111,8 +116,8 @@ fun DesktopPlayerScreen(
     val cueLoader = remember { SubtitleCueLoader(OkHttpClient()) }
     val subtitles = rememberDesktopSubtitles(player, externalSubtitles, referer, subtitleStyle, cueLoader)
     var subtitleSheetOpen by remember { mutableStateOf(false) }
+    var subtitleSettingsOpen by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    val navigationActions = koinInject<NavigationActions>()
 
     val fullscreen = rememberFullscreen()
     var activity by remember { mutableIntStateOf(0) }
@@ -137,6 +142,7 @@ fun DesktopPlayerScreen(
                 if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
                 activity++
                 // The subtitle sheet's own controls get the keys; Esc closes it.
+                if (subtitleSettingsOpen) return@onPreviewKeyEvent false
                 if (subtitleSheetOpen) {
                     if (event.key != Key.Escape) return@onPreviewKeyEvent false
                     subtitleSheetOpen = false
@@ -210,10 +216,32 @@ fun DesktopPlayerScreen(
                 onStyleChange = { transform -> scope.launch { subtitleSettings.update(transform) } },
                 onOpenSettings = {
                     subtitleSheetOpen = false
-                    navigationActions.navigate(SubtitleSettingsRoute)
+                    subtitleSettingsOpen = true
                 },
                 onDismiss = { subtitleSheetOpen = false },
             )
+        }
+
+        // Shown over the player instead of navigating: leaving this entry would close the player and lose the position.
+        if (subtitleSettingsOpen) {
+            DisposableEffect(player) {
+                val resume = player.pauseForOverlay()
+                onDispose { resume() }
+            }
+            Dialog(
+                onDismissRequest = { subtitleSettingsOpen = false },
+                properties = DialogProperties(usePlatformDefaultWidth = false),
+            ) {
+                Surface(
+                    shape = MaterialTheme.shapes.extraLarge,
+                    modifier = Modifier
+                        .widthIn(max = 640.dp)
+                        .fillMaxWidth(0.9f)
+                        .fillMaxHeight(0.9f),
+                ) {
+                    SubtitleSettingsScreen(onBack = { subtitleSettingsOpen = false })
+                }
+            }
         }
     }
 }

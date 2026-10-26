@@ -5,8 +5,6 @@ import com.programmersbox.anime.shared.AnimeDesktopSettings
 import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.anime.shared.subtitles.JvmSubtitleSettingsRepository
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRepository
-import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRoute
-import com.programmersbox.anime.shared.subtitles.SubtitleSettingsScreen
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsViewModel
 import com.programmersbox.anime.shared.VideoScreen
 import com.programmersbox.anime.shared.downloads.AnimeDownloadManager
@@ -76,7 +74,6 @@ fun main(args: Array<String>) {
             navigation<VideoScreen> { VideoPlayerUi(it) }
             navigation<PlatformSettings> { JvmSettingsScreen() }
             navigation<VideoViewerRoute> { ViewVideoScreen() }
-            navigation<SubtitleSettingsRoute> { SubtitleSettingsScreen() }
 
             includes(aniyomiModule)
         }

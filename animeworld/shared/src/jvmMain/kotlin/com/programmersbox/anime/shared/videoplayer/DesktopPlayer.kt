@@ -141,6 +141,16 @@ class DesktopPlayer(
         }
     }
 
+    /**
+     * Pauses while something covers the video (e.g. subtitle settings); calling the returned function resumes
+     * playback only if it was playing, so a paused video stays paused.
+     */
+    fun pauseForOverlay(): () -> Unit {
+        val wasPlaying = _state.value.playing
+        api { player.controls().setPause(true) }
+        return { if (wasPlaying) api { player.controls().setPause(false) } }
+    }
+
     fun seekTo(ms: Long) = api {
         val duration = _state.value.durationMs
         val target = if (duration > 0) ms.coerceIn(0, duration) else ms.coerceAtLeast(0)
