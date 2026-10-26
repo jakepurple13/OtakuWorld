@@ -95,8 +95,12 @@ class CloudstreamEndToEndNetworkTest {
         val file = downloads.walkTopDown().firstOrNull { it.isFile && it.extension in setOf("mp4", "mkv", "ts") }
             ?: fail("no downloaded video under $downloads: ${downloads.walkTopDown().toList()}")
         println("E2E downloaded: ${file.name} ${file.length()} bytes")
-        // Playing an HLS download (.ts) back through DesktopPlayer is not asserted: it showed no frame in 180 s (see task report).
         assertTrue(file.length() > 0, "empty download")
+
+        val local = DesktopPlayer(factory, proxy).also(players::add)
+        local.open(PlayerSource.LocalFile(file.absolutePath))
+        awaitTrue("a video frame from the download", 60_000) { local.frame.value != null }
+        println("E2E download frame: ${local.frame.value!!.width}x${local.frame.value!!.height}, duration=${local.state.value.durationMs} ms")
     }
 
     private suspend fun resolveFirstEpisodeLinks(): Pair<CloudstreamApiService, List<KmpStorage>> {
