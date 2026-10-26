@@ -28,7 +28,7 @@ fun interface EpisodeDownloadQueue {
 }
 
 /**
- * Downloads extension episodes (progressive or HLS, plus subtitle sidecars) into
+ * Downloads extension episodes (progressive, HLS or DASH, plus subtitle sidecars) into
  * `downloadsDirectory/<animeTitle>/`, one at a time in the order they were queued.
  *
  * [queue] lists running and waiting downloads and failed ones (kept for [retry] until [remove]d).
@@ -52,15 +52,8 @@ class AnimeDownloadManager(
         var view = QueuedDownload(key, title, QueuedDownloadState.Waiting)
         var job: Job? = null
 
-        /** DASH goes to its own downloader; everything else (HLS or progressive) to [EpisodeDownloader]. */
         fun request(folder: File): EpisodeDownloadRequest {
             val url = storage.link?.takeIf { it.isNotBlank() } ?: throw IOException("No stream link")
-            val mime = storage.mimeType?.substringBefore(';')?.trim()?.lowercase().orEmpty()
-            val path = url.substringBefore('#').substringBefore('?').lowercase()
-            // Routing point for DASH downloads.
-            if (mime == "application/dash+xml" || path.endsWith(".mpd")) {
-                throw UnsupportedOperationException("DASH downloads aren't supported yet")
-            }
             return EpisodeDownloadRequest(
                 url = url,
                 headers = playerHeaders(storage.headers, referer),
@@ -73,10 +66,18 @@ class AnimeDownloadManager(
         }
     }
 
+    private val dashDownloader = DashDownloader(client)
+
+    /** DASH links go to [DashDownloader]; everything else (HLS or progressive) stays in [EpisodeDownloader]. */
     private val downloader = EpisodeDownloader(
         client = client,
         vttSubtitles = true,
         warn = { message, t -> System.err.println("$message: $t") },
+        dash = { manifestUrl, headers, out, onProgress ->
+            dashDownloader.downloadCountingBytes(manifestUrl, headers, out) { fraction, bytes ->
+                onProgress(DownloadProgress(fraction, bytes, totalBytes = null))
+            }
+        },
     )
 
     /** One download at a time; the mutex is fair, so waiters get it in the order they asked. */

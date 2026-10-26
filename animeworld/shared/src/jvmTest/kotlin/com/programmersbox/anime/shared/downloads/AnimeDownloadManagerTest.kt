@@ -265,12 +265,37 @@ class AnimeDownloadManagerTest {
     }
 
     @Test
-    fun dashFailsUntilSupported() = runBlocking {
-        val key = manager.download(storage("/ep.mpd", "application/dash+xml"), null, "Show", "Ep 1")
+    fun dashDownloadWritesOneFileAndSidecars() = runBlocking {
+        listOf("manifest.mpd", "init-0.m4s", "init-1.m4s", "chunk-0-00001.m4s", "chunk-0-00002.m4s", "chunk-0-00003.m4s",
+            "chunk-1-00001.m4s", "chunk-1-00002.m4s", "chunk-1-00003.m4s").forEach { name ->
+            route("/dash/$name", AnimeDownloadManagerTest::class.java.getResource("/fixtures/dash/$name")!!.readBytes())
+        }
+        val vtt = "WEBVTT\n\n00:00.000 --> 00:01.000\nHi\n"
+        route("/subs/en.vtt", vtt)
+
+        val key = manager.download(
+            storage("/dash/manifest.mpd", "application/dash+xml", subtitles = listOf(KmpSubtitle(url("/subs/en.vtt"), "English"))),
+            null, "Show", "Ep 1",
+        )
+        val running = awaitQueue { q -> q.any { it.key == key && (it.progress ?: 0f) > 0f } }.single()
+        assertEquals(QueuedDownloadState.Running, running.state)
+        awaitQueue { it.isEmpty() }
+
+        assertEquals(setOf("Ep 1.mp4", "Ep 1.0.English.vtt", sidecarIndexName("Ep 1")), showDir.list()!!.toSet())
+        assertTrue(File(showDir, "Ep 1.mp4").length() > 50_000)
+        assertTrue(recorded.all { it.headers["X-Token"] == "abc" })
+    }
+
+    @Test
+    fun liveDashFailsWithClearError() = runBlocking {
+        route("/live.mpd", """<MPD xmlns="urn:mpeg:dash:schema:mpd:2011" type="dynamic"><Period/></MPD>""")
+
+        val key = manager.download(storage("/live.mpd", "application/dash+xml"), null, "Show", "Ep 1")
 
         val failed = awaitQueue { q -> q.any { it.state == QueuedDownloadState.Failed } }.single()
         assertEquals(key, failed.key)
-        assertEquals("DASH downloads aren't supported yet", failed.error)
+        assertEquals("Live DASH", failed.error)
+        assertEquals(emptyList(), showDir.list()?.toList().orEmpty())
     }
 
     private companion object {

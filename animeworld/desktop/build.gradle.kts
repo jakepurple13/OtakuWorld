@@ -66,6 +66,10 @@ kotlin {
             implementation(commonLibs.kotlin.test)
             implementation(androidLibs.okhttpMockWebServer)
         }
+        // DashDownloadPlaybackTest downloads the DASH fixture that :animeworld:shared's tests use.
+        jvmTest {
+            resources.srcDir("../shared/src/jvmTest/resources")
+        }
     }
 }
 

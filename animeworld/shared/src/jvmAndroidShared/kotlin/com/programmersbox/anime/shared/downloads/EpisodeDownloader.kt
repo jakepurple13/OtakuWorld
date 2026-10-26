@@ -67,12 +67,16 @@ private class WrittenFiles(private val record: File?) : ArrayList<File>() {
  *
  * With [vttSubtitles], sidecars are converted to WebVTT (`.vtt`) instead of kept in their own format.
  * [warn] receives problems that do not fail the download (a skipped subtitle).
+ *
+ * With [dash], DASH links (a `.mpd` path or `application/dash+xml`) are handed to it to write `<name>.mp4.part`;
+ * without it they take the progressive path.
  */
 class EpisodeDownloader(
     private val client: OkHttpClient,
     private val retryDelayMillis: Long = 1_000,
     private val vttSubtitles: Boolean = false,
     private val warn: (String, Throwable) -> Unit = { _, _ -> },
+    private val dash: DashEpisodeDownload? = null,
 ) {
 
     suspend fun download(
@@ -84,7 +88,9 @@ class EpisodeDownloader(
         partsRecord?.let(::discardPartsRecord)
         val written = WrittenFiles(partsRecord)
         try {
-            val video = if (isHlsHint(request)) {
+            val video = if (dash != null && isDashHint(request)) {
+                downloadDash(dash, request, folder, written, onProgress)
+            } else if (isHlsHint(request)) {
                 downloadHls(request, fetchText(request.url, request.headers), folder, written, onProgress)
             } else {
                 val response = execute(request.url, request.headers)
@@ -115,6 +121,12 @@ class EpisodeDownloader(
         val mime = request.mimeType?.lowercase().orEmpty()
         val path = request.url.substringBefore('#').substringBefore('?').lowercase()
         return "mpegurl" in mime || path.endsWith(".m3u8")
+    }
+
+    private fun isDashHint(request: EpisodeDownloadRequest): Boolean {
+        val mime = request.mimeType?.substringBefore(';')?.trim()?.lowercase().orEmpty()
+        val path = request.url.substringBefore('#').substringBefore('?').lowercase()
+        return mime == "application/dash+xml" || path.endsWith(".mpd")
     }
 
     private fun reserveBase(folder: File, title: String): String =
@@ -164,6 +176,23 @@ class EpisodeDownloader(
             type == "video/webm" || urlExt == "webm" -> "webm"
             else -> "mp4"
         }
+    }
+
+    // endregion
+
+    // region DASH
+
+    private suspend fun downloadDash(
+        dash: DashEpisodeDownload,
+        request: EpisodeDownloadRequest,
+        folder: File,
+        written: MutableList<File>,
+        onProgress: (DownloadProgress) -> Unit,
+    ): File {
+        val base = reserveBase(folder, request.title)
+        val part = File(folder, "$base.mp4.part").also(written::add)
+        dash.download(request.url, request.headers, part, onProgress)
+        return finish(part, File(folder, "$base.mp4"), written)
     }
 
     // endregion
@@ -356,27 +385,34 @@ class EpisodeDownloader(
     private suspend fun fetchBytes(url: String, headers: Map<String, String>): ByteArray =
         execute(url, headers).use { it.body.bytes() }
 
-    /** Executes a GET with [headers]; throws [IOException] for non-2xx. Cancelling the coroutine cancels the call. */
-    private suspend fun execute(url: String, headers: Map<String, String>): Response {
-        val call = client.newCall(upstreamRequest(url.toHttpUrl(), headers).build())
-        val response = call.await()
-        if (!response.isSuccessful) {
-            response.close()
-            throw IOException("HTTP ${response.code} for $url")
+    private suspend fun execute(url: String, headers: Map<String, String>): Response = client.execute(url, headers)
+}
+
+/** Writes the DASH stream at `manifestUrl` as one playable file at `out`, sending `headers` on every request. */
+fun interface DashEpisodeDownload {
+    suspend fun download(manifestUrl: String, headers: Map<String, String>, out: File, onProgress: (DownloadProgress) -> Unit)
+}
+
+/** Executes a GET with [headers]; throws [IOException] for non-2xx. Cancelling the coroutine cancels the call. */
+internal suspend fun OkHttpClient.execute(url: String, headers: Map<String, String>): Response {
+    val call = newCall(upstreamRequest(url.toHttpUrl(), headers).build())
+    val response = call.await()
+    if (!response.isSuccessful) {
+        response.close()
+        throw IOException("HTTP ${response.code} for $url")
+    }
+    return response
+}
+
+private suspend fun Call.await(): Response = suspendCancellableCoroutine { cont ->
+    cont.invokeOnCancellation { cancel() }
+    enqueue(object : Callback {
+        override fun onResponse(call: Call, response: Response) {
+            cont.resume(response) { _, value, _ -> value.close() }
         }
-        return response
-    }
 
-    private suspend fun Call.await(): Response = suspendCancellableCoroutine { cont ->
-        cont.invokeOnCancellation { cancel() }
-        enqueue(object : Callback {
-            override fun onResponse(call: Call, response: Response) {
-                cont.resume(response) { _, value, _ -> value.close() }
-            }
-
-            override fun onFailure(call: Call, e: IOException) {
-                cont.resumeWithException(e)
-            }
-        })
-    }
+        override fun onFailure(call: Call, e: IOException) {
+            cont.resumeWithException(e)
+        }
+    })
 }
