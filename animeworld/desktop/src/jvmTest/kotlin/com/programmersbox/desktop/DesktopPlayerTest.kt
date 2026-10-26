@@ -106,6 +106,18 @@ class DesktopPlayerTest {
     }
 
     @Test
+    fun embeddedSubtitleTrackListed() {
+        val player = newPlayer()
+        player.open(PlayerSource.LocalFile(fixture.absolutePath))
+
+        // Under load the track can be listed before libVLC knows its language, so wait for the language too.
+        awaitTrue("embedded English subtitle track", timeoutMs = 10_000) {
+            player.spuTracks.value.singleOrNull()?.language == "eng"
+        }
+        assertEquals("Embedded (eng)", player.spuTracks.value.single().label)
+    }
+
+    @Test
     fun streamGoesThroughProxy() {
         val bytes = fixture.readBytes()
         val requests = CopyOnWriteArrayList<RecordedRequest>()

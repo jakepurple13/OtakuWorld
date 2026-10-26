@@ -19,6 +19,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material.icons.filled.ClosedCaption
+import androidx.compose.material.icons.filled.ClosedCaptionOff
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Forward30
 import androidx.compose.material.icons.filled.Fullscreen
@@ -47,6 +49,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -70,9 +73,16 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.WindowPlacement
+import com.programmersbox.anime.shared.subtitles.SubtitleQuickSheet
+import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRepository
+import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRoute
+import com.programmersbox.anime.shared.subtitles.SubtitleTrackItem
+import com.programmersbox.kmpmodels.KmpSubtitle
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
 import org.koin.compose.koinInject
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -80,16 +90,29 @@ import kotlin.math.roundToInt
 private const val CONTROLS_HIDE_DELAY_MS = 3_000L
 private const val KEY_SEEK_MS = 10_000L
 
-/** Full-window video with auto-hiding controls; keyboard: Space, ←/→ (10 s), F (fullscreen), Esc. */
+/**
+ * Full-window video with auto-hiding controls; keyboard: Space, ←/→ (10 s), F (fullscreen), Esc.
+ * [externalSubtitles] are fetched with [referer]; embedded subtitle tracks come from [player].
+ */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun DesktopPlayerScreen(
     player: DesktopPlayer,
     title: String,
     modifier: Modifier = Modifier,
+    externalSubtitles: List<KmpSubtitle> = emptyList(),
+    referer: String? = null,
 ) {
     val state by player.state.collectAsState()
     state.error?.let { return PlayerErrorPanel(it, modifier) }
+
+    val subtitleSettings = koinInject<SubtitleSettingsRepository>()
+    val subtitleStyle by subtitleSettings.style.collectAsState(initial = null)
+    val cueLoader = remember { SubtitleCueLoader(OkHttpClient()) }
+    val subtitles = rememberDesktopSubtitles(player, externalSubtitles, referer, subtitleStyle, cueLoader)
+    var subtitleSheetOpen by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val navigationActions = koinInject<NavigationActions>()
 
     val fullscreen = rememberFullscreen()
     var activity by remember { mutableIntStateOf(0) }
@@ -113,6 +136,12 @@ fun DesktopPlayerScreen(
             .onPreviewKeyEvent { event ->
                 if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
                 activity++
+                // The subtitle sheet's own controls get the keys; Esc closes it.
+                if (subtitleSheetOpen) {
+                    if (event.key != Key.Escape) return@onPreviewKeyEvent false
+                    subtitleSheetOpen = false
+                    return@onPreviewKeyEvent true
+                }
                 when (event.key) {
                     Key.Spacebar -> player.playPause()
                     Key.DirectionLeft -> player.seekBy(-KEY_SEEK_MS)
@@ -127,6 +156,7 @@ fun DesktopPlayerScreen(
             .focusable()
     ) {
         VideoFrame(player.frame.collectAsState(), Modifier.fillMaxSize())
+        subtitleStyle?.let { SubtitleOverlay(subtitles.cues, state.positionMs, it, Modifier.fillMaxSize()) }
 
         if (state.buffering) {
             CircularProgressIndicator(Modifier.align(Alignment.Center), color = Color.White)
@@ -161,12 +191,29 @@ fun DesktopPlayerScreen(
                     player = player,
                     state = state,
                     fullscreen = fullscreen,
+                    subtitlesOn = subtitles.selected != null,
+                    onSubtitles = { subtitleSheetOpen = true },
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(Color.Black.copy(alpha = 0.5f))
                         .padding(horizontal = 12.dp, vertical = 4.dp),
                 )
             }
+        }
+
+        val style = subtitleStyle
+        if (subtitleSheetOpen && style != null) {
+            SubtitleQuickSheet(
+                tracks = subtitles.tracks.map { SubtitleTrackItem(it.label, it == subtitles.selected) },
+                onSelectTrack = { index -> subtitles.select(index?.let(subtitles.tracks::get)) },
+                style = style,
+                onStyleChange = { transform -> scope.launch { subtitleSettings.update(transform) } },
+                onOpenSettings = {
+                    subtitleSheetOpen = false
+                    navigationActions.navigate(SubtitleSettingsRoute)
+                },
+                onDismiss = { subtitleSheetOpen = false },
+            )
         }
     }
 }
@@ -193,6 +240,8 @@ private fun PlayerControls(
     player: DesktopPlayer,
     state: PlayerState,
     fullscreen: FullscreenState,
+    subtitlesOn: Boolean,
+    onSubtitles: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier) {
@@ -214,6 +263,9 @@ private fun PlayerControls(
 
             Spacer(Modifier.weight(1f))
 
+            IconButton(onClick = onSubtitles) {
+                Icon(if (subtitlesOn) Icons.Default.ClosedCaption else Icons.Default.ClosedCaptionOff, "Subtitles")
+            }
             VolumeControl(state.volume, onVolumeChange = player::setVolume)
             if (fullscreen.available) {
                 IconButton(onClick = fullscreen::toggle) {

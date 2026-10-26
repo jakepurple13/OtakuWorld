@@ -14,10 +14,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.anime.shared.VideoScreen
+import com.programmersbox.anime.shared.downloads.OfflineSubtitles
+import com.programmersbox.kmpmodels.KmpSubtitle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.koin.compose.koinInject
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory
+import java.io.File
 
 @Composable
 actual fun VideoPlayerUi(videoScreen: VideoScreen) {
@@ -33,14 +36,18 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
         }
 
         else -> result.fold(
-            onSuccess = { PlayerHost(it, videoScreen, remember(videoScreen) { playerSource(videoScreen, storageHolder) }) },
+            onSuccess = {
+                val source = remember(videoScreen) { playerSource(videoScreen, storageHolder) }
+                val subtitles = remember(source) { externalSubtitles(source, storageHolder) }
+                PlayerHost(it, videoScreen, source, subtitles)
+            },
             onFailure = { PlayerUnavailable("The video player couldn't start: libVLC failed to load (${it.message}).") },
         )
     }
 }
 
 @Composable
-private fun PlayerHost(factory: MediaPlayerFactory, videoScreen: VideoScreen, source: PlayerSource) {
+private fun PlayerHost(factory: MediaPlayerFactory, videoScreen: VideoScreen, source: PlayerSource, subtitles: List<KmpSubtitle>) {
     val proxy = remember(source) { LocalStreamProxy() }
     val player = remember(factory, source) { DesktopPlayer(factory, proxy) }
     DisposableEffect(player) {
@@ -50,7 +57,18 @@ private fun PlayerHost(factory: MediaPlayerFactory, videoScreen: VideoScreen, so
             proxy.close()
         }
     }
-    DesktopPlayerScreen(player, title = videoScreen.showName)
+    DesktopPlayerScreen(
+        player,
+        title = videoScreen.showName,
+        externalSubtitles = subtitles,
+        referer = videoScreen.referer,
+    )
+}
+
+/** A download's sidecar files, else the subtitles the source returned. */
+private fun externalSubtitles(source: PlayerSource, storageHolder: StorageHolder): List<KmpSubtitle> = when (source) {
+    is PlayerSource.LocalFile -> OfflineSubtitles.find(File(source.path))
+    is PlayerSource.Stream -> storageHolder.storageModel?.subtitles.orEmpty()
 }
 
 /** Downloads play from their file; everything else streams the resolved [StorageHolder] video with its headers. */
