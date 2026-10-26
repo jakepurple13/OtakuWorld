@@ -65,6 +65,9 @@ kotlin {
         jvmTest.dependencies {
             implementation(commonLibs.kotlin.test)
             implementation(androidLibs.okhttpMockWebServer)
+            // AnimeWorldEndToEndNetworkTest (opt-in) loads the AnimeOnsen fixture extension.
+            implementation(commonLibs.ktorMock)
+            implementation(projects.sharedutils.kmpextensionloader)
         }
         // DashDownloadPlaybackTest downloads the DASH fixture that :animeworld:shared's tests use.
         jvmTest {
