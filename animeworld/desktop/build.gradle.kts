@@ -64,6 +64,7 @@ kotlin {
 
         jvmTest.dependencies {
             implementation(commonLibs.kotlin.test)
+            implementation(androidLibs.okhttpMockWebServer)
         }
     }
 }
