@@ -1,0 +1,230 @@
+package spike
+
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.application
+import androidx.compose.ui.window.rememberWindowState
+import com.sun.jna.NativeLibrary
+import com.sun.jna.Pointer
+import kotlinx.coroutines.delay
+import org.jetbrains.skia.*
+import uk.co.caprica.vlcj.binding.lib.LibC
+import uk.co.caprica.vlcj.factory.MediaPlayerFactory
+import uk.co.caprica.vlcj.factory.discovery.NativeDiscovery
+import uk.co.caprica.vlcj.factory.discovery.strategy.BaseNativeDiscoveryStrategy
+import uk.co.caprica.vlcj.player.base.MediaPlayer
+import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter
+import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer
+import uk.co.caprica.vlcj.player.embedded.videosurface.callback.BufferFormat
+import uk.co.caprica.vlcj.player.embedded.videosurface.callback.BufferFormatCallback
+import uk.co.caprica.vlcj.player.embedded.videosurface.callback.RenderCallback
+import uk.co.caprica.vlcj.player.embedded.videosurface.callback.format.RV32BufferFormat
+import java.io.File
+import java.nio.ByteBuffer
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.concurrent.thread
+
+/** Discovery restricted to the bundled natives dir only. */
+class BundledDiscovery(private val dir: String) :
+    BaseNativeDiscoveryStrategy(arrayOf("libvlc\\.dylib", "libvlccore\\.dylib"), arrayOf("%s/../plugins")) {
+    override fun supported() = true
+    override fun discoveryDirectories() = listOf(dir)
+    override fun onFound(path: String): Boolean {
+        // libvlc links @rpath/libvlccore.dylib: preload it by absolute path so dyld finds it.
+        NativeLibrary.addSearchPath("vlccore", path)
+        NativeLibrary.getInstance("vlccore")
+        return true
+    }
+    override fun setPluginPath(pluginPath: String): Boolean =
+        LibC.INSTANCE.setenv("VLC_PLUGIN_PATH", pluginPath, 1) == 0
+}
+
+/** Callback (offscreen) renderer: VLC writes BGRA into a native buffer, we memcpy into a Skia Bitmap. */
+class SkiaFrameSink {
+    private val lock = Any()
+    private var bitmap: Bitmap? = null
+    private var info: ImageInfo? = null
+    val frameTick = mutableLongStateOf(0L)
+    val framesThisSecond = AtomicInteger()
+    val drawsThisSecond = AtomicInteger()
+    @Volatile var size = "?"
+
+    val bufferFormatCallback = object : BufferFormatCallback {
+        override fun getBufferFormat(sourceWidth: Int, sourceHeight: Int): BufferFormat {
+            size = "${sourceWidth}x$sourceHeight"
+            println("[render] buffer format ${sourceWidth}x$sourceHeight RV32")
+            synchronized(lock) {
+                val i = ImageInfo(sourceWidth, sourceHeight, ColorType.BGRA_8888, ColorAlphaType.OPAQUE)
+                bitmap?.close()
+                bitmap = Bitmap().apply { allocPixels(i) }
+                info = i
+            }
+            return RV32BufferFormat(sourceWidth, sourceHeight)
+        }
+        override fun newFormatSize(bufferWidth: Int, bufferHeight: Int, displayWidth: Int, displayHeight: Int) {
+            println("[render] newFormatSize buf=${bufferWidth}x$bufferHeight display=${displayWidth}x$displayHeight")
+        }
+        override fun allocatedBuffers(buffers: Array<out ByteBuffer>) {}
+    }
+
+    val renderCallback = object : RenderCallback {
+        override fun lock(mediaPlayer: MediaPlayer) {}
+        override fun unlock(mediaPlayer: MediaPlayer) {}
+        override fun display(mp: MediaPlayer, nativeBuffers: Array<out ByteBuffer>, bf: BufferFormat, dw: Int, dh: Int) {
+            synchronized(lock) {
+                val bmp = bitmap ?: return
+                val src = nativeBuffers[0]
+                val n = minOf(src.capacity(), bf.width * bf.height * 4)
+                val dst = Pointer(bmp.peekPixels()!!.addr).getByteBuffer(0, n.toLong())
+                src.rewind(); src.limit(n)
+                dst.put(src)
+                bmp.notifyPixelsChanged()
+            }
+            framesThisSecond.incrementAndGet()
+            frameTick.longValue++
+        }
+    }
+
+    /** Called from draw: snapshot current frame into an immutable Image. */
+    fun snapshot(): Image? = synchronized(lock) { bitmap?.let { Image.makeFromBitmap(it) } }
+}
+
+fun main() {
+    val natives = System.getProperty("spike.natives") ?: error("spike.natives not set")
+    val stream = System.getProperty("spike.stream") ?: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"
+
+    val discovery = NativeDiscovery(BundledDiscovery("$natives/lib"))
+    check(discovery.discover()) { "libvlc not found in $natives/lib" }
+    println("[vlc] discovered path=${discovery.discoveredPath()} pluginPath env=${System.getenv("VLC_PLUGIN_PATH")} (java env is a snapshot; native setenv done)")
+
+    val factory = MediaPlayerFactory(discovery, "--no-video-title-show", "--adaptive-logic=highest", "--adaptive-maxheight=1080","--verbose=0")
+    println("[vlc] libvlc version=${factory.application().version()} changeset=${factory.application().changeset()}")
+    println("[vlc] loaded libvlc from ${NativeLibrary.getInstance("vlc").file}")
+    println("[vlc] loaded libvlccore from ${NativeLibrary.getInstance("vlccore").file}")
+
+    val proxy = HeaderProxy(mapOf("X-Spike" to "1", "Referer" to "https://spike.example/player", "User-Agent" to "OtakuSpike/1.0"))
+    proxy.start(NanoHTTPD_TIMEOUT, true)
+    println("[proxy] listening ${proxy.base()}")
+    val mrl = proxy.proxied(stream)
+    println("[proxy] media mrl=$mrl")
+
+    val sink = SkiaFrameSink()
+    val player: EmbeddedMediaPlayer = factory.mediaPlayers().newEmbeddedMediaPlayer()
+    player.videoSurface().set(factory.videoSurfaces().newVideoSurface(sink.bufferFormatCallback, sink.renderCallback, true))
+
+    val timeMs = mutableLongStateOf(0L)
+    val lengthMs = mutableLongStateOf(0L)
+    val playing = mutableStateOf(false)
+    val fps = mutableIntStateOf(0)
+    player.events().addMediaPlayerEventListener(object : MediaPlayerEventAdapter() {
+        override fun timeChanged(mediaPlayer: MediaPlayer, newTime: Long) { timeMs.longValue = newTime }
+        override fun lengthChanged(mediaPlayer: MediaPlayer, newLength: Long) { lengthMs.longValue = newLength }
+        override fun playing(mediaPlayer: MediaPlayer) { playing.value = true; println("[vlc] playing") }
+        override fun paused(mediaPlayer: MediaPlayer) { playing.value = false }
+        override fun error(mediaPlayer: MediaPlayer) { println("[vlc] ERROR") }
+        override fun buffering(mediaPlayer: MediaPlayer, newCache: Float) { if (newCache < 100f) println("[vlc] buffering $newCache%") }
+    })
+
+    thread(isDaemon = true, name = "fps") {
+        while (true) {
+            Thread.sleep(1000)
+            val f = sink.framesThisSecond.getAndSet(0)
+            val d = sink.drawsThisSecond.getAndSet(0)
+            fps.intValue = d
+            println("[stats] vlcFrames/s=$f composeDraws/s=$d video=${sink.size} t=${timeMs.longValue}ms proxiedBytes=${proxy.bytes.get()}")
+        }
+    }
+
+    player.media().play(mrl)
+
+    application {
+        Window(
+            onCloseRequest = { player.release(); factory.release(); proxy.stop(); exitApplication() },
+            title = "vlcj spike",
+            state = rememberWindowState(width = 1280.dp, height = 760.dp),
+        ) {
+            System.getProperty("spike.shotDir")?.let { dir ->
+                LaunchedEffect(Unit) {
+                    for ((i, at) in listOf(15_000L, 3_000L).withIndex()) {
+                        delay(at)
+                        val bmp = findSkiaLayer(window)?.screenshot()
+                        if (bmp == null) { println("[shot] no SkiaLayer/screenshot"); continue }
+                        val f = File(dir, "${System.getProperty("spike.shotName", "shot")}-${i + 1}.png")
+                        f.parentFile.mkdirs()
+                        f.writeBytes(Image.makeFromBitmap(bmp).encodeToData(EncodedImageFormat.PNG)!!.bytes)
+                        println("[shot] wrote ${f.absolutePath} ${bmp.width}x${bmp.height} at t=${timeMs.longValue}ms")
+                    }
+                }
+            }
+            MaterialTheme(colorScheme = darkColorScheme()) {
+                Box(Modifier.fillMaxSize().background(Color.Black)) {
+                    val lastImage = remember { arrayOfNulls<Image>(1) }
+                    Canvas(Modifier.fillMaxSize()) {
+                        sink.frameTick.longValue // read -> redraw per frame (draw phase only)
+                        val img = sink.snapshot() ?: return@Canvas
+                        sink.drawsThisSecond.incrementAndGet()
+                        lastImage[0]?.close(); lastImage[0] = img
+                        val scale = minOf(size.width / img.width, size.height / img.height)
+                        val w = img.width * scale; val h = img.height * scale
+                        val l = (size.width - w) / 2; val t = (size.height - h) / 2
+                        drawIntoCanvas {
+                            it.nativeCanvas.drawImageRect(img, Rect.makeWH(img.width.toFloat(), img.height.toFloat()), Rect.makeXYWH(l, t, w, h), SamplingMode.LINEAR, null, true)
+                        }
+                    }
+                    Text(
+                        "fps ${fps.intValue}  ${sink.size}",
+                        color = Color.Yellow,
+                        modifier = Modifier.align(Alignment.TopStart).padding(8.dp).background(Color(0x99000000)).padding(4.dp),
+                    )
+                    Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth()) {
+                        Text(
+                            "[subtitle] This Compose Text is drawn OVER the video frame.",
+                            color = Color.White, fontSize = 26.sp, fontWeight = FontWeight.Bold,
+                            modifier = Modifier.align(Alignment.CenterHorizontally).background(Color(0x88000000)).padding(horizontal = 12.dp, vertical = 4.dp),
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Row(
+                            Modifier.fillMaxWidth().background(Color(0xAA202020)).padding(8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Button(onClick = { player.controls().pause() }) { Text(if (playing.value) "Pause" else "Play") }
+                            Spacer(Modifier.width(12.dp))
+                            var dragging by remember { mutableStateOf<Float?>(null) }
+                            val len = lengthMs.longValue.coerceAtLeast(1)
+                            Slider(
+                                value = dragging ?: (timeMs.longValue.toFloat() / len),
+                                onValueChange = { dragging = it },
+                                onValueChangeFinished = { dragging?.let { player.controls().setPosition(it) }; dragging = null },
+                                modifier = Modifier.weight(1f),
+                            )
+                            Spacer(Modifier.width(12.dp))
+                            Text("${fmt(timeMs.longValue)} / ${fmt(lengthMs.longValue)}", color = Color.White)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+private fun findSkiaLayer(c: java.awt.Component): org.jetbrains.skiko.SkiaLayer? {
+    if (c is org.jetbrains.skiko.SkiaLayer) return c
+    if (c is java.awt.Container) for (ch in c.components) findSkiaLayer(ch)?.let { return it }
+    return null
+}
+
+private const val NanoHTTPD_TIMEOUT = 30_000
+
+private fun fmt(ms: Long): String { val s = ms / 1000; return "%d:%02d".format(s / 60, s % 60) }

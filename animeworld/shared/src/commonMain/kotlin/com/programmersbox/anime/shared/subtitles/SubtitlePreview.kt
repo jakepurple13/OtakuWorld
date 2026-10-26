@@ -25,10 +25,12 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 private val PreviewHeight = 200.dp
+private val PreviewFontSize = 15.sp
 
 // The scene stands in for video content, so it keeps fixed colors instead of theme roles.
 private val SceneSky = Color(0xFF2B3A4A)
@@ -96,9 +98,10 @@ fun SubtitlePreview(style: SubtitleStyle, modifier: Modifier = Modifier) {
     }
 }
 
+/** One caption drawn from [spec]; [baseFontSize] is its size at 100%. */
 @Composable
-private fun CaptionCue(text: String, spec: CaptionSpec) {
-    val base = spec.textStyle()
+internal fun CaptionCue(text: String, spec: CaptionSpec, baseFontSize: TextUnit = PreviewFontSize) {
+    val base = spec.textStyle(baseFontSize)
     Box(
         modifier = Modifier
             .background(Color(spec.backgroundArgb.toInt()), RoundedCornerShape(3.dp))
@@ -107,7 +110,7 @@ private fun CaptionCue(text: String, spec: CaptionSpec) {
         when (spec.edge) {
             // Stroke is centered on the glyph outline, so half of it shows outside the fill.
             SubtitleEdge.Outline -> {
-                val strokeWidth = with(LocalDensity.current) { 3.dp.toPx() } * spec.textScale
+                val strokeWidth = with(LocalDensity.current) { 3.dp.toPx() } * spec.textScale * (baseFontSize.value / PreviewFontSize.value)
                 Text(text, style = base.copy(color = Color.Black, drawStyle = Stroke(width = strokeWidth)))
             }
             // Media3 raised edge: a light copy up-left; the base text adds the dark edge down-right.
@@ -122,10 +125,10 @@ private fun CaptionCue(text: String, spec: CaptionSpec) {
     }
 }
 
-private fun CaptionSpec.textStyle(): TextStyle = TextStyle(
+private fun CaptionSpec.textStyle(baseFontSize: TextUnit): TextStyle = TextStyle(
     color = Color(foregroundArgb.toInt()),
-    fontSize = 15.sp * textScale,
-    lineHeight = 15.sp * textScale * 1.3f,
+    fontSize = baseFontSize * textScale,
+    lineHeight = baseFontSize * textScale * 1.3f,
     fontFamily = when (font) {
         SubtitleFont.Default, SubtitleFont.Bold -> FontFamily.Default
         SubtitleFont.Serif -> FontFamily.Serif

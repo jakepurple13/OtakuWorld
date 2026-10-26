@@ -4,13 +4,23 @@
 set -euo pipefail
 SHA="${1:-97414446b8a95994c72dd33c41c971a89d4d25b8}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-DEST="$ROOT/src/androidMain/kotlin"
 BASE="https://raw.githubusercontent.com/aniyomiorg/aniyomi/$SHA"
 HEADER="// Copied from aniyomiorg/aniyomi $SHA, Apache-2.0. Local edits marked with \"OTAKU:\"."
 
-fetch() { # $1 = repo path, $2 = path under DEST
-  mkdir -p "$DEST/$(dirname "$2")"
-  { echo "$HEADER"; curl -fsSL "$BASE/$1"; } > "$DEST/$2"
+# Files that need WebView/Android APIs stay in androidMain; the rest is shared with the JVM target.
+ANDROID_ONLY=" \
+  eu/kanade/tachiyomi/network/AndroidCookieJar.kt \
+  eu/kanade/tachiyomi/network/interceptor/CloudflareInterceptor.kt \
+  eu/kanade/tachiyomi/network/interceptor/WebViewInterceptor.kt \
+  eu/kanade/tachiyomi/util/system/DeviceUtil.kt \
+  eu/kanade/tachiyomi/util/system/WebViewUtil.kt \
+  tachiyomi/core/common/util/system/LogcatExtensions.kt "
+
+fetch() { # $1 = repo path, $2 = path under the source dir
+  local dest="$ROOT/src/jvmAndroidShared/kotlin"
+  [[ "$ANDROID_ONLY" == *" $2 "* ]] && dest="$ROOT/src/androidMain/kotlin"
+  mkdir -p "$dest/$(dirname "$2")"
+  { echo "$HEADER"; curl -fsSL "$BASE/$1"; } > "$dest/$2"
 }
 
 SA=source-api/src/commonMain/kotlin

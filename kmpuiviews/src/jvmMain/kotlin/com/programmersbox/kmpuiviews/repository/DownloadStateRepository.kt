@@ -69,7 +69,9 @@ class DownloadStateRepository(
                 // Cancelling mid-install would leave the APK installed with no reload, so finish it.
                 withContext(NonCancellable) {
                     setStatus(id, DownloadAndInstallStatus.Installing)
-                    val store = stores.firstOrNull() ?: throw NoStoreException()
+                    if (stores.isEmpty()) throw NoStoreException()
+                    val store = stores.firstOrNull { it.accepts(file) }
+                        ?: throw ApkInstallException(ApkInstallFailure.INVALID, "Not a supported extension")
                     store.install(file)
                     reload()
                     installed = true

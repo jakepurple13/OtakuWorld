@@ -7,7 +7,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
 import kotlinx.serialization.protobuf.ProtoOneOf
 
-// Aniyomi "index_v2" store index (same shape as Mihon's; see AnimeExtensionStoreService upstream).
+// Aniyomi "index_v2" store index. Field numbers follow upstream NetworkAnimeExtensionStore, which differs
+// from Mihon's: Extension has isTorrent = 8 and sources = 9, Source has message = 6.
 
 @Serializable
 data class V2Index(
@@ -46,7 +47,8 @@ data class V2Extension(
     @ProtoNumber(5) val versionCode: Long = 0,
     @ProtoNumber(6) val versionName: String = "",
     @ProtoNumber(7) val contentWarning: V2ContentWarning = V2ContentWarning.CONTENT_WARNING_UNSPECIFIED,
-    @ProtoNumber(8) val sources: List<V2Source> = emptyList(),
+    @ProtoNumber(8) val isTorrent: Boolean = false,
+    @ProtoNumber(9) val sources: List<V2Source> = emptyList(),
 )
 
 @Serializable
@@ -62,7 +64,7 @@ data class V2Source(
     @ProtoNumber(3) val language: String = "",
     @ProtoNumber(4) val homeUrl: String = "",
     @ProtoNumber(5) val mirrorUrls: List<String> = emptyList(),
-    @ProtoNumber(7) val message: String? = null,
+    @ProtoNumber(6) val message: String? = null,
 )
 
 @Serializable

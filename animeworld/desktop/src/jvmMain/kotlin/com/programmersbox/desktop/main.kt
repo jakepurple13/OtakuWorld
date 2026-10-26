@@ -3,16 +3,18 @@ package com.programmersbox.desktop
 import ca.gosyer.appdirs.AppDirs
 import com.programmersbox.anime.shared.AnimeDesktopSettings
 import com.programmersbox.anime.shared.StorageHolder
-import com.programmersbox.anime.shared.subtitles.InMemorySubtitleSettingsRepository
+import com.programmersbox.anime.shared.subtitles.JvmSubtitleSettingsRepository
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRepository
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsViewModel
 import com.programmersbox.anime.shared.VideoScreen
 import com.programmersbox.anime.shared.downloads.AnimeDownloadManager
 import com.programmersbox.anime.shared.downloads.DownloadQueueSource
+import com.programmersbox.anime.shared.downloads.EpisodeDownloadQueue
 import com.programmersbox.anime.shared.videoplayer.VideoPlayerUi
 import com.programmersbox.anime.shared.videos.VideoLibrarySource
 import com.programmersbox.anime.shared.videos.VideoViewerRoute
 import com.programmersbox.anime.shared.videos.ViewVideoScreen
+import com.programmersbox.aniyomi.aniyomiModule
 import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.ExtensionWatcher
 import com.programmersbox.kmpuiviews.MangaDesktopSettings
@@ -24,8 +26,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.bind
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.navigation3.navigation
+import java.io.File
 
 fun main(args: Array<String>) {
     desktopSetup(
@@ -48,7 +52,9 @@ fun main(args: Array<String>) {
         moduleBlock = {
             singleOf(::AnimeDesktopSettings)
             singleOf(::StorageHolder)
-            single<SubtitleSettingsRepository> { InMemorySubtitleSettingsRepository() }
+            single<SubtitleSettingsRepository> {
+                JvmSubtitleSettingsRepository(File(get<AppDirs>().getUserDataDir(), "subtitle_style.json"))
+            }
             viewModelOf(::SubtitleSettingsViewModel)
             singleOf(::VideoLibrarySource)
             singleOf(::DownloadQueueSource)
@@ -65,11 +71,13 @@ fun main(args: Array<String>) {
                     animeDesktopSettings = get(),
                     trayState = get(),
                 )
-            }
+            } bind EpisodeDownloadQueue::class
 
             navigation<VideoScreen> { VideoPlayerUi(it) }
             navigation<PlatformSettings> { JvmSettingsScreen() }
             navigation<VideoViewerRoute> { ViewVideoScreen() }
+
+            includes(aniyomiModule)
         }
     )
 }

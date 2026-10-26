@@ -9,6 +9,8 @@ plugins {
     id("kotlinx-serialization")
 }
 
+apply(from = "vlc.gradle.kts")
+
 compose.resources {
     packageOfResClass = "com.programmersbox.desktop"
 }
@@ -46,6 +48,7 @@ kotlin {
             implementation(projects.datastore)
             implementation(projects.kmpmodels)
             implementation(projects.animeworld.shared)
+            implementation(projects.sourceUtilities.aniyomi)
             implementation(commonLibs.bundles.datastoreLibs)
             implementation(commonLibs.coroutinesCore)
             implementation(desktopLibs.kotlinx.coroutines.swing)
@@ -57,6 +60,18 @@ kotlin {
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(desktopLibs.kotlinx.coroutines.swing)
+        }
+
+        jvmTest.dependencies {
+            implementation(commonLibs.kotlin.test)
+            implementation(androidLibs.okhttpMockWebServer)
+            // AnimeWorldEndToEndNetworkTest (opt-in) loads the AnimeOnsen fixture extension.
+            implementation(commonLibs.ktorMock)
+            implementation(projects.sharedutils.kmpextensionloader)
+        }
+        // DashDownloadPlaybackTest downloads the DASH fixture that :animeworld:shared's tests use.
+        jvmTest {
+            resources.srcDir("../shared/src/jvmTest/resources")
         }
     }
 }
@@ -84,6 +99,9 @@ compose.desktop {
 
             modules("jdk.unsupported")
 
+            // libVLC for the video player lands in appResources/<os>-<arch>/vlc (see vlc.gradle.kts).
+            appResourcesRootDir.set(layout.buildDirectory.dir("appResources"))
+
             windows {
                 iconFile.set(project.file("icons/icon.ico"))
             }
@@ -95,4 +113,8 @@ compose.desktop {
             }
         }
     }
+}
+
+tasks.named { it == "prepareAppResources" || it == "run" }.configureEach {
+    dependsOn("prepareVlc")
 }

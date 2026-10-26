@@ -1,13 +1,84 @@
 package com.programmersbox.anime.shared.videoplayer
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
-import com.programmersbox.anime.shared.VideoNotSupportedScreen
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.anime.shared.VideoScreen
+import com.programmersbox.anime.shared.downloads.OfflineSubtitles
+import com.programmersbox.kmpmodels.KmpSubtitle
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.koin.compose.koinInject
+import uk.co.caprica.vlcj.factory.MediaPlayerFactory
+import java.io.File
 
 @Composable
 actual fun VideoPlayerUi(videoScreen: VideoScreen) {
-    // TODO(user): replace with a real desktop video player implementation.
-    // videoScreen.showPath is the stream URL or local file path to play;
-    // videoScreen.referer carries any required request header for streaming.
-    VideoNotSupportedScreen()
+    val storageHolder = koinInject<StorageHolder>()
+    // The first load scans libVLC's plugins, so keep it off the UI thread.
+    val factory by produceState<Result<MediaPlayerFactory>?>(null) {
+        value = withContext(Dispatchers.IO) { VlcRuntime.factory() }
+    }
+
+    when (val result = factory) {
+        null -> Box(Modifier.fillMaxSize().background(Color.Black)) {
+            CircularProgressIndicator(Modifier.align(Alignment.Center), color = Color.White)
+        }
+
+        else -> result.fold(
+            onSuccess = {
+                val source = remember(videoScreen) { playerSource(videoScreen, storageHolder) }
+                val subtitles = remember(source) { externalSubtitles(source, storageHolder) }
+                PlayerHost(it, videoScreen, source, subtitles, storageHolder.storageModel?.headers.orEmpty())
+            },
+            onFailure = { PlayerUnavailable("The video player couldn't start: libVLC failed to load (${it.message}).") },
+        )
+    }
+}
+
+@Composable
+private fun PlayerHost(factory: MediaPlayerFactory, videoScreen: VideoScreen, source: PlayerSource, subtitles: List<KmpSubtitle>, streamHeaders: Map<String, String>) {
+    val proxy = remember(source) { LocalStreamProxy() }
+    val player = remember(factory, source) { DesktopPlayer(factory, proxy) }
+    DisposableEffect(player) {
+        player.open(source)
+        onDispose {
+            player.close()
+            proxy.close()
+        }
+    }
+    DesktopPlayerScreen(
+        player,
+        title = videoScreen.showName,
+        externalSubtitles = subtitles,
+        referer = videoScreen.referer,
+        streamHeaders = streamHeaders,
+    )
+}
+
+/** A download's sidecar files, else the subtitles the source returned. */
+private fun externalSubtitles(source: PlayerSource, storageHolder: StorageHolder): List<KmpSubtitle> = when (source) {
+    is PlayerSource.LocalFile -> OfflineSubtitles.find(File(source.path))
+    is PlayerSource.Stream -> storageHolder.storageModel?.subtitles.orEmpty()
+}
+
+/** Downloads play from their file; everything else streams the resolved [StorageHolder] video with its headers. */
+private fun playerSource(videoScreen: VideoScreen, storageHolder: StorageHolder): PlayerSource {
+    if (videoScreen.downloadOrStream) return PlayerSource.LocalFile(videoScreen.showPath)
+    val storage = storageHolder.storageModel
+    return PlayerSource.Stream(
+        url = storage?.link ?: videoScreen.showPath,
+        headers = playerHeaders(storage?.headers.orEmpty(), videoScreen.referer),
+        mimeType = storage?.let(::streamMime),
+    )
 }

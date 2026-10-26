@@ -10,9 +10,16 @@ This module defines `eu.kanade.tachiyomi.network.*`, `tachiyomi.core.common.*`,
 `mihon.core.common.*` and `app.cash.quickjs.QuickJs`, as `:mihonsupport` does. The two modules
 must never be packaged into the same APK.
 
+## Source layout
+
+The runtime compiles for Android and for the desktop JVM. Files live in `src/jvmAndroidShared/kotlin/`
+(added to both `androidMain` and `jvmMain`) unless they need WebView or other Android-only APIs; those
+stay in `src/androidMain/kotlin/` and are marked *(androidMain)* below. On the JVM, `android.*` and
+`androidx.preference.*` resolve to the stubs in `:sharedutils:kmpextensionloader`.
+
 ## Files (copied verbatim unless noted)
 
-From `source-api/src/commonMain/kotlin` (under `src/androidMain/kotlin/`):
+From `source-api/src/commonMain/kotlin`:
 
 - `eu/kanade/tachiyomi/animesource/AnimeCatalogueSource.kt`
 - `eu/kanade/tachiyomi/animesource/AnimeSource.kt`
@@ -26,7 +33,7 @@ From `source-api/src/commonMain/kotlin` (under `src/androidMain/kotlin/`):
 - `eu/kanade/tachiyomi/animesource/model/AnimesPage.kt`
 - `eu/kanade/tachiyomi/animesource/model/FetchType.kt`
 - `eu/kanade/tachiyomi/animesource/model/Hoster.kt`
-- `eu/kanade/tachiyomi/animesource/model/HttpServer.kt`
+- `eu/kanade/tachiyomi/animesource/model/HttpServer.kt` — **edited** (see below)
 - `eu/kanade/tachiyomi/animesource/model/SAnime.kt`
 - `eu/kanade/tachiyomi/animesource/model/SAnimeEpisodeUpdate.kt`
 - `eu/kanade/tachiyomi/animesource/model/SAnimeImpl.kt`
@@ -48,7 +55,7 @@ From `source-api/src/androidMain/kotlin`:
 
 From `core/common/src/main/java`:
 
-- `eu/kanade/tachiyomi/network/AndroidCookieJar.kt`
+- `eu/kanade/tachiyomi/network/AndroidCookieJar.kt` *(androidMain)*
 - `eu/kanade/tachiyomi/network/DohProviders.kt`
 - `eu/kanade/tachiyomi/network/HttpException.kt`
 - `eu/kanade/tachiyomi/network/JavaScriptEngine.kt`
@@ -56,17 +63,17 @@ From `core/common/src/main/java`:
 - `eu/kanade/tachiyomi/network/ProgressListener.kt`
 - `eu/kanade/tachiyomi/network/ProgressResponseBody.kt`
 - `eu/kanade/tachiyomi/network/Requests.kt`
-- `eu/kanade/tachiyomi/network/interceptor/CloudflareInterceptor.kt` — **edited** (see below)
+- `eu/kanade/tachiyomi/network/interceptor/CloudflareInterceptor.kt` *(androidMain)* — **edited** (see below)
 - `eu/kanade/tachiyomi/network/interceptor/RateLimitInterceptor.kt`
 - `eu/kanade/tachiyomi/network/interceptor/SpecificHostRateLimitInterceptor.kt`
 - `eu/kanade/tachiyomi/network/interceptor/UncaughtExceptionInterceptor.kt`
 - `eu/kanade/tachiyomi/network/interceptor/UserAgentInterceptor.kt`
-- `eu/kanade/tachiyomi/network/interceptor/WebViewInterceptor.kt` — **edited** (see below)
-- `eu/kanade/tachiyomi/util/system/DeviceUtil.kt`
-- `eu/kanade/tachiyomi/util/system/WebViewUtil.kt`
+- `eu/kanade/tachiyomi/network/interceptor/WebViewInterceptor.kt` *(androidMain)* — **edited** (see below)
+- `eu/kanade/tachiyomi/util/system/DeviceUtil.kt` *(androidMain)*
+- `eu/kanade/tachiyomi/util/system/WebViewUtil.kt` *(androidMain)*
 - `tachiyomi/core/common/util/lang/CoroutinesExtensions.kt`
 - `tachiyomi/core/common/util/lang/RxCoroutineBridge.kt`
-- `tachiyomi/core/common/util/system/LogcatExtensions.kt`
+- `tachiyomi/core/common/util/system/LogcatExtensions.kt` *(androidMain)*
 - `mihon/core/common/extensions/JsonObject.kt`
 
 ### Local edits (`OTAKU:`)
@@ -75,7 +82,12 @@ From `core/common/src/main/java`:
   annotation; this module has no Compose dependency. The annotation has no effect on extension
   binary compatibility.
 - `PreferenceScreen.kt`: `actual typealias` became a plain `typealias`. The commonMain
-  `expect class PreferenceScreen` is not vendored because the runtime is Android-only.
+  `expect class PreferenceScreen` is not vendored; on the JVM the alias points at the
+  `androidx.preference.PreferenceScreen` stub.
+- `HttpServer.kt`: logs a failed start with `android.util.Log.d` instead of `logcat`, because
+  `LogcatExtensions.kt` is Android-only (the JVM has an `android.util.Log` stub).
+  It also binds `NanoHTTPD("127.0.0.1", 0)` instead of `NanoHTTPD(0)` so the server listens on loopback
+  only (class shape and signatures unchanged).
 - `CloudflareInterceptor.kt`: removed imports `util.system.toast`, `core.common.i18n.stringResource`,
   `tachiyomi.i18n.MR` (moko-resources not vendored). The bypass-failure `IOException` message is
   the literal "Failed to bypass Cloudflare"; the outdated-WebView toast is a `Toast.makeText(...)`
@@ -90,8 +102,22 @@ From `core/common/src/main/java`:
   takes `NetworkPreferences` (not vendored; it needs Aniyomi's preference store). No DoH or
   verbose-logging toggles; fixed default user agent. Keeps the extensions-lib surface: `client`,
   `cloudflareClient` (deprecated alias of `client`), `cookieJar`, `defaultUserAgentProvider()`.
+  Calls `context.getCacheDir()` instead of `context.cacheDir` (`OTAKU:`) so it compiles against the
+  JVM `Context` stub.
 - `app/cash/quickjs/QuickJs.kt` — copied from `:mihonsupport`. Replaces the `quickjs-android`
   artifact; delegates to Zipline's `app.cash.zipline.QuickJs` so only one `libquickjs.so` ships.
+
+### Desktop (JVM) replacements
+
+Under `src/jvmMain/kotlin/`, with the same public shape as the Android files they replace:
+
+- `eu/kanade/tachiyomi/network/AndroidCookieJar.kt` — copied from `:mihonsupport`; in-memory
+  cookie store (no WebView `CookieManager` on desktop).
+- `eu/kanade/tachiyomi/network/interceptor/CloudflareInterceptor.kt` — copied from `:mihonsupport`,
+  constructor matched to Aniyomi's (no `scope` parameter). Uses the Android interceptor's detection
+  rule (403/503 with a Cloudflare `Server` header) and fails the request with
+  `IOException("Cloudflare-protected; not supported on desktop yet")`, since solving the challenge
+  needs a WebView.
 
 ## Not vendored
 

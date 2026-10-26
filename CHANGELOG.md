@@ -497,7 +497,15 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   ([#2505](https://github.com/jakepurple13/OtakuWorld/pull/2505)):
   - Browse, details, favorites, and the other shared screens
   - Desktop download manager
-  - Video playback is not supported yet; a placeholder screen explains this
+- AnimeWorld Desktop: install and use Aniyomi extensions from Aniyomi repos (non-Cloudflare
+  sources; source settings not yet available on desktop)
+- AnimeWorld Desktop: in-app video player with libVLC bundled in the app (no VLC install needed).
+  Seek, skip buttons, keyboard shortcuts, volume, fullscreen, and a video choice when an episode
+  has several streams
+- AnimeWorld Desktop: subtitles with external and embedded tracks, and an in-player settings dialog
+  for style (shares the Android subtitle style options)
+- AnimeWorld Desktop: episode downloads for progressive, HLS, and DASH streams, saved as one
+  playable file with subtitles kept, with progress, cancel, and retry in the downloads screen
 - Packaged installers for Windows, macOS, and Linux with app icons
   ([#2507](https://github.com/jakepurple13/OtakuWorld/pull/2507))
 
