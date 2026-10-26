@@ -70,3 +70,18 @@ internal fun requestOutcome(succeeded: Boolean, failed: Boolean, isStopped: Bool
         isStopped && !cancelledByApp -> RequestOutcome(deleteRequest = false, writeFailure = false)
         else -> RequestOutcome(deleteRequest = true, writeFailure = false)
     }
+
+/**
+ * Writes [request] as JSON into [dir] (WorkManager `Data` is capped at 10 KB, too small for sources
+ * with many subtitle tracks). The name is a UUID derived from [uniqueName], so re-enqueueing the same
+ * episode (dropped by `ExistingWorkPolicy.KEEP`) overwrites the file instead of leaking a new one.
+ */
+internal fun writeRequestFile(dir: File, uniqueName: String, request: EpisodeDownloadRequest): File {
+    dir.mkdirs()
+    val file = File(dir, UUID.nameUUIDFromBytes(uniqueName.encodeToByteArray()).toString() + ".json")
+    file.writeText(Json.encodeToString(request))
+    return file
+}
+
+internal fun readRequestFile(file: File): EpisodeDownloadRequest? =
+    runCatching { Json.decodeFromString<EpisodeDownloadRequest>(file.readText()) }.getOrNull()

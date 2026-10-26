@@ -1,6 +1,7 @@
 package com.programmersbox.anime.shared.downloads
 
-import android.util.Log
+import com.programmersbox.anime.shared.cast.toWebVtt
+import com.programmersbox.anime.shared.videoplayer.upstreamRequest
 import com.programmersbox.kmpmodels.KmpSubtitle
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -13,9 +14,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import okhttp3.Call
 import okhttp3.Callback
-import okhttp3.Headers.Companion.toHeaders
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
-import okhttp3.Request
 import okhttp3.Response
 import java.io.BufferedOutputStream
 import java.io.File
@@ -26,6 +26,7 @@ import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import com.programmersbox.anime.shared.cast.SubtitleFormat as VttSource
 
 @Serializable
 data class EpisodeDownloadRequest(
@@ -44,7 +45,6 @@ data class EpisodeDownloadRequest(
  */
 data class DownloadProgress(val fraction: Float?, val bytes: Long, val totalBytes: Long?)
 
-private const val TAG = "EpisodeDownloader"
 private const val SEGMENT_RETRIES = 3
 private const val BUFFER_SIZE = 64 * 1024
 private const val UNKNOWN_LENGTH_PROGRESS_STEP = 1_000_000L
@@ -64,10 +64,15 @@ private class WrittenFiles(private val record: File?) : ArrayList<File>() {
  *
  * When [download] gets a `partsRecord`, every path is listed there as it is written, so a run killed
  * with the process can be cleaned up: the next run (or Remove) deletes the recorded `.part` files.
+ *
+ * With [vttSubtitles], sidecars are converted to WebVTT (`.vtt`) instead of kept in their own format.
+ * [warn] receives problems that do not fail the download (a skipped subtitle).
  */
 class EpisodeDownloader(
     private val client: OkHttpClient,
     private val retryDelayMillis: Long = 1_000,
+    private val vttSubtitles: Boolean = false,
+    private val warn: (String, Throwable) -> Unit = { _, _ -> },
 ) {
 
     suspend fun download(
@@ -295,13 +300,16 @@ class EpisodeDownloader(
             try {
                 val bytes = fetchBytes(subtitle.url, request.headers + subtitle.headers)
                 val format = subtitleFormat(subtitle.url, bytes.copyOf(minOf(bytes.size, 64)).decodeToString())
-                val name = sidecarName(base, index, subtitle.lang, format)
-                writeAtomically(File(folder, name), bytes, written)
+                val (sidecarFormat, sidecarBytes) =
+                    if (vttSubtitles) SubtitleFormat.Vtt to toWebVtt(bytes.decodeToString(), format.toVttSource()).encodeToByteArray()
+                    else format to bytes
+                val name = sidecarName(base, index, subtitle.lang, sidecarFormat)
+                writeAtomically(File(folder, name), sidecarBytes, written)
                 entries += SidecarEntry(file = name, lang = subtitle.lang, label = subtitle.lang)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Log.w(TAG, "Skipping subtitle ${subtitle.lang} (${subtitle.url})", e)
+                warn("Skipping subtitle ${subtitle.lang} (${subtitle.url})", e)
             }
         }
         if (entries.isEmpty()) return
@@ -312,8 +320,14 @@ class EpisodeDownloader(
                 written,
             )
         } catch (e: IOException) {
-            Log.w(TAG, "Failed to write subtitle index for $base", e)
+            warn("Failed to write subtitle index for $base", e)
         }
+    }
+
+    private fun SubtitleFormat.toVttSource(): VttSource = when (this) {
+        SubtitleFormat.Vtt -> VttSource.Vtt
+        SubtitleFormat.Srt -> VttSource.Srt
+        SubtitleFormat.Ass -> VttSource.Ass
     }
 
     internal fun writeAtomically(target: File, bytes: ByteArray, written: MutableList<File>) {
@@ -344,7 +358,7 @@ class EpisodeDownloader(
 
     /** Executes a GET with [headers]; throws [IOException] for non-2xx. Cancelling the coroutine cancels the call. */
     private suspend fun execute(url: String, headers: Map<String, String>): Response {
-        val call = client.newCall(Request.Builder().url(url).headers(headers.toHeaders()).build())
+        val call = client.newCall(upstreamRequest(url.toHttpUrl(), headers).build())
         val response = call.await()
         if (!response.isSuccessful) {
             response.close()

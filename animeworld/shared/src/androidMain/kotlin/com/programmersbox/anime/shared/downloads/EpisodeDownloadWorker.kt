@@ -29,11 +29,9 @@ import androidx.work.workDataOf
 import com.programmersbox.kmpuiviews.utils.NotificationChannels
 import com.programmersbox.kmpuiviews.utils.NotificationLogo
 import kotlinx.coroutines.CancellationException
-import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 import org.koin.core.component.KoinComponent
 import java.io.File
-import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 const val DOWNLOAD_TAG = "episodeDownload"
@@ -46,21 +44,6 @@ const val TOTAL_KEY = "total"
 private const val KEY_REQUEST_FILE = "episodeDownloadRequestFile"
 private const val TAG = "EpisodeDownloadWorker"
 private const val MAX_FOREGROUND_ATTEMPTS = 5
-
-/**
- * Writes [request] as JSON into [dir] (WorkManager `Data` is capped at 10 KB, too small for sources
- * with many subtitle tracks). The name is a UUID derived from [uniqueName], so re-enqueueing the same
- * episode (dropped by `ExistingWorkPolicy.KEEP`) overwrites the file instead of leaking a new one.
- */
-internal fun writeRequestFile(dir: File, uniqueName: String, request: EpisodeDownloadRequest): File {
-    dir.mkdirs()
-    val file = File(dir, UUID.nameUUIDFromBytes(uniqueName.encodeToByteArray()).toString() + ".json")
-    file.writeText(Json.encodeToString(request))
-    return file
-}
-
-internal fun readRequestFile(file: File): EpisodeDownloadRequest? =
-    runCatching { Json.decodeFromString<EpisodeDownloadRequest>(file.readText()) }.getOrNull()
 
 fun episodeDownloadsDir(context: Context): File = File(context.noBackupFilesDir, "episode-downloads")
 
@@ -135,7 +118,8 @@ class EpisodeDownloadWorker(
                 throw IllegalStateException("Storage permission is needed to save downloads")
             }
             val partsRecord = requestFile?.let(::partsRecordFor)
-            val file = EpisodeDownloader(client).download(request, partsRecord) { progress ->
+            val downloader = EpisodeDownloader(client, warn = { message, t -> Log.w("EpisodeDownloader", message, t) })
+            val file = downloader.download(request, partsRecord) { progress ->
                 val fraction = progress.fraction
                 if (fraction == null) {
                     // Unknown length: the downloader already throttles these, publish each one.

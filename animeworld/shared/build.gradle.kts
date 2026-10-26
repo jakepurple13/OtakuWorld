@@ -52,6 +52,10 @@ kotlin {
             implementation(commonLibs.androidx.navigation3.runtime)
         }
 
+        // Plain-JVM code (OkHttp, java.io) used by both the Android app and the desktop app.
+        androidMain {
+            kotlin.srcDir("src/jvmAndroidShared/kotlin")
+        }
         androidMain.dependencies {
             implementation(androidLibs.bundles.media3)
             implementation(projects.uiViews)
@@ -71,6 +75,7 @@ kotlin {
         }
 
         getByName("androidHostTest") {
+            kotlin.srcDir("src/jvmAndroidSharedTest/kotlin")
             dependencies {
                 implementation(commonLibs.kotlin.test)
                 implementation(commonLibs.coroutinesTest)
@@ -78,6 +83,9 @@ kotlin {
             }
         }
 
+        jvmMain {
+            kotlin.srcDir("src/jvmAndroidShared/kotlin")
+        }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(desktopLibs.kotlinx.coroutines.swing)
@@ -87,6 +95,9 @@ kotlin {
             implementation(androidLibs.okhttpLib)
         }
 
+        jvmTest {
+            kotlin.srcDir("src/jvmAndroidSharedTest/kotlin")
+        }
         jvmTest.dependencies {
             implementation(commonLibs.kotlin.test)
             implementation(androidLibs.okhttpMockWebServer)
