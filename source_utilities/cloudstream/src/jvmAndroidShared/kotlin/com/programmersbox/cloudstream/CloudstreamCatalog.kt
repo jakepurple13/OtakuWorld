@@ -1,7 +1,6 @@
 package com.programmersbox.cloudstream
 
 import android.app.Application
-import com.lagradost.cloudstream3.plugins.Plugin
 import com.programmersbox.cloudstream.plugins.InstalledPlugin
 import com.programmersbox.cloudstream.plugins.LoadedPlugin
 import com.programmersbox.cloudstream.plugins.PluginLoader
@@ -15,13 +14,34 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-class CloudstreamCatalog(
+/**
+ * Shared by Android and desktop: each platform supplies its own [PluginLoader], [CloudstreamShims]
+ * and [cloudstreamApiService] under the same names.
+ */
+class CloudstreamCatalog internal constructor(
     private val application: Application,
-    private val settings: NewSettingsHandling,
     private val repoClient: CloudstreamRepoClient,
     private val store: PluginStore,
     private val loader: PluginLoader,
+    private val trustedRepos: suspend () -> Set<String>,
+    private val addTrustedRepo: suspend (String) -> Unit,
 ) : KmpExternalCustomApiServicesCatalog {
+
+    constructor(
+        application: Application,
+        settings: NewSettingsHandling,
+        repoClient: CloudstreamRepoClient,
+        store: PluginStore,
+        loader: PluginLoader,
+    ) : this(
+        application = application,
+        repoClient = repoClient,
+        store = store,
+        loader = loader,
+        trustedRepos = { settings.trustedCloudstreamRepos.first().toSet() },
+        addTrustedRepo = { settings.addTrustedCloudstreamRepo(it) },
+    )
+
     override val name: String = "CloudStream"
     override val hasRemoteSources: Boolean = true
 
@@ -38,7 +58,7 @@ class CloudstreamCatalog(
             CloudstreamShims.install(application)
             shimsInstalled = true
         }
-        val trusted = settings.trustedCloudstreamRepos.first().toSet()
+        val trusted = trustedRepos()
         val installed = store.installed()
         // Drop plugins that were uninstalled, updated (record changed) or are no longer trusted.
         loaded.values
@@ -104,12 +124,7 @@ class CloudstreamCatalog(
         val names = serviceNamesFor(apis.map { (l, api) -> l.plugin.internalName to api })
         return apis.zip(names) { (l, api), serviceName ->
             val internalName = l.plugin.internalName
-            val openSettings = (l.instance as? Plugin)?.openSettings
-            val service = if (openSettings != null) {
-                ConfigurableCloudstreamApiService(api, internalName, serviceName, openSettings)
-            } else {
-                CloudstreamApiService(api, internalName, serviceName)
-            }
+            val service = cloudstreamApiService(l.instance, api, internalName, serviceName)
             KmpSourceInformation(
                 apiService = service,
                 name = service.displayName,
@@ -125,7 +140,7 @@ class CloudstreamCatalog(
             internalName = plugin.internalName,
             reason = reason,
             canTrust = canTrust,
-            onTrust = { settings.addTrustedCloudstreamRepo(plugin.repoUrl) },
+            onTrust = { addTrustedRepo(plugin.repoUrl) },
         ),
         name = "${plugin.internalName} ($reason)",
         icon = null,

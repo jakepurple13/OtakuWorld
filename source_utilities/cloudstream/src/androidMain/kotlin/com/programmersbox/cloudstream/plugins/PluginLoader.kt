@@ -3,20 +3,11 @@ package com.programmersbox.cloudstream.plugins
 import android.content.Context
 import android.content.res.AssetManager
 import android.content.res.Resources
-import com.lagradost.cloudstream3.MainAPI
 import com.lagradost.cloudstream3.mapper
 import com.lagradost.cloudstream3.plugins.BasePlugin
 import com.lagradost.cloudstream3.plugins.Plugin
-import com.lagradost.cloudstream3.utils.ExtractorApi
 import dalvik.system.PathClassLoader
 import java.io.File
-
-data class LoadedPlugin(
-    val plugin: InstalledPlugin,
-    val instance: BasePlugin,
-    val apis: List<MainAPI>,
-    val extractors: List<ExtractorApi>,
-)
 
 /** Loads `.cs3` plugins the way CloudStream's PluginManager does. */
 class PluginLoader(private val context: Context) {
