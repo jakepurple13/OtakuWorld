@@ -50,6 +50,7 @@ kotlin {
         }
 
         androidMain {
+            kotlin.srcDir("src/jvmAndroidShared/kotlin")
             dependencies {
                 implementation(commonLibs.ktorOkHttp)
                 implementation(projects.datastore)
@@ -81,6 +82,7 @@ kotlin {
         }
 
         getByName("androidHostTest") {
+            kotlin.srcDir("src/jvmAndroidSharedTest/kotlin")
             dependencies {
                 implementation(commonLibs.kotlin.test)
                 implementation(commonLibs.coroutinesTest)
