@@ -38,8 +38,8 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
-import androidx.compose.material3.Surface
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -85,6 +85,7 @@ import com.programmersbox.anime.shared.subtitles.SubtitleTrackItem
 import com.programmersbox.kmpmodels.KmpSubtitle
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
+import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
@@ -109,6 +110,7 @@ fun DesktopPlayerScreen(
     referer: String? = null,
     streamHeaders: Map<String, String> = emptyMap(),
 ) {
+    HideNavBarWhileOnScreen()
     val state by player.state.collectAsState()
     state.error?.let { return PlayerErrorPanel(it, modifier) }
 
