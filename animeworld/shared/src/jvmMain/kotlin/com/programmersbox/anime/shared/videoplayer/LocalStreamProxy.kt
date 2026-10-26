@@ -6,7 +6,6 @@ import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
-import okhttp3.Request
 import java.io.IOException
 import java.security.SecureRandom
 import java.util.Base64
@@ -88,8 +87,7 @@ class LocalStreamProxy(private val client: OkHttpClient = OkHttpClient()) : Auto
             val path = url.encodedPath
             val isManifest = hintedType.isHls() || hintedType.isDash() ||
                 path.endsWith(".m3u8", true) || path.endsWith(".mpd", true)
-            val request = Request.Builder().url(url).apply {
-                stream.headers.forEach { (k, v) -> header(k, v) }
+            val request = upstreamRequest(url, stream.headers).apply {
                 // Manifests are rewritten, so a byte range would no longer match the body.
                 if (range != null && !isManifest) header("Range", range)
             }.build()

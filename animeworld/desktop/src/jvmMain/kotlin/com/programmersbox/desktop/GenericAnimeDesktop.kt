@@ -13,7 +13,7 @@ import androidx.navigation3.runtime.NavKey
 import com.programmersbox.anime.shared.GenericSharedAnime
 import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.anime.shared.VideoScreen
-import com.programmersbox.anime.shared.downloads.AnimeDownloadManager
+import com.programmersbox.anime.shared.downloads.EpisodeDownloadQueue
 import com.programmersbox.anime.shared.videochoice.VideoChoiceScreen
 import com.programmersbox.anime.shared.videochoice.VideoSourceModel
 import com.programmersbox.anime.shared.videoplayer.VideoPlayerUi
@@ -38,7 +38,7 @@ import kotlinx.coroutines.withContext
 open class GenericAnimeDesktop(
     appConfig: AppConfig,
     private val navigationActions: NavigationActions,
-    private val animeDownloadManager: AnimeDownloadManager,
+    private val episodeDownloads: EpisodeDownloadQueue,
     private val storageHolder: StorageHolder,
     private val trayState: TrayState,
 ) : GenericSharedAnime(appConfig = appConfig), PlatformGenericInfo {
@@ -152,8 +152,12 @@ open class GenericAnimeDesktop(
 
     /** The single hand-off to the downloader. */
     protected open fun enqueueDownload(storage: KmpStorage, model: KmpChapterModel, infoModel: KmpInfoModel) {
-        // Interim: the manager re-fetches its own stream and ignores [storage]; Task 6 passes it through.
-        animeDownloadManager.downloadChapter(model, infoModel.title.ifBlank { infoModel.url })
+        episodeDownloads.download(
+            storage = storage,
+            referer = storage.headers["referer"] ?: storage.source,
+            animeTitle = infoModel.title.ifBlank { infoModel.url },
+            episodeName = model.name,
+        )
     }
 
     context(navGraph: EntryProviderScope<NavKey>)

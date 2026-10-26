@@ -3,7 +3,7 @@ package com.programmersbox.desktop
 import androidx.compose.ui.window.TrayState
 import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.anime.shared.VideoScreen
-import com.programmersbox.anime.shared.downloads.AnimeDownloadManager
+import com.programmersbox.anime.shared.downloads.EpisodeDownloadQueue
 import com.programmersbox.anime.shared.videochoice.VideoSourceModel
 import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.KmpChapterModel
@@ -41,7 +41,7 @@ class GenericAnimeDesktopTest {
     ) : GenericAnimeDesktop(
         appConfig = AppConfig("test", BuildType.NoFirebase, false),
         navigationActions = nav(navigated),
-        animeDownloadManager = unusedDownloadManager(),
+        episodeDownloads = EpisodeDownloadQueue { _, _, _, _ -> error("enqueueDownload is overridden") },
         storageHolder = holder,
         trayState = TrayState(),
     ) {
@@ -155,12 +155,3 @@ private fun nav(log: MutableList<Any>): NavigationActions =
         if (method.name == "navigate") log += args!![0]
         null
     } as NavigationActions
-
-/**
- * The manager needs a Koin-provided DataStore to construct, and every test overrides
- * `enqueueDownload`, so it is never touched. Allocate it without running its constructor.
- */
-private fun unusedDownloadManager(): AnimeDownloadManager {
-    val field = sun.misc.Unsafe::class.java.getDeclaredField("theUnsafe").apply { isAccessible = true }
-    return (field.get(null) as sun.misc.Unsafe).allocateInstance(AnimeDownloadManager::class.java) as AnimeDownloadManager
-}

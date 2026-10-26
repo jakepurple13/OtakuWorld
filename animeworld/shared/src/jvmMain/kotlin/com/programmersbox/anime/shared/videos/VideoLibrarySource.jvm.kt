@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.map
 import java.io.File
 import java.util.prefs.Preferences
 
-private val VIDEO_EXTENSIONS = setOf("mp4", "mkv", "avi", "mov", "webm")
+private val VIDEO_EXTENSIONS = setOf("mp4", "mkv", "avi", "mov", "webm", "ts")
 
 actual class VideoLibrarySource(private val animeDesktopSettings: AnimeDesktopSettings) {
 

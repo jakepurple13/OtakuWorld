@@ -9,6 +9,7 @@ import com.programmersbox.anime.shared.subtitles.SubtitleSettingsViewModel
 import com.programmersbox.anime.shared.VideoScreen
 import com.programmersbox.anime.shared.downloads.AnimeDownloadManager
 import com.programmersbox.anime.shared.downloads.DownloadQueueSource
+import com.programmersbox.anime.shared.downloads.EpisodeDownloadQueue
 import com.programmersbox.anime.shared.videoplayer.VideoPlayerUi
 import com.programmersbox.anime.shared.videos.VideoLibrarySource
 import com.programmersbox.anime.shared.videos.VideoViewerRoute
@@ -25,6 +26,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.bind
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.navigation3.navigation
 import java.io.File
@@ -69,7 +71,7 @@ fun main(args: Array<String>) {
                     animeDesktopSettings = get(),
                     trayState = get(),
                 )
-            }
+            } bind EpisodeDownloadQueue::class
 
             navigation<VideoScreen> { VideoPlayerUi(it) }
             navigation<PlatformSettings> { JvmSettingsScreen() }
