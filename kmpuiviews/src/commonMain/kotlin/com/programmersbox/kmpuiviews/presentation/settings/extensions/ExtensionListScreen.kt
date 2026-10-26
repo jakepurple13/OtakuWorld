@@ -16,6 +16,7 @@ import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircleOutline
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.CopyAll
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.HideSource
 import androidx.compose.material.icons.filled.Language
@@ -40,6 +41,8 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -73,10 +76,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
-import com.programmersbox.kmpuiviews.presentation.globalsearch.SearchLanguagesSheet
-import com.programmersbox.kmpuiviews.presentation.settings.languageorder.LanguageOrderSheet
 import com.programmersbox.kmpuiviews.presentation.components.LoadingDialog
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
+import com.programmersbox.kmpuiviews.presentation.globalsearch.SearchLanguagesSheet
+import com.programmersbox.kmpuiviews.presentation.settings.languageorder.LanguageOrderSheet
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
 import com.programmersbox.kmpuiviews.repository.SourceInfoRepository
 import com.programmersbox.kmpuiviews.utils.AppConfig
@@ -291,6 +294,7 @@ private fun CustomUrlDialog(
     onRemoveUrl: (String) -> Unit,
     urls: List<String>,
 ) {
+    val snackbarHostState = remember { SnackbarHostState() }
     val sourceInfoRepository = koinInject<SourceInfoRepository>()
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
@@ -306,10 +310,11 @@ private fun CustomUrlDialog(
                             onClick = onDismissRequest
                         ) { Icon(Icons.Default.Close, null) }
                     },
-                    title = { Text("Custom Tachiyomi Urls") },
+                    title = { Text("Custom Extension Urls") },
                     actions = { Text(urls.size.toString()) }
                 )
             },
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             bottomBar = {
                 var customUrl by remember { mutableStateOf("") }
 
@@ -392,11 +397,15 @@ private fun CustomUrlDialog(
                     val clipboard = LocalClipboard.current
                     OutlinedCard(
                         onClick = {
-                            scope.launch { sourceInfoRepository.copyUrl(clipboard, it) }
+                            scope.launch {
+                                sourceInfoRepository.copyUrl(clipboard, it)
+                                snackbarHostState.showSnackbar("Copied")
+                            }
                         }
                     ) {
                         ListItem(
                             headlineContent = { Text(it) },
+                            leadingContent = { Icon(Icons.Default.CopyAll, null) },
                             trailingContent = {
                                 IconButton(
                                     onClick = { showDeleteDialog = true }
