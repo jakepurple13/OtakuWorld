@@ -86,6 +86,8 @@ From `core/common/src/main/java`:
   `androidx.preference.PreferenceScreen` stub.
 - `HttpServer.kt`: logs a failed start with `android.util.Log.d` instead of `logcat`, because
   `LogcatExtensions.kt` is Android-only (the JVM has an `android.util.Log` stub).
+  It also binds `NanoHTTPD("127.0.0.1", 0)` instead of `NanoHTTPD(0)` so the server listens on loopback
+  only (class shape and signatures unchanged).
 - `CloudflareInterceptor.kt`: removed imports `util.system.toast`, `core.common.i18n.stringResource`,
   `tachiyomi.i18n.MR` (moko-resources not vendored). The bypass-failure `IOException` message is
   the literal "Failed to bypass Cloudflare"; the outdated-WebView toast is a `Toast.makeText(...)`

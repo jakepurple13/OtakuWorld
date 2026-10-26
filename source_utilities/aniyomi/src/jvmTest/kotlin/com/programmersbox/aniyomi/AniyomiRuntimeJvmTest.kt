@@ -108,4 +108,26 @@ class AniyomiRuntimeJvmTest {
         val port = AniyomiHttpServers.portFor(FakeHttpServerSource())
         assertTrue(port > 0)
     }
+
+    @Test
+    fun httpServerBindsLoopback() {
+        val server = eu.kanade.tachiyomi.animesource.model.HttpServer()
+        server.start()
+        try {
+            assertTrue(server.isRunning())
+            assertEquals("127.0.0.1", server.hostname)
+            val lanAddress = java.net.NetworkInterface.getNetworkInterfaces().toList()
+                .filter { it.isUp && !it.isLoopback }
+                .flatMap { it.inetAddresses.toList() }
+                .filterIsInstance<java.net.Inet4Address>()
+                .firstOrNull { !it.isLoopbackAddress }
+            if (lanAddress != null) {
+                assertFailsWith<IOException> {
+                    java.net.Socket().use { it.connect(java.net.InetSocketAddress(lanAddress, server.listeningPort), 1000) }
+                }
+            }
+        } finally {
+            server.stop()
+        }
+    }
 }

@@ -4,7 +4,8 @@ package eu.kanade.tachiyomi.animesource.model
 import android.util.Log
 import fi.iki.elonen.NanoHTTPD
 
-open class HttpServer : NanoHTTPD(0) {
+// OTAKU: bind loopback only (upstream NanoHTTPD(0) binds every interface, exposing the server to the LAN).
+open class HttpServer : NanoHTTPD("127.0.0.1", 0) {
     val url: String
         get() = "http://localhost:$listeningPort"
 
