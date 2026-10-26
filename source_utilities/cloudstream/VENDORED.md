@@ -11,13 +11,16 @@ re-apply every edit marked `OTAKU:` (listed below).
 
 Every vendored file starts with `// Copied from recloudstream/cloudstream <sha>, GPL-3.0`.
 
-## Layout: expect/actual collapsed into androidMain
+## Layout: expect/actual collapsed into one platform set
 
 Upstream `library` is KMP (`commonMain`, `jvmCommonMain`, `androidMain`, `jvmMain`, `webMain`).
-Everything here lives in this module's `src/androidMain/kotlin`; the module's other targets do not
-see it. File names are kept exactly, because Kotlin derives the JVM facade class of top-level
-declarations from the file name (`Coroutines.android.kt` -> `Coroutines_androidKt`), and plugins
-built against the Android artifact reference those classes.
+Here the vendored files live in `src/jvmAndroidShared/kotlin`, a source dir added to both this
+module's `androidMain` and `jvmMain` (desktop), except the two that need Android APIs, which stay
+in `src/androidMain/kotlin`: `network/WebViewResolver.android.kt` and
+`utils/Coroutines.android.kt`. The module's other targets do not see any of it. File names are kept
+exactly, because Kotlin derives the JVM facade class of top-level declarations from the file name
+(`Coroutines.android.kt` -> `Coroutines_androidKt`), and plugins built against the Android artifact
+reference those classes.
 
 - `commonMain` files that only hold `expect` declarations are not copied:
   `com/lagradost/api/ContextHelper.kt`, `com/lagradost/api/Log.kt`,
@@ -25,7 +28,50 @@ built against the Android artifact reference those classes.
   `com/lagradost/cloudstream3/utils/SubtitleHelperPlatform.kt`.
 - `commonMain` files that mix `expect` with other code have the `expect` lines removed.
 - The `actual` modifier is removed from the `androidMain` / `jvmCommonMain` actuals.
-- `jvmMain`, `webMain` and the test source sets are not copied.
+- Upstream `jvmMain`, `webMain` and the test source sets are not copied.
+
+The app-module shims (`shims.md`) follow the same split: shared unless they need Android UI
+(`CloudStreamApp.kt`, `CommonActivity.kt`, `network/CloudflareKiller.kt`,
+`utils/AppContextUtils.kt` stay in `androidMain`).
+
+On the JVM, `android.*` / `androidx.*` types resolve to the stubs in
+`:sharedutils:kmpextensionloader` (`src/jvmMain`), and `androidx.annotation` to the real
+`annotation-jvm` jar. Stubs added for this module: `android.app.Activity`,
+`android.view.ContextThemeWrapper`, `androidx.fragment.app.Fragment` and core-ktx's
+`androidx.core.content.edit`, plus the link-time stubs real plugins need (see "Desktop (JVM)" in
+`shims.md`).
+
+### Desktop (JVM) replacements
+
+`src/jvmMain/kotlin` holds a desktop version of every Android-only file above, with the same file
+name, package, classes and public JVM signatures (including `$default` methods). They are derived
+from upstream (each carries the `Copied from` header and an `OTAKU:` note), not re-synced by
+`scripts/vendor-cloudstream.sh`, which never writes to `src/jvmMain`. No file there is wholly new
+code; each is a desktop rewrite of its androidMain counterpart:
+
+- `com/lagradost/cloudstream3/network/WebViewResolver.android.kt` — same constructor, defaults and
+  `resolveUsingWebView` overloads; resolving (and `intercept`) throws `IOException("WebViewResolver
+  requires a WebView; not supported on desktop yet …")`. `getWebViewUserAgent()` returns the stored
+  `webViewUserAgent` (null unless set). `toRequest` / `toWebResourceResponse` kept.
+- `com/lagradost/cloudstream3/utils/Coroutines.android.kt` — `runOnMainThreadNative` and
+  `mainDispatcher` use `Dispatchers.Main` when a Main dispatcher module (coroutines-swing) is on the
+  classpath, else one daemon thread (`cloudstream-main`). Work posted from the main thread runs
+  inline; otherwise it is enqueued, never waited on.
+- `com/lagradost/cloudstream3/network/CloudflareKiller.kt` — same public members; a Cloudflare
+  challenge (403/503 from a `cloudflare` server) fails with `IOException("Cloudflare-protected …;
+  solving it requires a WebView; not supported on desktop yet")`. Cookies in `savedCookies` are sent.
+- `com/lagradost/cloudstream3/utils/AppContextUtils.kt` — `html` via the `android.text.Html` stub
+  (plain text), `openBrowser` via `java.awt.Desktop.browse` when supported (returns `Unit?` like
+  Android), `openWebView` no-op, `isNetworkAvailable` true, `isUsingMobileData` false,
+  `isAppInstalled` false, `splitQuery` unchanged.
+- `com/lagradost/cloudstream3/CloudStreamApp.kt` — same companion API. Extends the desktop
+  `Application` stub (constructor follows that stub; never instantiated). `getActivity()` is
+  `this as? Activity`.
+- `com/lagradost/cloudstream3/CommonActivity.kt` — same members; `showToast*` print to stdout.
+
+`utils/DataStore.kt` (one `OTAKU:` edit, below) and `plugins/Plugin.kt` compile on the JVM over
+the desktop `Context`, `SharedPreferences` (`FileSharedPreferences`) and `Resources` stubs, so they
+are shared rather than duplicated.
 
 ## Dropped
 
@@ -41,7 +87,10 @@ built against the Android artifact reference those classes.
   buildkonfig plugin from `local.properties` (`MDL_API_KEY`, `TRAKT_CLIENT_ID`). We ship no keys, so
   both are `"null"`, the value upstream bakes in when no key is configured.
 - `com/lagradost/cloudstream3/utils/Coroutines.kt` — removed the `expect` declarations of
-  `runOnMainThreadNative`, `workerDispatcher` and `WorkerThread`.
+  `runOnMainThreadNative`, `workerDispatcher` and `WorkerThread`. `main` and `mainWork` use
+  `mainDispatcher` instead of `Dispatchers.Main`, so they run on desktop without a Main module.
+- `com/lagradost/cloudstream3/utils/Coroutines.android.kt` — adds
+  `internal val mainDispatcher get() = Dispatchers.Main` (the desktop version falls back).
 - `com/lagradost/cloudstream3/mvvm/ArchComponentExt.kt` — removed the `expect` of
   `platformThrowAbleToResource`.
 - `com/lagradost/cloudstream3/utils/ExtractorApi.kt` — removed the four YouTube extractor imports
@@ -55,6 +104,9 @@ built against the Android artifact reference those classes.
   the default argument values of the (not vendored) `expect class` moved onto the constructor and
   the three `resolveUsingWebView` overloads, so the JVM `$default` methods plugins call still exist.
   Adds the `USER_AGENT` import the defaults need.
+- `com/lagradost/cloudstream3/utils/DataStore.kt` (shim, see `shims.md`) — `getSharedPrefs().all`
+  is written `getAll()`, because the desktop `SharedPreferences` stub is Kotlin and has no synthetic
+  property. Same bytecode on Android.
 
 ## Dependencies
 
@@ -72,7 +124,7 @@ plugins built against 2.13.1 run on 2.21.
 
 ## Files (copied verbatim unless marked edited)
 
-All paths are under `src/androidMain/kotlin/`.
+All paths are under `src/jvmAndroidShared/kotlin/`, except those marked *(androidMain)*.
 
 From `library/src/commonMain/kotlin`:
 
@@ -229,6 +281,6 @@ From `library/src/androidMain/kotlin`:
 
 - `com/lagradost/api/ContextHelper.android.kt` — **edited**
 - `com/lagradost/api/Log.kt` — **edited**
-- `com/lagradost/cloudstream3/network/WebViewResolver.android.kt` — **edited**
-- `com/lagradost/cloudstream3/utils/Coroutines.android.kt` — **edited**
+- `com/lagradost/cloudstream3/network/WebViewResolver.android.kt` *(androidMain)* — **edited**
+- `com/lagradost/cloudstream3/utils/Coroutines.android.kt` *(androidMain)* — **edited**
 - `com/lagradost/cloudstream3/utils/SubtitleHelperPlatform.android.kt` — **edited**

@@ -43,6 +43,16 @@ open class View(private val context: Context) {
 
     open fun post(action: Runnable): Boolean = Handler(Looper.getMainLooper()).post(action)
 
+    // CloudStream plugins' settings dialogs implement these with synthetic lambda classes; the JVM loads
+    // a class's interfaces when the class loads, so they must exist even though nothing calls them here.
+    fun interface OnClickListener {
+        fun onClick(v: View)
+    }
+
+    fun interface OnFocusChangeListener {
+        fun onFocusChange(v: View, hasFocus: Boolean)
+    }
+
     class MeasureSpec {
         companion object {
             private const val MODE_SHIFT = 30

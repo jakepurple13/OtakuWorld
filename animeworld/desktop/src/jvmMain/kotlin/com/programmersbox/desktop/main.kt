@@ -15,6 +15,7 @@ import com.programmersbox.anime.shared.videos.VideoLibrarySource
 import com.programmersbox.anime.shared.videos.VideoViewerRoute
 import com.programmersbox.anime.shared.videos.ViewVideoScreen
 import com.programmersbox.aniyomi.aniyomiModule
+import com.programmersbox.cloudstream.cloudstreamModule
 import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.ExtensionWatcher
 import com.programmersbox.kmpuiviews.MangaDesktopSettings
@@ -77,7 +78,7 @@ fun main(args: Array<String>) {
             navigation<PlatformSettings> { JvmSettingsScreen() }
             navigation<VideoViewerRoute> { ViewVideoScreen() }
 
-            includes(aniyomiModule)
+            includes(aniyomiModule, cloudstreamModule)
         }
     )
 }

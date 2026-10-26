@@ -3,6 +3,7 @@ package com.programmersbox.mihon
 import android.app.Application
 import com.programmersbox.kmpextensionloader.ChildFirstClassLoader
 import com.programmersbox.kmpextensionloader.DexConverter
+import com.programmersbox.kmpextensionloader.ExtensionRefScanner
 import com.programmersbox.mihon.repo.MihonRepoClient
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
@@ -12,15 +13,7 @@ import io.ktor.http.isSuccess
 import kotlinx.coroutines.runBlocking
 import org.junit.Assume.assumeTrue
 import org.objectweb.asm.ClassReader
-import org.objectweb.asm.ClassVisitor
-import org.objectweb.asm.FieldVisitor
-import org.objectweb.asm.Handle
-import org.objectweb.asm.Label
-import org.objectweb.asm.MethodVisitor
-import org.objectweb.asm.Opcodes
-import org.objectweb.asm.Type
 import java.io.File
-import java.lang.reflect.Modifier
 import java.nio.file.Files
 import java.util.zip.ZipFile
 import kotlin.test.Test
@@ -49,7 +42,7 @@ class MihonExtensionScanTest {
         assumeTrue("set MIHON_SCAN=1 to run", System.getenv("MIHON_SCAN") == "1")
         val dir = File(System.getenv("MIHON_SCAN_DIR") ?: Files.createTempDirectory("mihonscan").toString()).apply { mkdirs() }
         MihonRuntime.init(Application("mihon-scan", File(dir, "data")))
-        val shapes = ShapeIndex(shapeJars())
+        val shapes = ExtensionRefScanner.ShapeIndex(ExtensionRefScanner.shapeJars("MIHON_SCAN_SHAPE_JARS"))
         val http = HttpClient(OkHttp)
         try {
             val remotes = MihonRepoClient(http).fetch(listOf(REPO_URL))
@@ -132,12 +125,10 @@ class MihonExtensionScanTest {
         // ref -> referencing classes
         val refs = sortedMapOf<String, MutableSet<String>>()
         readers.forEach { reader ->
-            val found = mutableSetOf<String>()
-            reader.accept(RefCollector(found), ClassReader.SKIP_FRAMES)
-            found.forEach { refs.getOrPut(it) { mutableSetOf() } += reader.className }
+            ExtensionRefScanner.references(reader).forEach { refs.getOrPut(it) { mutableSetOf() } += reader.className }
         }
         fun label(ref: String) = if (refs.getValue(ref).all(::isActivity)) "$ref (Activity only)" else ref
-        val unresolved = refs.keys.filter { ref -> ref.substringBefore(' ') !in supers && !resolves(ref) }
+        val unresolved = refs.keys.filter { ref -> ref.substringBefore(' ') !in supers && !ExtensionRefScanner.resolves(ref, host) }
         val types = unresolved.filter { ' ' !in it }
         // A member of a missing type is implied by the type entry.
         val members = unresolved.filter { ' ' in it && it.substringBefore(' ') !in types }
@@ -152,133 +143,6 @@ class MihonExtensionScanTest {
             }
         }
         return ScanResult(types.map(::label), members.map(::label), verified, failures)
-    }
-
-    /** "owner" for a class, "owner name desc" for a method/field (field descs never start with '('). */
-    private fun resolves(ref: String): Boolean {
-        val parts = ref.split(' ')
-        val cls = runCatching { Class.forName(parts[0].replace('/', '.'), false, host) }.getOrNull() ?: return false
-        if (parts.size == 1) return true
-        val (name, desc) = parts[1] to parts[2]
-        return hierarchy(cls).any { c ->
-            if (desc.startsWith("(")) {
-                if (name == "<init>") c == cls && c.declaredConstructors.any { Type.getConstructorDescriptor(it) == desc }
-                else c.declaredMethods.any { it.name == name && Type.getMethodDescriptor(it) == desc && (c == cls || !Modifier.isPrivate(it.modifiers)) }
-            } else {
-                c.declaredFields.any { it.name == name && Type.getDescriptor(it.type) == desc }
-            }
-        }
-    }
-
-    private fun hierarchy(cls: Class<*>): Sequence<Class<*>> = sequence {
-        val seen = mutableSetOf<Class<*>>()
-        val queue = ArrayDeque(listOf(cls))
-        while (queue.isNotEmpty()) {
-            val c = queue.removeFirst()
-            if (!seen.add(c)) continue
-            yield(c)
-            c.superclass?.let(queue::add)
-            queue.addAll(c.interfaces)
-        }
-        yield(Any::class.java)
-    }
-
-    private fun shapeJars(): List<File> {
-        val explicit = System.getenv("MIHON_SCAN_SHAPE_JARS")?.split(',')?.map { File(it.trim()) }?.filter { it.isFile }
-        if (!explicit.isNullOrEmpty()) return explicit
-        val sdk = System.getenv("ANDROID_HOME") ?: return emptyList()
-        return listOf(File(sdk, "platforms/android-36/android.jar")).filter { it.isFile }
-    }
-
-    /** Reads class shapes from jars (e.g. the SDK's android.jar) without loading them. */
-    private class ShapeIndex(private val jars: List<File>) {
-        fun describe(internalName: String): String {
-            jars.forEach { jar ->
-                ZipFile(jar).use { zip ->
-                    val entry = zip.getEntry("$internalName.class") ?: return@use
-                    val reader = ClassReader(zip.getInputStream(entry).use { it.readBytes() })
-                    val kind = if (reader.access and Opcodes.ACC_INTERFACE != 0) "interface" else if (reader.access and Opcodes.ACC_ABSTRACT != 0) "abstract class" else "class"
-                    val extends = reader.superName?.takeIf { it != "java/lang/Object" }?.let { " extends $it" }.orEmpty()
-                    val implements = reader.interfaces.takeIf { it.isNotEmpty() }?.joinToString(prefix = " implements ").orEmpty()
-                    return "$kind$extends$implements"
-                }
-            }
-            return "unknown (not in shape jars)"
-        }
-    }
-
-    /** Collects every referenced class type and every referenced member ("owner name desc"). */
-    private class RefCollector(private val refs: MutableSet<String>) : ClassVisitor(Opcodes.ASM9) {
-        private fun type(internalName: String?) {
-            if (internalName == null) return
-            val t = if (internalName.startsWith("[")) Type.getType(internalName).elementType else Type.getObjectType(internalName)
-            if (t.sort == Type.OBJECT) refs += t.internalName
-        }
-
-        private fun desc(descriptor: String) {
-            val t = Type.getType(descriptor)
-            if (t.sort == Type.METHOD) {
-                t.argumentTypes.forEach { desc(it.descriptor) }
-                desc(t.returnType.descriptor)
-            } else {
-                val element = if (t.sort == Type.ARRAY) t.elementType else t
-                if (element.sort == Type.OBJECT) refs += element.internalName
-            }
-        }
-
-        private fun constant(value: Any?) {
-            when (value) {
-                is Type -> desc(value.descriptor)
-                is Handle -> {
-                    type(value.owner)
-                    desc(value.desc)
-                }
-            }
-        }
-
-        override fun visit(version: Int, access: Int, name: String, signature: String?, superName: String?, interfaces: Array<String>?) {
-            type(superName)
-            interfaces?.forEach(::type)
-        }
-
-        override fun visitField(access: Int, name: String, descriptor: String, signature: String?, value: Any?): FieldVisitor? {
-            desc(descriptor)
-            return null
-        }
-
-        override fun visitMethod(access: Int, name: String, descriptor: String, signature: String?, exceptions: Array<String>?): MethodVisitor {
-            desc(descriptor)
-            exceptions?.forEach(::type)
-            return object : MethodVisitor(Opcodes.ASM9) {
-                override fun visitTypeInsn(opcode: Int, type: String) = type(type)
-
-                override fun visitFieldInsn(opcode: Int, owner: String, name: String, descriptor: String) {
-                    type(owner)
-                    desc(descriptor)
-                    if (!owner.startsWith("[")) refs += "$owner $name $descriptor"
-                }
-
-                override fun visitMethodInsn(opcode: Int, owner: String, name: String, descriptor: String, isInterface: Boolean) {
-                    type(owner)
-                    desc(descriptor)
-                    if (!owner.startsWith("[")) refs += "$owner $name $descriptor"
-                }
-
-                override fun visitInvokeDynamicInsn(name: String, descriptor: String, bootstrapMethodHandle: Handle, vararg bootstrapMethodArguments: Any?) {
-                    desc(descriptor)
-                    constant(bootstrapMethodHandle)
-                    bootstrapMethodArguments.forEach(::constant)
-                }
-
-                override fun visitLdcInsn(value: Any?) = constant(value)
-
-                override fun visitMultiANewArrayInsn(descriptor: String, numDimensions: Int) = desc(descriptor)
-
-                override fun visitTryCatchBlock(start: Label, end: Label, handler: Label, type: String?) = type(type)
-
-                override fun visitLocalVariable(name: String, descriptor: String, signature: String?, start: Label, end: Label, index: Int) = desc(descriptor)
-            }
-        }
     }
 
     private companion object {

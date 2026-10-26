@@ -10,12 +10,14 @@ import kotlinx.coroutines.*
 
 // OTAKU: expect declarations removed; Coroutines.android.kt / Coroutines.jvmCommon.kt hold the
 // (former) actuals for runOnMainThreadNative, workerDispatcher and WorkerThread.
+// OTAKU: main/mainWork use mainDispatcher (Coroutines.android.kt) instead of Dispatchers.Main, so
+// desktop runs them without a Main dispatcher module.
 
 object Coroutines {
     @AnyThread
     fun <T> T.main(@MainThread work: suspend ((T) -> Unit)): Job {
         val value = this
-        return CoroutineScope(Dispatchers.Main).launchSafe {
+        return CoroutineScope(mainDispatcher).launchSafe {
             work(value)
         }
     }
@@ -52,7 +54,7 @@ object Coroutines {
     @AnyThread
     suspend fun <T, V> V.mainWork(@MainThread work: suspend (CoroutineScope.(V) -> T)): T {
         val value = this
-        return withContext(Dispatchers.Main) {
+        return withContext(mainDispatcher) {
             work(value)
         }
     }

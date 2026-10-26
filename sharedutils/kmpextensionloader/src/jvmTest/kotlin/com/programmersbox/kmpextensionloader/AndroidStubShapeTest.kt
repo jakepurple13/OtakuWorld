@@ -1,5 +1,6 @@
 package com.programmersbox.kmpextensionloader
 
+import androidx.core.content.edit
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -174,6 +175,73 @@ class AndroidStubShapeTest {
         wrapper.getMethod("getSharedPreferences", String::class.java, Int::class.javaPrimitiveType)
         wrapper.getMethod("getCacheDir")
         wrapper.getMethod("getPackageName")
+    }
+
+    @Test fun activityAndFragmentMatchSdkShapes() {
+        classExtends(android.app.Activity::class.java, android.view.ContextThemeWrapper::class.java)
+        classExtends(android.view.ContextThemeWrapper::class.java, android.content.ContextWrapper::class.java)
+        classExtends(androidx.fragment.app.Fragment::class.java, Any::class.java)
+    }
+
+    // CloudStream plugins: settings dialogs extend these, and their synthetic listener lambdas implement the
+    // nested interfaces, which the JVM loads with the lambda class.
+    @Test fun cloudstreamUiTypesMatchSdkShapes() {
+        classExtends(androidx.core.app.ComponentActivity::class.java, android.app.Activity::class.java)
+        classExtends(androidx.activity.ComponentActivity::class.java, androidx.core.app.ComponentActivity::class.java)
+        classExtends(androidx.fragment.app.FragmentActivity::class.java, androidx.activity.ComponentActivity::class.java)
+        classExtends(androidx.appcompat.app.AppCompatActivity::class.java, androidx.fragment.app.FragmentActivity::class.java)
+        assertEquals(
+            androidx.fragment.app.FragmentManager::class.java,
+            androidx.fragment.app.FragmentActivity::class.java.getMethod("getSupportFragmentManager").returnType,
+        )
+        listOf(androidx.fragment.app.FragmentManager::class.java, androidx.fragment.app.FragmentTransaction::class.java)
+            .forEach { assertTrue(java.lang.reflect.Modifier.isAbstract(it.modifiers) && !it.isInterface, it.name) }
+        classExtends(
+            androidx.fragment.app.DialogFragment::class.java, androidx.fragment.app.Fragment::class.java,
+            android.content.DialogInterface.OnCancelListener::class.java, android.content.DialogInterface.OnDismissListener::class.java,
+        )
+        classExtends(androidx.appcompat.app.AppCompatDialogFragment::class.java, androidx.fragment.app.DialogFragment::class.java)
+        classExtends(
+            com.google.android.material.bottomsheet.BottomSheetDialogFragment::class.java,
+            androidx.appcompat.app.AppCompatDialogFragment::class.java,
+        )
+
+        assertTrue(android.content.DialogInterface::class.java.isInterface)
+        listOf(
+            android.content.DialogInterface.OnClickListener::class.java, android.content.DialogInterface.OnKeyListener::class.java,
+            android.content.DialogInterface.OnCancelListener::class.java, android.content.DialogInterface.OnDismissListener::class.java,
+            android.view.View.OnClickListener::class.java, android.view.View.OnFocusChangeListener::class.java,
+            android.widget.CompoundButton.OnCheckedChangeListener::class.java,
+        ).forEach { interfaceExtends(it) }
+        assertEquals("android.view.View\$OnClickListener", android.view.View.OnClickListener::class.java.name)
+        android.content.DialogInterface.OnKeyListener::class.java.getMethod(
+            "onKey", android.content.DialogInterface::class.java, Int::class.javaPrimitiveType, android.view.KeyEvent::class.java,
+        )
+        classExtends(android.view.KeyEvent::class.java, android.view.InputEvent::class.java)
+        assertTrue(java.lang.reflect.Modifier.isAbstract(android.view.InputEvent::class.java.modifiers))
+        classExtends(android.widget.CompoundButton::class.java, android.widget.Button::class.java)
+        assertTrue(java.lang.reflect.Modifier.isAbstract(android.widget.CompoundButton::class.java.modifiers))
+    }
+
+    @Test fun applicationIsItsOwnApplicationContext() {
+        val dir = java.nio.file.Files.createTempDirectory("ac").toFile()
+        try {
+            val app = android.app.Application("pkg.test", dir)
+            kotlin.test.assertSame<android.content.Context>(app, app.getApplicationContext())
+        } finally {
+            dir.deleteRecursively()
+        }
+    }
+
+    @Test fun coreKtxEditAppliesChanges() {
+        val dir = java.nio.file.Files.createTempDirectory("edit").toFile()
+        try {
+            val prefs = android.app.Application("pkg.test", dir).getSharedPreferences("p", 0)
+            prefs.edit { putString("k", "v") }
+            assertEquals("v", prefs.getString("k", null))
+        } finally {
+            dir.deleteRecursively()
+        }
     }
 
     @Test fun preferenceManagerDefaultPreferences() {

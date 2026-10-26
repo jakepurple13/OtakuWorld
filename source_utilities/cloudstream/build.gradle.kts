@@ -50,6 +50,7 @@ kotlin {
         }
 
         androidMain {
+            kotlin.srcDir("src/jvmAndroidShared/kotlin")
             dependencies {
                 implementation(commonLibs.ktorOkHttp)
                 implementation(projects.datastore)
@@ -81,6 +82,7 @@ kotlin {
         }
 
         getByName("androidHostTest") {
+            kotlin.srcDir("src/jvmAndroidSharedTest/kotlin")
             dependencies {
                 implementation(commonLibs.kotlin.test)
                 implementation(commonLibs.coroutinesTest)
@@ -88,5 +90,57 @@ kotlin {
                 implementation(androidLibs.okhttpMockWebServer)
             }
         }
+
+        jvmMain {
+            kotlin.srcDir("src/jvmAndroidShared/kotlin")
+            dependencies {
+                implementation(commonLibs.ktorOkHttp)
+                implementation(projects.datastore)
+                implementation(project.dependencies.platform(commonLibs.koin.bom))
+                implementation(commonLibs.koinCores)
+                // android.* / androidx.* stubs the vendored library compiles against.
+                implementation(projects.sharedutils.kmpextensionloader)
+                implementation(desktopLibs.kotlin.multiplatform.appdirs)
+                // CloudStream plugins compile against these; the host must provide them.
+                api(androidLibs.cloudstreamNiceHttp)
+                api(androidLibs.cloudstreamJackson)
+                api(androidLibs.cloudstreamRhino)
+                api(androidLibs.cloudstreamKsoup)
+                api(androidLibs.cloudstreamCryptographyCore)
+                api(androidLibs.cloudstreamCryptographyProvider)
+                api(androidLibs.cloudstreamAtomicfu)
+                api(androidLibs.cloudstreamKotlinxIo)
+                api(androidLibs.cloudstreamAnnotation) // resolves to annotation-jvm
+                api(androidLibs.jsoup)
+                api(androidLibs.okhttpLib)
+                api(commonLibs.ktorCore)
+                api(commonLibs.kotlinx.datetime)
+                api(commonLibs.kotlinxSerialization)
+                api(commonLibs.coroutinesCore)
+                api(kotlin("reflect"))
+                api(androidLibs.gson)
+            }
+        }
+
+        jvmTest {
+            kotlin.srcDir("src/jvmAndroidSharedTest/kotlin")
+            dependencies {
+                implementation(commonLibs.kotlin.test)
+                implementation(commonLibs.coroutinesTest)
+                implementation(commonLibs.ktorMock)
+                implementation(androidLibs.okhttpMockWebServer)
+                implementation("org.ow2.asm:asm:9.10.1") // PluginFixtureLinkTest, CloudstreamPluginScanTest
+            }
+        }
     }
+}
+
+// CloudstreamFixture downloads its plugin once into the Gradle user home; -P overrides exist for offline checks.
+tasks.named<Test>("jvmTest") {
+    systemProperty(
+        "cloudstream.fixture.cache",
+        providers.gradleProperty("cloudstream.fixture.cache").orNull
+            ?: File(gradle.gradleUserHomeDir, "caches/otaku-test-fixtures/cloudstream").absolutePath,
+    )
+    providers.gradleProperty("cloudstream.fixture.url").orNull?.let { systemProperty("cloudstream.fixture.url", it) }
 }

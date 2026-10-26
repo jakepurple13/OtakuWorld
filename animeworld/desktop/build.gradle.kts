@@ -49,6 +49,7 @@ kotlin {
             implementation(projects.kmpmodels)
             implementation(projects.animeworld.shared)
             implementation(projects.sourceUtilities.aniyomi)
+            implementation(projects.sourceUtilities.cloudstream)
             implementation(commonLibs.bundles.datastoreLibs)
             implementation(commonLibs.coroutinesCore)
             implementation(desktopLibs.kotlinx.coroutines.swing)
@@ -67,6 +68,9 @@ kotlin {
             implementation(androidLibs.okhttpMockWebServer)
             // AnimeWorldEndToEndNetworkTest (opt-in) loads the AnimeOnsen fixture extension.
             implementation(commonLibs.ktorMock)
+            // CloudstreamEndToEndNetworkTest (opt-in) talks to a real repo like the app does.
+            implementation(commonLibs.ktorOkHttp)
+            implementation(androidLibs.okhttpLib)
             implementation(projects.sharedutils.kmpextensionloader)
         }
         // DashDownloadPlaybackTest downloads the DASH fixture that :animeworld:shared's tests use.
@@ -117,4 +121,14 @@ compose.desktop {
 
 tasks.named { it == "prepareAppResources" || it == "run" }.configureEach {
     dependsOn("prepareVlc")
+}
+
+// CloudstreamFixture downloads its plugin once into the Gradle user home; -P overrides exist for offline checks.
+tasks.named<Test>("jvmTest") {
+    systemProperty(
+        "cloudstream.fixture.cache",
+        providers.gradleProperty("cloudstream.fixture.cache").orNull
+            ?: File(gradle.gradleUserHomeDir, "caches/otaku-test-fixtures/cloudstream").absolutePath,
+    )
+    providers.gradleProperty("cloudstream.fixture.url").orNull?.let { systemProperty("cloudstream.fixture.url", it) }
 }

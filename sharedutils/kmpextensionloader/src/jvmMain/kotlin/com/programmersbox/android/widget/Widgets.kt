@@ -50,6 +50,16 @@ open class EditText(context: Context) : TextView(context) {
 
 open class Button(context: Context) : TextView(context)
 
+/**
+ * Holder of [OnCheckedChangeListener], which CloudStream plugins' settings dialogs implement with synthetic
+ * lambda classes. The SDK's Checkable interface is left out: no extension references it.
+ */
+abstract class CompoundButton(context: Context) : Button(context) {
+    fun interface OnCheckedChangeListener {
+        fun onCheckedChanged(buttonView: CompoundButton, isChecked: Boolean)
+    }
+}
+
 /** Prints instead of showing a toast. */
 open class Toast(private val context: Context) {
     private var text: CharSequence? = null
