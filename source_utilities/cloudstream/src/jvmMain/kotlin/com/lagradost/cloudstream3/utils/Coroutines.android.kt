@@ -1,4 +1,5 @@
-// OTAKU: desktop replacement for the vendored androidMain Coroutines.android.kt. Same file name, so
+// Copied from recloudstream/cloudstream d9c55e2e5b020dde8e28c12a3e7802df962265ac, GPL-3.0
+// OTAKU: desktop rewrite of the vendored androidMain Coroutines.android.kt (derived: same API). Same file name, so
 // plugins find the same facade class (Coroutines_androidKt). Desktop has no Looper: the "main thread"
 // is Dispatchers.Main when a Main dispatcher module (coroutines-swing) is present, else one daemon thread.
 package com.lagradost.cloudstream3.utils

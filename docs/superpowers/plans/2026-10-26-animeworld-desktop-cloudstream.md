@@ -18,7 +18,7 @@
 - Trust identical to Android: plugins load only from repos in `trustedCloudstreamRepos`; otherwise `UntrustedCloudstreamApiService` with the existing trust action.
 - Service names unchanged (`cloudstream:<api.name>`, `cloudstream:<internalName>:<api.name>`, `cloudstream-untrusted:<internalName>`).
 - Desktop never exposes `ConfigurableCloudstreamApiService` (no settings UI on desktop, spec non-goal).
-- WebView/Cloudflare-dependent calls fail with a clear `IOException` (`"…requires a WebView; not supported on desktop yet"`), never crash. `requiresResources` plugins show as a failed placeholder `"Needs Android resources (not supported on desktop)"` unless the loader succeeds without them.
+- WebView/Cloudflare-dependent calls fail with a clear `IOException` (`"…requires a WebView; not supported on desktop yet"`), never crash. `requiresResources` plugins show as a failed placeholder `"Needs Android resources (not supported on desktop)"`; the manifest's `requiresResources` flag is checked up front and such plugins are rejected before any plugin code runs.
 - `animeworld:desktop` must not depend on `mihonsupport`. CloudStream is GPL-3.0 (already in the Android app); no license change.
 - Verified via `./gradlew :animeworld:desktop:run` on macOS.
 

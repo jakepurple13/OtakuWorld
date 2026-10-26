@@ -34,8 +34,11 @@ import kotlin.time.Duration.Companion.seconds
 class CloudstreamJvmRuntimeTest {
     private val tempDir = createTempDirectory("cloudstream-jvm").toFile()
 
+    private val previousContext = CloudStreamApp.context
+
     @AfterTest
     fun cleanUp() {
+        CloudStreamApp.context = previousContext
         tempDir.deleteRecursively()
     }
 

@@ -44,9 +44,10 @@ On the JVM, `android.*` / `androidx.*` types resolve to the stubs in
 ### Desktop (JVM) replacements
 
 `src/jvmMain/kotlin` holds a desktop version of every Android-only file above, with the same file
-name, package, classes and public JVM signatures (including `$default` methods). They are written
-for this project (marked `OTAKU:`), not copied by `scripts/vendor-cloudstream.sh`, which never
-writes to `src/jvmMain`:
+name, package, classes and public JVM signatures (including `$default` methods). They are derived
+from upstream (each carries the `Copied from` header and an `OTAKU:` note), not re-synced by
+`scripts/vendor-cloudstream.sh`, which never writes to `src/jvmMain`. No file there is wholly new
+code; each is a desktop rewrite of its androidMain counterpart:
 
 - `com/lagradost/cloudstream3/network/WebViewResolver.android.kt` — same constructor, defaults and
   `resolveUsingWebView` overloads; resolving (and `intercept`) throws `IOException("WebViewResolver

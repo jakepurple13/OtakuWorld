@@ -186,3 +186,5 @@ members such as `isFinishing`, `isDestroyed`, `runOnUiThread` and `getWindow` (o
 activity), `Handler.removeCallbacks*`, `Intent.makeRestartActivityTask` and
 `PackageManager.getLaunchIntentForPackage` (restart-the-app buttons). The full list is in
 `build/cloudstream-scan/scan.md` after a scan.
+
+Note: `org.json:json` now arrives on the desktop classpath via NiceHttp, so desktop Aniyomi/Mihon extensions that reference Android's `org.json` resolve to the real library.
