@@ -51,6 +51,7 @@ class PluginFixtureLinkTest {
     private fun isScreen(internalName: String, supers: Map<String, String?>): Boolean {
         var current: String? = internalName
         while (current != null && current in supers) current = supers[current]
+        // Deliberately strict (unlike the scanner's SCREEN_TYPES): a screen whose host supertype stub is missing is not skipped, so the missing stub fails the test.
         val hostType = current?.let { runCatching { Class.forName(it.replace('/', '.'), false, host) }.getOrNull() }
             ?: return false
         return Activity::class.java.isAssignableFrom(hostType) || Fragment::class.java.isAssignableFrom(hostType)
