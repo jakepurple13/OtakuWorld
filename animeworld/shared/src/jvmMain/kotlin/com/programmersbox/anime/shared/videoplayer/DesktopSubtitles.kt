@@ -31,7 +31,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
-import okhttp3.Request
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import java.io.File
 import java.io.IOException
 import java.net.URI
@@ -93,15 +93,16 @@ private fun embeddedLanguageText(label: String, language: String?): String {
     return listOf(label, twoLetter, name).filter { it.isNotBlank() }.joinToString(" ")
 }
 
-/** Fetches a subtitle file and converts it to cues; ASS styling is dropped. */
-class SubtitleCueLoader(private val client: OkHttpClient) {
+/**
+ * Fetches a subtitle file and converts it to cues; ASS styling is dropped.
+ * [streamHeaders] (the stream's own headers) go to the subtitle host too, under the subtitle's own headers.
+ */
+class SubtitleCueLoader(private val client: OkHttpClient, private val streamHeaders: Map<String, String> = emptyMap()) {
     suspend fun load(sub: KmpSubtitle, referer: String?): List<VttCue> = withContext(Dispatchers.IO) {
         val text = if (sub.url.startsWith("file:")) {
             File(URI(sub.url)).readText()
         } else {
-            val request = Request.Builder().url(sub.url).apply {
-                playerHeaders(sub.headers, referer).forEach { (k, v) -> header(k, v) }
-            }.build()
+            val request = upstreamRequest(sub.url.toHttpUrl(), playerHeaders(streamHeaders + sub.headers, referer)).build()
             client.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) throw IOException("HTTP ${response.code} for ${sub.url}")
                 response.body.string()

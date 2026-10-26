@@ -15,6 +15,15 @@ object OfflineSubtitles {
         return fromIndex(folder, base) ?: fromGlob(folder, base)
     }
 
+    /** Every file [find] could return for [video], plus its `.subtitles.json` index. */
+    fun sidecarFiles(video: File): List<File> {
+        val folder = video.absoluteFile.parentFile ?: return emptyList()
+        val base = video.nameWithoutExtension
+        val index = File(folder, sidecarIndexName(base))
+        val indexed = readIndex(index).orEmpty().map { File(folder, File(it.file).name) }
+        return (indexed + sidecars(folder, base).map { it.second } + index).filter { it.isFile }.distinct()
+    }
+
     private fun readIndex(index: File): List<SidecarEntry>? =
         index.takeIf { it.isFile }
             ?.let { runCatching { Json.decodeFromString<List<SidecarEntry>>(it.readText()) }.getOrNull() }

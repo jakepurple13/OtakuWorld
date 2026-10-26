@@ -1,12 +1,25 @@
 package com.programmersbox.anime.shared.videos
 
 import com.programmersbox.anime.shared.AnimeDesktopSettings
+import com.programmersbox.anime.shared.downloads.OfflineSubtitles
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.io.File
 import java.util.prefs.Preferences
 
 private val VIDEO_EXTENSIONS = setOf("mp4", "mkv", "avi", "mov", "webm", "ts")
+
+/** Videos under [root], skipping the `<base>.mp4.part.tracks` folders a DASH download works in. */
+internal fun libraryVideoFiles(root: File): Sequence<File> = root
+    .walkTopDown()
+    .onEnter { !it.name.endsWith(".tracks") }
+    .filter { it.isFile && it.extension.lowercase() in VIDEO_EXTENSIONS }
+
+/** Deletes [video] with its subtitle sidecars and index. */
+internal fun deleteWithSidecars(video: File) {
+    OfflineSubtitles.sidecarFiles(video).forEach { it.delete() }
+    video.delete()
+}
 
 actual class VideoLibrarySource(private val animeDesktopSettings: AnimeDesktopSettings) {
 
@@ -15,9 +28,7 @@ actual class VideoLibrarySource(private val animeDesktopSettings: AnimeDesktopSe
     private fun scanVideos(downloadsPath: String): List<SharedVideoContent> {
         val root = File(downloadsPath)
         if (!root.exists()) return emptyList()
-        return root
-            .walkTopDown()
-            .filter { it.isFile && it.extension.lowercase() in VIDEO_EXTENSIONS }
+        return libraryVideoFiles(root)
             .map {
                 SharedVideoContent(
                     videoName = it.nameWithoutExtension,
@@ -42,6 +53,6 @@ actual class VideoLibrarySource(private val animeDesktopSettings: AnimeDesktopSe
     }
 
     actual fun delete(content: SharedVideoContent) {
-        File(content.path).delete()
+        deleteWithSidecars(File(content.path))
     }
 }

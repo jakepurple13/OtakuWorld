@@ -30,6 +30,22 @@ class JvmSubtitleSettingsRepositoryTest {
     }
 
     @Test
+    fun unwritableTargetKeepsInMemoryValueWithoutThrowing() = runTest {
+        val dir = Files.createTempDirectory("subtitle-settings").toFile()
+        try {
+            // A regular file where the parent directory should be: mkdirs and the write both fail.
+            val blocker = dir.resolve("blocker").apply { writeText("x") }
+            val repo = JvmSubtitleSettingsRepository(blocker.resolve("subtitle_style.json"))
+
+            repo.update { it.copy(sizePercent = 150) }
+
+            assertEquals(150, repo.style.first().sizePercent)
+        } finally {
+            dir.deleteRecursively()
+        }
+    }
+
+    @Test
     fun unreadableFileYieldsDefaults() = runTest {
         val file = Files.createTempFile("subtitle-style", ".json").toFile()
         try {

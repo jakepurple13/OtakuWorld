@@ -1,5 +1,6 @@
 package com.programmersbox.anime.shared.subtitles
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,7 +25,19 @@ class JvmSubtitleSettingsRepository(private val file: File) : SubtitleSettingsRe
 
     override suspend fun reset() = writeLock.withLock { save(SubtitleStyle()) }
 
+    /** A failed write is logged and the new style still applies for this session. */
     private suspend fun save(style: SubtitleStyle) {
+        try {
+            write(style)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            println("[SubtitleSettings] couldn't save $file: $e")
+        }
+        state.value = style
+    }
+
+    private suspend fun write(style: SubtitleStyle) {
         withContext(Dispatchers.IO) {
             file.absoluteFile.parentFile?.mkdirs()
             // Write a sibling and move it over, so a crash mid-write never leaves a truncated file.
@@ -32,6 +45,5 @@ class JvmSubtitleSettingsRepository(private val file: File) : SubtitleSettingsRe
             temp.writeText(encodeSubtitleStyle(style))
             Files.move(temp.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
         }
-        state.value = style
     }
 }

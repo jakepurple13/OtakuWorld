@@ -107,13 +107,14 @@ fun DesktopPlayerScreen(
     modifier: Modifier = Modifier,
     externalSubtitles: List<KmpSubtitle> = emptyList(),
     referer: String? = null,
+    streamHeaders: Map<String, String> = emptyMap(),
 ) {
     val state by player.state.collectAsState()
     state.error?.let { return PlayerErrorPanel(it, modifier) }
 
     val subtitleSettings = koinInject<SubtitleSettingsRepository>()
     val subtitleStyle by subtitleSettings.style.collectAsState(initial = null)
-    val cueLoader = remember { SubtitleCueLoader(OkHttpClient()) }
+    val cueLoader = remember(streamHeaders) { SubtitleCueLoader(OkHttpClient(), streamHeaders) }
     val subtitles = rememberDesktopSubtitles(player, externalSubtitles, referer, subtitleStyle, cueLoader)
     var subtitleSheetOpen by remember { mutableStateOf(false) }
     var subtitleSettingsOpen by remember { mutableStateOf(false) }

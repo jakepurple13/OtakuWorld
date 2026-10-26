@@ -10,6 +10,7 @@ class VlcRuntimeTest {
 
     @Test
     fun loadsBundledLibVlc() {
+        assumeLibVlcBundled()
         val resourcesDir = File(System.getProperty("compose.application.resources.dir")).absolutePath
 
         val factory = VlcRuntime.factory()

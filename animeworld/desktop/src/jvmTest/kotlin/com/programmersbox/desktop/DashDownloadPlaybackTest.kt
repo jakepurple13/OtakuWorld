@@ -15,12 +15,17 @@ import okio.Buffer
 import java.io.File
 import kotlin.io.path.createTempDirectory
 import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.fail
 
 /** A DASH download (fixture from `:animeworld:shared`'s test resources) plays in libVLC with video and audio. */
 class DashDownloadPlaybackTest {
-    private val factory = VlcRuntime.factory().getOrThrow()
+    private val factory by lazy { VlcRuntime.factory().getOrThrow() }
+
+    @BeforeTest
+    fun requireLibVlc() = assumeLibVlcBundled()
+
     private val proxy = LocalStreamProxy()
     private val dir = createTempDirectory("dash-playback").toFile()
     private var player: DesktopPlayer? = null

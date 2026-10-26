@@ -95,6 +95,27 @@ class DesktopSubtitlesTest {
     }
 
     @Test
+    fun cueLoaderSendsStreamHeadersToSubtitleHost() = runTest {
+        MockWebServer().use { server ->
+            server.dispatcher = object : mockwebserver3.Dispatcher() {
+                override fun dispatch(request: mockwebserver3.RecordedRequest): MockResponse =
+                    if (request.headers["X-Stream"] == "s" && request.headers["X-Key"] == "own") {
+                        MockResponse.Builder().code(200).body(SRT).build()
+                    } else {
+                        MockResponse.Builder().code(403).build()
+                    }
+            }
+            server.start()
+            val subtitle = KmpSubtitle(server.url("/subs/ep1.srt").toString(), "English", mapOf("X-Key" to "own"))
+
+            val cues = SubtitleCueLoader(OkHttpClient(), streamHeaders = mapOf("X-Stream" to "s", "X-Key" to "stream"))
+                .load(subtitle, referer = null)
+
+            assertEquals(2, cues.size)
+        }
+    }
+
+    @Test
     fun cueLoaderReadsLocalSidecar() = runTest {
         val dir = Files.createTempDirectory("sidecar").toFile()
         try {

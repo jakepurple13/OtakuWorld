@@ -39,7 +39,7 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
             onSuccess = {
                 val source = remember(videoScreen) { playerSource(videoScreen, storageHolder) }
                 val subtitles = remember(source) { externalSubtitles(source, storageHolder) }
-                PlayerHost(it, videoScreen, source, subtitles)
+                PlayerHost(it, videoScreen, source, subtitles, storageHolder.storageModel?.headers.orEmpty())
             },
             onFailure = { PlayerUnavailable("The video player couldn't start: libVLC failed to load (${it.message}).") },
         )
@@ -47,7 +47,7 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
 }
 
 @Composable
-private fun PlayerHost(factory: MediaPlayerFactory, videoScreen: VideoScreen, source: PlayerSource, subtitles: List<KmpSubtitle>) {
+private fun PlayerHost(factory: MediaPlayerFactory, videoScreen: VideoScreen, source: PlayerSource, subtitles: List<KmpSubtitle>, streamHeaders: Map<String, String>) {
     val proxy = remember(source) { LocalStreamProxy() }
     val player = remember(factory, source) { DesktopPlayer(factory, proxy) }
     DisposableEffect(player) {
@@ -62,6 +62,7 @@ private fun PlayerHost(factory: MediaPlayerFactory, videoScreen: VideoScreen, so
         title = videoScreen.showName,
         externalSubtitles = subtitles,
         referer = videoScreen.referer,
+        streamHeaders = streamHeaders,
     )
 }
 

@@ -13,6 +13,7 @@ import java.io.File
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.concurrent.thread
 import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -21,7 +22,11 @@ import kotlin.test.assertTrue
 import kotlin.test.fail
 
 class DesktopPlayerTest {
-    private val factory = VlcRuntime.factory().getOrThrow()
+    private val factory by lazy { VlcRuntime.factory().getOrThrow() }
+
+    @BeforeTest
+    fun requireLibVlc() = assumeLibVlcBundled()
+
     private val proxy = LocalStreamProxy()
     private val players = mutableListOf<DesktopPlayer>()
     private val fixture = File(DesktopPlayerTest::class.java.getResource("/fixtures/tiny clip ü.mp4")!!.toURI())

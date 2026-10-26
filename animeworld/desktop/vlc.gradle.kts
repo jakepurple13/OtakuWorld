@@ -6,6 +6,7 @@ import java.net.http.HttpResponse
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.security.MessageDigest
+import java.time.Duration
 import javax.inject.Inject
 
 // Bundles libVLC for the desktop video player as Compose Desktop app resources:
@@ -88,7 +89,7 @@ abstract class PrepareVlcTask @Inject constructor(
     @get:Input abstract val prunedPluginDirs: ListProperty<String>
     @get:Input abstract val prunedPlugins: ListProperty<String>
 
-    /** Holds the downloaded archive between runs, so a clean output does not re-download. */
+    /** Holds the downloaded archive between runs (under the Gradle user home), so a clean build does not re-download. */
     @get:Internal abstract val downloadDir: DirectoryProperty
 
     /** `.../appResources/<os>-<arch>/vlc` */
@@ -165,14 +166,17 @@ abstract class PrepareVlcTask @Inject constructor(
 
         archive.parentFile.mkdirs()
         val part = File(archive.path + ".part")
-        val client = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build()
+        val client = HttpClient.newBuilder()
+            .followRedirects(HttpClient.Redirect.ALWAYS)
+            .connectTimeout(Duration.ofSeconds(30))
+            .build()
         var lastError: Exception? = null
         // get.videolan.org redirects to a random mirror; retry so one bad mirror does not fail the build.
         repeat(3) { attempt ->
             try {
                 logger.lifecycle("Downloading ${url.get()} (attempt ${attempt + 1})")
                 val response = client.send(
-                    HttpRequest.newBuilder(URI(url.get())).GET().build(),
+                    HttpRequest.newBuilder(URI(url.get())).timeout(Duration.ofMinutes(10)).GET().build(),
                     HttpResponse.BodyHandlers.ofFile(part.toPath()),
                 )
                 check(response.statusCode() == 200) { "HTTP ${response.statusCode()} from ${response.uri()}" }
@@ -213,7 +217,8 @@ if (vlcTarget != null && vlcArchive != null) {
         sha256.set(vlcArchive.sha256)
         prunedPluginDirs.set(vlcPrunedPluginDirs)
         prunedPlugins.set(vlcPrunedPlugins)
-        downloadDir.set(layout.buildDirectory.dir("vlc-download"))
+        // In the Gradle user home so CI's cached ~/.gradle keeps the archive across fresh runners and clean builds.
+        downloadDir.set(layout.dir(providers.provider { gradle.gradleUserHomeDir.resolve("caches/otaku-vlc/$vlcVersion") }))
         outputDir.set(layout.buildDirectory.dir("appResources/$vlcTarget/vlc"))
     }
 
