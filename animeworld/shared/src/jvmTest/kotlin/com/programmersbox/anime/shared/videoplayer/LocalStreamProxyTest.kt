@@ -184,4 +184,31 @@ class LocalStreamProxyTest {
         val url = proxy.register(upstream.url("/denied.mp4").toString(), headers, null)
         get(url).use { assertEquals(403, it.code) }
     }
+
+    @Test
+    fun plusAndEncodedSlashSurviveRoundTrip() {
+        route("/e/list.m3u8", "application/vnd.apple.mpegurl", body = "#EXTM3U\nseg+1.ts\na%2Fb.ts\nc%20d.ts\n")
+        route("/e/seg+1.ts", body = "plus")
+        route("/e/a%2Fb.ts", body = "slash")
+        route("/e/c%20d.ts", body = "space")
+        val url = proxy.register(upstream.url("/e/list.m3u8").toString(), headers, null)
+
+        val segs = get(url).use { it.body.string() }.lines().filter { it.startsWith("http") }
+        assertEquals(listOf("plus", "slash", "space"), segs.map { s -> get(s).use { it.body.string() } })
+        assertEquals(listOf("/e/seg+1.ts", "/e/a%2Fb.ts", "/e/c%20d.ts"), seen.drop(1).map { it.url.encodedPath })
+    }
+
+    @Test
+    fun attributedBaseUrlIsRewrittenWithoutInjection() {
+        route(
+            "/b/m.mpd", "application/dash+xml",
+            body = """<MPD><BaseURL serviceLocation="a">${upstream.url("/cdn/x/")}</BaseURL><Period/></MPD>""",
+        )
+        val url = proxy.register(upstream.url("/b/m.mpd").toString(), headers, null)
+
+        val out = get(url).use { it.body.string() }
+        assertTrue(out.contains("""<BaseURL serviceLocation="a">http://127.0.0.1:"""), out)
+        assertEquals(1, Regex("<BaseURL").findAll(out).count(), out)
+        assertFalse(out.contains("${upstream.port}/"), out)
+    }
 }

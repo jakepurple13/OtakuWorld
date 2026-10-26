@@ -57,7 +57,8 @@ class LocalStreamProxy(private val client: OkHttpClient = OkHttpClient()) : Auto
         val clean = upstream.newBuilder().query(null).fragment(null).build()
         val path = clean.encodedPath
         val dir = clean.toString().substringBeforeLast('/') + "/"
-        val rest = path.substring(path.lastIndexOf('/') + 1)
+        // NanoHTTPD URL-decodes the path ('+' -> space, %2F -> '/'), so escape both to get the bytes back unchanged.
+        val rest = path.substring(path.lastIndexOf('/') + 1).replace("%", "%25").replace("+", "%2B")
         val query = upstream.encodedQuery?.let { "?$it" }.orEmpty()
         val encodedDir = Base64.getUrlEncoder().withoutPadding().encodeToString(dir.toByteArray())
         return "http://$HOST:$port/$token/$encodedDir/$rest$query"
@@ -80,7 +81,7 @@ class LocalStreamProxy(private val client: OkHttpClient = OkHttpClient()) : Auto
         }
 
         private fun upstreamUrl(dir: String, rest: String, session: IHTTPSession): HttpUrl? =
-            dir.toHttpUrlOrNull()?.newBuilder()?.addPathSegments(rest)?.encodedQuery(session.queryParameterString)?.build()
+            (dir + rest).toHttpUrlOrNull()?.newBuilder()?.encodedQuery(session.queryParameterString)?.build()
 
         private fun forward(token: String, stream: Stream, url: HttpUrl, range: String?): Response {
             val hintedType = stream.mimeType.takeIf { url.toString() == stream.url }
@@ -135,8 +136,8 @@ class LocalStreamProxy(private val client: OkHttpClient = OkHttpClient()) : Auto
         /** Rewrites `BaseURL`s and absolute attribute URLs; injects a `BaseURL` (the final MPD dir) when there is none. */
         private fun rewriteMpd(body: String, base: HttpUrl, token: String): String {
             var out = baseUrlTag.replace(body) { m ->
-                val abs = base.resolve(m.groupValues[1].trim())
-                "<BaseURL>" + (abs?.let { proxied(listeningPort, token, it) } ?: m.groupValues[1]) + "</BaseURL>"
+                val abs = base.resolve(m.groupValues[2].trim())
+                "<BaseURL${m.groupValues[1]}>" + (abs?.let { proxied(listeningPort, token, it) } ?: m.groupValues[2]) + "</BaseURL>"
             }
             if (!baseUrlTag.containsMatchIn(body)) {
                 val dir = proxied(listeningPort, token, base).substringBefore('?').substringBeforeLast('/') + "/"
@@ -151,7 +152,7 @@ class LocalStreamProxy(private val client: OkHttpClient = OkHttpClient()) : Auto
 
     private companion object {
         const val HOST = "127.0.0.1"
-        val baseUrlTag = Regex("<BaseURL>([^<]*)</BaseURL>")
+        val baseUrlTag = Regex("<BaseURL([^>]*)>([^<]*)</BaseURL>")
         val mpdOpen = Regex("<MPD[^>]*>")
         val absoluteAttr = Regex("(media|initialization|sourceURL)=\"(https?://[^\"]+)\"")
         val hlsTypes = setOf("application/vnd.apple.mpegurl", "application/x-mpegurl")
