@@ -31,12 +31,15 @@ class JvmPluginLoaderTest {
         tempDir.deleteRecursively()
     }
 
-    private fun fixture() = InstalledPlugin(
-        repoUrl = CloudstreamFixture.REPO_URL,
-        internalName = CloudstreamFixture.INTERNAL_NAME,
-        version = CloudstreamFixture.VERSION,
-        path = CloudstreamFixture.cs3.absolutePath,
-    )
+    private fun fixture(): InstalledPlugin {
+        CloudstreamFixture.assumeAvailable()
+        return InstalledPlugin(
+            repoUrl = CloudstreamFixture.REPO_URL,
+            internalName = CloudstreamFixture.INTERNAL_NAME,
+            version = CloudstreamFixture.VERSION,
+            path = CloudstreamFixture.cs3.absolutePath,
+        )
+    }
 
     private fun testPlugin(name: String, cs3: File) = InstalledPlugin("https://repo.test/repo.json", name, 1, cs3.absolutePath)
 

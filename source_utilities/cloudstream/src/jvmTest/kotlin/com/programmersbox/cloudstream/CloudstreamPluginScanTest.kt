@@ -45,6 +45,7 @@ class CloudstreamPluginScanTest {
 
     @Test fun scanCloudstreamPlugins() = runBlocking {
         assumeTrue("set CS_SCAN=1 to run", System.getenv("CS_SCAN") == "1")
+        CloudstreamFixture.assumeAvailable()
         val dir = File(System.getenv("CS_SCAN_DIR") ?: "build/cloudstream-scan").apply { mkdirs() }
         val shapes = ExtensionRefScanner.ShapeIndex(ExtensionRefScanner.shapeJars("CS_SCAN_SHAPE_JARS"))
         val http = HttpClient(OkHttp)

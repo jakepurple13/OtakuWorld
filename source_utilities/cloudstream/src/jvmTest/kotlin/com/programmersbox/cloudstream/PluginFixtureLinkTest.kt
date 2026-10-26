@@ -28,6 +28,7 @@ class PluginFixtureLinkTest {
 
     @Test
     fun fixtureClassesLink() {
+        CloudstreamFixture.assumeAvailable()
         val jar = assertNotNull(DexConverter.convert(CloudstreamFixture.cs3, tempDir), "conversion failed")
         val supers = ZipFile(jar).use { zip ->
             zip.entries().asSequence().filter { it.name.endsWith(".class") }

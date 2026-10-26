@@ -134,3 +134,13 @@ kotlin {
         }
     }
 }
+
+// CloudstreamFixture downloads its plugin once into the Gradle user home; -P overrides exist for offline checks.
+tasks.named<Test>("jvmTest") {
+    systemProperty(
+        "cloudstream.fixture.cache",
+        providers.gradleProperty("cloudstream.fixture.cache").orNull
+            ?: File(gradle.gradleUserHomeDir, "caches/otaku-test-fixtures/cloudstream").absolutePath,
+    )
+    providers.gradleProperty("cloudstream.fixture.url").orNull?.let { systemProperty("cloudstream.fixture.url", it) }
+}

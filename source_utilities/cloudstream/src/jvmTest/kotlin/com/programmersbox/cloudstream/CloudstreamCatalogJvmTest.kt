@@ -61,6 +61,7 @@ class CloudstreamCatalogJvmTest {
     }
 
     private fun fixture(): InstalledPlugin {
+        CloudstreamFixture.assumeAvailable()
         val cs3 = CloudstreamFixture.cs3.copyTo(File(storeRoot, "repo/${CloudstreamFixture.INTERNAL_NAME}.cs3"))
         return InstalledPlugin(CloudstreamFixture.REPO_URL, CloudstreamFixture.INTERNAL_NAME, CloudstreamFixture.VERSION, cs3.absolutePath)
     }

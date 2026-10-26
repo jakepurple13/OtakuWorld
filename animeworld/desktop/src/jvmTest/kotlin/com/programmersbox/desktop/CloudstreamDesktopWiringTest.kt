@@ -90,6 +90,7 @@ class CloudstreamDesktopWiringTest {
 
     @Test
     fun aniyomiAndCloudstreamCoexist() = runBlocking {
+        CloudstreamFixture.assumeAvailable()
         val aniyomi = koin.koin.get<AniyomiCatalog>()
         val cloudstream = koin.koin.get<CloudstreamCatalog>()
         assertTrue(catalogs().let { all -> aniyomi in all && cloudstream in all })
@@ -128,9 +129,8 @@ class CloudstreamDesktopWiringTest {
         File("../../source_utilities/aniyomi/src/jvmTest/resources/fixtures/aniyomi-all.animeonsen-v14.10.apk")
             .also { assertTrue(it.isFile, "fixture missing at ${it.absolutePath}") }
 
-    private fun cloudstreamFixture() =
-        File("../../source_utilities/cloudstream/src/jvmTest/resources/fixtures/HiAnime.cs3")
-            .also { assertTrue(it.isFile, "fixture missing at ${it.absolutePath}") }
+    // Downloaded (and hash-checked) on first use; skips the test when offline.
+    private fun cloudstreamFixture() = CloudstreamFixture.cs3
 
     private companion object {
         // Mirror AniyomiFixture / CloudstreamFixture in the source_utilities jvmTest sources (not visible from this module).

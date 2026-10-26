@@ -111,7 +111,7 @@ JVM classpath. Converted plugins load through `ChildFirstClassLoader` with `CLOU
 the JVM host does not ship it.
 
 `CloudstreamPluginScanTest` (opt-in, `CS_SCAN=1`) converts the four reference plugins plus the
-`HiAnime` fixture and reports every type and member they reference that the JVM host lacks, and every
+`HiAnime` fixture (downloaded and sha256-verified at test time, not committed; see `CloudstreamFixture`) and reports every type and member they reference that the JVM host lacks, and every
 class that fails to load. Stubs were added for everything that broke class loading, plus the
 supertypes of the plugins' screens, so every non-screen class of the four plugins loads and links:
 
