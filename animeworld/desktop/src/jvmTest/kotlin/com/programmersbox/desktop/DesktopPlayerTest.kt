@@ -1,5 +1,7 @@
 package com.programmersbox.desktop
 
+import com.programmersbox.anime.shared.downloads.SubtitleFormat
+import com.programmersbox.anime.shared.downloads.sidecarName
 import com.programmersbox.anime.shared.videoplayer.DesktopPlayer
 import com.programmersbox.anime.shared.videoplayer.LocalStreamProxy
 import com.programmersbox.anime.shared.videoplayer.PlayerSource
@@ -12,6 +14,7 @@ import okio.Buffer
 import java.io.File
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.concurrent.thread
+import kotlin.io.path.createTempDirectory
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -30,6 +33,7 @@ class DesktopPlayerTest {
     private val proxy = LocalStreamProxy()
     private val players = mutableListOf<DesktopPlayer>()
     private val fixture = File(DesktopPlayerTest::class.java.getResource("/fixtures/tiny clip ü.mp4")!!.toURI())
+    private val tsFixture = File(DesktopPlayerTest::class.java.getResource("/fixtures/hls-download.ts")!!.toURI())
 
     private fun newPlayer() = DesktopPlayer(factory, proxy).also(players::add)
 
@@ -53,6 +57,29 @@ class DesktopPlayerTest {
         val start = player.state.value.positionMs
         awaitTrue("position advances past $start") { player.state.value.positionMs > start }
         assertEquals(null, player.state.value.error)
+    }
+
+    /**
+     * An HLS download is one `.ts` with subtitle sidecars beside it. libVLC must not autoload them: a sidecar's
+     * ES makes it select program 0, so the TS program (1) never plays and no frame arrives.
+     */
+    @Test
+    fun playsHlsDownloadWithSubtitleSidecars() {
+        val dir = createTempDirectory("ts-sidecars").toFile()
+        try {
+            val video = tsFixture.copyTo(File(dir, "Ep 1.ts"))
+            File(dir, sidecarName("Ep 1", 0, "English", SubtitleFormat.Vtt))
+                .writeText("WEBVTT\n\n00:00:00.000 --> 00:00:02.000\nHello\n")
+
+            val player = newPlayer()
+            player.open(PlayerSource.LocalFile(video.absolutePath))
+
+            awaitTrue("first frame") { player.frame.value != null }
+            assertEquals(320, player.frame.value!!.width)
+            assertEquals(null, player.state.value.error)
+        } finally {
+            dir.deleteRecursively()
+        }
     }
 
     @Test

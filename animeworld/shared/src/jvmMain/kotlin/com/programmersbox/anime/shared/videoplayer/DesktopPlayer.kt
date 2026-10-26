@@ -125,8 +125,11 @@ class DesktopPlayer(
                 return@api fail(gen, "Can't play this link: ${e.message}")
             }
         }
-        val options = if (startMs > 0) arrayOf(":start-time=${startMs / 1000.0}") else emptyArray()
-        if (!player.media().play(mrl, *options)) fail(gen, "The player couldn't open this video.")
+        // Download sidecars (`<name>.<n>.<lang>.vtt`) are drawn by Compose, so libVLC must not autoload them. As
+        // slaves they would also break MPEG-TS: their ES make libVLC select program 0, the TS program is never
+        // selected, and the input ends without a frame.
+        val options = listOfNotNull(":no-sub-autodetect-file", startMs.takeIf { it > 0 }?.let { ":start-time=${it / 1000.0}" })
+        if (!player.media().play(mrl, *options.toTypedArray())) fail(gen, "The player couldn't open this video.")
     }
 
     fun playPause() = api {
