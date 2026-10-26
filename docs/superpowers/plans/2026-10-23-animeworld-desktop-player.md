@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** AnimeWorld Desktop plays extension episodes and downloaded files in-app (no software installed on the machine), with subtitles at parity with Android, and downloads extension episodes (progressive + HLS) to playable files with sidecar subtitles.
+**Goal:** AnimeWorld Desktop plays extension episodes and downloaded files in-app (no software installed on the machine), with subtitles at parity with Android, and downloads extension episodes (progressive, HLS and DASH) to playable files with sidecar subtitles.
 
 **Architecture:** vlcj 4.12.1 over a libVLC 3.0.24 that the build downloads and ships as Compose Desktop app resources. Video is rendered through vlcj's `CallbackVideoSurface` into a Skia bitmap drawn by Compose, so Compose controls and subtitles draw on top. Every network stream goes through a loopback `LocalStreamProxy` (NanoHTTPD + OkHttp) that injects the source's headers and rewrites HLS/DASH manifests. External subtitles are rendered by Compose from parsed cues; embedded tracks are rendered by libVLC into the frame. Downloads reuse the proxy's header logic and the existing commonMain HLS helpers.
 
@@ -23,7 +23,7 @@
 - Subtitles: external `KmpSubtitle` tracks (VTT/SRT/ASS via existing `toWebVtt`/`parseVttCues`), embedded tracks via libVLC SPU, default track via existing `defaultSubtitleIndex`, styling from `SubtitleSettingsRepository`, honoring `autoEnable`. ASS styling may be lost (converted to plain cues).
 - Desktop subtitle settings persist across restarts (replace `InMemorySubtitleSettingsRepository` on desktop).
 - Native player resources are released when the player screen leaves composition; closing the window or navigating away mid-playback must not crash the JVM.
-- Android behavior unchanged except Task 8's loopback edit to the vendored Aniyomi `HttpServer` (applies to both platforms; Android extensions only ever connect from the same device). Android builds and existing tests keep passing.
+- Android behavior unchanged except Task 8's loopback edit (Task 8 = Loopback-only Aniyomi HttpServer) to the vendored Aniyomi `HttpServer` (applies to both platforms; Android extensions only ever connect from the same device). Android builds and existing tests keep passing.
 - Clear on-screen errors (not crashes) for: HTTP 4xx/5xx, unsupported format, Cloudflare/WebView-required source, libVLC failing to load.
 
 ## Review Focus
@@ -205,7 +205,7 @@ Port the proxy half of androidMain `cast/CastMediaServer.kt` (routes, `parseRang
 - Behavior: headers `playerHeaders(storage.headers, referer)` on every request (share the header logic with Task 2 — e.g. a small `upstreamRequest(url, headers)` helper used by both). Output dir `downloadsDirectory/<sanitizeFileName(animeTitle)>/`, base name `uniqueBaseName(sanitizeFileName(episodeName))`.
   - Progressive (`video/mp4` or not HLS/DASH): stream to `<base>.<ext from URL or mp4>.part`, progress from Content-Length, rename on success.
   - HLS: `parseHlsPlaylist` → `Master.chooseVariant(storage.quality)` → media playlist; fetch segments sequentially with headers, decrypt AES-128 (`HlsKey`, `aesIv(segment)`, keys cached per URI), prepend `HlsMap` init segment when present; write `<base>.ts` (or `<base>.mp4` when the playlist uses an fMP4 `EXT-X-MAP`). Progress = segments done / total. `SAMPLE-AES`/unsupported → Failed with `UnsupportedHlsException` message.
-  - DASH: Failed with "DASH downloads aren't supported yet" (v1; ruling: spec requires progressive + HLS only).
+  - DASH: route to Task 7's `DashDownloader`; until Task 7 lands, Failed with "DASH downloads aren't supported yet".
   - Subtitles: each `storage.subtitles` entry saved as `sidecarName(base, i, label, format)` converted with `toWebVtt` when needed, plus `sidecarIndexName(base)` JSON of `SidecarEntry` — the same layout Task 4 reads.
   - Cancel deletes the `.part`; failure keeps the error for retry; tray notification on finish/failure (as today).
   - `VideoLibrarySource.jvm.kt` already lists `mp4/mkv/avi/mov/webm`; add `ts`.
@@ -215,7 +215,7 @@ Port the proxy half of androidMain `cast/CastMediaServer.kt` (routes, `parseRang
   - `hlsAes128DownloadDecryptsSegments` — 3 segments AES-128 encrypted with explicit IV, key at relative URI requiring a header; output bytes == concatenated plaintext.
   - `hlsFmp4WritesInitSegmentFirst`
   - `subtitleSidecarsWritten` (index JSON + VTT files, SRT converted)
-  - `failureThenRetrySucceeds`, `cancelRemovesPartFile`, `dashReportsUnsupported`, `queueShowsWaitingWhileOneRuns`.
+  - `failureThenRetrySucceeds`, `cancelRemovesPartFile`, `queueShowsWaitingWhileOneRuns`.
 - [ ] **Step 2: Run** `./gradlew :animeworld:shared:jvmTest --tests '*AnimeDownloadManagerTest*'` → fail.
 - [ ] **Step 3: Implement.**
 - [ ] **Step 4: Run** → PASS; `./gradlew :animeworld:desktop:compileKotlinJvm`.
@@ -223,7 +223,45 @@ Port the proxy half of androidMain `cast/CastMediaServer.kt` (routes, `parseRang
 
 ---
 
-### Task 7: Loopback-only Aniyomi HttpServer
+### Task 7: DASH downloads
+
+User decision (2026-10-26): DASH episodes must download in this plan (AnimeOnsen, the source verified in Plan 1, only returns DASH).
+
+**Files:**
+- Create: `animeworld/shared/src/jvmMain/kotlin/com/programmersbox/anime/shared/downloads/DashManifest.kt` (parser), `DashDownloader.kt` (fetch + merge)
+- Modify: `AnimeDownloadManager.kt` (route DASH here)
+- Test: `animeworld/shared/src/jvmTest/kotlin/com/programmersbox/anime/shared/downloads/DashManifestTest.kt`, `DashDownloaderTest.kt`; `animeworld/desktop/src/jvmTest/kotlin/com/programmersbox/desktop/DashDownloadPlaybackTest.kt`
+- Fixture: a tiny DASH stream generated once with ffmpeg and committed under `animeworld/shared/src/jvmTest/resources/fixtures/dash/` (separate video and audio AdaptationSets, `SegmentTemplate` with `$Number$`, 3 s, < 300 KB). Record the exact ffmpeg command in a README next to it.
+
+**Interfaces:**
+- Produces:
+  ```kotlin
+  data class DashRepresentation(val id: String, val mimeType: String, val bandwidth: Long, val height: Int?, val initUrl: String?, val segmentUrls: List<String>)
+  data class DashManifest(val video: List<DashRepresentation>, val audio: List<DashRepresentation>, val muxed: List<DashRepresentation>)
+  fun parseDashManifest(xml: String, manifestUrl: String): DashManifest
+  /** Highest bandwidth with height <= 1080 (else lowest height); audio = highest bandwidth. */
+  fun DashManifest.choose(maxHeight: Int = 1080): Pair<DashRepresentation, DashRepresentation?>
+  class DashDownloader(client: OkHttpClient) {
+      /** Downloads the chosen representation(s) with [headers] on every request and writes ONE playable file at [out]. */
+      suspend fun download(manifestUrl: String, headers: Map<String, String>, out: File, onProgress: (Float) -> Unit)
+  }
+  ```
+- Parser must handle: `BaseURL` at MPD/Period/AdaptationSet/Representation levels (relative and absolute), `SegmentTemplate` with `$Number$` (+ `startNumber`, `duration`/`timescale` and Period/MPD `mediaPresentationDuration` to count segments), `SegmentTemplate` + `SegmentTimeline` (`$Time$`, `r` repeats), `$RepresentationID$`, `$Bandwidth$`, width-formatted identifiers like `$Number%05d$`, `SegmentList`, and single-file `SegmentBase`/`BaseURL` representations. Static MPDs only (`type="dynamic"` → `UnsupportedOperationException("Live DASH")`). DRM (`ContentProtection`) → unsupported error.
+- Output: one playable file containing video + audio, **no external tools**. Approach is the builder's call, in this order of preference: (a) libVLC stream output remux of the downloaded video track with the audio as `:input-slave` into MP4 or MKV (only if it runs faster than real time — measure on the fixture and report), (b) a small in-process fragmented-MP4 merger (two single-track fMP4s → one fMP4 with two `trak`s and interleaved `moof`/`mdat`, track IDs rewritten), (c) Matroska writer. Muxed-only representations are simply init + segments concatenated. Intermediate files under the download's `.part` dir, deleted on success/cancel.
+- Progress = bytes or segments across both tracks; merge step reported as the last ~5%.
+
+- [ ] **Step 1: Failing tests:**
+  - `DashManifestTest`: `numberTemplateCountsSegmentsFromDuration`, `timelineExpandsRepeats`, `nestedBaseUrlsResolve`, `formatWidthIdentifier`, `segmentListAndSegmentBase`, `dynamicManifestRejected`, `drmRejected`, `choosesBest1080AndBestAudio`.
+  - `DashDownloaderTest` (MockWebServer serving the fixture, requiring `X-Test: 1` on every request): `downloadsWithHeadersAndProgress` (progress reaches 1.0, every request had the header), `cancelCleansIntermediates`.
+  - `DashDownloadPlaybackTest` (desktop module, real libVLC): output file opens in `DesktopPlayer` with duration within 10% of 3 s, a video frame appears, and libVLC reports an audio track.
+- [ ] **Step 2: Run** `./gradlew :animeworld:shared:jvmTest --tests '*Dash*' :animeworld:desktop:jvmTest --tests '*DashDownloadPlaybackTest*'` → fail.
+- [ ] **Step 3: Implement** parser, downloader, merge; route DASH in `AnimeDownloadManager`.
+- [ ] **Step 4: Run** → PASS.
+- [ ] **Step 5: Commit** — `feat(anime-desktop): download DASH episodes into a single playable file`
+
+---
+
+### Task 8: Loopback-only Aniyomi HttpServer
 
 **Files:**
 - Modify: `source_utilities/aniyomi/src/jvmAndroidShared/kotlin/eu/kanade/tachiyomi/animesource/model/HttpServer.kt` (`NanoHTTPD(0)` → `NanoHTTPD("127.0.0.1", 0)`, marked `OTAKU:`), `source_utilities/aniyomi/VENDORED.md`
@@ -237,7 +275,7 @@ Port the proxy half of androidMain `cast/CastMediaServer.kt` (routes, `parseRang
 
 ---
 
-### Task 8: Wire-up, regression, changelog
+### Task 9: Wire-up, regression, changelog
 
 **Files:**
 - Modify: `CHANGELOG.md` (AnimeWorld → Desktop: in-app player, subtitles, downloads), any leftover DI in `animeworld/desktop/.../main.kt`.
@@ -247,4 +285,4 @@ Port the proxy half of androidMain `cast/CastMediaServer.kt` (routes, `parseRang
 - [ ] **Step 3:** Opt-in live check: extend `AniyomiEndToEndNetworkTest` (env `ANIYOMI_E2E=1`) or add a desktop-module opt-in test that resolves the AnimeOnsen fixture's first episode and plays it through `DesktopPlayer` until a frame arrives (DASH through the proxy). Run once; report output.
 - [ ] **Step 4: Commit** — `docs: changelog for AnimeWorld desktop player and downloads`
 
-Manual checklist for the user (macOS, `./gradlew :animeworld:desktop:run`): play an Aniyomi episode (AnimeOnsen) with video choice; seek, skip buttons, keyboard, fullscreen, volume; turn on an external and an embedded subtitle and change the style; leave mid-playback; download an episode (HLS source if one is available) and play it offline with subtitles; cancel and retry a download.
+Manual checklist for the user (macOS, `./gradlew :animeworld:desktop:run`): play an Aniyomi episode (AnimeOnsen) with video choice; seek, skip buttons, keyboard, fullscreen, volume; turn on an external and an embedded subtitle and change the style; leave mid-playback; download an AnimeOnsen episode (DASH) and, if available, an HLS-source episode, and play them offline with subtitles; cancel and retry a download.

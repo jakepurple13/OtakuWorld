@@ -282,6 +282,10 @@ User's decisions:
 - Subtitles required. No cast, volume or brightness controls on desktop.
 - v1 verified through `gradlew run`; installers later.
 - Desktop episode downloads must work for extension sources in v1 (headers + HLS).
+- (2026-10-26) DASH downloads are also in v1. Player engine confirmed as vlcj + bundled libVLC after the spike
+  (`docs/superpowers/spikes/2026-10-23-desktop-player/`).
+- (2026-10-26) No in-player quality picker: Android has none (recon showed its player only selects subtitle
+  tracks), so parity = choose the video before playback; libVLC adapts quality, capped at 1080p.
 - Work branches off `feat/mangaworld-desktop-mihon-extensions`.
 
 My calls (flagged for review):
