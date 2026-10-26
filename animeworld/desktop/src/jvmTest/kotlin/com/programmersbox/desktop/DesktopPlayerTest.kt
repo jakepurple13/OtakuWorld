@@ -82,6 +82,15 @@ class DesktopPlayerTest {
     }
 
     @Test
+    fun volumeIsKeptInState() {
+        val player = newPlayer()
+        player.setVolume(30)
+        player.open(PlayerSource.LocalFile(fixture.absolutePath))
+        awaitTrue("playing") { player.state.value.playing }
+        assertEquals(30, player.state.value.volume)
+    }
+
+    @Test
     fun releaseWhilePlayingDoesNotCrash() {
         val player = newPlayer()
         player.open(PlayerSource.LocalFile(fixture.absolutePath))

@@ -45,6 +45,8 @@ data class PlayerState(
     val playing: Boolean = false,
     val buffering: Boolean = false,
     val error: String? = null,
+    /** 0..100; kept across [DesktopPlayer.open]. */
+    val volume: Int = 100,
 )
 
 /** An embedded (in-container) subtitle track; [id] is the libVLC SPU id for [DesktopPlayer.selectSpu]. */
@@ -88,9 +90,6 @@ class DesktopPlayer(
     private var source: PlayerSource? = null
 
     @Volatile
-    private var volume = 100
-
-    @Volatile
     private var sawFrame = false
 
     /** Size of the picture without decoder padding, from libVLC once the video output exists. */
@@ -110,7 +109,7 @@ class DesktopPlayer(
         sawFrame = false
         videoSize = null
         _spuTracks.value = emptyList()
-        _state.value = PlayerState(positionMs = startMs, buffering = true)
+        _state.value = PlayerState(positionMs = startMs, buffering = true, volume = _state.value.volume)
         val mrl = when (source) {
             is PlayerSource.LocalFile -> {
                 val file = File(source.path)
@@ -153,7 +152,8 @@ class DesktopPlayer(
     fun seekBy(deltaMs: Long) = seekTo(_state.value.positionMs + deltaMs)
 
     fun setVolume(percent: Int) = api {
-        volume = percent.coerceIn(0, 100)
+        val volume = percent.coerceIn(0, 100)
+        _state.update { it.copy(volume = volume) }
         player.audio().setVolume(volume)
     }
 
@@ -267,7 +267,7 @@ class DesktopPlayer(
             _state.update { it.copy(playing = true, buffering = false) }
             mediaPlayer.later {
                 // The audio output only exists once playing, so a volume set earlier is applied now.
-                it.audio().setVolume(volume)
+                it.audio().setVolume(_state.value.volume)
                 refreshSpuTracks(it)
             }
         }
@@ -325,15 +325,9 @@ class DesktopPlayer(
         }
     }
 
-    /**
-     * Copies each decoded frame (BGRA) into one of a few reused Skia bitmaps of the display size and publishes it.
-     * Rotating bitmaps keeps the one Compose is drawing from being overwritten by the next frame.
-     */
+    /** Receives decoded frames from libVLC and publishes them, cropped to [videoSize]. */
     private inner class FrameSink : BufferFormatCallback, RenderCallback {
-        private val lock = Any()
-        private var buffers: List<FrameBuffer> = emptyList()
-        private var bitmapSize = 0 to 0
-        private var next = 0
+        private val frames = FrameBuffers(FRAME_BUFFERS)
 
         override fun getBufferFormat(sourceWidth: Int, sourceHeight: Int): BufferFormat {
             // The source size here includes decoder padding (1920x1088 for 1080p). The real size can't be asked
@@ -359,43 +353,15 @@ class DesktopPlayer(
             displayHeight: Int,
         ) {
             if (closed.get()) return
-            val image = synchronized(lock) {
-                val rowBytes = bufferFormat.width * 4
-                // Crop: keep the top-left video-sized region of the padded buffer.
-                val size = videoSize
-                val width = size?.width?.takeIf { it in 1..bufferFormat.width } ?: bufferFormat.width
-                val height = size?.height?.takeIf { it in 1..bufferFormat.height } ?: bufferFormat.height
-                if (bitmapSize != width to height || buffers.isEmpty()) allocate(width, height, rowBytes)
-                val buffer = buffers[next]
-                next = (next + 1) % buffers.size
-
-                val byteCount = rowBytes * (height - 1) + width * 4
-                val src = nativeBuffers[0]
-                src.rewind()
-                src.limit(byteCount)
-                Pointer(buffer.address).getByteBuffer(0, byteCount.toLong()).put(src)
-                src.clear()
-                buffer.bitmap.notifyPixelsChanged()
-                buffer.image
-            }
+            // Crop: keep the top-left video-sized region of the padded buffer.
+            val size = videoSize
+            val width = size?.width?.takeIf { it in 1..bufferFormat.width } ?: bufferFormat.width
+            val height = size?.height?.takeIf { it in 1..bufferFormat.height } ?: bufferFormat.height
+            val image = frames.copy(nativeBuffers[0], rowBytes = bufferFormat.width * 4, width = width, height = height)
             sawFrame = true
             _frame.value = image
         }
-
-        private fun allocate(width: Int, height: Int, rowBytes: Int) {
-            val info = ImageInfo(width, height, ColorType.BGRA_8888, ColorAlphaType.OPAQUE)
-            // Old bitmaps are not closed: Compose may still be drawing one. Skia frees them once unreachable.
-            buffers = List(FRAME_BUFFERS) {
-                val bitmap = Bitmap()
-                check(bitmap.allocPixels(info, rowBytes)) { "Couldn't allocate a ${width}x$height frame" }
-                FrameBuffer(bitmap, bitmap.peekPixels()!!.addr, bitmap.asComposeImageBitmap())
-            }
-            bitmapSize = width to height
-            next = 0
-        }
     }
-
-    private class FrameBuffer(val bitmap: Bitmap, val address: Long, val image: ImageBitmap)
 
     private companion object {
         const val FRAME_BUFFERS = 3
@@ -411,5 +377,49 @@ class DesktopPlayer(
                 }
             )
         }
+    }
+}
+
+/**
+ * Copies BGRA frames into one of [count] reused Skia bitmaps and returns that bitmap as an [ImageBitmap].
+ * Rotating bitmaps keeps the one Compose is drawing from being overwritten by the next frame.
+ */
+internal class FrameBuffers(private val count: Int) {
+    private class Slot(val bitmap: Bitmap, val address: Long, val image: ImageBitmap)
+
+    private data class Layout(val width: Int, val height: Int, val rowBytes: Int)
+
+    private val lock = Any()
+    private var slots: List<Slot> = emptyList()
+    private var layout: Layout? = null
+    private var next = 0
+
+    /** Copies the top-left [width]x[height] pixels of [src], whose rows are [rowBytes] apart. */
+    fun copy(src: ByteBuffer, rowBytes: Int, width: Int, height: Int): ImageBitmap = synchronized(lock) {
+        // The bitmaps share the source's row stride, so a new stride needs new bitmaps even at the same size.
+        val wanted = Layout(width, height, rowBytes)
+        if (wanted != layout) allocate(wanted)
+        val slot = slots[next]
+        next = (next + 1) % slots.size
+
+        val byteCount = rowBytes * (height - 1) + width * 4
+        src.rewind()
+        src.limit(byteCount)
+        Pointer(slot.address).getByteBuffer(0, byteCount.toLong()).put(src)
+        src.clear()
+        slot.bitmap.notifyPixelsChanged()
+        slot.image
+    }
+
+    private fun allocate(layout: Layout) {
+        val info = ImageInfo(layout.width, layout.height, ColorType.BGRA_8888, ColorAlphaType.OPAQUE)
+        // Old bitmaps are not closed: Compose may still be drawing one. Skia frees them once unreachable.
+        slots = List(count) {
+            val bitmap = Bitmap()
+            check(bitmap.allocPixels(info, layout.rowBytes)) { "Couldn't allocate a ${layout.width}x${layout.height} frame" }
+            Slot(bitmap, bitmap.peekPixels()!!.addr, bitmap.asComposeImageBitmap())
+        }
+        this.layout = layout
+        next = 0
     }
 }

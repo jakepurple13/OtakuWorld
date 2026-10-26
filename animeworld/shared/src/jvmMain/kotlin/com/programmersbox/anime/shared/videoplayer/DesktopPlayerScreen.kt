@@ -214,7 +214,7 @@ private fun PlayerControls(
 
             Spacer(Modifier.weight(1f))
 
-            VolumeControl(player)
+            VolumeControl(state.volume, onVolumeChange = player::setVolume)
             if (fullscreen.available) {
                 IconButton(onClick = fullscreen::toggle) {
                     Icon(
@@ -256,8 +256,7 @@ private fun SeekBar(state: PlayerState, onSeek: (Long) -> Unit, modifier: Modifi
 }
 
 @Composable
-private fun VolumeControl(player: DesktopPlayer) {
-    var volume by remember { mutableIntStateOf(100) }
+private fun VolumeControl(volume: Int, onVolumeChange: (Int) -> Unit) {
     Icon(
         if (volume == 0) Icons.AutoMirrored.Filled.VolumeOff else Icons.AutoMirrored.Filled.VolumeUp,
         contentDescription = "Volume",
@@ -265,10 +264,7 @@ private fun VolumeControl(player: DesktopPlayer) {
     )
     Slider(
         value = volume.toFloat(),
-        onValueChange = {
-            volume = it.roundToInt()
-            player.setVolume(volume)
-        },
+        onValueChange = { onVolumeChange(it.roundToInt()) },
         valueRange = 0f..100f,
         modifier = Modifier.width(120.dp),
     )
