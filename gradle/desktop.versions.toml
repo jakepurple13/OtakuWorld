@@ -8,6 +8,7 @@ javase = "3.5.4"
 connectivity = "2.5.2"
 camerak = "1.2"
 ksafe = "3.2.0"
+vlcj = "4.12.1"
 
 [libraries]
 core = { module = "com.google.zxing:core", version.ref = "javase" }
@@ -33,5 +34,6 @@ camerak-qr-scanner = { module = "io.github.kashif-mehmood-km:qr_scanner_plugin",
 camerak-ocr = { module = "io.github.kashif-mehmood-km:ocr_plugin", version.ref = "camerak" }
 camerak-analyzer = { module = "io.github.kashif-mehmood-km:analyzer_plugin", version.ref = "camerak" }
 ksafe-biometrics = { module = "eu.anifantakis:ksafe-biometrics", version.ref = "ksafe" }
+vlcj = { module = "uk.co.caprica:vlcj", version.ref = "vlcj" }
 
 [bundles]

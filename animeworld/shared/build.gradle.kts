@@ -81,6 +81,15 @@ kotlin {
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(desktopLibs.kotlinx.coroutines.swing)
+            // api: VlcRuntime.factory() exposes vlcj's MediaPlayerFactory to the desktop app.
+            api(desktopLibs.vlcj)
+            implementation(androidLibs.nanohttpd)
+            implementation(androidLibs.okhttpLib)
+        }
+
+        jvmTest.dependencies {
+            implementation(commonLibs.kotlin.test)
+            implementation(androidLibs.okhttpMockWebServer)
         }
     }
 }

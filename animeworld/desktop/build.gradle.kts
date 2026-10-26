@@ -9,6 +9,8 @@ plugins {
     id("kotlinx-serialization")
 }
 
+apply(from = "vlc.gradle.kts")
+
 compose.resources {
     packageOfResClass = "com.programmersbox.desktop"
 }
@@ -59,6 +61,10 @@ kotlin {
             implementation(compose.desktop.currentOs)
             implementation(desktopLibs.kotlinx.coroutines.swing)
         }
+
+        jvmTest.dependencies {
+            implementation(commonLibs.kotlin.test)
+        }
     }
 }
 
@@ -85,6 +91,9 @@ compose.desktop {
 
             modules("jdk.unsupported")
 
+            // libVLC for the video player lands in appResources/<os>-<arch>/vlc (see vlc.gradle.kts).
+            appResourcesRootDir.set(layout.buildDirectory.dir("appResources"))
+
             windows {
                 iconFile.set(project.file("icons/icon.ico"))
             }
@@ -96,4 +105,8 @@ compose.desktop {
             }
         }
     }
+}
+
+tasks.named { it == "prepareAppResources" || it == "run" }.configureEach {
+    dependsOn("prepareVlc")
 }
