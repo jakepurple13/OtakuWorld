@@ -499,6 +499,9 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   - Desktop download manager
 - AnimeWorld Desktop: install and use Aniyomi extensions from Aniyomi repos (non-Cloudflare
   sources; source settings not yet available on desktop)
+- AnimeWorld Desktop: install and use CloudStream plugins from CloudStream repos, next to Aniyomi
+  extensions (repos must be trusted first; plugins that need Android resources or a WebView, and
+  plugin settings, are not available on desktop)
 - AnimeWorld Desktop: in-app video player with libVLC bundled in the app (no VLC install needed).
   Seek, skip buttons, keyboard shortcuts, volume, fullscreen, and a video choice when an episode
   has several streams
