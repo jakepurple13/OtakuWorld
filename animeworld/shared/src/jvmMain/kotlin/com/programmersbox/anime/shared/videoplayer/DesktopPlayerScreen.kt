@@ -3,6 +3,8 @@ package com.programmersbox.anime.shared.videoplayer
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
@@ -211,18 +213,24 @@ fun DesktopPlayerScreen(
         }
 
         val style = subtitleStyle
-        if (subtitleSheetOpen && style != null) {
-            SubtitleQuickSheet(
-                tracks = subtitles.tracks.map { SubtitleTrackItem(it.label, it == subtitles.selected) },
-                onSelectTrack = { index -> subtitles.select(index?.let(subtitles.tracks::get)) },
-                style = style,
-                onStyleChange = { transform -> scope.launch { subtitleSettings.update(transform) } },
-                onOpenSettings = {
-                    subtitleSheetOpen = false
-                    subtitleSettingsOpen = true
-                },
-                onDismiss = { subtitleSheetOpen = false },
-            )
+        if (style != null) {
+            AnimatedVisibility(
+                subtitleSheetOpen,
+                enter = fadeIn() + slideInHorizontally { it },
+                exit = fadeOut() + slideOutHorizontally { it }
+            ) {
+                SubtitleQuickSheet(
+                    tracks = subtitles.tracks.map { SubtitleTrackItem(it.label, it == subtitles.selected) },
+                    onSelectTrack = { index -> subtitles.select(index?.let(subtitles.tracks::get)) },
+                    style = style,
+                    onStyleChange = { transform -> scope.launch { subtitleSettings.update(transform) } },
+                    onOpenSettings = {
+                        subtitleSheetOpen = false
+                        subtitleSettingsOpen = true
+                    },
+                    onDismiss = { subtitleSheetOpen = false },
+                )
+            }
         }
 
         // Shown over the player instead of navigating: leaving this entry would close the player and lose the position.
