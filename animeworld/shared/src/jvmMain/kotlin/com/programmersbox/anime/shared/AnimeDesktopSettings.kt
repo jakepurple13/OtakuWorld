@@ -12,4 +12,10 @@ class AnimeDesktopSettings(
         key = stringPreferencesKey("downloadsDirectory"),
         defaultValue = File("${System.getProperty("user.home")}/Downloads/AnimeWorld").absolutePath
     )
+
+    /** ffmpeg binary for video export; blank means look it up on PATH. */
+    val ffmpegPath = DataStoreHandler(
+        key = stringPreferencesKey("ffmpegPath"),
+        defaultValue = ""
+    )
 }

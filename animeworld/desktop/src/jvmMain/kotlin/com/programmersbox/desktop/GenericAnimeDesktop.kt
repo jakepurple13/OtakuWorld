@@ -15,6 +15,8 @@ import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.anime.shared.VideoScreen
 import com.programmersbox.anime.shared.downloads.EpisodeDownloadQueue
 import com.programmersbox.anime.shared.videochoice.VideoChoiceScreen
+import com.programmersbox.anime.shared.videoexport.VideoExportRoute
+import com.programmersbox.anime.shared.videoexport.VideoExportScreen
 import com.programmersbox.anime.shared.videochoice.VideoSourceModel
 import com.programmersbox.anime.shared.videoplayer.VideoPlayerUi
 import com.programmersbox.anime.shared.videos.VideoViewerRoute
@@ -169,6 +171,7 @@ open class GenericAnimeDesktop(
     override fun settingsNav3Setup() {
         navGraph.entry<PlatformSettings> { JvmSettingsScreen() }
         navGraph.entry<VideoViewerRoute> { ViewVideoScreen() }
+        navGraph.entry<VideoExportRoute> { VideoExportScreen(it) }
     }
 
     @OptIn(ExperimentalMaterial3ExpressiveApi::class)

@@ -88,6 +88,9 @@ internal expect fun VideoPermissionGate(content: @Composable () -> Unit)
 @Composable
 internal expect fun VideoThumbnail(path: String, modifier: Modifier)
 
+/** Where the row menu's "Export…" goes for the video at [path]; null hides it (only desktop has ffmpeg export). */
+internal expect fun videoExportRoute(path: String): NavKey?
+
 @OptIn(
     ExperimentalMaterial3Api::class,
     ExperimentalAnimationApi::class,
@@ -412,6 +415,7 @@ private fun VideoContentView(
                     }
                 },
                 onRemove = { showDeleteDialog = true },
+                onExport = videoExportRoute(item.path)?.let { route -> { navController.navigate(route) } },
             )
         },
         modifier = modifier

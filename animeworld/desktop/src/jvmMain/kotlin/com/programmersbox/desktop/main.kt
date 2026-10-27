@@ -10,6 +10,9 @@ import com.programmersbox.anime.shared.VideoScreen
 import com.programmersbox.anime.shared.downloads.AnimeDownloadManager
 import com.programmersbox.anime.shared.downloads.DownloadQueueSource
 import com.programmersbox.anime.shared.downloads.EpisodeDownloadQueue
+import com.programmersbox.anime.shared.videoexport.VideoExportManager
+import com.programmersbox.anime.shared.videoexport.VideoExportRoute
+import com.programmersbox.anime.shared.videoexport.VideoExportScreen
 import com.programmersbox.anime.shared.videoplayer.VideoPlayerUi
 import com.programmersbox.anime.shared.videos.VideoLibrarySource
 import com.programmersbox.anime.shared.videos.VideoViewerRoute
@@ -73,10 +76,18 @@ fun main(args: Array<String>) {
                     trayState = get(),
                 )
             } bind EpisodeDownloadQueue::class
+            single {
+                VideoExportManager(
+                    scope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
+                    settings = get(),
+                    trayState = get(),
+                )
+            }
 
             navigation<VideoScreen> { VideoPlayerUi(it) }
             navigation<PlatformSettings> { JvmSettingsScreen() }
             navigation<VideoViewerRoute> { ViewVideoScreen() }
+            navigation<VideoExportRoute> { VideoExportScreen(it) }
 
             includes(aniyomiModule, cloudstreamModule)
         }
