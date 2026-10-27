@@ -19,9 +19,9 @@ fun playerHeaders(sourceHeaders: Map<String, String>, referer: String?): Map<Str
         result.keys.firstOrNull { it.equals(key, ignoreCase = true) }?.let(result::remove)
         result[key] = value
     }
-    DEFAULT_PLAYER_HEADERS.forEach(::put)
+    DEFAULT_PLAYER_HEADERS.forEach { (key, value) -> put(key, value) }
     if (!referer.isNullOrBlank()) put("referer", referer)
-    sourceHeaders.forEach(::put)
+    sourceHeaders.forEach { (key, value) -> put(key, value) }
     return result
 }
 
