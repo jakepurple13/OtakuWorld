@@ -97,7 +97,7 @@ kotlin {
                 implementation(commonLibs.kotlin.test)
                 implementation(commonLibs.coroutinesTest)
                 implementation(androidLibs.okhttpMockWebServer)
-                implementation("org.ow2.asm:asm:9.10.1") // MihonExtensionScanTest
+                implementation("org.ow2.asm:asm:9.11.1") // MihonExtensionScanTest
             }
         }
     }

@@ -129,7 +129,7 @@ kotlin {
                 implementation(commonLibs.coroutinesTest)
                 implementation(commonLibs.ktorMock)
                 implementation(androidLibs.okhttpMockWebServer)
-                implementation("org.ow2.asm:asm:9.10.1") // PluginFixtureLinkTest, CloudstreamPluginScanTest
+                implementation("org.ow2.asm:asm:9.11.1") // PluginFixtureLinkTest, CloudstreamPluginScanTest
             }
         }
     }
