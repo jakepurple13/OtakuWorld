@@ -9,6 +9,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.navigation3.runtime.NavKey
+import com.programmersbox.anime.shared.videoexport.VideoExportRoute
 
 @Composable
 internal actual fun VideoPermissionGate(content: @Composable () -> Unit) {
@@ -31,3 +33,5 @@ internal actual fun VideoThumbnail(path: String, modifier: Modifier) {
         )
     }
 }
+
+internal actual fun videoExportRoute(path: String): NavKey? = VideoExportRoute(path)

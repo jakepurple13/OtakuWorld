@@ -46,6 +46,9 @@ data class EpisodeDownloadRequest(
 data class DownloadProgress(val fraction: Float?, val bytes: Long, val totalBytes: Long?)
 
 private const val SEGMENT_RETRIES = 3
+/** HLS CDNs throttle bursts of segment requests with 429; those get more, longer retries. */
+private const val RATE_LIMIT_RETRIES = 10
+private const val MAX_RATE_LIMIT_DELAY_MILLIS = 60_000L
 private const val BUFFER_SIZE = 64 * 1024
 private const val UNKNOWN_LENGTH_PROGRESS_STEP = 1_000_000L
 
@@ -281,12 +284,20 @@ class EpisodeDownloader(
                 streamOnce(url, headers, decrypt, out)
                 return
             } catch (e: IOException) {
-                if (attempt >= SEGMENT_RETRIES) throw e
+                val throttled = e is HttpStatusException && e.code == 429
+                if (attempt >= if (throttled) RATE_LIMIT_RETRIES else SEGMENT_RETRIES) throw e
                 attempt++
                 out.flush()
                 file.channel.truncate(start)
                 file.channel.position(start)
-                delay(retryDelayMillis * attempt)
+                delay(
+                    if (throttled) {
+                        ((e as HttpStatusException).retryAfterMillis ?: (retryDelayMillis shl attempt))
+                            .coerceAtMost(MAX_RATE_LIMIT_DELAY_MILLIS)
+                    } else {
+                        retryDelayMillis * attempt
+                    }
+                )
             }
         }
     }
@@ -393,13 +404,17 @@ fun interface DashEpisodeDownload {
     suspend fun download(manifestUrl: String, headers: Map<String, String>, out: File, onProgress: (DownloadProgress) -> Unit)
 }
 
-/** Executes a GET with [headers]; throws [IOException] for non-2xx. Cancelling the coroutine cancels the call. */
+/** A non-2xx response; [retryAfterMillis] is its `Retry-After` (in seconds) when present. */
+class HttpStatusException(val code: Int, val retryAfterMillis: Long?, url: String) : IOException("HTTP $code for $url")
+
+/** Executes a GET with [headers]; throws [HttpStatusException] for non-2xx. Cancelling the coroutine cancels the call. */
 internal suspend fun OkHttpClient.execute(url: String, headers: Map<String, String>): Response {
     val call = newCall(upstreamRequest(url.toHttpUrl(), headers).build())
     val response = call.await()
     if (!response.isSuccessful) {
+        val retryAfter = response.header("Retry-After")?.trim()?.toLongOrNull()?.times(1000)
         response.close()
-        throw IOException("HTTP ${response.code} for $url")
+        throw HttpStatusException(response.code, retryAfter, url)
     }
     return response
 }

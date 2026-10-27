@@ -88,6 +88,7 @@ fun VideoRow(
     onClick: () -> Unit,
     onRemove: () -> Unit,
     modifier: Modifier = Modifier,
+    onExport: (() -> Unit)? = null,
 ) {
     VideoRowContent(
         item = item,
@@ -108,6 +109,15 @@ fun VideoRow(
                 expanded = showDropDown,
                 onDismissRequest = { showDropDown = false }
             ) {
+                if (onExport != null) {
+                    DropdownMenuItem(
+                        onClick = {
+                            showDropDown = false
+                            onExport()
+                        },
+                        text = { Text("Export…") }
+                    )
+                }
                 DropdownMenuItem(
                     onClick = {
                         showDropDown = false

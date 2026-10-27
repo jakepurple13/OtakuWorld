@@ -19,6 +19,7 @@ import com.bumptech.glide.integration.compose.GlideImage
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.PermissionRequest
 import androidx.core.net.toUri
+import androidx.navigation3.runtime.NavKey
 
 @Composable
 internal actual fun VideoPermissionGate(content: @Composable () -> Unit) {
@@ -67,3 +68,5 @@ internal actual fun VideoThumbnail(path: String, modifier: Modifier) {
         )
     }
 }
+
+internal actual fun videoExportRoute(path: String): NavKey? = null
