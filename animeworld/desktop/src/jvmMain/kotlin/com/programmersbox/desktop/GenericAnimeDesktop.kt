@@ -2,6 +2,7 @@ package com.programmersbox.desktop
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DesktopMac
+import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -177,6 +178,11 @@ open class GenericAnimeDesktop(
     @OptIn(ExperimentalMaterial3ExpressiveApi::class)
     override fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit = {
         viewSettings {
+            segmentedListItem(
+                content = { Text("Videos") },
+                leadingContent = { Icon(Icons.Default.VideoLibrary, null) },
+                onClick = { navigationActions.navigate(VideoViewerRoute) }
+            )
             segmentedListItem(
                 content = { Text("Platform Settings") },
                 leadingContent = { Icon(Icons.Default.DesktopMac, null) },
