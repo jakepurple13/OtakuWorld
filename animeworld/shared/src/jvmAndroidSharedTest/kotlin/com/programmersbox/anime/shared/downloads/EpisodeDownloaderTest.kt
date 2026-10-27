@@ -370,6 +370,35 @@ class EpisodeDownloaderTest {
     }
 
     @Test
+    fun rateLimitedSegmentIsRetriedPastNormalLimit() = runTest {
+        route("/r/index.m3u8", mediaPlaylist(listOf("s0.ts", "s1.ts", "s2.ts")))
+        route("/r/s0.ts", body = segs[0])
+        route("/r/s2.ts", body = segs[2])
+        var throttled = 5
+        routes["/r/s1.ts"] = {
+            if (throttled-- > 0) MockResponse.Builder().code(429).build()
+            else MockResponse.Builder().body(Buffer().write(segs[1])).build()
+        }
+
+        val file = downloader.download(request("/r/index.m3u8")) {}
+
+        assertContentEquals(segs.reduce { a, b -> a + b }, file.readBytes())
+        assertEquals(6, recorded.count { it.url.encodedPath == "/r/s1.ts" })
+    }
+
+    @Test
+    fun rateLimitEventuallyGivesUp() = runTest {
+        route("/g/index.m3u8", mediaPlaylist(listOf("s0.ts")))
+        routes["/g/s0.ts"] = { MockResponse.Builder().code(429).setHeader("Retry-After", "0").build() }
+
+        val e = assertFailsWith<IOException> { downloader.download(request("/g/index.m3u8")) {} }
+
+        assertTrue("HTTP 429" in e.message.orEmpty())
+        assertEquals(11, recorded.count { it.url.encodedPath == "/g/s0.ts" }, "1 attempt + 10 retries")
+        assertEquals(emptySet(), fileNames())
+    }
+
+    @Test
     fun subtitleFailureDoesNotFailVideo() = runTest {
         route("/video.mp4", "video/mp4", byteArrayOf(1, 2, 3))
         route("/subs/ja.srt", "1\n00:00:00,000 --> 00:00:01,000\nこんにちは\n")
