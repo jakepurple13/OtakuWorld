@@ -1,5 +1,5 @@
 [versions]
-kfswatch = "1.4.0"
+kfswatch = "1.5.0"
 knotify = "0.4.3"
 kotlinMultiplatformAppdirsVersion = "2.0.0"
 kotlinx-coroutines = "1.11.0"
@@ -7,7 +7,7 @@ nucleusSystem = "2.5.15"
 javase = "3.5.4"
 connectivity = "2.5.2"
 camerak = "1.2"
-ksafe = "3.2.0"
+ksafe = "3.3.0"
 vlcj = "4.12.1"
 
 [libraries]
