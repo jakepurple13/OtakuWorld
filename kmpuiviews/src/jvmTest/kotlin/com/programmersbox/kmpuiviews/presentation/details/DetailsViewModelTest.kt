@@ -34,6 +34,7 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class DetailsViewModelTest {
@@ -220,6 +221,101 @@ class DetailsViewModelTest {
         vm.reread()
         awaitCondition { vm.chapters.isEmpty() }
         assertTrue(vm.chapters.isEmpty())
+    }
+
+    @Test
+    fun `selection toggle selectAll invert and clear`() = runTest {
+        val vm = viewModel()
+        awaitCondition { vm.currentState is DetailState.Success }
+        val chapters = (vm.currentState as DetailState.Success).info.chapters
+
+        vm.toggleSelection(chapters[0].url)
+        assertTrue(vm.isSelecting)
+        assertEquals(setOf(chapters[0].url), vm.selectedChapterUrls.toSet())
+
+        vm.toggleSelection(chapters[0].url)
+        assertTrue(vm.selectedChapterUrls.isEmpty())
+        assertFalse(vm.isSelecting)
+
+        vm.toggleSelection(chapters[0].url)
+        vm.selectAllChapters()
+        assertEquals(10, vm.selectedChapterUrls.size)
+
+        vm.clearSelection()
+        assertTrue(vm.selectedChapterUrls.isEmpty())
+
+        vm.toggleSelection(chapters[0].url)
+        vm.toggleSelection(chapters[1].url)
+        vm.invertSelection()
+        assertEquals(8, vm.selectedChapterUrls.size)
+        assertFalse(chapters[0].url in vm.selectedChapterUrls)
+        assertFalse(chapters[1].url in vm.selectedChapterUrls)
+
+        vm.selectAllChapters()
+        vm.invertSelection()
+        assertTrue(vm.selectedChapterUrls.isEmpty())
+        assertFalse(vm.isSelecting)
+    }
+
+    @Test
+    fun `setBookmarked true on mixed selection bookmarks all`() = runTest {
+        val vm = viewModel()
+        awaitCondition { vm.currentState is DetailState.Success }
+        val chapters = (vm.currentState as DetailState.Success).info.chapters
+        val picked = chapters.take(3)
+
+        vm.toggleBookmark(picked[0])
+        awaitCondition { picked[0].url in vm.bookmarkedChapterUrls }
+
+        vm.setBookmarked(picked, true)
+        awaitCondition { picked.all { it.url in vm.bookmarkedChapterUrls } }
+        assertTrue(picked.all { it.url in vm.bookmarkedChapterUrls })
+
+        vm.setBookmarked(picked, false)
+        awaitCondition { picked.none { it.url in vm.bookmarkedChapterUrls } }
+        assertTrue(picked.none { it.url in vm.bookmarkedChapterUrls })
+    }
+
+    @Test
+    fun `restoreReadState restores per-chapter prior state`() = runTest {
+        val vm = viewModel()
+        awaitCondition { vm.currentState is DetailState.Success }
+        val chapters = (vm.currentState as DetailState.Success).info.chapters
+        val picked = chapters.take(2)
+
+        vm.markAs(picked[0], true)
+        awaitCondition { vm.chapters.any { it.url == picked[0].url } }
+
+        vm.markChaptersAs(picked, true)
+        awaitCondition { picked.all { c -> vm.chapters.any { it.url == c.url } } }
+
+        vm.restoreReadState(picked, setOf(picked[0].url))
+        awaitCondition {
+            vm.chapters.any { it.url == picked[0].url } && vm.chapters.none { it.url == picked[1].url }
+        }
+        assertTrue(vm.chapters.any { it.url == picked[0].url })
+        assertTrue(vm.chapters.none { it.url == picked[1].url })
+    }
+
+    @Test
+    fun `restoreBookmarkState restores per-chapter prior state`() = runTest {
+        val vm = viewModel()
+        awaitCondition { vm.currentState is DetailState.Success }
+        val chapters = (vm.currentState as DetailState.Success).info.chapters
+        val picked = chapters.take(2)
+
+        vm.toggleBookmark(picked[0])
+        awaitCondition { picked[0].url in vm.bookmarkedChapterUrls }
+
+        vm.setBookmarked(picked, true)
+        awaitCondition { picked.all { it.url in vm.bookmarkedChapterUrls } }
+
+        vm.restoreBookmarkState(picked, setOf(picked[0].url))
+        awaitCondition {
+            picked[0].url in vm.bookmarkedChapterUrls && picked[1].url !in vm.bookmarkedChapterUrls
+        }
+        assertTrue(picked[0].url in vm.bookmarkedChapterUrls)
+        assertTrue(picked[1].url !in vm.bookmarkedChapterUrls)
     }
 
     @Test

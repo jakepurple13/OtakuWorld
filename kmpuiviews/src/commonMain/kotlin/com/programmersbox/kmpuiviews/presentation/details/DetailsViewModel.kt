@@ -87,6 +87,10 @@ class DetailsViewModel(
     var chapters: List<ChapterWatched> by mutableStateOf(emptyList())
     val bookmarkedChapterUrls = mutableStateSetOf<String>()
 
+    val selectedChapterUrls = mutableStateSetOf<String>()
+
+    val isSelecting by derivedStateOf { selectedChapterUrls.isNotEmpty() }
+
     var description: String by mutableStateOf("")
 
     var dbModel by mutableStateOf<DbModel?>(null)
@@ -230,18 +234,56 @@ class DetailsViewModel(
             if (bookmarkRepository.hasBookmark(chapter.url)) {
                 bookmarkRepository.deleteBookmark(chapter.url)
             } else {
-                bookmarkRepository.insertBookmark(
-                    BookmarkedChapter(
-                        chapterUrl = chapter.url,
-                        chapterName = chapter.name,
-                        parentUrl = mangaUrl,
-                        parentTitle = itemModel?.title ?: "",
-                        parentImageUrl = itemModel?.imageUrl ?: "",
-                        source = itemModel?.source?.serviceName ?: "",
-                    )
-                )
+                bookmarkRepository.insertBookmark(bookmarkFor(chapter, mangaUrl))
             }
         }
+    }
+
+    fun setBookmarked(chapters: List<KmpChapterModel>, bookmarked: Boolean) {
+        val mangaUrl = itemModel?.url ?: return
+        viewModelScope.launch(Dispatchers.IO) {
+            chapters.forEach { chapter ->
+                val has = bookmarkRepository.hasBookmark(chapter.url)
+                when {
+                    bookmarked && !has -> bookmarkRepository.insertBookmark(bookmarkFor(chapter, mangaUrl))
+                    !bookmarked && has -> bookmarkRepository.deleteBookmark(chapter.url)
+                }
+            }
+        }
+    }
+
+    fun restoreBookmarkState(chapters: List<KmpChapterModel>, previouslyBookmarked: Set<String>) {
+        val (wasBookmarked, wasNot) = chapters.partition { it.url in previouslyBookmarked }
+        setBookmarked(wasBookmarked, true)
+        setBookmarked(wasNot, false)
+    }
+
+    private fun bookmarkFor(chapter: KmpChapterModel, mangaUrl: String) = BookmarkedChapter(
+        chapterUrl = chapter.url,
+        chapterName = chapter.name,
+        parentUrl = mangaUrl,
+        parentTitle = itemModel?.title ?: "",
+        parentImageUrl = itemModel?.imageUrl ?: "",
+        source = itemModel?.source?.serviceName ?: "",
+    )
+
+    fun toggleSelection(url: String) {
+        if (!selectedChapterUrls.remove(url)) selectedChapterUrls.add(url)
+    }
+
+    fun selectAllChapters() {
+        info?.chapters?.let { chapters -> selectedChapterUrls.addAll(chapters.map { it.url }) }
+    }
+
+    fun invertSelection() {
+        val all = info?.chapters?.map { it.url }.orEmpty()
+        val inverted = all.filterNot { it in selectedChapterUrls }
+        selectedChapterUrls.clear()
+        selectedChapterUrls.addAll(inverted)
+    }
+
+    fun clearSelection() {
+        selectedChapterUrls.clear()
     }
 
     fun toggleNotify() {
@@ -298,6 +340,14 @@ class DetailsViewModel(
                 favoritesRepository.removeWatched(chapter)
             }
         }
+    }
+
+    fun markChaptersAs(chapters: List<KmpChapterModel>, read: Boolean) {
+        chapters.forEach { markAs(it, read) }
+    }
+
+    fun restoreReadState(chapters: List<KmpChapterModel>, previouslyRead: Set<String>) {
+        chapters.forEach { markAs(it, it.url in previouslyRead) }
     }
 
     fun reread() {
