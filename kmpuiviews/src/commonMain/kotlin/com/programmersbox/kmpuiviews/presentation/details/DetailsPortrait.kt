@@ -1,6 +1,15 @@
 package com.programmersbox.kmpuiviews.presentation.details
 
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import com.programmersbox.kmpuiviews.presentation.components.plus
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -131,6 +140,11 @@ fun DetailsView(
 
     var showLists by remember { mutableStateOf(false) }
 
+    val selection = detailsActions.selection
+    val isSelecting = selection.selectedUrls.isNotEmpty()
+
+    BackHandler(isSelecting) { selection.onClear() }
+
     AddToList(
         showLists = showLists,
         showListsChange = { showLists = it },
@@ -159,62 +173,83 @@ fun DetailsView(
 
     OtakuScaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        info.title,
-                        modifier = Modifier.basicMarquee()
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
+            AnimatedContent(
+                targetState = isSelecting,
+                transitionSpec = {
+                    if (targetState > initialState) {
+                        (slideInVertically { height -> height } + fadeIn()) togetherWith
+                                (slideOutVertically { height -> -height } + fadeOut())
+                    } else {
+                        (slideInVertically { height -> -height } + fadeIn()) togetherWith
+                                (slideOutVertically { height -> height } + fadeOut())
                     }
-                },
-                actions = {
-                    DetailActions(
-                        genericInfo = genericInfo,
-                        navController = navController,
-                        scope = scope,
-                        info = info,
-                        isSaved = isSaved,
-                        dao = dao,
-                        isFavorite = isFavorite,
-                        canNotify = canNotify,
-                        notifyAction = detailsActions.notifyChange,
-                        onReverseChaptersClick = { reverseChapters = !reverseChapters },
-                        onShowLists = { showLists = true },
-                        addToForLater = {
-                            scope.launch {
-                                val result = AppConfig.forLaterUuid?.let {
-                                    listDao.addToList(
-                                        it,
-                                        info.title,
-                                        info.description,
-                                        info.url,
-                                        info.imageUrl,
-                                        info.source.serviceName
-                                    )
-                                } == true
-                                hostState.showSnackbar(
-                                    getString(
-                                        if (result) Res.string.added_to_list else Res.string.already_in_list,
-                                        getString(Res.string.for_later)
-                                    ),
-                                    withDismissAction = true
-                                )
+                }
+            ) { selecting ->
+                if (selecting) {
+                    ChapterSelectionTopBar(
+                        count = selection.selectedUrls.size,
+                        onClear = selection.onClear,
+                        scrollBehavior = scrollBehavior,
+                    )
+                } else {
+                    TopAppBar(
+                        title = {
+                            Text(
+                                info.title,
+                                modifier = Modifier.basicMarquee()
+                            )
+                        },
+                        navigationIcon = {
+                            IconButton(onClick = { navController.popBackStack() }) {
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
                             }
                         },
-                        onNoteClick = { showNoteSheet = true },
+                        actions = {
+                            DetailActions(
+                                genericInfo = genericInfo,
+                                navController = navController,
+                                scope = scope,
+                                info = info,
+                                isSaved = isSaved,
+                                dao = dao,
+                                isFavorite = isFavorite,
+                                canNotify = canNotify,
+                                notifyAction = detailsActions.notifyChange,
+                                onReverseChaptersClick = { reverseChapters = !reverseChapters },
+                                onShowLists = { showLists = true },
+                                addToForLater = {
+                                    scope.launch {
+                                        val result = AppConfig.forLaterUuid?.let {
+                                            listDao.addToList(
+                                                it,
+                                                info.title,
+                                                info.description,
+                                                info.url,
+                                                info.imageUrl,
+                                                info.source.serviceName
+                                            )
+                                        } == true
+                                        hostState.showSnackbar(
+                                            getString(
+                                                if (result) Res.string.added_to_list else Res.string.already_in_list,
+                                                getString(Res.string.for_later)
+                                            ),
+                                            withDismissAction = true
+                                        )
+                                    }
+                                },
+                                onNoteClick = { showNoteSheet = true },
+                            )
+                        },
+                        scrollBehavior = scrollBehavior,
                     )
-                },
-                scrollBehavior = scrollBehavior,
-            )
+                }
+            }
         },
         floatingActionButton = {
             DetailFloatingActionButtonMenu(
                 navController = navController,
-                isVisible = fabVisible,
+                isVisible = fabVisible && !isSelecting,
                 onShowLists = { showLists = true },
                 info = info,
                 removeFromSaved = {
@@ -280,7 +315,8 @@ fun DetailsView(
             verticalArrangement = Arrangement.spacedBy(4.dp),
             state = listState,
             //contentPadding = modifiedPaddingValues,
-            contentPadding = LocalNavHostPadding.current,
+            contentPadding = LocalNavHostPadding.current +
+                    PaddingValues(bottom = if (isSelecting) SelectionToolbarListPadding else 0.dp),
             userScrollEnabled = !fabMenuExpanded,
             modifier = Modifier
                 .fillMaxHeight()
@@ -356,12 +392,32 @@ fun DetailsView(
                     showDownload = showDownloadButton,
                     swipeBehavior = swipeBehavior,
                     downloadUiState = downloadStates[c.url] ?: ChapterDownloadUiState.None,
+                    selectionMode = isSelecting,
+                    isSelected = c.url in selection.selectedUrls,
+                    onToggleSelection = { selection.onToggle(c.url) },
                     modifier = Modifier.animateItem()
                 )
             }
         }
         Box(Modifier.padding(modifiedPaddingValues)) {
             ScrollBar(listState)
+        }
+
+        Box(
+            contentAlignment = Alignment.BottomCenter,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(modifiedPaddingValues)
+        ) {
+            ChapterSelectionToolbarHost(
+                visible = isSelecting,
+                chapters = info.chapters,
+                read = chapters,
+                detailsActions = detailsActions,
+                downloadStates = downloadStates,
+                canDownload = info.source.canDownload,
+                snackbarHostState = hostState,
+            )
         }
 
         if (fabMenuExpanded) {

@@ -321,7 +321,20 @@ private fun DetailsScreenInternal(
                             },
                             rereadClick = details::reread,
                             bookmarkChapter = { details.toggleBookmark(it) },
-                            bookmarkedChapterUrls = details.bookmarkedChapterUrls
+                            bookmarkedChapterUrls = details.bookmarkedChapterUrls,
+                            selection = ChapterSelectionActions(
+                                selectedUrls = details.selectedChapterUrls,
+                                onToggle = details::toggleSelection,
+                                onSelectAll = details::selectAllChapters,
+                                onInvert = details::invertSelection,
+                                onClear = details::clearSelection,
+                                onMarkAs = details::markChaptersAs,
+                                onRestoreRead = details::restoreReadState,
+                                onSetBookmarked = details::setBookmarked,
+                                onRestoreBookmarks = details::restoreBookmarkState,
+                                onBatchDownload = { genericInfo.batchDownloadChapters(it, infoModel) },
+                                supportsBatchDownload = genericInfo.supportsBatchDownload,
+                            )
                         )
                     )
                 }

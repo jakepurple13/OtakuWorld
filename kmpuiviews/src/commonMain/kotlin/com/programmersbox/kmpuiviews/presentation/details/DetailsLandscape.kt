@@ -1,5 +1,13 @@
 package com.programmersbox.kmpuiviews.presentation.details
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -134,6 +142,11 @@ fun DetailsViewLandscape(
     var showLists by remember { mutableStateOf(false) }
     var showNoteSheet by remember { mutableStateOf(false) }
 
+    val selection = detailsActions.selection
+    val isSelecting = selection.selectedUrls.isNotEmpty()
+
+    BackHandler(isSelecting) { selection.onClear() }
+
     AddToList(
         showLists = showLists,
         showListsChange = { showLists = it },
@@ -145,58 +158,79 @@ fun DetailsViewLandscape(
 
     OtakuScaffold(
         topBar = {
-            TopAppBar(
-                modifier = Modifier.zIndex(2f),
-                scrollBehavior = scrollBehavior,
-                title = { Text(info.title) },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
+            AnimatedContent(
+                targetState = isSelecting,
+                transitionSpec = {
+                    if (targetState > initialState) {
+                        (slideInVertically { height -> height } + fadeIn()) togetherWith
+                                (slideOutVertically { height -> -height } + fadeOut())
+                    } else {
+                        (slideInVertically { height -> -height } + fadeIn()) togetherWith
+                                (slideOutVertically { height -> height } + fadeOut())
                     }
-                },
-                actions = {
-                    DetailActions(
-                        genericInfo = genericInfo,
-                        navController = navController,
-                        scope = scope,
-                        info = info,
-                        isSaved = isSaved,
-                        dao = dao,
-                        isFavorite = isFavorite,
-                        canNotify = canNotify,
-                        notifyAction = detailsActions.notifyChange,
-                        onReverseChaptersClick = { reverseChapters = !reverseChapters },
-                        onShowLists = { showLists = true },
-                        addToForLater = {
-                            scope.launch {
-                                val result = AppConfig.forLaterUuid?.let {
-                                    listDao.addToList(
-                                        it,
-                                        info.title,
-                                        info.description,
-                                        info.url,
-                                        info.imageUrl,
-                                        info.source.serviceName
-                                    )
-                                } ?: false
-
-                                hostState.showSnackbar(
-                                    getString(
-                                        if (result) {
-                                            Res.string.added_to_list
-                                        } else {
-                                            Res.string.already_in_list
-                                        },
-                                        getString(Res.string.for_later)
-                                    ),
-                                    withDismissAction = true
-                                )
+                }
+            ) { selecting ->
+                if (selecting) {
+                    ChapterSelectionTopBar(
+                        count = selection.selectedUrls.size,
+                        onClear = selection.onClear,
+                        scrollBehavior = scrollBehavior,
+                    )
+                } else {
+                    TopAppBar(
+                        modifier = Modifier.zIndex(2f),
+                        scrollBehavior = scrollBehavior,
+                        title = { Text(info.title) },
+                        navigationIcon = {
+                            IconButton(onClick = { navController.popBackStack() }) {
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
                             }
                         },
-                        onNoteClick = { showNoteSheet = true },
+                        actions = {
+                            DetailActions(
+                                genericInfo = genericInfo,
+                                navController = navController,
+                                scope = scope,
+                                info = info,
+                                isSaved = isSaved,
+                                dao = dao,
+                                isFavorite = isFavorite,
+                                canNotify = canNotify,
+                                notifyAction = detailsActions.notifyChange,
+                                onReverseChaptersClick = { reverseChapters = !reverseChapters },
+                                onShowLists = { showLists = true },
+                                addToForLater = {
+                                    scope.launch {
+                                        val result = AppConfig.forLaterUuid?.let {
+                                            listDao.addToList(
+                                                it,
+                                                info.title,
+                                                info.description,
+                                                info.url,
+                                                info.imageUrl,
+                                                info.source.serviceName
+                                            )
+                                        } ?: false
+
+                                        hostState.showSnackbar(
+                                            getString(
+                                                if (result) {
+                                                    Res.string.added_to_list
+                                                } else {
+                                                    Res.string.already_in_list
+                                                },
+                                                getString(Res.string.for_later)
+                                            ),
+                                            withDismissAction = true
+                                        )
+                                    }
+                                },
+                                onNoteClick = { showNoteSheet = true },
+                            )
+                        }
                     )
                 }
-            )
+            }
         },
         snackbarHost = {
             SnackbarHost(hostState) { data ->
@@ -405,35 +439,62 @@ private fun DetailsLandscapeContent(
             val listOfChapters = remember(reverseChapters) {
                 info.chapters.let { if (reverseChapters) it.reversed() else it }
             }
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.fillMaxHeight(),
-                state = listState
-            ) {
-                stickyHeader {
-                    ChapterListHeader(
-                        scope = scope,
-                        reverseChapters = reverseChapters,
-                        onReverseChaptersClick = onReverse,
-                        bottomPadding = 0,
-                        listState = listState,
-                        listOfChapters = listOfChapters,
-                        chapters = chapters,
-                        detailsActions = detailsActions
-                    )
+            val selection = detailsActions.selection
+            val isSelecting = selection.selectedUrls.isNotEmpty()
+            val paneSnackbarState = remember { SnackbarHostState() }
+            Box(modifier = Modifier.fillMaxSize()) {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.fillMaxHeight(),
+                    contentPadding = PaddingValues(bottom = if (isSelecting) SelectionToolbarListPadding else 0.dp),
+                    state = listState
+                ) {
+                    stickyHeader {
+                        ChapterListHeader(
+                            scope = scope,
+                            reverseChapters = reverseChapters,
+                            onReverseChaptersClick = onReverse,
+                            bottomPadding = 0,
+                            listState = listState,
+                            listOfChapters = listOfChapters,
+                            chapters = chapters,
+                            detailsActions = detailsActions
+                        )
+                    }
+                    items(listOfChapters) { c ->
+                        ChapterItem(
+                            c = c,
+                            read = chapters,
+                            isBookmarked = c.url in detailsActions.bookmarkedChapterUrls,
+                            showDownload = showDownloadButton,
+                            detailsActions = detailsActions,
+                            swipeBehavior = swipeBehavior,
+                            downloadUiState = downloadStates[c.url] ?: ChapterDownloadUiState.None,
+                            selectionMode = isSelecting,
+                            isSelected = c.url in selection.selectedUrls,
+                            onToggleSelection = { selection.onToggle(c.url) },
+                            modifier = Modifier.animateItem()
+                        )
+                    }
                 }
-                items(listOfChapters) { c ->
-                    ChapterItem(
-                        c = c,
-                        read = chapters,
-                        isBookmarked = c.url in detailsActions.bookmarkedChapterUrls,
-                        showDownload = showDownloadButton,
-                        detailsActions = detailsActions,
-                        swipeBehavior = swipeBehavior,
-                        downloadUiState = downloadStates[c.url] ?: ChapterDownloadUiState.None,
-                        modifier = Modifier.animateItem()
-                    )
-                }
+
+                SnackbarHost(
+                    paneSnackbarState,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = SelectionToolbarListPadding)
+                )
+
+                ChapterSelectionToolbarHost(
+                    visible = isSelecting,
+                    chapters = info.chapters,
+                    read = chapters,
+                    detailsActions = detailsActions,
+                    downloadStates = downloadStates,
+                    canDownload = info.source.canDownload,
+                    snackbarHostState = paneSnackbarState,
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                )
             }
             /*LazyColumnScrollbar(
                 state = listState,

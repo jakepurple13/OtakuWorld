@@ -129,6 +129,9 @@ data class ChapterSelectionActions(
     val supportsBatchDownload: Boolean = false,
 )
 
+// Space below the chapter list so the last row can scroll clear of the floating toolbar.
+internal val SelectionToolbarListPadding = 88.dp
+
 private fun chapterCount(n: Int) = if (n == 1) "1 chapter" else "$n chapters"
 
 // Holds the last non-empty value so exit animations don't show an empty selection.
