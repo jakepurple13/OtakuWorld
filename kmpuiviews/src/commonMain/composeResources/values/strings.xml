@@ -41,7 +41,6 @@
     <string name="read">Read</string>
     <string name="download">Download</string>
     <string name="download_chapter">Download</string>
-    <string name="markAs">Mark As...</string>
     <string name="loadNextChapter">Next</string>
     <string name="loadPreviousChapter">Previous</string>
     <string name="reachedLastChapter">Reached Last Chapter</string>

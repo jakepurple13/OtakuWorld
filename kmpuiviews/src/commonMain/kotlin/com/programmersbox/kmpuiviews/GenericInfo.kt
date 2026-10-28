@@ -58,6 +58,8 @@ interface KmpGenericInfo {
         navController: NavigationActions,
     )
 
+    val supportsBatchDownload: Boolean get() = false
+
     fun batchDownloadChapters(
         chapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,
