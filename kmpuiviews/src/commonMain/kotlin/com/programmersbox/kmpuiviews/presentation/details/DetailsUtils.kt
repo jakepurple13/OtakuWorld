@@ -16,7 +16,6 @@ import androidx.compose.material.icons.filled.BookmarkRemove
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -34,7 +33,6 @@ import androidx.compose.material.icons.filled.WatchLater
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomAppBarScrollBehavior
 import androidx.compose.material3.ButtonGroup
-import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -98,7 +96,6 @@ import otakuworld.kmpuiviews.generated.resources.add_to_for_later_list
 import otakuworld.kmpuiviews.generated.resources.add_to_list
 import otakuworld.kmpuiviews.generated.resources.global_search_by_name
 import otakuworld.kmpuiviews.generated.resources.hadAnUpdate
-import otakuworld.kmpuiviews.generated.resources.markAs
 import otakuworld.kmpuiviews.generated.resources.removeFromFavorites
 import otakuworld.kmpuiviews.generated.resources.removeNotification
 import otakuworld.kmpuiviews.generated.resources.reverseOrder
@@ -161,7 +158,6 @@ internal fun AddToList(
 @Composable
 internal fun DetailActions(
     genericInfo: KmpGenericInfo,
-    scaffoldState: DrawerState,
     navController: NavigationActions,
     scope: CoroutineScope,
     info: KmpInfoModel,
@@ -174,7 +170,6 @@ internal fun DetailActions(
     onShowLists: () -> Unit,
     addToForLater: () -> Unit,
     onNoteClick: () -> Unit,
-    onBatchDownloadClick: () -> Unit,
     customActions: @Composable () -> Unit = {},
 ) {
     val uriHandler = LocalUriHandler.current
@@ -191,15 +186,6 @@ internal fun DetailActions(
         expanded = showDropDown,
         onDismissRequest = dropDownDismiss,
     ) {
-
-        DropdownMenuItem(
-            onClick = {
-                dropDownDismiss()
-                scope.launch { scaffoldState.open() }
-            },
-            text = { Text(stringResource(Res.string.markAs)) },
-            leadingIcon = { Icon(Icons.Default.Check, null) }
-        )
 
         DropdownMenuItem(
             onClick = {
@@ -309,15 +295,6 @@ internal fun DetailActions(
             },
             text = { Text("Note") },
             leadingIcon = { Icon(Icons.Default.Edit, null) }
-        )
-
-        DropdownMenuItem(
-            onClick = {
-                dropDownDismiss()
-                onBatchDownloadClick()
-            },
-            text = { Text("Batch Download") },
-            leadingIcon = { Icon(Icons.Default.Download, null) }
         )
     }
 
@@ -458,7 +435,6 @@ fun DetailFloatingActionButtonMenu(
     modifier: Modifier = Modifier,
     isFavorite: Boolean,
     onFavoriteClick: (Boolean) -> Unit,
-    onBatchDownloadClick: () -> Unit,
 ) {
     BackHandler(fabMenuExpanded) { onFabMenuExpandedChange(false) }
 
@@ -534,15 +510,6 @@ fun DetailFloatingActionButtonMenu(
         )
 
         FloatingActionButtonMenuItem(
-            onClick = {
-                onFabMenuExpandedChange(false)
-                onBatchDownloadClick()
-            },
-            icon = { Icon(Icons.Default.Download, contentDescription = null) },
-            text = { Text("Batch Download") },
-        )
-
-        FloatingActionButtonMenuItem(
             onClick = { onFavoriteClick(isFavorite) },
             icon = {
                 Icon(
@@ -583,7 +550,6 @@ fun ChapterListHeader(
     listOfChapters: List<KmpChapterModel>,
     chapters: List<ChapterWatched>,
     detailsActions: DetailsActions,
-    markAsClick: suspend () -> Unit,
 ) {
     ButtonGroup(
         overflowIndicator = { menuState ->
@@ -634,12 +600,6 @@ fun ChapterListHeader(
             },
             icon = { Icon(Icons.Default.VerticalAlignTop, null) },
             label = "Top"
-        )
-
-        clickableItem(
-            onClick = { scope.launch { markAsClick() } },
-            icon = { Icon(Icons.Default.Check, null) },
-            label = "Mark As..."
         )
 
         clickableItem(

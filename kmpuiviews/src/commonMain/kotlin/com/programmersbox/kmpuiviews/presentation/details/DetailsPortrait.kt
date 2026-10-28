@@ -8,25 +8,20 @@ import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scrim
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDefaults
@@ -35,7 +30,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -129,21 +123,8 @@ fun DetailsView(
     val listDao = koinInject<ListRepository>()
 
     val scope = rememberCoroutineScope()
-    val scaffoldState = rememberDrawerState(DrawerValue.Closed)
-
     var fabMenuExpanded by remember { mutableStateOf(false) }
     var showNoteSheet by remember { mutableStateOf(false) }
-
-    BackHandler(scaffoldState.isOpen) {
-        scope.launch {
-            try {
-                if (scaffoldState.isOpen) scaffoldState.close()
-                else navController.popBackStack()
-            } catch (_: Exception) {
-                navController.popBackStack()
-            }
-        }
-    }
 
     //val bottomAppBarScrollBehavior = LocalBottomAppBarScrollBehavior.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
@@ -176,244 +157,218 @@ fun DetailsView(
         )
     }
 
-    ModalNavigationDrawer(
-        drawerState = scaffoldState,
-        drawerContent = {
-            ModalDrawerSheet(
-                drawerShape = RoundedCornerShape(
-                    topStart = 0.0.dp,
-                    topEnd = 8.0.dp,
-                    bottomEnd = 8.0.dp,
-                    bottomStart = 0.0.dp
-                ),
-                windowInsets = WindowInsets(0.dp)
-            ) {
-                MarkAsScreen(
-                    drawerState = scaffoldState,
-                    info = info,
-                    chapters = chapters,
-                    markAs = detailsActions.markAsRead
-                )
-            }
-        }
-    ) {
-        OtakuScaffold(
-            topBar = {
-                TopAppBar(
-                    title = {
-                        Text(
-                            info.title,
-                            modifier = Modifier.basicMarquee()
-                        )
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
-                        }
-                    },
-                    actions = {
-                        DetailActions(
-                            genericInfo = genericInfo,
-                            scaffoldState = scaffoldState,
-                            navController = navController,
-                            scope = scope,
-                            info = info,
-                            isSaved = isSaved,
-                            dao = dao,
-                            isFavorite = isFavorite,
-                            canNotify = canNotify,
-                            notifyAction = detailsActions.notifyChange,
-                            onReverseChaptersClick = { reverseChapters = !reverseChapters },
-                            onShowLists = { showLists = true },
-                            addToForLater = {
-                                scope.launch {
-                                    val result = AppConfig.forLaterUuid?.let {
-                                        listDao.addToList(
-                                            it,
-                                            info.title,
-                                            info.description,
-                                            info.url,
-                                            info.imageUrl,
-                                            info.source.serviceName
-                                        )
-                                    } == true
-                                    hostState.showSnackbar(
-                                        getString(
-                                            if (result) Res.string.added_to_list else Res.string.already_in_list,
-                                            getString(Res.string.for_later)
-                                        ),
-                                        withDismissAction = true
-                                    )
-                                }
-                            },
-                            onNoteClick = { showNoteSheet = true },
-                            onBatchDownloadClick = detailsActions.batchDownload,
-                        )
-                    },
-                    scrollBehavior = scrollBehavior,
-                )
-            },
-            floatingActionButton = {
-                DetailFloatingActionButtonMenu(
-                    navController = navController,
-                    isVisible = fabVisible,
-                    onShowLists = { showLists = true },
-                    info = info,
-                    removeFromSaved = {
-                        scope.launch(Dispatchers.IO) {
-                            dao.getNotificationItemFlow(info.url)
-                                .firstOrNull()
-                                ?.let {
-                                    dao.deleteNotification(it)
-                                    notificationRepository.cancelNotification(it)
-                                }
-                        }
-                    },
-                    isSaved = isSaved,
-                    addToSaved = {
-                        scope.launch(Dispatchers.IO) {
-                            dao.insertNotification(
-                                NotificationItem(
-                                    id = info.hashCode(),
-                                    url = info.url,
-                                    summaryText = getString(
-                                        Res.string.hadAnUpdate,
-                                        info.title,
-                                        info.chapters.firstOrNull()?.name.orEmpty()
-                                    ),
-                                    notiTitle = info.title,
-                                    imageUrl = info.imageUrl,
-                                    source = info.source.serviceName,
-                                    contentTitle = info.title
-                                )
-                            )
-                        }
-                    },
-                    canNotify = canNotify,
-                    notifyAction = detailsActions.notifyChange,
-                    isFavorite = isFavorite,
-                    onFavoriteClick = { detailsActions.favoriteAction() },
-                    fabMenuExpanded = fabMenuExpanded,
-                    onFabMenuExpandedChange = { fabMenuExpanded = it },
-                    onBatchDownloadClick = detailsActions.batchDownload,
-                    modifier = Modifier.padding(LocalNavHostPadding.current)
-                )
-            },
-            snackbarHost = {
-                SnackbarHost(hostState) { data ->
-                    val font = SnackbarDefaults.contentColor
-                    Snackbar(
-                        containerColor = MaterialTheme.colorScheme.onSurface,
-                        contentColor = font,
-                        snackbarData = data
+    OtakuScaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        info.title,
+                        modifier = Modifier.basicMarquee()
                     )
-                }
-            },
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
-        ) { p ->
-            val bottomPadding = with(LocalDensity.current) {
-                LocalNavHostPadding.current.calculateBottomPadding().toPx().toInt()
-            }
-            val modifiedPaddingValues = p// - LocalNavHostPadding.current
-            var descriptionVisibility by remember { mutableStateOf(false) }
-            val listOfChapters = remember(reverseChapters) {
-                info.chapters.let { if (reverseChapters) it.reversed() else it }
-            }
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                state = listState,
-                //contentPadding = modifiedPaddingValues,
-                contentPadding = LocalNavHostPadding.current,
-                userScrollEnabled = !fabMenuExpanded,
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .padding(modifiedPaddingValues - LocalNavHostPadding.current)
-                    .padding(bottom = 4.dp)
-            ) {
-                item(key = "header") {
-                    DetailsHeader(
-                        model = info,
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
+                    }
+                },
+                actions = {
+                    DetailActions(
+                        genericInfo = genericInfo,
+                        navController = navController,
+                        scope = scope,
+                        info = info,
+                        isSaved = isSaved,
+                        dao = dao,
                         isFavorite = isFavorite,
-                        favoriteClick = { detailsActions.favoriteAction() },
-                        onPaletteSet = onPaletteSet,
-                        onBitmapSet = onBitmapSet,
-                        blurHash = blurHash,
-                    )
-                }
-
-                if (info.description.isNotEmpty()) {
-                    item {
-                        Box {
-                            val progress = remember { mutableStateOf(false) }
-
-                            Text(
-                                description,
-                                overflow = TextOverflow.Ellipsis,
-                                maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier
-                                    .clip(MaterialTheme.shapes.medium)
-                                    .combinedClickable(
-                                        interactionSource = null,
-                                        indication = ripple(),
-                                        onClick = { descriptionVisibility = !descriptionVisibility },
-                                        onLongClick = { onTranslateDescription(progress) }
+                        canNotify = canNotify,
+                        notifyAction = detailsActions.notifyChange,
+                        onReverseChaptersClick = { reverseChapters = !reverseChapters },
+                        onShowLists = { showLists = true },
+                        addToForLater = {
+                            scope.launch {
+                                val result = AppConfig.forLaterUuid?.let {
+                                    listDao.addToList(
+                                        it,
+                                        info.title,
+                                        info.description,
+                                        info.url,
+                                        info.imageUrl,
+                                        info.source.serviceName
                                     )
-                                    .padding(horizontal = 16.dp)
-                                    .fillMaxWidth()
-                                    .animateContentSize()
-                            )
-
-                            if (progress.value) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.align(Alignment.Center)
+                                } == true
+                                hostState.showSnackbar(
+                                    getString(
+                                        if (result) Res.string.added_to_list else Res.string.already_in_list,
+                                        getString(Res.string.for_later)
+                                    ),
+                                    withDismissAction = true
                                 )
                             }
+                        },
+                        onNoteClick = { showNoteSheet = true },
+                    )
+                },
+                scrollBehavior = scrollBehavior,
+            )
+        },
+        floatingActionButton = {
+            DetailFloatingActionButtonMenu(
+                navController = navController,
+                isVisible = fabVisible,
+                onShowLists = { showLists = true },
+                info = info,
+                removeFromSaved = {
+                    scope.launch(Dispatchers.IO) {
+                        dao.getNotificationItemFlow(info.url)
+                            .firstOrNull()
+                            ?.let {
+                                dao.deleteNotification(it)
+                                notificationRepository.cancelNotification(it)
+                            }
+                    }
+                },
+                isSaved = isSaved,
+                addToSaved = {
+                    scope.launch(Dispatchers.IO) {
+                        dao.insertNotification(
+                            NotificationItem(
+                                id = info.hashCode(),
+                                url = info.url,
+                                summaryText = getString(
+                                    Res.string.hadAnUpdate,
+                                    info.title,
+                                    info.chapters.firstOrNull()?.name.orEmpty()
+                                ),
+                                notiTitle = info.title,
+                                imageUrl = info.imageUrl,
+                                source = info.source.serviceName,
+                                contentTitle = info.title
+                            )
+                        )
+                    }
+                },
+                canNotify = canNotify,
+                notifyAction = detailsActions.notifyChange,
+                isFavorite = isFavorite,
+                onFavoriteClick = { detailsActions.favoriteAction() },
+                fabMenuExpanded = fabMenuExpanded,
+                onFabMenuExpandedChange = { fabMenuExpanded = it },
+                modifier = Modifier.padding(LocalNavHostPadding.current)
+            )
+        },
+        snackbarHost = {
+            SnackbarHost(hostState) { data ->
+                val font = SnackbarDefaults.contentColor
+                Snackbar(
+                    containerColor = MaterialTheme.colorScheme.onSurface,
+                    contentColor = font,
+                    snackbarData = data
+                )
+            }
+        },
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
+    ) { p ->
+        val bottomPadding = with(LocalDensity.current) {
+            LocalNavHostPadding.current.calculateBottomPadding().toPx().toInt()
+        }
+        val modifiedPaddingValues = p// - LocalNavHostPadding.current
+        var descriptionVisibility by remember { mutableStateOf(false) }
+        val listOfChapters = remember(reverseChapters) {
+            info.chapters.let { if (reverseChapters) it.reversed() else it }
+        }
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            state = listState,
+            //contentPadding = modifiedPaddingValues,
+            contentPadding = LocalNavHostPadding.current,
+            userScrollEnabled = !fabMenuExpanded,
+            modifier = Modifier
+                .fillMaxHeight()
+                .padding(modifiedPaddingValues - LocalNavHostPadding.current)
+                .padding(bottom = 4.dp)
+        ) {
+            item(key = "header") {
+                DetailsHeader(
+                    model = info,
+                    isFavorite = isFavorite,
+                    favoriteClick = { detailsActions.favoriteAction() },
+                    onPaletteSet = onPaletteSet,
+                    onBitmapSet = onBitmapSet,
+                    blurHash = blurHash,
+                )
+            }
+
+            if (info.description.isNotEmpty()) {
+                item {
+                    Box {
+                        val progress = remember { mutableStateOf(false) }
+
+                        Text(
+                            description,
+                            overflow = TextOverflow.Ellipsis,
+                            maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier
+                                .clip(MaterialTheme.shapes.medium)
+                                .combinedClickable(
+                                    interactionSource = null,
+                                    indication = ripple(),
+                                    onClick = { descriptionVisibility = !descriptionVisibility },
+                                    onLongClick = { onTranslateDescription(progress) }
+                                )
+                                .padding(horizontal = 16.dp)
+                                .fillMaxWidth()
+                                .animateContentSize()
+                        )
+
+                        if (progress.value) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.align(Alignment.Center)
+                            )
                         }
                     }
                 }
-
-                stickyHeader {
-                    ChapterListHeader(
-                        scope = scope,
-                        reverseChapters = reverseChapters,
-                        onReverseChaptersClick = { reverseChapters = it },
-                        bottomPadding = bottomPadding,
-                        listState = listState,
-                        listOfChapters = listOfChapters,
-                        chapters = chapters,
-                        markAsClick = { scaffoldState.open() },
-                        detailsActions = detailsActions
-                    )
-                }
-
-                items(
-                    listOfChapters,
-                    key = { it.url + it.name }
-                ) { c ->
-                    ChapterItem(
-                        c = c,
-                        read = chapters,
-                        isBookmarked = c.url in detailsActions.bookmarkedChapterUrls,
-                        detailsActions = detailsActions,
-                        showDownload = showDownloadButton,
-                        swipeBehavior = swipeBehavior,
-                        downloadUiState = downloadStates[c.url] ?: ChapterDownloadUiState.None,
-                        modifier = Modifier.animateItem()
-                    )
-                }
-            }
-            Box(Modifier.padding(modifiedPaddingValues)) {
-                ScrollBar(listState)
             }
 
-            if (fabMenuExpanded) {
-                Scrim(
-                    contentDescription = null,
-                    onClick = { fabMenuExpanded = false },
+            stickyHeader {
+                ChapterListHeader(
+                    scope = scope,
+                    reverseChapters = reverseChapters,
+                    onReverseChaptersClick = { reverseChapters = it },
+                    bottomPadding = bottomPadding,
+                    listState = listState,
+                    listOfChapters = listOfChapters,
+                    chapters = chapters,
+                    detailsActions = detailsActions
                 )
             }
+
+            items(
+                listOfChapters,
+                key = { it.url + it.name }
+            ) { c ->
+                ChapterItem(
+                    c = c,
+                    read = chapters,
+                    isBookmarked = c.url in detailsActions.bookmarkedChapterUrls,
+                    detailsActions = detailsActions,
+                    showDownload = showDownloadButton,
+                    swipeBehavior = swipeBehavior,
+                    downloadUiState = downloadStates[c.url] ?: ChapterDownloadUiState.None,
+                    modifier = Modifier.animateItem()
+                )
+            }
+        }
+        Box(Modifier.padding(modifiedPaddingValues)) {
+            ScrollBar(listState)
+        }
+
+        if (fabMenuExpanded) {
+            Scrim(
+                contentDescription = null,
+                onClick = { fabMenuExpanded = false },
+            )
         }
     }
 }

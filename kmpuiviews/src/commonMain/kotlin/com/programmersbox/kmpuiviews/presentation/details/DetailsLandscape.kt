@@ -23,16 +23,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DrawerState
-import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -44,7 +40,6 @@ import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffold
 import androidx.compose.material3.adaptive.layout.rememberPaneExpansionState
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
-import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.material3.ripple
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
@@ -134,19 +129,7 @@ fun DetailsViewLandscape(
     val listState = rememberLazyListState()
 
     val scope = rememberCoroutineScope()
-    val scaffoldState = rememberDrawerState(DrawerValue.Closed)
-
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
-
-    BackHandler(scaffoldState.isOpen) {
-        scope.launch {
-            try {
-                scaffoldState.close()
-            } catch (_: Exception) {
-                navController.popBackStack()
-            }
-        }
-    }
 
     var showLists by remember { mutableStateOf(false) }
     var showNoteSheet by remember { mutableStateOf(false) }
@@ -160,108 +143,91 @@ fun DetailsViewLandscape(
         scope = scope,
     )
 
-    ModalNavigationDrawer(
-        drawerState = scaffoldState,
-        drawerContent = {
-            ModalDrawerSheet {
-                MarkAsScreen(
-                    drawerState = scaffoldState,
-                    info = info,
-                    chapters = chapters,
-                    markAs = detailsActions.markAsRead
-                )
-            }
-        }
-    ) {
-        OtakuScaffold(
-            topBar = {
-                TopAppBar(
-                    modifier = Modifier.zIndex(2f),
-                    scrollBehavior = scrollBehavior,
-                    title = { Text(info.title) },
-                    navigationIcon = {
-                        IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
-                        }
-                    },
-                    actions = {
-                        DetailActions(
-                            genericInfo = genericInfo,
-                            scaffoldState = scaffoldState,
-                            navController = navController,
-                            scope = scope,
-                            info = info,
-                            isSaved = isSaved,
-                            dao = dao,
-                            isFavorite = isFavorite,
-                            canNotify = canNotify,
-                            notifyAction = detailsActions.notifyChange,
-                            onReverseChaptersClick = { reverseChapters = !reverseChapters },
-                            onShowLists = { showLists = true },
-                            addToForLater = {
-                                scope.launch {
-                                    val result = AppConfig.forLaterUuid?.let {
-                                        listDao.addToList(
-                                            it,
-                                            info.title,
-                                            info.description,
-                                            info.url,
-                                            info.imageUrl,
-                                            info.source.serviceName
-                                        )
-                                    } ?: false
-
-                                    hostState.showSnackbar(
-                                        getString(
-                                            if (result) {
-                                                Res.string.added_to_list
-                                            } else {
-                                                Res.string.already_in_list
-                                            },
-                                            getString(Res.string.for_later)
-                                        ),
-                                        withDismissAction = true
-                                    )
-                                }
-                            },
-                            onNoteClick = { showNoteSheet = true },
-                            onBatchDownloadClick = detailsActions.batchDownload,
-                        )
+    OtakuScaffold(
+        topBar = {
+            TopAppBar(
+                modifier = Modifier.zIndex(2f),
+                scrollBehavior = scrollBehavior,
+                title = { Text(info.title) },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
                     }
-                )
-            },
-            snackbarHost = {
-                SnackbarHost(hostState) { data ->
-                    Snackbar(snackbarData = data)
+                },
+                actions = {
+                    DetailActions(
+                        genericInfo = genericInfo,
+                        navController = navController,
+                        scope = scope,
+                        info = info,
+                        isSaved = isSaved,
+                        dao = dao,
+                        isFavorite = isFavorite,
+                        canNotify = canNotify,
+                        notifyAction = detailsActions.notifyChange,
+                        onReverseChaptersClick = { reverseChapters = !reverseChapters },
+                        onShowLists = { showLists = true },
+                        addToForLater = {
+                            scope.launch {
+                                val result = AppConfig.forLaterUuid?.let {
+                                    listDao.addToList(
+                                        it,
+                                        info.title,
+                                        info.description,
+                                        info.url,
+                                        info.imageUrl,
+                                        info.source.serviceName
+                                    )
+                                } ?: false
+
+                                hostState.showSnackbar(
+                                    getString(
+                                        if (result) {
+                                            Res.string.added_to_list
+                                        } else {
+                                            Res.string.already_in_list
+                                        },
+                                        getString(Res.string.for_later)
+                                    ),
+                                    withDismissAction = true
+                                )
+                            }
+                        },
+                        onNoteClick = { showNoteSheet = true },
+                    )
                 }
-            },
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
-        ) { p ->
-            DetailsLandscapeContent(
-                info = info,
-                shareChapter = shareChapter,
-                reverseChapters = reverseChapters,
-                onReverse = { reverseChapters = it },
-                description = description,
-                onTranslateDescription = onTranslateDescription,
-                chapters = chapters,
-                isFavorite = isFavorite,
-                listState = listState,
-                isSaved = isSaved,
-                showDownloadButton = showDownloadButton,
-                canNotify = canNotify,
-                onPaletteSet = onPaletteSet,
-                blurHash = blurHash,
-                onBitmapSet = onBitmapSet,
-                scaffoldState = scaffoldState,
-                detailsActions = detailsActions,
-                notesVm = notesVm,
-                showNoteSheet = showNoteSheet,
-                onNoteSheetDismiss = { showNoteSheet = false },
-                downloadStates = downloadStates,
-                modifier = Modifier.padding(p)
             )
-        }
+        },
+        snackbarHost = {
+            SnackbarHost(hostState) { data ->
+                Snackbar(snackbarData = data)
+            }
+        },
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
+    ) { p ->
+        DetailsLandscapeContent(
+            info = info,
+            shareChapter = shareChapter,
+            reverseChapters = reverseChapters,
+            onReverse = { reverseChapters = it },
+            description = description,
+            onTranslateDescription = onTranslateDescription,
+            chapters = chapters,
+            isFavorite = isFavorite,
+            listState = listState,
+            isSaved = isSaved,
+            showDownloadButton = showDownloadButton,
+            canNotify = canNotify,
+            onPaletteSet = onPaletteSet,
+            blurHash = blurHash,
+            onBitmapSet = onBitmapSet,
+            detailsActions = detailsActions,
+            notesVm = notesVm,
+            showNoteSheet = showNoteSheet,
+            onNoteSheetDismiss = { showNoteSheet = false },
+            downloadStates = downloadStates,
+            modifier = Modifier.padding(p)
+        )
     }
 }
 
@@ -280,7 +246,6 @@ private fun DetailsLandscapeContent(
     chapters: List<ChapterWatched>,
     reverseChapters: Boolean,
     onReverse: (Boolean) -> Unit,
-    scaffoldState: DrawerState,
     listState: LazyListState,
     showDownloadButton: () -> Boolean,
     canNotify: Boolean,
@@ -454,7 +419,6 @@ private fun DetailsLandscapeContent(
                         listState = listState,
                         listOfChapters = listOfChapters,
                         chapters = chapters,
-                        markAsClick = { scaffoldState.open() },
                         detailsActions = detailsActions
                     )
                 }

@@ -16,7 +16,6 @@ import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,19 +26,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.DownloadDone
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.OpenInBrowser
@@ -48,40 +41,25 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material3.Card
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularWavyProgressIndicator
-import androidx.compose.material3.DrawerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedListItem
-import androidx.compose.material3.SheetValue
-import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.TriStateCheckbox
-import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
-import androidx.compose.material3.rememberTopAppBarState
-import androidx.compose.material3.ripple
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
@@ -92,10 +70,8 @@ import androidx.compose.ui.ExperimentalMediaQueryApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
-import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.zIndex
@@ -116,12 +92,9 @@ import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.favoritesdatabase.RecentModel
 import com.programmersbox.kmpmodels.KmpChapterModel
-import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpuiviews.ChapterDownloadUiState
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
-import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
-import com.programmersbox.kmpuiviews.presentation.components.optionsSheet
 import com.programmersbox.kmpuiviews.presentation.notes.DetailsNotesViewModel
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.repository.ListRepository
@@ -136,13 +109,11 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
-import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.hadAnUpdate
-import otakuworld.kmpuiviews.generated.resources.markAs
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
@@ -271,21 +242,6 @@ private fun DetailsScreenInternal(
                         if (save != -1) historyDao.removeOldData(save)
                     }
 
-                    var showBatchDownloads by remember { mutableStateOf(false) }
-
-                    if (showBatchDownloads) {
-                        BatchDownloads(
-                            chapters = infoModel.chapters,
-                            onSelection = {
-                                genericInfo.batchDownloadChapters(it, infoModel)
-                                showBatchDownloads = false
-                            },
-                            onDismiss = { showBatchDownloads = false },
-                            downloadStates = details.downloadStates,
-                            readList = details.chapters
-                        )
-                    }
-
                     DetailContent(
                         dao = dao,
                         details = details,
@@ -361,8 +317,7 @@ private fun DetailsScreenInternal(
                             },
                             rereadClick = details::reread,
                             bookmarkChapter = { details.toggleBookmark(it) },
-                            bookmarkedChapterUrls = details.bookmarkedChapterUrls,
-                            batchDownload = { showBatchDownloads = true }
+                            bookmarkedChapterUrls = details.bookmarkedChapterUrls
                         )
                     )
                 }
@@ -386,7 +341,6 @@ data class DetailsActions(
     val rereadClick: () -> Unit,
     val bookmarkChapter: (KmpChapterModel) -> Unit = {},
     val bookmarkedChapterUrls: Set<String> = emptySet(),
-    val batchDownload: () -> Unit = {},
 )
 
 @OptIn(
@@ -450,64 +404,6 @@ private fun DetailContent(
                 notesVm = notesVm,
                 downloadStates = details.downloadStates
             )
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun MarkAsScreen(
-    drawerState: DrawerState,
-    info: KmpInfoModel,
-    chapters: List<ChapterWatched>,
-    markAs: (KmpChapterModel, Boolean) -> Unit,
-) {
-    val scrollBehaviorMarkAs = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
-    val scope = rememberCoroutineScope()
-
-    OtakuScaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(Res.string.markAs)) },
-
-                navigationIcon = {
-                    IconButton(onClick = { scope.launch { drawerState.close() } }) {
-                        Icon(Icons.Default.Close, null)
-                    }
-                },
-                scrollBehavior = scrollBehaviorMarkAs
-            )
-        },
-        modifier = Modifier.nestedScroll(scrollBehaviorMarkAs.nestedScrollConnection)
-    ) { p ->
-        LazyColumn(
-            contentPadding = p,
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier.fillMaxSize()
-        ) {
-            items(info.chapters) { c ->
-                Surface(
-                    shape = RoundedCornerShape(0.dp),
-                    tonalElevation = 4.dp,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(
-                            interactionSource = null,
-                            indication = ripple()
-                        ) { markAs(c, !chapters.fastAny { it.url == c.url }) },
-                ) {
-                    ListItem(
-                        modifier = Modifier.padding(horizontal = 4.dp),
-                        headlineContent = { Text(c.name) },
-                        leadingContent = {
-                            Checkbox(
-                                checked = chapters.fastAny { it.url == c.url },
-                                onCheckedChange = { b -> markAs(c, b) },
-                            )
-                        }
-                    )
-                }
-            }
         }
     }
 }
@@ -638,19 +534,6 @@ fun ChapterItem(
     val updatedIsRead by rememberUpdatedState(hasBeenRead)
     val updatedAnimated = updateTransition(updatedIsRead)
 
-    var options by chapterItemOptions(
-        chapter = c,
-        hasBeenRead = updatedIsRead,
-        isBookmarked = isBookmarked,
-        downloadUiState = downloadUiState,
-        onOpen = { detailsActions.onClick(c) },
-        downloadChapter = { detailsActions.onDownload(c) },
-        deleteDownload = { detailsActions.onDeleteDownload(c) },
-        markAsRead = { detailsActions.markAsRead(c, !updatedIsRead) },
-        shareChapter = { detailsActions.shareChapter(c) },
-        bookmarkChapter = { detailsActions.bookmarkChapter(c) }
-    )
-
     fun swipeBehavior(behavior: DetailsChapterSwipeBehavior) {
         when (behavior) {
             DetailsChapterSwipeBehavior.MarkAsRead -> detailsActions.markAsRead(c, !updatedIsRead)
@@ -746,7 +629,7 @@ fun ChapterItem(
     ) {
         ListItem(
             onClick = { detailsActions.onClick(c) },
-            onLongClick = { options = true },
+            onLongClick = {},
             leadingContent = {
                 updatedAnimated.AnimatedVisibility(
                     { !it },
@@ -815,210 +698,4 @@ fun ChapterItem(
                 .fillMaxWidth()
         )
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-private fun BatchDownloads(
-    chapters: List<KmpChapterModel>,
-    readList: List<ChapterWatched>,
-    onSelection: (List<KmpChapterModel>) -> Unit,
-    downloadStates: Map<String, ChapterDownloadUiState>,
-    onDismiss: () -> Unit,
-) {
-    val selected = remember { mutableStateListOf<KmpChapterModel>() }
-
-    val checkMarkState by remember {
-        derivedStateOf {
-            val downloadStateCount = downloadStates.count { it.value == ChapterDownloadUiState.None }
-            when {
-                selected.isEmpty() -> ToggleableState.Off
-                selected.size == (chapters.size - downloadStateCount) -> ToggleableState.On
-                else -> ToggleableState.Indeterminate
-            }
-        }
-    }
-
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberBottomSheetState(SheetValue.Expanded),
-        containerColor = MaterialTheme.colorScheme.background
-    ) {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text("Choose chapters to download") },
-                    navigationIcon = {
-                        IconButton(
-                            onClick = onDismiss
-                        ) { Icon(Icons.Default.Cancel, null) }
-                    },
-                    actions = {
-                        TriStateCheckbox(
-                            state = checkMarkState,
-                            onClick = {
-                                when (checkMarkState) {
-                                    ToggleableState.On -> selected.clear()
-                                    ToggleableState.Off,
-                                    ToggleableState.Indeterminate,
-                                        -> {
-                                        selected.clear()
-                                        selected.addAll(
-                                            chapters.filter {
-                                                downloadStates[it.url]?.let { it == ChapterDownloadUiState.None } ?: true
-                                            }
-                                        )
-                                    }
-                                }
-                            },
-                        )
-                    }
-                )
-            },
-            floatingActionButton = {
-                ExtendedFloatingActionButton(
-                    onClick = { onSelection(selected) },
-                    text = { Text("Download (${selected.size})") },
-                    icon = { Icon(Icons.Default.Download, null) }
-                )
-            }
-        ) { padding ->
-            LazyColumn(
-                contentPadding = padding,
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.fillMaxSize()
-            ) {
-                itemsIndexed(
-                    chapters,
-                    key = { i, c -> "${c.url}$i" },
-                    contentType = { _, _ -> "chapter" }
-                ) { index, chapter ->
-                    ListItem(
-                        checked = chapter in selected,
-                        onCheckedChange = { if (chapter in selected) selected.remove(chapter) else selected.add(chapter) },
-                        content = { Text(chapter.name) },
-                        enabled = downloadStates[chapter.url]?.let { it == ChapterDownloadUiState.None } ?: true,
-                        leadingContent = if (!readList.fastAny { it.url == chapter.url }) {
-                            {
-                                Box(
-                                    modifier = Modifier
-                                        .size(12.dp)
-                                        .background(MaterialTheme.colorScheme.primary, CircleShape)
-                                )
-                            }
-                        } else null
-                    )
-
-                    if (index != chapters.lastIndex) {
-                        HorizontalDivider(
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@ExperimentalMaterial3ExpressiveApi
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun chapterItemOptions(
-    chapter: KmpChapterModel,
-    hasBeenRead: Boolean,
-    isBookmarked: Boolean,
-    downloadUiState: ChapterDownloadUiState,
-    onOpen: () -> Unit,
-    downloadChapter: () -> Unit,
-    deleteDownload: () -> Unit,
-    markAsRead: () -> Unit,
-    shareChapter: () -> Unit,
-    bookmarkChapter: () -> Unit,
-) = optionsSheet(
-    verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap),
-) {
-
-    val colors = ListItemDefaults.segmentedColors(
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-    )
-
-    val canDownload = chapter.source.canDownload
-    val isDownloaded = downloadUiState == ChapterDownloadUiState.Downloaded
-    val totalCount = if (canDownload) 5 else 4
-
-    ListItem(
-        headlineContent = { Text(chapter.name) },
-    )
-
-    SegmentedListItem(
-        onClick = {
-            dismiss()
-            onOpen()
-        },
-        content = { Text("Read") },
-        colors = colors,
-        shapes = ListItemDefaults.segmentedShapes(
-            index = 0,
-            count = totalCount
-        )
-    )
-
-    if (canDownload) {
-        SegmentedListItem(
-            onClick = {
-                dismiss()
-                if (isDownloaded) deleteDownload() else downloadChapter()
-            },
-            content = { Text(if (isDownloaded) "Delete" else "Download") },
-            colors = colors,
-            shapes = ListItemDefaults.segmentedShapes(
-                index = 1,
-                count = totalCount
-            )
-        )
-    }
-
-    SegmentedListItem(
-        content = { Text("Mark as read") },
-        colors = colors,
-        trailingContent = { Checkbox(checked = hasBeenRead, onCheckedChange = null) },
-        checked = hasBeenRead,
-        onCheckedChange = { markAsRead() },
-        shapes = ListItemDefaults.segmentedShapes(
-            index = if (canDownload) 2 else 1,
-            count = totalCount
-        )
-    )
-
-    SegmentedListItem(
-        onClick = {
-            dismiss()
-            bookmarkChapter()
-        },
-        content = { Text(if (isBookmarked) "Remove bookmark" else "Bookmark") },
-        leadingContent = {
-            Icon(
-                imageVector = if (isBookmarked) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
-                contentDescription = null,
-            )
-        },
-        colors = colors,
-        shapes = ListItemDefaults.segmentedShapes(
-            index = if (canDownload) 3 else 2,
-            count = totalCount
-        )
-    )
-
-    SegmentedListItem(
-        onClick = {
-            dismiss()
-            shareChapter()
-        },
-        content = { Text("Share") },
-        colors = colors,
-        shapes = ListItemDefaults.segmentedShapes(
-            index = if (canDownload) 4 else 3,
-            count = totalCount
-        )
-    )
 }
