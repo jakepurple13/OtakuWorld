@@ -19,6 +19,8 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -281,120 +283,131 @@ fun ChapterSelectionToolbarHost(
         visible = visible,
         enter = slideInVertically { it * 2 } + fadeIn() + scaleIn(),
         exit = slideOutVertically { it * 2 } + fadeOut() + scaleOut(),
-        modifier = modifier.offset(y = -FloatingToolbarDefaults.ScreenOffset)
+        modifier = modifier
+            .offset(y = -FloatingToolbarDefaults.ScreenOffset)
+            .padding(horizontal = 16.dp)
     ) {
-        HorizontalFloatingToolbar(expanded = true) {
-            AnimatedVisibility(
-                visible = state.showSingleActions,
-                enter = expandHorizontally() + fadeIn(),
-                exit = shrinkHorizontally() + fadeOut()
+        HorizontalFloatingToolbar(
+            expanded = true,
+            colors = FloatingToolbarDefaults.vibrantFloatingToolbarColors(),
+        ) {
+            // Scrolls sideways when every action doesn't fit (e.g. single selection on narrow phones).
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.horizontalScroll(rememberScrollState())
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Button(
-                        onClick = {
-                            val chapter = selected.singleOrNull() ?: return@Button
-                            selection.onClear()
-                            detailsActions.onClick(chapter)
+                AnimatedVisibility(
+                    visible = state.showSingleActions,
+                    enter = expandHorizontally() + fadeIn(),
+                    exit = shrinkHorizontally() + fadeOut()
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Button(
+                            onClick = {
+                                val chapter = selected.singleOrNull() ?: return@Button
+                                selection.onClear()
+                                detailsActions.onClick(chapter)
+                            }
+                        ) {
+                            Icon(Icons.Default.PlayArrow, null)
+                            Spacer(Modifier.width(4.dp))
+                            Text("Read")
                         }
-                    ) {
-                        Icon(Icons.Default.PlayArrow, null)
-                        Spacer(Modifier.width(4.dp))
-                        Text("Read")
-                    }
-                    IconButton(
-                        onClick = {
-                            val chapter = selected.singleOrNull() ?: return@IconButton
-                            selection.onClear()
-                            detailsActions.shareChapter(chapter)
-                        }
-                    ) { Icon(Icons.Default.Share, "Share") }
-                    VerticalDivider(Modifier.height(24.dp).padding(horizontal = 4.dp))
-                }
-            }
-
-            IconButton(
-                onClick = {
-                    if (selected.isEmpty()) return@IconButton
-                    val targetRead = !state.allRead
-                    val previouslyRead = selected.filter { it.url in readUrls }.map { it.url }.toSet()
-                    val affected = selected
-                    selection.onMarkAs(affected, targetRead)
-                    selection.onClear()
-                    showUndo("Marked ${chapterCount(affected.size)} ${if (targetRead) "read" else "unread"}") {
-                        selection.onRestoreRead(affected, previouslyRead)
+                        IconButton(
+                            onClick = {
+                                val chapter = selected.singleOrNull() ?: return@IconButton
+                                selection.onClear()
+                                detailsActions.shareChapter(chapter)
+                            }
+                        ) { Icon(Icons.Default.Share, "Share") }
+                        VerticalDivider(Modifier.height(24.dp).padding(horizontal = 4.dp))
                     }
                 }
-            ) {
-                AnimatedContent(state.allRead) { allRead ->
-                    if (allRead) Icon(Icons.Default.RemoveDone, "Mark unread")
-                    else Icon(Icons.Default.DoneAll, "Mark read")
-                }
-            }
 
-            IconButton(
-                onClick = {
-                    if (selected.isEmpty()) return@IconButton
-                    val targetBookmarked = !state.allBookmarked
-                    val previouslyBookmarked = selected.filter { it.url in bookmarkedUrls }.map { it.url }.toSet()
-                    val affected = selected
-                    selection.onSetBookmarked(affected, targetBookmarked)
-                    selection.onClear()
-                    showUndo(
-                        if (targetBookmarked) "Bookmarked ${chapterCount(affected.size)}"
-                        else "Removed bookmark from ${chapterCount(affected.size)}"
-                    ) { selection.onRestoreBookmarks(affected, previouslyBookmarked) }
-                }
-            ) {
-                AnimatedContent(state.allBookmarked) { allBookmarked ->
-                    if (allBookmarked) Icon(Icons.Default.BookmarkRemove, "Remove bookmark")
-                    else Icon(Icons.Outlined.BookmarkBorder, "Bookmark")
-                }
-            }
-
-            AnimatedVisibility(
-                visible = state.downloadMode != SelectionDownloadMode.Hidden,
-                enter = expandHorizontally() + fadeIn(),
-                exit = shrinkHorizontally() + fadeOut()
-            ) {
                 IconButton(
                     onClick = {
                         if (selected.isEmpty()) return@IconButton
-                        when (state.downloadMode) {
-                            SelectionDownloadMode.Delete -> {
-                                selected.forEach(detailsActions.onDeleteDownload)
-                                showMessage("Deleted ${chapterCount(selected.size)}")
-                            }
-
-                            SelectionDownloadMode.Download -> {
-                                val toDownload = state.chaptersToDownload
-                                if (toDownload.isNotEmpty()) {
-                                    if (selected.size == 1) detailsActions.onDownload(toDownload.first())
-                                    else selection.onBatchDownload(toDownload)
-                                    showMessage("Downloading ${chapterCount(toDownload.size)}")
-                                }
-                            }
-
-                            SelectionDownloadMode.Hidden -> Unit
-                        }
+                        val targetRead = !state.allRead
+                        val previouslyRead = selected.filter { it.url in readUrls }.map { it.url }.toSet()
+                        val affected = selected
+                        selection.onMarkAs(affected, targetRead)
                         selection.onClear()
+                        showUndo("Marked ${chapterCount(affected.size)} ${if (targetRead) "read" else "unread"}") {
+                            selection.onRestoreRead(affected, previouslyRead)
+                        }
                     }
                 ) {
-                    AnimatedContent(state.downloadMode == SelectionDownloadMode.Delete) { delete ->
-                        if (delete) Icon(Icons.Default.Delete, "Delete download")
-                        else Icon(Icons.Default.Download, "Download")
+                    AnimatedContent(state.allRead) { allRead ->
+                        if (allRead) Icon(Icons.Default.RemoveDone, "Mark unread")
+                        else Icon(Icons.Default.DoneAll, "Mark read")
                     }
                 }
-            }
 
-            VerticalDivider(Modifier.height(24.dp).padding(horizontal = 4.dp))
+                IconButton(
+                    onClick = {
+                        if (selected.isEmpty()) return@IconButton
+                        val targetBookmarked = !state.allBookmarked
+                        val previouslyBookmarked = selected.filter { it.url in bookmarkedUrls }.map { it.url }.toSet()
+                        val affected = selected
+                        selection.onSetBookmarked(affected, targetBookmarked)
+                        selection.onClear()
+                        showUndo(
+                            if (targetBookmarked) "Bookmarked ${chapterCount(affected.size)}"
+                            else "Removed bookmark from ${chapterCount(affected.size)}"
+                        ) { selection.onRestoreBookmarks(affected, previouslyBookmarked) }
+                    }
+                ) {
+                    AnimatedContent(state.allBookmarked) { allBookmarked ->
+                        if (allBookmarked) Icon(Icons.Default.BookmarkRemove, "Remove bookmark")
+                        else Icon(Icons.Outlined.BookmarkBorder, "Bookmark")
+                    }
+                }
 
-            IconButton(
-                onClick = selection.onSelectAll,
-                enabled = state.selectAllEnabled
-            ) { Icon(Icons.Default.SelectAll, "Select all") }
+                AnimatedVisibility(
+                    visible = state.downloadMode != SelectionDownloadMode.Hidden,
+                    enter = expandHorizontally() + fadeIn(),
+                    exit = shrinkHorizontally() + fadeOut()
+                ) {
+                    IconButton(
+                        onClick = {
+                            if (selected.isEmpty()) return@IconButton
+                            when (state.downloadMode) {
+                                SelectionDownloadMode.Delete -> {
+                                    selected.forEach(detailsActions.onDeleteDownload)
+                                    showMessage("Deleted ${chapterCount(selected.size)}")
+                                }
 
-            IconButton(onClick = selection.onInvert) {
-                Icon(Icons.Default.Flip, "Invert selection")
+                                SelectionDownloadMode.Download -> {
+                                    val toDownload = state.chaptersToDownload
+                                    if (toDownload.isNotEmpty()) {
+                                        if (selected.size == 1) detailsActions.onDownload(toDownload.first())
+                                        else selection.onBatchDownload(toDownload)
+                                        showMessage("Downloading ${chapterCount(toDownload.size)}")
+                                    }
+                                }
+
+                                SelectionDownloadMode.Hidden -> Unit
+                            }
+                            selection.onClear()
+                        }
+                    ) {
+                        AnimatedContent(state.downloadMode == SelectionDownloadMode.Delete) { delete ->
+                            if (delete) Icon(Icons.Default.Delete, "Delete download")
+                            else Icon(Icons.Default.Download, "Download")
+                        }
+                    }
+                }
+
+                VerticalDivider(Modifier.height(24.dp).padding(horizontal = 4.dp))
+
+                IconButton(
+                    onClick = selection.onSelectAll,
+                    enabled = state.selectAllEnabled
+                ) { Icon(Icons.Default.SelectAll, "Select all") }
+
+                IconButton(onClick = selection.onInvert) {
+                    Icon(Icons.Default.Flip, "Invert selection")
+                }
             }
         }
     }

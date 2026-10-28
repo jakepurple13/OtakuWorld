@@ -731,8 +731,8 @@ fun ChapterItem(
             colors = if (selectionMode) {
                 ListItemDefaults.colors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                    selectedContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    selectedContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                 )
             } else {
                 ListItemDefaults.colors(

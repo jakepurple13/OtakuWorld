@@ -342,12 +342,19 @@ class DetailsViewModel(
         }
     }
 
+    // Only touch chapters whose read state changes; re-inserting a read chapter resets its sync fields.
     fun markChaptersAs(chapters: List<KmpChapterModel>, read: Boolean) {
-        chapters.forEach { markAs(it, read) }
+        val readUrls = this.chapters.map { it.url }.toSet()
+        chapters
+            .filter { (it.url in readUrls) != read }
+            .forEach { markAs(it, read) }
     }
 
     fun restoreReadState(chapters: List<KmpChapterModel>, previouslyRead: Set<String>) {
-        chapters.forEach { markAs(it, it.url in previouslyRead) }
+        val readUrls = this.chapters.map { it.url }.toSet()
+        chapters
+            .filter { (it.url in readUrls) != (it.url in previouslyRead) }
+            .forEach { markAs(it, it.url in previouslyRead) }
     }
 
     fun reread() {

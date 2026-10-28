@@ -6,6 +6,7 @@ import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.programmersbox.favoritesdatabase.BlurHashDatabase
 import com.programmersbox.favoritesdatabase.BookmarkDatabase
+import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ExceptionDatabase
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.kmpmodels.ExampleService
@@ -295,6 +296,32 @@ class DetailsViewModelTest {
         }
         assertTrue(vm.chapters.any { it.url == picked[0].url })
         assertTrue(vm.chapters.none { it.url == picked[1].url })
+    }
+
+    @Test
+    fun `markChaptersAs leaves already read chapters untouched`() = runTest {
+        val vm = viewModel()
+        awaitCondition { vm.currentState is DetailState.Success }
+        val chapters = (vm.currentState as DetailState.Success).info.chapters
+        val picked = chapters.take(2)
+
+        itemDatabase.itemDao().insertChapter(
+            ChapterWatched(
+                url = picked[0].url,
+                name = picked[0].name,
+                favoriteUrl = "https://example.com/",
+                supabaseId = "synced-id",
+                createdAt = 123L,
+            )
+        )
+        awaitCondition { vm.chapters.any { it.url == picked[0].url } }
+
+        vm.markChaptersAs(picked, true)
+        awaitCondition { vm.chapters.any { it.url == picked[1].url } }
+
+        val kept = vm.chapters.first { it.url == picked[0].url }
+        assertEquals("synced-id", kept.supabaseId)
+        assertEquals(123L, kept.createdAt)
     }
 
     @Test
