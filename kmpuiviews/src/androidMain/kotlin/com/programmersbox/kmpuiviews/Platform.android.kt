@@ -57,12 +57,15 @@ import com.programmersbox.kmpuiviews.utils.openInCustomChromeBrowser
 import com.programmersbox.kmpuiviews.utils.printLogs
 import io.github.vinceglb.filekit.PlatformFile
 import io.kamel.core.ExperimentalKamelApi
+import io.kamel.core.config.DefaultHttpCacheSize
 import io.kamel.core.config.KamelConfig
+import io.kamel.core.config.httpUrlFetcher
 import io.kamel.core.config.takeFrom
 import io.kamel.image.config.Default
 import io.kamel.image.config.animatedImageDecoder
 import io.kamel.image.config.imageBitmapResizingDecoder
 import io.kamel.image.config.resourcesFetcher
+import io.ktor.client.engine.okhttp.OkHttp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import me.saket.telephoto.zoomable.rememberZoomablePeekOverlayState
@@ -138,6 +141,12 @@ actual fun customKamelConfig(): KamelConfig {
     val context = LocalContext.current
     return KamelConfig {
         takeFrom(KamelConfig.Default)
+        // Kamel's default fetcher resolves Ktor's Android (HttpURLConnection) engine. Since Ktor 3.5,
+        // cancelling a load closes that stream on the cancelling (main) thread while an IO thread is
+        // still reading it, which crashes with "Unbalanced enter/exit". OkHttp closes on its reader.
+        httpUrlFetcher(OkHttp.create()) {
+            httpCache(DefaultHttpCacheSize)
+        }
         imageBitmapResizingDecoder()
         animatedImageDecoder()
         resourcesFetcher(context)

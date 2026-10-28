@@ -168,6 +168,7 @@ kotlin {
                 implementation(commonLibs.heatmap)
                 implementation(commonLibs.kamel.decoder.image.bitmap.resizing)
                 implementation(commonLibs.ktorAndroid)
+                implementation(commonLibs.ktorOkHttp)
                 implementation(androidx.browser.browser)
                 implementation(androidLibs.androidBrowserHelper)
                 implementation(project.dependencies.platform(androidLibs.firebasePlatform))
