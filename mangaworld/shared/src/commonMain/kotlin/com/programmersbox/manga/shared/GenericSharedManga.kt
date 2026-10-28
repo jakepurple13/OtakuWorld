@@ -133,6 +133,8 @@ abstract class GenericSharedManga(
         mangaDownloadManager.downloadChapter(model, infoModel.title.ifBlank { infoModel.url })
     }
 
+    override val supportsBatchDownload: Boolean get() = true
+
     override fun batchDownloadChapters(
         chapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,
