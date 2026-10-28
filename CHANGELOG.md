@@ -112,6 +112,10 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   where you can try hidden gestures. The tips also live under Settings › Discover, and each app
   adds its own (MangaWorld reader, AnimeWorld player, NovelWorld reader)
   ([#2627](https://github.com/jakepurple13/OtakuWorld/pull/2627))
+- Details screen chapter multi-select: long-press a chapter to start selecting, then mark as read
+  or unread, bookmark, download or delete downloads, select all, or invert the selection from a
+  floating toolbar. Read and Share appear when one chapter is selected. Marking and bookmarking can
+  be undone from the snackbar ([#2641](https://github.com/jakepurple13/OtakuWorld/pull/2641))
 
 #### Improvements
 
@@ -172,6 +176,9 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   ([#2509](https://github.com/jakepurple13/OtakuWorld/pull/2509))
 - Custom server sync ([0e723f117](https://github.com/jakepurple13/OtakuWorld/commit/0e723f117))
 - In-app WebView screen ([d3843280b](https://github.com/jakepurple13/OtakuWorld/commit/d3843280b))
+- Details screen: the Mark As drawer, the Batch Download sheet, and the chapter long-press options
+  sheet, replaced by chapter multi-select
+  ([#2641](https://github.com/jakepurple13/OtakuWorld/pull/2641))
 
 ### Android Only
 
