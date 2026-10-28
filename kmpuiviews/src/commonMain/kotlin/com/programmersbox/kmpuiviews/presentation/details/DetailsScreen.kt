@@ -21,6 +21,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -341,6 +345,7 @@ data class DetailsActions(
     val rereadClick: () -> Unit,
     val bookmarkChapter: (KmpChapterModel) -> Unit = {},
     val bookmarkedChapterUrls: Set<String> = emptySet(),
+    val selection: ChapterSelectionActions = ChapterSelectionActions(),
 )
 
 @OptIn(
@@ -527,9 +532,13 @@ fun ChapterItem(
     swipeBehavior: DetailsChapterSwipeBehaviorHandle,
     detailsActions: DetailsActions,
     downloadUiState: ChapterDownloadUiState = ChapterDownloadUiState.None,
+    selectionMode: Boolean = false,
+    isSelected: Boolean = false,
+    onToggleSelection: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
+    val haptic = LocalHapticFeedback.current
     val hasBeenRead by remember(read) { derivedStateOf { read.fastAny { it.url == c.url } } }
     val updatedIsRead by rememberUpdatedState(hasBeenRead)
     val updatedAnimated = updateTransition(updatedIsRead)
@@ -558,8 +567,8 @@ fun ChapterItem(
                 dismissState.reset()
             }
         },
-        enableDismissFromEndToStart = swipeBehavior.detailsChapterSwipeBehaviorEndToStart != DetailsChapterSwipeBehavior.Nothing,
-        enableDismissFromStartToEnd = swipeBehavior.detailsChapterSwipeBehaviorStartToEnd != DetailsChapterSwipeBehavior.Nothing,
+        enableDismissFromEndToStart = !selectionMode && swipeBehavior.detailsChapterSwipeBehaviorEndToStart != DetailsChapterSwipeBehavior.Nothing,
+        enableDismissFromStartToEnd = !selectionMode && swipeBehavior.detailsChapterSwipeBehaviorStartToEnd != DetailsChapterSwipeBehavior.Nothing,
         backgroundContent = {
             val direction = dismissState.dismissDirection
             val alignment = when (direction) {
@@ -628,18 +637,26 @@ fun ChapterItem(
         modifier = modifier.fillMaxWidth()
     ) {
         ListItem(
-            onClick = { detailsActions.onClick(c) },
-            onLongClick = {},
+            onClick = { if (selectionMode) onToggleSelection() else detailsActions.onClick(c) },
+            onLongClick = {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                onToggleSelection()
+            },
             leadingContent = {
-                updatedAnimated.AnimatedVisibility(
-                    { !it },
-                    enter = fadeIn() + expandHorizontally(),
-                    exit = fadeOut() + shrinkHorizontally()
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(12.dp)
-                            .background(MaterialTheme.colorScheme.primary, CircleShape)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    AnimatedVisibility(
+                        visible = selectionMode,
+                        enter = fadeIn() + expandHorizontally(),
+                        exit = fadeOut() + shrinkHorizontally()
+                    ) {
+                        ChapterSelectionIndicator(
+                            isSelected = isSelected,
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                    }
+                    ChapterUnreadDot(
+                        transition = updatedAnimated,
+                        size = if (selectionMode) 6.dp else 12.dp
                     )
                 }
             },
@@ -676,26 +693,43 @@ fun ChapterItem(
 
                         ChapterDownloadUiState.None -> {}
                     }
-                    IconButton(onClick = { detailsActions.bookmarkChapter(c) }) {
-                        Icon(
-                            imageVector = if (isBookmarked) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
-                            contentDescription = if (isBookmarked) "Remove bookmark" else "Bookmark chapter",
-                            tint = if (isBookmarked) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    IconButton(onClick = { detailsActions.shareChapter(c) }) {
-                        Icon(Icons.Default.Share, null)
+                    AnimatedVisibility(
+                        visible = !selectionMode,
+                        enter = fadeIn() + expandHorizontally(),
+                        exit = fadeOut() + shrinkHorizontally()
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            IconButton(onClick = { detailsActions.bookmarkChapter(c) }) {
+                                Icon(
+                                    imageVector = if (isBookmarked) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
+                                    contentDescription = if (isBookmarked) "Remove bookmark" else "Bookmark chapter",
+                                    tint = if (isBookmarked) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                            IconButton(onClick = { detailsActions.shareChapter(c) }) {
+                                Icon(Icons.Default.Share, null)
+                            }
+                        }
                     }
                 }
             },
-            selected = !updatedIsRead,
-            colors = ListItemDefaults.colors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainer,
-            ),
+            selected = if (selectionMode) isSelected else !updatedIsRead,
+            colors = if (selectionMode) {
+                ListItemDefaults.colors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                    selectedContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                )
+            } else {
+                ListItemDefaults.colors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                )
+            },
             modifier = Modifier
                 .wrapContentHeight()
                 .fillMaxWidth()
+                .semantics { selected = selectionMode && isSelected }
         )
     }
 }
