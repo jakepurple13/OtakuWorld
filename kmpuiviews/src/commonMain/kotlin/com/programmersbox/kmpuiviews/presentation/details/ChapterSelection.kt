@@ -289,7 +289,8 @@ fun ChapterSelectionToolbarHost(
     ) {
         HorizontalFloatingToolbar(
             expanded = true,
-            colors = FloatingToolbarDefaults.vibrantFloatingToolbarColors(),
+            // Border keeps the toolbar distinct from the chapter rows under any cover-derived palette.
+            modifier = Modifier.border(1.dp, MaterialTheme.colorScheme.outline, CircleShape),
         ) {
             // Scrolls sideways when every action doesn't fit (e.g. single selection on narrow phones).
             Row(
