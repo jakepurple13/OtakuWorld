@@ -116,6 +116,9 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   or unread, bookmark, download or delete downloads, select all, or invert the selection from a
   floating toolbar. Read and Share appear when one chapter is selected. Marking and bookmarking can
   be undone from the snackbar ([#2641](https://github.com/jakepurple13/OtakuWorld/pull/2641))
+- Details screen transition: opening an item from a cover or list row flies its cover and title
+  into the Details header, and back on return. Details then fills in as a short cascade, with the
+  cover's colors applied first ([#2643](https://github.com/jakepurple13/OtakuWorld/pull/2643))
 
 #### Improvements
 
@@ -134,6 +137,9 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   ([#2570](https://github.com/jakepurple13/OtakuWorld/pull/2570))
 - Details header animates size changes
   ([b31f12b7f](https://github.com/jakepurple13/OtakuWorld/commit/b31f12b7f))
+- Details screen opens faster: the cover shows right away from the screen you came from, its
+  colors are worked out in the background, and the colors stay when you rotate
+  ([#2643](https://github.com/jakepurple13/OtakuWorld/pull/2643))
 - AI chat input moved to the bottom bar and handles the keyboard correctly
   ([#2522](https://github.com/jakepurple13/OtakuWorld/pull/2522))
 - Sensitive settings now use encrypted DataStore (Google Tink)
