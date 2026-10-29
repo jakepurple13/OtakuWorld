@@ -1,16 +1,11 @@
 package com.programmersbox.kmpuiviews.presentation.details
 
 
-import kotlinx.coroutines.delay
+import com.materialkolor.PaletteStyle
 import androidx.compose.animation.core.tween
 import com.materialkolor.material3.ktx.animateColorScheme
 import androidx.compose.ui.graphics.painter.BitmapPainter
-import kotlinx.coroutines.withTimeoutOrNull
-import kotlinx.coroutines.flow.first
 import androidx.compose.ui.graphics.Color
-import androidx.compose.runtime.snapshotFlow
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.updateTransition
@@ -78,7 +73,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
@@ -221,9 +215,8 @@ private fun DetailsScreenInternal(
     val currentColorScheme = MaterialTheme.colorScheme
     // Start from the scheme built before a rotation so the palette doesn't drop out and animate back in
     val cachedScheme = details.colorScheme?.takeIf { it.first == schemeInputs }?.second
-    var appliedSchemeInputs by remember { mutableStateOf(schemeInputs.takeIf { cachedScheme != null }) }
     val dynamicColorScheme by produceState(cachedScheme ?: currentColorScheme, schemeInputs) {
-        if (appliedSchemeInputs == schemeInputs) return@produceState
+        if (cachedScheme != null) return@produceState
         value = withContext(Dispatchers.Default) {
             dynamicColorScheme(
                 seedColor = schemeInputs.seedColor,
@@ -233,29 +226,6 @@ private fun DetailsScreenInternal(
             )
         }
         details.colorScheme = schemeInputs to value
-        appliedSchemeInputs = schemeInputs
-    }
-    // Updated state so the reveal below sees the palette arrive, not the value from when it started
-    val paletteApplied by rememberUpdatedState(
-        !usePalette || (details.palette != null && appliedSchemeInputs == schemeInputs)
-    )
-
-    // Build the loaded screen one stage per frame instead of all in one long frame. The palette goes
-    // first, while only the cover and title are showing, so every stage fades in already in its colors
-    var revealStage by rememberSaveable { mutableIntStateOf(0) }
-    // Restored already revealed (rotation): show everything without replaying the fades
-    val revealAnimates = remember { revealStage < DetailsRevealStage.All }
-    val loaded = contentTransition.targetState is DetailState.Success
-    LaunchedEffect(loaded) {
-        if (!loaded || revealStage >= DetailsRevealStage.All) return@LaunchedEffect
-        // Don't hold the screen for a slow cover; the palette switches in whenever it arrives
-        withTimeoutOrNull(PaletteWaitMillis) { snapshotFlow { paletteApplied }.first { it } }
-        while (revealStage < DetailsRevealStage.All) {
-            // Each stage gets its own frame, and a short gap so the cascade reads on fast devices too
-            withFrameNanos { }
-            delay(RevealStageGapMillis)
-            revealStage++
-        }
     }
 
     val shareChapter by handling.rememberShareChapter()
@@ -269,163 +239,158 @@ private fun DetailsScreenInternal(
             dynamicColorScheme
         }
     ) {
-        CompositionLocalProvider(
-            LocalDetailsRevealStage provides revealStage,
-            LocalDetailsRevealAnimates provides revealAnimates,
-        ) {
-            contentTransition.AnimatedContent(
-                transitionSpec = {
-                    when (val state = targetState) {
-                        is DetailState.Success if state.info == (initialState as? DetailState.Success)?.info -> {
-                            EnterTransition.None togetherWith ExitTransition.None
-                        }
-
-                        // Both headers show the same cover; keep the loading one opaque underneath so the
-                        // cover doesn't dip dark halfway through the crossfade
-                        is DetailState.Success if initialState is DetailState.Loading -> {
-                            fadeIn() togetherWith ExitTransition.KeepUntilTransitionsFinished
-                        }
-
-                        else -> fadeIn() togetherWith fadeOut()
+        contentTransition.AnimatedContent(
+            transitionSpec = {
+                when (val state = targetState) {
+                    is DetailState.Success if state.info == (initialState as? DetailState.Success)?.info -> {
+                        EnterTransition.None togetherWith ExitTransition.None
                     }
-                },
-                contentKey = {
-                    when (it) {
-                        is DetailState.Success -> it.info
-                        else -> it
+
+                    // Both headers show the same cover; keep the loading one opaque underneath so the
+                    // cover doesn't dip dark halfway through the crossfade
+                    is DetailState.Success if initialState is DetailState.Loading -> {
+                        fadeIn() togetherWith ExitTransition.KeepUntilTransitionsFinished
                     }
+
+                    else -> fadeIn() togetherWith fadeOut()
                 }
-            ) { target ->
-                when (target) {
-                    is DetailState.Error -> {
-                        DetailError(
-                            details = details,
-                            state = target
-                        )
-                    }
+            },
+            contentKey = {
+                when (it) {
+                    is DetailState.Success -> it.info
+                    else -> it
+                }
+            }
+        ) { target ->
+            when (target) {
+                is DetailState.Error -> {
+                    DetailError(
+                        details = details,
+                        state = target
+                    )
+                }
 
-                    DetailState.Loading -> {
-                        DetailLoading(
-                            details = details
-                        )
-                    }
+                DetailState.Loading -> {
+                    DetailLoading(
+                        details = details
+                    )
+                }
 
-                    is DetailState.Success -> {
-                        val infoModel = target.info
+                is DetailState.Success -> {
+                    val infoModel = target.info
 
-                        suspend fun insertRecent() {
-                            if (
-                                favoritesRepository.isIncognito(infoModel.source.serviceName) ||
-                                favoritesRepository.isIncognito(infoModel.url)
-                            ) return
+                    suspend fun insertRecent() {
+                        if (
+                            favoritesRepository.isIncognito(infoModel.source.serviceName) ||
+                            favoritesRepository.isIncognito(infoModel.url)
+                        ) return
 
-                            historyDao.insertRecentlyViewed(
-                                RecentModel(
-                                    title = infoModel.title,
-                                    url = infoModel.url,
-                                    imageUrl = infoModel.imageUrl,
-                                    description = infoModel.description,
-                                    source = infoModel.source.serviceName,
-                                    timestamp = Clock.System.now().toEpochMilliseconds()
-                                )
+                        historyDao.insertRecentlyViewed(
+                            RecentModel(
+                                title = infoModel.title,
+                                url = infoModel.url,
+                                imageUrl = infoModel.imageUrl,
+                                description = infoModel.description,
+                                source = infoModel.source.serviceName,
+                                timestamp = Clock.System.now().toEpochMilliseconds()
                             )
+                        )
 
-                            val save = dataStoreHandling.historySave.get()
-                            if (save != -1) historyDao.removeOldData(save)
-                        }
+                        val save = dataStoreHandling.historySave.get()
+                        if (save != -1) historyDao.removeOldData(save)
+                    }
 
-                        DetailContent(
-                            dao = dao,
-                            details = details,
-                            state = target,
-                            windowSize = windowSize,
-                            shareChapter = shareChapter,
-                            showDownload = showDownload,
-                            detailsActions = DetailsActions(
-                                onClick = { model ->
-                                    scope.launch(Dispatchers.IO) {
-                                        genericInfo.chapterOnClick(model, target.info.chapters, infoModel, navActions)
-                                        insertRecent()
-                                        heatMapDao.upsertHeatMap()
-                                    }
-                                },
-                                onDownload = { model ->
-                                    genericInfo.downloadChapter(model, target.info.chapters, infoModel, navActions)
-                                    scope.launch(Dispatchers.IO) { insertRecent() }
-                                },
-                                onDeleteDownload = { model ->
-                                    genericInfo.deleteDownloadedChapter(model, infoModel)
-                                },
-                                shareChapter = {
-                                    scope.launch {
-                                        qrCodeRepository.shareUrl(
-                                            url = it.url,
-                                            title = it.name
-                                        )
-                                    }
-                                },
-                                markAsRead = { model, read -> details.markAs(model, read) },
-                                favoriteAction = { details.favoriteAction(target.action) },
-                                notifyChange = { details.toggleNotify() },
-                                globalSearch = { navActions.globalSearch(infoModel.title) },
-                                addToList = { item ->
-                                    listDao.addToList(
-                                        item.item.uuid,
-                                        infoModel.title,
-                                        infoModel.description,
-                                        infoModel.url,
-                                        infoModel.imageUrl,
-                                        infoModel.source.serviceName
+                    DetailContent(
+                        dao = dao,
+                        details = details,
+                        state = target,
+                        windowSize = windowSize,
+                        shareChapter = shareChapter,
+                        showDownload = showDownload,
+                        detailsActions = DetailsActions(
+                            onClick = { model ->
+                                scope.launch(Dispatchers.IO) {
+                                    genericInfo.chapterOnClick(model, target.info.chapters, infoModel, navActions)
+                                    insertRecent()
+                                    heatMapDao.upsertHeatMap()
+                                }
+                            },
+                            onDownload = { model ->
+                                genericInfo.downloadChapter(model, target.info.chapters, infoModel, navActions)
+                                scope.launch(Dispatchers.IO) { insertRecent() }
+                            },
+                            onDeleteDownload = { model ->
+                                genericInfo.deleteDownloadedChapter(model, infoModel)
+                            },
+                            shareChapter = {
+                                scope.launch {
+                                    qrCodeRepository.shareUrl(
+                                        url = it.url,
+                                        title = it.name
                                     )
-                                },
-                                addToSaved = {
-                                    scope.launch(Dispatchers.IO) {
-                                        dao.insertNotification(
-                                            NotificationItem(
-                                                id = infoModel.hashCode(),
-                                                url = infoModel.url,
-                                                summaryText = getString(
-                                                    Res.string.hadAnUpdate,
-                                                    infoModel.title,
-                                                    infoModel.chapters.firstOrNull()?.name.orEmpty()
-                                                ),
-                                                notiTitle = infoModel.title,
-                                                imageUrl = infoModel.imageUrl,
-                                                source = infoModel.source.serviceName,
-                                                contentTitle = infoModel.title
-                                            )
-                                        )
-                                    }
-                                },
-                                removeFromSaved = {
-                                    scope.launch(Dispatchers.IO) {
-                                        dao.getNotificationItemFlow(infoModel.url)
-                                            .firstOrNull()
-                                            ?.let {
-                                                dao.deleteNotification(it)
-                                                notificationRepository.cancelNotification(it)
-                                            }
-                                    }
-                                },
-                                rereadClick = details::reread,
-                                bookmarkChapter = { details.toggleBookmark(it) },
-                                bookmarkedChapterUrls = details.bookmarkedChapterUrls,
-                                selection = ChapterSelectionActions(
-                                    selectedUrls = details.selectedChapterUrls,
-                                    onToggle = details::toggleSelection,
-                                    onSelectAll = details::selectAllChapters,
-                                    onInvert = details::invertSelection,
-                                    onClear = details::clearSelection,
-                                    onMarkAs = details::markChaptersAs,
-                                    onRestoreRead = details::restoreReadState,
-                                    onSetBookmarked = details::setBookmarked,
-                                    onRestoreBookmarks = details::restoreBookmarkState,
-                                    onBatchDownload = { genericInfo.batchDownloadChapters(it, infoModel) },
-                                    supportsBatchDownload = genericInfo.supportsBatchDownload,
+                                }
+                            },
+                            markAsRead = { model, read -> details.markAs(model, read) },
+                            favoriteAction = { details.favoriteAction(target.action) },
+                            notifyChange = { details.toggleNotify() },
+                            globalSearch = { navActions.globalSearch(infoModel.title) },
+                            addToList = { item ->
+                                listDao.addToList(
+                                    item.item.uuid,
+                                    infoModel.title,
+                                    infoModel.description,
+                                    infoModel.url,
+                                    infoModel.imageUrl,
+                                    infoModel.source.serviceName
                                 )
+                            },
+                            addToSaved = {
+                                scope.launch(Dispatchers.IO) {
+                                    dao.insertNotification(
+                                        NotificationItem(
+                                            id = infoModel.hashCode(),
+                                            url = infoModel.url,
+                                            summaryText = getString(
+                                                Res.string.hadAnUpdate,
+                                                infoModel.title,
+                                                infoModel.chapters.firstOrNull()?.name.orEmpty()
+                                            ),
+                                            notiTitle = infoModel.title,
+                                            imageUrl = infoModel.imageUrl,
+                                            source = infoModel.source.serviceName,
+                                            contentTitle = infoModel.title
+                                        )
+                                    )
+                                }
+                            },
+                            removeFromSaved = {
+                                scope.launch(Dispatchers.IO) {
+                                    dao.getNotificationItemFlow(infoModel.url)
+                                        .firstOrNull()
+                                        ?.let {
+                                            dao.deleteNotification(it)
+                                            notificationRepository.cancelNotification(it)
+                                        }
+                                }
+                            },
+                            rereadClick = details::reread,
+                            bookmarkChapter = { details.toggleBookmark(it) },
+                            bookmarkedChapterUrls = details.bookmarkedChapterUrls,
+                            selection = ChapterSelectionActions(
+                                selectedUrls = details.selectedChapterUrls,
+                                onToggle = details::toggleSelection,
+                                onSelectAll = details::selectAllChapters,
+                                onInvert = details::invertSelection,
+                                onClear = details::clearSelection,
+                                onMarkAs = details::markChaptersAs,
+                                onRestoreRead = details::restoreReadState,
+                                onSetBookmarked = details::setBookmarked,
+                                onRestoreBookmarks = details::restoreBookmarkState,
+                                onBatchDownload = { genericInfo.batchDownloadChapters(it, infoModel) },
+                                supportsBatchDownload = genericInfo.supportsBatchDownload,
                             )
                         )
-                    }
+                    )
                 }
             }
         }
@@ -852,8 +817,10 @@ fun ChapterItem(
     }
 }
 
-/** How long the loaded screen waits for the cover palette before revealing without it */
-private const val PaletteWaitMillis = 300L
-
-/** Minimum time between reveal stages */
-private const val RevealStageGapMillis = 70L
+/** What a Details color scheme is built from; the ViewModel caches the last scheme by these */
+internal data class SchemeInputs(
+    val seedColor: Color,
+    val isDark: Boolean,
+    val isAmoled: Boolean,
+    val style: PaletteStyle,
+)

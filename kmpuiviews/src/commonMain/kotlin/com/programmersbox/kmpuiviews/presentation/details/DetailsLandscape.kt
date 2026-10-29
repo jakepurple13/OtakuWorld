@@ -1,6 +1,5 @@
 package com.programmersbox.kmpuiviews.presentation.details
 
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.togetherWith
 import androidx.compose.animation.slideInVertically
@@ -297,7 +296,6 @@ private fun DetailsLandscapeContent(
 ) {
     val scope = rememberCoroutineScope()
     val readUrls = remember(chapters) { chapters.mapTo(HashSet()) { it.url } }
-    val revealStage = LocalDetailsRevealStage.current
     val dao = LocalItemDao.current
     var showLists by remember { mutableStateOf(false) }
 
@@ -452,34 +450,32 @@ private fun DetailsLandscapeContent(
                     contentPadding = PaddingValues(bottom = if (isSelecting) SelectionToolbarListPadding else 0.dp),
                     state = listState
                 ) {
-                    if (revealStage >= DetailsRevealStage.Chapters) {
-                        stickyHeader {
-                            ChapterListHeader(
-                                scope = scope,
-                                reverseChapters = reverseChapters,
-                                onReverseChaptersClick = onReverse,
-                                bottomPadding = 0,
-                                listState = listState,
-                                listOfChapters = listOfChapters,
-                                chapters = chapters,
-                                detailsActions = detailsActions
-                            )
-                        }
-                        itemsIndexed(listOfChapters) { index, c ->
-                            ChapterItem(
-                                c = c,
-                                readUrls = readUrls,
-                                isBookmarked = c.url in detailsActions.bookmarkedChapterUrls,
-                                showDownload = showDownloadButton,
-                                detailsActions = detailsActions,
-                                swipeBehavior = swipeBehavior,
-                                downloadUiState = downloadStates[c.url] ?: ChapterDownloadUiState.None,
-                                selectionMode = isSelecting,
-                                isSelected = c.url in selection.selectedUrls,
-                                onToggleSelection = { selection.onToggle(c.url) },
-                                modifier = Modifier.animateItem(fadeInSpec = chapterRevealFade(index))
-                            )
-                        }
+                    stickyHeader {
+                        ChapterListHeader(
+                            scope = scope,
+                            reverseChapters = reverseChapters,
+                            onReverseChaptersClick = onReverse,
+                            bottomPadding = 0,
+                            listState = listState,
+                            listOfChapters = listOfChapters,
+                            chapters = chapters,
+                            detailsActions = detailsActions
+                        )
+                    }
+                    items(listOfChapters) { c ->
+                        ChapterItem(
+                            c = c,
+                            readUrls = readUrls,
+                            isBookmarked = c.url in detailsActions.bookmarkedChapterUrls,
+                            showDownload = showDownloadButton,
+                            detailsActions = detailsActions,
+                            swipeBehavior = swipeBehavior,
+                            downloadUiState = downloadStates[c.url] ?: ChapterDownloadUiState.None,
+                            selectionMode = isSelecting,
+                            isSelected = c.url in selection.selectedUrls,
+                            onToggleSelection = { selection.onToggle(c.url) },
+                            modifier = Modifier.animateItem()
+                        )
                     }
                 }
 

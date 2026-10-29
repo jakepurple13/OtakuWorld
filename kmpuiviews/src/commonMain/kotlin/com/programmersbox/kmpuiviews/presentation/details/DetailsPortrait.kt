@@ -1,7 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.details
 
 
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.togetherWith
 import androidx.compose.animation.slideInVertically
@@ -116,7 +115,6 @@ fun DetailsView(
     downloadStates: Map<String, ChapterDownloadUiState>,
 ) {
     val readUrls = remember(chapters) { chapters.mapTo(HashSet()) { it.url } }
-    val revealStage = LocalDetailsRevealStage.current
     val dao = LocalItemDao.current
     val genericInfo = koinInject<KmpGenericInfo>()
     val navController = LocalNavActions.current
@@ -250,53 +248,49 @@ fun DetailsView(
             }
         },
         floatingActionButton = {
-            if (revealStage >= DetailsRevealStage.Chapters) {
-                DetailFloatingActionButtonMenu(
-                    navController = navController,
-                    isVisible = fabVisible && !isSelecting,
-                    onShowLists = { showLists = true },
-                    info = info,
-                    removeFromSaved = {
-                        scope.launch(Dispatchers.IO) {
-                            dao.getNotificationItemFlow(info.url)
-                                .firstOrNull()
-                                ?.let {
-                                    dao.deleteNotification(it)
-                                    notificationRepository.cancelNotification(it)
-                                }
-                        }
-                    },
-                    isSaved = isSaved,
-                    addToSaved = {
-                        scope.launch(Dispatchers.IO) {
-                            dao.insertNotification(
-                                NotificationItem(
-                                    id = info.hashCode(),
-                                    url = info.url,
-                                    summaryText = getString(
-                                        Res.string.hadAnUpdate,
-                                        info.title,
-                                        info.chapters.firstOrNull()?.name.orEmpty()
-                                    ),
-                                    notiTitle = info.title,
-                                    imageUrl = info.imageUrl,
-                                    source = info.source.serviceName,
-                                    contentTitle = info.title
-                                )
+            DetailFloatingActionButtonMenu(
+                navController = navController,
+                isVisible = fabVisible && !isSelecting,
+                onShowLists = { showLists = true },
+                info = info,
+                removeFromSaved = {
+                    scope.launch(Dispatchers.IO) {
+                        dao.getNotificationItemFlow(info.url)
+                            .firstOrNull()
+                            ?.let {
+                                dao.deleteNotification(it)
+                                notificationRepository.cancelNotification(it)
+                            }
+                    }
+                },
+                isSaved = isSaved,
+                addToSaved = {
+                    scope.launch(Dispatchers.IO) {
+                        dao.insertNotification(
+                            NotificationItem(
+                                id = info.hashCode(),
+                                url = info.url,
+                                summaryText = getString(
+                                    Res.string.hadAnUpdate,
+                                    info.title,
+                                    info.chapters.firstOrNull()?.name.orEmpty()
+                                ),
+                                notiTitle = info.title,
+                                imageUrl = info.imageUrl,
+                                source = info.source.serviceName,
+                                contentTitle = info.title
                             )
-                        }
-                    },
-                    canNotify = canNotify,
-                    notifyAction = detailsActions.notifyChange,
-                    isFavorite = isFavorite,
-                    onFavoriteClick = { detailsActions.favoriteAction() },
-                    fabMenuExpanded = fabMenuExpanded,
-                    onFabMenuExpandedChange = { fabMenuExpanded = it },
-                    modifier = Modifier
-                        .padding(LocalNavHostPadding.current)
-                        .revealFade()
-                )
-            }
+                        )
+                    }
+                },
+                canNotify = canNotify,
+                notifyAction = detailsActions.notifyChange,
+                isFavorite = isFavorite,
+                onFavoriteClick = { detailsActions.favoriteAction() },
+                fabMenuExpanded = fabMenuExpanded,
+                onFabMenuExpandedChange = { fabMenuExpanded = it },
+                modifier = Modifier.padding(LocalNavHostPadding.current)
+            )
         },
         snackbarHost = {
             SnackbarHost(hostState) { data ->
@@ -341,9 +335,9 @@ fun DetailsView(
                 )
             }
 
-            if (info.description.isNotEmpty() && revealStage >= DetailsRevealStage.Info) {
+            if (info.description.isNotEmpty()) {
                 item {
-                    Box(Modifier.revealFade()) {
+                    Box {
                         val progress = remember { mutableStateOf(false) }
 
                         Text(
@@ -374,40 +368,36 @@ fun DetailsView(
                 }
             }
 
-            if (revealStage >= DetailsRevealStage.Chapters) {
-                stickyHeader {
-                    Box(Modifier.revealFade()) {
-                        ChapterListHeader(
-                            scope = scope,
-                            reverseChapters = reverseChapters,
-                            onReverseChaptersClick = { reverseChapters = it },
-                            bottomPadding = bottomPadding,
-                            listState = listState,
-                            listOfChapters = listOfChapters,
-                            chapters = chapters,
-                            detailsActions = detailsActions
-                        )
-                    }
-                }
+            stickyHeader {
+                ChapterListHeader(
+                    scope = scope,
+                    reverseChapters = reverseChapters,
+                    onReverseChaptersClick = { reverseChapters = it },
+                    bottomPadding = bottomPadding,
+                    listState = listState,
+                    listOfChapters = listOfChapters,
+                    chapters = chapters,
+                    detailsActions = detailsActions
+                )
+            }
 
-                itemsIndexed(
-                    listOfChapters,
-                    key = { _, c -> c.url + c.name }
-                ) { index, c ->
-                    ChapterItem(
-                        c = c,
-                        readUrls = readUrls,
-                        isBookmarked = c.url in detailsActions.bookmarkedChapterUrls,
-                        detailsActions = detailsActions,
-                        showDownload = showDownloadButton,
-                        swipeBehavior = swipeBehavior,
-                        downloadUiState = downloadStates[c.url] ?: ChapterDownloadUiState.None,
-                        selectionMode = isSelecting,
-                        isSelected = c.url in selection.selectedUrls,
-                        onToggleSelection = { selection.onToggle(c.url) },
-                        modifier = Modifier.animateItem(fadeInSpec = chapterRevealFade(index))
-                    )
-                }
+            items(
+                listOfChapters,
+                key = { it.url + it.name }
+            ) { c ->
+                ChapterItem(
+                    c = c,
+                    readUrls = readUrls,
+                    isBookmarked = c.url in detailsActions.bookmarkedChapterUrls,
+                    detailsActions = detailsActions,
+                    showDownload = showDownloadButton,
+                    swipeBehavior = swipeBehavior,
+                    downloadUiState = downloadStates[c.url] ?: ChapterDownloadUiState.None,
+                    selectionMode = isSelecting,
+                    isSelected = c.url in selection.selectedUrls,
+                    onToggleSelection = { selection.onToggle(c.url) },
+                    modifier = Modifier.animateItem()
+                )
             }
         }
         Box(Modifier.padding(modifiedPaddingValues)) {

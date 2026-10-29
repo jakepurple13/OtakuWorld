@@ -117,8 +117,8 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   floating toolbar. Read and Share appear when one chapter is selected. Marking and bookmarking can
   be undone from the snackbar ([#2641](https://github.com/jakepurple13/OtakuWorld/pull/2641))
 - Details screen transition: opening an item from a cover or list row flies its cover and title
-  into the Details header, and back on return. Details then fills in as a short cascade, with the
-  cover's colors applied first ([#2643](https://github.com/jakepurple13/OtakuWorld/pull/2643))
+  into the Details header, and back on return
+  ([#2643](https://github.com/jakepurple13/OtakuWorld/pull/2643))
 
 #### Improvements
 

@@ -71,6 +71,7 @@ import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3place
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
+import com.programmersbox.kmpuiviews.utils.composables.modifiers.fadeInAnimation
 import com.programmersbox.kmpuiviews.utils.composables.modifiers.scaleRotateOffsetReset
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuImageElement
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.SharedItemKey
@@ -226,13 +227,10 @@ internal fun DetailsHeader(
                         .padding(start = 12.dp)
                         .animateContentSize()
                 ) {
-                    if (isRevealed(DetailsRevealStage.Header)) {
-                        Text(
-                            model.source.displayName,
-                            style = MaterialTheme.typography.labelSmall,
-                            modifier = Modifier.revealFade()
-                        )
-                    }
+                    Text(
+                        model.source.displayName,
+                        style = MaterialTheme.typography.labelSmall,
+                    )
 
                     var descriptionVisibility by remember { mutableStateOf(false) }
                     val clipboard = LocalClipboardManager.current
@@ -259,62 +257,53 @@ internal fun DetailsHeader(
                             .fillMaxWidth(),
                     )
 
-                    if (isRevealed(DetailsRevealStage.Header)) {
-                        Crossfade(
-                            targetState = isFavorite,
-                            label = "",
-                            modifier = Modifier.revealFade()
-                        ) { target ->
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .clip(MaterialTheme.shapes.medium)
-                                    .clickable(
-                                        interactionSource = null,
-                                        indication = ripple()
-                                    ) { favoriteClick(isFavorite) }
-                                    .padding(4.dp)
-                                    .semantics(true) {}
-                                    .fillMaxWidth()
-                            ) {
-                                Icon(
-                                    if (target) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Text(
-                                    stringResource(if (target) Res.string.removeFromFavorites else Res.string.addToFavorites),
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontSize = 16.sp,
-                                )
-                            }
+                    Crossfade(targetState = isFavorite, label = "") { target ->
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .clip(MaterialTheme.shapes.medium)
+                                .clickable(
+                                    interactionSource = null,
+                                    indication = ripple()
+                                ) { favoriteClick(isFavorite) }
+                                .padding(4.dp)
+                                .semantics(true) {}
+                                .fillMaxWidth()
+                        ) {
+                            Icon(
+                                if (target) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Text(
+                                stringResource(if (target) Res.string.removeFromFavorites else Res.string.addToFavorites),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontSize = 16.sp,
+                            )
                         }
-
-                        Text(
-                            stringResource(Res.string.chapter_count, model.chapters.size),
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.revealFade()
-                        )
                     }
+
+                    Text(
+                        stringResource(Res.string.chapter_count, model.chapters.size),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
                 }
             }
 
-            if (isRevealed(DetailsRevealStage.Info)) {
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-                ) {
-                    model.genres.forEach {
-                        AssistChip(
-                            onClick = {},
-                            modifier = Modifier.revealFade(),
-                            label = { Text(it) }
-                        )
-                    }
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+            ) {
+                model.genres.forEach {
+                    AssistChip(
+                        onClick = {},
+                        modifier = Modifier.fadeInAnimation(),
+                        label = { Text(it) }
+                    )
                 }
-                possibleDescription()
             }
+            possibleDescription()
         }
     }
 }
