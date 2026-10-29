@@ -30,13 +30,16 @@ import com.programmersbox.kmpuiviews.utils.composables.modifiers.bounceClick
 import com.programmersbox.kmpuiviews.utils.composables.modifiers.combineClickableWithIndication
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuImageElement
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuTitleElement
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.SharedItemKey
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.customSharedElement
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.rememberCoverHandoff
 import com.programmersbox.kmpuiviews.zoomOverlay
 
 @Composable
 fun M3CoverCard(
     imageUrl: String,
     name: String,
+    sharedItemKey: SharedItemKey? = null,
     placeHolder: @Composable () -> Painter,
     modifier: Modifier = Modifier,
     error: @Composable () -> Painter = placeHolder,
@@ -46,11 +49,17 @@ fun M3CoverCard(
     colorFilter: ColorFilter? = null,
     onClick: () -> Unit = {},
 ) {
+    val coverHandoff = rememberCoverHandoff(sharedItemKey)
+    val onCardClick = {
+        coverHandoff.handOff()
+        onClick()
+    }
+
     @Composable
     fun CustomSurface(modifier: Modifier, tonalElevation: Dp, shape: Shape, content: @Composable () -> Unit) {
         onLongPress?.let {
             Surface(
-                modifier = modifier.combineClickableWithIndication(it, onClick),
+                modifier = modifier.combineClickableWithIndication(it, onCardClick),
                 tonalElevation = tonalElevation,
                 shape = shape,
                 content = content
@@ -59,7 +68,7 @@ fun M3CoverCard(
             modifier = modifier,
             tonalElevation = tonalElevation,
             shape = shape,
-            onClick = onClick,
+            onClick = onCardClick,
             content = content
         )
     }
@@ -72,12 +81,7 @@ fun M3CoverCard(
                 ComposableUtils.IMAGE_HEIGHT
             )
             .bounceClick(.9f)
-            .customSharedElement(
-                OtakuImageElement(
-                    origin = imageUrl,
-                    source = name
-                )
-            )
+            .customSharedElement(sharedItemKey?.let(::OtakuImageElement))
             .clip(MaterialTheme.shapes.medium)
             .zoomOverlay(),
     ) {
@@ -93,6 +97,7 @@ fun M3CoverCard(
                 error = error,
                 contentScale = ContentScale.FillBounds,
                 colorFilter = colorFilter,
+                onImageSet = coverHandoff.onImageSet,
                 modifier = Modifier.matchParentSize()
             )
 
@@ -120,7 +125,7 @@ fun M3CoverCard(
                         .fillMaxWidth()
                         .padding(horizontal = 4.dp)
                         .align(Alignment.BottomCenter)
-                        .customSharedElement(OtakuTitleElement(name, name))
+                        .customSharedElement(sharedItemKey?.let(::OtakuTitleElement))
                 )
             }
 
@@ -199,6 +204,7 @@ fun M3ImageCard(
 fun M3CoverCard(
     imageUrl: String,
     name: String,
+    sharedItemKey: SharedItemKey? = null,
     placeHolder: @Composable () -> Painter,
     modifier: Modifier = Modifier,
     error: @Composable () -> Painter = placeHolder,
@@ -233,12 +239,7 @@ fun M3CoverCard(
                 colorFilter = colorFilter,
                 modifier = Modifier
                     .matchParentSize()
-                    .customSharedElement(
-                        OtakuImageElement(
-                            origin = imageUrl,
-                            source = name
-                        )
-                    )
+                    .customSharedElement(sharedItemKey?.let(::OtakuImageElement))
             )
 
             Box(
@@ -265,7 +266,7 @@ fun M3CoverCard(
                         .fillMaxWidth()
                         .padding(horizontal = 4.dp)
                         .align(Alignment.BottomCenter)
-                        .customSharedElement(OtakuTitleElement(name, name))
+                        .customSharedElement(sharedItemKey?.let(::OtakuTitleElement))
                 )
             }
 
@@ -278,6 +279,7 @@ fun M3CoverCard(
 fun M3CoverCard2(
     imageUrl: String,
     name: String,
+    sharedItemKey: SharedItemKey? = null,
     placeHolder: @Composable () -> Painter,
     modifier: Modifier = Modifier,
     error: @Composable () -> Painter = placeHolder,
@@ -310,12 +312,7 @@ fun M3CoverCard2(
                 colorFilter = colorFilter,
                 modifier = Modifier
                     .matchParentSize()
-                    .customSharedElement(
-                        OtakuImageElement(
-                            origin = imageUrl,
-                            source = name
-                        )
-                    )
+                    .customSharedElement(sharedItemKey?.let(::OtakuImageElement))
             )
 
             Box(
@@ -342,7 +339,7 @@ fun M3CoverCard2(
                         .fillMaxWidth()
                         .padding(horizontal = 4.dp)
                         .align(Alignment.BottomCenter)
-                        .customSharedElement(OtakuTitleElement(name, name))
+                        .customSharedElement(sharedItemKey?.let(::OtakuTitleElement))
                 )
             }
 

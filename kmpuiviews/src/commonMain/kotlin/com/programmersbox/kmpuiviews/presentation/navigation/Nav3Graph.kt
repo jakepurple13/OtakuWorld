@@ -1,6 +1,9 @@
 package com.programmersbox.kmpuiviews.presentation.navigation
 
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
@@ -10,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.scene.DialogSceneStrategy
+import androidx.navigation3.ui.NavDisplay
 import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.presentation.Screen
@@ -97,7 +101,12 @@ import org.koin.dsl.navigation3.navigation
 )
 fun buildKmpGraph(): Module = module {
     navigation<Screen.RecentScreen> { RecentView() }
-    navigation<Screen.DetailsScreen.Details> {
+    // Fade instead of slide so the cover and title shared elements carry the transition
+    navigation<Screen.DetailsScreen.Details>(
+        metadata = NavDisplay.transitionSpec { fadeIn() togetherWith fadeOut() } +
+                NavDisplay.popTransitionSpec { fadeIn() togetherWith fadeOut() } +
+                NavDisplay.predictivePopTransitionSpec { fadeIn() togetherWith fadeOut() }
+    ) {
         DetailsScreen(
             windowSize = LocalWindowSizeClass.current,
             details = koinViewModel { parametersOf(it) }

@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.details
 
+import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -39,6 +40,8 @@ import com.programmersbox.kmpuiviews.utils.ImageModifier
 import com.programmersbox.kmpuiviews.utils.dispatchIo
 import com.programmersbox.kmpuiviews.utils.printLogs
 import io.github.vinceglb.filekit.dialogs.compose.util.encodeToByteArray
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.SharedCoverBitmaps
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.sharedItemKey
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
@@ -66,6 +69,7 @@ class DetailsViewModel(
     private val exceptionDao: ExceptionDao,
     private val imageModifier: ImageModifier,
     private val bookmarkRepository: BookmarkRepository,
+    sharedCoverBitmaps: SharedCoverBitmaps,
 ) : ViewModel() {
 
     //private val details: Screen.DetailsScreen.Details? = handle.toRoute()
@@ -81,6 +85,9 @@ class DetailsViewModel(
 
     var palette by mutableStateOf<Palette?>(null)
 
+    /** The last color scheme built for this screen, so a rotation doesn't rebuild or re-animate it */
+    internal var colorScheme: Pair<SchemeInputs, ColorScheme>? = null
+
     private var addRemoveFavoriteJob: Job? = null
 
     var favoriteListener by mutableStateOf(false)
@@ -95,7 +102,11 @@ class DetailsViewModel(
 
     var dbModel by mutableStateOf<DbModel?>(null)
 
-    var imageBitmap: ImageBitmap? by mutableStateOf(null)
+    /** A copy of the cover the tapped card already loaded, if any; safe to draw directly */
+    val handedOffCover: ImageBitmap? = itemModel?.let { sharedCoverBitmaps.take(it.sharedItemKey()) }
+
+    // Starts as the handed-off cover so the palette builds before Details loads the image
+    var imageBitmap: ImageBitmap? by mutableStateOf(handedOffCover)
     var blurHash by mutableStateOf<BitmapPainter?>(null)
     private var blurHashItem: BlurHashItem? = null
 

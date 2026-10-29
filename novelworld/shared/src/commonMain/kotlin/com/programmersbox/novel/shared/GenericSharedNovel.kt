@@ -35,6 +35,7 @@ import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.sharedItemKey
 import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.M3PlaceHolderCoverCard
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
@@ -121,6 +122,7 @@ abstract class GenericSharedNovel(
                     onLongPress = { c -> onLongPress(it, c) },
                     imageUrl = it.imageUrl,
                     name = it.title,
+                    sharedItemKey = it.sharedItemKey(),
                     headers = it.extras,
                     //placeHolder = { painterLogo() },
                     placeHolder = { rememberVectorPainter(Icons.Default.BrokenImage) },

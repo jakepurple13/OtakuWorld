@@ -118,6 +118,10 @@ import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.presentation.components.optionsSheet
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuImageElement
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuTitleElement
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.SharedItemKey
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.customSharedElement
 import com.programmersbox.kmpuiviews.utils.Cached
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
@@ -672,6 +676,7 @@ private fun NotificationRow(
                     modifier = Modifier
                         .size(width = 48.dp, height = 72.dp)
                         .clip(MaterialTheme.shapes.small)
+                        .customSharedElement(OtakuImageElement(SharedItemKey(item.url, item.source)))
                 ) {
                     GradientImage(
                         model = item.imageUrl.orEmpty(),
@@ -699,7 +704,8 @@ private fun NotificationRow(
                         item.notiTitle,
                         style = MaterialTheme.typography.titleSmall,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.customSharedElement(OtakuTitleElement(SharedItemKey(item.url, item.source)))
                     )
                     Text(
                         item.summaryText,

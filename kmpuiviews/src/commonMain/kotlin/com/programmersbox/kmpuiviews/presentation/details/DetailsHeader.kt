@@ -41,6 +41,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -73,6 +74,7 @@ import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderC
 import com.programmersbox.kmpuiviews.utils.composables.modifiers.fadeInAnimation
 import com.programmersbox.kmpuiviews.utils.composables.modifiers.scaleRotateOffsetReset
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuImageElement
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.SharedItemKey
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuTitleElement
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.customSharedElement
 import com.programmersbox.kmpuiviews.zoomOverlay
@@ -87,6 +89,12 @@ import otakuworld.kmpuiviews.generated.resources.removeFromFavorites
 
 private val BannerHeight = 180.dp
 private val CoverOverlap = 70.dp
+
+/** The item that opened Details; keys its cover and title for the shared element transition */
+internal val LocalDetailsSharedItemKey = staticCompositionLocalOf<SharedItemKey?> { null }
+
+/** The cover the tapped card handed off, already decoded */
+internal val LocalDetailsHandedOffCover = staticCompositionLocalOf<ImageBitmap?> { null }
 
 @OptIn(ExperimentalLayoutApi::class)
 @ExperimentalComposeUiApi
@@ -103,6 +111,7 @@ internal fun DetailsHeader(
     onBitmapSet: (ImageBitmap) -> Unit = {},
 ) {
     val scope = rememberCoroutineScope()
+    val sharedItemKey = LocalDetailsSharedItemKey.current
 
     val colorBlindness: ColorBlindnessType by koinInject<NewSettingsHandling>().rememberColorBlindType()
     val colorFilter by remember { derivedStateOf { colorFilterBlind(colorBlindness) } }
@@ -183,24 +192,33 @@ internal fun DetailsHeader(
                     shadowElevation = 8.dp,
                     modifier = Modifier
                         .padding(4.dp)
-                        .customSharedElement(
-                            OtakuImageElement(
-                                origin = model.imageUrl,
-                                source = model.title,
-                            )
-                        )
+                        .customSharedElement(sharedItemKey?.let(::OtakuImageElement))
                         .zoomOverlay()
                 ) {
-                    ImageLoaderChoice(
-                        imageUrl = imageUrl,
-                        name = "",
-                        headers = model.extras.mapValues { it.value.toString() },
-                        contentScale = ContentScale.FillBounds,
-                        placeHolder = { rememberVectorPainter(Icons.Default.BrokenImage) },
-                        onImageSet = onBitmapSet,
-                        colorFilter = colorFilter,
-                        modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
-                    )
+                    // The loader fades even a cached image in from transparent, so the handed-off cover is drawn
+                    // directly; the palette was already built from it
+                    val handedOffCover = LocalDetailsHandedOffCover.current
+                    if (handedOffCover != null) {
+                        Image(
+                            bitmap = handedOffCover,
+                            contentDescription = null,
+                            contentScale = ContentScale.FillBounds,
+                            colorFilter = colorFilter,
+                            modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
+                        )
+                    } else {
+                        ImageLoaderChoice(
+                            imageUrl = imageUrl,
+                            name = "",
+                            headers = model.extras.mapValues { it.value.toString() },
+                            contentScale = ContentScale.FillBounds,
+                            placeHolder = { blurHash ?: rememberVectorPainter(Icons.Default.BrokenImage) },
+                            error = { rememberVectorPainter(Icons.Default.BrokenImage) },
+                            onImageSet = onBitmapSet,
+                            colorFilter = colorFilter,
+                            modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
+                        )
+                    }
                 }
 
                 Column(
@@ -223,12 +241,7 @@ internal fun DetailsHeader(
                         maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
                         modifier = Modifier
                             .clip(MaterialTheme.shapes.medium)
-                            .customSharedElement(
-                                OtakuTitleElement(
-                                    origin = model.title,
-                                    source = model.title
-                                )
-                            )
+                            .customSharedElement(sharedItemKey?.let(::OtakuTitleElement))
                             .combinedClickable(
                                 interactionSource = null,
                                 indication = ripple(),
@@ -300,7 +313,11 @@ internal fun DetailsHeader(
 internal fun PlaceHolderHeader(
     paddingValues: PaddingValues,
     bitmapPainter: BitmapPainter? = null,
+    imageUrl: String? = null,
+    title: String? = null,
+    coverBitmap: ImageBitmap? = null,
 ) {
+    val sharedItemKey = LocalDetailsSharedItemKey.current
     val placeholderModifier = Modifier.m3placeholder(
         true,
         highlight = PlaceholderHighlight.shimmer()
@@ -328,10 +345,27 @@ internal fun PlaceHolderHeader(
                 Card(
                     shape = RoundedCornerShape(4.dp),
                     modifier = Modifier
-                        .then(if (bitmapPainter != null) Modifier else placeholderModifier)
+                        .then(if (bitmapPainter != null || imageUrl != null) Modifier else placeholderModifier)
                         .padding(4.dp)
+                        .customSharedElement(sharedItemKey?.takeIf { imageUrl != null }?.let(::OtakuImageElement))
                 ) {
-                    if (bitmapPainter != null) {
+                    // The card's own decoded cover, when it handed one off; no second load needed
+                    if (coverBitmap != null) {
+                        Image(
+                            bitmap = coverBitmap,
+                            contentDescription = null,
+                            contentScale = ContentScale.FillBounds,
+                            modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                        )
+                    } else if (imageUrl != null) {
+                        ImageLoaderChoice(
+                            imageUrl = imageUrl,
+                            name = "",
+                            placeHolder = { bitmapPainter ?: rememberVectorPainter(Icons.Default.BrokenImage) },
+                            contentScale = ContentScale.FillBounds,
+                            modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                        )
+                    } else if (bitmapPainter != null) {
                         Image(
                             painter = bitmapPainter,
                             contentDescription = null,
@@ -354,13 +388,25 @@ internal fun PlaceHolderHeader(
                 Column(
                     modifier = Modifier.padding(start = 4.dp)
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .padding(vertical = 4.dp)
-                            .then(placeholderModifier)
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) { Text("") }
+                    if (title != null) {
+                        Text(
+                            title,
+                            style = MaterialTheme.typography.titleMedium,
+                            maxLines = 3,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier
+                                .padding(vertical = 4.dp)
+                                .customSharedElement(sharedItemKey?.let(::OtakuTitleElement))
+                        )
+                    } else {
+                        Row(
+                            modifier = Modifier
+                                .padding(vertical = 4.dp)
+                                .then(placeholderModifier)
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) { Text("") }
+                    }
 
                     Row(
                         modifier = Modifier

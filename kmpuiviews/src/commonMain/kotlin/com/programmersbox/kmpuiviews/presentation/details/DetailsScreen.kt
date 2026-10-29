@@ -1,13 +1,19 @@
 package com.programmersbox.kmpuiviews.presentation.details
 
 
+import com.materialkolor.PaletteStyle
+import androidx.compose.animation.core.tween
+import com.materialkolor.material3.ktx.animateColorScheme
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.Color
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.updateTransition
+import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
@@ -62,8 +68,11 @@ import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
@@ -77,19 +86,18 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kmpalette.color
-import com.materialkolor.material3.DynamicMaterialTheme
-import com.materialkolor.material3.rememberDynamicMaterialThemeState
+import com.materialkolor.material3.dynamicColorScheme
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalNavigationAnimatedScope
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.sharedItemKey
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.DetailsChapterSwipeBehavior
 import com.programmersbox.datastore.DetailsChapterSwipeBehaviorHandle
 import com.programmersbox.datastore.SystemThemeMode
 import com.programmersbox.datastore.rememberSwatchStyle
 import com.programmersbox.datastore.rememberSwatchType
-import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.HeatMapDao
 import com.programmersbox.favoritesdatabase.ItemDao
@@ -112,6 +120,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.getString
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -127,11 +136,16 @@ fun DetailsScreen(
     dao: ItemDao = LocalItemDao.current,
     details: DetailsViewModel = koinViewModel(),
 ) {
-    DetailsScreenInternal(
-        windowSize = windowSize,
-        dao = dao,
-        details = details
-    )
+    CompositionLocalProvider(
+        LocalDetailsSharedItemKey provides details.itemModel?.sharedItemKey(),
+        LocalDetailsHandedOffCover provides details.handedOffCover,
+    ) {
+        DetailsScreenInternal(
+            windowSize = windowSize,
+            dao = dao,
+            details = details
+        )
+    }
 }
 
 @OptIn(
@@ -166,36 +180,76 @@ private fun DetailsScreenInternal(
     val paletteSwatchType by rememberSwatchType()
     val paletteStyle by rememberSwatchStyle()
 
-    val dynamicColor = rememberDynamicMaterialThemeState(
-        seedColor = details
-            .palette
-            ?.let(paletteSwatchType.swatch)
-            ?.color
-            ?.takeIf { usePalette }
-            ?: MaterialTheme.colorScheme.primary,
-        isDark = when (themeSetting) {
-            SystemThemeMode.FollowSystem -> isSystemInDarkTheme()
-            SystemThemeMode.Day -> false
-            SystemThemeMode.Night -> true
-        },
-        isAmoled = isAmoledMode && (!usePalette || details.palette == null),
-        style = paletteStyle
+    // Keep the state shown on open until the enter transition settles, so only one header
+    // carries the shared cover/title keys while they are in flight
+    val navTransition = LocalNavigationAnimatedScope.current?.transition
+    // Checked by state, not isRunning: the transition has not started yet on the first frame
+    val entering = navTransition != null &&
+            navTransition.currentState != EnterExitState.Visible &&
+            navTransition.targetState == EnterExitState.Visible
+    val openingState = remember { details.currentState }
+    var enterSettled by remember { mutableStateOf(false) }
+    LaunchedEffect(entering) { if (!entering) enterSettled = true }
+
+    val contentTransition = updateTransition(
+        targetState = if (enterSettled) details.currentState else openingState,
+        label = ""
     )
+
+    val seedColor = details
+        .palette
+        ?.let(paletteSwatchType.swatch)
+        ?.color
+        ?.takeIf { usePalette }
+        ?: MaterialTheme.colorScheme.primary
+    val isDark = when (themeSetting) {
+        SystemThemeMode.FollowSystem -> isSystemInDarkTheme()
+        SystemThemeMode.Day -> false
+        SystemThemeMode.Night -> true
+    }
+    val isAmoled = isAmoledMode && (!usePalette || details.palette == null)
+    val schemeInputs = SchemeInputs(seedColor, isDark, isAmoled, paletteStyle)
+
+    // Building a dynamic scheme is expensive (hundreds of ms on low-end devices), so build it off the
+    // main thread and keep the current scheme until it is ready
+    val currentColorScheme = MaterialTheme.colorScheme
+    // Start from the scheme built before a rotation so the palette doesn't drop out and animate back in
+    val cachedScheme = details.colorScheme?.takeIf { it.first == schemeInputs }?.second
+    val dynamicColorScheme by produceState(cachedScheme ?: currentColorScheme, schemeInputs) {
+        if (cachedScheme != null) return@produceState
+        value = withContext(Dispatchers.Default) {
+            dynamicColorScheme(
+                seedColor = schemeInputs.seedColor,
+                isDark = schemeInputs.isDark,
+                isAmoled = schemeInputs.isAmoled,
+                style = schemeInputs.style
+            )
+        }
+        details.colorScheme = schemeInputs to value
+    }
 
     val shareChapter by handling.rememberShareChapter()
 
-    DynamicMaterialTheme(
-        state = dynamicColor,
-        animate = true,
-        animationSpec = tween()
+    MaterialTheme(
+        // Only the change to the cover palette animates; earlier scheme changes switch in one step since
+        // animating recomposes everything that reads colors on every frame
+        colorScheme = if (details.palette != null) {
+            animateColorScheme(colorScheme = dynamicColorScheme, animationSpec = { tween() })
+        } else {
+            dynamicColorScheme
+        }
     ) {
-        AnimatedContent(
-            targetState = details.currentState,
-            label = "",
+        contentTransition.AnimatedContent(
             transitionSpec = {
                 when (val state = targetState) {
                     is DetailState.Success if state.info == (initialState as? DetailState.Success)?.info -> {
                         EnterTransition.None togetherWith ExitTransition.None
+                    }
+
+                    // Both headers show the same cover; keep the loading one opaque underneath so the
+                    // cover doesn't dip dark halfway through the crossfade
+                    is DetailState.Success if initialState is DetailState.Loading -> {
+                        fadeIn() togetherWith ExitTransition.KeepUntilTransitionsFinished
                     }
 
                     else -> fadeIn() togetherWith fadeOut()
@@ -383,6 +437,11 @@ private fun DetailContent(
         .doesNotificationExistFlow(state.info.url)
         .collectAsStateWithLifecycle(false)
 
+    // Shown while the header loads its cover: the card's handed-off cover, else the saved blur hash
+    val coverPlaceholder = remember(details.imageBitmap, details.blurHash) {
+        details.imageBitmap?.let(::BitmapPainter) ?: details.blurHash
+    }
+
     when (windowSize.widthSizeClass) {
         WindowWidthSizeClass.Expanded -> {
             DetailsViewLandscape(
@@ -396,8 +455,9 @@ private fun DetailContent(
                 showDownloadButton = { showDownload },
                 canNotify = details.dbModel?.shouldCheckForUpdate == true,
                 onPaletteSet = { details.palette = it },
-                blurHash = details.blurHash,
-                onBitmapSet = { details.imageBitmap = it },
+                blurHash = coverPlaceholder,
+                // Keep the cover handed off by the card so the palette isn't rebuilt from the same image
+                onBitmapSet = { if (details.imageBitmap == null) details.imageBitmap = it },
                 detailsActions = detailsActions,
                 notesVm = notesVm,
                 downloadStates = details.downloadStates
@@ -416,8 +476,9 @@ private fun DetailContent(
                 showDownloadButton = { showDownload },
                 canNotify = details.dbModel?.shouldCheckForUpdate == true,
                 onPaletteSet = { details.palette = it },
-                onBitmapSet = { details.imageBitmap = it },
-                blurHash = details.blurHash,
+                // Keep the cover handed off by the card so the palette isn't rebuilt from the same image
+                onBitmapSet = { if (details.imageBitmap == null) details.imageBitmap = it },
+                blurHash = coverPlaceholder,
                 detailsActions = detailsActions,
                 notesVm = notesVm,
                 downloadStates = details.downloadStates
@@ -467,7 +528,15 @@ private fun DetailLoading(
                 },
             )
         }
-    ) { PlaceHolderHeader(it, details.blurHash) }
+    ) {
+        PlaceHolderHeader(
+            paddingValues = it,
+            bitmapPainter = details.blurHash,
+            imageUrl = details.itemModel?.imageUrl,
+            title = details.itemModel?.title,
+            coverBitmap = details.handedOffCover,
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -539,7 +608,7 @@ private fun DetailError(
 @Composable
 fun ChapterItem(
     c: KmpChapterModel,
-    read: List<ChapterWatched>,
+    readUrls: Set<String>,
     isBookmarked: Boolean,
     showDownload: () -> Boolean,
     swipeBehavior: DetailsChapterSwipeBehaviorHandle,
@@ -552,8 +621,7 @@ fun ChapterItem(
 ) {
     val scope = rememberCoroutineScope()
     val haptic = LocalHapticFeedback.current
-    val hasBeenRead by remember(read) { derivedStateOf { read.fastAny { it.url == c.url } } }
-    val updatedIsRead by rememberUpdatedState(hasBeenRead)
+    val updatedIsRead by rememberUpdatedState(c.url in readUrls)
     val updatedAnimated = updateTransition(updatedIsRead)
 
     fun swipeBehavior(behavior: DetailsChapterSwipeBehavior) {
@@ -584,6 +652,8 @@ fun ChapterItem(
         enableDismissFromStartToEnd = !selectionMode && swipeBehavior.detailsChapterSwipeBehaviorStartToEnd != DetailsChapterSwipeBehavior.Nothing,
         backgroundContent = {
             val direction = dismissState.dismissDirection
+            // Only build the swipe hint while a swipe is happening; every row composes this otherwise
+            if (direction == SwipeToDismissBoxValue.Settled) return@SwipeToDismissBox
             val alignment = when (direction) {
                 SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
                 SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
@@ -746,3 +816,11 @@ fun ChapterItem(
         )
     }
 }
+
+/** What a Details color scheme is built from; the ViewModel caches the last scheme by these */
+internal data class SchemeInputs(
+    val seedColor: Color,
+    val isDark: Boolean,
+    val isAmoled: Boolean,
+    val style: PaletteStyle,
+)

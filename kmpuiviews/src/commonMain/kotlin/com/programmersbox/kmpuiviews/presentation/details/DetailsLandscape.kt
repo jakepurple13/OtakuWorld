@@ -295,6 +295,7 @@ private fun DetailsLandscapeContent(
     notificationRepository: NotificationRepository = koinInject(),
 ) {
     val scope = rememberCoroutineScope()
+    val readUrls = remember(chapters) { chapters.mapTo(HashSet()) { it.url } }
     val dao = LocalItemDao.current
     var showLists by remember { mutableStateOf(false) }
 
@@ -464,7 +465,7 @@ private fun DetailsLandscapeContent(
                     items(listOfChapters) { c ->
                         ChapterItem(
                             c = c,
-                            read = chapters,
+                            readUrls = readUrls,
                             isBookmarked = c.url in detailsActions.bookmarkedChapterUrls,
                             showDownload = showDownloadButton,
                             detailsActions = detailsActions,

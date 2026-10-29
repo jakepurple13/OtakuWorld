@@ -114,6 +114,7 @@ fun DetailsView(
     notesVm: DetailsNotesViewModel,
     downloadStates: Map<String, ChapterDownloadUiState>,
 ) {
+    val readUrls = remember(chapters) { chapters.mapTo(HashSet()) { it.url } }
     val dao = LocalItemDao.current
     val genericInfo = koinInject<KmpGenericInfo>()
     val navController = LocalNavActions.current
@@ -386,7 +387,7 @@ fun DetailsView(
             ) { c ->
                 ChapterItem(
                     c = c,
-                    read = chapters,
+                    readUrls = readUrls,
                     isBookmarked = c.url in detailsActions.bookmarkedChapterUrls,
                     detailsActions = detailsActions,
                     showDownload = showDownloadButton,

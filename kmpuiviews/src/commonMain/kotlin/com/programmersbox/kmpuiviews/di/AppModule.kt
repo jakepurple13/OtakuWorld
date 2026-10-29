@@ -47,6 +47,7 @@ import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.bind
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.SharedCoverBitmaps
 import org.koin.dsl.module
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
@@ -70,6 +71,7 @@ val appModule = module {
     singleOf(::EncryptedDataStoreHandling)
     singleOf(::DataStoreHandling)
     singleOf(::MediaUpdateChecker)
+    singleOf(::SharedCoverBitmaps)
     factoryOf(::Backup)
     backupProcessors()
     includes(platformModule())

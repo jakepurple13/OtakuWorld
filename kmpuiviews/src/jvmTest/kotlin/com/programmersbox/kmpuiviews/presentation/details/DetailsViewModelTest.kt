@@ -1,6 +1,10 @@
 package com.programmersbox.kmpuiviews.presentation.details
 
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.ImageBitmapConfig
+import androidx.compose.ui.graphics.colorspace.ColorSpace
+import androidx.compose.ui.graphics.colorspace.ColorSpaces
 import androidx.lifecycle.ViewModelStore
 import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
@@ -21,6 +25,8 @@ import com.programmersbox.kmpuiviews.testing.FakeKmpGenericInfo
 import com.programmersbox.kmpuiviews.testing.FakeTranslationHandler
 import com.programmersbox.kmpuiviews.utils.Cached
 import com.programmersbox.kmpuiviews.utils.ImageModifier
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.SharedCoverBitmaps
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.SharedItemKey
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -36,6 +42,8 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class DetailsViewModelTest {
@@ -75,7 +83,10 @@ class DetailsViewModelTest {
         source = source,
     )
 
-    private fun viewModel(details: Screen.DetailsScreen.Details? = details()) = DetailsViewModel(
+    private fun viewModel(
+        details: Screen.DetailsScreen.Details? = details(),
+        sharedCoverBitmaps: SharedCoverBitmaps = SharedCoverBitmaps(),
+    ) = DetailsViewModel(
         details = details,
         genericInfo = FakeKmpGenericInfo(),
         blurHashDao = blurHashDatabase.blurDao(),
@@ -92,6 +103,7 @@ class DetailsViewModelTest {
             dao = bookmarkDatabase.bookmarkDao(),
             authManager = FakeAuthManager(),
         ),
+        sharedCoverBitmaps = sharedCoverBitmaps,
     ).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -137,6 +149,30 @@ class DetailsViewModelTest {
         blurHashDbFile.delete()
         exceptionDatabase.close()
         exceptionDbFile.delete()
+    }
+
+    @Test
+    fun `starts with the cover handed off by the tapped card`() {
+        val bitmaps = SharedCoverBitmaps()
+        val cover = FakeImageBitmap(width = 2, height = 3)
+        bitmaps.offer(SharedItemKey(url = "https://example.com/", source = "ExampleService"), cover)
+
+        val vm = viewModel(sharedCoverBitmaps = bitmaps)
+
+        assertNotNull(vm.imageBitmap)
+        assertEquals(2, vm.imageBitmap?.width)
+        // Taken once, so a later Details for the same item loads normally
+        assertNull(bitmaps.take(SharedItemKey(url = "https://example.com/", source = "ExampleService")))
+    }
+
+    @Test
+    fun `ignores a handed off cover for a different item`() {
+        val bitmaps = SharedCoverBitmaps()
+        bitmaps.offer(SharedItemKey(url = "https://other.com/", source = "ExampleService"), FakeImageBitmap(width = 2, height = 3))
+
+        val vm = viewModel(sharedCoverBitmaps = bitmaps)
+
+        assertNull(vm.imageBitmap)
     }
 
     @Test
@@ -364,4 +400,24 @@ class DetailsViewModelTest {
         assertEquals(null, vm.itemModel)
         assertEquals(DetailState.Loading, vm.currentState)
     }
+}
+
+// The JVM test runtime has no Compose graphics backend, so a real ImageBitmap can't be created here
+private class FakeImageBitmap(
+    override val width: Int,
+    override val height: Int,
+) : ImageBitmap {
+    override val colorSpace: ColorSpace = ColorSpaces.Srgb
+    override val hasAlpha: Boolean = false
+    override val config: ImageBitmapConfig = ImageBitmapConfig.Argb8888
+    override fun prepareToDraw() = Unit
+    override fun readPixels(
+        buffer: IntArray,
+        startX: Int,
+        startY: Int,
+        width: Int,
+        height: Int,
+        bufferOffset: Int,
+        stride: Int,
+    ) = Unit
 }
