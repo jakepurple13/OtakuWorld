@@ -31,7 +31,8 @@ actual class QrCodeRepository(
     private val clipboardManager by lazy {
         context.getSystemService<ClipboardManager>()
     }
-    val scanner = BarcodeScanning.getClient()
+    // Creating the ML Kit client is slow; Details injects this repository just to share, so defer it
+    val scanner by lazy { BarcodeScanning.getClient() }
     actual suspend fun getInfoFromQRCode(
         bitmap: ImageBitmap,
     ): Result<List<String>> = runCatching { InputImage.fromBitmap(bitmap.asAndroidBitmap(), 0) }
