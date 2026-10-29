@@ -82,6 +82,10 @@ import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.SourceRepository
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuImageElement
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuTitleElement
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.SharedItemKey
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.customSharedElement
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.components.GradientImage
 import com.programmersbox.kmpuiviews.presentation.components.LoadingDialog
@@ -676,7 +680,9 @@ private fun CatchUpCard(
                 contentDescription = item.notiTitle,
                 contentScale = ContentScale.Crop,
                 colorFilter = colorFilter,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .customSharedElement(OtakuImageElement(SharedItemKey(item.url, item.source)))
             )
 
             if (actionLabel != null) {
@@ -711,7 +717,8 @@ private fun CatchUpCard(
                     style = MaterialTheme.typography.titleLarge,
                     color = Color.White,
                     maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.customSharedElement(OtakuTitleElement(SharedItemKey(item.url, item.source)))
                 )
                 Text(
                     item.summaryText,

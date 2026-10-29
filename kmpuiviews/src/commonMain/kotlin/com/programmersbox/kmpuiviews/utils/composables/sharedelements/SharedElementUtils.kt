@@ -8,11 +8,18 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDeepLink
 import androidx.navigation.NavGraphBuilder
@@ -25,44 +32,50 @@ import kotlin.reflect.KType
 val LocalSharedElementScope = staticCompositionLocalOf<SharedTransitionScope?> { null }
 val LocalNavigationAnimatedScope = staticCompositionLocalOf<AnimatedVisibilityScope?> { null }
 
+// Titles leave the cover's bounds on the way to Details, so they must not inherit the parent clip
+@OptIn(ExperimentalSharedTransitionApi::class)
+private val NoOverlayClip = object : SharedTransitionScope.OverlayClip {
+    override fun getClipPath(
+        sharedContentState: SharedTransitionScope.SharedContentState,
+        bounds: Rect,
+        layoutDirection: LayoutDirection,
+        density: Density,
+    ): Path? = null
+}
+
+/**
+ * Covers move and resize, swapping from the source copy to the destination copy late in the flight.
+ * Titles crossfade between their two text styles while their bounds move ([SharedTransitionScope.sharedBounds]).
+ * No-op outside a navigation entry or when [key] is null.
+ */
 @OptIn(ExperimentalSharedTransitionApi::class)
 fun Modifier.customSharedElement(
-    key: Any?,
-    /*boundsTransform: BoundsTransform = BoundsTransform { _, _ ->
-        spring(
-            stiffness = Spring.StiffnessMediumLow,
-            visibilityThreshold = Rect.VisibilityThreshold
-        )
-    },
-    placeHolderSize: PlaceHolderSize = contentSize,
-    renderInOverlayDuringTransition: Boolean = true,
-    zIndexInOverlay: Float = 0f,
-    clipInOverlayDuringTransition: OverlayClip = object : OverlayClip {
-        override fun getClipPath(
-            state: SharedContentState,
-            bounds: Rect,
-            layoutDirection: LayoutDirection,
-            density: Density,
-        ): Path? {
-            return state.parentSharedContentState?.clipPathInOverlay
-        }
-    },*/
+    key: OtakuSharedElement?,
 ) = composed {
-    this
     val scope = LocalSharedElementScope.current
     val animatedScope = LocalNavigationAnimatedScope.current
 
     if (animatedScope != null && key != null && scope != null) {
         with(scope) {
-            sharedElement(
-                sharedContentState = rememberSharedContentState(key = key),
-                animatedVisibilityScope = animatedScope,
-                /*boundsTransform = boundsTransform,
-                placeHolderSize = placeHolderSize,
-                renderInOverlayDuringTransition = renderInOverlayDuringTransition,
-                zIndexInOverlay = zIndexInOverlay,
-                clipInOverlayDuringTransition = clipInOverlayDuringTransition*/
-            )
+            when (key.type) {
+                // The destination copy of the cover is usually still loading when the flight starts,
+                // so keep the already-loaded source visible and swap near the end
+                OtakuSharedElementType.Image -> sharedBounds(
+                    sharedContentState = rememberSharedContentState(key = key),
+                    animatedVisibilityScope = animatedScope,
+                    enter = fadeIn(tween(durationMillis = 150, delayMillis = 250)),
+                    exit = fadeOut(tween(durationMillis = 150, delayMillis = 250)),
+                    resizeMode = SharedTransitionScope.ResizeMode.scaleToBounds(),
+                )
+
+                OtakuSharedElementType.Title -> sharedBounds(
+                    sharedContentState = rememberSharedContentState(key = key),
+                    animatedVisibilityScope = animatedScope,
+                    resizeMode = SharedTransitionScope.ResizeMode.scaleToBounds(),
+                    zIndexInOverlay = 1f,
+                    clipInOverlayDuringTransition = NoOverlayClip,
+                )
+            }
         }
     } else {
         this

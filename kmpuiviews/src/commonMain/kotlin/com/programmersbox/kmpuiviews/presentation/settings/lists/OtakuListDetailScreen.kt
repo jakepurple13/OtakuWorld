@@ -104,6 +104,7 @@ import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.favoritesdatabase.toItemModel
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.SharedItemKey
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomScreen
@@ -828,6 +829,8 @@ private fun CustomItemVertical(
         onLongPress = { c -> if (c == ComponentState.Pressed) onToggleSelection() },
         imageUrl = remember(items) { items.firstOrNull()?.imageUrl.orEmpty() },
         name = title,
+        // Only single-item groups open Details directly
+        sharedItemKey = items.singleOrNull()?.let { SharedItemKey(url = it.url, source = it.source) },
         //placeHolder = { painterLogo() },
         placeHolder = { rememberVectorPainter(Icons.Default.BrokenImage) },
         favoriteIcon = {

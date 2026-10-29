@@ -52,6 +52,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.favoritesdatabase.BookmarkedChapter
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuImageElement
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuTitleElement
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.SharedItemKey
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.customSharedElement
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.CustomKamelImage
@@ -191,6 +195,7 @@ private fun MangaBookmarkGroup(
 ) {
     var expanded by remember { mutableStateOf(true) }
     val coverUrl = chapters.firstOrNull()?.parentImageUrl.orEmpty()
+    val sharedItemKey = chapters.firstOrNull()?.let { SharedItemKey(it.parentUrl, it.source) }
 
     Card(
         modifier = modifier.fillMaxWidth()
@@ -202,7 +207,9 @@ private fun MangaBookmarkGroup(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier.basicMarquee(1)
+                    modifier = Modifier
+                        .customSharedElement(sharedItemKey?.let(::OtakuTitleElement))
+                        .basicMarquee(1)
                 )
             },
             supportingContent = {
@@ -222,7 +229,8 @@ private fun MangaBookmarkGroup(
                     modifier = Modifier
                         .width(40.dp)
                         .height(56.dp)
-                        .clip(MaterialTheme.shapes.medium),
+                        .clip(MaterialTheme.shapes.medium)
+                        .customSharedElement(sharedItemKey?.let(::OtakuImageElement)),
                 )
             },
             trailingContent = {

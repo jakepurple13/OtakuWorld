@@ -99,6 +99,11 @@ import com.programmersbox.kmpuiviews.presentation.components.placeholder.Placeho
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
 import com.programmersbox.kmpuiviews.presentation.components.plus
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuImageElement
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuTitleElement
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.customSharedElement
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.rememberCoverHandoff
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.sharedItemKey
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
@@ -534,6 +539,7 @@ fun SearchCoverCard(
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {},
 ) {
+    val coverHandoff = rememberCoverHandoff(model.sharedItemKey())
     ElevatedCard(
         modifier = modifier
             .size(
@@ -541,7 +547,13 @@ fun SearchCoverCard(
                 ComposableUtils.IMAGE_HEIGHT
             )
             .clip(CardDefaults.shape)
-            .combineClickableWithIndication(onLongPress, onClick)
+            .combineClickableWithIndication(
+                onLongPress = onLongPress,
+                onClick = {
+                    coverHandoff.handOff()
+                    onClick()
+                }
+            )
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -553,7 +565,10 @@ fun SearchCoverCard(
                 //placeHolder = { painterLogo() },
                 placeHolder = { rememberVectorPainter(Icons.Default.BrokenImage) },
                 contentScale = ContentScale.FillBounds,
-                modifier = Modifier.matchParentSize()
+                onImageSet = coverHandoff.onImageSet,
+                modifier = Modifier
+                    .matchParentSize()
+                    .customSharedElement(OtakuImageElement(model.sharedItemKey()))
             )
 
             Box(
@@ -580,6 +595,7 @@ fun SearchCoverCard(
                         .fillMaxWidth()
                         .padding(4.dp)
                         .align(Alignment.BottomCenter)
+                        .customSharedElement(OtakuTitleElement(model.sharedItemKey()))
                 )
             }
         }

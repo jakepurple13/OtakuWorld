@@ -66,6 +66,10 @@ import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.PlaceholderHighlight
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuImageElement
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuTitleElement
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.SharedItemKey
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.customSharedElement
 import com.programmersbox.kmpuiviews.utils.BiometricOpen
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
@@ -332,7 +336,7 @@ fun HistoryItem(
                     headlineContent = {
                         Text(
                             item.title,
-                            //modifier = Modifier.customSharedElement(OtakuTitleElement(source = item.title, origin = item.title))
+                            modifier = Modifier.customSharedElement(OtakuTitleElement(SharedItemKey(item.url, item.source)))
                         )
                     },
                     overlineContent = { Text(info.displayNameFor(item.source)) },
@@ -348,12 +352,7 @@ fun HistoryItem(
                             modifier = Modifier
                                 .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                                 .clip(MaterialTheme.shapes.medium)
-                            /*.customSharedElement(
-                                OtakuImageElement(
-                                    source = item.title,
-                                    origin = item.imageUrl
-                                )
-                            )*/
+                                .customSharedElement(OtakuImageElement(SharedItemKey(item.url, item.source)))
                         )
                     },
                     trailingContent = {

@@ -94,6 +94,7 @@ import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.presentation.components.optionsKmpSheetList
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.SharedItemKey
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
@@ -527,6 +528,8 @@ private fun FavoritesGrid(
                 },
                 imageUrl = remember { info.value.randomOrNull()?.imageUrl.orEmpty() },
                 name = info.key,
+                // Only single-source groups open Details directly
+                sharedItemKey = info.value.singleOrNull()?.let { SharedItemKey(url = it.url, source = it.source) },
                 //placeHolder = { painterLogo() },
                 placeHolder = { rememberVectorPainter(Icons.Default.BrokenImage) },
                 colorFilter = colorFilter,

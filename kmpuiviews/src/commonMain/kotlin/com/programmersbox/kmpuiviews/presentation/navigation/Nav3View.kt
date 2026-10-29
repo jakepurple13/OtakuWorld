@@ -10,7 +10,9 @@ import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -27,6 +29,7 @@ import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import com.programmersbox.kmpuiviews.presentation.navigation.scenestrategy.BottomSheetSceneStrategy
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalNavigationAnimatedScope
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalSharedElementScope
 import org.koin.compose.koinInject
 import org.koin.compose.navigation3.koinEntryProvider
@@ -70,6 +73,18 @@ fun Nav3(
         }
     )
 
+    // Lets customSharedElement find the entry's AnimatedContentScope
+    val navigationAnimatedScopeDecorator = remember {
+        SharedElementNavDecorator<NavKey>(
+            onPop = {},
+            decorate = { entry ->
+                CompositionLocalProvider(LocalNavigationAnimatedScope provides LocalNavAnimatedContentScope.current) {
+                    entry.Content()
+                }
+            }
+        )
+    }
+
     NavDisplay(
         backStack = backStack,
         //onBack = { backStack.removeLastOrNull() },
@@ -81,6 +96,7 @@ fun Nav3(
         onBack = { navigation3Actions.popBackStack() },
         entryDecorators = listOf(
             //sharedEntryInSceneNavEntryDecorator,
+            navigationAnimatedScopeDecorator,
             rememberSaveableStateHolderNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator()
         ),
