@@ -41,7 +41,7 @@ import java.io.File
 @Serializable
 data object PlatformSettings : NavKey
 
-private const val PLATFORM_SETTINGS_COUNT = 3
+private const val PLATFORM_SETTINGS_COUNT = 4
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -104,7 +104,7 @@ fun JvmSettingsScreen() {
                     leadingContent = { Icon(Icons.Default.Download, null) },
                     onClick = { directoryPicker.launch() },
                     colors = colors,
-                    shapes = ListItemDefaults.segmentedShapes(index = 0, count = PLATFORM_SETTINGS_COUNT)
+                    shapes = ListItemDefaults.segmentedShapes(index = 1, count = PLATFORM_SETTINGS_COUNT)
                 )
             }
 
@@ -120,7 +120,7 @@ fun JvmSettingsScreen() {
                     checked = useWebView,
                     onCheckedChange = { useWebView = !useWebView },
                     colors = colors,
-                    shapes = ListItemDefaults.segmentedShapes(index = 1, count = PLATFORM_SETTINGS_COUNT)
+                    shapes = ListItemDefaults.segmentedShapes(index = 2, count = PLATFORM_SETTINGS_COUNT)
                 )
             }
 
@@ -135,7 +135,7 @@ fun JvmSettingsScreen() {
                         }
                     },
                     colors = colors,
-                    shapes = ListItemDefaults.segmentedShapes(index = 2, count = PLATFORM_SETTINGS_COUNT)
+                    shapes = ListItemDefaults.segmentedShapes(index = 3, count = PLATFORM_SETTINGS_COUNT)
                 )
             }
 
