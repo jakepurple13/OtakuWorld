@@ -98,6 +98,8 @@ tasks.withType<org.jetbrains.compose.reload.gradle.ComposeHotRun>().configureEac
     mainClass.set("com.programmersbox.desktop.MainKt")
 }
 
+registerDesktopSplash()
+
 nucleus.application {
     mainClass = "com.programmersbox.desktop.MainKt"
 
@@ -127,8 +129,10 @@ nucleus.application {
 
         modules("jdk.unsupported")
 
-        // libVLC for the video player lands in appResources/<os>-<arch>/vlc (see vlc.gradle.kts).
+        // libVLC lands in appResources/<os>-<arch>/vlc (see vlc.gradle.kts) and splash.png in
+        // appResources/common (see registerDesktopSplash()).
         appResourcesRootDir.set(layout.buildDirectory.dir("appResources"))
+        splashImage = DESKTOP_SPLASH_IMAGE
 
         windows {
             packageVersion = numericVersion

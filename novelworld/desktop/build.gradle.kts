@@ -79,6 +79,8 @@ tasks.withType<org.jetbrains.compose.reload.gradle.ComposeHotRun>().configureEac
     mainClass.set("com.programmersbox.desktop.MainKt")
 }
 
+registerDesktopSplash()
+
 nucleus.application {
     mainClass = "com.programmersbox.desktop.MainKt"
 
@@ -107,6 +109,10 @@ nucleus.application {
         vendor = "jakepurple13 <jakepurple13@users.noreply.github.com>"
 
         modules("jdk.unsupported")
+
+        // splash.png lands in appResources/common (see registerDesktopSplash()).
+        appResourcesRootDir.set(layout.buildDirectory.dir("appResources"))
+        splashImage = DESKTOP_SPLASH_IMAGE
 
         windows {
             packageVersion = numericVersion

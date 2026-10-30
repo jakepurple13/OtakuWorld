@@ -120,6 +120,8 @@ internal fun ChapterPage(
     contentScale: ContentScale,
     imageLoaderType: ImageLoaderType,
     colorFilter: ColorFilter? = null,
+    aspectRatio: Float? = null,
+    onAspectRatio: (Float) -> Unit = {},
 ) {
     if (imageLoaderType == ImageLoaderType.Panpf) {
         Panpf(
@@ -142,6 +144,8 @@ internal fun ChapterPage(
                 contentScale = contentScale,
                 imageLoaderType = imageLoaderType,
                 colorFilter = colorFilter,
+                aspectRatio = aspectRatio,
+                onAspectRatio = onAspectRatio,
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -157,6 +161,8 @@ private fun ZoomableImage(
     contentScale: ContentScale = ContentScale.Fit,
     colorFilter: ColorFilter? = null,
     imageLoaderType: ImageLoaderType,
+    aspectRatio: Float? = null,
+    onAspectRatio: (Float) -> Unit = {},
 ) {
     Box(
         modifier = modifier
@@ -183,6 +189,8 @@ private fun ZoomableImage(
             },
             contentScale = contentScale,
             headers = headers,
+            aspectRatio = aspectRatio,
+            onAspectRatio = onAspectRatio,
             modifier = Modifier.align(Alignment.Center)
         )
     }
