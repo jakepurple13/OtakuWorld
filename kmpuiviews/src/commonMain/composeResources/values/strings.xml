@@ -284,4 +284,27 @@
     <string name="catch_up_delete_body">It will be removed from your saved notifications.</string>
     <string name="catch_up_dont_ask_again">Don\'t ask again during this catch-up</string>
     <string name="no_updates_description">New chapters from saved titles show up here.</string>
+    <string name="history_today">Today</string>
+    <string name="history_yesterday">Yesterday</string>
+    <string name="history_this_week">This week</string>
+    <plurals name="history_item_count">
+        <item quantity="one">%1$d item</item>
+        <item quantity="other">%1$d items</item>
+    </plurals>
+    <string name="search_history">Search history</string>
+    <string name="clear_search">Clear search</string>
+    <string name="more_options">More options</string>
+    <string name="select_all">Select all</string>
+    <string name="remove_selected">Remove selected</string>
+    <string name="clear_all_history_menu">Clear all history</string>
+    <string name="clear_all_history_body">This removes all %1$d items from History. It can't be undone.</string>
+    <string name="clear_all">Clear all</string>
+    <string name="history_removed_count">Removed %1$d items</string>
+    <string name="history_empty_title">No history yet</string>
+    <string name="history_empty_description">Anything you open shows up here, newest first.</string>
+    <string name="history_no_matches">No matches</string>
+    <string name="history_no_matches_description">Nothing in your history matches this search.</string>
+    <string name="history_reset_filters">Clear search and filter</string>
+    <string name="source_not_installed">%1$s · not installed</string>
+    <string name="remove_from_history">Remove from history</string>
 </resources>
