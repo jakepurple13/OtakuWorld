@@ -183,6 +183,9 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   updating every app; until then sync shows a "schema is out of date" error. Each app re-uploads
   its local data on its first sync after the migration. Cloud backups made before this change no
   longer appear in restore ([#2616](https://github.com/jakepurple13/OtakuWorld/pull/2616))
+- Recent screen: swiping the source icon now follows the source chooser's order, including
+  language order within an extension, opens on the chosen source, and no longer snaps back on
+  short swipes ([#2647](https://github.com/jakepurple13/OtakuWorld/pull/2647))
 
 #### Removed
 
