@@ -140,6 +140,10 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 - Details screen opens faster: the cover shows right away from the screen you came from, its
   colors are worked out in the background, and the colors stay when you rotate
   ([#2643](https://github.com/jakepurple13/OtakuWorld/pull/2643))
+- Choosing a language in the source chooser: a multi-language extension opens in one tap in your
+  current or preferred language. A language pill on the row opens a searchable grid of every
+  language, with your preferred languages first
+  ([#2645](https://github.com/jakepurple13/OtakuWorld/pull/2645))
 - AI chat input moved to the bottom bar and handles the keyboard correctly
   ([#2522](https://github.com/jakepurple13/OtakuWorld/pull/2522))
 - Sensitive settings now use encrypted DataStore (Google Tink)
