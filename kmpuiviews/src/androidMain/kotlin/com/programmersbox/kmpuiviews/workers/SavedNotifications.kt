@@ -126,6 +126,7 @@ object SavedNotifications {
         val client = HttpClient()
         val icon = logo.notificationId
         dao.getAllNotifications()
+            .filter { it.isShowing }
             .fastMap { n ->
                 printLogs { n }
                 dao.updateNotification(
