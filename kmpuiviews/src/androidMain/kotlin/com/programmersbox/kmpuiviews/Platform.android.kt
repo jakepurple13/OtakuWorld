@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews
 
+import android.app.ActivityManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
@@ -30,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -57,6 +59,7 @@ import com.programmersbox.kmpuiviews.utils.openInCustomChromeBrowser
 import com.programmersbox.kmpuiviews.utils.printLogs
 import io.github.vinceglb.filekit.PlatformFile
 import io.kamel.core.ExperimentalKamelApi
+import io.kamel.core.cache.Cache
 import io.kamel.core.config.DefaultHttpCacheSize
 import io.kamel.core.config.KamelConfig
 import io.kamel.core.config.httpUrlFetcher
@@ -141,7 +144,7 @@ actual fun customKamelConfig(): KamelConfig {
     val context = LocalContext.current
     // Remembered so recomposition doesn't discard the in-memory bitmap cache and HTTP client.
     return remember(context) {
-        KamelConfig {
+        val config = KamelConfig {
             takeFrom(KamelConfig.Default)
             // Kamel's default fetcher resolves Ktor's Android (HttpURLConnection) engine. Since Ktor 3.5,
             // cancelling a load closes that stream on the cancelling (main) thread while an IO thread is
@@ -152,6 +155,11 @@ actual fun customKamelConfig(): KamelConfig {
             imageBitmapResizingDecoder()
             animatedImageDecoder()
             resourcesFetcher(context)
+        }
+        // Half the app's memory class (128MB on a 256MB-class phone) for decoded images.
+        val memoryClassBytes = context.getSystemService(ActivityManager::class.java).memoryClass * 1024L * 1024L
+        object : KamelConfig by config {
+            override val imageBitmapCache: Cache<Any, ImageBitmap> = ByteBoundedImageCache(memoryClassBytes / 2)
         }
     }
 }
