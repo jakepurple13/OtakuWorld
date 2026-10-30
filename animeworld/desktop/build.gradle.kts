@@ -1,4 +1,4 @@
-import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import dev.nucleusframework.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.compose.compiler.gradle.ComposeFeatureFlag
 
 plugins {
@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.compose.compiler)
     id("org.jetbrains.compose.hot-reload")
     id("kotlinx-serialization")
+    id("dev.nucleusframework")
 }
 
 apply(from = "vlc.gradle.kts")
@@ -60,6 +61,11 @@ kotlin {
 
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
+            // CMP 1.13 ships Skiko natives only in skiko-awt-runtime-all, but Nucleus packaging only
+            // extracts libskiko from the per-platform runtime jar (while still pointing skiko.library.path
+            // at $APPDIR). Pull in the current platform jar so the packaged app can load Skiko.
+            // Version comes from skiko-awt's dependency constraints.
+            runtimeOnly("org.jetbrains.skiko:skiko-awt-runtime-${compose.desktop.currentOs.substringAfter("desktop-jvm-").substringBefore(':')}")
             implementation(desktopLibs.kotlinx.coroutines.swing)
         }
 
@@ -84,41 +90,69 @@ composeCompiler {
     featureFlags.add(ComposeFeatureFlag.OptimizeNonSkippingGroups)
 }
 
+val desktopVersion = System.getenv("DESKTOP_VERSION") ?: AppInfo.otakuVersionName
+val numericVersion = desktopVersion.substringBefore('-')
+
+// Hot reload's hotRunJvm defaults its main class from compose.desktop.application, which is no longer applied.
+tasks.withType<org.jetbrains.compose.reload.gradle.ComposeHotRun>().configureEach {
+    mainClass.set("com.programmersbox.desktop.MainKt")
+}
+
 registerDesktopSplash()
 
-compose.desktop {
-    application {
-        mainClass = "com.programmersbox.desktop.MainKt"
+// DESKTOP_VERSION is read from the environment, so Gradle must see it as an input or it reuses stale outputs.
+tasks.configureEach {
+    if (name == "generateAppProperties" || name.startsWith("package") || (name.startsWith("create") && name.endsWith("Distributable"))) {
+        inputs.property("desktopVersion", desktopVersion)
+    }
+}
 
-        jvmArgs(DESKTOP_SPLASH_JVM_ARG)
+nucleus.application {
+    mainClass = "com.programmersbox.desktop.MainKt"
 
-        jvmArgs("--add-opens", "java.desktop/sun.awt=ALL-UNNAMED")
-        jvmArgs("--add-opens", "java.desktop/java.awt.peer=ALL-UNNAMED")
+    jvmArgs("--add-opens", "java.desktop/sun.awt=ALL-UNNAMED")
+    jvmArgs("--add-opens", "java.desktop/java.awt.peer=ALL-UNNAMED")
 
-        if (System.getProperty("os.name").contains("Mac")) {
-            jvmArgs("--add-opens", "java.desktop/sun.lwawt=ALL-UNNAMED")
-            jvmArgs("--add-opens", "java.desktop/sun.lwawt.macosx=ALL-UNNAMED")
+    if (System.getProperty("os.name").contains("Mac")) {
+        jvmArgs("--add-opens", "java.desktop/sun.lwawt=ALL-UNNAMED")
+        jvmArgs("--add-opens", "java.desktop/sun.lwawt.macosx=ALL-UNNAMED")
+    }
+
+    nativeDistributions {
+        cleanupNativeLibs = true
+        targetFormats(
+            *listOfNotNull(
+                TargetFormat.Dmg,
+                TargetFormat.Zip.takeIf { System.getProperty("os.name").contains("Mac") },
+                TargetFormat.Nsis,
+                TargetFormat.Deb,
+                TargetFormat.AppImage,
+            ).toTypedArray()
+        )
+        packageName = "AnimeWorld"
+        packageVersion = desktopVersion
+        homepage = "https://github.com/jakepurple13/OtakuWorld"
+        // electron-builder needs a maintainer email for DEB packages
+        vendor = "jakepurple13 <jakepurple13@users.noreply.github.com>"
+
+        modules("jdk.unsupported")
+
+        // libVLC lands in appResources/<os>-<arch>/vlc (see vlc.gradle.kts) and splash.png in
+        // appResources/common (see registerDesktopSplash()).
+        appResourcesRootDir.set(layout.buildDirectory.dir("appResources"))
+        splashImage = DESKTOP_SPLASH_IMAGE
+
+        windows {
+            packageVersion = numericVersion
+            iconFile.set(project.file("icons/icon.ico"))
         }
-
-        nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "AnimeWorld"
-            packageVersion = "1.0.0"
-
-            modules("jdk.unsupported")
-
-            // libVLC for the video player lands in appResources/<os>-<arch>/vlc (see vlc.gradle.kts).
-            appResourcesRootDir.set(layout.buildDirectory.dir("appResources"))
-
-            windows {
-                iconFile.set(project.file("icons/icon.ico"))
-            }
-            macOS {
-                iconFile.set(project.file("icons/icon.icns"))
-            }
-            linux {
-                iconFile.set(project.file("icons/icon.png"))
-            }
+        macOS {
+            packageVersion = numericVersion
+            iconFile.set(project.file("icons/icon.icns"))
+        }
+        linux {
+            debMaintainer = "jakepurple13 <jakepurple13@users.noreply.github.com>"
+            iconFile.set(project.file("icons/icon.png"))
         }
     }
 }

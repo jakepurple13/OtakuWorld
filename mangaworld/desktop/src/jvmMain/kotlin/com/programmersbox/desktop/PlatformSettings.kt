@@ -29,6 +29,7 @@ import ca.gosyer.appdirs.AppDirs
 import com.programmersbox.datastore.asState
 import com.programmersbox.kmpuiviews.MangaDesktopSettings
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
+import com.programmersbox.kmpuiviews.updates.updatesSettingsGroup
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.absolutePath
 import io.github.vinceglb.filekit.dialogs.compose.rememberDirectoryPickerLauncher
@@ -137,6 +138,8 @@ fun JvmSettingsScreen() {
                     shapes = ListItemDefaults.segmentedShapes(index = 2, count = PLATFORM_SETTINGS_COUNT)
                 )
             }
+
+            updatesSettingsGroup()
         }
     }
 }

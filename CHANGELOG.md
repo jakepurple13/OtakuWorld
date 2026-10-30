@@ -156,6 +156,9 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   ([#2522](https://github.com/jakepurple13/OtakuWorld/pull/2522))
 - Sensitive settings now use encrypted DataStore (Google Tink)
   ([#2532](https://github.com/jakepurple13/OtakuWorld/pull/2532))
+- Pre-release screen shows only the files for your platform: APKs on Android, and this app's
+  installers on Desktop
+  ([#2650](https://github.com/jakepurple13/OtakuWorld/pull/2650))
 
 #### Bug Fixes
 
@@ -242,6 +245,16 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   ([70dfd0a3d](https://github.com/jakepurple13/OtakuWorld/commit/70dfd0a3d))
 - Desktop apps show their real app icon
   ([#2507](https://github.com/jakepurple13/OtakuWorld/pull/2507))
+- Desktop apps check for updates on launch and show an update dialog with download, skip this
+  version, later, and restart-to-install options
+  ([#2650](https://github.com/jakepurple13/OtakuWorld/pull/2650))
+- New "Updates" group in Desktop Settings: Check now, Check automatically toggle, update track
+  (Nightly or Stable), and a Download from GitHub fallback. Nightly builds get nightly and stable
+  updates; stable builds get stable updates only
+  ([#2650](https://github.com/jakepurple13/OtakuWorld/pull/2650))
+- New desktop package formats: ZIP for macOS, an NSIS installer for Windows (replaces MSI), and
+  AppImage for Linux. Desktop builds are unsigned for now
+  ([#2650](https://github.com/jakepurple13/OtakuWorld/pull/2650))
 
 #### Improvements
 
@@ -254,6 +267,8 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 
 - Fixed packaged desktop apps failing to launch: the `jdk.unsupported` module is now included in
   the runtime image ([#2531](https://github.com/jakepurple13/OtakuWorld/pull/2531))
+- Fixed packaged desktop apps failing to start with a missing Skiko native library
+  ([#2650](https://github.com/jakepurple13/OtakuWorld/pull/2650))
 
 ### Under the Hood
 

@@ -71,29 +71,47 @@ jobs:
     with:
       IS_PRERELEASE: true
 
-  mangaworldDesktop:
+  desktopVersion:
+    name: Compute desktop version
     needs: checkNightly
+    continue-on-error: true # failure just skips desktop builds
     if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
-    uses: ./.github/workflows/mangaworld_desktop_build.yaml
-    secrets: inherit # pass all secrets
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # Required to see release tags
+      - name: Compute version
+        id: version
+        run: |
+          echo "version=$(bash .github/scripts/desktop-version.sh nightly buildSrc/src/main/kotlin/AppInfo.kt "$(date -u +%Y%m%d%H%M)")" >> "$GITHUB_OUTPUT"
+
+  mangaworldDesktop:
+    needs: [ checkNightly, desktopVersion ]
+    if: ${{ needs.checkNightly.outputs.shouldRun == 'true' && needs.desktopVersion.outputs.version != '' }}
+    uses: ./.github/workflows/desktop_release.yaml
     with:
-      IS_PRERELEASE: true
+      app: mangaworld
+      version: ${{ needs.desktopVersion.outputs.version }}
 
   animeworldDesktop:
-    needs: checkNightly
-    if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
-    uses: ./.github/workflows/animeworld_desktop_build.yaml
-    secrets: inherit # pass all secrets
+    needs: [ checkNightly, desktopVersion ]
+    if: ${{ needs.checkNightly.outputs.shouldRun == 'true' && needs.desktopVersion.outputs.version != '' }}
+    uses: ./.github/workflows/desktop_release.yaml
     with:
-      IS_PRERELEASE: true
+      app: animeworld
+      version: ${{ needs.desktopVersion.outputs.version }}
 
   novelworldDesktop:
-    needs: checkNightly
-    if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
-    uses: ./.github/workflows/novelworld_desktop_build.yaml
-    secrets: inherit # pass all secrets
+    needs: [ checkNightly, desktopVersion ]
+    if: ${{ needs.checkNightly.outputs.shouldRun == 'true' && needs.desktopVersion.outputs.version != '' }}
+    uses: ./.github/workflows/desktop_release.yaml
     with:
-      IS_PRERELEASE: true
+      app: novelworld
+      version: ${{ needs.desktopVersion.outputs.version }}
 
   #  otakuworld:
   #    needs: checkNightly
@@ -105,8 +123,9 @@ jobs:
 
   release:
     name: Release APK
-    needs: [ mangaworld, animeworld, novelworld, mangaworldDesktop, animeworldDesktop, novelworldDesktop ]
-    if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
+    needs: [ checkNightly, mangaworld, animeworld, novelworld, mangaworldDesktop, animeworldDesktop, novelworldDesktop ]
+    # desktop jobs may fail or be skipped; only the Android builds gate the release
+    if: ${{ !cancelled() && needs.checkNightly.outputs.shouldRun == 'true' && needs.mangaworld.result == 'success' && needs.animeworld.result == 'success' && needs.novelworld.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Download all build artifacts
@@ -128,14 +147,29 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          fail_on_unmatched_files: true
+          fail_on_unmatched_files: false # a failed/skipped desktop leg must not block the APKs
           prerelease: true
           generate_release_notes: true
           tag_name: nightly_${{ env.NIGHTLY_TAG }}
           name: OtakuWorld Nightly Release ${{ env.NIGHTLY_TIME }}
           body: Nightly release of OtakuWorld at ${{ env.NIGHTLY_TIME }}
           files: |
-            ${{ github.workspace }}/release-artifacts/**
+            ${{ github.workspace }}/release-artifacts/**/*.apk
+
+      - name: Check out upload script
+        if: always()
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: .github/scripts
+          path: repo
+
+      - name: Upload desktop assets
+        if: always()
+        continue-on-error: true # desktop problems must never block the Android release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: bash repo/.github/scripts/upload-desktop-assets.sh "nightly_${{ env.NIGHTLY_TAG }}" release-artifacts
 
       - name: Discord notification
         env:

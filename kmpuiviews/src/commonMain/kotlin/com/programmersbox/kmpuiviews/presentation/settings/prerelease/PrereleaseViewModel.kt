@@ -11,6 +11,7 @@ import androidx.lifecycle.viewModelScope
 import com.programmersbox.kmpuiviews.repository.DownloadStateInterface
 import com.programmersbox.kmpuiviews.repository.GitHubPrerelease
 import com.programmersbox.kmpuiviews.repository.PrereleaseRepository
+import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -20,6 +21,7 @@ import kotlin.time.ExperimentalTime
 class PrereleaseViewModel(
     private val prereleaseRepository: PrereleaseRepository,
     private val downloadStateRepository: DownloadStateInterface,
+    private val appConfig: AppConfig,
 ) : ViewModel() {
 
     var uiState by mutableStateOf<PrereleaseUiState>(PrereleaseUiState.Loading)
@@ -48,7 +50,13 @@ class PrereleaseViewModel(
                         .filter { it.prerelease }
                         .maxBy { it.createdAt }
                 }
-                .map { it.copy(assets = it.assets.sortedBy { it.name }) }
+                .map { release ->
+                    release.copy(
+                        assets = release.assets
+                            .filter { isPrereleaseAssetForPlatform(it.name, appConfig.appName, currentAssetPlatform) }
+                            .sortedBy { it.name }
+                    )
+                }
                 .onFailure { it.printStackTrace() }
                 .fold(
                     onSuccess = { PrereleaseUiState.Success(it) },
