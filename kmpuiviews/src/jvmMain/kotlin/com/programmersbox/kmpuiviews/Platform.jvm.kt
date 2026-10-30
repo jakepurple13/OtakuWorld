@@ -271,4 +271,14 @@ class MangaDesktopSettings(
         key = stringPreferencesKey("downloadsDirectory"),
         defaultValue = File("${System.getProperty("user.home")}/Downloads/MangaWorld").absolutePath
     )
+
+    val checkUpdatesOnLaunch = DataStoreHandler(
+        key = booleanPreferencesKey("checkUpdatesOnLaunch"),
+        defaultValue = true
+    )
+
+    val skippedUpdateVersion = DataStoreHandler(
+        key = stringPreferencesKey("skippedUpdateVersion"),
+        defaultValue = ""
+    )
 }
