@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -17,8 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -32,7 +29,6 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.BottomSheetScaffoldState
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -44,20 +40,16 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.SearchBarDefaults
-import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.carousel.CarouselDefaults
 import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
 import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
-import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberSearchBarState
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -67,13 +59,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -85,8 +75,6 @@ import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.DynamicSearchBar
-import com.programmersbox.kmpuiviews.presentation.components.LimitedBottomSheetScaffold
-import com.programmersbox.kmpuiviews.presentation.components.LimitedBottomSheetScaffoldDefaults
 import com.programmersbox.kmpuiviews.presentation.components.NormalOtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.OtakuPullToRefreshBox
 import com.programmersbox.kmpuiviews.presentation.components.blurkind.BlurKindState
@@ -109,7 +97,6 @@ import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
-import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
 import com.programmersbox.kmpuiviews.utils.composables.modifiers.combineClickableWithIndication
 import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
@@ -123,7 +110,6 @@ import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.global_search
-import otakuworld.kmpuiviews.generated.resources.search_found
 import otakuworld.kmpuiviews.generated.resources.you_re_offline
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
@@ -151,9 +137,7 @@ fun GlobalSearchScreen(
         .searchHistory("%${viewModel.searchText.text}%")
         .collectAsStateWithLifecycle(emptyList())
 
-    val bottomScaffold = rememberBottomSheetScaffoldState()
     var optionsSheet by optionsKmpSheet()
-    var searchModelBottom by remember { mutableStateOf<SearchModel?>(null) }
     var showLanguages by remember { mutableStateOf(false) }
 
     if (showLanguages) {
@@ -165,18 +149,8 @@ fun GlobalSearchScreen(
         )
     }
 
-    BackHandler(bottomScaffold.bottomSheetState.currentValue == SheetValue.Expanded) {
-        scope.launch {
-            runCatching {
-                bottomScaffold.bottomSheetState.partialExpand()
-            }.onFailure { navController.popBackStack() }
-        }
-    }
-
-    val biometric = rememberBiometricOpening()
-
-    LimitedBottomSheetScaffold(
-        scaffoldState = bottomScaffold,
+    NormalOtakuScaffold(
+        contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
         topBar = {
             val searchBarState = rememberSearchBarState()
 
@@ -279,44 +253,6 @@ fun GlobalSearchScreen(
                 }
             }
         },
-        sheetContent = searchModelBottom?.let { s ->
-            {
-                val sheetScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
-                NormalOtakuScaffold(
-                    topBar = {
-                        TopAppBar(
-                            scrollBehavior = sheetScrollBehavior,
-                            title = { Text(s.apiName) },
-                            actions = { Text(stringResource(Res.string.search_found, s.data.size)) },
-                            windowInsets = WindowInsets(0.dp)
-                        )
-                    },
-                    modifier = Modifier
-                        .padding(bottom = LocalNavHostPadding.current.calculateBottomPadding())
-                        .nestedScroll(sheetScrollBehavior.nestedScrollConnection),
-                ) { p ->
-                    LazyVerticalGrid(
-                        columns = adaptiveGridCell(),
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        contentPadding = p,
-                    ) {
-                        items(s.data) { m ->
-                            SearchCoverCard(
-                                model = m,
-                                onLongPress = { c -> optionsSheet = m }
-                            ) { scope.launch { biometric.openIfNotIncognito(m) } }
-                        }
-                    }
-                }
-            }
-        } ?: {},
-        bottomSheet = LimitedBottomSheetScaffoldDefaults.bottomSheet(
-            sheetPeekHeight = 0.dp
-        ),
-        colors = LimitedBottomSheetScaffoldDefaults.colors(
-            topAppBarContainerColor = Color.Transparent
-        )
     ) { padding ->
         Crossfade(targetState = networkState, label = "") { network ->
             if (network) {
@@ -327,8 +263,7 @@ fun GlobalSearchScreen(
                     listState = listState,
                     blurKindState = blurKindState,
                     scope = scope,
-                    onSearchModel = { searchModelBottom = it },
-                    bottomScaffold = bottomScaffold,
+                    onSearchModel = { navController.sourceSearch(it.serviceName, viewModel.searchedText) },
                     onLongPress = { optionsSheet = it },
                     onLanguagesClick = { showLanguages = true },
                 )
@@ -350,7 +285,6 @@ private fun Content(
     scope: CoroutineScope,
     onSearchModel: (SearchModel) -> Unit,
     onLongPress: (KmpItemModel) -> Unit,
-    bottomScaffold: BottomSheetScaffoldState,
     onLanguagesClick: () -> Unit,
 ) {
     val biometrics = rememberBiometricOpening()
@@ -423,10 +357,7 @@ private fun Content(
                     Surface(
                         tonalElevation = 4.dp,
                         shape = MaterialTheme.shapes.medium,
-                        onClick = {
-                            onSearchModel(i)
-                            scope.launch { bottomScaffold.bottomSheetState.expand() }
-                        }
+                        onClick = { onSearchModel(i) }
                     ) {
                         Column {
                             Box(modifier = Modifier.fillMaxWidth()) {
@@ -438,24 +369,10 @@ private fun Content(
                                         .padding(start = 4.dp)
                                 ) {
                                     Text(i.title)
-                                    i.language?.let { lang ->
-                                        Surface(
-                                            color = MaterialTheme.colorScheme.tertiaryContainer,
-                                            shape = MaterialTheme.shapes.small,
-                                        ) {
-                                            Text(
-                                                lang,
-                                                style = MaterialTheme.typography.labelSmall,
-                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                            )
-                                        }
-                                    }
+                                    i.language?.let { LanguageBadge(it) }
                                 }
                                 IconButton(
-                                    onClick = {
-                                        onSearchModel(i)
-                                        scope.launch { bottomScaffold.bottomSheetState.expand() }
-                                    },
+                                    onClick = { onSearchModel(i) },
                                     modifier = Modifier.align(Alignment.CenterEnd)
                                 ) {
                                     Row {

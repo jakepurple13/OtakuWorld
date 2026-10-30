@@ -58,6 +58,10 @@ class GlobalSearchViewModel(
     var isRefreshing by mutableStateOf(false)
     var isSearching by mutableStateOf(false)
 
+    /** The query behind [searchListPublisher], which can differ from [searchText] once the user edits it. */
+    var searchedText by mutableStateOf("")
+        private set
+
     private var searchJob: Job? = null
 
     init {
@@ -73,6 +77,7 @@ class GlobalSearchViewModel(
             isRefreshing = true
             isSearching = true
             searchListPublisher = emptyList()
+            searchedText = searchText.text.toString()
             //TODO: Add option to have live population or all at once
             searchFlow().collect()
             //searchAllFlow()
@@ -89,7 +94,7 @@ class GlobalSearchViewModel(
                     .apiService
                     .searchSourceList(searchText.text.toString(), list = emptyList())
                     .dispatchIoAndCatchList()
-                    .map { SearchModel(a.apiService.displayName, it, a.apiService.language) }
+                    .map { SearchModel(a.apiService.displayName, it, a.apiService.language, a.apiService.serviceName) }
                     .filter { it.data.isNotEmpty() }
                     .onEach { searchListPublisher += it }
                     .onCompletion { isRefreshing = false }
@@ -109,7 +114,7 @@ class GlobalSearchViewModel(
                             .apiService
                             .searchSourceList(searchText.text.toString(), list = emptyList())
                             .dispatchIoAndCatchList()
-                            .map { SearchModel(a.apiService.displayName, it, a.apiService.language) }
+                            .map { SearchModel(a.apiService.displayName, it, a.apiService.language, a.apiService.serviceName) }
                             .filter { it.data.isNotEmpty() }
                             .firstOrNull()
                     }
@@ -123,7 +128,12 @@ class GlobalSearchViewModel(
 
 }
 
-data class SearchModel(val apiName: String, val data: List<KmpItemModel>, val language: String? = null) {
+data class SearchModel(
+    val apiName: String,
+    val data: List<KmpItemModel>,
+    val language: String? = null,
+    val serviceName: String,
+) {
     /** [apiName] without the language suffix, which is shown as a badge instead. */
     val title: String get() = language?.let { apiName.removeSuffix(" ($it)") } ?: apiName
 }
