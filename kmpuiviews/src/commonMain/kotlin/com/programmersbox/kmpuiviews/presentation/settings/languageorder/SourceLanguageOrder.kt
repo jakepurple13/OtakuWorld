@@ -58,6 +58,9 @@ object SourceLanguageOrdering {
             .thenBy { rank(it.apiService.language, ranked) }
             .thenBy { it.apiService.language.orEmpty() })
 
+    /** Whether [language] has a rank of its own or through its base language. */
+    fun isRanked(language: String?, ranked: List<String>) = bucket(language, ranked) == 0
+
     /** [languages] in the order [sort] would put them. */
     fun order(languages: List<String>, ranked: List<String>): List<String> =
         languages.sortedWith(compareBy<String> { bucket(it, ranked) }.thenBy { rank(it, ranked) }.thenBy { it })

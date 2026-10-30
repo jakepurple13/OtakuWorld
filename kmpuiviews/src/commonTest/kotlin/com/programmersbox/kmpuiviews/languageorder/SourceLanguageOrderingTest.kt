@@ -31,6 +31,15 @@ class SourceLanguageOrderingTest {
     private fun List<KmpSourceInformation>.languages() = map { it.apiService.language }
 
     @Test
+    fun rankedMeansRankedDirectlyOrThroughTheBaseLanguage() {
+        val ranked = listOf("en", "pt")
+        assertEquals(
+            listOf(true, true, false, false, false),
+            listOf("en", "pt-BR", "ja", "all", null).map { SourceLanguageOrdering.isRanked(it, ranked) },
+        )
+    }
+
+    @Test
     fun rankedLanguagesComeFirstThenTheRestAToZ() {
         assertEquals(
             listOf("en", "ja", "es", "es-419", "fr", "pt", "pt-BR"),
