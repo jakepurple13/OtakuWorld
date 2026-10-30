@@ -216,6 +216,8 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   [ce9b4ca80](https://github.com/jakepurple13/OtakuWorld/commit/ce9b4ca80))
 - Fixed bundled JS extensions not building or packaging on Android
   ([#2511](https://github.com/jakepurple13/OtakuWorld/pull/2511))
+- Notify on boot now only re-posts notifications that were still in the tray, not every saved
+  notification ([#2644](https://github.com/jakepurple13/OtakuWorld/pull/2644))
 
 ### Desktop Only
 
