@@ -20,6 +20,7 @@ import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -27,6 +28,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -70,9 +72,14 @@ private fun LazyItemScope.CheckForUpdatesItem() {
         highlighted -> MaterialTheme.colorScheme.primaryContainer
         else -> MaterialTheme.colorScheme.surfaceContainer
     }
-    val colors = ListItemDefaults.colors(
-        containerColor = container,
-        disabledContainerColor = container,
+    val colors = staticItemColors(
+        container = container,
+        content = if (state is DesktopUpdateState.Error) MaterialTheme.colorScheme.onErrorContainer
+        else if (highlighted) MaterialTheme.colorScheme.onPrimaryContainer
+        else MaterialTheme.colorScheme.onSurface,
+        supporting = if (state is DesktopUpdateState.Error) MaterialTheme.colorScheme.onErrorContainer
+        else if (highlighted) MaterialTheme.colorScheme.onPrimaryContainer
+        else MaterialTheme.colorScheme.onSurfaceVariant,
     )
 
     val status = when (val s = state) {
@@ -157,15 +164,22 @@ private fun LazyItemScope.CheckAutomaticallyItem() {
     val settings = koinInject<MangaDesktopSettings>()
     val state by updater.state.collectAsState()
     var checkOnLaunch by settings.checkUpdatesOnLaunch.asState()
+    val enabled = state != DesktopUpdateState.Unsupported
 
     SegmentedListItem(
         content = { Text("Check automatically") },
         supportingContent = { Text("Look for updates each time the app starts") },
         leadingContent = { Icon(Icons.Default.Schedule, null) },
+        trailingContent = {
+            Switch(checked = checkOnLaunch, onCheckedChange = null, enabled = enabled)
+        },
         checked = checkOnLaunch,
         onCheckedChange = { checkOnLaunch = it },
-        enabled = state != DesktopUpdateState.Unsupported,
-        colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+        enabled = enabled,
+        colors = ListItemDefaults.segmentedColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            selectedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+        ),
         shapes = ListItemDefaults.segmentedShapes(index = 1, count = UPDATES_COUNT),
         modifier = Modifier.animateItem()
     )
@@ -189,9 +203,10 @@ private fun LazyItemScope.UpdateTrackItem() {
             Text("$gets. Set by the build you installed.")
         },
         leadingContent = { Icon(Icons.Default.Update, null) },
-        colors = ListItemDefaults.colors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer,
-            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+        colors = staticItemColors(
+            container = MaterialTheme.colorScheme.surfaceContainer,
+            content = MaterialTheme.colorScheme.onSurface,
+            supporting = MaterialTheme.colorScheme.onSurfaceVariant,
         ),
         shapes = ListItemDefaults.segmentedShapes(index = 2, count = UPDATES_COUNT),
         modifier = Modifier.animateItem()
@@ -218,3 +233,21 @@ private fun LazyItemScope.DownloadFromGitHubItem() {
 }
 
 private fun Long.toMb(): String = String.format(Locale.ROOT, "%.1f", this / 1_048_576.0)
+
+/** Colors for non-interactive rows (`enabled = false`) so content keeps its normal, undimmed colors. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun staticItemColors(container: Color, content: Color, supporting: Color) = ListItemDefaults.segmentedColors(
+    containerColor = container,
+    contentColor = content,
+    leadingContentColor = content,
+    trailingContentColor = content,
+    overlineContentColor = supporting,
+    supportingContentColor = supporting,
+    disabledContainerColor = container,
+    disabledContentColor = content,
+    disabledLeadingContentColor = content,
+    disabledTrailingContentColor = content,
+    disabledOverlineContentColor = supporting,
+    disabledSupportingContentColor = supporting,
+)
