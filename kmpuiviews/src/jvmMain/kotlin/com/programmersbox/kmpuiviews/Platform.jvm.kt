@@ -118,10 +118,12 @@ actual val databaseBuilder: Module = module {
 @OptIn(ExperimentalKamelApi::class)
 @Composable
 actual fun customKamelConfig(): KamelConfig {
-    return KamelConfig {
-        takeFrom(KamelConfig.Default)
-        animatedImageDecoder()
-        resourcesFetcher()
+    return remember {
+        KamelConfig {
+            takeFrom(KamelConfig.Default)
+            animatedImageDecoder()
+            resourcesFetcher()
+        }
     }
 }
 

@@ -139,17 +139,20 @@ actual val databaseBuilder: Module = module {
 @Composable
 actual fun customKamelConfig(): KamelConfig {
     val context = LocalContext.current
-    return KamelConfig {
-        takeFrom(KamelConfig.Default)
-        // Kamel's default fetcher resolves Ktor's Android (HttpURLConnection) engine. Since Ktor 3.5,
-        // cancelling a load closes that stream on the cancelling (main) thread while an IO thread is
-        // still reading it, which crashes with "Unbalanced enter/exit". OkHttp closes on its reader.
-        httpUrlFetcher(OkHttp.create()) {
-            httpCache(DefaultHttpCacheSize)
+    // Remembered so recomposition doesn't discard the in-memory bitmap cache and HTTP client.
+    return remember(context) {
+        KamelConfig {
+            takeFrom(KamelConfig.Default)
+            // Kamel's default fetcher resolves Ktor's Android (HttpURLConnection) engine. Since Ktor 3.5,
+            // cancelling a load closes that stream on the cancelling (main) thread while an IO thread is
+            // still reading it, which crashes with "Unbalanced enter/exit". OkHttp closes on its reader.
+            httpUrlFetcher(OkHttp.create()) {
+                httpCache(DefaultHttpCacheSize)
+            }
+            imageBitmapResizingDecoder()
+            animatedImageDecoder()
+            resourcesFetcher(context)
         }
-        imageBitmapResizingDecoder()
-        animatedImageDecoder()
-        resourcesFetcher(context)
     }
 }
 
