@@ -103,6 +103,8 @@ nucleus.application {
         packageName = "NovelWorld"
         packageVersion = desktopVersion
         homepage = "https://github.com/jakepurple13/OtakuWorld"
+        // electron-builder needs a maintainer email for DEB packages
+        vendor = "jakepurple13 <jakepurple13@users.noreply.github.com>"
 
         modules("jdk.unsupported")
 
@@ -115,6 +117,7 @@ nucleus.application {
             iconFile.set(project.file("icons/icon.icns"))
         }
         linux {
+            debMaintainer = "jakepurple13 <jakepurple13@users.noreply.github.com>"
             iconFile.set(project.file("icons/icon.png"))
         }
     }
