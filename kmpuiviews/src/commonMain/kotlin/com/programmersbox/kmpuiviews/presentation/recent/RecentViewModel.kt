@@ -10,6 +10,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ExceptionDao
 import com.programmersbox.favoritesdatabase.ItemDao
@@ -19,6 +20,7 @@ import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.createConnectivity
+import com.programmersbox.kmpuiviews.presentation.settings.languageorder.languageOrderState
 import com.programmersbox.kmpuiviews.recordFirebaseException
 import com.programmersbox.kmpuiviews.repository.CurrentSourceRepository
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
@@ -27,6 +29,7 @@ import com.programmersbox.kmpuiviews.utils.dispatchIo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapMerge
@@ -43,6 +46,7 @@ class RecentViewModel(
     dao: ItemDao,
     sourceRepository: SourceRepository,
     currentSourceRepository: CurrentSourceRepository,
+    settings: NewSettingsHandling,
     private val favoritesRepository: FavoritesRepository,
     private val exceptionDao: ExceptionDao,
 ) : ViewModel() {
@@ -72,7 +76,11 @@ class RecentViewModel(
     var isIncognitoSource by mutableStateOf(false)
 
     init {
-        combineSources(sourceRepository, dao)
+        // Same order as the source chooser: extension order, then the user's language order within each extension
+        combine(
+            combineSources(sourceRepository, dao),
+            languageOrderState(sourceRepository, settings),
+        ) { list, languageOrder -> list.groupBy { it.packageName }.values.flatMap(languageOrder::sort) }
             .onEach {
                 sources.clear()
                 sources.addAll(it)

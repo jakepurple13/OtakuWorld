@@ -119,6 +119,10 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 - Details screen transition: opening an item from a cover or list row flies its cover and title
   into the Details header, and back on return
   ([#2643](https://github.com/jakepurple13/OtakuWorld/pull/2643))
+- Global search: tap a source to open its own results screen and keep scrolling to load more pages.
+  Pages are marked with dividers, a failed page can be retried, and returning from Details keeps
+  your place. This replaces the source results bottom sheet
+  ([#2646](https://github.com/jakepurple13/OtakuWorld/pull/2646))
 - Redesigned History screen: items are grouped by day with sticky headers, and you can search by
   title or filter by source. Swipe or multi-select to remove items, with Undo. Items from sources
   you don't have installed are marked, and each row has an info button for the options sheet
@@ -144,6 +148,10 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 - Details screen opens faster: the cover shows right away from the screen you came from, its
   colors are worked out in the background, and the colors stay when you rotate
   ([#2643](https://github.com/jakepurple13/OtakuWorld/pull/2643))
+- Choosing a language in the source chooser: a multi-language extension opens in one tap in your
+  current or preferred language. A language pill on the row opens a searchable grid of every
+  language, with your preferred languages first
+  ([#2645](https://github.com/jakepurple13/OtakuWorld/pull/2645))
 - AI chat input moved to the bottom bar and handles the keyboard correctly
   ([#2522](https://github.com/jakepurple13/OtakuWorld/pull/2522))
 - Sensitive settings now use encrypted DataStore (Google Tink)
@@ -179,6 +187,9 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   updating every app; until then sync shows a "schema is out of date" error. Each app re-uploads
   its local data on its first sync after the migration. Cloud backups made before this change no
   longer appear in restore ([#2616](https://github.com/jakepurple13/OtakuWorld/pull/2616))
+- Recent screen: swiping the source icon now follows the source chooser's order, including
+  language order within an extension, opens on the chosen source, and no longer snaps back on
+  short swipes ([#2647](https://github.com/jakepurple13/OtakuWorld/pull/2647))
 
 #### Removed
 
@@ -220,6 +231,8 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   [ce9b4ca80](https://github.com/jakepurple13/OtakuWorld/commit/ce9b4ca80))
 - Fixed bundled JS extensions not building or packaging on Android
   ([#2511](https://github.com/jakepurple13/OtakuWorld/pull/2511))
+- Notify on boot now only re-posts notifications that were still in the tray, not every saved
+  notification ([#2644](https://github.com/jakepurple13/OtakuWorld/pull/2644))
 
 ### Desktop Only
 

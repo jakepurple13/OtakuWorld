@@ -166,6 +166,16 @@
     <string name="enable">Enable</string>
     <string name="history">History</string>
     <string name="search_found">%1$d Found</string>
+    <plurals name="source_search_subtitle">
+        <item quantity="one">%1$s · %2$d result · page %3$d</item>
+        <item quantity="other">%1$s · %2$d results · page %3$d</item>
+    </plurals>
+    <string name="source_search_page">Page %1$d</string>
+    <string name="source_search_failed">Couldn't load page %1$d from %2$s.</string>
+    <string name="source_search_end">That's everything %1$s found for “%2$s”.</string>
+    <string name="source_search_no_results">%1$s found nothing for “%2$s”.</string>
+    <string name="source_search_retry">Retry</string>
+    <string name="source_search_scroll_to_top">Scroll to top</string>
     <string name="battery_default">Default is 20</string>
     <string name="clear_all_history">Clear All History?</string>
     <string name="reverseOrder">Reverse Chapter Order</string>
