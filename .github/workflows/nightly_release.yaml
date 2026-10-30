@@ -155,13 +155,13 @@ jobs:
           body: Nightly release of OtakuWorld at ${{ env.NIGHTLY_TIME }}
           files: |
             ${{ github.workspace }}/release-artifacts/**/*.apk
-            ${{ github.workspace }}/release-artifacts/**/*.dmg
-            ${{ github.workspace }}/release-artifacts/**/*.zip
-            ${{ github.workspace }}/release-artifacts/**/*.exe
-            ${{ github.workspace }}/release-artifacts/**/*.deb
-            ${{ github.workspace }}/release-artifacts/**/*.AppImage
-            ${{ github.workspace }}/release-artifacts/**/*.blockmap
-            ${{ github.workspace }}/release-artifacts/**/*.yml
+
+      - name: Upload desktop assets
+        if: always()
+        continue-on-error: true # desktop problems must never block the Android release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash .github/scripts/upload-desktop-assets.sh "nightly_${{ env.NIGHTLY_TAG }}" release-artifacts
 
       - name: Discord notification
         env:

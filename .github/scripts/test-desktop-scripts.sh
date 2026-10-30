@@ -87,4 +87,33 @@ bash "$HERE/rename-update-yml.sh" mangaworld "$DR/update-yml"
 assert_file "realistic layout: mangaworld-mac.yml survives" "$DR/update-yml/mangaworld-mac.yml"
 assert_file "realistic layout: mangaworld.yml survives" "$DR/update-yml/mangaworld.yml"
 
+# --- upload-desktop-assets.sh ---
+FAKEBIN="$TMP/fakebin"; mkdir -p "$FAKEBIN"
+cat > "$FAKEBIN/gh" <<'GH'
+#!/usr/bin/env bash
+# fake gh: logs "<file basename>" per attempt; fails when the basename is in $FAIL_FILE
+f="$(basename "$4")"
+echo "$f" >> "$UPLOAD_LOG"
+[ "$f" = "${FAIL_FILE:-}" ] && exit 1
+exit 0
+GH
+chmod +x "$FAKEBIN/gh"
+UP="$TMP/up"; mkdir -p "$UP/a" "$UP/b"
+for f in mangaworld-1-mac.dmg mangaworld-1-mac.dmg.blockmap mangaworld-mac.yml animeworld-1.zip animeworld.yml; do echo x > "$UP/a/$f"; done
+echo x > "$UP/b/mangaworld-1-linux.deb"; echo x > "$UP/b/mangaworld-linux.yml"
+export UPLOAD_RETRY_SLEEP=0
+
+export UPLOAD_LOG="$TMP/up1.log"; : > "$UPLOAD_LOG"
+PATH="$FAKEBIN:$PATH" bash "$HERE/upload-desktop-assets.sh" tag "$UP" >/dev/null
+assert_eq "upload: all 7 files uploaded once" "7" "$(wc -l < "$UPLOAD_LOG" | tr -d ' ')"
+assert_eq "upload: ymls last" "1" "$(awk '/\.yml$/ {y=1; next} y {bad=1} END {print bad ? 0 : 1}' "$UPLOAD_LOG")"
+
+export UPLOAD_LOG="$TMP/up2.log"; : > "$UPLOAD_LOG"
+FAIL_FILE=mangaworld-1-mac.dmg PATH="$FAKEBIN:$PATH" bash "$HERE/upload-desktop-assets.sh" tag "$UP" >/dev/null
+assert_eq "upload: failing installer retried 3 times" "3" "$(grep -c '^mangaworld-1-mac.dmg$' "$UPLOAD_LOG")"
+assert_eq "upload: failed app ymls skipped" "0" "$(grep -c '^mangaworld.*\.yml$' "$UPLOAD_LOG")"
+assert_eq "upload: other app yml still uploaded" "1" "$(grep -c '^animeworld.yml$' "$UPLOAD_LOG")"
+FAIL_FILE=mangaworld-1-mac.dmg PATH="$FAKEBIN:$PATH" bash "$HERE/upload-desktop-assets.sh" tag "$UP" >/dev/null
+assert_eq "upload: exits 0 even on failure" "0" "$?"
+
 if [ "$FAILS" -eq 0 ]; then echo "ALL PASSED"; else echo "$FAILS FAILED"; exit 1; fi
