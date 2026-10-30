@@ -17,6 +17,7 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import java.io.File
+import java.io.IOException
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -98,6 +99,28 @@ class DesktopUpdaterTest {
         advanceUntilIdle()
         assertEquals(0, engine.checkCalls)
         assertEquals(DesktopUpdateState.Idle, u.state.value)
+    }
+
+    @Test
+    fun noReleaseForAppIsUpToDate() = runTest {
+        val error = NetworkException(
+            "Failed to check for updates",
+            NoSuchElementException("No release with mangaworld-mac.yml"),
+        )
+        val u = updater(FakeUpdaterEngine(result = UpdateResult.Error(error)))
+        u.checkOnLaunch()
+        advanceUntilIdle()
+        assertEquals(DesktopUpdateState.UpToDate, u.state.value)
+        assertFalse(u.showLaunchDialog.value)
+    }
+
+    @Test
+    fun errorShowsInnermostCauseMessage() = runTest {
+        val error = NetworkException("Failed to check for updates", IOException("GitHub API returned 403"))
+        val u = updater(FakeUpdaterEngine(result = UpdateResult.Error(error)))
+        u.checkOnLaunch()
+        advanceUntilIdle()
+        assertEquals(DesktopUpdateState.Error("GitHub API returned 403"), u.state.value)
     }
 
     @Test

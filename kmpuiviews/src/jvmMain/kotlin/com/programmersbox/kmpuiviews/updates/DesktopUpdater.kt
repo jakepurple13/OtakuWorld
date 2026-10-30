@@ -98,8 +98,15 @@ class DesktopUpdater(
             }
 
             UpdateResult.NotAvailable -> _state.value = DesktopUpdateState.UpToDate
-            is UpdateResult.Error -> _state.value =
-                DesktopUpdateState.Error(result.exception.message ?: NETWORK_MESSAGE)
+            is UpdateResult.Error -> {
+                val causes = generateSequence<Throwable>(result.exception) { it.cause }
+                _state.value = if (causes.any { it is NoSuchElementException }) {
+                    // No release carries this app's update file yet (e.g. stable build before any stable desktop release).
+                    DesktopUpdateState.UpToDate
+                } else {
+                    DesktopUpdateState.Error(causes.last().message?.takeIf { it.isNotBlank() } ?: NETWORK_MESSAGE)
+                }
+            }
         }
     }
 
