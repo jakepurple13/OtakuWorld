@@ -128,7 +128,7 @@ private fun LazyItemScope.CheckForUpdatesItem() {
                 Text(status)
                 (state as? DesktopUpdateState.Downloading)?.let {
                     LinearProgressIndicator(
-                        progress = { it.percent.coerceIn(0f, 1f) },
+                        progress = { (it.percent / 100f).coerceIn(0f, 1f) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 4.dp)

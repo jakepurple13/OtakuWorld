@@ -70,7 +70,7 @@ fun UpdateLaunchDialog(updater: DesktopUpdater) {
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     LinearProgressIndicator(
-                        progress = { if (s.total > 0) s.percent.coerceIn(0f, 1f) else 0f },
+                        progress = { if (s.total > 0) (s.percent / 100f).coerceIn(0f, 1f) else 0f },
                         modifier = Modifier.fillMaxWidth(),
                     )
                     Text("${s.bytes.toMb()} of ${s.total.toMb()} MB")
