@@ -3,7 +3,7 @@ apksig = "9.4.1"
 accompanist = "0.37.3"
 activity = "1.13.0"
 arcore = "1.0.0"
-autoBinding = "1.1-beta04"
+autoBinding = "1.1-beta05"
 barcodeScanning = "17.3.0"
 benchmark-macro-junit4 = "1.5.0"
 biometricVersion = "1.4.0-alpha07"
@@ -286,7 +286,7 @@ cloudstreamCryptographyProvider = { module = "dev.whyoleg.cryptography:cryptogra
 # Not strict: koog (kmpuiviews:koogintegration) needs jackson 2.21.x. Upstream pins 2.13.1 strictly only
 # for API <= 25 devices; our minSdk is 28.
 cloudstreamJackson = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version = { require = "2.13.1" } }
-cloudstreamKotlinxIo = "org.jetbrains.kotlinx:kotlinx-io-core:0.9.1"
+cloudstreamKotlinxIo = "org.jetbrains.kotlinx:kotlinx-io-core:0.9.2"
 cloudstreamKsoup = "com.fleeksoft.ksoup:ksoup:0.2.6"
 cloudstreamNiceHttp = "com.github.Blatzar:NiceHttp:0.4.18"
 cloudstreamRhino = { module = "org.mozilla:rhino", version = { strictly = "1.8.1" } }
