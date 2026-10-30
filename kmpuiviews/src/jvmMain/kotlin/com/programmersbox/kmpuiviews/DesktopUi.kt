@@ -22,7 +22,11 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -234,6 +238,17 @@ private fun InternalDesktopUi(
             }
         ),
         content = {
+            var showMain by remember { mutableStateOf(false) }
+            var mainShown by remember { mutableStateOf(false) }
+            if (!mainShown) {
+                SplashWindow(
+                    title = title,
+                    onCloseRequest = exitApplication,
+                    onShown = { showMain = true },
+                )
+            }
+            if (!showMain) return@KoinApplication
+
             val navigationActions = koinInject<NavigationActions>()
             val dataStoreHandling = koinInject<DataStoreHandling>()
             LaunchedEffect(Unit) {
@@ -285,6 +300,11 @@ private fun InternalDesktopUi(
                 undecorated = true,
                 transparent = true,
             ) {
+                LaunchedEffect(Unit) {
+                    withFrameNanos { }
+                    mainShown = true
+                }
+
                 KmpLocalCompositionSetup {
                     OtakuMaterialTheme(
                         settingsHandling = koinInject(),

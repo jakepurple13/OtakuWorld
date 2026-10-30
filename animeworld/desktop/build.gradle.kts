@@ -84,9 +84,13 @@ composeCompiler {
     featureFlags.add(ComposeFeatureFlag.OptimizeNonSkippingGroups)
 }
 
+registerDesktopSplash()
+
 compose.desktop {
     application {
         mainClass = "com.programmersbox.desktop.MainKt"
+
+        jvmArgs(DESKTOP_SPLASH_JVM_ARG)
 
         jvmArgs("--add-opens", "java.desktop/sun.awt=ALL-UNNAMED")
         jvmArgs("--add-opens", "java.desktop/java.awt.peer=ALL-UNNAMED")
