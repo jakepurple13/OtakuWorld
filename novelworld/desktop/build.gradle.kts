@@ -65,9 +65,13 @@ composeCompiler {
     featureFlags.add(ComposeFeatureFlag.OptimizeNonSkippingGroups)
 }
 
+registerDesktopSplash()
+
 compose.desktop {
     application {
         mainClass = "com.programmersbox.desktop.MainKt"
+
+        jvmArgs(DESKTOP_SPLASH_JVM_ARG)
 
         jvmArgs("--add-opens", "java.desktop/sun.awt=ALL-UNNAMED")
         jvmArgs("--add-opens", "java.desktop/java.awt.peer=ALL-UNNAMED")
@@ -83,6 +87,9 @@ compose.desktop {
             packageVersion = "1.0.0"
 
             modules("jdk.unsupported")
+
+            // splash.png lands in appResources/common (see registerDesktopSplash()).
+            appResourcesRootDir.set(layout.buildDirectory.dir("appResources"))
 
             windows {
                 iconFile.set(project.file("icons/icon.ico"))
