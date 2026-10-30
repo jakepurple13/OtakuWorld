@@ -84,6 +84,11 @@ composeCompiler {
 val desktopVersion = System.getenv("DESKTOP_VERSION") ?: AppInfo.otakuVersionName
 val numericVersion = desktopVersion.substringBefore('-')
 
+// Hot reload's hotRunJvm defaults its main class from compose.desktop.application, which is no longer applied.
+tasks.withType<org.jetbrains.compose.reload.gradle.ComposeHotRun>().configureEach {
+    mainClass.set("com.programmersbox.desktop.MainKt")
+}
+
 nucleus.application {
     mainClass = "com.programmersbox.desktop.MainKt"
 
@@ -96,7 +101,15 @@ nucleus.application {
     }
 
     nativeDistributions {
-        targetFormats(TargetFormat.Dmg, TargetFormat.Zip, TargetFormat.Nsis, TargetFormat.Deb, TargetFormat.AppImage)
+        targetFormats(
+            *listOfNotNull(
+                TargetFormat.Dmg,
+                TargetFormat.Zip.takeIf { System.getProperty("os.name").contains("Mac") },
+                TargetFormat.Nsis,
+                TargetFormat.Deb,
+                TargetFormat.AppImage,
+            ).toTypedArray()
+        )
         packageName = "MangaWorld"
         packageVersion = desktopVersion
         homepage = "https://github.com/jakepurple13/OtakuWorld"
