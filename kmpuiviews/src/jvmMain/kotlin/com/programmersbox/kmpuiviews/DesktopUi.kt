@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -63,6 +64,13 @@ import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandlerImpl
 import com.programmersbox.kmpuiviews.repository.JsExtensionSourceBridge
 import com.programmersbox.kmpuiviews.repository.SetupRepository
 import com.programmersbox.kmpuiviews.theme.OtakuMaterialTheme
+import com.programmersbox.kmpuiviews.updates.DataStoreUpdatePrefs
+import com.programmersbox.kmpuiviews.updates.DesktopUpdater
+import com.programmersbox.kmpuiviews.updates.JustUpdatedSnackbar
+import com.programmersbox.kmpuiviews.updates.NucleusUpdaterEngine
+import com.programmersbox.kmpuiviews.updates.UpdateLaunchDialog
+import com.programmersbox.kmpuiviews.updates.UpdatePrefs
+import com.programmersbox.kmpuiviews.updates.UpdaterEngine
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.JvmAppLogo
@@ -72,7 +80,9 @@ import com.programmersbox.kmpuiviews.utils.bindsPlatformGenericInfo
 import com.programmersbox.supabaseintegration.Res
 import com.programmersbox.supabaseintegration.supabase_logo_icon
 import dev.nucleusframework.application.NucleusApplicationScope
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.withContext
@@ -116,6 +126,9 @@ fun desktopSetup(
                     modules(
                         module {
                             single { appConfig() }
+                            single<UpdatePrefs> { DataStoreUpdatePrefs(get()) }
+                            single<UpdaterEngine> { NucleusUpdaterEngine(channel = name.lowercase()) }
+                            single { DesktopUpdater(get(), get(), CoroutineScope(Dispatchers.IO + SupervisorJob())) }
                             single { jvmAppLogo() }
                             genericInfo(this).bindsPlatformGenericInfo()
                             moduleBlock()
@@ -297,37 +310,43 @@ private fun InternalDesktopUi(
                                 MaterialTheme.colorScheme.outlineVariant
                             )
                         ) {
-                            Column(modifier = Modifier.fillMaxSize()) {
-                                CompositionLocalProvider(
-                                    LocalNavHostPadding provides PaddingValues()
-                                ) {
-                                    CustomTitleBar(
-                                        title = title,
-                                        onMinimizeClick = { windowState.isMinimized = true },
-                                        onMaximizeToggle = {
-                                            windowState.placement = if (windowState.placement == WindowPlacement.Maximized) {
-                                                WindowPlacement.Floating
-                                            } else {
-                                                WindowPlacement.Maximized
-                                            }
-                                        },
-                                        onCloseClick = exitApplication
-                                    )
-                                    HorizontalDivider()
-                                    //UrlOpenerScreen()
-                                    //ScanQrCode()
-                                    val genericInfo = koinInject<KmpGenericInfo>()
-                                    val customSettings = remember {
-                                        ComposeSettingsDsl().apply(genericInfo.composeCustomPreferences())
+                            Box(modifier = Modifier.fillMaxSize()) {
+                                Column(modifier = Modifier.fillMaxSize()) {
+                                    CompositionLocalProvider(
+                                        LocalNavHostPadding provides PaddingValues()
+                                    ) {
+                                        CustomTitleBar(
+                                            title = title,
+                                            onMinimizeClick = { windowState.isMinimized = true },
+                                            onMaximizeToggle = {
+                                                windowState.placement = if (windowState.placement == WindowPlacement.Maximized) {
+                                                    WindowPlacement.Floating
+                                                } else {
+                                                    WindowPlacement.Maximized
+                                                }
+                                            },
+                                            onCloseClick = exitApplication
+                                        )
+                                        HorizontalDivider()
+                                        //UrlOpenerScreen()
+                                        //ScanQrCode()
+                                        val genericInfo = koinInject<KmpGenericInfo>()
+                                        val customSettings = remember {
+                                            ComposeSettingsDsl().apply(genericInfo.composeCustomPreferences())
+                                        }
+                                        val windowSize = calculateWindowSizeClass()
+                                        HomeNav(
+                                            genericInfo = genericInfo,
+                                            windowSize = windowSize,
+                                            bottomBarAdditions = {},
+                                            customPreferences = customSettings,
+                                        )
                                     }
-                                    val windowSize = calculateWindowSizeClass()
-                                    HomeNav(
-                                        genericInfo = genericInfo,
-                                        windowSize = windowSize,
-                                        bottomBarAdditions = {},
-                                        customPreferences = customSettings,
-                                    )
                                 }
+                                val updater = koinInject<DesktopUpdater>()
+                                LaunchedEffect(Unit) { updater.checkOnLaunch() }
+                                UpdateLaunchDialog(updater)
+                                JustUpdatedSnackbar(updater)
                             }
                         }
                     }
