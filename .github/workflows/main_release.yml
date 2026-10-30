@@ -363,12 +363,20 @@ jobs:
           files: |
             ${{ github.workspace }}/release-artifacts/**/*.apk
 
+      - name: Check out upload script
+        if: always()
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: .github/scripts
+          path: repo
+
       - name: Upload desktop assets
         if: always()
         continue-on-error: true # desktop problems must never block the Android release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: bash .github/scripts/upload-desktop-assets.sh "${{ env.VERSION_TAG }}" release-artifacts
+          GH_REPO: ${{ github.repository }}
+        run: bash repo/.github/scripts/upload-desktop-assets.sh "${{ env.VERSION_TAG }}" release-artifacts
 
       #            mangaworld-release.apk
       #            animeworld-release.apk
