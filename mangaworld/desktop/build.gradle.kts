@@ -67,6 +67,11 @@ kotlin {
 
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
+            // CMP 1.13 ships Skiko natives only in skiko-awt-runtime-all, but Nucleus packaging only
+            // extracts libskiko from the per-platform runtime jar (while still pointing skiko.library.path
+            // at $APPDIR). Pull in the current platform jar so the packaged app can load Skiko.
+            // Version comes from skiko-awt's dependency constraints.
+            runtimeOnly("org.jetbrains.skiko:skiko-awt-runtime-${compose.desktop.currentOs.substringAfter("desktop-jvm-").substringBefore(':')}")
             implementation(desktopLibs.kotlinx.coroutines.swing)
         }
     }
