@@ -19,7 +19,10 @@ shopt -s nullglob
 dirs=("$assets"/release-assets-"$app"-*/)
 [ "${#dirs[@]}" -ge 4 ] || drop "expected 4 release-assets-$app-* dirs, found ${#dirs[@]}"
 
-dups="$(for d in "${dirs[@]}"; do find "$d" -type f -exec basename {} \;; done | sort | uniq -d)"
+dups="$(for d in "${dirs[@]}"; do
+  find "$d" -type f \( -name '*.dmg' -o -name '*.zip' -o -name '*.exe' -o -name '*.deb' \
+    -o -name '*.AppImage' -o -name '*.blockmap' \) -exec basename {} \;
+done | sort | uniq -d)"
 [ -z "$dups" ] || drop "duplicate installer names across legs: $(echo "$dups" | tr '\n' ' ')"
 
 mv "$dir/latest.yml" "$dir/$app.yml"

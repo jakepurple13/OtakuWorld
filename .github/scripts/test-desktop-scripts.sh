@@ -71,4 +71,20 @@ echo y > "$DD/release-assets-mangaworld-macos-x64/same.dmg"
 bash "$HERE/rename-update-yml.sh" mangaworld "$DD/update-yml"
 assert_eq "duplicate basename: exit 0 and no ymls" "0" "$(find "$DD/update-yml" -name '*.yml' | wc -l | tr -d ' ')"
 
+# realistic Nucleus layout: app/ distributable and package.json in each format dir, across two legs
+DR="$TMP/real"; make_assets "$DR" mangaworld 4
+for leg in macos-arm64 macos-x64; do
+  b="$DR/release-assets-mangaworld-$leg"
+  mkdir -p "$b/dmg" "$b/zip" "$b/app/MangaWorld.app/Contents/MacOS" "$b/app/MangaWorld.app/Contents/Resources"
+  echo '{}' > "$b/dmg/package.json"; echo '{}' > "$b/zip/package.json"
+  echo '{}' > "$b/dmg/packaging-metadata.json"; echo '{}' > "$b/zip/packaging-metadata.json"
+  echo p > "$b/app/MangaWorld.app/Contents/Info.plist"
+  echo l > "$b/app/MangaWorld.app/Contents/MacOS/libjli.dylib"
+  echo m > "$b/dmg/mangaworld-33.0.0-mac-$leg.dmg"
+  echo b > "$b/dmg/mangaworld-33.0.0-mac-$leg.dmg.blockmap"
+done
+bash "$HERE/rename-update-yml.sh" mangaworld "$DR/update-yml"
+assert_file "realistic layout: mangaworld-mac.yml survives" "$DR/update-yml/mangaworld-mac.yml"
+assert_file "realistic layout: mangaworld.yml survives" "$DR/update-yml/mangaworld.yml"
+
 if [ "$FAILS" -eq 0 ]; then echo "ALL PASSED"; else echo "$FAILS FAILED"; exit 1; fi

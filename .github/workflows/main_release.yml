@@ -29,8 +29,10 @@ jobs:
         uses: actions/checkout@v7
       - name: Compute version
         id: version
+        env:
+          REF_NAME: ${{ github.ref_name }}
         run: |
-          echo "version=$(bash .github/scripts/desktop-version.sh stable "${{ github.ref_name }}")" >> "$GITHUB_OUTPUT"
+          echo "version=$(bash .github/scripts/desktop-version.sh stable "$REF_NAME")" >> "$GITHUB_OUTPUT"
 
   mangaworldDesktop:
     needs: desktopVersion
@@ -296,7 +298,7 @@ jobs:
     name: Release APK
     needs: [ mangaworld, animeworld, novelworld, mangaworldDesktop, animeworldDesktop, novelworldDesktop ]
     # desktop jobs may be skipped (non-stable tag); still release the Android build then
-    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && startsWith(github.ref, 'refs/tags/') }}
+    if: ${{ !cancelled() && needs.mangaworld.result == 'success' && needs.animeworld.result == 'success' && needs.novelworld.result == 'success' && startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-latest
     steps:
 
@@ -355,7 +357,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          fail_on_unmatched_files: true
+          fail_on_unmatched_files: false # a failed/skipped desktop leg must not block the APKs
           tag_name: ${{ env.VERSION_TAG }}
           name: Release ${{ env.VERSION_TAG }}
           files: |

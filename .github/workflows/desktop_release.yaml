@@ -49,14 +49,19 @@ jobs:
         with:
           name: release-assets-${{ inputs.app }}-${{ matrix.label }}-${{ matrix.arch }}
           path: |
-            ${{ inputs.app }}/desktop/build/compose/binaries/main/**/*
-            !**/*.yml
+            ${{ inputs.app }}/desktop/build/compose/binaries/main/*/*.dmg
+            ${{ inputs.app }}/desktop/build/compose/binaries/main/*/*.zip
+            ${{ inputs.app }}/desktop/build/compose/binaries/main/*/*.exe
+            ${{ inputs.app }}/desktop/build/compose/binaries/main/*/*.deb
+            ${{ inputs.app }}/desktop/build/compose/binaries/main/*/*.AppImage
+            ${{ inputs.app }}/desktop/build/compose/binaries/main/*/*.blockmap
           if-no-files-found: error
 
   metadata:
     name: Update metadata (${{ inputs.app }})
     needs: build
     if: ${{ !cancelled() }}
+    continue-on-error: true
     runs-on: ubuntu-latest
     steps:
       - name: Check out the source code

@@ -74,6 +74,7 @@ jobs:
   desktopVersion:
     name: Compute desktop version
     needs: checkNightly
+    continue-on-error: true # failure just skips desktop builds
     if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
     runs-on: ubuntu-latest
     outputs:
@@ -90,7 +91,7 @@ jobs:
 
   mangaworldDesktop:
     needs: [ checkNightly, desktopVersion ]
-    if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
+    if: ${{ needs.checkNightly.outputs.shouldRun == 'true' && needs.desktopVersion.outputs.version != '' }}
     uses: ./.github/workflows/desktop_release.yaml
     with:
       app: mangaworld
@@ -98,7 +99,7 @@ jobs:
 
   animeworldDesktop:
     needs: [ checkNightly, desktopVersion ]
-    if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
+    if: ${{ needs.checkNightly.outputs.shouldRun == 'true' && needs.desktopVersion.outputs.version != '' }}
     uses: ./.github/workflows/desktop_release.yaml
     with:
       app: animeworld
@@ -106,7 +107,7 @@ jobs:
 
   novelworldDesktop:
     needs: [ checkNightly, desktopVersion ]
-    if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
+    if: ${{ needs.checkNightly.outputs.shouldRun == 'true' && needs.desktopVersion.outputs.version != '' }}
     uses: ./.github/workflows/desktop_release.yaml
     with:
       app: novelworld
@@ -123,7 +124,8 @@ jobs:
   release:
     name: Release APK
     needs: [ checkNightly, mangaworld, animeworld, novelworld, mangaworldDesktop, animeworldDesktop, novelworldDesktop ]
-    if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
+    # desktop jobs may fail or be skipped; only the Android builds gate the release
+    if: ${{ !cancelled() && needs.checkNightly.outputs.shouldRun == 'true' && needs.mangaworld.result == 'success' && needs.animeworld.result == 'success' && needs.novelworld.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Download all build artifacts
@@ -145,7 +147,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          fail_on_unmatched_files: true
+          fail_on_unmatched_files: false # a failed/skipped desktop leg must not block the APKs
           prerelease: true
           generate_release_notes: true
           tag_name: nightly_${{ env.NIGHTLY_TAG }}
