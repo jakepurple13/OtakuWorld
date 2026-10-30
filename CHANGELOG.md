@@ -119,6 +119,10 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 - Details screen transition: opening an item from a cover or list row flies its cover and title
   into the Details header, and back on return
   ([#2643](https://github.com/jakepurple13/OtakuWorld/pull/2643))
+- Redesigned History screen: items are grouped by day with sticky headers, and you can search by
+  title or filter by source. Swipe or multi-select to remove items, with Undo. Items from sources
+  you don't have installed are marked, and each row has an info button for the options sheet
+  ([#2648](https://github.com/jakepurple13/OtakuWorld/pull/2648))
 
 #### Improvements
 
