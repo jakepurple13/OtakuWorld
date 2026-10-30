@@ -60,6 +60,19 @@ class ReadViewModel(
 
     val headers = mutableStateMapOf<String, String>()
 
+    // Plain map, not snapshot state: recording a ratio must not recompose every visible page.
+    private val pageAspectRatios = mutableMapOf<String, Float>()
+    private var lastAspectRatio = DEFAULT_PAGE_ASPECT_RATIO
+
+    /** Height to reserve for a page before it loads: its known ratio, else the last page seen. */
+    fun aspectRatioFor(url: String): Float = pageAspectRatios[url] ?: lastAspectRatio
+
+    fun recordAspectRatio(url: String, ratio: Float) {
+        if (!ratio.isFinite() || ratio <= 0f) return
+        pageAspectRatios[url] = ratio
+        lastAspectRatio = ratio
+    }
+
     val currentChapterIsDownloaded: Boolean
         get() = pageItems
             .filterIsInstance<PageItem.Page>()
@@ -101,6 +114,7 @@ class ReadViewModel(
 
     companion object {
         private const val WINDOW_SIZE = 3
+        private const val DEFAULT_PAGE_ASPECT_RATIO = 0.7f
 
         fun navigateToMangaReader(
             navController: NavigationActions,

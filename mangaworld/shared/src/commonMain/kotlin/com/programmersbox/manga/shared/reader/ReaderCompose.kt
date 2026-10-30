@@ -475,6 +475,32 @@ fun ReadView(
                                 .map { it.url }
                         }
                     }
+                    val prefetchUrls by remember {
+                        derivedStateOf {
+                            when (readerType) {
+                                ReaderType.List, ReaderType.Pager -> {
+                                    val current = if (readerType == ReaderType.List) listState.firstVisibleItemIndex else pagerState.currentPage
+                                    viewModel.pageItems
+                                        .asSequence()
+                                        .drop(current + 1)
+                                        .filterIsInstance<PageItem.Page>()
+                                        .take(PREFETCH_AHEAD)
+                                        .map { it.url }
+                                        .toList()
+                                }
+
+                                ReaderType.FlipPager -> pages.drop(pagerState.currentPage + 1).take(PREFETCH_AHEAD)
+                                ReaderType.CurlPager -> pages.drop(curlState.current + 1).take(PREFETCH_AHEAD)
+                            }
+                        }
+                    }
+                    if (imageLoaderType == ImageLoaderType.Kamel) {
+                        PrefetchPages(
+                            urls = prefetchUrls,
+                            headers = viewModel.headers,
+                            onAspectRatio = viewModel::recordAspectRatio
+                        )
+                    }
                     Crossfade(
                         targetState = readerType,
                         label = "",
@@ -569,12 +595,13 @@ fun PagerView(
     colorFilter: ColorFilter? = null,
     modifier: Modifier = Modifier,
 ) {
+    val keys by remember(pageItems) { derivedStateOf { pageItems.lazyKeys() } }
     VerticalPager(
         state = pagerState,
         modifier = modifier.fillMaxSize(),
         pageSpacing = itemSpacing,
         beyondViewportPageCount = 1,
-        key = { it }
+        key = { keys.getOrNull(it) ?: it }
     ) { page ->
         when (val item = pageItems.getOrNull(page)) {
             is PageItem.Page -> ChapterPage(
@@ -686,10 +713,11 @@ private fun LazyListScope.reader(
     imageLoaderType: ImageLoaderType,
     colorFilter: ColorFilter? = null,
 ) {
+    val keys = pageItems.lazyKeys()
     pageItems.forEachIndexed { index, item ->
         when (item) {
             is PageItem.Page -> item(
-                key = "${item.url}${item.chapterListIndex}$index",
+                key = keys[index],
                 contentType = "page"
             ) {
                 ChapterPage(
@@ -698,12 +726,14 @@ private fun LazyListScope.reader(
                     headers = vm.headers,
                     contentScale = ContentScale.FillWidth,
                     imageLoaderType = imageLoaderType,
-                    colorFilter = colorFilter
+                    colorFilter = colorFilter,
+                    aspectRatio = vm.aspectRatioFor(item.url),
+                    onAspectRatio = { vm.recordAspectRatio(item.url, it) }
                 )
             }
 
             is PageItem.ChapterTransition -> item(
-                key = "transition_${item.fromChapterListIndex}_${item.toChapterListIndex}$index",
+                key = keys[index],
                 contentType = "transition"
             ) {
                 ChapterTransitionItem(
@@ -712,6 +742,25 @@ private fun LazyListScope.reader(
                 )
             }
         }
+    }
+}
+
+private const val PREFETCH_AHEAD = 3
+
+/**
+ * Lazy keys that survive items being trimmed from the front of [pageItems] (unlike list indices),
+ * so visible pages keep their state and scroll anchor. Repeats get a suffix to stay unique.
+ */
+private fun List<PageItem>.lazyKeys(): List<String> {
+    val seen = HashMap<String, Int>()
+    return map { item ->
+        val base = when (item) {
+            is PageItem.Page -> "page_${item.chapterListIndex}_${item.pageIndex}"
+            is PageItem.ChapterTransition -> "transition_${item.fromChapterListIndex}_${item.toChapterListIndex}"
+        }
+        val count = seen[base] ?: 0
+        seen[base] = count + 1
+        if (count == 0) base else "${base}_$count"
     }
 }
 
