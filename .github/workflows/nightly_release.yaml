@@ -71,29 +71,46 @@ jobs:
     with:
       IS_PRERELEASE: true
 
-  mangaworldDesktop:
+  desktopVersion:
+    name: Compute desktop version
     needs: checkNightly
     if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
-    uses: ./.github/workflows/mangaworld_desktop_build.yaml
-    secrets: inherit # pass all secrets
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # Required to see release tags
+      - name: Compute version
+        id: version
+        run: |
+          echo "version=$(bash .github/scripts/desktop-version.sh nightly buildSrc/src/main/kotlin/AppInfo.kt "$(date -u +%Y%m%d%H%M)")" >> "$GITHUB_OUTPUT"
+
+  mangaworldDesktop:
+    needs: [ checkNightly, desktopVersion ]
+    if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
+    uses: ./.github/workflows/desktop_release.yaml
     with:
-      IS_PRERELEASE: true
+      app: mangaworld
+      version: ${{ needs.desktopVersion.outputs.version }}
 
   animeworldDesktop:
-    needs: checkNightly
+    needs: [ checkNightly, desktopVersion ]
     if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
-    uses: ./.github/workflows/animeworld_desktop_build.yaml
-    secrets: inherit # pass all secrets
+    uses: ./.github/workflows/desktop_release.yaml
     with:
-      IS_PRERELEASE: true
+      app: animeworld
+      version: ${{ needs.desktopVersion.outputs.version }}
 
   novelworldDesktop:
-    needs: checkNightly
+    needs: [ checkNightly, desktopVersion ]
     if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
-    uses: ./.github/workflows/novelworld_desktop_build.yaml
-    secrets: inherit # pass all secrets
+    uses: ./.github/workflows/desktop_release.yaml
     with:
-      IS_PRERELEASE: true
+      app: novelworld
+      version: ${{ needs.desktopVersion.outputs.version }}
 
   #  otakuworld:
   #    needs: checkNightly
@@ -105,7 +122,7 @@ jobs:
 
   release:
     name: Release APK
-    needs: [ mangaworld, animeworld, novelworld, mangaworldDesktop, animeworldDesktop, novelworldDesktop ]
+    needs: [ checkNightly, mangaworld, animeworld, novelworld, mangaworldDesktop, animeworldDesktop, novelworldDesktop ]
     if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
     runs-on: ubuntu-latest
     steps:
@@ -135,7 +152,14 @@ jobs:
           name: OtakuWorld Nightly Release ${{ env.NIGHTLY_TIME }}
           body: Nightly release of OtakuWorld at ${{ env.NIGHTLY_TIME }}
           files: |
-            ${{ github.workspace }}/release-artifacts/**
+            ${{ github.workspace }}/release-artifacts/**/*.apk
+            ${{ github.workspace }}/release-artifacts/**/*.dmg
+            ${{ github.workspace }}/release-artifacts/**/*.zip
+            ${{ github.workspace }}/release-artifacts/**/*.exe
+            ${{ github.workspace }}/release-artifacts/**/*.deb
+            ${{ github.workspace }}/release-artifacts/**/*.AppImage
+            ${{ github.workspace }}/release-artifacts/**/*.blockmap
+            ${{ github.workspace }}/release-artifacts/**/*.yml
 
       - name: Discord notification
         env:

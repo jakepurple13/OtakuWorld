@@ -1,0 +1,87 @@
+name: Desktop Release Build
+
+on:
+  workflow_call:
+    inputs:
+      app:
+        description: 'App module name: mangaworld, animeworld or novelworld'
+        required: true
+        type: string
+      version:
+        description: 'Full desktop version, e.g. 33.0.0 or 33.1.0-alpha.20261030.1415'
+        required: true
+        type: string
+
+jobs:
+  build:
+    name: Build ${{ inputs.app }} (${{ matrix.label }}-${{ matrix.arch }})
+    runs-on: ${{ matrix.os }}
+    continue-on-error: true
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, label: linux, arch: amd64 }
+          - { os: windows-latest, label: windows, arch: amd64 }
+          - { os: macos-latest, label: macos, arch: arm64 }
+          - { os: macos-15-intel, label: macos, arch: x64 }
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out the source code
+        uses: actions/checkout@v7
+
+      - name: Setup Nucleus
+        uses: NucleusFramework/Nucleus/.github/actions/setup-nucleus@v2.5.18
+        with:
+          java-version: '21'
+          packaging-tools: 'true'
+
+      - name: Package distribution
+        run: ./gradlew :${{ inputs.app }}:desktop:packageDistributionForCurrentOS --no-daemon --stacktrace
+        env:
+          DESKTOP_VERSION: ${{ inputs.version }}
+
+      - name: Upload installers
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-assets-${{ inputs.app }}-${{ matrix.label }}-${{ matrix.arch }}
+          path: |
+            ${{ inputs.app }}/desktop/build/compose/binaries/main/**/*
+            !**/*.yml
+          if-no-files-found: error
+
+  metadata:
+    name: Update metadata (${{ inputs.app }})
+    needs: build
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the source code
+        uses: actions/checkout@v7
+
+      - name: Download installers
+        uses: actions/download-artifact@v8
+        with:
+          pattern: release-assets-${{ inputs.app }}-*
+          path: assets
+
+      - name: Generate update yml
+        id: yml
+        uses: NucleusFramework/Nucleus/.github/actions/generate-update-yml@v2.5.18
+        with:
+          artifacts-path: assets
+          version: ${{ inputs.version }}
+          channel: latest
+
+      - name: Rename update yml per app
+        run: bash .github/scripts/rename-update-yml.sh "${{ inputs.app }}" "${{ steps.yml.outputs.update-yml-path }}"
+
+      - name: Upload update yml
+        uses: actions/upload-artifact@v7
+        with:
+          name: update-yml-${{ inputs.app }}
+          path: ${{ steps.yml.outputs.update-yml-path }}/*.yml
+          if-no-files-found: ignore

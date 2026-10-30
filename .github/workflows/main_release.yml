@@ -18,6 +18,44 @@ jobs:
     uses: ./.github/workflows/animeworld_build.yaml
     secrets: inherit # pass all secrets
 
+  desktopVersion:
+    name: Compute desktop version
+    runs-on: ubuntu-latest
+    continue-on-error: true # non-stable tags / manual runs just skip desktop builds
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Compute version
+        id: version
+        run: |
+          echo "version=$(bash .github/scripts/desktop-version.sh stable "${{ github.ref_name }}")" >> "$GITHUB_OUTPUT"
+
+  mangaworldDesktop:
+    needs: desktopVersion
+    if: ${{ needs.desktopVersion.outputs.version != '' }}
+    uses: ./.github/workflows/desktop_release.yaml
+    with:
+      app: mangaworld
+      version: ${{ needs.desktopVersion.outputs.version }}
+
+  animeworldDesktop:
+    needs: desktopVersion
+    if: ${{ needs.desktopVersion.outputs.version != '' }}
+    uses: ./.github/workflows/desktop_release.yaml
+    with:
+      app: animeworld
+      version: ${{ needs.desktopVersion.outputs.version }}
+
+  novelworldDesktop:
+    needs: desktopVersion
+    if: ${{ needs.desktopVersion.outputs.version != '' }}
+    uses: ./.github/workflows/desktop_release.yaml
+    with:
+      app: novelworld
+      version: ${{ needs.desktopVersion.outputs.version }}
+
   #  animeworldtv:
   #    uses: ./.github/workflows/animeworldtv_build.yaml
   #    secrets: inherit # pass all secrets
@@ -256,8 +294,9 @@ jobs:
 
   release:
     name: Release APK
-    needs: [ mangaworld, animeworld, novelworld ]
-    if: startsWith(github.ref, 'refs/tags/')
+    needs: [ mangaworld, animeworld, novelworld, mangaworldDesktop, animeworldDesktop, novelworldDesktop ]
+    # desktop jobs may be skipped (non-stable tag); still release the Android build then
+    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-latest
     steps:
 
@@ -320,7 +359,14 @@ jobs:
           tag_name: ${{ env.VERSION_TAG }}
           name: Release ${{ env.VERSION_TAG }}
           files: |
-            ${{ github.workspace }}/release-artifacts/**
+            ${{ github.workspace }}/release-artifacts/**/*.apk
+            ${{ github.workspace }}/release-artifacts/**/*.dmg
+            ${{ github.workspace }}/release-artifacts/**/*.zip
+            ${{ github.workspace }}/release-artifacts/**/*.exe
+            ${{ github.workspace }}/release-artifacts/**/*.deb
+            ${{ github.workspace }}/release-artifacts/**/*.AppImage
+            ${{ github.workspace }}/release-artifacts/**/*.blockmap
+            ${{ github.workspace }}/release-artifacts/**/*.yml
 
       #            mangaworld-release.apk
       #            animeworld-release.apk
