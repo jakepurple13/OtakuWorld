@@ -16,7 +16,6 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
@@ -72,11 +71,11 @@ import androidx.compose.ui.unit.dp
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpuiviews.ChapterDownloadUiState
+import com.programmersbox.kmpuiviews.presentation.components.AnimatedSelectedText
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.clear_selection
-import otakuworld.kmpuiviews.generated.resources.selected_count
 
 enum class SelectionDownloadMode { Hidden, Download, Delete }
 
@@ -157,18 +156,7 @@ fun ChapterSelectionTopBar(
     val shownCount = rememberLastNonEmpty(count, count == 0)
     TopAppBar(
         scrollBehavior = scrollBehavior,
-        title = {
-            AnimatedContent(
-                targetState = shownCount,
-                transitionSpec = {
-                    if (targetState > initialState) {
-                        (slideInVertically { it } + fadeIn()) togetherWith (slideOutVertically { -it } + fadeOut())
-                    } else {
-                        (slideInVertically { -it } + fadeIn()) togetherWith (slideOutVertically { it } + fadeOut())
-                    }
-                }
-            ) { Text(stringResource(Res.string.selected_count, it)) }
-        },
+        title = { AnimatedSelectedText(shownCount) },
         navigationIcon = {
             IconButton(onClick = onClear) {
                 Icon(Icons.Default.Close, stringResource(Res.string.clear_selection))

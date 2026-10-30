@@ -102,14 +102,15 @@ import com.programmersbox.datastore.ColorBlindnessType
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.RecentModel
 import com.programmersbox.kmpuiviews.painterLogo
+import com.programmersbox.kmpuiviews.presentation.components.AnimatedSelectedText
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.GradientImage
 import com.programmersbox.kmpuiviews.presentation.components.LoadingDialog
 import com.programmersbox.kmpuiviews.presentation.components.OptionsSheetValues
 import com.programmersbox.kmpuiviews.presentation.components.OtakuHazeScaffold
-import com.programmersbox.kmpuiviews.presentation.components.optionsSheet
 import com.programmersbox.kmpuiviews.presentation.components.SourceNotInstalledModal
 import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
+import com.programmersbox.kmpuiviews.presentation.components.optionsSheet
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.PlaceholderHighlight
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
@@ -160,7 +161,6 @@ import otakuworld.kmpuiviews.generated.resources.remove_selected
 import otakuworld.kmpuiviews.generated.resources.removed
 import otakuworld.kmpuiviews.generated.resources.search_history
 import otakuworld.kmpuiviews.generated.resources.select_all
-import otakuworld.kmpuiviews.generated.resources.selected_count
 import otakuworld.kmpuiviews.generated.resources.source_not_installed
 import otakuworld.kmpuiviews.generated.resources.undo
 import kotlin.time.Clock
@@ -337,7 +337,7 @@ fun HistoryUi(
                 ) { selecting ->
                     if (selecting) {
                         TopAppBar(
-                            title = { Text(stringResource(Res.string.selected_count, vm.selected.size)) },
+                            title = { AnimatedSelectedText(vm.selected.size) },
                             navigationIcon = {
                                 IconButton(onClick = vm::clearSelection) {
                                     Icon(Icons.Default.Close, stringResource(Res.string.clear_selection))

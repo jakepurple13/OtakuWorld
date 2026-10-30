@@ -109,6 +109,7 @@ import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.DateTimeFormatHandler
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.presentation.components.AnimatedSelectedText
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.GradientImage
 import com.programmersbox.kmpuiviews.presentation.components.LoadingDialog
@@ -118,14 +119,14 @@ import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.presentation.components.optionsSheet
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
-import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuImageElement
-import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuTitleElement
-import com.programmersbox.kmpuiviews.utils.composables.sharedelements.SharedItemKey
-import com.programmersbox.kmpuiviews.utils.composables.sharedelements.customSharedElement
 import com.programmersbox.kmpuiviews.utils.Cached
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuImageElement
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuTitleElement
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.SharedItemKey
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.customSharedElement
 import com.programmersbox.kmpuiviews.utils.dispatchIo
 import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
 import kotlinx.coroutines.CoroutineScope
@@ -172,7 +173,6 @@ import otakuworld.kmpuiviews.generated.resources.removeNoti
 import otakuworld.kmpuiviews.generated.resources.selectDate
 import otakuworld.kmpuiviews.generated.resources.selectTime
 import otakuworld.kmpuiviews.generated.resources.select_all_notifications
-import otakuworld.kmpuiviews.generated.resources.selected_count
 import otakuworld.kmpuiviews.generated.resources.sent_to_tray
 import otakuworld.kmpuiviews.generated.resources.undo
 import otakuworld.kmpuiviews.generated.resources.yes
@@ -357,7 +357,7 @@ private fun NotificationTimeline(
                 if (target) {
                     TopAppBar(
                         scrollBehavior = scrollBehavior,
-                        title = { Text(stringResource(Res.string.selected_count, vm.selected.size)) },
+                        title = { AnimatedSelectedText(vm.selected.size) },
                         navigationIcon = {
                             IconButton(onClick = vm::clearSelection) {
                                 Icon(Icons.Default.Close, stringResource(Res.string.clear_selection))
