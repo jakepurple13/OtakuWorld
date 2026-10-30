@@ -26,6 +26,7 @@ import com.programmersbox.kmpuiviews.presentation.dictionary.DictionaryFormScree
 import com.programmersbox.kmpuiviews.presentation.dictionary.DictionaryListScreen
 import com.programmersbox.kmpuiviews.presentation.favorite.FavoriteScreen
 import com.programmersbox.kmpuiviews.presentation.globalsearch.GlobalSearchScreen
+import com.programmersbox.kmpuiviews.presentation.globalsearch.SourceSearchScreen
 import com.programmersbox.kmpuiviews.presentation.history.HistoryUi
 import com.programmersbox.kmpuiviews.presentation.notes.NotesScreen
 import com.programmersbox.kmpuiviews.presentation.notifications.CatchUpScreen
@@ -268,6 +269,7 @@ fun buildKmpGraph(): Module = module {
             screen = it
         )
     }
+    navigation<Screen.SourceSearchScreen> { SourceSearchScreen(screen = it) }
 
     navigation<Screen.ImportListScreen> {
         ImportListScreen()

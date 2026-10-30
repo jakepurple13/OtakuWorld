@@ -8,6 +8,7 @@ import com.programmersbox.kmpuiviews.presentation.dictionary.DictionaryFormViewM
 import com.programmersbox.kmpuiviews.presentation.dictionary.DictionaryListViewModel
 import com.programmersbox.kmpuiviews.presentation.favorite.FavoriteViewModel
 import com.programmersbox.kmpuiviews.presentation.globalsearch.GlobalSearchViewModel
+import com.programmersbox.kmpuiviews.presentation.globalsearch.SourceSearchViewModel
 import com.programmersbox.kmpuiviews.presentation.history.HistoryViewModel
 import com.programmersbox.kmpuiviews.presentation.notes.AllNotesViewModel
 import com.programmersbox.kmpuiviews.presentation.notes.DetailsNotesViewModel
@@ -51,6 +52,7 @@ val viewModels: Module = module {
     viewModelOf(::IncognitoViewModel)
     viewModelOf(::FavoriteViewModel)
     viewModelOf(::GlobalSearchViewModel)
+    viewModelOf(::SourceSearchViewModel)
     viewModelOf(::RecentViewModel)
     viewModelOf(::AllViewModel)
     viewModelOf(::ImportFullListViewModel)

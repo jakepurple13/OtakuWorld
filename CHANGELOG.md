@@ -119,6 +119,10 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 - Details screen transition: opening an item from a cover or list row flies its cover and title
   into the Details header, and back on return
   ([#2643](https://github.com/jakepurple13/OtakuWorld/pull/2643))
+- Global search: tap a source to open its own results screen and keep scrolling to load more pages.
+  Pages are marked with dividers, a failed page can be retried, and returning from Details keeps
+  your place. This replaces the source results bottom sheet
+  ([#2646](https://github.com/jakepurple13/OtakuWorld/pull/2646))
 
 #### Improvements
 

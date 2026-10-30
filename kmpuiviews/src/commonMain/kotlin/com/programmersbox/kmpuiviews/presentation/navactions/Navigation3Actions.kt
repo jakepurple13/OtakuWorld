@@ -91,6 +91,10 @@ class Navigation3Actions : NavigationActions, Navigator {
         navBackStack.add(Screen.GlobalSearchScreen(searchText))
     }
 
+    override fun sourceSearch(serviceName: String, query: String) {
+        navBackStack.add(Screen.SourceSearchScreen(serviceName, query))
+    }
+
     override fun customList() {
         navBackStack.add(Screen.CustomListScreen)
     }

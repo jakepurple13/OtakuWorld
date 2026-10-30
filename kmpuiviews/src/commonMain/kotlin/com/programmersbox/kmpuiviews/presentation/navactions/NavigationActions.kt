@@ -27,6 +27,7 @@ interface NavigationActions {
     fun extensionList()
     fun settings()
     fun globalSearch(searchText: String? = null)
+    fun sourceSearch(serviceName: String, query: String)
     fun customList()
     fun customList(customList: CustomList)
     fun history()

@@ -165,6 +165,12 @@ sealed class Screen(val route: String) : NavKey {
     }
 
     @Serializable
+    data class SourceSearchScreen(
+        val serviceName: String,
+        val query: String,
+    ) : Screen("source_search")
+
+    @Serializable
     data object ExtensionListScreen : Screen("extension_list") {
         @Serializable
         data object Home : Screen("home")
