@@ -40,8 +40,10 @@ import io.kamel.core.loadImageBitmapResource
 import io.kamel.image.asyncPainterResource
 import io.kamel.image.config.LocalKamelConfig
 import io.ktor.client.request.header
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 internal fun ImageLoaderType.Composed(
@@ -191,7 +193,11 @@ internal fun PrefetchPages(
                         }
                         .build()
 
-                    when (val result = kamelConfig.loadImageBitmapResource(url, config).first { it !is Resource.Loading }) {
+                    // Kamel decodes in the collector's context, so collect off the main thread
+                    val result = withContext(Dispatchers.Default) {
+                        kamelConfig.loadImageBitmapResource(url, config).first { it !is Resource.Loading }
+                    }
+                    when (result) {
                         is Resource.Success -> onAspectRatio(url, result.value.width.toFloat() / result.value.height)
                         else -> requested.remove(url)
                     }
