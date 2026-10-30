@@ -100,6 +100,13 @@ tasks.withType<org.jetbrains.compose.reload.gradle.ComposeHotRun>().configureEac
 
 registerDesktopSplash()
 
+// DESKTOP_VERSION is read from the environment, so Gradle must see it as an input or it reuses stale outputs.
+tasks.configureEach {
+    if (name == "generateAppProperties" || name.startsWith("package") || (name.startsWith("create") && name.endsWith("Distributable"))) {
+        inputs.property("desktopVersion", desktopVersion)
+    }
+}
+
 nucleus.application {
     mainClass = "com.programmersbox.desktop.MainKt"
 
@@ -112,6 +119,7 @@ nucleus.application {
     }
 
     nativeDistributions {
+        cleanupNativeLibs = true
         targetFormats(
             *listOfNotNull(
                 TargetFormat.Dmg,
