@@ -1,4 +1,4 @@
-import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import dev.nucleusframework.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.compose.compiler.gradle.ComposeFeatureFlag
 
 plugins {
@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.compose.compiler)
     id("org.jetbrains.compose.hot-reload")
     id("kotlinx-serialization")
+    id("dev.nucleusframework")
     //alias(libs.plugins.kotzilla)
 }
 
@@ -75,39 +76,43 @@ composeCompiler {
     featureFlags.add(ComposeFeatureFlag.OptimizeNonSkippingGroups)
 }
 
-compose.desktop {
-    application {
-        mainClass = "com.programmersbox.desktop.MainKt"
+val desktopVersion = System.getenv("DESKTOP_VERSION") ?: AppInfo.otakuVersionName
+val numericVersion = desktopVersion.substringBefore('-')
 
-        jvmArgs("--add-opens", "java.desktop/sun.awt=ALL-UNNAMED")
-        jvmArgs("--add-opens", "java.desktop/java.awt.peer=ALL-UNNAMED") // recommended but not necessary
+nucleus.application {
+    mainClass = "com.programmersbox.desktop.MainKt"
 
-        if (System.getProperty("os.name").contains("Mac")) {
-            jvmArgs("--add-opens", "java.desktop/sun.lwawt=ALL-UNNAMED")
-            jvmArgs("--add-opens", "java.desktop/sun.lwawt.macosx=ALL-UNNAMED")
+    jvmArgs("--add-opens", "java.desktop/sun.awt=ALL-UNNAMED")
+    jvmArgs("--add-opens", "java.desktop/java.awt.peer=ALL-UNNAMED") // recommended but not necessary
+
+    if (System.getProperty("os.name").contains("Mac")) {
+        jvmArgs("--add-opens", "java.desktop/sun.lwawt=ALL-UNNAMED")
+        jvmArgs("--add-opens", "java.desktop/sun.lwawt.macosx=ALL-UNNAMED")
+    }
+
+    nativeDistributions {
+        targetFormats(TargetFormat.Dmg, TargetFormat.Zip, TargetFormat.Nsis, TargetFormat.Deb, TargetFormat.AppImage)
+        packageName = "MangaWorld"
+        packageVersion = desktopVersion
+        homepage = "https://github.com/jakepurple13/OtakuWorld"
+
+        modules("jdk.unsupported")
+
+        windows {
+            packageVersion = numericVersion
+            iconFile.set(project.file("icons/icon.ico"))
+        }
+        macOS {
+            packageVersion = numericVersion
+            iconFile.set(project.file("icons/icon.icns"))
+        }
+        linux {
+            iconFile.set(project.file("icons/icon.png"))
         }
 
-        nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "MangaWorld"
-            packageVersion = "1.0.0"
-
-            modules("jdk.unsupported")
-
-            windows {
-                iconFile.set(project.file("icons/icon.ico"))
-            }
-            macOS {
-                iconFile.set(project.file("icons/icon.icns"))
-            }
-            linux {
-                iconFile.set(project.file("icons/icon.png"))
-            }
-
-            //com.apple.security.local-authentication
-            /*macOS {
-                entitlementsFile.set(project.file("entitlements.plist"))
-            }*/
-        }
+        //com.apple.security.local-authentication
+        /*macOS {
+            entitlementsFile.set(project.file("entitlements.plist"))
+        }*/
     }
 }
