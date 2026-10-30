@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
 import ca.gosyer.appdirs.AppDirs
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
+import com.programmersbox.kmpuiviews.updates.updatesSettingsGroup
 import kotlinx.serialization.Serializable
 import org.koin.compose.koinInject
 import java.awt.Desktop
@@ -70,6 +71,8 @@ fun JvmSettingsScreen() {
                     shapes = ListItemDefaults.segmentedShapes(index = 0, count = 1)
                 )
             }
+
+            updatesSettingsGroup()
         }
     }
 }
