@@ -37,11 +37,11 @@ import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpmodels.SourceRepository
-import com.programmersbox.kmpuiviews.presentation.components.ListBottomScreen
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomSheetItemModel
 import com.programmersbox.kmpuiviews.presentation.globalsearch.SearchLanguages
 import com.programmersbox.kmpuiviews.presentation.settings.languageorder.LanguageOrderSheet
 import com.programmersbox.kmpuiviews.presentation.settings.languageorder.LanguageOrderState
+import com.programmersbox.kmpuiviews.presentation.settings.languageorder.SourceLanguageOrdering
 import com.programmersbox.kmpuiviews.presentation.settings.languageorder.languageDisplayName
 import com.programmersbox.kmpuiviews.presentation.settings.languageorder.languageOrderState
 import com.programmersbox.kmpuiviews.utils.LocalItemDao
@@ -98,32 +98,18 @@ fun SourceChooserScreen(
     val languageOrder = rememberLanguageOrder()
 
     showChooser?.let { list ->
-        ModalBottomSheet(
-            onDismissRequest = { showChooser = null },
-            containerColor = MaterialTheme.colorScheme.surface,
-        ) {
-            ListBottomScreen(
-                includeInsetPadding = false,
-                title = languageOrder.groupName(list) ?: stringResource(Res.string.chooseASource),
-                list = languageOrder.sort(list),
-                navigationIcon = {
-                    IconButton(
-                        onClick = onChosen
-                    ) { Icon(Icons.Default.Close, null) }
-                },
-                onClick = { service ->
-                    onChosen()
-                    scope.launch { dataStoreHandling.currentService.set(service.apiService.serviceName) }
-                },
-                actions = { languageOrder.ReorderButton(list) },
-            ) {
-                ListBottomSheetItemModel(
-                    primaryText = it.apiService.displayName,
-                    secondaryText = it.languageName(),
-                    icon = if (it.apiService.serviceName == currentService) Icons.Default.Check else null
-                )
-            }
-        }
+        SourceLanguageGridSheet(
+            title = languageOrder.groupName(list) ?: stringResource(Res.string.chooseASource),
+            sources = languageOrder.sort(list),
+            currentService = currentService,
+            isPreferred = languageOrder::isPreferred,
+            onDismiss = { showChooser = null },
+            onClick = { service ->
+                onChosen()
+                scope.launch { dataStoreHandling.currentService.set(service.apiService.serviceName) }
+            },
+            actions = { languageOrder.ReorderButton(list) },
+        )
     }
 
     GroupBottomScreen(
@@ -148,19 +134,21 @@ fun SourceChooserScreen(
             .collectAsStateWithLifecycle(emptyMap())
             .value,
         onClick = { service ->
-            if (service.size == 1) {
-                onChosen()
-                service.firstOrNull()?.apiService?.serviceName?.let {
-                    scope.launch { dataStoreHandling.currentService.set(it) }
-                }
-            } else {
-                showChooser = service
+            onChosen()
+            languageOrder.best(service, currentService)?.apiService?.serviceName?.let {
+                scope.launch { dataStoreHandling.currentService.set(it) }
             }
-        }
+        },
+        trailingContent = { service ->
+            if (service.size > 1) {
+                LanguagePill(languageOrder.best(service, currentService)?.languageCode().orEmpty()) { showChooser = service }
+            }
+        },
     ) {
         ListBottomSheetItemModel(
-            primaryText = "${languageOrder.groupName(it) ?: it.firstOrNull()?.name ?: "Nothing"} (${it.size})",
-            icon = if (it.firstOrNull()?.apiService?.serviceName == currentService) Icons.Default.Check else null,
+            primaryText = languageOrder.groupName(it) ?: it.firstOrNull()?.name ?: "Nothing",
+            secondaryText = if (it.size > 1) "${it.size} languages" else null,
+            icon = if (it.any { s -> s.apiService.serviceName == currentService }) Icons.Default.Check else null,
             overlineText = it.firstOrNull()?.packageName
         )
     }
@@ -217,31 +205,15 @@ private fun SourceChooserScreen(
     val languageOrder = rememberLanguageOrder()
 
     showChooser?.let { list ->
-        ModalBottomSheet(
-            onDismissRequest = { showChooser = null },
-            containerColor = MaterialTheme.colorScheme.surface,
-        ) {
-            ListBottomScreen(
-                includeInsetPadding = false,
-                title = languageOrder.groupName(list) ?: stringResource(Res.string.chooseASource),
-                list = languageOrder.sort(list),
-                navigationIcon = {
-                    IconButton(
-                        onClick = onClose
-                    ) { Icon(Icons.Default.Close, null) }
-                },
-                onClick = { service ->
-                    onChosen(service)
-                },
-                actions = { languageOrder.ReorderButton(list) },
-            ) {
-                ListBottomSheetItemModel(
-                    primaryText = it.apiService.displayName,
-                    secondaryText = it.languageName(),
-                    icon = if (it.apiService.serviceName == currentService) Icons.Default.Check else null
-                )
-            }
-        }
+        SourceLanguageGridSheet(
+            title = languageOrder.groupName(list) ?: stringResource(Res.string.chooseASource),
+            sources = languageOrder.sort(list),
+            currentService = currentService,
+            isPreferred = languageOrder::isPreferred,
+            onDismiss = { showChooser = null },
+            onClick = onChosen,
+            actions = { languageOrder.ReorderButton(list) },
+        )
     }
 
     GroupBottomScreen(
@@ -261,16 +233,18 @@ private fun SourceChooserScreen(
             .collectAsStateWithLifecycle(emptyMap())
             .value,
         onClick = { service ->
-            if (service.size == 1) {
-                service.firstOrNull()?.let { onChosen(it) }
-            } else {
-                showChooser = service
+            languageOrder.best(service, currentService)?.let { onChosen(it) }
+        },
+        trailingContent = { service ->
+            if (service.size > 1) {
+                LanguagePill(languageOrder.best(service, currentService)?.languageCode().orEmpty()) { showChooser = service }
             }
-        }
+        },
     ) {
         ListBottomSheetItemModel(
-            primaryText = "${languageOrder.groupName(it) ?: it.firstOrNull()?.name ?: "Nothing"} (${it.size})",
-            icon = if (it.firstOrNull()?.apiService?.serviceName == currentService) Icons.Default.Check else null,
+            primaryText = languageOrder.groupName(it) ?: it.firstOrNull()?.name ?: "Nothing",
+            secondaryText = if (it.size > 1) "${it.size} languages" else null,
+            icon = if (it.any { s -> s.apiService.serviceName == currentService }) Icons.Default.Check else null,
             overlineText = it.firstOrNull()?.packageName
         )
     }
@@ -282,6 +256,14 @@ private class LanguageOrderController(
     private val onEdit: (String) -> Unit,
 ) {
     fun sort(list: List<KmpSourceInformation>) = state?.sort(list) ?: list
+
+    /** The current source when it's in [list], otherwise the top language by the user's order. */
+    fun best(list: List<KmpSourceInformation>, currentService: String?) =
+        list.find { it.apiService.serviceName == currentService } ?: sort(list).firstOrNull()
+
+    fun isPreferred(source: KmpSourceInformation) = state
+        ?.let { SourceLanguageOrdering.isRanked(source.apiService.language, it.orderFor(source.packageName)) }
+        ?: false
 
     fun groupName(list: List<KmpSourceInformation>) = group(list)?.name
 
@@ -311,7 +293,7 @@ private fun rememberLanguageOrder(
     return LanguageOrderController(state) { editing = it }
 }
 
-private fun KmpSourceInformation.languageName() = apiService.language?.let {
+internal fun KmpSourceInformation.languageName() = apiService.language?.let {
     if (it == SearchLanguages.ALL) "All languages" else languageDisplayName(it)
 }
 
@@ -327,6 +309,7 @@ fun <T> GroupBottomScreen(
         IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.Close, null) }
     },
     lazyListContent: LazyListScope.() -> Unit = {},
+    trailingContent: (@Composable (T) -> Unit)? = null,
     itemContent: (T) -> ListBottomSheetItemModel,
 ) {
     LazyColumn(
@@ -351,7 +334,7 @@ fun <T> GroupBottomScreen(
                 headlineContent = { Text(c.primaryText) },
                 supportingContent = c.secondaryText?.let { i -> { Text(i) } },
                 overlineContent = c.overlineText?.let { i -> { Text(i) } },
-                trailingContent = c.trailingText?.let { i -> { Text(i) } }
+                trailingContent = trailingContent?.let { t -> { t(it.value) } } ?: c.trailingText?.let { i -> { Text(i) } }
             )
             if (index < list.size - 1) HorizontalDivider()
         }
