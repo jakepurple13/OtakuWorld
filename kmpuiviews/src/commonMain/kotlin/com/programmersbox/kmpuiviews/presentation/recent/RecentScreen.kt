@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -87,20 +88,24 @@ fun RecentView(
     val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
 
     val sourceList = viewModel.sources
-    val initSource = remember(source) { sourceList.indexOfFirst { it.apiService == source } }
+    // Derived so it updates when the sources load after the current source, not only when the source changes
+    val currentIndex by remember {
+        derivedStateOf {
+            sourceList.indexOfFirst { it.apiService.serviceName == viewModel.currentSource?.serviceName }
+        }
+    }
     val pagerState = rememberPagerState(
-        initialPage = initSource.coerceAtLeast(0),
+        initialPage = currentIndex.coerceAtLeast(0),
         initialPageOffsetFraction = 0f
     ) { sourceList.size }
 
-    LaunchedEffect(initSource, source) {
-        if (initSource != -1) pagerState.scrollToPage(initSource)
-    }
-
-    LaunchedEffect(pagerState, initSource) {
+    LaunchedEffect(currentIndex) {
+        if (currentIndex == -1) return@LaunchedEffect
+        pagerState.scrollToPage(currentIndex)
+        // Only a page the user swiped to changes the source, never the pager catching up
         snapshotFlow { pagerState.settledPage }
             .collect {
-                if (initSource != -1) {
+                if (it != currentIndex) {
                     sourceList
                         .getOrNull(it)
                         ?.let { s -> dataStoreHandling.currentService.set(s.apiService.serviceName) }
@@ -161,8 +166,10 @@ fun RecentView(
                     }
                 },
                 actions = {
+                    // Bounded height, otherwise each page is screen-tall and short swipes snap back
                     VerticalPager(
-                        state = pagerState
+                        state = pagerState,
+                        modifier = Modifier.height(TopAppBarDefaults.TopAppBarExpandedHeight)
                     ) {
                         Box(Modifier.fillMaxHeight()) {
                             IconButton(
