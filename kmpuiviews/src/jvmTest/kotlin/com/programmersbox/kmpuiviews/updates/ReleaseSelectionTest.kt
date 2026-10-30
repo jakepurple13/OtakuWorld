@@ -1,7 +1,6 @@
 package com.programmersbox.kmpuiviews.updates
 
 import dev.nucleusframework.core.runtime.Platform
-import dev.nucleusframework.updater.Version
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -62,7 +61,8 @@ class ReleaseSelectionTest {
     @Test
     fun sameDayRerunSortsHigher() {
         val a = rel("nightly_2026_10_30", true) to "33.0.0-alpha.20261030.0100"
-        val b = rel("nightly_2026_10_30", true) to "33.0.0-alpha.20261030.1415"
-        assertEquals("33.0.0-alpha.20261030.1415", listOf(a, b).maxBy { Version.fromString(it.second) }.second)
+        val b = rel("nightly_2026_10_30_2", true) to "33.0.0-alpha.20261030.1415"
+        assertEquals("nightly_2026_10_30_2", pickHigher(a, b)?.tagName)
+        assertEquals("nightly_2026_10_30_2", pickHigher(b, a)?.tagName)
     }
 }

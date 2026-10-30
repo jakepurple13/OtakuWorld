@@ -12,6 +12,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.File
 
+fun UpdateLevel.displayName(): String = when (this) {
+    UpdateLevel.MAJOR -> "Major"
+    UpdateLevel.MINOR -> "Minor"
+    UpdateLevel.PATCH -> "Patch"
+    UpdateLevel.PRE_RELEASE -> "Nightly"
+}
+
 sealed interface DesktopUpdateState {
     data object Idle : DesktopUpdateState
     data object Checking : DesktopUpdateState
@@ -45,6 +52,7 @@ class DesktopUpdater(
     private var pendingLevel: UpdateLevel = UpdateLevel.PATCH
     private var downloadedFile: File? = null
     private var downloadJob: Job? = null
+    private var downloadFromDialog = false
 
     suspend fun checkOnLaunch() {
         if (!canCheck()) return
@@ -54,6 +62,8 @@ class DesktopUpdater(
 
     fun checkNow() {
         if (!canCheck()) return
+        _showLaunchDialog.value = false
+        downloadFromDialog = false
         _state.value = DesktopUpdateState.Checking
         scope.launch { runCheck(fromLaunch = false) }
     }
@@ -96,6 +106,7 @@ class DesktopUpdater(
     fun download() {
         val info = pendingInfo ?: return
         if (_state.value !is DesktopUpdateState.Available) return
+        downloadFromDialog = _showLaunchDialog.value
         _state.value = DesktopUpdateState.Downloading(info.version, 0f, 0, 0)
         downloadJob = scope.launch {
             try {
@@ -104,6 +115,7 @@ class DesktopUpdater(
                     if (file != null) {
                         downloadedFile = file
                         _state.value = DesktopUpdateState.Ready(info.version)
+                        if (downloadFromDialog) _showLaunchDialog.value = true
                     } else {
                         _state.value = DesktopUpdateState.Downloading(
                             info.version,
@@ -126,12 +138,19 @@ class DesktopUpdater(
         if (_state.value !is DesktopUpdateState.Downloading) return
         downloadJob?.cancel()
         downloadJob = null
+        downloadFromDialog = false
         _state.value = DesktopUpdateState.Available(info.version, pendingLevel)
     }
 
     fun restart() {
         val file = downloadedFile ?: return
-        engine.installAndRestart(file)
+        try {
+            engine.installAndRestart(file)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            _state.value = DesktopUpdateState.Error(INSTALL_MESSAGE)
+        }
     }
 
     fun skipThisVersion() {
@@ -152,6 +171,8 @@ class DesktopUpdater(
     }
 
     private companion object {
+        const val INSTALL_MESSAGE =
+            "Couldn’t install the update. Use Download from GitHub to install it yourself."
         const val NETWORK_MESSAGE = "Couldn’t reach GitHub. Check your connection and retry."
     }
 }

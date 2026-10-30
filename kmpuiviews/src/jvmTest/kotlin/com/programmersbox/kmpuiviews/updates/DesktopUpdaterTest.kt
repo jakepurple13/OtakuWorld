@@ -11,6 +11,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -40,6 +41,8 @@ private class FakeUpdaterEngine(
     var checkCalls = 0
     val progress = MutableSharedFlow<DownloadProgress>()
     var installed: File? = null
+    var installError: Exception? = null
+    var downloadError: Exception? = null
 
     override fun isSupported() = supported
     override suspend fun check(): UpdateResult {
@@ -47,8 +50,11 @@ private class FakeUpdaterEngine(
         return result
     }
 
-    override fun download(info: UpdateInfo): Flow<DownloadProgress> = progress
+    override fun download(info: UpdateInfo): Flow<DownloadProgress> =
+        downloadError?.let { e -> flow { throw e } } ?: progress
+
     override fun installAndRestart(file: File) {
+        installError?.let { throw it }
         installed = file
     }
 
@@ -232,5 +238,96 @@ class DesktopUpdaterTest {
     fun releasePageUrlFallbackNightly() = runTest {
         val u = updater(FakeUpdaterEngine(track = UpdateTrack.Nightly))
         assertEquals("https://github.com/jakepurple13/OtakuWorld/releases", u.releasePageUrl())
+    }
+
+    @Test
+    fun checkNowClearsLaunchDialog() = runTest {
+        val engine = FakeUpdaterEngine(result = available("33.0.1"))
+        val u = updater(engine)
+        u.checkOnLaunch()
+        advanceUntilIdle()
+        assertTrue(u.showLaunchDialog.value)
+        u.checkNow()
+        assertFalse(u.showLaunchDialog.value)
+        advanceUntilIdle()
+        assertTrue(u.state.value is DesktopUpdateState.Available)
+        assertFalse(u.showLaunchDialog.value)
+    }
+
+    @Test
+    fun downloadFailureSetsError() = runTest {
+        val engine = FakeUpdaterEngine(result = available("33.0.1"))
+        val u = updater(engine)
+        u.checkOnLaunch()
+        advanceUntilIdle()
+        engine.downloadError = NetworkException("offline")
+        u.download()
+        advanceUntilIdle()
+        assertEquals(DesktopUpdateState.Error("offline"), u.state.value)
+        assertTrue(u.showLaunchDialog.value)
+    }
+
+    @Test
+    fun downloadIsNoOpOutsideAvailable() = runTest {
+        val engine = FakeUpdaterEngine(result = available("33.0.1"))
+        val u = updater(engine)
+        u.download()
+        advanceUntilIdle()
+        assertEquals(DesktopUpdateState.Idle, u.state.value)
+        u.checkNow()
+        advanceUntilIdle()
+        u.download()
+        advanceUntilIdle()
+        u.download()
+        advanceUntilIdle()
+        assertTrue(u.state.value is DesktopUpdateState.Downloading)
+    }
+
+    @Test
+    fun hiddenDialogDownloadReopensAtReady() = runTest {
+        val engine = FakeUpdaterEngine(result = available("33.0.1"))
+        val u = updater(engine)
+        u.checkOnLaunch()
+        advanceUntilIdle()
+        u.download()
+        advanceUntilIdle()
+        u.dismissLaunchDialog()
+        assertFalse(u.showLaunchDialog.value)
+        engine.progress.emit(DownloadProgress(100, 100, 100.0, File("f.dmg")))
+        advanceUntilIdle()
+        assertEquals(DesktopUpdateState.Ready("33.0.1"), u.state.value)
+        assertTrue(u.showLaunchDialog.value)
+    }
+
+    @Test
+    fun settingsDownloadDoesNotOpenDialogAtReady() = runTest {
+        val engine = FakeUpdaterEngine(result = available("33.0.1"))
+        val u = updater(engine)
+        u.checkNow()
+        advanceUntilIdle()
+        u.download()
+        advanceUntilIdle()
+        engine.progress.emit(DownloadProgress(100, 100, 100.0, File("f.dmg")))
+        advanceUntilIdle()
+        assertEquals(DesktopUpdateState.Ready("33.0.1"), u.state.value)
+        assertFalse(u.showLaunchDialog.value)
+    }
+
+    @Test
+    fun restartFailureSetsError() = runTest {
+        val engine = FakeUpdaterEngine(result = available("33.0.1"))
+        val u = updater(engine)
+        u.checkNow()
+        advanceUntilIdle()
+        u.download()
+        advanceUntilIdle()
+        engine.progress.emit(DownloadProgress(100, 100, 100.0, File("f.dmg")))
+        advanceUntilIdle()
+        engine.installError = IllegalStateException("boom")
+        u.restart()
+        assertEquals(
+            DesktopUpdateState.Error("Couldn’t install the update. Use Download from GitHub to install it yourself."),
+            u.state.value
+        )
     }
 }

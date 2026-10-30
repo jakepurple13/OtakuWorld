@@ -45,7 +45,7 @@ fun UpdateLaunchDialog(updater: DesktopUpdater) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("$appName ${s.version} is ready to download. You’re on ${updater.currentVersion}.")
                     Text(
-                        "${s.level.name.lowercase().replaceFirstChar { it.titlecase(Locale.ROOT) }} · " +
+                        "${s.level.displayName()} · " +
                                 "${updater.track.name} track",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -101,7 +101,19 @@ fun UpdateLaunchDialog(updater: DesktopUpdater) {
             confirmButton = { TextButton(onClick = updater::restart) { Text("Restart now") } },
         )
 
-        else -> Unit
+        is DesktopUpdateState.Error -> AlertDialog(
+            onDismissRequest = updater::dismissLaunchDialog,
+            title = { Text("Update failed") },
+            text = { Text(s.message) },
+            dismissButton = {
+                TextButton(onClick = { uriHandler.openUri(updater.releasePageUrl()) }) {
+                    Text("Download from GitHub")
+                }
+            },
+            confirmButton = { TextButton(onClick = updater::dismissLaunchDialog) { Text("Close") } },
+        )
+
+        else -> LaunchedEffect(Unit) { updater.dismissLaunchDialog() }
     }
 }
 

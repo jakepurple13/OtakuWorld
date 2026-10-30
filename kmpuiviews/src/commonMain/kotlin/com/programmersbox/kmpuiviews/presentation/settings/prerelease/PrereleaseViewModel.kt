@@ -22,7 +22,7 @@ class PrereleaseViewModel(
     private val prereleaseRepository: PrereleaseRepository,
     private val downloadStateRepository: DownloadStateInterface,
     private val appConfig: AppConfig,
-): ViewModel() {
+) : ViewModel() {
 
     var uiState by mutableStateOf<PrereleaseUiState>(PrereleaseUiState.Loading)
 

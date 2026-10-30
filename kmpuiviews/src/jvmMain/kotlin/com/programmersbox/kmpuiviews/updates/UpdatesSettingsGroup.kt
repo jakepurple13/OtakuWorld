@@ -115,7 +115,7 @@ private fun LazyItemScope.CheckForUpdatesItem() {
                         modifier = Modifier.padding(start = 8.dp)
                     ) {
                         Text(
-                            it.level.name.lowercase().replaceFirstChar { c -> c.titlecase(Locale.ROOT) },
+                            it.level.displayName(),
                             style = MaterialTheme.typography.labelSmall,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                         )
