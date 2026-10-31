@@ -1,5 +1,5 @@
 [versions]
-apksig = "9.4.1"
+apksig = "9.5.0"
 accompanist = "0.37.3"
 activity = "1.13.0"
 arcore = "1.0.0"
@@ -279,17 +279,17 @@ ziplineProfiler = { module = "app.cash.zipline:zipline-profiler", version.ref = 
 # CloudStream (:source_utilities:cloudstream). Versions follow recloudstream/cloudstream's catalog;
 # Upstream pins jackson and rhino strictly because newer releases need minSdk 26. Here only rhino is
 # strict; jackson is `require 2.13.1` and resolves to 2.21.x because koog needs it (our minSdk is 28).
-cloudstreamAnnotation = "androidx.annotation:annotation:1.10.0"
+cloudstreamAnnotation = "androidx.annotation:annotation:1.11.0"
 cloudstreamAtomicfu = "org.jetbrains.kotlinx:atomicfu:0.33.0"
 cloudstreamCryptographyCore = { module = "dev.whyoleg.cryptography:cryptography-core", version.ref = "cloudstreamCryptography" }
 cloudstreamCryptographyProvider = { module = "dev.whyoleg.cryptography:cryptography-provider-optimal", version.ref = "cloudstreamCryptography" }
 # Not strict: koog (kmpuiviews:koogintegration) needs jackson 2.21.x. Upstream pins 2.13.1 strictly only
 # for API <= 25 devices; our minSdk is 28.
-cloudstreamJackson = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version = { require = "2.13.1" } }
+cloudstreamJackson = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version = { require = "2.22.4" } }
 cloudstreamKotlinxIo = "org.jetbrains.kotlinx:kotlinx-io-core:0.9.1"
 cloudstreamKsoup = "com.fleeksoft.ksoup:ksoup:0.2.6"
 cloudstreamNiceHttp = "com.github.Blatzar:NiceHttp:0.4.18"
-cloudstreamRhino = { module = "org.mozilla:rhino", version = { strictly = "1.8.1" } }
+cloudstreamRhino = { module = "org.mozilla:rhino", version = { strictly = "1.9.2" } }
 
 [bundles]
 compose = [
