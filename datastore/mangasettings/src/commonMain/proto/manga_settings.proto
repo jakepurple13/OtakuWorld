@@ -13,6 +13,8 @@ message MangaSettings {
   bool useFloatingReaderBottomBar = 9;
   bool hasMigrated = 10;
   bool includeInsetsForReader = 11;
+  // Fraction of the screen width the reader pages use on expanded windows. 0 = full width.
+  float readerWidthFraction = 12;
 }
 
 enum ImageLoaderType {

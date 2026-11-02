@@ -43,6 +43,11 @@ class MangaNewSettingsHandling(
         updateValue = { copy(pagePadding = it) }
     )
 
+    val readerWidthFraction = SettingInfo(
+        flow = all.map { it.readerWidthFraction.takeIf { f -> f > 0f } ?: 1f },
+        updateValue = { copy(readerWidthFraction = it) }
+    )
+
     val readerType = SettingInfo(
         flow = all.map { it.readerType },
         updateValue = { copy(readerType = it) }

@@ -27,6 +27,7 @@ kotlin {
             implementation(compose.uiUtil)
             implementation(compose.foundation)
             implementation(compose.material3AdaptiveNavigationSuite)
+            implementation(commonLibs.material3.window.size)
             implementation(compose.components.resources)
             implementation(commonLibs.material.kolor)
 
