@@ -236,6 +236,8 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   ([#2511](https://github.com/jakepurple13/OtakuWorld/pull/2511))
 - Notify on boot now only re-posts notifications that were still in the tray, not every saved
   notification ([#2644](https://github.com/jakepurple13/OtakuWorld/pull/2644))
+- Fixed the QR code share button not copying the QR code image to the clipboard
+  ([#2656](https://github.com/jakepurple13/OtakuWorld/pull/2656))
 
 ### Desktop Only
 
