@@ -44,6 +44,7 @@ class SyncManager(
     val syncConnectedStatus: StateFlow<SyncConnectedStatus>
         field = MutableStateFlow<SyncConnectedStatus>(SyncConnectedStatus.Idle)
 
+    private var startJob: Job? = null
     private var realtimeJob: Job? = null
     private var pollingJob: Job? = null
 
@@ -51,7 +52,10 @@ class SyncManager(
     private var lastSyncTimestamp = 0L
 
     fun start() {
-        combine(
+        // Called from UI (LaunchedEffect), so it repeats on every activity recreation. A second collector would
+        // race the first in startWifi() and open two subscriptions on the same realtime channel topic.
+        if (startJob?.isActive == true) return
+        startJob = combine(
             authManager.authState,
             connectivityMonitor.isOnline,
         ) { auth, online -> auth to online }
