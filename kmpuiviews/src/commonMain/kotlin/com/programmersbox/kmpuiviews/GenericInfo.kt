@@ -47,6 +47,8 @@ interface KmpGenericInfo {
         allChapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,
         navController: NavigationActions,
+        // ARGB cover color from Details for theming the reader/player; null keeps the app theme
+        seedColor: Int? = null,
     )
 
     fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit = {}

@@ -1,5 +1,6 @@
 package com.programmersbox.manga.shared.reader
 
+import com.programmersbox.kmpuiviews.theme.SeedColorTheme
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -99,6 +100,21 @@ import kotlin.math.absoluteValue
 fun ReadView(
     mangaSettingsHandling: MangaNewSettingsHandling = koinInject(),
     viewModel: ReadViewModel = koinViewModel(),
+) {
+    SeedColorTheme(viewModel.seedColor) {
+        ReadViewContent(mangaSettingsHandling, viewModel)
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalZoomableApi::class, ExperimentalPageCurlApi::class)
+@ExperimentalMaterial3Api
+@ExperimentalComposeUiApi
+@ExperimentalAnimationApi
+@ExperimentalFoundationApi
+@Composable
+private fun ReadViewContent(
+    mangaSettingsHandling: MangaNewSettingsHandling,
+    viewModel: ReadViewModel,
 ) {
     HideNavBarWhileOnScreen()
     RecordTimeSpentDoing()

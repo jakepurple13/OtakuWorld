@@ -20,7 +20,6 @@ import com.programmersbox.kmpuiviews.presentation.components.placeholder.Placeho
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
-import com.materialkolor.PaletteStyle
 import androidx.compose.animation.core.tween
 import com.materialkolor.material3.ktx.animateColorScheme
 import androidx.compose.ui.graphics.painter.BitmapPainter
@@ -42,6 +41,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -134,6 +134,8 @@ import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
 import com.programmersbox.kmpuiviews.utils.LocalItemDao
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
+import com.programmersbox.kmpuiviews.theme.SchemeInputs
+import com.programmersbox.kmpuiviews.theme.SeedSchemeCache
 import com.programmersbox.sharedcomponents.qrcode.QrCodeRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -215,12 +217,13 @@ private fun DetailsScreenInternal(
         label = ""
     )
 
-    val seedColor = details
+    // Only a real cover color is handed to the reader; without one it keeps the app theme
+    val paletteSeed = details
         .palette
         ?.let(paletteSwatchType.swatch)
         ?.color
         ?.takeIf { usePalette }
-        ?: MaterialTheme.colorScheme.primary
+    val seedColor = paletteSeed ?: MaterialTheme.colorScheme.primary
     val isDark = when (themeSetting) {
         SystemThemeMode.FollowSystem -> isSystemInDarkTheme()
         SystemThemeMode.Day -> false
@@ -245,6 +248,7 @@ private fun DetailsScreenInternal(
             )
         }
         details.colorScheme = schemeInputs to value
+        SeedSchemeCache.put(schemeInputs, value)
     }
 
     val shareChapter by handling.rememberShareChapter()
@@ -330,7 +334,7 @@ private fun DetailsScreenInternal(
                         detailsActions = DetailsActions(
                             onClick = { model ->
                                 scope.launch(Dispatchers.IO) {
-                                    genericInfo.chapterOnClick(model, target.info.chapters, infoModel, navActions)
+                                    genericInfo.chapterOnClick(model, target.info.chapters, infoModel, navActions, paletteSeed?.toArgb())
                                     insertRecent()
                                     heatMapDao.upsertHeatMap()
                                 }
@@ -940,11 +944,3 @@ fun ChapterItem(
         )
     }
 }
-
-/** What a Details color scheme is built from; the ViewModel caches the last scheme by these */
-internal data class SchemeInputs(
-    val seedColor: Color,
-    val isDark: Boolean,
-    val isAmoled: Boolean,
-    val style: PaletteStyle,
-)

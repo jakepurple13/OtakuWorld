@@ -12,6 +12,7 @@ data class VideoSourceModel(
     val infoModel: KmpInfoModel,
     val isStreaming: Boolean,
     val model: KmpChapterModel,
+    val seedColor: Int? = null,
 ) {
     companion object {
         var showVideoSources by mutableStateOf<VideoSourceModel?>(null)

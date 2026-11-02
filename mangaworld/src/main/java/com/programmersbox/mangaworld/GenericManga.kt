@@ -84,6 +84,7 @@ class GenericManga(
         allChapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,
         navController: NavigationActions,
+        seedColor: Int?,
     ) {
         chapterHolder.chapters = allChapters
         chapterHolder.chapterModel = model
@@ -91,7 +92,8 @@ class GenericManga(
             navController,
             infoModel.title,
             model.url,
-            model.sourceUrl
+            model.sourceUrl,
+            seedColor = seedColor
         )
     }
 

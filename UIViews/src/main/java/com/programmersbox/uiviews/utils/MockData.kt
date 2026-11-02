@@ -83,6 +83,7 @@ class MockInfo(private val context: Context) : GenericInfo {
         allChapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,
         navController: NavigationActions,
+        seedColor: Int?,
     ) {
 
     }
