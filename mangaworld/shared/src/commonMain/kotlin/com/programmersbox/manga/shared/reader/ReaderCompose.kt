@@ -168,11 +168,9 @@ fun ReadView(
     val imageLoaderType by mangaSettingsHandling.rememberImageLoaderType()
 
     val isWidthAdjustable = isReaderWidthAdjustable
+    val savedWidthFraction by mangaSettingsHandling.readerWidthFraction.flow.collectAsStateWithLifecycle(1f)
     // Kept locally so dragging the dividers doesn't write to the datastore every frame
-    var readerWidthFraction by remember { mutableFloatStateOf(1f) }
-    LaunchedEffect(Unit) {
-        mangaSettingsHandling.readerWidthFraction.flow.collect { readerWidthFraction = it }
-    }
+    var readerWidthFraction by remember(savedWidthFraction) { mutableFloatStateOf(savedWidthFraction) }
 
     fun showToast() {
         scope.launch {
