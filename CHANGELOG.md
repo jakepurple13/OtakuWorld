@@ -159,6 +159,8 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 - Pre-release screen shows only the files for your platform: APKs on Android, and this app's
   installers on Desktop
   ([#2650](https://github.com/jakepurple13/OtakuWorld/pull/2650))
+- Manga reader, novel reader and anime player now take their colors from the cover when opened
+  from an item's details page ([#2657](https://github.com/jakepurple13/OtakuWorld/pull/2657))
 
 #### Bug Fixes
 
