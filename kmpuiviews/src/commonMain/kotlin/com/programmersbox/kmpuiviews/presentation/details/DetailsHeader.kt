@@ -12,23 +12,24 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BrokenImage
-import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Card
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -58,6 +59,7 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
@@ -158,20 +160,7 @@ internal fun DetailsHeader(
             colorFilter = colorFilter,
             modifier = Modifier
                 .matchParentSize()
-                .composed {
-                    val brush = Brush.verticalGradient(
-                        listOf(
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                            MaterialTheme.colorScheme.surface
-                        )
-                    )
-                    this
-                        .blur(8.dp)
-                        .drawWithContent {
-                            drawContent()
-                            drawRect(brush)
-                        }
-                }
+                .bannerScrim()
         )
 
         // Content column — padding(top = BannerHeight - CoverOverlap)
@@ -308,54 +297,99 @@ internal fun DetailsHeader(
     }
 }
 
-@ExperimentalFoundationApi
-@Composable
-internal fun PlaceHolderHeader(
-    paddingValues: PaddingValues,
-    bitmapPainter: BitmapPainter? = null,
-    imageUrl: String? = null,
-    title: String? = null,
-    coverBitmap: ImageBitmap? = null,
-) {
-    val sharedItemKey = LocalDetailsSharedItemKey.current
-    val placeholderModifier = Modifier.m3placeholder(
+/** Blur and primary-to-surface scrim behind the header, shared by the loaded and loading headers */
+private fun Modifier.bannerScrim() = composed {
+    val brush = Brush.verticalGradient(
+        listOf(
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+            MaterialTheme.colorScheme.surface
+        )
+    )
+    this
+        .blur(8.dp)
+        .drawWithContent {
+            drawContent()
+            drawRect(brush)
+        }
+}
+
+private val shimmerModifier
+    @Composable get() = Modifier.m3placeholder(
         true,
         highlight = PlaceholderHighlight.shimmer()
     )
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues)
-    ) {
+@Composable
+private fun circleShimmerModifier() = Modifier.m3placeholder(
+    true,
+    shape = CircleShape,
+    highlight = PlaceholderHighlight.shimmer()
+)
 
-        Box(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            if (bitmapPainter != null) {
-                Image(
-                    painter = bitmapPainter,
-                    contentDescription = null,
-                    contentScale = ContentScale.FillBounds,
-                    modifier = Modifier.matchParentSize()
-                )
-            }
+/** Mirrors [DetailsHeader]'s layout, showing what the tapped item already knows and shimmer for the rest */
+@OptIn(ExperimentalLayoutApi::class)
+@ExperimentalFoundationApi
+@Composable
+internal fun PlaceHolderHeader(
+    modifier: Modifier = Modifier,
+    bitmapPainter: BitmapPainter? = null,
+    imageUrl: String? = null,
+    title: String? = null,
+    sourceName: String? = null,
+    coverBitmap: ImageBitmap? = null,
+    possibleDescription: @Composable () -> Unit = {},
+) {
+    val sharedItemKey = LocalDetailsSharedItemKey.current
+    val placeholderModifier = shimmerModifier
 
-            Row(modifier = Modifier.padding(4.dp)) {
-                Card(
-                    shape = RoundedCornerShape(4.dp),
+    val colorBlindness: ColorBlindnessType by koinInject<NewSettingsHandling>().rememberColorBlindType()
+    val colorFilter by remember { derivedStateOf { colorFilterBlind(colorBlindness) } }
+
+    Box(modifier = modifier.fillMaxWidth()) {
+        if (imageUrl != null) {
+            ImageLoaderChoice(
+                imageUrl = imageUrl,
+                name = "",
+                placeHolder = { bitmapPainter ?: rememberVectorPainter(Icons.Default.BrokenImage) },
+                contentScale = ContentScale.Crop,
+                colorFilter = colorFilter,
+                modifier = Modifier
+                    .matchParentSize()
+                    .bannerScrim()
+            )
+        } else if (bitmapPainter != null) {
+            Image(
+                painter = bitmapPainter,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                colorFilter = colorFilter,
+                modifier = Modifier
+                    .matchParentSize()
+                    .bannerScrim()
+            )
+        }
+
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                verticalAlignment = Alignment.Bottom,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            ) {
+                Surface(
+                    shape = MaterialTheme.shapes.medium,
+                    shadowElevation = 8.dp,
                     modifier = Modifier
-                        .then(if (bitmapPainter != null || imageUrl != null) Modifier else placeholderModifier)
                         .padding(4.dp)
                         .customSharedElement(sharedItemKey?.takeIf { imageUrl != null }?.let(::OtakuImageElement))
                 ) {
+                    val coverModifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                     // The card's own decoded cover, when it handed one off; no second load needed
                     if (coverBitmap != null) {
                         Image(
                             bitmap = coverBitmap,
                             contentDescription = null,
                             contentScale = ContentScale.FillBounds,
-                            modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                            colorFilter = colorFilter,
+                            modifier = coverModifier
                         )
                     } else if (imageUrl != null) {
                         ImageLoaderChoice(
@@ -363,80 +397,160 @@ internal fun PlaceHolderHeader(
                             name = "",
                             placeHolder = { bitmapPainter ?: rememberVectorPainter(Icons.Default.BrokenImage) },
                             contentScale = ContentScale.FillBounds,
-                            modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                        )
-                    } else if (bitmapPainter != null) {
-                        Image(
-                            painter = bitmapPainter,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .align(Alignment.CenterHorizontally)
-                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                                .clip(RoundedCornerShape(4.dp))
+                            colorFilter = colorFilter,
+                            modifier = coverModifier
                         )
                     } else {
-                        Image(
-                            imageVector = Icons.Default.CloudOff,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .align(Alignment.CenterHorizontally)
-                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                        )
+                        Box(coverModifier.then(placeholderModifier))
                     }
                 }
 
                 Column(
-                    modifier = Modifier.padding(start = 4.dp)
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.padding(start = 12.dp)
                 ) {
-                    if (title != null) {
-                        Text(
-                            title,
-                            style = MaterialTheme.typography.titleMedium,
-                            maxLines = 3,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier
-                                .padding(vertical = 4.dp)
-                                .customSharedElement(sharedItemKey?.let(::OtakuTitleElement))
-                        )
-                    } else {
-                        Row(
-                            modifier = Modifier
-                                .padding(vertical = 4.dp)
-                                .then(placeholderModifier)
-                                .fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) { Text("") }
-                    }
+                    Text(
+                        sourceName ?: "Source",
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = if (sourceName == null) placeholderModifier else Modifier
+                    )
+
+                    Text(
+                        title.orEmpty(),
+                        style = MaterialTheme.typography.titleMedium,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 3,
+                        modifier = Modifier
+                            .customSharedElement(sharedItemKey?.takeIf { title != null }?.let(::OtakuTitleElement))
+                            .fillMaxWidth()
+                            .then(if (title == null) placeholderModifier else Modifier),
+                    )
 
                     Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
-                            .then(placeholderModifier)
-                            .semantics(true) {}
-                            .padding(vertical = 4.dp)
+                            .padding(4.dp)
                             .fillMaxWidth()
+                            .then(placeholderModifier)
                     ) {
                         Icon(
                             Icons.Default.FavoriteBorder,
                             contentDescription = null,
-                            modifier = Modifier.align(Alignment.CenterVertically)
+                            modifier = Modifier.size(20.dp)
                         )
                         Text(
                             stringResource(Res.string.addToFavorites),
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.align(Alignment.CenterVertically)
+                            style = MaterialTheme.typography.titleSmall,
+                            fontSize = 16.sp,
                         )
                     }
 
                     Text(
-                        "Otaku".repeat(50),
-                        modifier = Modifier
-                            .padding(vertical = 4.dp)
-                            .fillMaxWidth()
-                            .then(placeholderModifier),
-                        maxLines = 2
+                        stringResource(Res.string.chapter_count, 100),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = placeholderModifier
                     )
                 }
             }
+
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+            ) {
+                repeat(3) {
+                    AssistChip(
+                        onClick = {},
+                        label = { Text("Genre") },
+                        modifier = placeholderModifier
+                    )
+                }
+            }
+            possibleDescription()
+        }
+    }
+}
+
+/** The tapped item's description when it has one, else shimmer lines in the same style */
+@Composable
+internal fun PlaceholderDescription(
+    description: String?,
+    horizontalPadding: Dp,
+    maxLines: Int = 3,
+) {
+    val known = !description.isNullOrBlank()
+    Text(
+        if (known) description.orEmpty() else "Otaku ".repeat(60),
+        overflow = TextOverflow.Ellipsis,
+        maxLines = if (known) maxLines else 3,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurface,
+        modifier = Modifier
+            .padding(horizontal = horizontalPadding)
+            .fillMaxWidth()
+            .then(if (known) Modifier else shimmerModifier)
+    )
+}
+
+/** Stand-in for [ChapterListHeader] and the first chapter rows */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+internal fun PlaceholderChapterList(
+    modifier: Modifier = Modifier,
+    rows: Int = 5,
+) {
+    val placeholderModifier = shimmerModifier
+    val circleModifier = circleShimmerModifier()
+    Column(
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = modifier
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier
+                .padding(horizontal = 8.dp)
+                .fillMaxWidth()
+        ) {
+            repeat(4) {
+                Box(
+                    Modifier
+                        .weight(1f)
+                        .height(ButtonDefaults.MinHeight)
+                        .then(circleModifier)
+                )
+            }
+            Box(
+                Modifier
+                    .size(ButtonDefaults.MinHeight)
+                    .then(circleModifier)
+            )
+        }
+
+        repeat(rows) {
+            ListItem(
+                onClick = {},
+                leadingContent = { Box(Modifier.size(12.dp).then(circleModifier)) },
+                overlineContent = { Text("Jan 01, 2026", modifier = placeholderModifier) },
+                content = {
+                    Text(
+                        "Chapter 000",
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = placeholderModifier
+                    )
+                },
+                trailingContent = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        repeat(2) {
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier.size(48.dp)
+                            ) { Box(Modifier.size(24.dp).then(circleModifier)) }
+                        }
+                    }
+                },
+                colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }

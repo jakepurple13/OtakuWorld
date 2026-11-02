@@ -1,6 +1,25 @@
 package com.programmersbox.kmpuiviews.presentation.details
 
 
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.BottomAppBarDefaults
+import androidx.compose.material3.FloatingActionButtonMenu
+import androidx.compose.material3.ToggleFloatingActionButton
+import androidx.compose.material3.VerticalDragHandle
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffold
+import androidx.compose.material3.adaptive.layout.rememberPaneExpansionState
+import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Brush
+import com.programmersbox.kmpuiviews.presentation.components.NormalOtakuScaffold
+import com.programmersbox.kmpuiviews.presentation.components.placeholder.PlaceholderHighlight
+import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
+import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
+import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.materialkolor.PaletteStyle
 import androidx.compose.animation.core.tween
 import com.materialkolor.material3.ktx.animateColorScheme
@@ -272,7 +291,8 @@ private fun DetailsScreenInternal(
 
                 DetailState.Loading -> {
                     DetailLoading(
-                        details = details
+                        details = details,
+                        windowSize = windowSize
                     )
                 }
 
@@ -487,10 +507,16 @@ private fun DetailContent(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalFoundationApi::class,
+    ExperimentalMaterial3AdaptiveApi::class,
+    ExperimentalMaterial3ExpressiveApi::class
+)
 @Composable
 private fun DetailLoading(
     details: DetailsViewModel,
+    windowSize: WindowSizeClass,
     uriHandler: UriHandler = LocalUriHandler.current,
 ) {
     val qrCodeRepository = koinInject<QrCodeRepository>()
@@ -527,15 +553,113 @@ private fun DetailLoading(
                     IconButton(onClick = {}) { Icon(Icons.Default.MoreVert, null) }
                 },
             )
+        },
+        floatingActionButton = {
+            if (windowSize.widthSizeClass != WindowWidthSizeClass.Expanded) {
+                // Stand-in for DetailFloatingActionButtonMenu's toggle button
+                FloatingActionButtonMenu(
+                    expanded = false,
+                    button = {
+                        ToggleFloatingActionButton(
+                            checked = false,
+                            onCheckedChange = {},
+                            modifier = Modifier.m3placeholder(
+                                true,
+                                shape = MaterialTheme.shapes.large,
+                                highlight = PlaceholderHighlight.shimmer()
+                            )
+                        ) { Icon(Icons.Default.Add, null) }
+                    },
+                    modifier = Modifier.padding(LocalNavHostPadding.current)
+                ) {}
+            }
         }
-    ) {
-        PlaceHolderHeader(
-            paddingValues = it,
+    ) { padding ->
+        val itemModel = details.itemModel
+        @Composable
+        fun Header(possibleDescription: @Composable () -> Unit = {}) = PlaceHolderHeader(
             bitmapPainter = details.blurHash,
-            imageUrl = details.itemModel?.imageUrl,
-            title = details.itemModel?.title,
+            imageUrl = itemModel?.imageUrl,
+            title = itemModel?.title,
+            sourceName = itemModel?.source?.displayName,
             coverBitmap = details.handedOffCover,
+            possibleDescription = possibleDescription,
         )
+
+        // Same layout split as DetailContent
+        when (windowSize.widthSizeClass) {
+            WindowWidthSizeClass.Expanded -> {
+                val navigator = rememberListDetailPaneScaffoldNavigator<Int>()
+                ListDetailPaneScaffold(
+                    directive = navigator.scaffoldDirective,
+                    value = navigator.scaffoldValue,
+                    paneExpansionState = rememberPaneExpansionState(keyProvider = navigator.scaffoldValue),
+                    paneExpansionDragHandle = { VerticalDragHandle() },
+                    listPane = {
+                        val b = MaterialTheme.colorScheme.surface
+                        val c = MaterialTheme.colorScheme.primary
+                        NormalOtakuScaffold(
+                            bottomBar = {
+                                BottomAppBar(
+                                    actions = {
+                                        repeat(3) {
+                                            IconButton(onClick = {}, enabled = false) {
+                                                Icon(
+                                                    Icons.Default.MoreVert,
+                                                    contentDescription = null,
+                                                    modifier = Modifier.m3placeholder(
+                                                        true,
+                                                        shape = CircleShape,
+                                                        highlight = PlaceholderHighlight.shimmer()
+                                                    )
+                                                )
+                                            }
+                                        }
+                                    },
+                                    windowInsets = BottomAppBarDefaults.windowInsets,
+                                    modifier = Modifier.padding(LocalNavHostPadding.current)
+                                )
+                            },
+                            contentWindowInsets = WindowInsets.navigationBars,
+                            containerColor = Color.Transparent,
+                            modifier = Modifier.drawBehind { drawRect(Brush.verticalGradient(listOf(c.copy(alpha = 0.85f), b))) }
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .padding(it)
+                                    .verticalScroll(rememberScrollState())
+                            ) {
+                                Header {
+                                    PlaceholderDescription(
+                                        description = itemModel?.description,
+                                        horizontalPadding = 4.dp,
+                                        maxLines = Int.MAX_VALUE
+                                    )
+                                }
+                            }
+                        }
+                    },
+                    detailPane = { PlaceholderChapterList(modifier = Modifier.fillMaxSize()) },
+                    modifier = Modifier.padding(padding)
+                )
+            }
+
+            else -> {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                ) {
+                    Header()
+                    PlaceholderDescription(
+                        description = itemModel?.description,
+                        horizontalPadding = 16.dp
+                    )
+                    PlaceholderChapterList()
+                }
+            }
+        }
     }
 }
 
