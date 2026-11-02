@@ -9,4 +9,7 @@
     <external-path
         name="Download1"
         path="Download/" />
+    <files-path
+        name="internal_files"
+        path="." />
 </paths>
