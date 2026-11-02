@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.FormatLineSpacing
 import androidx.compose.material.icons.filled.Gesture
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -72,10 +73,12 @@ import com.programmersbox.manga.shared.settings.ImageLoaderSettings
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -115,6 +118,23 @@ internal fun SettingsSheet(
                 initialValue = runBlocking { mangaSettingsHandling.pagePadding.flow.firstOrNull() ?: 4 },
                 range = 0f..10f
             )
+
+            if (isReaderWidthAdjustable && readerType.supportsWidthAdjust) {
+                val savedWidthFraction by mangaSettingsHandling.readerWidthFraction.flow.collectAsStateWithLifecycle(1f)
+                var widthPercent by remember(savedWidthFraction) { mutableFloatStateOf(savedWidthFraction * 100) }
+                SliderSetting(
+                    sliderValue = widthPercent,
+                    updateValue = { widthPercent = it },
+                    range = MIN_READER_WIDTH_FRACTION * 100..100f,
+                    settingTitle = { Text("Reader Page Width") },
+                    settingSummary = { Text("You can also drag the dividers beside the pages") },
+                    settingIcon = { Icon(Icons.Default.SwapHoriz, null) },
+                    format = { "${it.roundToInt()}%" },
+                    onValueChangedFinished = {
+                        scope.launch { mangaSettingsHandling.readerWidthFraction.updateSetting(widthPercent / 100) }
+                    }
+                )
+            }
             HorizontalDivider()
 
             var userGestureAllowed by mangaSettingsHandling.rememberUserGestureEnabled()

@@ -43,6 +43,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -55,6 +56,8 @@ import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -163,6 +166,11 @@ fun ReadView(
         .collectAsStateWithLifecycle(initialValue = 4)
 
     val imageLoaderType by mangaSettingsHandling.rememberImageLoaderType()
+
+    val isWidthAdjustable = isReaderWidthAdjustable
+    val savedWidthFraction by mangaSettingsHandling.readerWidthFraction.flow.collectAsStateWithLifecycle(1f)
+    // Kept locally so dragging the dividers doesn't write to the datastore every frame
+    var readerWidthFraction by remember(savedWidthFraction) { mutableFloatStateOf(savedWidthFraction) }
 
     fun showToast() {
         scope.launch {
@@ -458,8 +466,12 @@ fun ReadView(
             },
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
         ) { p ->
+            val density = LocalDensity.current
+            var readerContainerWidth by remember { mutableStateOf(0.dp) }
             Box(
-                modifier = Modifier.setBlurKindSource(blurKind),
+                modifier = Modifier
+                    .setBlurKindSource(blurKind)
+                    .onSizeChanged { readerContainerWidth = with(density) { it.width.toDp() } },
             ) {
                 OtakuPullToRefreshBox(
                     isRefreshing = viewModel.isLoadingPages,
@@ -516,6 +528,15 @@ fun ReadView(
                     ) {
                         when (it) {
                             ReaderType.List -> {
+                                val sidePadding = if (isWidthAdjustable) {
+                                    readerSidePadding(readerContainerWidth, readerWidthFraction)
+                                } else {
+                                    0.dp
+                                }
+                                val verticalPadding = PaddingValues(
+                                    top = if (viewModel.pageItems.isNotEmpty()) 0.dp else p.calculateTopPadding(),
+                                    bottom = p.calculateBottomPadding()
+                                ).animate()
                                 ListView(
                                     listState = listState,
                                     pageItems = viewModel.pageItems,
@@ -523,9 +544,11 @@ fun ReadView(
                                     itemSpacing = spacing,
                                     colorFilter = colorFilter,
                                     paddingValues = PaddingValues(
-                                        top = if (viewModel.pageItems.isNotEmpty()) 0.dp else p.calculateTopPadding(),
-                                        bottom = p.calculateBottomPadding()
-                                    ).animate(),
+                                        start = sidePadding,
+                                        end = sidePadding,
+                                        top = verticalPadding.calculateTopPadding(),
+                                        bottom = verticalPadding.calculateBottomPadding()
+                                    ),
                                     imageLoaderType = imageLoaderType,
                                 )
                             }
@@ -559,6 +582,15 @@ fun ReadView(
                                 )
                             }
                         }
+                    }
+
+                    if (isWidthAdjustable && readerType.supportsWidthAdjust) {
+                        ReaderWidthDividers(
+                            visible = showItems,
+                            widthFraction = { readerWidthFraction },
+                            onWidthFractionChange = { readerWidthFraction = it },
+                            onDragStopped = { scope.launch { mangaSettingsHandling.readerWidthFraction.updateSetting(it) } },
+                        )
                     }
                 }
             }
