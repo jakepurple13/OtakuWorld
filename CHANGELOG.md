@@ -193,6 +193,8 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 - Recent screen: swiping the source icon now follows the source chooser's order, including
   language order within an extension, opens on the chosen source, and no longer snaps back on
   short swipes ([#2647](https://github.com/jakepurple13/OtakuWorld/pull/2647))
+- Cloud sync: fixed a crash on Wi-Fi when the app was reopened or rotated while signed in
+  ([#2655](https://github.com/jakepurple13/OtakuWorld/pull/2655))
 
 #### Removed
 
