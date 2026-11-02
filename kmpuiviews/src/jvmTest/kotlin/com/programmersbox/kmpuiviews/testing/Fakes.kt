@@ -106,6 +106,7 @@ class FakeKmpGenericInfo : KmpGenericInfo {
         allChapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,
         navController: NavigationActions,
+        seedColor: Int?,
     ) {
     }
 

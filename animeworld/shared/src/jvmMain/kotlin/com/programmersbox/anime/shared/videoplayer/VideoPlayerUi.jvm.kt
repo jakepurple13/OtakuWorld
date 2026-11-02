@@ -1,5 +1,6 @@
 package com.programmersbox.anime.shared.videoplayer
 
+import com.programmersbox.kmpuiviews.theme.SeedColorTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,6 +25,11 @@ import java.io.File
 
 @Composable
 actual fun VideoPlayerUi(videoScreen: VideoScreen) {
+    SeedColorTheme(videoScreen.seedColor) { VideoPlayerContent(videoScreen) }
+}
+
+@Composable
+private fun VideoPlayerContent(videoScreen: VideoScreen) {
     val storageHolder = koinInject<StorageHolder>()
     // The first load scans libVLC's plugins, so keep it off the UI thread.
     val factory by produceState<Result<MediaPlayerFactory>?>(null) {

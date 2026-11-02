@@ -123,6 +123,7 @@ class ReadViewModel(
             mangaInfoUrl: String? = null,
             downloaded: Boolean = false,
             filePath: String? = null,
+            seedColor: Int? = null,
         ) {
             navController.navigate(
                 MangaReader(
@@ -130,7 +131,8 @@ class ReadViewModel(
                     mangaUrl = mangaUrl,
                     mangaInfoUrl = mangaInfoUrl,
                     downloaded = downloaded,
-                    filePath = filePath
+                    filePath = filePath,
+                    seedColor = seedColor
                 )
             )// { launchSingleTop = true }
         }
@@ -143,7 +145,11 @@ class ReadViewModel(
         val mangaInfoUrl: String? = null,
         val downloaded: Boolean,
         val filePath: String? = null,
+        // Cover color handed over by Details to theme the reader
+        val seedColor: Int? = null,
     ) : NavKey
+
+    val seedColor = mangaReader.seedColor
 
     val title by lazy { mangaReader.mangaTitle ?: "" }
 

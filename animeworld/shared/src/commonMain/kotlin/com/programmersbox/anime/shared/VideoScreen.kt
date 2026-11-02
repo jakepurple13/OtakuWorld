@@ -9,4 +9,6 @@ data class VideoScreen(
     val showName: String,
     val downloadOrStream: Boolean,
     val referer: String,
+    // Cover color handed over by Details to theme the player
+    val seedColor: Int? = null,
 ) : NavKey

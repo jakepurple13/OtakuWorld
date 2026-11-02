@@ -63,13 +63,15 @@ abstract class GenericSharedNovel(
         allChapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,
         navController: NavigationActions,
+        seedColor: Int?,
     ) {
         chapterHolder.chapterModel = model
         ReadViewModel.navigateToNovelReader(
             navController,
             infoModel.title,
             model.url,
-            model.sourceUrl
+            model.sourceUrl,
+            seedColor = seedColor
         )
     }
 

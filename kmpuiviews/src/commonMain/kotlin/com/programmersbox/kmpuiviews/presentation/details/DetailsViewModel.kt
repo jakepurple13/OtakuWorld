@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.presentation.details
 
 import androidx.compose.material3.ColorScheme
+import com.programmersbox.kmpuiviews.theme.SchemeInputs
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue

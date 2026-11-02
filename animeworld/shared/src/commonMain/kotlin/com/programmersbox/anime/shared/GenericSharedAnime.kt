@@ -69,6 +69,7 @@ abstract class GenericSharedAnime(
         allChapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,
         navController: NavigationActions,
+        seedColor: Int?,
     ) {
         if (isLoadingChapter) return
         isLoadingChapter = true
@@ -76,12 +77,13 @@ abstract class GenericSharedAnime(
             val storages = model.getChapterInfo().firstOrNull().orEmpty()
 
             when {
-                storages.size == 1 -> playResolved(navController, storages.first(), model, infoModel)
+                storages.size == 1 -> playResolved(navController, storages.first(), model, infoModel, seedColor)
                 storages.isNotEmpty() -> VideoSourceModel.showVideoSources = VideoSourceModel(
                     c = storages,
                     infoModel = infoModel,
                     isStreaming = true,
                     model = model,
+                    seedColor = seedColor,
                 )
                 else -> Unit
             }
@@ -133,6 +135,7 @@ abstract class GenericSharedAnime(
         storage: KmpStorage,
         model: KmpChapterModel,
         infoModel: KmpInfoModel,
+        seedColor: Int? = null,
     ) {
         val resolved = try {
             model.source.resolve(storage)
@@ -143,7 +146,7 @@ abstract class GenericSharedAnime(
             onResolveFailed(storage, e)
             return
         }
-        playOrCast(navController, resolved, model, infoModel)
+        playOrCast(navController, resolved, model, infoModel, seedColor)
     }
 
     /** Called when resolving a stream fails, so the platform can tell the user. */
@@ -154,6 +157,7 @@ abstract class GenericSharedAnime(
         storage: KmpStorage,
         model: KmpChapterModel,
         infoModel: KmpInfoModel,
+        seedColor: Int?,
     )
 
     @Composable

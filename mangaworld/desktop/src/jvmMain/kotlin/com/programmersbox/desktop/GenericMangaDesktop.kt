@@ -49,6 +49,7 @@ class GenericMangaDesktop(
         allChapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,
         navController: NavigationActions,
+        seedColor: Int?,
     ) {
         if (desktopSettings.useWebViewForReader.get()) {
             navigationActions.webView(model.url)
@@ -59,7 +60,8 @@ class GenericMangaDesktop(
                 navController,
                 infoModel.title,
                 model.url,
-                model.sourceUrl
+                model.sourceUrl,
+                seedColor = seedColor
             )
         }
     }

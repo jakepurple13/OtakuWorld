@@ -1,5 +1,6 @@
 package com.programmersbox.novel.shared.reader
 
+import com.programmersbox.kmpuiviews.theme.SeedColorTheme
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.fadeIn
@@ -73,6 +74,20 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun NovelReadView(
     viewModel: ReadViewModel = koinViewModel(),
+) {
+    SeedColorTheme(viewModel.seedColor) {
+        NovelReadViewContent(viewModel)
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@ExperimentalMaterial3Api
+@ExperimentalComposeUiApi
+@ExperimentalAnimationApi
+@ExperimentalFoundationApi
+@Composable
+private fun NovelReadViewContent(
+    viewModel: ReadViewModel,
 ) {
     HideNavBarWhileOnScreen()
     RecordTimeSpentDoing()

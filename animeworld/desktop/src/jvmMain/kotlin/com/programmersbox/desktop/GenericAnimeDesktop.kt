@@ -59,7 +59,7 @@ open class GenericAnimeDesktop(
                 genericInfo = this,
                 navController = navController,
                 onPlay = { s ->
-                    if (it.isStreaming) playResolved(navController, s, it.model, it.infoModel)
+                    if (it.isStreaming) playResolved(navController, s, it.model, it.infoModel, it.seedColor)
                     else downloadResolved(it.model, it.infoModel, s)
                 }
             )
@@ -96,6 +96,7 @@ open class GenericAnimeDesktop(
         storage: KmpStorage,
         model: KmpChapterModel,
         infoModel: KmpInfoModel,
+        seedColor: Int?,
     ) {
         storageHolder.storageModel = storage
         storageHolder.showTitle = infoModel.title
@@ -105,7 +106,8 @@ open class GenericAnimeDesktop(
                 showPath = storage.link.orEmpty(),
                 showName = model.name,
                 downloadOrStream = false,
-                referer = storage.headers["referer"] ?: storage.source.orEmpty()
+                referer = storage.headers["referer"] ?: storage.source.orEmpty(),
+                seedColor = seedColor
             )
         )
     }

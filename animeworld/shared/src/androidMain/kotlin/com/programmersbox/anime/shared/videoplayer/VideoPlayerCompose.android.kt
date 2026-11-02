@@ -1,5 +1,6 @@
 package com.programmersbox.anime.shared.videoplayer
 
+import com.programmersbox.kmpuiviews.theme.SeedColorTheme
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
@@ -157,10 +158,15 @@ import kotlin.math.roundToInt
 private val IGNORE_SSL = booleanPreferencesKey("ignore_ssl")
 private val Context.ignoreSsl get() = otakuDataStore.data.map { it[IGNORE_SSL] ?: true }
 
+@Composable
+actual fun VideoPlayerUi(videoScreen: VideoScreen) {
+    SeedColorTheme(videoScreen.seedColor) { VideoPlayerContent(videoScreen) }
+}
+
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @Composable
-actual fun VideoPlayerUi(videoScreen: VideoScreen) {
+private fun VideoPlayerContent(videoScreen: VideoScreen) {
     val context = LocalContext.current
     val genericInfo = koinInject<GenericInfo>()
     val storageHolder = koinInject<StorageHolder>()
