@@ -142,7 +142,7 @@ actual class QrCodeRepository(
         // Use FileProvider so external apps can read the file via a content:// URI without exposing the path
         return FileProvider.getUriForFile(
             context,
-            context.applicationContext.packageName + ".fileprovider",
+            context.applicationContext.packageName + ".provider",
             file
         )
     }
