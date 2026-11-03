@@ -9,6 +9,7 @@ import com.programmersbox.mihon.loader.MihonSourceInstantiator
 class JvmMihonExtensionLoader(
     private val store: MihonApkStore,
     private val parentClassLoader: ClassLoader = MihonCatalog::class.java.classLoader,
+    private val onError: (Throwable) -> Unit = store.onError,
 ) {
     private val jars = JarLoaderCache<List<MihonApiService>>(parentClassLoader, ChildFirstClassLoader.BASE_PARENT_FIRST)
 
@@ -29,6 +30,7 @@ class JvmMihonExtensionLoader(
                 loadPackage(it, catalog, repoSigningKeys, trustedIds, onTrust)
             } catch (t: Throwable) {
                 t.printStackTrace()
+                onError(IllegalStateException("Mihon: could not load ${it.info.packageName}", t))
                 emptyList()
             }
         }
@@ -100,6 +102,7 @@ class JvmMihonExtensionLoader(
             }
         } catch (t: Throwable) {
             t.printStackTrace()
+            onError(IllegalStateException("Mihon: could not load $pkg", t))
             notLoaded("Failed to load: ${t.message}")
         }
     }
