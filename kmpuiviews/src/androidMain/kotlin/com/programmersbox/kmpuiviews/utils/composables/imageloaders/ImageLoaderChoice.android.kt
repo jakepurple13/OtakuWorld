@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import com.bumptech.glide.load.model.GlideUrl
+import com.bumptech.glide.load.model.LazyHeaders
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.components.rememberImageComponent
 import com.skydoves.landscapist.crossfade.CrossfadePlugin
@@ -29,7 +30,14 @@ actual fun CustomImageChoice(
 ) {
     val url = remember(imageUrl) {
         try {
-            GlideUrl(imageUrl) { headers.mapValues { it.value.toString() } }
+            // LazyHeaders has value equality. GlideUrl.equals compares headers, so a lambda
+            // Headers made every memory-cache key unique and nothing was ever a cache hit.
+            GlideUrl(
+                imageUrl,
+                LazyHeaders.Builder()
+                    .apply { headers.forEach { (key, value) -> addHeader(key, value.toString()) } }
+                    .build()
+            )
         } catch (_: IllegalArgumentException) {
             ""
         }
@@ -37,6 +45,10 @@ actual fun CustomImageChoice(
 
     GlideImage(
         imageModel = { url },
+        // Release the request when this leaves composition so Glide moves the bitmap into its
+        // LRU memory cache. Without this it stays a weakly-held "active resource" and is lost on
+        // GC, so returning to a screen (e.g. Recent) reloads every cover.
+        clearTarget = true,
         imageOptions = ImageOptions(
             contentScale = contentScale,
             contentDescription = name,
