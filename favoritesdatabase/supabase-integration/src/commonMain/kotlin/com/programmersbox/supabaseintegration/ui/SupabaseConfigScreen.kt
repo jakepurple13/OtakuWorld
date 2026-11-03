@@ -1,10 +1,13 @@
 package com.programmersbox.supabaseintegration.ui
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -15,16 +18,21 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.VpnKey
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -33,7 +41,6 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -42,6 +49,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,12 +57,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.sharedcomponents.qrcode.ScanQrCode
 import com.programmersbox.sharedcomponents.qrcode.ShareViaQrCode
+import com.programmersbox.sharedcomponents.qrcode.qrDockTransform
 import com.programmersbox.supabaseintegration.Res
 import com.programmersbox.supabaseintegration.credentials.SupabaseCredentials
 import com.programmersbox.supabaseintegration.supabase_logo_icon
@@ -389,84 +402,260 @@ fun ScanQrCode(
     onClose: () -> Unit,
 ) {
     ScanQrCode<QrCodeInfo>(
-        onOpen = { onSaveCredentials(it.credentials) },
         onRemove = onClose,
-        customUi = { qrCodeInfo ->
-            qrCodeInfo?.let { info ->
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
-                            modifier = Modifier.padding(16.dp)
-                        ) {
-                            Text("Project url: ${info.credentials.projectUrl}")
-                            HorizontalDivider()
-                            Text("Project key: ${info.credentials.anonKey}")
-                            FilledTonalButton(
-                                onClick = { testScannedCredentials(info.credentials.projectUrl, info.credentials.anonKey) },
-                                shapes = ButtonDefaults.shapes(),
-                                modifier = Modifier.align(Alignment.CenterHorizontally)
-                            ) { Text("Test Connection") }
-                            // Smooth appearance for connection result
-                            AnimatedVisibility(
-                                visible = connectionResult != null,
-                                enter = fadeIn() + expandVertically(),
-                                exit = fadeOut() + shrinkVertically()
-                            ) {
-                                connectionResult?.let { result ->
-                                    val isSuccess = result.startsWith("✓")
-                                    Surface(
-                                        color = if (isSuccess) MaterialTheme.colorScheme.primaryContainer
-                                        else MaterialTheme.colorScheme.errorContainer,
-                                        shape = MaterialTheme.shapes.small,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(top = 16.dp)
-                                    ) {
-                                        Text(
-                                            text = result,
-                                            color = if (isSuccess) MaterialTheme.colorScheme.onPrimaryContainer
-                                            else MaterialTheme.colorScheme.onErrorContainer,
-                                            modifier = Modifier.padding(12.dp),
-                                            style = MaterialTheme.typography.bodyMedium
-                                        )
-                                    }
-                                }
-                            }
-                        }
+        hint = "Scan the code from Configuration → Share",
+        invalidCodeText = "Not a Supabase config QR code",
+        dockContent = { qrCodeInfo, scanAgain ->
+            // Reset per scanned code so a result from an earlier code never shows for a new one.
+            var tested by remember(qrCodeInfo) { mutableStateOf(false) }
+            var credentialsSaved by remember(qrCodeInfo) { mutableStateOf(false) }
+            var syncSaved by remember(qrCodeInfo) { mutableStateOf(false) }
+
+            AnimatedContent(
+                targetState = qrCodeInfo,
+                transitionSpec = { qrDockTransform() },
+            ) { target ->
+                if (target == null) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            "Nothing scanned yet",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Text(
+                            "Project and sync settings show up here",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
-
-                    Button(
-                        onClick = { onSaveCredentials(info.credentials) },
-                        shapes = ButtonDefaults.shapes(),
-                        modifier = Modifier
-                            .align(Alignment.CenterHorizontally)
-                            .fillMaxWidth(.75f)
-                    ) { Text("Save Credentials") }
-
-                    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
-                        Column(
-                            modifier = Modifier.padding(16.dp)
-                        ) {
-                            Text("Poll interval: ${info.syncConfig.pollIntervalMs}")
-                            Text("Max retries: ${info.syncConfig.maxRetries}")
-                            Text("Initial backoff: ${info.syncConfig.initialBackoffMs}")
-                            Text("Max backoff: ${info.syncConfig.maxBackoffMs}")
-                        }
-                    }
-
-                    Button(
-                        onClick = { onSaveSyncConfig(info.syncConfig) },
-                        shapes = ButtonDefaults.shapes(),
-                        modifier = Modifier
-                            .align(Alignment.CenterHorizontally)
-                            .fillMaxWidth(.75f)
-                    ) { Text("Save Config") }
+                } else {
+                    ScannedSupabaseInfo(target)
                 }
             }
-        },
-        showSaveOpenButton = false
+
+            if (qrCodeInfo != null) {
+                val status = when {
+                    credentialsSaved && syncSaved -> "✓ Credentials and sync settings saved"
+                    credentialsSaved -> "✓ Credentials saved to Configuration"
+                    syncSaved -> "✓ Sync settings saved to Configuration"
+                    tested && connectionResult != null -> connectionResult
+                    tested -> "Testing connection…"
+                    else -> "Connection not tested"
+                }
+                AnimatedContent(
+                    targetState = status,
+                    transitionSpec = { qrDockTransform() },
+                ) { text ->
+                    val isSuccess = text.startsWith("✓")
+                    val isFailure = text.startsWith("✗")
+                    Surface(
+                        color = when {
+                            isSuccess -> MaterialTheme.colorScheme.primaryContainer
+                            isFailure -> MaterialTheme.colorScheme.errorContainer
+                            else -> Color.Transparent
+                        },
+                        contentColor = when {
+                            isSuccess -> MaterialTheme.colorScheme.onPrimaryContainer
+                            isFailure -> MaterialTheme.colorScheme.onErrorContainer
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                        shape = MaterialTheme.shapes.small,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(
+                                horizontal = if (isSuccess || isFailure) 10.dp else 0.dp,
+                                vertical = 6.dp
+                            )
+                        )
+                    }
+                }
+
+                AnimatedVisibility(
+                    visible = !credentialsSaved && !syncSaved,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically(),
+                ) {
+                    OutlinedButton(
+                        onClick = {
+                            tested = true
+                            testScannedCredentials(qrCodeInfo.credentials.projectUrl, qrCodeInfo.credentials.anonKey)
+                        },
+                        shapes = ButtonDefaults.shapes(),
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text("Test connection") }
+                }
+            }
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Button(
+                    onClick = {
+                        qrCodeInfo?.let { onSaveCredentials(it.credentials) }
+                        credentialsSaved = true
+                    },
+                    enabled = qrCodeInfo != null && !credentialsSaved,
+                    shapes = ButtonDefaults.shapes(),
+                    modifier = Modifier.weight(1f)
+                ) { SaveButtonLabel(saved = credentialsSaved, text = "Save credentials") }
+
+                FilledTonalButton(
+                    onClick = {
+                        qrCodeInfo?.let { onSaveSyncConfig(it.syncConfig) }
+                        syncSaved = true
+                    },
+                    enabled = qrCodeInfo != null && !syncSaved,
+                    shapes = ButtonDefaults.shapes(),
+                    modifier = Modifier.weight(1f)
+                ) { SaveButtonLabel(saved = syncSaved, text = "Save sync settings") }
+            }
+
+            AnimatedVisibility(
+                visible = credentialsSaved || syncSaved,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically(),
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    TextButton(
+                        onClick = scanAgain,
+                        modifier = Modifier.weight(1f)
+                    ) { Text("Scan again") }
+                    TextButton(
+                        onClick = onClose,
+                        modifier = Modifier.weight(1f)
+                    ) { Text("Done") }
+                }
+            }
+        }
     )
+}
+
+@Composable
+private fun SaveButtonLabel(saved: Boolean, text: String) {
+    AnimatedContent(
+        targetState = saved,
+        transitionSpec = { qrDockTransform() },
+    ) { isSaved ->
+        if (isSaved) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                Text("Saved", maxLines = 1)
+            }
+        } else {
+            Text(text, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+    }
+}
+
+@Composable
+private fun ScannedSupabaseInfo(info: QrCodeInfo) {
+    var showKey by remember(info) { mutableStateOf(false) }
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Image(
+                painter = painterResource(Res.drawable.supabase_logo_icon),
+                contentDescription = null,
+                modifier = Modifier.size(22.dp)
+            )
+            Text("Supabase project", style = MaterialTheme.typography.titleSmall)
+        }
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                "URL",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.width(64.dp)
+            )
+            Text(
+                info.credentials.projectUrl,
+                style = MaterialTheme.typography.bodySmall,
+                fontFamily = FontFamily.Monospace,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                "Anon key",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.width(64.dp)
+            )
+            Text(
+                if (showKey) info.credentials.anonKey else maskKey(info.credentials.anonKey),
+                style = MaterialTheme.typography.bodySmall,
+                fontFamily = FontFamily.Monospace,
+                maxLines = if (showKey) 3 else 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false)
+            )
+            IconButton(
+                onClick = { showKey = !showKey },
+                modifier = Modifier.size(32.dp)
+            ) {
+                Icon(
+                    if (showKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                    contentDescription = if (showKey) "Hide key" else "Show key",
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        }
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            SyncValueTile(formatDuration(info.syncConfig.pollIntervalMs), "Poll", Modifier.weight(1f))
+            SyncValueTile(info.syncConfig.maxRetries.toString(), "Retries", Modifier.weight(1f))
+            SyncValueTile(formatDuration(info.syncConfig.initialBackoffMs), "Backoff", Modifier.weight(1f))
+            SyncValueTile(formatDuration(info.syncConfig.maxBackoffMs), "Max backoff", Modifier.weight(1f))
+        }
+    }
+}
+
+@Composable
+private fun SyncValueTile(value: String, label: String, modifier: Modifier = Modifier) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+            .clip(MaterialTheme.shapes.small)
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .padding(vertical = 6.dp, horizontal = 4.dp)
+    ) {
+        Text(value, style = MaterialTheme.typography.titleSmall, maxLines = 1)
+        Text(
+            label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+private fun maskKey(key: String): String =
+    if (key.length <= 16) "•".repeat(key.length)
+    else "${key.take(10)}…••••${key.takeLast(3)}"
+
+internal fun formatDuration(ms: Long): String = when {
+    ms >= 60_000 && ms % 60_000 == 0L -> "${ms / 60_000} min"
+    ms >= 1_000 && ms % 1_000 == 0L -> "${ms / 1_000} s"
+    else -> "$ms ms"
 }
