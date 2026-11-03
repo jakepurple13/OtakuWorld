@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.NoteItem
 import com.programmersbox.favoritesdatabase.NotesDao
+import com.programmersbox.favoritesdatabase.ftsMatch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -17,9 +18,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
 
-private fun String.toFtsQuery(): String =
-    trim().split("\\s+".toRegex()).filter { it.isNotBlank() }.joinToString(" ") { "$it*" }
-
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 class AllNotesViewModel(
     private val notesDao: NotesDao,
@@ -30,8 +28,8 @@ class AllNotesViewModel(
     val notes: StateFlow<List<NoteItem>> = searchQuery
         .debounce(300)
         .flatMapLatest { query ->
-            if (query.isBlank()) notesDao.getAllNotes()
-            else notesDao.searchNotes(query.toFtsQuery())
+            // ftsMatch quotes each word, so punctuation can't break the FTS5 query
+            ftsMatch(query)?.let(notesDao::searchNotes) ?: notesDao.getAllNotes()
         }
         .stateIn(
             scope = viewModelScope,

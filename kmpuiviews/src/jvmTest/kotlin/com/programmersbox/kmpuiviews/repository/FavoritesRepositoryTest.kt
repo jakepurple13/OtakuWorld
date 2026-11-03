@@ -50,6 +50,18 @@ class FavoritesRepositoryTest {
         assertEquals("https://example.com/1", all[0].url)
     }
 
+    @Test fun `addFavorite stamps createdAt when missing`() = runTest {
+        repository().addFavorite(favorite("https://example.com/1"))
+
+        assertTrue(repository().getAllFavorites().single().createdAt > 0)
+    }
+
+    @Test fun `addFavorite keeps an existing createdAt`() = runTest {
+        repository().addFavorite(favorite("https://example.com/1").copy(createdAt = 123))
+
+        assertEquals(123, repository().getAllFavorites().single().createdAt)
+    }
+
     @Test fun `removeFavorite hard-deletes when logged out`() = runTest {
         val repo = repository(loggedIn = false)
         val item = favorite("https://example.com/1")

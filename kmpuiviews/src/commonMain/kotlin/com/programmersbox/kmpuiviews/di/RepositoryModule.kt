@@ -4,6 +4,7 @@ import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.repository.BookmarkRepository
 import com.programmersbox.kmpuiviews.repository.CurrentSourceRepository
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
+import com.programmersbox.kmpuiviews.repository.FavoritesSearchRepository
 import com.programmersbox.kmpuiviews.repository.IncognitoRepository
 import com.programmersbox.kmpuiviews.repository.ListRepository
 import com.programmersbox.kmpuiviews.repository.PrereleaseRepository
@@ -18,6 +19,7 @@ val repositories = module {
     singleOf(::CurrentSourceRepository)
     singleOf(::ChangingSettingsRepository)
     singleOf(::FavoritesRepository)
+    singleOf(::FavoritesSearchRepository)
     singleOf(::PrereleaseRepository)
     singleOf(::SetupRepository)
     includes(platformRepositories())

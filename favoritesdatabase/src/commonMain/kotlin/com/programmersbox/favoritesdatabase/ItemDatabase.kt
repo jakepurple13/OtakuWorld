@@ -9,8 +9,8 @@ import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.execSQL
 
 @Database(
-    entities = [DbModel::class, ChapterWatched::class, NotificationItem::class, SourceOrder::class, IncognitoSource::class],
-    version = 7,
+    entities = [DbModel::class, DbModelFts::class, ChapterWatched::class, NotificationItem::class, SourceOrder::class, IncognitoSource::class],
+    version = 8,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(
@@ -58,11 +58,20 @@ abstract class ItemDatabase : RoomDatabase() {
             }
         }
 
+        // Creates the FTS5 index and fills it from existing favorites; Room re-creates
+        // the content sync triggers once migrations finish.
+        private val MIGRATION_7_8 = object : Migration(7, 8) {
+            override suspend fun migrate(connection: SQLiteConnection) {
+                connection.execSQL("CREATE VIRTUAL TABLE IF NOT EXISTS `favorites_fts` USING FTS5(`title`, `description`, tokenize=`unicode61 remove_diacritics 2`, content=`FavoriteItem`, prefix=`2 3`)")
+                connection.execSQL("INSERT INTO favorites_fts(favorites_fts) VALUES('rebuild')")
+            }
+        }
+
+        internal val MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
+
         fun getInstance(databaseBuilder: DatabaseBuilder): ItemDatabase = databaseBuilder
             .build<ItemDatabase>("favoriteItems.db")
-            .addMigrations(MIGRATION_1_2)
-            .addMigrations(MIGRATION_5_6)
-            .addMigrations(MIGRATION_6_7)
+            .addMigrations(*MIGRATIONS)
             .build()
     }
 }

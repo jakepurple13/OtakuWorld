@@ -2,6 +2,7 @@ package com.programmersbox.favoritesdatabase
 
 import androidx.room3.ColumnInfo
 import androidx.room3.Entity
+import androidx.room3.Fts5
 import androidx.room3.PrimaryKey
 import kotlinx.serialization.Serializable
 import kotlin.time.Clock
@@ -34,6 +35,31 @@ data class DbModel(
     val isDeleted: Boolean = false,
     @ColumnInfo(name = "is_dirty", defaultValue = "1")
     val isDirty: Boolean = true,
+)
+
+/** FTS5 index over favorite titles and descriptions; Room keeps it in sync with [DbModel]. */
+@Entity(tableName = "favorites_fts")
+@Fts5(
+    contentEntity = DbModel::class,
+    tokenizerArgs = ["remove_diacritics", "2"],
+    prefix = [2, 3],
+)
+data class DbModelFts(
+    @ColumnInfo(name = "title")
+    val title: String,
+    @ColumnInfo(name = "description")
+    val description: String,
+)
+
+/**
+ * One favorites search result. Highlight and snippet text mark matched words with
+ * `\u0002` (start) and `\u0003` (end).
+ */
+data class FavoriteFtsHit(
+    val url: String,
+    val score: Double,
+    val titleHighlight: String,
+    val descriptionSnippet: String,
 )
 
 @Serializable

@@ -36,6 +36,9 @@ kotlin {
 
         androidMain.dependencies {
             implementation(projects.models)
+            // FTS5 (favorites/notes search) is not compiled into the platform SQLite.
+            // api: DatabaseBuilder.build is inline, so callers reference the driver too.
+            api(commonLibs.androidx.room.sqlite)
         }
     }
 }

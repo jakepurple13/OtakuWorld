@@ -170,6 +170,15 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   Copy link action was added. Supabase config sharing shows the sync settings on the card and
   keeps the anon key out of the shared image
   ([#2660](https://github.com/jakepurple13/OtakuWorld/pull/2660))
+- Redesigned Favorites screen with Overview and Library tabs. Overview shows your stats, recently
+  added titles, titles saved from more than one source and titles not checking for updates, each
+  with a See all into Library. Library has a list or grid view, A–Z / chapters / added sorting
+  with section headers, an A–Z jump rail, and removable filter chips. Sources moved into a
+  searchable filter sheet
+  ([#2663](https://github.com/jakepurple13/OtakuWorld/pull/2663))
+- Favorites search now covers titles, descriptions and your notes, matches words by their start,
+  ignores accents, ranks title matches first and highlights what matched
+  ([#2663](https://github.com/jakepurple13/OtakuWorld/pull/2663))
 
 #### Bug Fixes
 
@@ -297,6 +306,9 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 
 ### Under the Hood
 
+- Favorites and notes use SQLite FTS5 full-text indexes (favorites database v8, notes database
+  v3). Android now uses the bundled SQLite driver, since the platform SQLite has no FTS5
+  ([#2663](https://github.com/jakepurple13/OtakuWorld/pull/2663))
 - Kotlin 2.4.20, Gradle 9.7.1, KSP 2.3.11, SDK 37.2, Java 21
   ([#2573](https://github.com/jakepurple13/OtakuWorld/pull/2573),
   [e850dba7e](https://github.com/jakepurple13/OtakuWorld/commit/e850dba7e),

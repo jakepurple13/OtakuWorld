@@ -250,6 +250,20 @@ class NewSettingsHandling(
     )
 
     @Composable
+    fun rememberFavoritesGridView() = preferences.rememberPreference(
+        key = { it.favoritesGridView },
+        update = { copy(favoritesGridView = it) },
+        defaultValue = false
+    )
+
+    @Composable
+    fun rememberFavoritesOpenLibrary() = preferences.rememberPreference(
+        key = { it.favoritesOpenLibrary },
+        update = { copy(favoritesOpenLibrary = it) },
+        defaultValue = false
+    )
+
+    @Composable
     fun rememberGridChoice() = preferences.rememberPreference(
         key = { it.gridChoice },
         update = { copy(gridChoice = it) },

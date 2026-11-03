@@ -5,7 +5,7 @@ import androidx.room3.ConstructedBy
 import androidx.room3.Dao
 import androidx.room3.Database
 import androidx.room3.Entity
-import androidx.room3.Fts4
+import androidx.room3.Fts5
 import androidx.room3.Insert
 import androidx.room3.OnConflictStrategy
 import androidx.room3.PrimaryKey
@@ -39,10 +39,24 @@ data class NoteItem(
 )
 
 @Entity(tableName = "notes_fts")
-@Fts4(contentEntity = NoteItem::class)
+@Fts5(
+    contentEntity = NoteItem::class,
+    tokenizerArgs = ["remove_diacritics", "2"],
+    prefix = [2, 3],
+)
 data class NoteItemFts(
     val content: String,
     val itemTitle: String,
+)
+
+/**
+ * One notes search result. The snippet marks matched words with `\u0002` (start) and
+ * `\u0003` (end).
+ */
+data class NoteFtsHit(
+    val itemUrl: String,
+    val score: Double,
+    val contentSnippet: String,
 )
 
 @Dao
@@ -72,6 +86,19 @@ interface NotesDao {
         ) ORDER BY timestamp DESC
     """)
     fun searchNotes(query: String): Flow<List<NoteItem>>
+
+    // Callers restrict the match to the content column (see ftsMatch(column = "content")).
+    @Query(
+        """
+        SELECT notes.itemUrl AS itemUrl,
+               bm25(notes_fts) AS score,
+               snippet(notes_fts, 0, char(2), char(3), '…', 12) AS contentSnippet
+        FROM notes_fts JOIN notes ON notes.rowid = notes_fts.rowid
+        WHERE notes_fts MATCH :match AND notes.is_deleted = 0
+        ORDER BY score
+        """
+    )
+    fun searchNoteHits(match: String): Flow<List<NoteFtsHit>>
 
     @Query("SELECT * FROM notes WHERE is_dirty = 1")
     suspend fun getDirtyNotes(): List<NoteItem>
@@ -103,7 +130,7 @@ interface NotesDao {
 
 @Database(
     entities = [NoteItem::class, NoteItemFts::class],
-    version = 2,
+    version = 3,
     exportSchema = true,
 )
 @ConstructedBy(NotesDatabaseConstructor::class)
@@ -122,10 +149,22 @@ abstract class NotesDatabase : RoomDatabase() {
             }
         }
 
+        // Replaces the FTS4 index with FTS5 and refills it from existing notes; Room
+        // re-creates the content sync triggers once migrations finish.
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override suspend fun migrate(connection: SQLiteConnection) {
+                connection.execSQL("DROP TABLE IF EXISTS `notes_fts`")
+                connection.execSQL("CREATE VIRTUAL TABLE IF NOT EXISTS `notes_fts` USING FTS5(`content`, `itemTitle`, tokenize=`unicode61 remove_diacritics 2`, content=`notes`, prefix=`2 3`)")
+                connection.execSQL("INSERT INTO notes_fts(notes_fts) VALUES('rebuild')")
+            }
+        }
+
+        internal val MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3)
+
         fun getInstance(databaseBuilder: DatabaseBuilder): NotesDatabase =
             databaseBuilder
                 .build<NotesDatabase>("notes.db")
-                .addMigrations(MIGRATION_1_2)
+                .addMigrations(*MIGRATIONS)
                 .build()
     }
 }

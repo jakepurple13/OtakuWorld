@@ -3,6 +3,7 @@ package com.programmersbox.favoritesdatabase
 import android.content.Context
 import androidx.room3.Room
 import androidx.room3.RoomDatabase
+import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 
 actual class DatabaseBuilder(
     val context: Context,
@@ -21,5 +22,5 @@ inline fun <reified T : RoomDatabase> getDatabaseBuilder(
     return Room.databaseBuilder<T>(
         context = appContext,
         name = dbFile.absolutePath
-    )
+    ).setDriver(BundledSQLiteDriver())
 }
