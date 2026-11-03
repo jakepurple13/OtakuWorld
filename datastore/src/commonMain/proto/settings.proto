@@ -48,6 +48,10 @@ message Settings {
   repeated string sourceLanguageOrder = 42;
   // Keyed by extension package name.
   map<string, SourceLanguageOrder> sourceLanguageOrderOverrides = 43;
+  // Favorites Library shows a grid instead of a list.
+  bool favoritesGridView = 44;
+  // Favorites reopens on the Library tab instead of Overview.
+  bool favoritesOpenLibrary = 45;
 }
 
 message GlobalSearchLanguageOverride {
