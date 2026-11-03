@@ -209,6 +209,9 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 - Supabase config: scanning a config QR code no longer fills the poll interval and retry delays
   with milliseconds, which saved them far too large
   ([#2660](https://github.com/jakepurple13/OtakuWorld/pull/2660))
+- Scan QR code: the scan-from-image button is always available, including after a code is read
+  and when camera permission is denied, and the sheet now slides up when opened
+  ([#2661](https://github.com/jakepurple13/OtakuWorld/pull/2661))
 
 #### Removed
 

@@ -54,10 +54,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberBottomSheetState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -126,7 +125,7 @@ fun <T> ScanQrCodeSheet(
     dockContent: @Composable ColumnScope.(info: T?, scanAgain: () -> Unit) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
-    val sheetState = rememberBottomSheetState(initialValue = SheetValue.Expanded)
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val onDismiss: () -> Unit = {
         scope.launch { sheetState.hide() }
             .invokeOnCompletion { onRemove() }
@@ -211,11 +210,22 @@ fun <T> ScanQrCodeSheet(
                             hasTorch = hasTorch,
                             torchOn = torchState,
                             onTorchToggle = { torchState = !torchState },
-                            onChooseImage = { filePicker.launch() },
                         )
                     },
                     modifier = Modifier.fillMaxSize()
                 )
+
+                // Always available, whatever state the camera is in.
+                IconButton(
+                    onClick = { filePicker.launch() },
+                    colors = IconButtonDefaults.iconButtonColors(
+                        containerColor = FabContainer,
+                        contentColor = Color.White,
+                    ),
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(12.dp)
+                ) { Icon(Icons.Default.Image, contentDescription = "Scan from image") }
             }
 
             Surface(
@@ -284,7 +294,6 @@ private fun BoxScope.QrViewfinderOverlay(
     hasTorch: Boolean,
     torchOn: Boolean,
     onTorchToggle: () -> Unit,
-    onChooseImage: () -> Unit,
 ) {
     val bracketColor by animateColorAsState(if (locked) LockedColor else Color.White)
     val pulse = remember { Animatable(1f) }
@@ -348,23 +357,6 @@ private fun BoxScope.QrViewfinderOverlay(
                 strokeWidth = 2.dp.toPx(),
             )
         }
-    }
-
-    AnimatedVisibility(
-        visible = !locked,
-        enter = fadeIn() + scaleIn(initialScale = .6f),
-        exit = fadeOut() + scaleOut(targetScale = .6f),
-        modifier = Modifier
-            .align(Alignment.TopStart)
-            .padding(12.dp)
-    ) {
-        IconButton(
-            onClick = onChooseImage,
-            colors = IconButtonDefaults.iconButtonColors(
-                containerColor = FabContainer,
-                contentColor = Color.White,
-            )
-        ) { Icon(Icons.Default.Image, contentDescription = "Scan from image") }
     }
 
     if (hasTorch) {
