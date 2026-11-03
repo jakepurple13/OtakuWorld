@@ -28,6 +28,19 @@ interface ItemDao {
     @Query("SELECT * FROM FavoriteItem WHERE is_deleted = 0")
     fun getAllFavorites(): Flow<List<DbModel>>
 
+    @Query(
+        """
+        SELECT FavoriteItem.url AS url,
+               bm25(favorites_fts, 10.0, 1.0) AS score,
+               highlight(favorites_fts, 0, char(2), char(3)) AS titleHighlight,
+               snippet(favorites_fts, 1, char(2), char(3), '…', 12) AS descriptionSnippet
+        FROM favorites_fts JOIN FavoriteItem ON FavoriteItem.rowid = favorites_fts.rowid
+        WHERE favorites_fts MATCH :match AND FavoriteItem.is_deleted = 0
+        ORDER BY score
+        """
+    )
+    fun searchFavorites(match: String): Flow<List<FavoriteFtsHit>>
+
     @Query("SELECT COUNT(url) FROM FavoriteItem  WHERE is_deleted = 0")
     fun getAllFavoritesCount(): Flow<Int>
 
