@@ -1,6 +1,7 @@
 package com.programmersbox.favoritesdatabase
 
-private val ftsToken = Regex("[\\p{L}\\p{N}]+")
+// Letters, digits and combining marks, matching what unicode61 keeps inside a token
+private val ftsToken = Regex("[\\p{L}\\p{N}\\p{M}]+")
 
 /**
  * Turns raw user input into an FTS5 MATCH expression where every word is a quoted prefix

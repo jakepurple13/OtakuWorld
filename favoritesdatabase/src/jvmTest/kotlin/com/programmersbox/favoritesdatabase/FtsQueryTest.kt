@@ -22,4 +22,7 @@ class FtsQueryTest {
         assertEquals("content : \"tour\"* content : \"arc\"*", ftsMatch("tour arc", column = "content"))
 
     @Test fun `unicode letters kept`() = assertEquals("\"進撃\"* \"café\"*", ftsMatch("進撃 café"))
+
+    // unicode61 keeps combining marks inside tokens (Devanagari, Thai)
+    @Test fun `combining marks stay in the word`() = assertEquals("\"हिन्दी\"*", ftsMatch("हिन्दी"))
 }
