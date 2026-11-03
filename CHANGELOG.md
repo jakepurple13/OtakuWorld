@@ -161,6 +161,10 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   ([#2650](https://github.com/jakepurple13/OtakuWorld/pull/2650))
 - Manga reader, novel reader and anime player now take their colors from the cover when opened
   from an item's details page ([#2657](https://github.com/jakepurple13/OtakuWorld/pull/2657))
+- Redesigned Scan QR code sheet: a larger camera view, a flashlight toggle, a result panel with
+  clearer actions, and an image drop zone on Desktop when there is no camera. The Supabase scanner
+  masks the anon key and shows sync settings in readable units
+  ([#2659](https://github.com/jakepurple13/OtakuWorld/pull/2659))
 
 #### Bug Fixes
 
