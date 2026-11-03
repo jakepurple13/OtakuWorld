@@ -9,10 +9,18 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -22,19 +30,31 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.kmpalette.generatePalette
 import com.programmersbox.datastore.ColorBlindnessType
 import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.datastore.rememberSwatchType
+import com.programmersbox.datastore.rememberUseCoverColorsInQrCode
 import com.programmersbox.datastore.rememberUseLogoInQrCode
+import com.programmersbox.kmpuiviews.theme.generateColorScheme
+import com.programmersbox.kmpuiviews.theme.rememberSeedColorScheme
+import com.programmersbox.kmpuiviews.utils.AppConfig
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.kmpuiviews.painterLogo
@@ -77,37 +97,112 @@ fun ShareViaQrCode(
     onClose: () -> Unit,
 ) {
     var includeLogo by rememberUseLogoInQrCode()
+    var useCoverColors by rememberUseCoverColorsInQrCode()
+    val swatchType by rememberSwatchType()
+    val appName = koinInject<AppConfig>().appName
+    val colorBlindness: ColorBlindnessType by koinInject<NewSettingsHandling>().rememberColorBlindType()
+    val colorFilter by remember { derivedStateOf { colorFilterBlind(colorBlindness) } }
     val logoPainter = painterLogo()
-    ShareViaQrCode<QrCodeInfo>(
-        qrCodeInfo = QrCodeInfo(
-            title = title,
-            url = url,
-            imageUrl = imageUrl,
-            apiService = apiService,
-        ),
-        onClose = onClose,
-        painterCustomize = {
-            if (includeLogo) {
-                logo {
-                    painter = logoPainter
-                    padding = QrLogoPadding.Natural(.1f)
-                    shape = QrLogoShape.circle()
-                }
-            }
-        },
-        customUi = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text("Include Logo")
+    // apiService is the lookup key (e.g. "mihon:6084…"), so show the source's readable name instead
+    val sourceName = LocalSourcesRepository.current
+        .toSourceByApiServiceName(apiService)
+        ?.apiService
+        ?.displayName
+        ?: apiService
 
-                Switch(
-                    checked = includeLogo,
-                    onCheckedChange = { includeLogo = it }
-                )
-            }
+    var cover by remember(imageUrl) { mutableStateOf<ImageBitmap?>(null) }
+    // Same palette and swatch Details uses, so from Details the scheme comes straight from SeedSchemeCache
+    val seedColor by produceState<Int?>(null, cover, swatchType) {
+        val bitmap = cover ?: return@produceState
+        value = withContext(Dispatchers.Default) {
+            runCatching { swatchType.swatch(bitmap.generatePalette())?.rgb }.getOrNull()
         }
+    }
+
+    val content: @Composable () -> Unit = {
+        ShareViaQrCode<QrCodeInfo>(
+            qrCodeInfo = QrCodeInfo(
+                title = title,
+                url = url,
+                imageUrl = imageUrl,
+                apiService = apiService,
+            ),
+            onClose = onClose,
+            captureReady = cover != null,
+            hint = "Scan in $appName › Settings › Scan QR Code",
+            header = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    ImageLoaderChoice(
+                        imageUrl = imageUrl,
+                        name = title,
+                        placeHolder = { logoPainter },
+                        contentScale = ContentScale.Crop,
+                        colorFilter = colorFilter,
+                        onImageSet = { cover = it },
+                        modifier = Modifier
+                            .size(44.dp, 62.dp)
+                            .clip(MaterialTheme.shapes.small)
+                    )
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            title,
+                            style = MaterialTheme.typography.titleMedium,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Text(
+                            "$sourceName · $appName",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = LocalContentColor.current.copy(alpha = .8f),
+                        )
+                    }
+                }
+            },
+            customUi = {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(
+                        selected = includeLogo,
+                        onClick = { includeLogo = !includeLogo },
+                        label = { Text("Logo") },
+                        leadingIcon = if (includeLogo) {
+                            { Icon(Icons.Default.Check, null, Modifier.size(FilterChipDefaults.IconSize)) }
+                        } else null,
+                    )
+                    FilterChip(
+                        selected = useCoverColors,
+                        onClick = { useCoverColors = !useCoverColors },
+                        label = { Text("Cover colors") },
+                        leadingIcon = if (useCoverColors) {
+                            { Icon(Icons.Default.Check, null, Modifier.size(FilterChipDefaults.IconSize)) }
+                        } else null,
+                    )
+                }
+            },
+            painterCustomize = {
+                if (includeLogo) {
+                    logo {
+                        painter = logoPainter
+                        padding = QrLogoPadding.Natural(.1f)
+                        shape = QrLogoShape.circle()
+                    }
+                }
+            },
+        )
+    }
+
+    // From Details the surrounding theme is already cover-seeded, so it is the right placeholder until
+    // our own scheme is ready. With cover colors off, Details' theming is undone with the app theme.
+    val appScheme = generateColorScheme(koinInject<NewSettingsHandling>())
+    MaterialTheme(
+        colorScheme = rememberSeedColorScheme(
+            seedColor = seedColor.takeIf { useCoverColors },
+            fallback = if (useCoverColors) MaterialTheme.colorScheme else appScheme,
+        ),
+        content = content
     )
 }
 

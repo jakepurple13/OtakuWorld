@@ -45,13 +45,24 @@ class SupabaseConfigViewModel(
                 projectUrl.value = it.projectUrl
                 anonKey.value = it.anonKey
             }
-            syncConfig.value.let { c ->
-                pollIntervalMinutes.value = (c.pollIntervalMs / 60_000).toString()
-                maxRetries.value = c.maxRetries.toString()
-                initialBackoffSeconds.value = (c.initialBackoffMs / 1_000).toString()
-                maxBackoffSeconds.value = (c.maxBackoffMs / 1_000).toString()
-            }
+            fillSyncConfigFields(syncConfig.value)
         }
+    }
+
+    /**
+     * Fills the sync fields from a scanned [SyncConfig]. The config holds milliseconds,
+     * while the fields show minutes and seconds.
+     */
+    fun onScannedSyncConfig(config: SyncConfig) {
+        fillSyncConfigFields(config)
+        syncConfigSaved.value = false
+    }
+
+    private fun fillSyncConfigFields(c: SyncConfig) {
+        pollIntervalMinutes.value = (c.pollIntervalMs / 60_000).toString()
+        maxRetries.value = c.maxRetries.toString()
+        initialBackoffSeconds.value = (c.initialBackoffMs / 1_000).toString()
+        maxBackoffSeconds.value = (c.maxBackoffMs / 1_000).toString()
     }
 
     fun onPollIntervalChange(v: String) {
