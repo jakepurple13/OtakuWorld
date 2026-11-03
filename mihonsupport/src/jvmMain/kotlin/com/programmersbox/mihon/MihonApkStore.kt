@@ -18,7 +18,9 @@ class MihonApkStore(
     private val apkDir: File,
     private val jarCacheDir: File,
     private val inspect: (File) -> MihonApkInfo = MihonApkInspector::inspect,
-    private val convert: (File, File) -> File? = DexConverter::convert,
+    private val convert: (File, File) -> File? = DexConverter::convertOrThrow,
+    /** Receives conversion/inspection failures (desktop: the exception database). */
+    val onError: (Throwable) -> Unit = {},
 ) : ApkExtensionStore {
 
     override fun accepts(file: File): Boolean =
@@ -44,8 +46,13 @@ class MihonApkStore(
                 throw ApkInstallException(ApkInstallFailure.INVALID, "Invalid package name: ${info.packageName}")
             }
             // Convert before moving so a failure leaves apkDir untouched. Jar name is content-hash based.
-            convert(apk, jarCacheDir)
-                ?: throw ApkInstallException(ApkInstallFailure.INVALID, "Could not convert ${info.packageName} dex")
+            val jar = try {
+                convert(apk, jarCacheDir)
+            } catch (t: Throwable) {
+                onError(IllegalStateException("Mihon: could not convert ${info.packageName} on install", t))
+                throw ApkInstallException(ApkInstallFailure.INVALID, "Could not convert ${info.packageName} dex: ${t.message}", t)
+            }
+            jar ?: throw ApkInstallException(ApkInstallFailure.INVALID, "Could not convert ${info.packageName} dex")
             try {
                 apkDir.mkdirs()
                 ApkFiles.moveReplacing(apk, File(apkDir, "${info.packageName}.apk"))
@@ -71,10 +78,15 @@ class MihonApkStore(
     fun installed(): List<InstalledMihonApk> = apkFiles().mapNotNull { apk ->
         runCatching {
             val info = inspect(apk)
-            val jar = runCatching { convert(apk, jarCacheDir) }.getOrNull()
+            val jar = runCatching { convert(apk, jarCacheDir) }
+                .onFailure { onError(IllegalStateException("Mihon: could not convert ${apk.name}", it)) }
+                .getOrNull()
             if (jar == null) println("MihonApkStore: could not convert ${apk.name}")
             InstalledMihonApk(apk, jar, info)
-        }.onFailure { println("MihonApkStore: skipping ${apk.name}: ${it.message}") }.getOrNull()
+        }.onFailure {
+            println("MihonApkStore: skipping ${apk.name}: ${it.message}")
+            onError(IllegalStateException("Mihon: could not inspect ${apk.name}", it))
+        }.getOrNull()
     }
 
     override fun versionName(packageName: String): String? {

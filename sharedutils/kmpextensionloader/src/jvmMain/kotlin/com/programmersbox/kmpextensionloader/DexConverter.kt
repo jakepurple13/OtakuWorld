@@ -18,14 +18,21 @@ object DexConverter {
     /** Bump when conversion output changes so jars from an older converter are not reused. */
     private const val CONVERTER_VERSION = 5
 
-    fun convert(apkFile: File, cacheDir: File): File? {
+    fun convert(apkFile: File, cacheDir: File): File? = runCatching { convertOrThrow(apkFile, cacheDir) }
+        .onFailure {
+            println("DexConverter: failed to convert ${apkFile.name}: ${it.message}")
+            it.printStackTrace()
+        }.getOrNull()
+
+    /** Like [convert], but throws the conversion failure instead of returning null. */
+    fun convertOrThrow(apkFile: File, cacheDir: File): File {
         val hash = sha256(apkFile)
         val cachedJar = jarFor(apkFile, cacheDir)
         if (cachedJar.exists()) return cachedJar
 
         // Not "*.jar", so cache cleanup never mistakes an in-progress conversion for a stale jar.
         val tmp = File(cacheDir, "$hash.jar.part")
-        return runCatching {
+        try {
             cacheDir.mkdirs()
             translate(MultiDexFileReader.open(apkFile.readBytes()), tmp, apkFile.name)
             addApkResources(apkFile, tmp)
@@ -34,12 +41,11 @@ object DexConverter {
                 cachedJar.toPath(),
                 java.nio.file.StandardCopyOption.REPLACE_EXISTING
             )
-            cachedJar
-        }.onFailure {
+            return cachedJar
+        } catch (t: Throwable) {
             tmp.delete()
-            println("DexConverter: failed to convert ${apkFile.name}: ${it.message}")
-            it.printStackTrace()
-        }.getOrNull()
+            throw t
+        }
     }
 
     /** Translates the dex in [reader] to [jar]; throws when no classes come out. */
