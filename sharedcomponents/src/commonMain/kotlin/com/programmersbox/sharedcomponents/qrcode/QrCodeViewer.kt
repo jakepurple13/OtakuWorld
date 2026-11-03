@@ -24,6 +24,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SnackbarHost
@@ -171,6 +172,7 @@ fun QrShareSheet(
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val qrCodeRepository = koinInject<QrCodeRepository>()
+
     @Suppress("DEPRECATION")
     val clipboard = LocalClipboardManager.current
     val snackbarHostState = remember { SnackbarHostState() }
@@ -326,9 +328,21 @@ private fun QrShareAction(
         }
         val buttonModifier = Modifier.size(56.dp)
         if (primary) {
-            FilledIconButton(onClick = onClick, enabled = !busy, modifier = buttonModifier, content = content)
+            FilledIconButton(
+                onClick = onClick,
+                enabled = !busy,
+                modifier = buttonModifier,
+                shapes = IconButtonDefaults.shapes(),
+                content = content
+            )
         } else {
-            FilledTonalIconButton(onClick = onClick, enabled = !busy, modifier = buttonModifier, content = content)
+            FilledTonalIconButton(
+                onClick = onClick,
+                enabled = !busy,
+                modifier = buttonModifier,
+                content = content,
+                shapes = IconButtonDefaults.shapes(),
+            )
         }
         Text(label, style = MaterialTheme.typography.labelMedium)
     }
