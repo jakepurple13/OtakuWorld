@@ -51,6 +51,21 @@ fun SeedColorTheme(
         return
     }
 
+    MaterialTheme(
+        colorScheme = rememberSeedColorScheme(seedColor, fallback = MaterialTheme.colorScheme),
+        content = content
+    )
+}
+
+/**
+ * The cover-seeded scheme for [seedColor], built with the same settings Details uses. Returns
+ * [fallback] when there is no seed and while a new scheme is still being built.
+ */
+@Composable
+fun rememberSeedColorScheme(
+    seedColor: Int?,
+    fallback: ColorScheme,
+): ColorScheme {
     val handling = LocalSettingsHandling.current
     val themeSetting by handling.rememberSystemThemeMode()
     val paletteStyle by rememberSwatchStyle()
@@ -60,11 +75,11 @@ fun SeedColorTheme(
         SystemThemeMode.Night -> true
     }
     // Details turns AMOLED off whenever a cover palette is in use, so a seeded scheme never uses it
-    val inputs = SchemeInputs(Color(seedColor), isDark, isAmoled = false, style = paletteStyle)
+    val inputs = seedColor?.let { SchemeInputs(Color(it), isDark, isAmoled = false, style = paletteStyle) }
 
-    val cached = SeedSchemeCache.get(inputs)
-    val colorScheme by produceState(cached ?: MaterialTheme.colorScheme, inputs) {
-        if (cached != null) {
+    val cached = inputs?.let(SeedSchemeCache::get)
+    val colorScheme by produceState(cached, inputs) {
+        if (inputs == null || cached != null) {
             value = cached
             return@produceState
         }
@@ -75,9 +90,8 @@ fun SeedColorTheme(
                 isAmoled = inputs.isAmoled,
                 style = inputs.style
             )
-        }
-        SeedSchemeCache.put(inputs, value)
+        }.also { SeedSchemeCache.put(inputs, it) }
     }
 
-    MaterialTheme(colorScheme = colorScheme, content = content)
+    return colorScheme ?: fallback
 }

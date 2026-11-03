@@ -132,3 +132,9 @@ fun rememberUseLogoInQrCode() = rememberPreference(
     key = booleanPreferencesKey("useLogoInQrCode"),
     defaultValue = true
 )
+
+@Composable
+fun rememberUseCoverColorsInQrCode() = rememberPreference(
+    key = booleanPreferencesKey("useCoverColorsInQrCode"),
+    defaultValue = true
+)

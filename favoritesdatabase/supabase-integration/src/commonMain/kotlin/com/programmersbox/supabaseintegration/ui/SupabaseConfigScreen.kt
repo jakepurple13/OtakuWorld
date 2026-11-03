@@ -5,8 +5,21 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import com.programmersbox.sharedcomponents.qrcode.QrShareCardColors
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -104,14 +117,7 @@ fun SupabaseConfigScreen(
                     viewModel.onAnonKeyChange(credentials.anonKey)
                 }
             },
-            onSaveSyncConfig = { syncConfig ->
-                runCatching {
-                    viewModel.onPollIntervalChange(syncConfig.pollIntervalMs.toString())
-                    viewModel.onMaxRetriesChange(syncConfig.maxRetries.toString())
-                    viewModel.onInitialBackoffChange(syncConfig.initialBackoffMs.toString())
-                    viewModel.onMaxBackoffChange(syncConfig.maxBackoffMs.toString())
-                }
-            },
+            onSaveSyncConfig = viewModel::onScannedSyncConfig,
             onClose = { scanShareQrCode = false },
             testScannedCredentials = viewModel::testConnectionWithScannedCredentials,
             connectionResult = viewModel
@@ -360,6 +366,7 @@ fun ShareViaQrCode(
         .collectAsStateWithLifecycle(SyncConfig())
 
     val supabaseLogo = painterResource(Res.drawable.supabase_logo_icon)
+    val isDark = MaterialTheme.colorScheme.surface.luminance() < .5f
 
     ShareViaQrCode(
         qrCodeInfo = QrCodeInfo(
@@ -367,8 +374,81 @@ fun ShareViaQrCode(
             syncConfig = syncConfigInfo
         ),
         onClose = onClose,
+        hint = "On your other device: Settings › Integrations › Supabase › Supabase Config › Scan QR",
+        // Supabase green; there is no cover to take colors from
+        cardColors = if (isDark) {
+            QrShareCardColors(container = Color(0xFF12382A), content = Color(0xFFC4F1DA))
+        } else {
+            QrShareCardColors(container = Color(0xFFDCF5E8), content = Color(0xFF0B3A24))
+        },
+        header = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(44.dp)
+                        .background(Color(0xFF1C1C1C), RoundedCornerShape(12.dp))
+                ) {
+                    Image(supabaseLogo, contentDescription = null, modifier = Modifier.size(24.dp))
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Supabase Sync Config", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        projectHost(baseUrl).ifBlank { "No project URL" },
+                        style = MaterialTheme.typography.labelMedium,
+                        fontFamily = FontFamily.Monospace,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+        },
+        cardDetails = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                SyncFact("Poll every", "${syncConfigInfo.pollIntervalMs / 60_000} min")
+                SyncFact("Max retries", syncConfigInfo.maxRetries.toString())
+                SyncFact(
+                    "Retry delay",
+                    "${syncConfigInfo.initialBackoffMs / 1_000}–${syncConfigInfo.maxBackoffMs / 1_000} s"
+                )
+            }
+        },
+        // Below the card, so the key never ends up in the shared image
+        notice = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                SyncFact(
+                    "Anon key",
+                    shortenKey(key).ifBlank { "Not set" },
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    valueFontFamily = FontFamily.Monospace,
+                )
+                Surface(
+                    color = MaterialTheme.colorScheme.tertiaryContainer,
+                    shape = RoundedCornerShape(12.dp),
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.padding(12.dp)
+                    ) {
+                        Icon(Icons.Default.Warning, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Text(
+                            "This code holds your project URL and anon key. Share it only with your own devices.",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                }
+            }
+        },
         includeShareUrl = false,
         includeSaveImage = false,
+        includeCopyUrl = false,
         painterCustomize = {
             logo {
                 painter = supabaseLogo
@@ -377,6 +457,43 @@ fun ShareViaQrCode(
             }
         }
     )
+}
+
+@Composable
+private fun SyncFact(
+    label: String,
+    value: String,
+    color: Color = LocalContentColor.current,
+    valueFontFamily: FontFamily? = null,
+) {
+    Row(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            label,
+            style = MaterialTheme.typography.labelMedium,
+            color = color.copy(alpha = .75f),
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            value,
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.SemiBold,
+            fontFamily = valueFontFamily,
+            color = color,
+        )
+    }
+}
+
+/** The host of a Supabase project URL, e.g. `abcd.supabase.co` */
+internal fun projectHost(projectUrl: String): String = projectUrl
+    .trim()
+    .substringAfter("://")
+    .substringBefore('/')
+
+/** Enough of a key to recognize it, without showing it: `eyJhb…Xk9Q` */
+internal fun shortenKey(key: String): String {
+    val trimmed = key.trim()
+    return if (trimmed.length <= 12) "•".repeat(trimmed.length.coerceAtMost(8))
+    else "${trimmed.take(5)}…${trimmed.takeLast(4)}"
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
