@@ -111,6 +111,23 @@ class AllNotesViewModelTest {
         assertEquals("https://example.com/1", vm.notes.value[0].itemUrl)
     }
 
+    // FTS5 rejects raw punctuation (it's, re:zero, foo-bar) that FTS4 tolerated
+    @Test fun `updateQuery with punctuation still matches`() = runTest {
+        val dao = database.notesDao()
+        dao.upsertNote(note("https://example.com/1", content = "Re:Zero is great, it's a must-read"))
+        dao.upsertNote(note("https://example.com/2", content = "A story about robots"))
+
+        val vm = viewModel()
+
+        val __sub = backgroundScope.launch { vm.notes.collect {} }
+        awaitCondition { vm.notes.value.size == 2 }
+
+        vm.updateQuery("re:zero it's")
+        awaitCondition { vm.notes.value.size == 1 }
+
+        assertEquals("https://example.com/1", vm.notes.value[0].itemUrl)
+    }
+
     @Test fun `updateQuery filters notes by itemTitle`() = runTest {
         val dao = database.notesDao()
         dao.upsertNote(note("https://example.com/1", itemTitle = "Dragon Tales", content = "Nothing relevant"))
