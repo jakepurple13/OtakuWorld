@@ -17,6 +17,10 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.CoverHandoff
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuImageElement
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.SharedItemKey
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.customSharedElement
 import kotlin.time.Duration.Companion.milliseconds
 
 /** Shared transition scope for the favorites screen (set by its SharedTransitionLayout). */
@@ -36,9 +40,9 @@ private data class FavoriteCoverKey(val title: String, val layer: Int)
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-private fun Modifier.favoriteCoverShared(title: String): Modifier {
+private fun Modifier.favoriteCoverShared(title: String, acrossTabs: Boolean): Modifier {
     val shared = LocalFavoritesSharedScope.current ?: return this
-    val tab = LocalFavoritesTabScope.current
+    val tab = LocalFavoritesTabScope.current?.takeIf { acrossTabs }
     val view = LocalFavoritesViewScope.current
     var modifier = this
     with(shared) {
@@ -60,18 +64,32 @@ private fun Modifier.favoriteCoverShared(title: String): Modifier {
     return modifier
 }
 
-/** A favorite group's cover, shared across tabs and list/grid by title. */
+/**
+ * Key for the nav-level cover → Details transition. Only single-source groups open Details
+ * directly; multi-source groups go through the source chooser first.
+ */
+internal val FavoriteGroup.navKey: SharedItemKey?
+    get() = items.singleOrNull()?.let { SharedItemKey(url = it.url, source = it.source) }
+
+/**
+ * A favorite group's cover, shared across tabs and list/grid by title, and with Details by
+ * [navKey]. Pass the same [handoff] the click handler calls so Details gets the loaded bitmap.
+ */
 @Composable
 internal fun FavoriteCover(
     group: FavoriteGroup,
     shape: Shape,
     modifier: Modifier = Modifier,
+    handoff: CoverHandoff? = null,
+    shareAcrossTabs: Boolean = true,
     overlay: @Composable BoxScope.() -> Unit = {},
 ) {
     Surface(
         shape = shape,
         color = MaterialTheme.colorScheme.surfaceContainerHighest,
-        modifier = modifier.favoriteCoverShared(group.title),
+        modifier = modifier
+            .favoriteCoverShared(group.title, shareAcrossTabs)
+            .customSharedElement(group.navKey?.let(::OtakuImageElement)),
     ) {
         Box {
             ImageLoaderChoice(
@@ -80,6 +98,7 @@ internal fun FavoriteCover(
                 placeHolder = { rememberVectorPainter(Icons.Default.BrokenImage) },
                 contentScale = ContentScale.Crop,
                 colorFilter = LocalFavoritesColorFilter.current,
+                onImageSet = handoff?.onImageSet ?: {},
                 modifier = Modifier.matchParentSize(),
             )
             overlay()

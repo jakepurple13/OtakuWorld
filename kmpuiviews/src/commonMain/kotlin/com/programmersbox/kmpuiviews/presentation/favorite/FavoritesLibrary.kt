@@ -51,6 +51,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -64,6 +65,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.programmersbox.kmpuiviews.repository.MatchField
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.CoverHandoff
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuTitleElement
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.customSharedElement
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.rememberCoverHandoff
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -399,16 +404,21 @@ private fun LibraryList(
                     SectionHeaderRow(section.header, section.groups.size, Modifier.animateItem(), endPadding = 32.dp)
                 }
                 items(section.groups, key = { it.title }) { group ->
+                    val handoff = rememberCoverHandoff(group.navKey)
                     LibraryRow(
                         group = group,
                         isSearching = isSearching,
                         showAdded = sort == FavoriteSort.ADDED && !isSearching,
                         now = now,
                         displayName = displayName,
+                        handoff = handoff,
                         modifier = Modifier
                             .animateItem()
                             .combinedClickable(
-                                onClick = { onGroupClick(group) },
+                                onClick = {
+                                    handoff.handOff()
+                                    onGroupClick(group)
+                                },
                                 onLongClick = { onGroupLongPress(group) },
                             ),
                     )
@@ -440,9 +450,11 @@ private fun LibraryRow(
     showAdded: Boolean,
     now: Long,
     displayName: (String) -> String,
+    handoff: CoverHandoff,
     modifier: Modifier = Modifier,
 ) {
     val hit = group.hit
+    val titleModifier = Modifier.customSharedElement(group.navKey?.let(::OtakuTitleElement))
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -450,13 +462,13 @@ private fun LibraryRow(
             .fillMaxWidth()
             .padding(start = 16.dp, end = 28.dp, top = 6.dp, bottom = 6.dp),
     ) {
-        FavoriteCover(group = group, shape = RoundedCornerShape(6.dp), modifier = Modifier.size(48.dp, 72.dp))
+        FavoriteCover(group = group, shape = RoundedCornerShape(6.dp), handoff = handoff, modifier = Modifier.size(48.dp, 72.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
             val title = hit?.titleHighlight?.takeIf { isSearching }
             if (title != null) {
-                Text(highlightedText(title), style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(highlightedText(title), style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = titleModifier)
             } else {
-                Text(group.title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(group.title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = titleModifier)
             }
             FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 group.sources.forEach { Tag(displayName(it)) }
@@ -537,16 +549,21 @@ private fun LibraryGrid(
                 SectionHeaderRow(section.header, section.groups.size, Modifier.animateItem())
             }
             items(section.groups, key = { it.title }) { group ->
+                val handoff = rememberCoverHandoff(group.navKey)
                 GridTile(
                     group = group,
                     isSearching = isSearching,
                     showAdded = sort == FavoriteSort.ADDED && !isSearching,
                     now = now,
                     displayName = displayName,
+                    handoff = handoff,
                     modifier = Modifier
                         .animateItem()
                         .combinedClickable(
-                            onClick = { onGroupClick(group) },
+                            onClick = {
+                                handoff.handOff()
+                                onGroupClick(group)
+                            },
                             onLongClick = { onGroupLongPress(group) },
                         ),
                 )
@@ -562,13 +579,16 @@ private fun GridTile(
     showAdded: Boolean,
     now: Long,
     displayName: (String) -> String,
+    handoff: CoverHandoff,
     modifier: Modifier = Modifier,
 ) {
     val hit = group.hit
+    val titleModifier = Modifier.customSharedElement(group.navKey?.let(::OtakuTitleElement))
     Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
         FavoriteCover(
             group = group,
             shape = RoundedCornerShape(10.dp),
+            handoff = handoff,
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(2f / 3f),
@@ -604,9 +624,9 @@ private fun GridTile(
         }
         val title = hit?.titleHighlight?.takeIf { isSearching }
         if (title != null) {
-            Text(highlightedText(title), style = MaterialTheme.typography.labelLarge, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(highlightedText(title), style = MaterialTheme.typography.labelLarge, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = titleModifier)
         } else {
-            Text(group.title, style = MaterialTheme.typography.labelLarge, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(group.title, style = MaterialTheme.typography.labelLarge, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = titleModifier)
         }
         Text(
             text = when {
@@ -641,11 +661,12 @@ private fun LetterRail(
 ) {
     var height by remember { mutableIntStateOf(1) }
     var last by remember { mutableIntStateOf(-1) }
+    val currentOnLetter by rememberUpdatedState(onLetter)
     fun pick(y: Float) {
         val index = ((y / height) * letters.size).toInt().coerceIn(0, letters.lastIndex)
         if (index != last) {
             last = index
-            onLetter(index)
+            currentOnLetter(index)
         }
     }
     Surface(

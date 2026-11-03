@@ -180,12 +180,15 @@ fun FavoriteScreen(
     }
 
     fun longPress(group: FavoriteGroup) {
-        optionsSheet = group.items.mapNotNull { item ->
+        val installed = group.items.mapNotNull { item ->
             sourceRepository
                 .toSourceByApiServiceName(item.source)
                 ?.apiService
                 ?.let { item.toItemModel(it) }
         }
+        // None of its sources are installed: the options sheet would be empty, so offer the
+        // source-not-installed sheet (the snackbar's More Options) right away
+        if (installed.isEmpty()) showDbModel = group.items.first() else optionsSheet = installed
     }
 
     SourceNotInstalledModal(

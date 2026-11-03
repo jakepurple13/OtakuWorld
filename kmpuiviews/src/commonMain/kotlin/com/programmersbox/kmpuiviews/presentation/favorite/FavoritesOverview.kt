@@ -43,6 +43,9 @@ import otakuworld.kmpuiviews.generated.resources.fav_stat_sources
 import otakuworld.kmpuiviews.generated.resources.fav_stat_titles
 import otakuworld.kmpuiviews.generated.resources.fav_titles_count
 import otakuworld.kmpuiviews.generated.resources.fav_updates_off_row
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuTitleElement
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.customSharedElement
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.rememberCoverHandoff
 import kotlin.time.Clock
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -96,14 +99,19 @@ internal fun FavoritesOverview(
                     modifier = Modifier.animateItem(),
                 ) {
                     items(overview.recent, key = { it.title }) { group ->
+                        val handoff = rememberCoverHandoff(group.navKey)
                         FavoriteCover(
                             group = group,
                             shape = RoundedCornerShape(16.dp),
+                            handoff = handoff,
                             modifier = Modifier
                                 .animateItem()
                                 .size(118.dp, 177.dp)
                                 .combinedClickable(
-                                    onClick = { onGroupClick(group) },
+                                    onClick = {
+                                        handoff.handOff()
+                                        onGroupClick(group)
+                                    },
                                     onLongClick = { onGroupLongPress(group) },
                                 ),
                         ) {
@@ -111,7 +119,7 @@ internal fun FavoritesOverview(
                                 text = stringResource(Res.string.fav_ago, shortAge(group.latestCreatedAt, now)),
                                 modifier = Modifier.align(Alignment.TopStart),
                             )
-                            CoverTitle(group.title, Modifier.align(Alignment.BottomStart))
+                            CoverTitle(group, Modifier.align(Alignment.BottomStart))
                         }
                     }
                 }
@@ -136,6 +144,8 @@ internal fun FavoritesOverview(
                         FavoriteCover(
                             group = group,
                             shape = RoundedCornerShape(12.dp),
+                            // Shared keys must be unique on screen; Recently added already has it
+                            shareAcrossTabs = overview.recent.none { it.title == group.title },
                             modifier = Modifier
                                 .animateItem()
                                 .size(84.dp, 126.dp)
@@ -237,7 +247,7 @@ internal fun CoverChip(text: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun CoverTitle(title: String, modifier: Modifier = Modifier) {
+private fun CoverTitle(group: FavoriteGroup, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -247,11 +257,12 @@ private fun CoverTitle(title: String, modifier: Modifier = Modifier) {
             .padding(8.dp)
     ) {
         Text(
-            title,
+            group.title,
             style = MaterialTheme.typography.labelLarge,
             color = Color.White,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.customSharedElement(group.navKey?.let(::OtakuTitleElement)),
         )
     }
 }
