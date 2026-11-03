@@ -85,6 +85,7 @@ kotlin {
                 implementation(androidLibs.rxjava1)
                 implementation(commonLibs.zipline)
                 implementation(projects.sharedutils.kmpextensionloader)
+                implementation(projects.favoritesdatabase)
                 implementation(androidLibs.apksig)
                 implementation("net.dongliu:apk-parser:2.6.10")
                 implementation(desktopLibs.kotlin.multiplatform.appdirs)

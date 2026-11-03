@@ -3,6 +3,7 @@ package com.programmersbox.supabaseintegration.ui
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class SupabaseShareFormattingTest {
 
@@ -14,15 +15,15 @@ class SupabaseShareFormattingTest {
     }
 
     @Test
-    fun shortenKeyKeepsOnlyTheEnds() {
+    fun maskKeyHidesTheMiddleOfLongKeys() {
         val key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.payload.signatureXk9Q"
-        assertEquals("eyJhb…Xk9Q", shortenKey(key))
+        val masked = maskKey(key)
+        assertTrue(masked.startsWith("eyJhbGciOi"))
+        assertFalse(masked.contains("payload"))
     }
 
     @Test
-    fun shortenKeyHidesShortKeysCompletely() {
-        val short = shortenKey("secret123")
-        assertEquals("•••••••••".take(8), short)
-        assertFalse(short.contains("sec"))
+    fun maskKeyHidesShortKeysCompletely() {
+        assertEquals("•••••••••", maskKey("secret123"))
     }
 }
