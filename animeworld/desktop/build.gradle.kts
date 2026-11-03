@@ -135,7 +135,8 @@ nucleus.application {
         // electron-builder needs a maintainer email for DEB packages
         vendor = "jakepurple13 <jakepurple13@users.noreply.github.com>"
 
-        modules("jdk.unsupported")
+        // jdk.zipfs: dex2jar writes converted extension jars through a zip FileSystem.
+        modules("jdk.unsupported", "jdk.zipfs")
 
         // libVLC lands in appResources/<os>-<arch>/vlc (see vlc.gradle.kts) and splash.png in
         // appResources/common (see registerDesktopSplash()).
