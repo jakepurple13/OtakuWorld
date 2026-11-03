@@ -303,6 +303,9 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   the runtime image ([#2531](https://github.com/jakepurple13/OtakuWorld/pull/2531))
 - Fixed packaged desktop apps failing to start with a missing Skiko native library
   ([#2650](https://github.com/jakepurple13/OtakuWorld/pull/2650))
+- Fixed Mihon (MangaWorld) and Aniyomi/CloudStream (AnimeWorld) extensions showing "Failed to
+  convert" in packaged desktop apps: the `jdk.zipfs` module is now included in the runtime image
+  ([#2658](https://github.com/jakepurple13/OtakuWorld/pull/2658))
 
 ### Under the Hood
 
