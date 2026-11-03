@@ -65,6 +65,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -358,6 +362,7 @@ private fun FavoriteSearchBar(
     viewModel: FavoriteViewModel,
     onOpenFilters: () -> Unit,
 ) {
+    val focusManager = LocalFocusManager.current
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -367,7 +372,7 @@ private fun FavoriteSearchBar(
         BackButton()
         TextField(
             state = viewModel.searchText,
-            placeholder = { Text(stringResource(Res.string.fav_search_placeholder)) },
+            placeholder = { Text(stringResource(Res.string.fav_search_placeholder), maxLines = 1, overflow = TextOverflow.Ellipsis) },
             leadingIcon = { Icon(Icons.Default.Search, null) },
             trailingIcon = {
                 if (viewModel.searchText.text.isNotEmpty()) {
@@ -377,6 +382,8 @@ private fun FavoriteSearchBar(
                 }
             },
             lineLimits = TextFieldLineLimits.SingleLine,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            onKeyboardAction = { focusManager.clearFocus() },
             shape = CircleShape,
             colors = TextFieldDefaults.colors(
                 focusedIndicatorColor = Color.Transparent,
@@ -399,7 +406,13 @@ private fun FavoriteSearchBar(
             },
             modifier = Modifier.padding(horizontal = 4.dp),
         ) {
-            IconButton(onClick = onOpenFilters) {
+            // Drop focus first so the keyboard doesn't come back when the sheet closes
+            IconButton(
+                onClick = {
+                    focusManager.clearFocus()
+                    onOpenFilters()
+                }
+            ) {
                 Icon(Icons.Default.FilterList, stringResource(Res.string.fav_filter))
             }
         }

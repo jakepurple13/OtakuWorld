@@ -60,6 +60,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.programmersbox.kmpuiviews.repository.MatchField
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
@@ -183,12 +184,14 @@ internal fun FavoritesLibrary(
                     onClick = { onGridViewChange(false) },
                     shape = SegmentedButtonDefaults.itemShape(0, 2),
                     icon = {},
+                    contentPadding = PaddingValues(horizontal = 12.dp),
                 ) { Icon(Icons.AutoMirrored.Filled.ViewList, stringResource(Res.string.fav_list_view)) }
                 SegmentedButton(
                     selected = gridView,
                     onClick = { onGridViewChange(true) },
                     shape = SegmentedButtonDefaults.itemShape(1, 2),
                     icon = {},
+                    contentPadding = PaddingValues(horizontal = 12.dp),
                 ) { Icon(Icons.Default.GridView, stringResource(Res.string.fav_grid_view)) }
             }
             Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
@@ -211,7 +214,8 @@ internal fun FavoritesLibrary(
                                 onClick = { onSortChange(option) },
                                 shape = SegmentedButtonDefaults.itemShape(index, sorts.size),
                                 icon = {},
-                            ) { Text(stringResource(label), maxLines = 1) }
+                                contentPadding = PaddingValues(horizontal = 8.dp),
+                            ) { Text(stringResource(label), style = MaterialTheme.typography.labelMedium, maxLines = 1, softWrap = false) }
                         }
                     }
                 }
@@ -344,12 +348,17 @@ private fun EmptyLibrary(isSearching: Boolean, query: String, modifier: Modifier
 }
 
 @Composable
-private fun SectionHeaderRow(header: SectionHeader, count: Int, modifier: Modifier = Modifier) {
+private fun SectionHeaderRow(
+    header: SectionHeader,
+    count: Int,
+    modifier: Modifier = Modifier,
+    endPadding: Dp = 16.dp,
+) {
     Row(
         modifier = modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.background)
-            .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp),
+            .padding(start = 16.dp, end = endPadding, top = 12.dp, bottom = 4.dp),
     ) {
         Text(
             sectionLabel(header),
@@ -387,7 +396,7 @@ private fun LibraryList(
         ) {
             sections.forEach { section ->
                 stickyHeader(key = section.header.key()) {
-                    SectionHeaderRow(section.header, section.groups.size, Modifier.animateItem())
+                    SectionHeaderRow(section.header, section.groups.size, Modifier.animateItem(), endPadding = 32.dp)
                 }
                 items(section.groups, key = { it.title }) { group ->
                     LibraryRow(
