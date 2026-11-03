@@ -1,121 +1,111 @@
 package com.programmersbox.kmpuiviews.presentation.favorite
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.clearText
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ReadMore
-import androidx.compose.material.icons.automirrored.filled.Sort
-import androidx.compose.material.icons.filled.BrokenImage
-import androidx.compose.material.icons.filled.Cancel
-import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.SortByAlpha
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SearchBarDefaults
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
-import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberSearchBarState
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.backhandler.BackHandler
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import com.programmersbox.datastore.ColorBlindnessType
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.toItemModel
-import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
-import com.programmersbox.kmpuiviews.presentation.components.DynamicSearchBar
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomScreen
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomSheetItemModel
-import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
 import com.programmersbox.kmpuiviews.presentation.components.OtakuHazeScaffold
 import com.programmersbox.kmpuiviews.presentation.components.SourceNotInstalledModal
 import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.presentation.components.optionsKmpSheetList
-import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
-import com.programmersbox.kmpuiviews.utils.composables.sharedelements.SharedItemKey
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
-import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
 import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
 import dev.chrisbanes.haze.HazeProgressive
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.add_a_favorite
 import otakuworld.kmpuiviews.generated.resources.chooseASource
+import otakuworld.kmpuiviews.generated.resources.fav_clear_search
+import otakuworld.kmpuiviews.generated.resources.fav_filter
+import otakuworld.kmpuiviews.generated.resources.fav_search_placeholder
+import otakuworld.kmpuiviews.generated.resources.fav_tab_library
+import otakuworld.kmpuiviews.generated.resources.fav_tab_overview
 import otakuworld.kmpuiviews.generated.resources.get_started
 import otakuworld.kmpuiviews.generated.resources.get_started_info
-import otakuworld.kmpuiviews.generated.resources.numFavorites
 import otakuworld.kmpuiviews.generated.resources.removeFromFavorites
 
-@OptIn(ExperimentalLayoutApi::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalSharedTransitionApi::class)
 @ExperimentalMaterial3Api
 @ExperimentalFoundationApi
 @Composable
@@ -126,20 +116,73 @@ fun FavoriteScreen(
     viewModel: FavoriteViewModel = koinViewModel(),
 ) {
     val navController = LocalNavActions.current
+    val settings = koinInject<NewSettingsHandling>()
 
     val showBlur by LocalSettingsHandling.current.rememberShowBlur()
+    var gridView by settings.rememberFavoritesGridView()
+    var openLibrary by settings.rememberFavoritesOpenLibrary()
 
-    val colorBlindness: ColorBlindnessType by koinInject<NewSettingsHandling>().rememberColorBlindType()
+    val colorBlindness: ColorBlindnessType by settings.rememberColorBlindType()
     val colorFilter by remember { derivedStateOf { colorFilterBlind(colorBlindness) } }
 
     var optionsSheet by optionsKmpSheetList()
     val scope = rememberCoroutineScope()
-
+    val biometric = rememberBiometricOpening()
     val snackbarHostState = remember { SnackbarHostState() }
 
     var showDbModel by remember { mutableStateOf<DbModel?>(null) }
+    var showFilters by remember { mutableStateOf(false) }
+    var chooser by remember { mutableStateOf<FavoriteGroup?>(null) }
 
-    var showSort by remember { mutableStateOf(false) }
+    val displayName: (String) -> String = remember(sourceRepository) { { sourceRepository.displayNameFor(it) } }
+
+    // Typing from Overview moves to Library, where results are shown
+    LaunchedEffect(viewModel) {
+        snapshotFlow { viewModel.searchText.text.isNotEmpty() }
+            .collect { if (it) openLibrary = true }
+    }
+
+    fun moreInfoClick(dbModel: DbModel) {
+        scope.launch {
+            snackbarHostState.currentSnackbarData?.dismiss()
+            val result = snackbarHostState.showSnackbar(
+                "Something went wrong. Source might not be installed",
+                duration = SnackbarDuration.Long,
+                actionLabel = "More Options",
+                withDismissAction = true
+            )
+            showDbModel = when (result) {
+                SnackbarResult.Dismissed -> null
+                SnackbarResult.ActionPerformed -> dbModel
+            }
+        }
+    }
+
+    fun openDetails(dbModel: DbModel) {
+        sourceRepository
+            .toSourceByApiServiceName(dbModel.source)
+            ?.apiService
+            ?.let { dbModel.toItemModel(it) }
+            ?.let(navController::details)
+            ?: moreInfoClick(dbModel)
+    }
+
+    fun openGroup(group: FavoriteGroup) {
+        scope.launch {
+            biometric.openIfNotIncognito(*group.items.toTypedArray()) {
+                if (group.items.size == 1) openDetails(group.items.first()) else chooser = group
+            }
+        }
+    }
+
+    fun longPress(group: FavoriteGroup) {
+        optionsSheet = group.items.mapNotNull { item ->
+            sourceRepository
+                .toSourceByApiServiceName(item.source)
+                ?.apiService
+                ?.let { item.toItemModel(it) }
+        }
+    }
 
     SourceNotInstalledModal(
         showItem = showDbModel?.title,
@@ -151,239 +194,80 @@ fun FavoriteScreen(
             headlineContent = { Text(stringResource(Res.string.removeFromFavorites)) },
             leadingContent = { Icon(Icons.Default.FavoriteBorder, null) },
             modifier = Modifier.clickable {
-                showDbModel?.let {
-                    scope.launch {
-                        favoritesRepository.removeFavorite(it)
-                    }
-                }
+                showDbModel?.let { scope.launch { favoritesRepository.removeFavorite(it) } }
                 showDbModel = null
             }
         )
     }
 
-    if (showSort) {
+    chooser?.let { group ->
         ModalBottomSheet(
-            onDismissRequest = { showSort = false },
+            onDismissRequest = { chooser = null },
             containerColor = MaterialTheme.colorScheme.surface,
         ) {
-            CenterAlignedTopAppBar(
-                title = { Text("Sort By") },
-                windowInsets = WindowInsets(0.dp)
-            )
-
-            val rotateIcon: @Composable (SortFavoritesBy<*>) -> Float = {
-                animateFloatAsState(if (it == viewModel.sortedBy && viewModel.reverse) 180f else 0f, label = "").value
-            }
-
-            SingleChoiceSegmentedButtonRow(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                @Composable
-                fun SegmentedButtonItem(
-                    sortFavoritesBy: SortFavoritesBy<*>,
-                    label: String,
-                    index: Int,
-                    icon: ImageVector,
-                ) {
-                    val isSelected = viewModel.sortedBy == sortFavoritesBy
-                    SegmentedButton(
-                        selected = isSelected,
-                        onClick = {
-                            if (viewModel.sortedBy != sortFavoritesBy)
-                                viewModel.sortedBy = sortFavoritesBy
-                            else
-                                viewModel.reverse = !viewModel.reverse
-                        },
-                        label = { Text(label) },
-                        icon = {
-                            SegmentedButtonDefaults.Icon(
-                                active = isSelected,
-                                activeContent = {
-                                    Icon(
-                                        icon,
-                                        null,
-                                        modifier = Modifier.rotate(rotateIcon(sortFavoritesBy))
-                                    )
-                                }
-                            )
-                        },
-                        shape = SegmentedButtonDefaults.itemShape(index, 3)
-                    )
+            ListBottomScreen(
+                navigationIcon = {
+                    IconButton(onClick = { chooser = null }) { Icon(Icons.Default.Close, null) }
+                },
+                includeInsetPadding = false,
+                title = stringResource(Res.string.chooseASource),
+                list = group.items,
+                onClick = { item ->
+                    chooser = null
+                    openDetails(item)
                 }
-
-                SegmentedButtonItem(
-                    sortFavoritesBy = SortFavoritesBy.TITLE,
-                    label = "Title",
-                    index = 0,
-                    icon = Icons.Default.SortByAlpha
-                )
-
-                SegmentedButtonItem(
-                    sortFavoritesBy = SortFavoritesBy.COUNT,
-                    label = "Count",
-                    index = 1,
-                    icon = Icons.AutoMirrored.Filled.Sort
-                )
-
-                SegmentedButtonItem(
-                    sortFavoritesBy = SortFavoritesBy.CHAPTERS,
-                    label = "Chapters",
-                    index = 2,
-                    icon = Icons.AutoMirrored.Filled.ReadMore
+            ) {
+                ListBottomSheetItemModel(
+                    primaryText = it.title,
+                    overlineText = displayName(it.source)
                 )
             }
         }
     }
 
+    if (showFilters) {
+        FavoritesFilterSheet(
+            quickFilters = viewModel.quickFilters,
+            quickCounts = viewModel.quickCounts,
+            onToggleQuick = viewModel::toggleQuickFilter,
+            sourceCounts = viewModel.sourceCounts,
+            selectedSources = viewModel.selectedSources,
+            displayName = displayName,
+            onToggleSource = viewModel::toggleSource,
+            onOnlySource = viewModel::onlySource,
+            onSelectAll = viewModel::selectAll,
+            onSelectNone = viewModel::selectNone,
+            activeFilterCount = viewModel.activeFilterCount,
+            onReset = viewModel::resetFilters,
+            resultCount = viewModel.resultCount,
+            onApply = {
+                showFilters = false
+                if (viewModel.activeFilterCount > 0) openLibrary = true
+            },
+            onDismiss = { showFilters = false },
+        )
+    }
+
+    val navHostPadding = LocalNavHostPadding.current
+
     OtakuHazeScaffold(
         snackbarHost = {
             SnackbarHost(
                 snackbarHostState,
-                modifier = Modifier.padding(LocalNavHostPadding.current)
+                modifier = Modifier.padding(navHostPadding)
             )
         },
         topBar = {
-            Surface(
-                color = if (showBlur) Color.Transparent else MaterialTheme.colorScheme.surface,
-            ) {
-                Column {
-                    val searchBarState = rememberSearchBarState()
-
-                    fun closeSearchBar() {
-                        scope.launch { searchBarState.animateToCollapsed() }
-                    }
-
-                    DynamicSearchBar(
-                        isDocked = isHorizontal,
-                        textFieldState = viewModel.searchText,
-                        searchBarState = searchBarState,
-                        onSearch = { closeSearchBar() },
-                        placeholder = {
-                            Text(
-                                pluralStringResource(
-                                    Res.plurals.numFavorites,
-                                    viewModel.listSources.size,
-                                    viewModel.listSources.size
-                                )
-                            )
-                        },
-                        leadingIcon = {
-                            IconButton(
-                                onClick = { closeSearchBar() }
-                            ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
-                        },
-                        actions = {
-                            IconButton(onClick = { showSort = true }) {
-                                Icon(Icons.AutoMirrored.Filled.Sort, null)
-                            }
-                        },
-                        navigationIcon = { BackButton() },
-                        trailingIcon = {
-                            IconButton(
-                                onClick = { viewModel.searchText = TextFieldState() }
-                            ) { Icon(Icons.Default.Cancel, null) }
-                        },
-                        colors = SearchBarDefaults.appBarWithSearchColors(
-                            appBarContainerColor = if (showBlur)
-                                Color.Transparent
-                            else
-                                MaterialTheme.colorScheme.surface,
-                            searchBarColors = SearchBarDefaults.colors(
-                                inputFieldColors = if (showBlur)
-                                    SearchBarDefaults.inputFieldColors(
-                                        focusedContainerColor = Color.Transparent,
-                                        unfocusedContainerColor = Color.Transparent,
-                                    )
-                                else
-                                    SearchBarDefaults.inputFieldColors()
-                            )
-                        ),
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .padding(16.dp)
-                                .fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            viewModel.listSources.take(4).forEachIndexed { index, dbModel ->
-                                Card(
-                                    onClick = {
-                                        viewModel.searchText = TextFieldState(dbModel.title)
-                                        closeSearchBar()
-                                    },
-                                ) {
-                                    ListItem(
-                                        headlineContent = { Text(dbModel.title) },
-                                        supportingContent = { Text(sourceRepository.displayNameFor(dbModel.source)) },
-                                        leadingContent = { Icon(Icons.Filled.Star, contentDescription = null) },
-                                        colors = ListItemDefaults.colors(
-                                            containerColor = Color.Transparent
-                                        )
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    var showFilterBySourceModal by remember { mutableStateOf(false) }
-
-                    if (showFilterBySourceModal) {
-                        BackHandler { showFilterBySourceModal = false }
-
-                        ModalBottomSheet(
-                            onDismissRequest = { showFilterBySourceModal = false },
-                            containerColor = MaterialTheme.colorScheme.surface,
-                            contentWindowInsets = { WindowInsets.systemBars.only(WindowInsetsSides.Top) },
-                        ) {
-                            CenterAlignedTopAppBar(title = { Text("Filter by Source") })
-                            Column(
-                                modifier = Modifier.verticalScroll(rememberScrollState())
-                            ) {
-                                FlowRow(
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
-                                ) {
-                                    FilterChip(
-                                        selected = true,
-                                        modifier = Modifier.combinedClickable(
-                                            onClick = { viewModel.resetSources() },
-                                            onLongClick = { viewModel.selectedSources.clear() }
-                                        ),
-                                        label = { Text("ALL") },
-                                        onClick = { viewModel.allClick() }
-                                    )
-
-                                    viewModel.allSources.forEach {
-                                        FilterChip(
-                                            selected = it.first in viewModel.selectedSources,
-                                            onClick = { viewModel.newSource(it.first) },
-                                            label = { Text(sourceRepository.displayNameFor(it.first)) },
-                                            leadingIcon = { Text("${it.second.size - 1}") },
-                                            modifier = Modifier.combinedClickable(
-                                                onClick = { viewModel.newSource(it.first) },
-                                                onLongClick = { viewModel.singleSource(it.first) }
-                                            )
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
-                    ) {
-                        SuggestionChip(
-                            onClick = { showFilterBySourceModal = true },
-                            label = { Text("Filter By Source") }
-                        )
-
-                        SuggestionChip(
-                            label = { Text("ALL") },
-                            onClick = { viewModel.resetSources() }
-                        )
-                    }
+            Surface(color = if (showBlur) Color.Transparent else MaterialTheme.colorScheme.surface) {
+                Column(Modifier.statusBarsPadding()) {
+                    FavoriteSearchBar(
+                        viewModel = viewModel,
+                        onOpenFilters = { showFilters = true },
+                    )
+                    FavoriteTabs(
+                        library = openLibrary,
+                        onSelect = { openLibrary = it },
+                    )
                 }
             }
         },
@@ -394,185 +278,201 @@ fun FavoriteScreen(
             )
         }
     ) { p ->
-        if (viewModel.listSources.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(p)
-            ) {
-                Surface(
-                    tonalElevation = 4.dp,
-                    shape = RoundedCornerShape(4.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(4.dp)
-                ) {
-                    Column(modifier = Modifier) {
-                        Text(
-                            text = stringResource(Res.string.get_started),
-                            style = MaterialTheme.typography.headlineSmall,
-                            modifier = Modifier.align(Alignment.CenterHorizontally)
-                        )
+        val layoutDirection = LocalLayoutDirection.current
+        val contentPadding = PaddingValues(
+            top = p.calculateTopPadding(),
+            bottom = p.calculateBottomPadding() + navHostPadding.calculateBottomPadding(),
+        )
 
-                        Text(
-                            text = stringResource(Res.string.get_started_info),
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.align(Alignment.CenterHorizontally)
-                        )
+        if (viewModel.totalCount == 0) {
+            GetStarted(
+                onAdd = { navController.popBackStack(Screen.RecentScreen, false) },
+                modifier = Modifier.padding(top = p.calculateTopPadding(), start = p.calculateStartPadding(layoutDirection)),
+            )
+            return@OtakuHazeScaffold
+        }
 
-                        Button(
-                            onClick = { navController.popBackStack(Screen.RecentScreen, false) },
-                            modifier = Modifier
-                                .align(Alignment.CenterHorizontally)
-                                .padding(vertical = 4.dp)
-                        ) { Text(text = stringResource(Res.string.add_a_favorite)) }
+        CompositionLocalProvider(LocalFavoritesColorFilter provides colorFilter) {
+            val slideSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
+            val fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+            val fadeOutSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+            SharedTransitionLayout {
+                CompositionLocalProvider(LocalFavoritesSharedScope provides this) {
+                    AnimatedContent(
+                        targetState = openLibrary,
+                        transitionSpec = {
+                            val direction = if (targetState) 1 else -1
+                            (slideInHorizontally(slideSpec) { it / 3 * direction } + fadeIn(fadeInSpec)) togetherWith
+                                (slideOutHorizontally(slideSpec) { -it / 3 * direction } + fadeOut(fadeOutSpec))
+                        },
+                        label = "favoritesTab",
+                    ) { library ->
+                        CompositionLocalProvider(LocalFavoritesTabScope provides this) {
+                            if (library) {
+                                FavoritesLibrary(
+                                    sections = viewModel.sections,
+                                    isSearching = viewModel.isSearching,
+                                    query = viewModel.searchQuery,
+                                    resultCount = viewModel.resultCount,
+                                    totalCount = viewModel.totalCount,
+                                    gridView = gridView,
+                                    onGridViewChange = { gridView = it },
+                                    sort = viewModel.sort,
+                                    onSortChange = { viewModel.sort = it },
+                                    quickFilters = viewModel.quickFilters,
+                                    selectedSources = viewModel.selectedSources,
+                                    displayName = displayName,
+                                    onRemoveQuick = viewModel::removeQuickFilter,
+                                    onClearSources = viewModel::clearSources,
+                                    onOpenFilters = { showFilters = true },
+                                    contentPadding = contentPadding,
+                                    onGroupClick = ::openGroup,
+                                    onGroupLongPress = ::longPress,
+                                )
+                            } else {
+                                FavoritesOverview(
+                                    overview = viewModel.overview,
+                                    contentPadding = PaddingValues(
+                                        top = contentPadding.calculateTopPadding() + 4.dp,
+                                        bottom = contentPadding.calculateBottomPadding() + 16.dp,
+                                    ),
+                                    onSeeAll = {
+                                        viewModel.seeAll(it)
+                                        openLibrary = true
+                                    },
+                                    onOpenFilters = { showFilters = true },
+                                    onGroupClick = ::openGroup,
+                                    onGroupLongPress = ::longPress,
+                                )
+                            }
+                        }
                     }
                 }
             }
-        } else {
-            FavoritesGrid(
-                paddingValues = p,
-                groupedSources = viewModel.groupedSources,
-                sourceRepository = sourceRepository,
-                navController = navController,
-                colorFilter = colorFilter,
-                moreInfoClick = {
-                    scope.launch {
-                        snackbarHostState.currentSnackbarData?.dismiss()
-                        val result = snackbarHostState.showSnackbar(
-                            "Something went wrong. Source might not be installed",
-                            duration = SnackbarDuration.Long,
-                            actionLabel = "More Options",
-                            withDismissAction = true
-                        )
-                        showDbModel = when (result) {
-                            SnackbarResult.Dismissed -> null
-                            SnackbarResult.ActionPerformed -> it
-                        }
-                    }
-                },
-                onLongPress = { optionsSheet = it },
-            )
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-private fun FavoritesGrid(
-    paddingValues: PaddingValues,
-    groupedSources: List<Map.Entry<String, List<DbModel>>>,
-    sourceRepository: SourceRepository,
-    navController: NavigationActions,
-    colorFilter: ColorFilter?,
-    moreInfoClick: (DbModel) -> Unit,
-    onLongPress: (List<KmpItemModel>) -> Unit,
-    modifier: Modifier = Modifier,
+private fun FavoriteSearchBar(
+    viewModel: FavoriteViewModel,
+    onOpenFilters: () -> Unit,
 ) {
-    val biometric = rememberBiometricOpening()
-    val scope = rememberCoroutineScope()
-    LazyVerticalGrid(
-        columns = adaptiveGridCell(),
-        state = rememberLazyGridState(),
-        contentPadding = paddingValues,
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = modifier.fillMaxSize()
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 4.dp, end = 4.dp, top = 4.dp),
     ) {
-        items(
-            groupedSources,
-            key = { it.key }
-        ) { info ->
-            var showBottomSheet by remember { mutableStateOf(false) }
-
-            if (showBottomSheet) {
-                ModalBottomSheet(
-                    onDismissRequest = { showBottomSheet = false },
-                    containerColor = MaterialTheme.colorScheme.surface,
-                ) {
-                    ListBottomScreen(
-                        navigationIcon = {
-                            IconButton(onClick = { showBottomSheet = false }) { Icon(Icons.Default.Close, null) }
-                        },
-                        includeInsetPadding = false,
-                        title = stringResource(Res.string.chooseASource),
-                        list = info.value,
-                        onClick = { item ->
-                            showBottomSheet = false
-                            item.let {
-                                sourceRepository
-                                    .toSourceByApiServiceName(it.source)
-                                    ?.apiService
-                                    ?.let { it1 -> it.toItemModel(it1) }
-                            }?.let(navController::details) ?: moreInfoClick(item)
-                        }
-                    ) {
-                        ListBottomSheetItemModel(
-                            primaryText = it.title,
-                            overlineText = it.source
-                        )
+        BackButton()
+        TextField(
+            state = viewModel.searchText,
+            placeholder = { Text(stringResource(Res.string.fav_search_placeholder)) },
+            leadingIcon = { Icon(Icons.Default.Search, null) },
+            trailingIcon = {
+                if (viewModel.searchText.text.isNotEmpty()) {
+                    IconButton(onClick = { viewModel.searchText.clearText() }) {
+                        Icon(Icons.Default.Close, stringResource(Res.string.fav_clear_search))
                     }
+                }
+            },
+            lineLimits = TextFieldLineLimits.SingleLine,
+            shape = CircleShape,
+            colors = TextFieldDefaults.colors(
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                disabledIndicatorColor = Color.Transparent,
+            ),
+            modifier = Modifier.weight(1f),
+        )
+        val popSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
+        val shrinkSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+        BadgedBox(
+            badge = {
+                AnimatedContent(
+                    targetState = viewModel.activeFilterCount,
+                    transitionSpec = { scaleIn(popSpec) togetherWith scaleOut(shrinkSpec) },
+                    label = "filterBadge",
+                ) { count ->
+                    if (count > 0) Badge { Text(count.toString()) }
+                }
+            },
+            modifier = Modifier.padding(horizontal = 4.dp),
+        ) {
+            IconButton(onClick = onOpenFilters) {
+                Icon(Icons.Default.FilterList, stringResource(Res.string.fav_filter))
+            }
+        }
+    }
+}
+
+@Composable
+private fun FavoriteTabs(
+    library: Boolean,
+    onSelect: (Boolean) -> Unit,
+) {
+    val fraction by animateFloatAsState(
+        targetValue = if (library) 1f else 0f,
+        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
+        label = "tabIndicator",
+    )
+    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    Box(
+        modifier = Modifier
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .fillMaxWidth()
+            .height(44.dp)
+            .background(MaterialTheme.colorScheme.surfaceContainer, CircleShape)
+            .padding(4.dp)
+    ) {
+        Box(
+            Modifier
+                .fillMaxWidth(0.5f)
+                .fillMaxHeight()
+                .graphicsLayer { translationX = fraction * size.width * if (rtl) -1 else 1 }
+                .background(MaterialTheme.colorScheme.secondaryContainer, CircleShape)
+        )
+        Row(Modifier.fillMaxSize()) {
+            listOf(false to Res.string.fav_tab_overview, true to Res.string.fav_tab_library).forEach { (isLibrary, label) ->
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .clickable(
+                            interactionSource = null,
+                            indication = null,
+                        ) { onSelect(isLibrary) },
+                ) {
+                    Text(
+                        stringResource(label),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = if (library == isLibrary) MaterialTheme.colorScheme.onSecondaryContainer
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
+        }
+    }
+}
 
-            M3CoverCard(
-                onLongPress = { c ->
-                    onLongPress(
-                        info.value.mapNotNull {
-                            sourceRepository
-                                .toSourceByApiServiceName(it.source)
-                                ?.apiService
-                                ?.let { it1 -> it.toItemModel(it1) }
-                        }
-                    )
-                },
-                imageUrl = remember { info.value.randomOrNull()?.imageUrl.orEmpty() },
-                name = info.key,
-                // Only single-source groups open Details directly
-                sharedItemKey = info.value.singleOrNull()?.let { SharedItemKey(url = it.url, source = it.source) },
-                //placeHolder = { painterLogo() },
-                placeHolder = { rememberVectorPainter(Icons.Default.BrokenImage) },
-                colorFilter = colorFilter,
-                favoriteIcon = {
-                    if (info.value.size > 1) {
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.TopStart)
-                                .padding(4.dp)
-                        ) {
-                            Icon(
-                                Icons.Default.Circle,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.align(Alignment.Center)
-                            )
-                            Text(
-                                info.value.size.toString(),
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.align(Alignment.Center)
-                            )
-                        }
-                    }
-                },
-                modifier = Modifier.animateItem()
-            ) {
-                scope.launch {
-                    biometric.openIfNotIncognito(*info.value.toTypedArray()) {
-                        if (info.value.size == 1) {
-                            info.value
-                                .firstOrNull()
-                                ?.let {
-                                    sourceRepository
-                                        .toSourceByApiServiceName(it.source)
-                                        ?.apiService
-                                        ?.let { it1 -> it.toItemModel(it1) }
-                                        ?.let(navController::details) ?: moreInfoClick(it)
-                                }
-                        } else {
-                            showBottomSheet = true
-                        }
-                    }
-                }
+@Composable
+private fun GetStarted(onAdd: () -> Unit, modifier: Modifier = Modifier) {
+    Surface(
+        tonalElevation = 4.dp,
+        shape = RoundedCornerShape(12.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(12.dp)
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(16.dp),
+        ) {
+            Text(stringResource(Res.string.get_started), style = MaterialTheme.typography.headlineSmall)
+            Text(stringResource(Res.string.get_started_info), style = MaterialTheme.typography.bodyLarge)
+            Button(onClick = onAdd, modifier = Modifier.padding(top = 8.dp)) {
+                Text(stringResource(Res.string.add_a_favorite))
             }
         }
     }
