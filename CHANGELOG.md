@@ -175,8 +175,10 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   with a See all into Library. Library has a list or grid view, A–Z / chapters / added sorting
   with section headers, an A–Z jump rail, and removable filter chips. Sources moved into a
   searchable filter sheet
+  ([#2663](https://github.com/jakepurple13/OtakuWorld/pull/2663))
 - Favorites search now covers titles, descriptions and your notes, matches words by their start,
   ignores accents, ranks title matches first and highlights what matched
+  ([#2663](https://github.com/jakepurple13/OtakuWorld/pull/2663))
 
 #### Bug Fixes
 
@@ -301,6 +303,7 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 
 - Favorites and notes use SQLite FTS5 full-text indexes (favorites database v8, notes database
   v3). Android now uses the bundled SQLite driver, since the platform SQLite has no FTS5
+  ([#2663](https://github.com/jakepurple13/OtakuWorld/pull/2663))
 - Kotlin 2.4.20, Gradle 9.7.1, KSP 2.3.11, SDK 37.2, Java 21
   ([#2573](https://github.com/jakepurple13/OtakuWorld/pull/2573),
   [e850dba7e](https://github.com/jakepurple13/OtakuWorld/commit/e850dba7e),
