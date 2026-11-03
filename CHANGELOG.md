@@ -161,6 +161,11 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   ([#2650](https://github.com/jakepurple13/OtakuWorld/pull/2650))
 - Manga reader, novel reader and anime player now take their colors from the cover when opened
   from an item's details page ([#2657](https://github.com/jakepurple13/OtakuWorld/pull/2657))
+- Sharing by QR code now shows a share card with the cover, title, source and scan instructions,
+  which is also what Share and Save export. The card can take its colors from the cover, and a
+  Copy link action was added. Supabase config sharing shows the sync settings on the card and
+  keeps the anon key out of the shared image
+  ([#2660](https://github.com/jakepurple13/OtakuWorld/pull/2660))
 
 #### Bug Fixes
 
@@ -197,6 +202,9 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   short swipes ([#2647](https://github.com/jakepurple13/OtakuWorld/pull/2647))
 - Cloud sync: fixed a crash on Wi-Fi when the app was reopened or rotated while signed in
   ([#2655](https://github.com/jakepurple13/OtakuWorld/pull/2655))
+- Supabase config: scanning a config QR code no longer fills the poll interval and retry delays
+  with milliseconds, which saved them far too large
+  ([#2660](https://github.com/jakepurple13/OtakuWorld/pull/2660))
 
 #### Removed
 
