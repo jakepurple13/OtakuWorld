@@ -17,6 +17,7 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ExceptionDao
 import com.programmersbox.favoritesdatabase.ExceptionItem
 import com.programmersbox.favoritesdatabase.ItemDatabase
+import com.programmersbox.favoritesdatabase.NotesDatabase
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
@@ -48,6 +49,13 @@ import java.io.File
 fun createTestItemDatabase(): ItemDatabase {
     val dbFile = File.createTempFile("kmpuiviews-test", ".db").also { it.deleteOnExit() }
     return Room.databaseBuilder<ItemDatabase>(name = dbFile.absolutePath)
+        .setDriver(BundledSQLiteDriver())
+        .build()
+}
+
+fun createTestNotesDatabase(): NotesDatabase {
+    val dbFile = File.createTempFile("kmpuiviews-notes-test", ".db").also { it.deleteOnExit() }
+    return Room.databaseBuilder<NotesDatabase>(name = dbFile.absolutePath)
         .setDriver(BundledSQLiteDriver())
         .build()
 }

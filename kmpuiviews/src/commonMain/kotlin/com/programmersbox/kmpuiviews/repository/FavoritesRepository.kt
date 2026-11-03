@@ -25,7 +25,9 @@ class FavoritesRepository(
         if (isIncognito(db.source)) return
         coroutineScope {
             launch {
-                dao.insertFavorite(db)
+                dao.insertFavorite(
+                    if (db.createdAt == 0L) db.copy(createdAt = Clock.System.now().toEpochMilliseconds()) else db
+                )
                 systemAlerter.alertFavoritesChange()
             }
         }
