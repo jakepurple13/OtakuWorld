@@ -257,6 +257,8 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   notification ([#2644](https://github.com/jakepurple13/OtakuWorld/pull/2644))
 - Fixed the QR code share button not copying the QR code image to the clipboard
   ([#2656](https://github.com/jakepurple13/OtakuWorld/pull/2656))
+- Cover images are now cached in memory, so going back to Recent or another cover grid no longer
+  reloads every cover ([#2662](https://github.com/jakepurple13/OtakuWorld/pull/2662))
 
 ### Desktop Only
 
