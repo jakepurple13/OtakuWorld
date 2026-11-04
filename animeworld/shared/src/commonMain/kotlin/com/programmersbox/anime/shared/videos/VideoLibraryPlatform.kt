@@ -23,6 +23,10 @@ internal expect val otherVideosDeleteNote: String?
 /** Where "Manage folders" goes; null where library folders aren't configurable (only desktop has them). */
 internal expect fun libraryFoldersRoute(): NavKey?
 
+/** Desktop's note while thumbnails and lengths are still being read. Nothing on other platforms. */
+@Composable
+internal expect fun ThumbnailProgressNotice(modifier: Modifier)
+
 /** Desktop's one-time "Show every video on this computer?" card. Nothing on other platforms. */
 @Composable
 internal expect fun OtherVideosPrompt(modifier: Modifier)

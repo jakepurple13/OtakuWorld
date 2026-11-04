@@ -1,6 +1,9 @@
 package com.programmersbox.anime.shared.videos
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -244,18 +247,26 @@ private fun LibraryThumbnail(item: SharedVideoContent, modifier: Modifier = Modi
             modifier = Modifier.size(width = 112.dp, height = 63.dp)
         )
 
-        val runTimeString = remember(item.duration) { item.duration.toDurationText() }
-        Text(
-            runTimeString,
-            color = Color.White,
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Medium,
+        // Desktop reads lengths in the background; show the badge once there is one instead of "00:00".
+        AnimatedVisibility(
+            visible = item.duration > 0,
+            enter = fadeIn(),
+            exit = fadeOut(),
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 6.dp, bottom = 8.dp)
-                .background(Color(0xB8000000), RoundedCornerShape(4.dp))
-                .padding(horizontal = 5.dp, vertical = 1.dp)
-        )
+        ) {
+            val runTimeString = remember(item.duration) { item.duration.toDurationText() }
+            Text(
+                runTimeString,
+                color = Color.White,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier
+                    .background(Color(0xB8000000), RoundedCornerShape(4.dp))
+                    .padding(horizontal = 5.dp, vertical = 1.dp)
+            )
+        }
 
         if (item.lastPlayedPositionMs > 0 && item.duration > 0) {
             val fraction = (item.lastPlayedPositionMs.toFloat() / item.duration).coerceIn(0f, 1f)
