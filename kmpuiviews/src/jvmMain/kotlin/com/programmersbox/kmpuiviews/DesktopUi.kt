@@ -18,7 +18,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -105,6 +104,7 @@ fun desktopSetup(
     DataStoreSettings { File(appDirs.getUserDataDir(), it).absolutePath }
 
     if (BackgroundWorkHandlerImpl.setupSyncCheckers(args)) return
+    NativeSplash.start()
     val desktopViewModelStoreOwner = DesktopViewModelStoreOwner()
     application {
         CompositionLocalProvider(
@@ -237,17 +237,6 @@ private fun InternalDesktopUi(
             }
         ),
         content = {
-            var showMain by remember { mutableStateOf(false) }
-            var mainShown by remember { mutableStateOf(false) }
-            if (!mainShown) {
-                SplashWindow(
-                    title = title,
-                    onCloseRequest = exitApplication,
-                    onShown = { showMain = true },
-                )
-            }
-            if (!showMain) return@KoinApplication
-
             val navigationActions = koinInject<NavigationActions>()
             val dataStoreHandling = koinInject<DataStoreHandling>()
             LaunchedEffect(Unit) {
@@ -294,11 +283,6 @@ private fun InternalDesktopUi(
                 title = title,
                 onCloseRequest = exitApplication,
             ) {
-                LaunchedEffect(Unit) {
-                    withFrameNanos { }
-                    mainShown = true
-                }
-
                 Box(modifier = Modifier.fillMaxSize()) {
                     //UrlOpenerScreen()
                     //ScanQrCode()

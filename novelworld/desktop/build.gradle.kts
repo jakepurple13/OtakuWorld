@@ -79,7 +79,7 @@ tasks.withType<org.jetbrains.compose.reload.gradle.ComposeHotRun>().configureEac
     mainClass.set("com.programmersbox.desktop.MainKt")
 }
 
-registerDesktopSplash()
+registerDesktopSplash(title = "NovelWorld")
 
 // DESKTOP_VERSION is read from the environment, so Gradle must see it as an input or it reuses stale outputs.
 tasks.configureEach {

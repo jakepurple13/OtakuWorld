@@ -310,6 +310,8 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   [52fb4ca73](https://github.com/jakepurple13/OtakuWorld/commit/52fb4ca73))
 - MangaWorld Mihon extension conversion and load failures are now saved to Settings > Exceptions
   with their full stack trace ([#2658](https://github.com/jakepurple13/OtakuWorld/pull/2658))
+- Desktop splash screen appears the moment the app launches and its loading bar stays smooth
+  while the app starts, instead of pausing
 
 #### Bug Fixes
 
