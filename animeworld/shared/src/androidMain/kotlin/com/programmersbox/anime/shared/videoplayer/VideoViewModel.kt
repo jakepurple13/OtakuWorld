@@ -166,6 +166,15 @@ class VideoViewModel(
         quickSeekAction = QuickSeekAction.rewind()
     }
 
+    var speed by mutableFloatStateOf(1f)
+        private set
+
+    /** Steps the playback speed by 0.25x up to 2x, then wraps to 0.5x. */
+    fun cycleSpeed() {
+        speed = if (speed >= 2f) 0.5f else speed + 0.25f
+        exoPlayer?.setPlaybackSpeed(speed)
+    }
+
     var visibility by mutableStateOf(VideoPlayerVisibility.Gone)
     var quickSeekAction by mutableStateOf(QuickSeekAction.none())
 

@@ -73,6 +73,8 @@ import com.programmersbox.anime.shared.videoplayer.VideoPlayerUi
 import com.programmersbox.anime.shared.videoplayer.defaultSubtitleIndex
 import com.programmersbox.anime.shared.videoplayer.playerHeaders
 import com.programmersbox.anime.shared.videoplayer.streamMime
+import com.programmersbox.anime.shared.videoplayer.PlayerPreviewDefaults
+import com.programmersbox.anime.shared.videoplayer.PlayerStyleSheetSetting
 import com.programmersbox.anime.shared.videoplayer.videoPlayerBlur
 import com.programmersbox.anime.shared.videos.SharedVideoContent
 import com.programmersbox.anime.shared.videos.VideoLibrarySource
@@ -464,6 +466,8 @@ class GenericAnime(
             var playerBlur by videoPlayerBlur.asState()
 
             CategoryGroup {
+                item { PlayerStyleSheetSetting(PlayerPreviewDefaults.Android) }
+
                 item {
                     val navController = LocalNavActions.current
                     PreferenceSetting(
