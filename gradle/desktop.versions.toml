@@ -20,6 +20,8 @@ nucleus-core-runtime = { module = "dev.nucleusframework:nucleus.core-runtime", v
 nucleus-aot-runtime = { module = "dev.nucleusframework:nucleus.aot-runtime", version.ref = "nucleusSystem" }
 nucleus-updater-runtime = { module = "dev.nucleusframework:nucleus.updater-runtime", version.ref = "nucleusSystem" }
 nucleus-nucleus-application = { module = "dev.nucleusframework:nucleus.nucleus-application", version.ref = "nucleusSystem" }
+nucleus-decorated-window-jni = { module = "dev.nucleusframework:nucleus.decorated-window-jni", version.ref = "nucleusSystem" }
+nucleus-decorated-window-material3 = { module = "dev.nucleusframework:nucleus.decorated-window-material3", version.ref = "nucleusSystem" }
 javase = { module = "com.google.zxing:javase", version.ref = "javase" }
 kfswatch = { module = "io.github.irgaly.kfswatch:kfswatch", version.ref = "kfswatch" }
 knotify = { module = "io.github.kdroidfilter:knotify", version.ref = "knotify" }
