@@ -15,6 +15,9 @@ import com.programmersbox.anime.shared.videoexport.VideoExportRoute
 import com.programmersbox.anime.shared.videoexport.VideoExportScreen
 import com.programmersbox.anime.shared.videoplayer.VideoPlayerUi
 import com.programmersbox.anime.shared.videos.VideoLibrarySource
+import com.programmersbox.anime.shared.videos.FreeUpSpaceRoute
+import com.programmersbox.anime.shared.videos.FreeUpSpaceScreen
+import com.programmersbox.anime.shared.videos.LibraryFoldersRoute
 import com.programmersbox.anime.shared.videos.VideoViewerRoute
 import com.programmersbox.anime.shared.videos.ViewVideoScreen
 import com.programmersbox.aniyomi.aniyomiModule
@@ -87,6 +90,8 @@ fun main(args: Array<String>) {
             navigation<VideoScreen> { VideoPlayerUi(it) }
             navigation<PlatformSettings> { JvmSettingsScreen() }
             navigation<VideoViewerRoute> { ViewVideoScreen() }
+            navigation<FreeUpSpaceRoute> { FreeUpSpaceScreen() }
+            navigation<LibraryFoldersRoute> { LibraryFoldersScreen() }
             navigation<VideoExportRoute> { VideoExportScreen(it) }
 
             includes(aniyomiModule, cloudstreamModule)

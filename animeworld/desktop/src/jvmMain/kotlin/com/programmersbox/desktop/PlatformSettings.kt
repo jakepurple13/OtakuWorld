@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dataset
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -26,6 +27,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
 import ca.gosyer.appdirs.AppDirs
 import com.programmersbox.anime.shared.AnimeDesktopSettings
+import com.programmersbox.anime.shared.videos.LibraryFoldersRoute
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.datastore.asState
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.updates.updatesSettingsGroup
@@ -40,7 +43,7 @@ import java.io.File
 @Serializable
 data object PlatformSettings : NavKey
 
-private const val PLATFORM_SETTINGS_COUNT = 2
+private const val PLATFORM_SETTINGS_COUNT = 3
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -99,6 +102,18 @@ fun JvmSettingsScreen() {
                     },
                     colors = colors,
                     shapes = ListItemDefaults.segmentedShapes(index = 1, count = PLATFORM_SETTINGS_COUNT)
+                )
+            }
+
+            item(contentType = "libraryFolders") {
+                val navActions = LocalNavActions.current
+                SegmentedListItem(
+                    content = { Text("Library folders") },
+                    supportingContent = { Text("Choose which folders on this computer show up in Downloads") },
+                    leadingContent = { Icon(Icons.Default.VideoLibrary, null) },
+                    onClick = { navActions.navigate(LibraryFoldersRoute) },
+                    colors = colors,
+                    shapes = ListItemDefaults.segmentedShapes(index = 2, count = PLATFORM_SETTINGS_COUNT)
                 )
             }
 

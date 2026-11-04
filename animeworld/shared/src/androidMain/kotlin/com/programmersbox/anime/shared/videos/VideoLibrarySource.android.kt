@@ -1,5 +1,6 @@
 package com.programmersbox.anime.shared.videos
 
+import android.app.RecoverableSecurityException
 import android.content.ContentUris
 import android.content.Context
 import android.content.SharedPreferences
@@ -114,21 +115,54 @@ actual class VideoLibrarySource(
     }
 
     actual fun delete(content: SharedVideoContent) {
-        try {
-            // Resolve before the MediaStore row (and its DATA path) is gone; clean sidecars only after it succeeds.
-            val videoFile = OfflineSubtitles.resolveVideoFile(context, content.path)
-            val uri = content.path.toUri()
+        tryDelete(content)
+    }
+
+    /**
+     * Deletes [content] without asking the user. Videos another app owns (camera, messaging apps) can't
+     * be deleted that way on Android 10+, so those come back as [DeleteAttempt.NeedsConsent] for the
+     * caller to send through the system prompt.
+     */
+    internal fun tryDelete(content: SharedVideoContent): DeleteAttempt {
+        // Resolve before the MediaStore row (and its DATA path) is gone; clean sidecars only after it succeeds.
+        val videoFile = runCatching { OfflineSubtitles.resolveVideoFile(context, content.path) }.getOrNull()
+        val uri = content.path.toUri()
+        return try {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
                 // content.path is a content:// URI, so delete the resolved file itself, then drop the MediaStore row.
                 videoFile?.delete()
             }
             uri?.let { context.contentResolver.delete(it, null, null) }
-            // Only drop sidecars once the video is really gone (a 0-row delete must keep its subtitles).
-            if (videoFile?.exists() == false) OfflineSubtitles.deleteFor(videoFile)
+            finishDelete(videoFile)
+            DeleteAttempt.Deleted
+        } catch (e: SecurityException) {
+            if (uri == null) {
+                e.printStackTrace()
+                DeleteAttempt.Deleted
+            } else {
+                DeleteAttempt.NeedsConsent(uri, videoFile, e as? RecoverableSecurityException)
+            }
         } catch (e: Exception) {
             e.printStackTrace()
+            DeleteAttempt.Deleted
         }
     }
+
+    /** Drops subtitle sidecars once [videoFile] is really gone (a 0-row delete must keep its subtitles). */
+    internal fun finishDelete(videoFile: File?) {
+        if (videoFile?.exists() == false) OfflineSubtitles.deleteFor(videoFile)
+    }
+}
+
+internal sealed interface DeleteAttempt {
+    data object Deleted : DeleteAttempt
+
+    /** The system has to ask the user first; [recoverable] is set on Android 10, where each video asks on its own. */
+    data class NeedsConsent(
+        val uri: Uri,
+        val videoFile: File?,
+        val recoverable: RecoverableSecurityException?,
+    ) : DeleteAttempt
 }
 
 private fun String.toUri(): Uri? = runCatching { Uri.parse(this) }.getOrNull()

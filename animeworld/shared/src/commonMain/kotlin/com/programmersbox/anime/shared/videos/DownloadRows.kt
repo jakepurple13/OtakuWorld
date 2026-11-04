@@ -1,5 +1,9 @@
 package com.programmersbox.anime.shared.videos
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -34,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathMeasure
@@ -135,6 +140,8 @@ fun VideoRow(
 internal fun VideoRowContent(
     item: SharedVideoContent,
     modifier: Modifier = Modifier,
+    selected: Boolean = false,
+    leading: @Composable RowScope.() -> Unit = {},
     trailing: @Composable RowScope.() -> Unit = {},
 ) {
     Row(
@@ -144,7 +151,11 @@ internal fun VideoRowContent(
             .fillMaxWidth()
             .padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 8.dp)
     ) {
-        LibraryThumbnail(item)
+        leading()
+
+        // Selected rows shrink their thumbnail a little, so the selection reads even without color.
+        val thumbnailScale by animateFloatAsState(if (selected) 0.9f else 1f, label = "thumbnailScale")
+        LibraryThumbnail(item, Modifier.graphicsLayer { scaleX = thumbnailScale; scaleY = thumbnailScale })
 
         Column(
             verticalArrangement = Arrangement.spacedBy(2.dp),
@@ -224,9 +235,9 @@ internal fun VideoRowContent(
 }
 
 @Composable
-private fun LibraryThumbnail(item: SharedVideoContent) {
+private fun LibraryThumbnail(item: SharedVideoContent, modifier: Modifier = Modifier) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .size(width = 112.dp, height = 63.dp)
             .clip(ThumbnailShape)
             .background(MaterialTheme.colorScheme.surfaceContainerHighest)
@@ -236,18 +247,26 @@ private fun LibraryThumbnail(item: SharedVideoContent) {
             modifier = Modifier.size(width = 112.dp, height = 63.dp)
         )
 
-        val runTimeString = remember(item.duration) { item.duration.toDurationText() }
-        Text(
-            runTimeString,
-            color = Color.White,
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Medium,
+        // Desktop reads lengths in the background; show the badge once there is one instead of "00:00".
+        AnimatedVisibility(
+            visible = item.duration > 0,
+            enter = fadeIn(),
+            exit = fadeOut(),
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 6.dp, bottom = 8.dp)
-                .background(Color(0xB8000000), RoundedCornerShape(4.dp))
-                .padding(horizontal = 5.dp, vertical = 1.dp)
-        )
+        ) {
+            val runTimeString = remember(item.duration) { item.duration.toDurationText() }
+            Text(
+                runTimeString,
+                color = Color.White,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier
+                    .background(Color(0xB8000000), RoundedCornerShape(4.dp))
+                    .padding(horizontal = 5.dp, vertical = 1.dp)
+            )
+        }
 
         if (item.lastPlayedPositionMs > 0 && item.duration > 0) {
             val fraction = (item.lastPlayedPositionMs.toFloat() / item.duration).coerceIn(0f, 1f)
