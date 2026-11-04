@@ -192,6 +192,8 @@ private fun VideoLoad(
                         .fillMaxSize()
                         .hazeSource(hazeState)
                 ) {
+                    item(key = "thumbnail_notice") { ThumbnailProgressNotice(Modifier.animateItem()) }
+
                     if (folders.isNotEmpty()) {
                         item(key = "folder_chips") {
                             FlowRow(

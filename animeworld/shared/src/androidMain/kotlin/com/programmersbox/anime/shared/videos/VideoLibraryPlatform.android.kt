@@ -84,3 +84,6 @@ internal actual val otherVideosDeleteNote: String? = "Android may ask you to all
 internal actual fun OtherVideosPrompt(modifier: Modifier) = Unit
 
 internal actual fun libraryFoldersRoute(): androidx.navigation3.runtime.NavKey? = null
+
+@Composable
+internal actual fun ThumbnailProgressNotice(modifier: Modifier) = Unit

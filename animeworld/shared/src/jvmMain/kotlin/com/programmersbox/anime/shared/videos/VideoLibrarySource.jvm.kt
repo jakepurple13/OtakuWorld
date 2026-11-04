@@ -1,5 +1,6 @@
 package com.programmersbox.anime.shared.videos
 
+import ca.gosyer.appdirs.AppDirs
 import com.programmersbox.anime.shared.AnimeDesktopSettings
 import com.programmersbox.anime.shared.downloads.OfflineSubtitles
 import kotlinx.coroutines.CoroutineScope
@@ -24,6 +25,7 @@ import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.update
 import java.awt.Desktop
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 import java.util.prefs.Preferences
 
 private val VIDEO_EXTENSIONS = setOf("mp4", "mkv", "avi", "mov", "webm", "ts")
@@ -105,11 +107,20 @@ internal val canMoveToTrash: Boolean by lazy {
 data class LibraryScanProgress(val folder: String, val done: Int, val total: Int)
 
 @OptIn(ExperimentalCoroutinesApi::class)
-actual class VideoLibrarySource(private val animeDesktopSettings: AnimeDesktopSettings) {
+actual class VideoLibrarySource(
+    private val animeDesktopSettings: AnimeDesktopSettings,
+    appDirs: AppDirs,
+) {
 
     private val resumePositions = Preferences.userNodeForPackage(VideoLibrarySource::class.java)
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    /** Reads lengths and grabs thumbnails with libVLC, cached on disk. */
+    internal val thumbnailer = VideoThumbnailer(appDirs)
+
+    /** [thumbnailKey] per video path, from the last scan. */
+    private val keys = ConcurrentHashMap<String, String>()
 
     private val refresh = MutableStateFlow(0)
 
@@ -143,10 +154,17 @@ actual class VideoLibrarySource(private val animeDesktopSettings: AnimeDesktopSe
         )
     }
 
-    private fun toContent(file: File, isDownload: Boolean, folder: String?) = SharedVideoContent(
+    private fun toContent(file: File, isDownload: Boolean, folder: String?): SharedVideoContent {
+        val key = thumbnailKey(file)
+        keys[file.absolutePath] = key
+        thumbnailer.prefetch(file)
+        return toContent(file, isDownload, folder, thumbnailer.cachedDuration(key) ?: 0L)
+    }
+
+    private fun toContent(file: File, isDownload: Boolean, folder: String?, duration: Long) = SharedVideoContent(
         videoName = file.nameWithoutExtension,
         path = file.absolutePath,
-        duration = 0L,
+        duration = duration.coerceAtLeast(0L),
         lastPlayedPositionMs = resumePositions.getLong(file.absolutePath, 0L),
         sizeBytes = file.length(),
         dateAddedMs = file.lastModified(),
@@ -189,6 +207,13 @@ actual class VideoLibrarySource(private val animeDesktopSettings: AnimeDesktopSe
             merge(refresh.map { }, ticks)
                 .conflate()
                 .map { scan(config) }
+        }
+        // Lengths arrive as libVLC reads them, after the scan that listed the file.
+        .combine(thumbnailer.durations) { videos, durations ->
+            videos.map { video ->
+                val duration = keys[video.path]?.let(durations::get)?.coerceAtLeast(0L)
+                if (duration != null && duration != video.duration) video.copy(duration = duration) else video
+            }
         }
         .flowOn(Dispatchers.IO)
         .shareIn(scope, SharingStarted.WhileSubscribed(5_000), replay = 1)
