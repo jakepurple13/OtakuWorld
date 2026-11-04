@@ -284,6 +284,9 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   player for the list), with on-screen feedback for each. Play Settings and onboarding now have a
   Player section with the style picker, subtitles, and the blur switch
   ([#2665](https://github.com/jakepurple13/OtakuWorld/pull/2665))
+- Desktop apps use a native title bar: the system's own window buttons, drag, snap, maximize, and
+  resize, colored to match the app theme
+  ([#2668](https://github.com/jakepurple13/OtakuWorld/pull/2668))
 - Biometric authentication using KSafe
   ([70dfd0a3d](https://github.com/jakepurple13/OtakuWorld/commit/70dfd0a3d))
 - Desktop apps show their real app icon
