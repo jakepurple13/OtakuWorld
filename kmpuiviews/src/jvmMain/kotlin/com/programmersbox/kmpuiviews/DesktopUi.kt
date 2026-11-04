@@ -1,50 +1,32 @@
 package com.programmersbox.kmpuiviews
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.window.WindowDraggableArea
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Minimize
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.PointerEventPass
-import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.input.pointer.PointerIcon
-import androidx.compose.ui.input.pointer.pointerHoverIcon
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.window.ApplicationScope
-import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.Tray
 import androidx.compose.ui.window.TrayState
-import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.application
-import androidx.compose.ui.window.rememberWindowState
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
@@ -84,6 +66,11 @@ import com.programmersbox.kmpuiviews.utils.bindsPlatformGenericInfo
 import com.programmersbox.supabaseintegration.Res
 import com.programmersbox.supabaseintegration.supabase_logo_icon
 import dev.nucleusframework.application.NucleusApplicationScope
+import dev.nucleusframework.window.DecoratedWindow
+import dev.nucleusframework.window.NucleusDecoratedWindowTheme
+import dev.nucleusframework.window.material.MaterialTitleBar
+import dev.nucleusframework.window.material.rememberMaterialTitleBarStyle
+import dev.nucleusframework.window.material.rememberMaterialWindowStyle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -100,7 +87,6 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.core.scope.Scope
 import org.koin.dsl.koinConfiguration
 import org.koin.dsl.module
-import java.awt.Cursor
 import java.io.File
 
 private class DesktopViewModelStoreOwner : ViewModelStoreOwner {
@@ -304,72 +290,33 @@ private fun InternalDesktopUi(
                 backgroundWorkHandler.setupPeriodicCheckers()
             }
 
-            val windowState = rememberWindowState()
-
-            Window(
-                onCloseRequest = exitApplication,
+            OtakuDecoratedWindow(
                 title = title,
-                state = windowState,
-                undecorated = true,
-                transparent = true,
+                onCloseRequest = exitApplication,
             ) {
                 LaunchedEffect(Unit) {
                     withFrameNanos { }
                     mainShown = true
                 }
 
-                KmpLocalCompositionSetup {
-                    OtakuMaterialTheme(
-                        settingsHandling = koinInject(),
-                    ) {
-                        Surface(
-                            modifier = Modifier.fillMaxSize(),
-                            shape = MaterialTheme.shapes.medium,
-                            border = BorderStroke(
-                                1.dp,
-                                MaterialTheme.colorScheme.outlineVariant
-                            )
-                        ) {
-                            Box(modifier = Modifier.fillMaxSize()) {
-                                Column(modifier = Modifier.fillMaxSize()) {
-                                    CompositionLocalProvider(
-                                        LocalNavHostPadding provides PaddingValues()
-                                    ) {
-                                        CustomTitleBar(
-                                            title = title,
-                                            onMinimizeClick = { windowState.isMinimized = true },
-                                            onMaximizeToggle = {
-                                                windowState.placement = if (windowState.placement == WindowPlacement.Maximized) {
-                                                    WindowPlacement.Floating
-                                                } else {
-                                                    WindowPlacement.Maximized
-                                                }
-                                            },
-                                            onCloseClick = exitApplication
-                                        )
-                                        HorizontalDivider()
-                                        //UrlOpenerScreen()
-                                        //ScanQrCode()
-                                        val genericInfo = koinInject<KmpGenericInfo>()
-                                        val customSettings = remember {
-                                            ComposeSettingsDsl().apply(genericInfo.composeCustomPreferences())
-                                        }
-                                        val windowSize = calculateWindowSizeClass()
-                                        HomeNav(
-                                            genericInfo = genericInfo,
-                                            windowSize = windowSize,
-                                            bottomBarAdditions = {},
-                                            customPreferences = customSettings,
-                                        )
-                                    }
-                                }
-                                val updater = koinInject<DesktopUpdater>()
-                                LaunchedEffect(Unit) { updater.checkOnLaunch() }
-                                UpdateLaunchDialog(updater)
-                                JustUpdatedSnackbar(updater)
-                            }
-                        }
+                Box(modifier = Modifier.fillMaxSize()) {
+                    //UrlOpenerScreen()
+                    //ScanQrCode()
+                    val genericInfo = koinInject<KmpGenericInfo>()
+                    val customSettings = remember {
+                        ComposeSettingsDsl().apply(genericInfo.composeCustomPreferences())
                     }
+                    val windowSize = calculateWindowSizeClass()
+                    HomeNav(
+                        genericInfo = genericInfo,
+                        windowSize = windowSize,
+                        bottomBarAdditions = {},
+                        customPreferences = customSettings,
+                    )
+                    val updater = koinInject<DesktopUpdater>()
+                    LaunchedEffect(Unit) { updater.checkOnLaunch() }
+                    UpdateLaunchDialog(updater)
+                    JustUpdatedSnackbar(updater)
                 }
             }
 
@@ -416,51 +363,11 @@ fun InternalBaseDesktopUi(
             }
         ),
         content = {
-            val windowState = rememberWindowState()
-
-            Window(
-                onCloseRequest = exitApplication,
+            OtakuDecoratedWindow(
                 title = title,
-                state = windowState,
-                undecorated = true,
-                transparent = true,
-            ) {
-                KmpLocalCompositionSetup {
-                    OtakuMaterialTheme(
-                        settingsHandling = koinInject(),
-                    ) {
-                        Surface(
-                            modifier = Modifier.fillMaxSize(),
-                            shape = MaterialTheme.shapes.medium,
-                            border = BorderStroke(
-                                1.dp,
-                                MaterialTheme.colorScheme.outlineVariant
-                            )
-                        ) {
-                            Column(modifier = Modifier.fillMaxSize()) {
-                                CompositionLocalProvider(
-                                    LocalNavHostPadding provides PaddingValues()
-                                ) {
-                                    CustomTitleBar(
-                                        title = title,
-                                        onMinimizeClick = { windowState.isMinimized = true },
-                                        onMaximizeToggle = {
-                                            windowState.placement = if (windowState.placement == WindowPlacement.Maximized) {
-                                                WindowPlacement.Floating
-                                            } else {
-                                                WindowPlacement.Maximized
-                                            }
-                                        },
-                                        onCloseClick = exitApplication
-                                    )
-                                    HorizontalDivider()
-                                    content()
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+                onCloseRequest = exitApplication,
+                content = content,
+            )
 
             // Tray must come after Window: the Skiko graphics implementation is registered
             // when the window's ComposeContainer is created, and Tray converts its icon
@@ -476,110 +383,63 @@ fun BaseWindow(
     exitApplication: () -> Unit,
     content: @Composable () -> Unit,
 ) {
-    val windowState = rememberWindowState()
-
-    Window(
-        onCloseRequest = exitApplication,
+    OtakuDecoratedWindow(
         title = title,
-        state = windowState,
-        undecorated = true,
-        transparent = true,
+        onCloseRequest = exitApplication,
+        content = content,
+    )
+}
+
+/**
+ * Native-decorated window (Nucleus JNI backend): real OS window controls, drag, snap and resize,
+ * with the title bar colored from the app's Material theme.
+ */
+@Composable
+private fun OtakuDecoratedWindow(
+    title: String,
+    onCloseRequest: () -> Unit,
+    content: @Composable () -> Unit,
+) {
+    // The window chrome reads its styles outside the window's content, where the app theme isn't
+    // composed yet (and isSystemInDarkTheme() isn't resolvable). The content publishes its color
+    // scheme back up here so the border and resize background follow the app theme.
+    var appColorScheme by remember { mutableStateOf<ColorScheme?>(null) }
+    val chromeColorScheme = appColorScheme ?: MaterialTheme.colorScheme
+
+    NucleusDecoratedWindowTheme(
+        isDark = chromeColorScheme.background.luminance() < 0.5f,
+        windowStyle = rememberMaterialWindowStyle(chromeColorScheme),
+        titleBarStyle = rememberMaterialTitleBarStyle(chromeColorScheme),
     ) {
-        KmpLocalCompositionSetup {
-            OtakuMaterialTheme(
-                settingsHandling = koinInject(),
-            ) {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    shape = MaterialTheme.shapes.medium,
-                    border = BorderStroke(
-                        1.dp,
-                        MaterialTheme.colorScheme.outlineVariant
-                    )
+        DecoratedWindow(
+            onCloseRequest = onCloseRequest,
+            title = title,
+        ) {
+            KmpLocalCompositionSetup {
+                OtakuMaterialTheme(
+                    settingsHandling = koinInject(),
                 ) {
-                    Column(modifier = Modifier.fillMaxSize()) {
+                    val colorScheme = MaterialTheme.colorScheme
+                    SideEffect { appColorScheme = colorScheme }
+
+                    // Title bar must be a direct child of the window's layout (it is placed by layoutId).
+                    MaterialTitleBar(style = rememberMaterialTitleBarStyle(colorScheme)) {
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.titleSmall,
+                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                        )
+                    }
+
+                    Surface(modifier = Modifier.fillMaxSize()) {
                         CompositionLocalProvider(
                             LocalNavHostPadding provides PaddingValues()
                         ) {
-                            CustomTitleBar(
-                                title = title,
-                                onMinimizeClick = { windowState.isMinimized = true },
-                                onMaximizeToggle = {
-                                    windowState.placement = if (windowState.placement == WindowPlacement.Maximized) {
-                                        WindowPlacement.Floating
-                                    } else {
-                                        WindowPlacement.Maximized
-                                    }
-                                },
-                                onCloseClick = exitApplication
-                            )
-                            HorizontalDivider()
                             content()
                         }
                     }
                 }
             }
         }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun FrameWindowScope.CustomTitleBar(
-    title: String,
-    onMinimizeClick: () -> Unit,
-    onMaximizeToggle: () -> Unit,
-    onCloseClick: () -> Unit,
-) {
-    WindowDraggableArea {
-        TopAppBar(
-            title = { Text(title) },
-            actions = {
-                IconButton(
-                    onClick = onMinimizeClick,
-                    modifier = Modifier.pointerHoverIcon(PointerIcon(Cursor(Cursor.HAND_CURSOR)))
-                ) {
-                    Icon(
-                        Icons.Default.Minimize,
-                        contentDescription = "Minimize",
-                    )
-                }
-
-                IconButton(
-                    onClick = onCloseClick,
-                    modifier = Modifier.pointerHoverIcon(PointerIcon(Cursor(Cursor.HAND_CURSOR)))
-                ) {
-                    Icon(
-                        Icons.Default.Close,
-                        contentDescription = "Close",
-                    )
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color.Transparent,
-            ),
-            modifier = Modifier.pointerInput(Unit) {
-                awaitPointerEventScope {
-                    var lastClickTime = 0L
-                    while (true) {
-                        // Observe the pointer events without consuming them
-                        val event = awaitPointerEvent(PointerEventPass.Initial)
-
-                        // Check for standard mouse/touch presses
-                        if (event.type == PointerEventType.Press) {
-                            val currentTime = System.currentTimeMillis()
-
-                            // 300ms is a standard threshold for a double-click
-                            if (currentTime - lastClickTime < 300) {
-                                onMaximizeToggle()
-                                lastClickTime = 0L // Reset to prevent triple-clicks from triggering twice
-                            } else {
-                                lastClickTime = currentTime
-                            }
-                        }
-                    }
-                }
-            },
-        )
     }
 }

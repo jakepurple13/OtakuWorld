@@ -213,6 +213,8 @@ kotlin {
                 api(desktopLibs.kotlin.multiplatform.appdirs)
                 api(desktopLibs.kfswatch)
                 implementation(desktopLibs.nucleus.system.color)
+                implementation(desktopLibs.nucleus.decorated.window.jni)
+                implementation(desktopLibs.nucleus.decorated.window.material3)
                 api(desktopLibs.github.nucleus.scheduler)
                 api(desktopLibs.github.nucleus.scheduler.testing)
                 api(desktopLibs.github.nucleus.taskbar.progress)
