@@ -1,5 +1,7 @@
 package com.programmersbox.animeworld
 
+import com.programmersbox.anime.shared.videoplayer.PlayerPreviewDefaults
+import com.programmersbox.anime.shared.videoplayer.PlayerStyleSheetSetting
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -74,6 +76,8 @@ fun PlayerOnboarding(
         )
 
         CategoryGroup {
+            item { PlayerStyleSheetSetting(PlayerPreviewDefaults.Android) }
+
             item {
                 val player by animeDataStoreHandling.useNewPlayer.asState()
                 SwitchSetting(

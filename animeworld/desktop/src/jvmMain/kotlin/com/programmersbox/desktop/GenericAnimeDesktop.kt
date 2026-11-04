@@ -19,6 +19,10 @@ import com.programmersbox.anime.shared.videochoice.VideoChoiceScreen
 import com.programmersbox.anime.shared.videoexport.VideoExportRoute
 import com.programmersbox.anime.shared.videoexport.VideoExportScreen
 import com.programmersbox.anime.shared.videochoice.VideoSourceModel
+import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRoute
+import com.programmersbox.anime.shared.subtitles.SubtitleSettingsScreen
+import com.programmersbox.anime.shared.videoplayer.DesktopPlayerOnboarding
+import com.programmersbox.anime.shared.videoplayer.DesktopPlayerSettings
 import com.programmersbox.anime.shared.videoplayer.VideoPlayerUi
 import com.programmersbox.anime.shared.videos.VideoViewerRoute
 import com.programmersbox.anime.shared.videos.ViewVideoScreen
@@ -175,6 +179,7 @@ open class GenericAnimeDesktop(
         navGraph.entry<PlatformSettings> { JvmSettingsScreen() }
         navGraph.entry<VideoViewerRoute> { ViewVideoScreen() }
         navGraph.entry<VideoExportRoute> { VideoExportScreen(it) }
+        navGraph.entry<SubtitleSettingsRoute> { SubtitleSettingsScreen() }
     }
 
     @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -190,6 +195,12 @@ open class GenericAnimeDesktop(
                 leadingContent = { Icon(Icons.Default.DesktopMac, null) },
                 onClick = { navigationActions.navigate(PlatformSettings) }
             )
+        }
+
+        playerSettings { DesktopPlayerSettings() }
+
+        onboardingSettings {
+            item { DesktopPlayerOnboarding() }
         }
     }
 }

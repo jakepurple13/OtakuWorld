@@ -1,6 +1,9 @@
 package com.programmersbox.anime.shared.videoplayer
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import com.programmersbox.kmpuiviews.theme.SeedColorTheme
+import com.programmersbox.datastore.asState
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
@@ -21,20 +24,15 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkOut
 import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -47,28 +45,18 @@ import androidx.compose.material.icons.filled.FastForward
 import androidx.compose.material.icons.filled.FastRewind
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -85,7 +73,6 @@ import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -124,11 +111,6 @@ import com.programmersbox.anime.shared.subtitles.apply
 import com.programmersbox.anime.shared.subtitles.toCaptionSpec
 import com.programmersbox.datastore.otakuDataStore
 import com.programmersbox.helpfulutils.audioManager
-import com.programmersbox.kmpuiviews.presentation.components.BackButton
-import com.programmersbox.kmpuiviews.presentation.components.blurkind.BlurKindState
-import com.programmersbox.kmpuiviews.presentation.components.blurkind.rememberBlurKindState
-import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKind
-import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKindSource
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.RecordTimeSpentDoing
 import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
@@ -221,7 +203,8 @@ private fun VideoPlayerContent(videoScreen: VideoScreen) {
     val useBlur by remember { videoPlayerBlur.asFlow() }.collectAsStateWithLifecycle(null)
     // Null until DataStore emits; the media source is built once, so it waits for this too.
     val ignoreSslEnabled by remember { context.ignoreSsl }.collectAsStateWithLifecycle(null)
-    val blurKindState = if (useBlur == true) rememberBlurKindState() else null
+    val blur = rememberPlayerBlur(useBlur == true)
+    val playerStyle by videoPlayerStyle.asState()
 
     val castController = koinInject<CastController>()
     val castScope = rememberCoroutineScope()
@@ -259,92 +242,100 @@ private fun VideoPlayerContent(videoScreen: VideoScreen) {
     }
 
     Box {
-        Scaffold(
-            topBar = {
-                VideoTopBar(
-                    viewModel,
-                    overlayVisibility,
-                    blurKindState,
-                    onCastClick = {
+        Box {
+            val useTextureView = useBlur
+            val ignoreSsl = ignoreSslEnabled
+            if (useTextureView != null && ignoreSsl != null) {
+                VideoPlayer(
+                    source = remember {
+                        if (viewModel.downloadOrStream) {
+                            //download
+                            context.getMediaSource(
+                                viewModel.showPath.toUri(),
+                                false,
+                                DefaultBandwidthMeter.Builder(context).build(),
+                                emptyMap(),
+                                viewModel.subtitles,
+                                null,
+                                viewModel.defaultSubtitle,
+                            )
+                        } else {
+                            //stream
+                            if (ignoreSsl) {
+                                val sslContext: SSLContext = SSLContext.getInstance("TLS")
+                                sslContext.init(null, arrayOf(SSLTrustManager()), SecureRandom())
+                                sslContext.createSSLEngine()
+                                HttpsURLConnection.setDefaultHostnameVerifier { _: String, _: SSLSession -> true }
+                                HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.socketFactory)
+                            }
+
+                            context.getMediaSource(
+                                viewModel.showPath.toUri(),
+                                false,
+                                DefaultBandwidthMeter.Builder(context).build(),
+                                viewModel.requestHeaders,
+                                viewModel.subtitles,
+                                viewModel.mimeType,
+                                viewModel.defaultSubtitle
+                            )
+                        }
+                    },
+                    viewModel = viewModel,
+                    useTextureView = useTextureView,
+                    modifier = Modifier.playerBlurSource(blur, playerStyle)
+                )
+            }
+            var draggingProgress: DraggingProgress? by remember { mutableStateOf(null) }
+            MediaControlGestures(
+                modifier = Modifier.fillMaxSize(),
+                visible = true,
+                enabled = true,
+                gesturesEnabled = true,
+                quickSeekDirection = viewModel.quickSeekAction.direction,
+                onQuickSeekDirectionChange = { viewModel.quickSeekAction = it },
+                draggingProgress = draggingProgress,
+                onDraggingProgressChange = { draggingProgress = it },
+                viewModel = viewModel
+            )
+        }
+        PlayerChrome(
+            style = playerStyle,
+            visible = overlayVisibility,
+            state = PlayerChromeState(
+                title = viewModel.showName.orEmpty(),
+                positionMs = viewModel.videoInfo.currentPosition,
+                durationMs = viewModel.videoInfo.duration,
+                bufferedMs = viewModel.videoInfo.buffered,
+                isPlaying = viewModel.isPlaying,
+                speed = viewModel.speed,
+            ),
+            actions = PlayerChromeActions(
+                onPlayPause = viewModel::playPause,
+                onRewind = viewModel::rewind,
+                onFastForward = viewModel::fastForward,
+                onSkip = viewModel::skipAhead,
+                onSeek = { viewModel.exoPlayer?.seekTo(it) },
+                onSpeed = viewModel::cycleSpeed,
+            ),
+            blur = blur,
+            topActions = {
+                CastButton(
+                    onClick = {
                         // Already connected: send this episode straight to the TV (also the retry path after a failure).
                         if (castController.state.value.connection == CastConnection.Connected) startCast() else castPickerOpen = true
-                    },
+                    }
                 )
-            },
-            bottomBar = {
-                VideoBottomBar(
-                    visible = overlayVisibility,
-                    blurKindState = blurKindState,
-                    currentTime = viewModel.currentTime,
-                    totalTime = viewModel.totalTime,
-                    totalDuration = viewModel.videoInfo.duration,
-                    currentPosition = viewModel.videoInfo.currentPosition,
-                    isPlaying = viewModel.isPlaying,
-                    playPauseToggle = viewModel::playPause,
-                    seekTo = { viewModel.exoPlayer?.seekTo(it) },
-                    rewind = viewModel::rewind,
-                    fastForward = viewModel::fastForward,
-                    skipAhead = viewModel::skipAhead,
-                )
-            }
-        ) { _ ->
-            Box {
-                val useTextureView = useBlur
-                val ignoreSsl = ignoreSslEnabled
-                if (useTextureView != null && ignoreSsl != null) {
-                    VideoPlayer(
-                        source = remember {
-                            if (viewModel.downloadOrStream) {
-                                //download
-                                context.getMediaSource(
-                                    viewModel.showPath.toUri(),
-                                    false,
-                                    DefaultBandwidthMeter.Builder(context).build(),
-                                    emptyMap(),
-                                    viewModel.subtitles,
-                                    null,
-                                    viewModel.defaultSubtitle,
-                                )
-                            } else {
-                                //stream
-                                if (ignoreSsl) {
-                                    val sslContext: SSLContext = SSLContext.getInstance("TLS")
-                                    sslContext.init(null, arrayOf(SSLTrustManager()), SecureRandom())
-                                    sslContext.createSSLEngine()
-                                    HttpsURLConnection.setDefaultHostnameVerifier { _: String, _: SSLSession -> true }
-                                    HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.socketFactory)
-                                }
-
-                                context.getMediaSource(
-                                    viewModel.showPath.toUri(),
-                                    false,
-                                    DefaultBandwidthMeter.Builder(context).build(),
-                                    viewModel.requestHeaders,
-                                    viewModel.subtitles,
-                                    viewModel.mimeType,
-                                    viewModel.defaultSubtitle
-                                )
-                            }
-                        },
-                        viewModel = viewModel,
-                        useTextureView = useTextureView,
-                        modifier = blurKindState?.let { Modifier.setBlurKindSource(it) } ?: Modifier
-                    )
+                if (viewModel.textTracks.isNotEmpty()) {
+                    IconButton(onClick = { viewModel.subtitleSheetOpen = true }) {
+                        Icon(
+                            if (viewModel.textTracks.any { it.selected }) Icons.Default.ClosedCaption else Icons.Default.ClosedCaptionOff,
+                            contentDescription = "Subtitles"
+                        )
+                    }
                 }
-                var draggingProgress: DraggingProgress? by remember { mutableStateOf(null) }
-                MediaControlGestures(
-                    modifier = Modifier.fillMaxSize(),
-                    visible = true,
-                    enabled = true,
-                    gesturesEnabled = true,
-                    quickSeekDirection = viewModel.quickSeekAction.direction,
-                    onQuickSeekDirectionChange = { viewModel.quickSeekAction = it },
-                    draggingProgress = draggingProgress,
-                    onDraggingProgressChange = { draggingProgress = it },
-                    viewModel = viewModel
-                )
-            }
-        }
+                BatteryIndicator(viewModel)
+            },
+        )
         AnimatedVisibility(
             viewModel.subtitleSheetOpen,
             enter = fadeIn() + slideInHorizontally { it },
@@ -480,146 +471,24 @@ fun VideoPlayer(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun VideoTopBar(viewModel: VideoViewModel, visible: Boolean, blurKindState: BlurKindState?, onCastClick: () -> Unit) {
-    AnimatedVisibility(
-        visible = visible,
-        enter = slideInVertically() + fadeIn(),
-        exit = slideOutVertically() + fadeOut()
+private fun BatteryIndicator(viewModel: VideoViewModel) {
+    Row(
+        modifier = Modifier.padding(4.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        TopAppBar(
-            modifier = blurKindState?.let { Modifier.setBlurKind(it) } ?: Modifier,
-            title = { Text(viewModel.showName.orEmpty()) },
-            navigationIcon = { BackButton() },
-            actions = {
-                CastButton(onClick = onCastClick)
-                if (viewModel.textTracks.isNotEmpty()) {
-                    IconButton(onClick = { viewModel.subtitleSheetOpen = true }) {
-                        Icon(
-                            if (viewModel.textTracks.any { it.selected }) Icons.Default.ClosedCaption else Icons.Default.ClosedCaptionOff,
-                            contentDescription = "Subtitles"
-                        )
-                    }
-                }
-                Row(
-                    modifier = Modifier.padding(4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        viewModel.batteryIcon.composeIcon,
-                        contentDescription = null,
-                        tint = animateColorAsState(
-                            if (viewModel.batteryColor == Color.White) MaterialTheme.colorScheme.onSurface
-                            else viewModel.batteryColor, label = ""
-                        ).value
-                    )
-                    Text(
-                        "${viewModel.batteryPercent.toInt()}%",
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = if (blurKindState?.showBlur == true) Color.Transparent else MaterialTheme.colorScheme.surface.copy(alpha = .5f)
-            )
+        Icon(
+            viewModel.batteryIcon.composeIcon,
+            contentDescription = null,
+            tint = animateColorAsState(
+                if (viewModel.batteryColor == Color.White) MaterialTheme.colorScheme.onSurface
+                else viewModel.batteryColor, label = ""
+            ).value
         )
-    }
-}
-
-@Composable
-fun VideoBottomBar(
-    visible: Boolean,
-    blurKindState: BlurKindState?,
-    currentTime: String,
-    totalTime: String,
-    currentPosition: Long,
-    totalDuration: Long,
-    isPlaying: Boolean,
-    playPauseToggle: () -> Unit,
-    seekTo: (Long) -> Unit,
-    rewind: () -> Unit,
-    fastForward: () -> Unit,
-    skipAhead: () -> Unit,
-) {
-    AnimatedVisibility(
-        visible = visible,
-        enter = slideInVertically { it / 2 } + fadeIn(),
-        exit = slideOutVertically { it / 2 } + fadeOut()
-    ) {
-        Surface(
-            color = if (blurKindState?.showBlur == true) Color.Transparent else MaterialTheme.colorScheme.surface.copy(alpha = .5f),
-            modifier = blurKindState?.let { Modifier.setBlurKind(it) } ?: Modifier,
-        ) {
-            Column(
-                modifier = Modifier.padding(horizontal = 4.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceAround
-                ) {
-                    Text(
-                        currentTime,
-                        modifier = Modifier.weight(1f, true),
-                        textAlign = TextAlign.Center
-                    )
-
-                    var isSeeking by remember { mutableStateOf(false) }
-
-                    var seekChange by remember(
-                        isSeeking,
-                        if (isSeeking) Unit else currentPosition
-                    ) { mutableFloatStateOf(currentPosition.toFloat()) }
-
-                    Slider(
-                        value = seekChange,
-                        onValueChange = {
-                            isSeeking = true
-                            seekChange = it
-                        },
-                        onValueChangeFinished = {
-                            isSeeking = false
-                            seekTo(seekChange.toLong())
-                        },
-                        valueRange = 0f..totalDuration.coerceAtLeast(0L).toFloat(),
-                        modifier = Modifier.weight(8f, true)
-                    )
-
-                    Text(
-                        totalTime,
-                        modifier = Modifier.weight(1f, true),
-                        textAlign = TextAlign.Center
-                    )
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    Spacer(modifier = Modifier.size(1.dp))
-                    IconButton(onClick = rewind) {
-                        Icon(
-                            Icons.Default.FastRewind,
-                            contentDescription = null
-                        )
-                    }
-                    IconButton(onClick = playPauseToggle) {
-                        Icon(
-                            if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                            contentDescription = null
-                        )
-                    }
-                    IconButton(onClick = fastForward) {
-                        Icon(
-                            Icons.Default.FastForward,
-                            contentDescription = null
-                        )
-                    }
-                    TextButton(onClick = skipAhead) {
-                        Text("+1:30")
-                    }
-                }
-            }
-        }
+        Text(
+            "${viewModel.batteryPercent.toInt()}%",
+            style = MaterialTheme.typography.bodyLarge
+        )
     }
 }
 

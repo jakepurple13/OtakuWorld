@@ -38,6 +38,9 @@ sealed interface PlayerSource {
     data class LocalFile(val path: String) : PlayerSource
 }
 
+const val MIN_RATE = 0.25f
+const val MAX_RATE = 2f
+
 data class PlayerState(
     val positionMs: Long = 0,
     val durationMs: Long = 0,
@@ -47,6 +50,10 @@ data class PlayerState(
     val error: String? = null,
     /** 0..100; kept across [DesktopPlayer.open]. */
     val volume: Int = 100,
+    /** Kept across [DesktopPlayer.open]. */
+    val muted: Boolean = false,
+    /** Playback speed; kept across [DesktopPlayer.open]. */
+    val rate: Float = 1f,
 )
 
 /** An embedded (in-container) subtitle track; [id] is the libVLC SPU id for [DesktopPlayer.selectSpu]. */
@@ -109,7 +116,7 @@ class DesktopPlayer(
         sawFrame = false
         videoSize = null
         _spuTracks.value = emptyList()
-        _state.value = PlayerState(positionMs = startMs, buffering = true, volume = _state.value.volume)
+        _state.value = _state.value.let { PlayerState(positionMs = startMs, buffering = true, volume = it.volume, muted = it.muted, rate = it.rate) }
         val mrl = when (source) {
             is PlayerSource.LocalFile -> {
                 val file = File(source.path)
@@ -168,6 +175,19 @@ class DesktopPlayer(
         val volume = percent.coerceIn(0, 100)
         _state.update { it.copy(volume = volume) }
         player.audio().setVolume(volume)
+    }
+
+    fun toggleMute() = api {
+        val muted = !_state.value.muted
+        _state.update { it.copy(muted = muted) }
+        player.audio().setMute(muted)
+    }
+
+    /** Sets the playback speed, clamped to 0.25x..2x. */
+    fun setRate(rate: Float) = api {
+        val clamped = rate.coerceIn(MIN_RATE, MAX_RATE)
+        _state.update { it.copy(rate = clamped) }
+        player.controls().setRate(clamped)
     }
 
     /** Shows embedded subtitle track [id]; null hides embedded subtitles. */
@@ -281,6 +301,8 @@ class DesktopPlayer(
             mediaPlayer.later {
                 // The audio output only exists once playing, so a volume set earlier is applied now.
                 it.audio().setVolume(_state.value.volume)
+                it.audio().setMute(_state.value.muted)
+                it.controls().setRate(_state.value.rate)
                 refreshSpuTracks(it)
             }
         }
