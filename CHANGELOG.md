@@ -533,8 +533,9 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 - **Free up space screen** replaces the delete sheet on the Downloads screen. A storage meter
   shows downloads against other videos, and videos are grouped (watched to the end, other videos,
   everything else) and sorted by size, with the space you'll free shown before you delete
+  ([#2666](https://github.com/jakepurple13/OtakuWorld/pull/2666))
 - Swiping a video right on the Downloads screen no longer plays it; tap to play. Swipe left still
-  deletes
+  deletes ([#2666](https://github.com/jakepurple13/OtakuWorld/pull/2666))
 
 #### Improvements
 
@@ -558,7 +559,7 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 #### Bug Fixes
 
 - Deleting videos other apps saved (camera, messaging apps) no longer fails silently on Android
-  10+; Android asks once for all of them
+  10+; Android asks once for all of them ([#2666](https://github.com/jakepurple13/OtakuWorld/pull/2666))
 - Fixed a possible crash in the video library from `Handler()` Looper use
   ([#2505](https://github.com/jakepurple13/OtakuWorld/pull/2505))
 - Fixed a player crash on close, a rotation loop when the player forces landscape, and the
@@ -606,8 +607,10 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 - AnimeWorld Desktop: Downloads can show every video on the computer. A card asks once, then
   lists videos from Movies, Videos, Downloads, and Desktop grouped by folder, with folder filter
   chips. Settings › Library folders adds, removes, and rescans folders
+  ([#2666](https://github.com/jakepurple13/OtakuWorld/pull/2666))
 - AnimeWorld Desktop: the Free up space screen, in two panes on wide windows. Videos outside the
   AnimeWorld downloads folder move to the Trash instead of being deleted
+  ([#2666](https://github.com/jakepurple13/OtakuWorld/pull/2666))
 
 ---
 
