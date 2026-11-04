@@ -50,6 +50,7 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   and Theater (bars that fade in from the edges). Pick one in Play Settings or onboarding, with a
   live preview of the player while you choose. Classic is the default. The bars use your blur kind
   when Video player blur is on, and the Floating dock has a playback speed button
+  ([#2665](https://github.com/jakepurple13/OtakuWorld/pull/2665))
 - Extensions screen redesigned with catalog shelves, an installed pane, per-catalog pages, and an
   extension detail sheet with install progress. Failed catalogs now show an error with a retry
   button ([#2601](https://github.com/jakepurple13/OtakuWorld/pull/2601))
@@ -282,6 +283,7 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   skipping the opening, volume, mute, captions, speed, and jumping by percent (press `?` in the
   player for the list), with on-screen feedback for each. Play Settings and onboarding now have a
   Player section with the style picker, subtitles, and the blur switch
+  ([#2665](https://github.com/jakepurple13/OtakuWorld/pull/2665))
 - Biometric authentication using KSafe
   ([70dfd0a3d](https://github.com/jakepurple13/OtakuWorld/commit/70dfd0a3d))
 - Desktop apps show their real app icon
