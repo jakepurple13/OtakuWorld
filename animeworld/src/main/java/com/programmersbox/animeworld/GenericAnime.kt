@@ -76,6 +76,8 @@ import com.programmersbox.anime.shared.videoplayer.streamMime
 import com.programmersbox.anime.shared.videoplayer.videoPlayerBlur
 import com.programmersbox.anime.shared.videos.SharedVideoContent
 import com.programmersbox.anime.shared.videos.VideoLibrarySource
+import com.programmersbox.anime.shared.videos.FreeUpSpaceRoute
+import com.programmersbox.anime.shared.videos.FreeUpSpaceScreen
 import com.programmersbox.anime.shared.videos.VideoViewerRoute
 import com.programmersbox.anime.shared.videos.ViewVideoScreen
 import com.programmersbox.aniyomi.aniyomiModule
@@ -152,6 +154,8 @@ val appModule = module {
 
     includes(aniyomiModule)
     includes(cloudstreamModule)
+
+    navigation<FreeUpSpaceRoute> { FreeUpSpaceScreen() }
 
     navigation<VideoViewerRoute> {
         val genericAnime = koinInject<GenericAnime>()
@@ -527,6 +531,7 @@ class GenericAnime(
 
     context(navGraph: EntryProviderScope<NavKey>)
     override fun settingsNav3Setup() {
+        navGraph.entry<FreeUpSpaceRoute> { FreeUpSpaceScreen() }
         navGraph.entry<VideoViewerRoute> {
             ViewVideoScreen(
                 isCastActive = ::isCasting,

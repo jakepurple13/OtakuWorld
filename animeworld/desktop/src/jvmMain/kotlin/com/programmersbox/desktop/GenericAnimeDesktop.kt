@@ -20,6 +20,9 @@ import com.programmersbox.anime.shared.videoexport.VideoExportRoute
 import com.programmersbox.anime.shared.videoexport.VideoExportScreen
 import com.programmersbox.anime.shared.videochoice.VideoSourceModel
 import com.programmersbox.anime.shared.videoplayer.VideoPlayerUi
+import com.programmersbox.anime.shared.videos.FreeUpSpaceRoute
+import com.programmersbox.anime.shared.videos.FreeUpSpaceScreen
+import com.programmersbox.anime.shared.videos.LibraryFoldersRoute
 import com.programmersbox.anime.shared.videos.VideoViewerRoute
 import com.programmersbox.anime.shared.videos.ViewVideoScreen
 import com.programmersbox.kmpmodels.KmpChapterModel
@@ -174,6 +177,8 @@ open class GenericAnimeDesktop(
     override fun settingsNav3Setup() {
         navGraph.entry<PlatformSettings> { JvmSettingsScreen() }
         navGraph.entry<VideoViewerRoute> { ViewVideoScreen() }
+        navGraph.entry<FreeUpSpaceRoute> { FreeUpSpaceScreen() }
+        navGraph.entry<LibraryFoldersRoute> { LibraryFoldersScreen() }
         navGraph.entry<VideoExportRoute> { VideoExportScreen(it) }
     }
 

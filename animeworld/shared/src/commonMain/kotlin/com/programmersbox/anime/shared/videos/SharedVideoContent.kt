@@ -11,6 +11,8 @@ data class SharedVideoContent(
     val dateAddedMs: Long = 0L,
     val isDownload: Boolean = false,
     val subtitleLabels: List<String> = emptyList(),
+    /** Display name of the library folder an "other" video was found in (desktop only, e.g. `~/Movies`). */
+    val folder: String? = null,
 )
 
 expect class VideoLibrarySource {
