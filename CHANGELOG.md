@@ -614,6 +614,7 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 - AnimeWorld Desktop: video thumbnails and lengths on the Downloads and Free up space screens, read
   with the bundled libVLC and cached. A spinner shows on each thumbnail and a note at the top of
   Downloads explains the wait while they load. "Watched to the end" now works on desktop
+  ([#2667](https://github.com/jakepurple13/OtakuWorld/pull/2667))
 
 ---
 
