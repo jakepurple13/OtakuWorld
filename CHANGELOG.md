@@ -312,6 +312,7 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   with their full stack trace ([#2658](https://github.com/jakepurple13/OtakuWorld/pull/2658))
 - Desktop splash screen appears the moment the app launches and its loading bar stays smooth
   while the app starts, instead of pausing
+  ([#2669](https://github.com/jakepurple13/OtakuWorld/pull/2669))
 
 #### Bug Fixes
 
