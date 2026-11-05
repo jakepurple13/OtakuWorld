@@ -32,6 +32,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 private class FakeWork(
     override val allWorkCheck: Flow<List<WorkInfoKmp>> = MutableStateFlow(emptyList()),
@@ -160,8 +161,11 @@ private fun work(state: String, progress: Int? = null, max: Int? = null) = WorkI
 private fun running(progress: Int?, max: Int?) = work("RUNNING", progress, max)
 private fun succeeded() = work("SUCCEEDED")
 
-private fun report(updated: Int) = UpdateCheckReport(
-    startedAt = 0,
+private const val OLD = 0L
+private const val NEW = Long.MAX_VALUE
+
+private fun report(updated: Int, startedAt: Long = NEW) = UpdateCheckReport(
+    startedAt = startedAt,
     finishedAt = 0,
     favoriteCount = 10,
     checkedCount = 10,
@@ -226,6 +230,10 @@ class QuickActionsViewModelTest {
         runCurrent()
         vm.run(QuickAction.CheckForUpdates)
         assertEquals(0, fake.checkCalls)
+        vm.uiState.test {
+            runCurrent()
+            assertIs<ManualCheckState.Running>(expectMostRecentItem().checkState)
+        }
     }
 
     @Test
@@ -271,12 +279,60 @@ class QuickActionsViewModelTest {
         val vm = vm()
         vm.uiState.test {
             vm.run(QuickAction.CheckForUpdates)
+            fakeWork.manual.value = listOf(running(null, null))
+            runCurrent()
             fakeWork.manual.value = listOf(succeeded())
+            fakeReports.reportFlow.value = report(updated = 0)
             runCurrent()
             assertEquals(ManualCheckState.Finished(CheckOutcome.NoUpdates), expectMostRecentItem().checkState)
             vm.dismissResult()
             runCurrent()
             assertEquals(ManualCheckState.Idle, expectMostRecentItem().checkState)
+        }
+    }
+
+    @Test
+    fun noStaleResultRightAfterRun() = runTest {
+        fakeReports.reportFlow.value = report(updated = 5, startedAt = OLD)
+        val vm = vm()
+        fakeWork.manual.value = listOf(succeeded())
+        vm.uiState.test {
+            runCurrent()
+            vm.run(QuickAction.CheckForUpdates)
+            runCurrent()
+            val state = expectMostRecentItem().checkState
+            assertTrue(state is ManualCheckState.Idle || state is ManualCheckState.Running, "was $state")
+        }
+    }
+
+    @Test
+    fun staleFailedEntryIgnored() = runTest {
+        val vm = vm()
+        fakeWork.manual.value = listOf(work("FAILED"))
+        vm.uiState.test {
+            runCurrent()
+            vm.run(QuickAction.CheckForUpdates)
+            fakeWork.manual.value = listOf(work("FAILED"), running(1, 10))
+            runCurrent()
+            fakeWork.manual.value = listOf(work("FAILED"), succeeded())
+            fakeReports.reportFlow.value = report(updated = 3)
+            runCurrent()
+            assertEquals(ManualCheckState.Finished(CheckOutcome.Updates(3)), expectMostRecentItem().checkState)
+        }
+    }
+
+    @Test
+    fun runEndedWithoutNewReportIsSourcesFailed() = runTest {
+        fakeReports.reportFlow.value = report(updated = 3, startedAt = OLD)
+        val vm = vm()
+        vm.uiState.test {
+            runCurrent()
+            vm.run(QuickAction.CheckForUpdates)
+            fakeWork.manual.value = listOf(running(1, 10))
+            runCurrent()
+            fakeWork.manual.value = emptyList()
+            runCurrent()
+            assertEquals(ManualCheckState.Finished(CheckOutcome.SourcesFailed), expectMostRecentItem().checkState)
         }
     }
 

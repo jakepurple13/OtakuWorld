@@ -13,7 +13,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlin.time.Clock
@@ -32,6 +34,9 @@ class QuickActionsViewModel(
     private val backgroundWorkHandler: BackgroundWorkHandler,
     private val navigationActions: NavigationActions,
 ) : ViewModel() {
+    // Set by run(); null until a check is requested. sawRunning flips once work is actually active,
+    // so stale finished work and reports from earlier runs never show as this run's result.
+    private val requestedAt = MutableStateFlow<Long?>(null)
     private val sawRunning = MutableStateFlow(false)
 
     // Each source starts with an initial value: on desktop allWorkCheck is emptyFlow(), and
@@ -49,14 +54,21 @@ class QuickActionsViewModel(
         .map { list -> list.any { it.state in activeStates } }
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
+    init {
+        work.onEach { list ->
+            if (requestedAt.value != null && list.any { it.state in activeStates }) sawRunning.value = true
+        }.launchIn(viewModelScope)
+    }
+
     val uiState: StateFlow<QuickActionsUiState> = combine(
         work,
         reportStore.report.onStart { emit(null) },
         backgroundWorkHandler.workerInfoFlow().onStart { emit(emptyList()) },
         sawRunning,
-    ) { work, report, workers, saw ->
+        requestedAt,
+    ) { work, report, workers, saw, requested ->
         QuickActionsUiState(
-            checkState = manualCheckState(work, report, saw),
+            checkState = manualCheckState(work, report, saw, requested ?: 0L),
             lastChecked = lastCheckedLabel(report, Clock.System.now().toEpochMilliseconds()),
             scheduledCount = workers.size.takeIf { it > 0 },
         )
@@ -71,7 +83,8 @@ class QuickActionsViewModel(
         when (action) {
             QuickAction.CheckForUpdates -> {
                 if (!isRunning.value) {
-                    sawRunning.value = true
+                    sawRunning.value = false
+                    requestedAt.value = Clock.System.now().toEpochMilliseconds()
                     workRepository.checkManually()
                 }
             }
@@ -88,6 +101,7 @@ class QuickActionsViewModel(
 
     fun dismissResult() {
         sawRunning.value = false
+        requestedAt.value = null
     }
 
     private companion object {

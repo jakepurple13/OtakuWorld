@@ -26,14 +26,18 @@ fun manualCheckState(
     work: List<WorkInfoKmp>,
     report: UpdateCheckReport?,
     sawRunning: Boolean,
+    requestedAtMillis: Long = 0L,
 ): ManualCheckState {
     work.firstOrNull { it.state in activeStates }?.let {
         return ManualCheckState.Running(it.progress, it.max)
     }
     if (!sawRunning) return ManualCheckState.Idle
+    // Finished work entries from earlier runs are ignored; only a report written by this run counts.
+    // A run that ended without writing one failed.
     val outcome = when {
-        work.any { it.state == "FAILED" } || report?.hasProblems == true -> CheckOutcome.SourcesFailed
-        (report?.updatedCount ?: 0) > 0 -> CheckOutcome.Updates(report!!.updatedCount)
+        report == null || report.startedAt < requestedAtMillis -> CheckOutcome.SourcesFailed
+        report.hasProblems -> CheckOutcome.SourcesFailed
+        report.updatedCount > 0 -> CheckOutcome.Updates(report.updatedCount)
         else -> CheckOutcome.NoUpdates
     }
     return ManualCheckState.Finished(outcome)

@@ -50,8 +50,19 @@ class QuickActionsStateTest {
     )
 
     @Test
-    fun failedWorkIsSourcesFailed() = assertEquals(
-        ManualCheckState.Finished(CheckOutcome.SourcesFailed), manualCheckState(listOf(work("FAILED")), report(0), true)
+    fun noReportAfterRunIsSourcesFailed() = assertEquals(
+        ManualCheckState.Finished(CheckOutcome.SourcesFailed), manualCheckState(listOf(work("SUCCEEDED")), null, true)
+    )
+
+    @Test
+    fun staleReportIsSourcesFailed() = assertEquals(
+        ManualCheckState.Finished(CheckOutcome.SourcesFailed),
+        manualCheckState(emptyList(), report(3), true, requestedAtMillis = 10)
+    )
+
+    @Test
+    fun staleFailedWorkEntryIgnored() = assertEquals(
+        ManualCheckState.Finished(CheckOutcome.NoUpdates), manualCheckState(listOf(work("FAILED")), report(0), true)
     )
 
     @Test
