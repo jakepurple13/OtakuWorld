@@ -254,6 +254,7 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   with a Download action in MangaWorld. The update check shows progress per source (segmented on
   Android 16), and the finished notification says what was found and what failed. Tapping it opens
   a new Update check errors screen for the last check, with Retry failed and Share
+  ([#2672](https://github.com/jakepurple13/OtakuWorld/pull/2672))
 - Extension installs now use the native Android PackageInstaller instead of Ackpine. Installs run
   one at a time and show pending-confirmation, permission-required, and cancelled states. Sources
   reload right after a successful install
