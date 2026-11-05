@@ -8,6 +8,8 @@ import com.programmersbox.anime.shared.subtitlegen.SubtitleGenerator
 import com.programmersbox.anime.shared.subtitlegen.WhisperModelStore
 import com.programmersbox.anime.shared.subtitles.JvmSubtitleSettingsRepository
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRepository
+import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRoute
+import com.programmersbox.anime.shared.subtitles.SubtitleSettingsScreen
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsViewModel
 import com.programmersbox.anime.shared.VideoScreen
 import com.programmersbox.anime.shared.downloads.AnimeDownloadManager
@@ -115,6 +117,7 @@ fun main(args: Array<String>) {
             navigation<FreeUpSpaceRoute> { FreeUpSpaceScreen() }
             navigation<LibraryFoldersRoute> { LibraryFoldersScreen() }
             navigation<VideoExportRoute> { VideoExportScreen(it) }
+            navigation<SubtitleSettingsRoute> { SubtitleSettingsScreen() }
 
             includes(aniyomiModule, cloudstreamModule)
         }
