@@ -10,6 +10,8 @@ import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.OtakuWorldCatalog
 import com.programmersbox.kmpuiviews.domain.AppUpdateCheck
 import com.programmersbox.kmpuiviews.domain.MediaUpdateChecker
+import com.programmersbox.kmpuiviews.domain.updatecheck.DataStoreUpdateCheckReportStore
+import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckReportStore
 import com.programmersbox.kmpuiviews.presentation.navigation.buildKmpGraph
 import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.accountstats.CollectionStatisticsProvider
 import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.accountstats.DiscoveryStatisticsProvider
@@ -71,6 +73,7 @@ val appModule = module {
     singleOf(::EncryptedDataStoreHandling)
     singleOf(::DataStoreHandling)
     singleOf(::MediaUpdateChecker)
+    singleOf(::DataStoreUpdateCheckReportStore) bind UpdateCheckReportStore::class
     singleOf(::SharedCoverBitmaps)
     factoryOf(::Backup)
     backupProcessors()
