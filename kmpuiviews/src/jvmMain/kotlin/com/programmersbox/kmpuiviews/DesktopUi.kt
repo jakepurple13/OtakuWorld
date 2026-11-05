@@ -22,6 +22,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.window.ApplicationScope
 import androidx.compose.ui.window.Tray
 import androidx.compose.ui.window.TrayState
@@ -44,6 +48,12 @@ import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.di.kmpModule
 import com.programmersbox.kmpuiviews.presentation.HomeNav
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
+import com.programmersbox.kmpuiviews.presentation.quickactions.OpenOrigin
+import com.programmersbox.kmpuiviews.presentation.quickactions.QuickActionsController
+import com.programmersbox.kmpuiviews.presentation.quickactions.QuickActionsMenuBar
+import com.programmersbox.kmpuiviews.presentation.quickactions.QuickActionsTitleBarMenu
+import com.programmersbox.kmpuiviews.presentation.quickactions.isMacOs
+import com.programmersbox.kmpuiviews.presentation.quickactions.isQuickActionsShortcut
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandlerImpl
 import com.programmersbox.kmpuiviews.repository.JsExtensionSourceBridge
@@ -282,6 +292,7 @@ private fun InternalDesktopUi(
             OtakuDecoratedWindow(
                 title = title,
                 onCloseRequest = exitApplication,
+                showQuickActions = true,
             ) {
                 Box(modifier = Modifier.fillMaxSize()) {
                     //UrlOpenerScreen()
@@ -382,8 +393,11 @@ fun BaseWindow(
 private fun OtakuDecoratedWindow(
     title: String,
     onCloseRequest: () -> Unit,
+    showQuickActions: Boolean = false,
     content: @Composable () -> Unit,
 ) {
+    val quickActionsController = if (showQuickActions) koinInject<QuickActionsController>() else null
+
     // The window chrome reads its styles outside the window's content, where the app theme isn't
     // composed yet (and isSystemInDarkTheme() isn't resolvable). The content publishes its color
     // scheme back up here so the border and resize background follow the app theme.
@@ -398,6 +412,24 @@ private fun OtakuDecoratedWindow(
         DecoratedWindow(
             onCloseRequest = onCloseRequest,
             title = title,
+            onPreviewKeyEvent = { event ->
+                when {
+                    quickActionsController == null -> false
+                    !isMacOs && isQuickActionsShortcut(event, isMac = false) -> {
+                        quickActionsController.toggle(OpenOrigin.Keyboard)
+                        true
+                    }
+
+                    event.type == KeyEventType.KeyDown &&
+                            event.key == Key.Escape &&
+                            quickActionsController.open.value != null -> {
+                        quickActionsController.close()
+                        true
+                    }
+
+                    else -> false
+                }
+            },
         ) {
             KmpLocalCompositionSetup {
                 OtakuMaterialTheme(
@@ -406,8 +438,13 @@ private fun OtakuDecoratedWindow(
                     val colorScheme = MaterialTheme.colorScheme
                     SideEffect { appColorScheme = colorScheme }
 
+                    if (showQuickActions && isMacOs) QuickActionsMenuBar()
+
                     // Title bar must be a direct child of the window's layout (it is placed by layoutId).
                     MaterialTitleBar(style = rememberMaterialTitleBarStyle(colorScheme)) {
+                        if (showQuickActions && !isMacOs) {
+                            Box(modifier = Modifier.align(Alignment.Start)) { QuickActionsTitleBarMenu() }
+                        }
                         Text(
                             text = title,
                             style = MaterialTheme.typography.titleSmall,

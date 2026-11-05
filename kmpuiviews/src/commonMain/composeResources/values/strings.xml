@@ -460,6 +460,9 @@
     <string name="uc_already_running">A check is already running. Try again when it finishes.</string>
     <string name="uc_report_copied">Report copied to clipboard</string>
     <string name="quick_actions">Quick actions</string>
+    <string name="qa_menu_actions">Actions</string>
+    <string name="qa_menu_open">Quick actions…</string>
+    <string name="qa_menu_open_shortcut">Quick actions…  %1$s</string>
     <string name="qa_check_updates">Check for updates</string>
     <string name="qa_scan_qr">Scan QR code</string>
     <string name="qa_scan_qr_sub">Import a title or list</string>
