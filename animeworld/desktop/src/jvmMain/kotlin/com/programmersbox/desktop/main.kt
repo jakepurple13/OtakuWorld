@@ -5,6 +5,7 @@ import com.programmersbox.anime.shared.AnimeDesktopSettings
 import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.anime.shared.subtitlegen.DesktopSubtitleGenerator
 import com.programmersbox.anime.shared.subtitlegen.SubtitleGenerator
+import com.programmersbox.anime.shared.subtitlegen.WhisperCliInstaller
 import com.programmersbox.anime.shared.subtitlegen.WhisperModelStore
 import com.programmersbox.anime.shared.subtitles.JvmSubtitleSettingsRepository
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRepository
@@ -101,11 +102,19 @@ fun main(args: Array<String>) {
                 )
             }
             single {
+                WhisperCliInstaller(
+                    installRoot = File(get<AppDirs>().getUserDataDir(), "whisper-cli"),
+                    client = OkHttpClient.Builder().followSslRedirects(false).build(),
+                    scope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
+                )
+            }
+            single {
                 DesktopSubtitleGenerator(
                     scope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
                     settings = get(),
                     models = get(),
                     ffmpeg = { get<VideoExportManager>().ffmpeg() },
+                    installer = get(),
                     onSidecarsChanged = { get<VideoLibrarySource>().rescan() },
                     trayState = get(),
                 )

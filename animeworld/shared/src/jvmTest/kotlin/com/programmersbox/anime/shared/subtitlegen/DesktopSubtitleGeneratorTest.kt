@@ -47,9 +47,10 @@ class DesktopSubtitleGeneratorTest {
     private val jaToEn = GenerationRequest(ja, en)
 
     private fun generator(
-        whisper: suspend () -> File? = { File("/fake/whisper-cli") },
+        whisper: suspend (onProgress: (Float) -> Unit) -> File? = { File("/fake/whisper-cli") },
         ffmpeg: suspend () -> File? = { File("/fake/ffmpeg") },
         models: WhisperModelStore = this.models,
+        isMac: Boolean = false,
         onSidecarsChanged: () -> Unit = {},
     ) = DesktopSubtitleGenerator(
         scope = scope,
@@ -57,6 +58,7 @@ class DesktopSubtitleGeneratorTest {
         models = models,
         ffmpeg = ffmpeg,
         whisper = whisper,
+        isMac = isMac,
         runner = runner,
         onSidecarsChanged = { sidecarsChanged.incrementAndGet(); onSidecarsChanged() },
         trayState = null,
@@ -276,11 +278,99 @@ class DesktopSubtitleGeneratorTest {
         waitFor { gen.statuses.value[a.absolutePath] is GenerationStatus.Failed }
         assertEquals(
             GenerationStatus.Failed(
-                "whisper-cli not found. Install whisper.cpp or set its location in Settings › Subtitles.",
+                "whisper-cli not found. Set its location in Settings › Subtitles.",
                 jaToEn,
             ),
             gen.statuses.value[a.absolutePath],
         )
+    }
+
+    @Test
+    fun missingWhisperOnMacSuggestsBrew() {
+        val gen = generator(whisper = { null }, isMac = true)
+        val a = video("Frieren - Episode 07")
+        gen.enqueue(a.absolutePath, jaToEn, remember = false)
+
+        waitFor { gen.statuses.value[a.absolutePath] is GenerationStatus.Failed }
+        assertEquals(
+            GenerationStatus.Failed(
+                "whisper-cli not found. Install it with brew install whisper-cpp, or set its location in Settings › Subtitles.",
+                jaToEn,
+            ),
+            gen.statuses.value[a.absolutePath],
+        )
+    }
+
+    @Test
+    fun missingWhisperWithoutWindowsBuildFails() {
+        // Windows on a CPU with no prebuilt whisper.cpp: nothing to download, so the plain message.
+        val installer = WhisperCliInstaller(File(root, "cli"), OkHttpClient(), scope, isWindows = true, arch = "x86")
+        val gen = generator(whisper = { p -> locateWhisperCli(settings, installer, p, search = { null }) })
+        val a = video("Frieren - Episode 07")
+        gen.enqueue(a.absolutePath, jaToEn, remember = false)
+
+        waitFor { gen.statuses.value[a.absolutePath] is GenerationStatus.Failed }
+        assertEquals(
+            GenerationStatus.Failed("whisper-cli not found. Set its location in Settings › Subtitles.", jaToEn),
+            gen.statuses.value[a.absolutePath],
+        )
+    }
+
+    @Test
+    fun downloadsWhisperCliWhenMissing() {
+        val server = MockWebServer().apply { start() }
+        try {
+            val zip = testWhisperZip()
+            server.enqueue(MockResponse.Builder().body(Buffer().write(zip)).build())
+            val installer = WhisperCliInstaller(
+                installRoot = File(root, "cli"),
+                client = OkHttpClient(),
+                scope = scope,
+                isWindows = true,
+                arch = "amd64",
+                baseUrl = server.url("/").toString(),
+                asset = testWhisperAsset(zip),
+            )
+            val a = video("Frieren - Episode 07")
+            val seen = CopyOnWriteArrayList<GenerationStatus?>()
+            lateinit var gen: DesktopSubtitleGenerator
+            gen = generator(whisper = { p ->
+                locateWhisperCli(settings, installer, { f -> p(f); seen += gen.statuses.value[a.absolutePath] }, search = { null })
+            })
+            gen.enqueue(a.absolutePath, jaToEn, remember = false)
+
+            waitFor { finished.isNotEmpty() }
+            assertEquals(GenerationStatus.DownloadingModel("whisper.cpp", 1f), seen.last())
+            val whisper = runner.calls.single { "-ovtt" in it }
+            assertEquals(File(root, "cli/b5454/whisper-cli.exe").path, whisper.first())
+            assertEquals(emptyMap(), gen.statuses.value)
+        } finally {
+            server.close()
+        }
+    }
+
+    @Test
+    fun resolveOrder() = runBlocking {
+        val installer = WhisperCliInstaller(File(root, "cli"), OkHttpClient(), scope, isWindows = false)
+        val searched = File("/usr/bin/whisper-cli")
+        // Nothing configured, nothing installed: the PATH search.
+        assertEquals(searched, resolveWhisperCli(settings, installer, search = { searched }))
+
+        File(root, "cli/b5454").mkdirs()
+        val installed = File(root, "cli/b5454/whisper-cli.exe").apply { writeText("exe") }
+        val zip = testWhisperZip()
+        val windows = WhisperCliInstaller(File(root, "cli"), OkHttpClient(), scope, asset = testWhisperAsset(zip))
+        // The installed copy wins over the search.
+        assertEquals(installed, resolveWhisperCli(settings, windows, search = { searched }))
+
+        // A configured, runnable file wins over both.
+        val configured = File(root, "my-whisper").apply { writeText("#!/bin/sh"); setExecutable(true) }
+        settings.whisperPath.set(configured.absolutePath)
+        assertEquals(configured, resolveWhisperCli(settings, windows, search = { searched }))
+
+        // A configured file that can't run is skipped.
+        configured.setExecutable(false)
+        assertEquals(installed, resolveWhisperCli(settings, windows, search = { searched }))
     }
 
     @Test

@@ -71,11 +71,14 @@ internal actual fun GeneratedSubtitlesSettings() {
     val downloaded by store.downloadedBytes.collectAsState()
     var addError by remember { mutableStateOf<String?>(null) }
 
+    val installer = koinInject<WhisperCliInstaller>()
+    val install by installer.state.collectAsState()
+    val isMac = remember { System.getProperty("os.name").startsWith("Mac") }
     val configuredPath by settings.whisperPath.asFlow().collectAsState(initial = "")
     var found by remember { mutableStateOf<File?>(null) }
     var lookedUp by remember { mutableStateOf(false) }
-    LaunchedEffect(configuredPath) {
-        found = findWhisperCli(configuredPath)
+    LaunchedEffect(configuredPath, install is CliInstall.Ready) {
+        found = resolveWhisperCli(settings, installer)
         lookedUp = true
     }
 
@@ -164,23 +167,57 @@ internal actual fun GeneratedSubtitlesSettings() {
         supportingContent = {
             val file = found
             val badConfigured = configuredPath.isNotBlank() && !File(configuredPath).canExecute()
-            Text(
-                when {
-                    !lookedUp -> ""
-                    badConfigured ->
-                        configuredPath + "\n" + "Chosen file can't be run. Choose another, or clear it to search automatically."
-                    file == null -> "Not found. Install whisper.cpp (brew install whisper-cpp) or choose the file."
-                    configuredPath.isNotBlank() && file.path == configuredPath -> file.path
-                    else -> file.path + " · found automatically"
-                },
-                fontFamily = if (file != null) FontFamily.Monospace else null,
-                color = if (lookedUp && (file == null || badConfigured)) MaterialTheme.colorScheme.error else Color.Unspecified,
-            )
+            // Windows with a prebuilt whisper.cpp for this CPU: AnimeWorld downloads it instead of the user.
+            val downloadable = install !is CliInstall.NotNeeded
+            val failed = install as? CliInstall.Failed
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    when {
+                        !lookedUp -> ""
+                        badConfigured ->
+                            configuredPath + "\n" + "Chosen file can't be run. Choose another, or clear it to search automatically."
+                        file == null && failed != null -> failed.message
+                        file == null && downloadable ->
+                            "Not installed yet. AnimeWorld downloads whisper.cpp (${installer.asset?.sizeLabel}) the first time you generate."
+                        file == null && isMac -> "Not found. Install it with brew install whisper-cpp, or choose the file."
+                        file == null -> "Not found. Install whisper.cpp or build it from source, then choose whisper-cli."
+                        configuredPath.isNotBlank() && file.path == configuredPath -> file.path
+                        file == (install as? CliInstall.Ready)?.file -> file.path + " · downloaded by AnimeWorld"
+                        else -> file.path + " · found automatically"
+                    },
+                    fontFamily = if (file != null) FontFamily.Monospace else null,
+                    color = if (lookedUp && (badConfigured || (file == null && (!downloadable || failed != null)))) {
+                        MaterialTheme.colorScheme.error
+                    } else {
+                        Color.Unspecified
+                    },
+                )
+                AnimatedVisibility(
+                    visible = file == null && install is CliInstall.Installing,
+                    enter = expandVertically(),
+                    exit = shrinkVertically(),
+                ) {
+                    // Keep the last progress visible while the bar collapses.
+                    var last by remember { mutableStateOf(0f) }
+                    (install as? CliInstall.Installing)?.let { last = it.fraction }
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        LinearProgressIndicator(progress = { last }, modifier = Modifier.fillMaxWidth())
+                        Text(
+                            "Downloading whisper.cpp · ${(last * 100).toInt()}%",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
         },
         trailingContent = {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 if (configuredPath.isNotBlank()) {
                     TextButton(onClick = { scope.launch { settings.whisperPath.set("") } }) { Text("Use automatic") }
+                }
+                if (found == null && (install is CliInstall.Missing || install is CliInstall.Failed)) {
+                    OutlinedButton(onClick = installer::install) { Text("Download now") }
                 }
                 OutlinedButton(onClick = {
                     chooseFile("Choose whisper-cli")?.let { file ->

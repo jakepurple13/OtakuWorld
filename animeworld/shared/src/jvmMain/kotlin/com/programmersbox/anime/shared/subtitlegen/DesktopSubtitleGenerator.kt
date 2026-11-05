@@ -79,10 +79,14 @@ class DesktopSubtitleGenerator(
     private val settings: AnimeDesktopSettings,
     private val models: WhisperModelStore,
     private val ffmpeg: suspend () -> File?,
-    private val whisper: suspend () -> File? = { findWhisperCli(settings.whisperPath.get()) },
+    /** Downloads whisper.cpp when nothing else is found, on platforms that have a build for it. */
+    installer: WhisperCliInstaller? = null,
+    /** Finds whisper-cli, downloading it if needed while reporting the download's progress. */
+    private val whisper: suspend (onProgress: (Float) -> Unit) -> File? = { onProgress -> locateWhisperCli(settings, installer, onProgress) },
     private val runner: CommandRunner = ProcessCommandRunner,
     private val onSidecarsChanged: () -> Unit,
     private val trayState: TrayState?,
+    private val isMac: Boolean = System.getProperty("os.name").startsWith("Mac"),
 ) : SubtitleGenerator {
 
     private class Entry(val path: String, val request: GenerationRequest) {
@@ -209,8 +213,15 @@ class DesktopSubtitleGenerator(
     private suspend fun generate(entry: Entry, temp: File) {
         val video = File(entry.path)
         val ffmpeg = ffmpeg() ?: throw GenerationFailure("ffmpeg not found. Install it or set its location in Video export.")
-        val whisper = whisper()
-            ?: throw GenerationFailure("whisper-cli not found. Install whisper.cpp or set its location in Settings › Subtitles.")
+        var downloaded = false
+        val whisper = whisper { fraction ->
+            downloaded = true
+            set(entry, GenerationStatus.DownloadingModel("whisper.cpp", fraction))
+        } ?: throw GenerationFailure(
+            if (isMac) "whisper-cli not found. Install it with brew install whisper-cpp, or set its location in Settings › Subtitles."
+            else "whisper-cli not found. Set its location in Settings › Subtitles."
+        )
+        if (downloaded) set(entry, GenerationStatus.ExtractingAudio)
 
         val wav = File(temp, "audio.wav")
         exec(extractAudioArgs(ffmpeg.path, video, wav), "ffmpeg")
