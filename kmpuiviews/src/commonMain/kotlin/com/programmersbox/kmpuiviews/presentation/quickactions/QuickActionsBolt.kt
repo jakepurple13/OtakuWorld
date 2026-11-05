@@ -62,7 +62,11 @@ fun QuickActionsBolt(modifier: Modifier = Modifier) {
 
     Box(
         contentAlignment = Alignment.Center,
-        modifier = modifier.size(48.dp),
+        // The whole 48dp slot is the touch target, not just the 40dp circle
+        modifier = modifier
+            .size(48.dp)
+            .clip(CircleShape)
+            .clickable(role = Role.Button) { controller.toggle(OpenOrigin.Bolt) },
     ) {
         // No fade of its own: sharedBounds' enter/exit drive the crossfade with the card
         AnimatedVisibility(
@@ -87,9 +91,6 @@ fun QuickActionsBolt(modifier: Modifier = Modifier) {
                     .size(40.dp)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.primaryContainer)
-                    .clickable(onClickLabel = description, role = Role.Button) {
-                        controller.toggle(OpenOrigin.Bolt)
-                    }
             ) {
                 Icon(
                     Icons.Default.Bolt,

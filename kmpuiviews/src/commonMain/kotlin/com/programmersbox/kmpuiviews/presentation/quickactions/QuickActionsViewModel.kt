@@ -25,6 +25,8 @@ data class QuickActionsUiState(
     val lastChecked: LastChecked,
     /** Null when there are no scheduled workers; the UI hides the count. */
     val scheduledCount: Int?,
+    /** True from Run until the result is dismissed; scheduled checks alone leave it false. */
+    val userRequested: Boolean = false,
 )
 
 class QuickActionsViewModel(
@@ -71,6 +73,7 @@ class QuickActionsViewModel(
             checkState = manualCheckState(work, report, saw, requested ?: 0L),
             lastChecked = lastCheckedLabel(report, Clock.System.now().toEpochMilliseconds()),
             scheduledCount = workers.size.takeIf { it > 0 },
+            userRequested = requested != null,
         )
     }.stateIn(
         viewModelScope,

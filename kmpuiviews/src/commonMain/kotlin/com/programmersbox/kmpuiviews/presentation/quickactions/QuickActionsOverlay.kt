@@ -19,6 +19,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.widthIn
@@ -162,7 +164,13 @@ fun SharedTransitionScope.QuickActionsOverlay() {
             onResultDismissed = vm::dismissResult,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = LocalNavHostPadding.current.calculateBottomPadding()),
+                // The gesture bar is the floor when the app's nav bar is hidden
+                .padding(
+                    bottom = maxOf(
+                        LocalNavHostPadding.current.calculateBottomPadding(),
+                        WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding(),
+                    )
+                ),
         )
     }
 }
@@ -201,16 +209,18 @@ private fun QuickActionsSnackbar(
 ) {
     val hostState = remember { SnackbarHostState() }
     val checkState = state.checkState
+    val userRequested = state.userRequested
 
     // Keyed on the phase, not the state: progress ticks update the running snackbar's text in place.
     val phase: Any = when (checkState) {
         is ManualCheckState.Finished -> checkState
         else -> checkState::class
     }
-    LaunchedEffect(phase) {
+    LaunchedEffect(phase, userRequested) {
         when (checkState) {
             ManualCheckState.Idle -> hostState.currentSnackbarData?.dismiss()
-            is ManualCheckState.Running -> hostState.showSnackbar(RunningVisuals)
+            // Scheduled checks spin the bolt but never raise the snackbar
+            is ManualCheckState.Running -> if (userRequested) hostState.showSnackbar(RunningVisuals)
             is ManualCheckState.Finished -> {
                 val visuals = when (val outcome = checkState.outcome) {
                     is CheckOutcome.Updates -> ResultVisuals(getString(Res.string.qa_new_updates, outcome.count), null)

@@ -30,6 +30,7 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -233,6 +234,24 @@ class QuickActionsViewModelTest {
         vm.uiState.test {
             runCurrent()
             assertIs<ManualCheckState.Running>(expectMostRecentItem().checkState)
+        }
+    }
+
+    @Test
+    fun scheduledCheckIsNotUserRequested() = runTest {
+        val allWork = MutableStateFlow(listOf(running(null, null)))
+        val vm = vm(FakeWork(allWork).also { fakeWork = it })
+        vm.uiState.test {
+            runCurrent()
+            val scheduled = expectMostRecentItem()
+            assertIs<ManualCheckState.Running>(scheduled.checkState)
+            assertFalse(scheduled.userRequested)
+
+            allWork.value = emptyList()
+            runCurrent()
+            vm.run(QuickAction.CheckForUpdates)
+            runCurrent()
+            assertTrue(expectMostRecentItem().userRequested)
         }
     }
 
