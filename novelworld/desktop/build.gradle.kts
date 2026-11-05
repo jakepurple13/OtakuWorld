@@ -14,18 +14,9 @@ compose.resources {
     packageOfResClass = "com.programmersbox.desktop"
 }
 
-configurations.all {
-    exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-android")
-}
+val desktopVersion = otakuDesktopApp(title = "NovelWorld")
 
 kotlin {
-    jvm()
-
-    compilerOptions {
-        freeCompilerArgs.add("-Xwhen-guards")
-        freeCompilerArgs.add("-Xcontext-parameters")
-    }
-
     sourceSets {
         commonMain.dependencies {
             implementation(libs.kotlinStLib)
@@ -71,25 +62,13 @@ composeCompiler {
     featureFlags.add(ComposeFeatureFlag.OptimizeNonSkippingGroups)
 }
 
-val desktopVersion = System.getenv("DESKTOP_VERSION") ?: AppInfo.otakuVersionName
-val numericVersion = desktopVersion.substringBefore('-')
-
 // Hot reload's hotRunJvm defaults its main class from compose.desktop.application, which is no longer applied.
 tasks.withType<org.jetbrains.compose.reload.gradle.ComposeHotRun>().configureEach {
-    mainClass.set("com.programmersbox.desktop.MainKt")
-}
-
-registerDesktopSplash(title = "NovelWorld")
-
-// DESKTOP_VERSION is read from the environment, so Gradle must see it as an input or it reuses stale outputs.
-tasks.configureEach {
-    if (name == "generateAppProperties" || name.startsWith("package") || (name.startsWith("create") && name.endsWith("Distributable"))) {
-        inputs.property("desktopVersion", desktopVersion)
-    }
+    mainClass.set(DESKTOP_MAIN_CLASS)
 }
 
 nucleus.application {
-    mainClass = "com.programmersbox.desktop.MainKt"
+    mainClass = DESKTOP_MAIN_CLASS
 
     jvmArgs("--add-opens", "java.desktop/sun.awt=ALL-UNNAMED")
     jvmArgs("--add-opens", "java.desktop/java.awt.peer=ALL-UNNAMED")
@@ -111,7 +90,7 @@ nucleus.application {
             ).toTypedArray()
         )
         packageName = "NovelWorld"
-        packageVersion = desktopVersion
+        packageVersion = desktopVersion.name
         homepage = "https://github.com/jakepurple13/OtakuWorld"
         // electron-builder needs a maintainer email for DEB packages
         vendor = "jakepurple13 <jakepurple13@users.noreply.github.com>"
@@ -123,11 +102,14 @@ nucleus.application {
         splashImage = DESKTOP_SPLASH_IMAGE
 
         windows {
-            packageVersion = numericVersion
+            packageVersion = desktopVersion.numeric
             iconFile.set(project.file("icons/icon.ico"))
         }
         macOS {
-            packageVersion = numericVersion
+            // Without this jpackage falls back to the main class package (com.programmersbox.desktop),
+            // giving all three desktop apps the same bundle ID.
+            bundleID = "com.programmersbox.novelworld"
+            packageVersion = desktopVersion.numeric
             iconFile.set(project.file("icons/icon.icns"))
         }
         linux {

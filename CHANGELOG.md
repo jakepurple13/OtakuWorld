@@ -323,6 +323,8 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 - Fixed Mihon (MangaWorld) and Aniyomi/CloudStream (AnimeWorld) extensions showing "Failed to
   convert" in packaged desktop apps: the `jdk.zipfs` module is now included in the runtime image
   ([#2664](https://github.com/jakepurple13/OtakuWorld/pull/2664))
+- Fixed MangaWorld, AnimeWorld, and NovelWorld on macOS all sharing one bundle ID
+  (`com.programmersbox.desktop`); each now has its own (`com.programmersbox.<app>world`)
 
 ### Under the Hood
 
