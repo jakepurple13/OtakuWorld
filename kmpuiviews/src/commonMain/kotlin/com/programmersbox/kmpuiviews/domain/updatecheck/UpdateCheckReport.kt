@@ -44,15 +44,22 @@ data class UpdateCheckReport(
 /**
  * Folds the result of a retry run into this report: failures for retried items/sources are replaced
  * by whatever the retry reported, everything else is kept.
+ * A retry that stopped early didn't get to every retried item, so then only the failures it reported replace
+ * earlier ones (by url / source) and every other earlier failure is kept.
  */
 fun UpdateCheckReport.mergeRetry(
     retry: UpdateCheckReport,
     retriedUrls: Set<String>,
     retriedSources: Set<String>,
-): UpdateCheckReport = copy(
-    updatedCount = updatedCount + retry.updatedCount,
-    sourceFailures = sourceFailures.filterNot { it.source in retriedSources } + retry.sourceFailures,
-    itemFailures = itemFailures.filterNot { it.url in retriedUrls } + retry.itemFailures,
-    stoppedEarly = retry.stoppedEarly,
-    retriedAt = retry.finishedAt,
-)
+): UpdateCheckReport {
+    val stopped = retry.stoppedEarly != null
+    val replacedUrls = if (stopped) retry.itemFailures.mapTo(HashSet()) { it.url } else retriedUrls
+    val replacedSources = if (stopped) retry.sourceFailures.mapTo(HashSet()) { it.source } else retriedSources
+    return copy(
+        updatedCount = updatedCount + retry.updatedCount,
+        sourceFailures = sourceFailures.filterNot { it.source in replacedSources } + retry.sourceFailures,
+        itemFailures = itemFailures.filterNot { it.url in replacedUrls } + retry.itemFailures,
+        stoppedEarly = retry.stoppedEarly ?: stoppedEarly,
+        retriedAt = retry.finishedAt,
+    )
+}

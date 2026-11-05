@@ -36,6 +36,8 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flowOn
@@ -43,9 +45,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
-import org.jetbrains.compose.resources.getString
-import otakuworld.kmpuiviews.generated.resources.Res
-import otakuworld.kmpuiviews.generated.resources.hadAnUpdate
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
@@ -99,17 +98,19 @@ class MediaUpdateChecker(
         val run = CheckRun(onProgress)
 
         suspend fun save(report: UpdateCheckReport) {
-            reportStore.save(
-                if (previous != null && onlyUrls != null) {
-                    previous.mergeRetry(
+            if (previous != null && onlyUrls != null) {
+                // A full check that finished while retrying has replaced the report; don't overwrite it.
+                val latest = reportStore.current()?.takeIf { it.startedAt == previous.startedAt } ?: return
+                reportStore.save(
+                    latest.mergeRetry(
                         retry = report,
                         retriedUrls = onlyUrls,
                         retriedSources = previous.itemFailures.mapTo(HashSet()) { it.source },
                     )
-                } else {
-                    report
-                }
-            )
+                )
+            } else {
+                reportStore.save(report)
+            }
         }
 
         return try {
@@ -383,14 +384,16 @@ class MediaUpdateChecker(
 }
 
 /**
- * Runs [block], turning a timeout or any other exception into a failure. Cancellation of the caller is rethrown.
+ * Runs [block], turning a timeout or any other exception into a failure. Cancellation of the caller is rethrown;
+ * a [CancellationException] a source throws while the caller is still active is a failure too.
  */
-private inline fun <T> attempt(block: () -> T): Result<T> = try {
+private suspend inline fun <T> attempt(block: () -> T): Result<T> = try {
     Result.success(block())
 } catch (e: TimeoutCancellationException) {
     Result.failure(e)
 } catch (e: CancellationException) {
-    throw e
+    currentCoroutineContext().ensureActive()
+    Result.failure(e)
 } catch (e: Exception) {
     Result.failure(e)
 }
@@ -402,7 +405,8 @@ private fun DbModel.toItemFailure(failure: FailureInfo, sourceFailed: Boolean) =
     source = source,
     kind = failure.kind,
     httpCode = failure.httpCode,
-    detail = failure.detail,
+    // The SourceFailure carries the detail for a failed source; repeating it per favorite adds nothing.
+    detail = if (sourceFailed) "" else failure.detail,
     sourceFailed = sourceFailed,
 )
 

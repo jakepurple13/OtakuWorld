@@ -99,4 +99,32 @@ class UpdateCheckReportTest {
         assertEquals(listOf("T"), cleared.sourceFailures.map { it.source })
         assertNull(cleared.stoppedEarly)
     }
+
+    @Test
+    fun `merge of a retry that stopped early keeps earlier failures it did not report`() {
+        val prev = report(
+            items = listOf(fail("a"), fail("b", source = "T"), fail("c")),
+            sources = listOf(sourceFail("S"), sourceFail("T")),
+        )
+        val retryFailure = fail("b", source = "T").copy(kind = FailureKind.Http)
+        val retry = report(
+            items = listOf(retryFailure),
+            sources = listOf(sourceFail("T", FailureKind.Http)),
+            stoppedEarly = "disk full",
+        )
+        val merged = prev.mergeRetry(retry, retriedUrls = setOf("a", "b", "c"), retriedSources = setOf("S", "T"))
+        assertEquals(setOf("a", "b", "c"), merged.itemFailures.map { it.url }.toSet())
+        assertEquals(3, merged.itemFailures.size)
+        assertEquals(FailureKind.Http, merged.itemFailures.single { it.url == "b" }.kind)
+        assertEquals(setOf("S", "T"), merged.sourceFailures.map { it.source }.toSet())
+        assertEquals(FailureKind.Http, merged.sourceFailures.single { it.source == "T" }.kind)
+        assertEquals("disk full", merged.stoppedEarly)
+    }
+
+    @Test
+    fun `merge keeps the original stoppedEarly unless the retry stopped early`() {
+        val prev = report(items = listOf(fail("a")), stoppedEarly = "original")
+        assertEquals("original", prev.mergeRetry(report(), setOf("a"), setOf("S")).stoppedEarly)
+        assertEquals("retry", prev.mergeRetry(report(stoppedEarly = "retry"), setOf("a"), setOf("S")).stoppedEarly)
+    }
 }

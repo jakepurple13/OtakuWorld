@@ -26,6 +26,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
 import java.io.File
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -337,5 +338,55 @@ class MediaUpdateCheckerTest {
         assertEquals(0, service.recentCalls.get())
         assertTrue(service.fetchedUrls.isEmpty())
         assertNull(store.current())
+    }
+
+    @Test
+    fun `source throwing CancellationException becomes an item failure`() = runTest {
+        sourceRepository.register(
+            FakeApiService(recentUrls = listOf("a"), onItemInfo = { throw CancellationException("x") })
+        )
+        favorite("a")
+        val store = FakeUpdateCheckReportStore()
+
+        val report = assertNotNull(checker(store).run().report)
+
+        val failure = report.itemFailures.single()
+        assertEquals("a", failure.url)
+        assertEquals(false, failure.sourceFailed)
+        assertEquals(1, report.checkedCount)
+        assertNull(report.stoppedEarly)
+        assertEquals(report, store.current())
+    }
+
+    @Test
+    fun `failed source favorites leave the detail to the source failure`() = runTest {
+        sourceRepository.register(FakeApiService(recentError = IllegalStateException("HTTP 403 Forbidden")))
+        favorite("a")
+
+        val report = checker().run().report!!
+
+        assertTrue(report.sourceFailures.single().detail.isNotBlank())
+        assertEquals("", report.itemFailures.single().detail)
+    }
+
+    @Test
+    fun `retry does not overwrite a newer report`() = runTest {
+        val newer = storedReport().copy(startedAt = 5L, finishedAt = 6L)
+        val store = FakeUpdateCheckReportStore(storedReport(storedFailure("a")))
+        sourceRepository.register(
+            FakeApiService(
+                recentUrls = listOf("a"),
+                onItemInfo = {
+                    // A full check finishes while the retry is still running.
+                    store.save(newer)
+                    infoModel(it.url, chapters = 0)
+                },
+            )
+        )
+        favorite("a")
+
+        checker(store).run(mode = UpdateCheckMode.RetryFailed)
+
+        assertEquals(newer, store.current())
     }
 }
