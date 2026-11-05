@@ -30,9 +30,11 @@ import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.qa_background_tasks
 import otakuworld.kmpuiviews.generated.resources.qa_check_updates
 import otakuworld.kmpuiviews.generated.resources.qa_scan_qr
-import otakuworld.kmpuiviews.generated.resources.quick_actions
+import otakuworld.kmpuiviews.generated.resources.qa_menu_actions
+import otakuworld.kmpuiviews.generated.resources.qa_menu_open
+import otakuworld.kmpuiviews.generated.resources.qa_menu_open_shortcut
 
-val isMacOs: Boolean = System.getProperty("os.name").orEmpty().startsWith("Mac", ignoreCase = true)
+internal val isMacOs: Boolean = System.getProperty("os.name").orEmpty().startsWith("Mac", ignoreCase = true)
 
 /** Cmd+K on macOS, Ctrl+K elsewhere, with no other modifiers. */
 fun isQuickActionsShortcut(event: KeyEvent, isMac: Boolean): Boolean =
@@ -53,18 +55,19 @@ private fun QuickAction.label(): StringResource = when (this) {
 fun FrameWindowScope.QuickActionsMenuBar() {
     val controller = koinInject<QuickActionsController>()
     val viewModel = koinViewModel<QuickActionsViewModel>()
-    val actionsTitle = stringResource(Res.string.quick_actions)
+    val menuTitle = stringResource(Res.string.qa_menu_actions)
+    val openLabel = stringResource(Res.string.qa_menu_open)
     val labels = QuickAction.entries.map { it to stringResource(it.label()) }
     MenuBar {
-        Menu("Actions") {
+        Menu(menuTitle) {
             labels.forEach { (action, label) ->
                 Item(label, onClick = { viewModel.run(action) })
             }
             Separator()
             Item(
-                "$actionsTitle…",
+                openLabel,
                 shortcut = KeyShortcut(Key.K, meta = true),
-                onClick = { controller.open(OpenOrigin.Keyboard) },
+                onClick = { controller.toggle(OpenOrigin.Keyboard) },
             )
         }
     }
@@ -75,7 +78,7 @@ fun QuickActionsTitleBarMenu() {
     val controller = koinInject<QuickActionsController>()
     val viewModel = koinViewModel<QuickActionsViewModel>()
     var expanded by remember { mutableStateOf(false) }
-    TextButton(onClick = { expanded = true }) { Text("Actions") }
+    TextButton(onClick = { expanded = true }) { Text(stringResource(Res.string.qa_menu_actions)) }
     DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
         QuickAction.entries.forEach { action ->
             DropdownMenuItem(
@@ -88,7 +91,7 @@ fun QuickActionsTitleBarMenu() {
         }
         HorizontalDivider()
         DropdownMenuItem(
-            text = { Text(stringResource(Res.string.quick_actions) + "…  Ctrl+K") },
+            text = { Text(stringResource(Res.string.qa_menu_open_shortcut, "Ctrl+K")) },
             onClick = {
                 expanded = false
                 controller.open(OpenOrigin.Keyboard)

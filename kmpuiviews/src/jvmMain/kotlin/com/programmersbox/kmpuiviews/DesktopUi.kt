@@ -415,7 +415,7 @@ private fun OtakuDecoratedWindow(
             onPreviewKeyEvent = { event ->
                 when {
                     quickActionsController == null -> false
-                    isQuickActionsShortcut(event, isMacOs) -> {
+                    !isMacOs && isQuickActionsShortcut(event, isMac = false) -> {
                         quickActionsController.toggle(OpenOrigin.Keyboard)
                         true
                     }
