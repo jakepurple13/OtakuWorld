@@ -9,6 +9,7 @@ import otakuworld.kmpuiviews.generated.resources.uc_failure_http_cloudflare
 import otakuworld.kmpuiviews.generated.resources.uc_failure_timeout
 import otakuworld.kmpuiviews.generated.resources.uc_failure_unreadable
 import otakuworld.kmpuiviews.generated.resources.uc_fallback_title
+import otakuworld.kmpuiviews.generated.resources.uc_finished_favorites
 import otakuworld.kmpuiviews.generated.resources.uc_finished_stopped
 import otakuworld.kmpuiviews.generated.resources.uc_finished_text
 import otakuworld.kmpuiviews.generated.resources.uc_finished_title
@@ -84,12 +85,14 @@ suspend fun UpdateCheckProgress.sourceLines(): List<String> = sources.map {
     }
 }
 
-suspend fun UpdateCheckReport.finishedTitle(): String =
-    if (updatedCount > 0) {
-        getPluralString(Res.plurals.uc_finished_title, updatedCount, updatedCount, favoriteCount)
+suspend fun UpdateCheckReport.finishedTitle(): String {
+    val favorites = getPluralString(Res.plurals.uc_finished_favorites, favoriteCount, favoriteCount)
+    return if (updatedCount > 0) {
+        getPluralString(Res.plurals.uc_finished_title, updatedCount, updatedCount, favorites)
     } else {
-        getString(Res.string.uc_finished_title_none, favoriteCount)
+        getString(Res.string.uc_finished_title_none, favorites)
     }
+}
 
 suspend fun UpdateCheckReport.finishedText(): String? = when {
     !hasProblems -> null

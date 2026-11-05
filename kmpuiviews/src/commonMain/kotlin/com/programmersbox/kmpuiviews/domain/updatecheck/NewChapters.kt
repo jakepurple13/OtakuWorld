@@ -13,7 +13,15 @@ fun newChapters(info: KmpInfoModel, oldCount: Int): List<KmpChapterModel> {
     if (count <= 0) return emptyList()
     val chapters = info.chapters
     return if (chapters.all { it.uploadedTime != null }) {
-        chapters.sortedByDescending { it.uploadedTime }.take(count)
+        // On equal times keep list order: in an oldest-first list the later chapter is newer.
+        val oldestFirst = chapters.first().uploadedTime!! < chapters.last().uploadedTime!!
+        chapters.withIndex()
+            .sortedWith(
+                compareByDescending<IndexedValue<KmpChapterModel>> { it.value.uploadedTime }
+                    .thenBy { if (oldestFirst) -it.index else it.index }
+            )
+            .map { it.value }
+            .take(count)
     } else {
         chapters.take(count)
     }

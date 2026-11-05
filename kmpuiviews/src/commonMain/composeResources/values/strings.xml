@@ -411,11 +411,15 @@
     <string name="uc_source_no_updates">✓ %1$s · no updates</string>
     <string name="uc_source_failed">✗ %1$s · %2$s</string>
     <string name="uc_source_pending">… %1$s</string>
-    <plurals name="uc_finished_title">
-        <item quantity="one">1 update from %2$d favorites</item>
-        <item quantity="other">%1$d updates from %2$d favorites</item>
+    <plurals name="uc_finished_favorites">
+        <item quantity="one">1 favorite</item>
+        <item quantity="other">%1$d favorites</item>
     </plurals>
-    <string name="uc_finished_title_none">No updates from %1$d favorites</string>
+    <plurals name="uc_finished_title">
+        <item quantity="one">1 update from %2$s</item>
+        <item quantity="other">%1$d updates from %2$s</item>
+    </plurals>
+    <string name="uc_finished_title_none">No updates from %1$s</string>
     <plurals name="uc_finished_text">
         <item quantity="one">1 couldn't be checked. Tap to see why.</item>
         <item quantity="other">%1$d couldn't be checked. Tap to see why.</item>

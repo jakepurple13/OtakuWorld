@@ -39,8 +39,14 @@ class UpdateCheckTextTest {
         sources = sources, updatesFound = updatesFound, itemFailures = itemFailures,
     )
 
-    private fun report(updated: Int = 0, stopped: String? = null, items: Int = 0, sources: Int = 0) = UpdateCheckReport(
-        startedAt = 0, finishedAt = 0, favoriteCount = 42, checkedCount = 42, updatedCount = updated,
+    private fun report(
+        updated: Int = 0,
+        stopped: String? = null,
+        items: Int = 0,
+        sources: Int = 0,
+        favorites: Int = 42,
+    ) = UpdateCheckReport(
+        startedAt = 0, finishedAt = 0, favoriteCount = favorites, checkedCount = 42, updatedCount = updated,
         sourceFailures = List(sources) { SourceFailure("S$it", FailureKind.TimedOut, null, "") },
         itemFailures = List(items) {
             ItemFailure("u$it", "t", "", "S", FailureKind.CouldNotRead, null, "", false)
@@ -51,6 +57,18 @@ class UpdateCheckTextTest {
     @Test
     fun `newChapters picks newest by uploadedTime when list is oldest first`() {
         val list = (1..5).map { chapter("C$it", it.toLong()) }
+        assertEquals(listOf("C5", "C4"), newChapters(info(list), 3).map { it.name })
+    }
+
+    @Test
+    fun `newChapters breaks uploadedTime ties by list order when oldest first`() {
+        val list = listOf(1L, 2L, 3L, 3L, 3L).mapIndexed { i, t -> chapter("C${i + 1}", t) }
+        assertEquals(listOf("C5", "C4"), newChapters(info(list), 3).map { it.name })
+    }
+
+    @Test
+    fun `newChapters breaks uploadedTime ties by list order when newest first`() {
+        val list = listOf(3L, 3L, 3L, 2L, 1L).mapIndexed { i, t -> chapter("C${5 - i}", t) }
         assertEquals(listOf("C5", "C4"), newChapters(info(list), 3).map { it.name })
     }
 
@@ -135,6 +153,9 @@ class UpdateCheckTextTest {
         assertEquals("3 updates from 42 favorites", report(updated = 3).finishedTitle())
         assertEquals("1 update from 42 favorites", report(updated = 1).finishedTitle())
         assertEquals("No updates from 42 favorites", report().finishedTitle())
+        assertEquals("1 update from 1 favorite", report(updated = 1, favorites = 1).finishedTitle())
+        assertEquals("No updates from 1 favorite", report(favorites = 1).finishedTitle())
+        assertEquals("3 updates from 1 favorite", report(updated = 3, favorites = 1).finishedTitle())
         assertEquals("3 couldn't be checked. Tap to see why.", report(items = 3).finishedText())
         assertEquals("1 couldn't be checked. Tap to see why.", report(items = 1).finishedText())
         assertEquals("Check stopped early. Tap to see why.", report(stopped = "x").finishedText())
