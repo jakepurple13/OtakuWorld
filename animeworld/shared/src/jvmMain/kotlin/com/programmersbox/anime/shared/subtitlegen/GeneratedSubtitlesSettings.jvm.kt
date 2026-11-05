@@ -2,7 +2,10 @@ package com.programmersbox.anime.shared.subtitlegen
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -47,9 +50,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.programmersbox.anime.shared.AnimeDesktopSettings
 import com.programmersbox.anime.shared.videos.SectionHeader
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.koin.compose.koinInject
 import java.io.File
 import javax.swing.JFileChooser
@@ -87,19 +88,46 @@ internal actual fun GeneratedSubtitlesSettings() {
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
     )
 
-    // A Column, not a lazy list: custom rows animate in via AnimatedVisibility keyed by path.
-    rows.forEach { row ->
+    // A Column, not a lazy list: custom rows animate with AnimatedVisibility keyed by path. Removed custom
+    // rows are retained until their exit animation finishes.
+    val initialPaths = remember { rows.mapNotNull { it.path }.toSet() }
+    var retained by remember { mutableStateOf(rows.filter { it.path != null }) }
+    LaunchedEffect(rows) {
+        val current = rows.filter { it.path != null }
+        val kept = retained.map { old -> current.firstOrNull { it.path == old.path } ?: old }
+        retained = kept + current.filter { c -> kept.none { it.path == c.path } }
+    }
+    val currentPaths = rows.mapNotNull { it.path }.toSet()
+    rows.filter { it.path == null }.forEach { row ->
         key(row.choice) {
-            val custom = row.choice is WhisperModelChoice.Custom
-            var visible by remember { mutableStateOf(!custom) }
-            LaunchedEffect(Unit) { visible = true }
-            AnimatedVisibility(visible = visible, enter = expandVertically()) {
+            ModelListItem(
+                row = row,
+                onSelect = { store.select(row.choice) },
+                onDownload = { (row.choice as? WhisperModelChoice.BuiltIn)?.let { store.download(it.model) } },
+                onDelete = { (row.choice as? WhisperModelChoice.BuiltIn)?.let { store.delete(it.model) } },
+                onRemove = {},
+            )
+        }
+    }
+    retained.forEach { row ->
+        val path = row.path ?: return@forEach
+        key(path) {
+            val state = remember { MutableTransitionState(path in initialPaths) }
+            state.targetState = path in currentPaths
+            if (state.isIdle && !state.currentState && path !in currentPaths) {
+                LaunchedEffect(Unit) { retained = retained.filter { it.path != path } }
+            }
+            AnimatedVisibility(
+                visibleState = state,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut(),
+            ) {
                 ModelListItem(
                     row = row,
                     onSelect = { store.select(row.choice) },
-                    onDownload = { (row.choice as? WhisperModelChoice.BuiltIn)?.let { store.download(it.model) } },
-                    onDelete = { (row.choice as? WhisperModelChoice.BuiltIn)?.let { store.delete(it.model) } },
-                    onRemove = { row.path?.let(store::removeCustom) },
+                    onDownload = {},
+                    onDelete = {},
+                    onRemove = { store.removeCustom(path) },
                 )
             }
         }
@@ -110,9 +138,10 @@ internal actual fun GeneratedSubtitlesSettings() {
         supportingContent = { Text("A whisper.cpp model (.bin), such as a fine-tuned or quantized one") },
         leadingContent = { Icon(Icons.Default.Add, null) },
         modifier = Modifier.clickable {
-            scope.launch {
-                val file = withContext(Dispatchers.IO) { chooseFile("Choose a whisper.cpp model") }
-                if (file != null) addError = (store.addCustom(file) as? AddModelResult.Rejected)?.message
+            addError = null
+            // Same as VideoExportScreen: the chooser runs on the Compose/Swing event thread.
+            chooseFile("Choose a whisper.cpp model")?.let { file ->
+                scope.launch { addError = (store.addCustom(file) as? AddModelResult.Rejected)?.message }
             }
         },
     )
@@ -133,22 +162,24 @@ internal actual fun GeneratedSubtitlesSettings() {
         headlineContent = { Text("whisper-cli location") },
         supportingContent = {
             val file = found
+            val badConfigured = configuredPath.isNotBlank() && !File(configuredPath).canExecute()
             Text(
                 when {
                     !lookedUp -> ""
+                    configuredPath.isNotBlank() && !File(configuredPath).canExecute() ->
+                        configuredPath + "\n" + "Chosen file can't be run. Choose another, or clear it to search automatically."
                     file == null -> "Not found. Install whisper.cpp (brew install whisper-cpp) or choose the file."
                     configuredPath.isNotBlank() && file.path == configuredPath -> file.path
                     else -> file.path + " · found automatically"
                 },
                 fontFamily = if (file != null) FontFamily.Monospace else null,
-                color = if (lookedUp && file == null) MaterialTheme.colorScheme.error else Color.Unspecified,
+                color = if (lookedUp && (file == null || badConfigured)) MaterialTheme.colorScheme.error else Color.Unspecified,
             )
         },
         trailingContent = {
             OutlinedButton(onClick = {
-                scope.launch {
-                    val file = withContext(Dispatchers.IO) { chooseFile("Choose whisper-cli") }
-                    if (file != null) settings.whisperPath.set(file.absolutePath)
+                chooseFile("Choose whisper-cli")?.let { file ->
+                    scope.launch { settings.whisperPath.set(file.absolutePath) }
                 }
             }) { Text("Choose…") }
         },
