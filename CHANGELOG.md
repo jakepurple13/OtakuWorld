@@ -632,6 +632,9 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   with the bundled libVLC and cached. A spinner shows on each thumbnail and a note at the top of
   Downloads explains the wait while they load. "Watched to the end" now works on desktop
   ([#2667](https://github.com/jakepurple13/OtakuWorld/pull/2667))
+- **Generate subtitles on Desktop (AnimeWorld).** Downloaded episodes can get subtitles made on
+  your computer with whisper.cpp, from the Downloads menu. Pick From and To languages, track
+  progress under the episode, and choose or add your own speech model in Settings › Subtitles.
 
 ---
 

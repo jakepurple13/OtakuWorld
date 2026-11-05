@@ -9,3 +9,6 @@ internal actual fun VideoThumbnail(path: String, modifier: androidx.compose.ui.M
 }
 
 internal actual fun videoExportRoute(path: String): androidx.navigation3.runtime.NavKey? = null
+
+@androidx.compose.runtime.Composable
+internal actual fun rememberSubtitleGenerator(): com.programmersbox.anime.shared.subtitlegen.SubtitleGenerator? = null
