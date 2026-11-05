@@ -7,10 +7,14 @@ import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.kmpuiviews.DateTimeFormatHandler
+import com.programmersbox.kmpuiviews.domain.updatecheck.FailureKind
+import com.programmersbox.kmpuiviews.domain.updatecheck.ItemFailure
+import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckReport
 import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfoModel
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
 import com.programmersbox.kmpuiviews.repository.WorkInfoKmp
 import com.programmersbox.kmpuiviews.repository.WorkRepository
+import com.programmersbox.kmpuiviews.testing.FakeUpdateCheckReportStore
 import com.programmersbox.kmpuiviews.testing.createTestDataStoreHandling
 import com.programmersbox.kmpuiviews.testing.createTestItemDatabase
 import com.programmersbox.kmpuiviews.testing.createTestNewSettingsHandling
@@ -32,11 +36,19 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-class FakeWorkRepository : WorkRepository {
+class FakeWorkRepository(private val retryAccepted: Boolean = true) : WorkRepository {
     override val manualCheck: Flow<List<WorkInfoKmp>> = flowOf(emptyList())
     override val allWorkCheck: Flow<List<WorkInfoKmp>> = flowOf(emptyList())
     override fun pruneWork() {}
     override fun checkManually() {}
+
+    var retryCount = 0
+        private set
+
+    override fun retryFailedUpdates(): Boolean {
+        retryCount++
+        return retryAccepted
+    }
 }
 
 class NotificationSettingsViewModelTest {
@@ -67,14 +79,23 @@ class NotificationSettingsViewModelTest {
         contentTitle = "Content Title",
     )
 
-    private fun viewModel() = NotificationSettingsViewModel(
+    private fun viewModel(report: UpdateCheckReport? = null) = NotificationSettingsViewModel(
         dao = database.itemDao(),
         dataStoreHandling = dataStoreHandling,
         settingsHandling = settingsHandling,
         dateTimeFormatHandler = DateTimeFormatHandler(),
         workRepository = FakeWorkRepository(),
         notificationRepository = NotificationRepository(database.itemDao()),
+        updateCheckReportStore = FakeUpdateCheckReportStore(report),
     ).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
+
+    private fun report(itemFailures: Int) = UpdateCheckReport(
+        startedAt = 0, finishedAt = 0, favoriteCount = 42, checkedCount = 42, updatedCount = 0,
+        sourceFailures = emptyList(),
+        itemFailures = List(itemFailures) {
+            ItemFailure("u$it", "t$it", "", "S", FailureKind.TimedOut, null, "", false)
+        },
+    )
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @BeforeTest
@@ -191,6 +212,24 @@ class NotificationSettingsViewModelTest {
         awaitCondition { true }
         assertEquals(true, vm.notifyOnBoot.get())
         sub.cancel()
+    }
+
+    @Test fun `update check errors summary uses finished text count`() = runTest {
+        val vm = viewModel(report(itemFailures = 3))
+
+        awaitCondition { vm.updateCheckErrorsSummary.isNotEmpty() }
+
+        assertEquals("3 couldn't be checked. Tap to see why.", vm.updateCheckErrorsSummary)
+    }
+
+    @Test fun `update check errors summary without failures or report`() = runTest {
+        val clean = viewModel(report(itemFailures = 0))
+        val none = viewModel(null)
+
+        awaitCondition { clean.updateCheckErrorsSummary.isNotEmpty() && none.updateCheckErrorsSummary.isNotEmpty() }
+
+        assertEquals("No errors in the last check", clean.updateCheckErrorsSummary)
+        assertEquals("No update check yet", none.updateCheckErrorsSummary)
     }
 
     @Test fun `cancelGroup does not throw`() = runTest {

@@ -28,6 +28,8 @@ actual interface PlatformGenericInfo : KmpGenericInfo {
 
     fun deepLinkSettings(context: Context): PendingIntent?
 
+    fun deepLinkUpdateCheckErrors(context: Context): PendingIntent?
+
     @SuppressLint("RestrictedApi")
     fun deepLinkDetailsUri(itemModel: KmpItemModel?): Uri {
         return itemModel?.let {
@@ -63,6 +65,11 @@ actual interface PlatformGenericInfo : KmpGenericInfo {
     fun deepLinkSettingsUri() = deepLinks
         .notification
         .createUri(Screen.NotificationScreen)
+        .toUri()
+
+    fun deepLinkUpdateCheckErrorsUri(): Uri = deepLinks
+        .updateCheckErrors
+        .createUri(Screen.UpdateCheckErrors)
         .toUri()
 
     fun <T : FragmentActivity> deepLinkSetup(

@@ -2,6 +2,7 @@ package com.programmersbox.kmpuiviews.repository
 
 import android.content.Context
 import androidx.work.Constraints
+import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
@@ -61,11 +62,31 @@ class WorkRepositoryImpl(
     }
 
     override fun checkManually() {
+        enqueueOneTimeUpdate(workDataOf(UpdateFlowWorker.CHECK_ALL to true))
+    }
+
+    override fun retryFailedUpdates(): Boolean {
+        val oneTimeBusy = workManager.getWorkInfosForUniqueWork("oneTimeUpdate").get()
+            .any { it.state == WorkInfo.State.RUNNING || it.state == WorkInfo.State.ENQUEUED || it.state == WorkInfo.State.BLOCKED }
+        val periodicRunning = workManager.getWorkInfosForUniqueWork("updateFlowChecks").get()
+            .any { it.state == WorkInfo.State.RUNNING }
+        if (oneTimeBusy || periodicRunning) return false
+        // Shares the manual check's unique name, so a retry can't overlap a manual check.
+        enqueueOneTimeUpdate(
+            workDataOf(
+                UpdateFlowWorker.CHECK_ALL to true,
+                UpdateFlowWorker.RETRY_FAILED to true,
+            )
+        )
+        return true
+    }
+
+    private fun enqueueOneTimeUpdate(inputData: Data) {
         workManager.enqueueUniqueWork(
             "oneTimeUpdate",
             ExistingWorkPolicy.KEEP,
             OneTimeWorkRequestBuilder<UpdateFlowWorker>()
-                .setInputData(workDataOf(UpdateFlowWorker.CHECK_ALL to true))
+                .setInputData(inputData)
                 .addTag("ManualCheck")
                 .setConstraints(
                     Constraints.Builder()

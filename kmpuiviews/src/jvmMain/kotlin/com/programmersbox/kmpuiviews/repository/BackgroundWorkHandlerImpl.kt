@@ -10,6 +10,7 @@ import com.programmersbox.kmpuiviews.ExtensionWatcher
 import com.programmersbox.kmpuiviews.MangaDesktopSettings
 import com.programmersbox.kmpuiviews.di.kmpModule
 import com.programmersbox.kmpuiviews.domain.MediaUpdateChecker
+import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckMode
 import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfoModel
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandlerImpl.Companion.ManualSyncId
@@ -213,9 +214,10 @@ class SyncCheckWorker : DesktopTask, KoinComponent {
 
             val items = mediaUpdateChecker.getFavoritesThatNeedUpdates(
                 checkAll = true,
+                mode = if (data?.retryFailed == true) UpdateCheckMode.RetryFailed else UpdateCheckMode.Full,
                 putMetric = { name, value -> },
-                notificationUpdate = { max, progress, source ->
-                    println("Progress: $progress, Max: $max, Source: $source")
+                onProgress = { progress ->
+                    println("Progress: ${progress.checked}, Max: ${progress.total}, Source: ${progress.current}")
                     //update.sendRunningNotification(max, progress, source)
                     //runCatching { setForeground(createNotification(max, progress, source)) }
                 },
@@ -231,7 +233,7 @@ class SyncCheckWorker : DesktopTask, KoinComponent {
                 }
             )
 
-            println("Items: $items")
+            println("Items: ${items.updates}")
 
             //update.onEnd(update.mapDbModel(items))/* { id, notification -> setForegroundInfo(id, notification) }*/
             logFirebaseMessage("Finished!")
@@ -253,6 +255,7 @@ class SyncCheckWorker : DesktopTask, KoinComponent {
     @Serializable
     data class SyncCheckData(
         val cancel: Boolean,
+        val retryFailed: Boolean = false,
     )
 }
 

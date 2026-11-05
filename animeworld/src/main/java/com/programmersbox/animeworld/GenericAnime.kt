@@ -93,6 +93,7 @@ import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpStorage
 import com.programmersbox.kmpmodels.KmpSubtitle
 import com.programmersbox.kmpuiviews.SystemAlerter
+import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateUnit
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
@@ -195,6 +196,8 @@ class GenericAnime(
     private val scope = CoroutineScope(Job() + Dispatchers.Main)
 
     override val deepLinkUri: String get() = "animeworld://"
+
+    override val updateUnit: UpdateUnit get() = UpdateUnit.Episodes
 
     private var storageAccessDialog by mutableStateOf<StorageAccessPrompt?>(null)
 
@@ -609,6 +612,14 @@ class GenericAnime(
         return deepLinkSetup(
             context = context,
             uri = deepLinkSettingsUri(),
+            activity = MainActivity::class.java
+        )
+    }
+
+    override fun deepLinkUpdateCheckErrors(context: Context): PendingIntent? {
+        return deepLinkSetup(
+            context = context,
+            uri = deepLinkUpdateCheckErrorsUri(),
             activity = MainActivity::class.java
         )
     }

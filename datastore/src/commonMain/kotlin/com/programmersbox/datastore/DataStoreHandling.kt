@@ -35,6 +35,11 @@ class DataStoreHandling {
         defaultValue = Clock.System.now().toEpochMilliseconds()
     )
 
+    val lastUpdateCheckReport = DataStoreHandler(
+        key = stringPreferencesKey("lastUpdateCheckReport"),
+        defaultValue = ""
+    )
+
     val floatingNavigation = DataStoreHandler(
         key = booleanPreferencesKey("floatingNavigation"),
         defaultValue = true

@@ -381,4 +381,82 @@
     </plurals>
     <string name="fav_no_titles_match">No titles match</string>
     <string name="fav_no_sources_match">No sources match “%1$s”</string>
+    <plurals name="uc_title_chapters">
+        <item quantity="one">%1$s · 1 new chapter</item>
+        <item quantity="other">%1$s · %2$d new chapters</item>
+    </plurals>
+    <plurals name="uc_download_action">
+        <item quantity="one">Download</item>
+        <item quantity="other">Download %1$d</item>
+    </plurals>
+    <plurals name="uc_title_episodes">
+        <item quantity="one">%1$s · 1 new episode</item>
+        <item quantity="other">%1$s · %2$d new episodes</item>
+    </plurals>
+    <string name="uc_headline">Checking %1$d sources · %2$d favorites</string>
+    <string name="uc_fallback_title">Checking %1$s · %2$d of %3$d</string>
+    <plurals name="uc_summary_updates">
+        <item quantity="one">1 update</item>
+        <item quantity="other">%1$d updates</item>
+    </plurals>
+    <string name="uc_summary_source_failed">%1$s failed</string>
+    <plurals name="uc_summary_items_failed">
+        <item quantity="one">1 failed</item>
+        <item quantity="other">%1$d failed</item>
+    </plurals>
+    <plurals name="uc_source_updates">
+        <item quantity="one">✓ %1$s · 1 update</item>
+        <item quantity="other">✓ %1$s · %2$d updates</item>
+    </plurals>
+    <string name="uc_source_no_updates">✓ %1$s · no updates</string>
+    <string name="uc_source_failed">✗ %1$s · %2$s</string>
+    <string name="uc_source_pending">… %1$s</string>
+    <plurals name="uc_finished_favorites">
+        <item quantity="one">1 favorite</item>
+        <item quantity="other">%1$d favorites</item>
+    </plurals>
+    <plurals name="uc_finished_title">
+        <item quantity="one">1 update from %2$s</item>
+        <item quantity="other">%1$d updates from %2$s</item>
+    </plurals>
+    <string name="uc_finished_title_none">No updates from %1$s</string>
+    <plurals name="uc_finished_text">
+        <item quantity="one">1 couldn't be checked. Tap to see why.</item>
+        <item quantity="other">%1$d couldn't be checked. Tap to see why.</item>
+    </plurals>
+    <string name="uc_finished_stopped">Check stopped early. Tap to see why.</string>
+    <string name="uc_failure_timeout">No response after 15s</string>
+    <string name="uc_failure_http">HTTP %1$d</string>
+    <string name="uc_failure_http_cloudflare">HTTP %1$d · likely Cloudflare</string>
+    <string name="uc_failure_unreadable">Couldn't read the page</string>
+    <string name="uc_failure_source_failed">Not checked: source failed</string>
+    <string name="uc_errors_title">Update check errors</string>
+    <string name="uc_retry_failed">Retry failed</string>
+    <string name="uc_share">Share</string>
+    <string name="uc_no_errors">No errors in the last check</string>
+    <string name="uc_no_report">No update check yet</string>
+    <string name="uc_source_banner_title">Couldn't load %1$s's recent updates</string>
+    <string name="uc_source_banner_body">None of its favorites were checked.</string>
+    <string name="uc_stopped_early">Check stopped early</string>
+    <string name="uc_share_header">Update check · %1$s</string>
+    <string name="uc_share_summary">%1$d favorites · %2$d updated · %3$d failed</string>
+    <string name="uc_errors_when">Last check · %1$s · took %2$s</string>
+    <string name="uc_stat_checked">checked</string>
+    <string name="uc_stat_updated">updated</string>
+    <string name="uc_stat_failed">failed</string>
+    <string name="uc_pill_source_failed">recent list failed</string>
+    <string name="uc_pill_timed_out">timed out</string>
+    <string name="uc_pill_http">HTTP error</string>
+    <string name="uc_pill_unreadable">unreadable</string>
+    <plurals name="uc_group_items">
+        <item quantity="one">%1$d item</item>
+        <item quantity="other">%1$d items</item>
+    </plurals>
+    <string name="uc_open_details">Open details</string>
+    <plurals name="uc_rechecking">
+        <item quantity="one">Rechecking 1 item…</item>
+        <item quantity="other">Rechecking %1$d items…</item>
+    </plurals>
+    <string name="uc_already_running">A check is already running. Try again when it finishes.</string>
+    <string name="uc_report_copied">Report copied to clipboard</string>
 </resources>

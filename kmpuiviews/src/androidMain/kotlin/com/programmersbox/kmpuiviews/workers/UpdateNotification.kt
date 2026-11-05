@@ -14,6 +14,16 @@ import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpuiviews.PlatformGenericInfo
 import com.programmersbox.kmpuiviews.domain.MediaUpdateChecker
+import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckProgress
+import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckReport
+import com.programmersbox.kmpuiviews.domain.UpdateModel
+import com.programmersbox.kmpuiviews.domain.updatecheck.UpdatedItem
+import com.programmersbox.kmpuiviews.domain.updatecheck.chapterRange
+import com.programmersbox.kmpuiviews.domain.updatecheck.inboxLines
+import com.programmersbox.kmpuiviews.domain.updatecheck.updateTitle
+import com.programmersbox.kmpuiviews.receivers.DownloadNewChaptersReceiver
+import com.programmersbox.kmpuiviews.domain.updatecheck.finishedText
+import com.programmersbox.kmpuiviews.domain.updatecheck.finishedTitle
 import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.receivers.DeleteNotificationReceiver
 import com.programmersbox.kmpuiviews.receivers.SwipeAwayReceiver
@@ -31,7 +41,7 @@ import org.jetbrains.compose.resources.getString
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.checking
 import otakuworld.kmpuiviews.generated.resources.finishedChecking
-import otakuworld.kmpuiviews.generated.resources.hadAnUpdate
+import otakuworld.kmpuiviews.generated.resources.uc_download_action
 import otakuworld.kmpuiviews.generated.resources.mark_read
 import otakuworld.kmpuiviews.generated.resources.updateAmount
 
@@ -55,40 +65,38 @@ class UpdateNotification(
         }
     }
 
-    suspend fun mapDbModel(list: List<Pair<KmpInfoModel?, DbModel>>): List<Pair<Int, Notification>> {
+    private suspend fun getTitle(updateModel: UpdateModel) = updateTitle(
+        updateModel.item.dbModel.title,
+        updateModel.item.newChapters.size,
+        info.updateUnit,
+    )
+
+    suspend fun mapDbModel(list: List<UpdatedItem>): List<Pair<Int, Notification>> {
         return mediaUpdateChecker.mapDbModel(
             list = list,
-            notificationUpdate = { max, progress, source -> sendRunningNotification(max, progress, source) }
+            // No progress here: the mapping phase is short, and a plain notify on the foreground id outlives the worker.
+            notificationUpdate = { _, _, _ -> },
+            unit = info.updateUnit,
         )
             .map { updateModel ->
                 val notificationId = updateModel.notificationId
-                val pair = updateModel.infoModel to updateModel.dbModel
+                val pair: Pair<KmpInfoModel?, DbModel> = updateModel.item.info to updateModel.item.dbModel
+                val newChapters = updateModel.item.newChapters
+                val notificationTitle = getTitle(updateModel)
                 notificationId to NotificationDslBuilder.builder(
                     context,
                     NotificationChannels.Otaku.id,
                     icon.notificationId
                 ) {
-                    title = pair.second.title
+                    title = notificationTitle
+                    message = chapterRange(newChapters)
                     subText = pair.first?.source?.displayName ?: pair.second.source
                     client.getBitmapFromURL(pair.second.imageUrl, pair.first?.extras.orEmpty())?.let {
                         largeIconBitmap = it
-                        pictureStyle {
-                            bigPicture = it
-                            largeIcon = it
-                            contentTitle = pair.first?.chapters?.firstOrNull()?.name ?: ""
-                            summaryText = getString(
-                                Res.string.hadAnUpdate,
-                                pair.second.title,
-                                pair.first?.chapters?.firstOrNull()?.name ?: ""
-                            )
-                        }
-                    } ?: bigTextStyle {
-                        contentTitle = pair.first?.chapters?.firstOrNull()?.name ?: ""
-                        bigText = getString(
-                            Res.string.hadAnUpdate,
-                            pair.second.title,
-                            pair.first?.chapters?.firstOrNull()?.name.orEmpty()
-                        )
+                    }
+                    inboxStyle {
+                        contentTitle = notificationTitle
+                        inboxLines(newChapters).forEach { addLine(it) }
                     }
                     showWhen = true
                     groupId = NotificationGroups.Otaku.id
@@ -102,6 +110,19 @@ class UpdateNotification(
                             intent.putExtra("url", pair.second.url)
                             intent.putExtra("id", notificationId)
                             PendingIntent.getBroadcast(context, notificationId, intent, PendingIntent.FLAG_IMMUTABLE)
+                        }
+                    }
+                    if (info.supportsBatchDownload && newChapters.isNotEmpty()) addAction {
+                        actionTitle = getPluralString(Res.plurals.uc_download_action, newChapters.size, newChapters.size)
+                        actionIcon = icon.notificationId
+                        pendingActionIntent {
+                            val intent = Intent(context, DownloadNewChaptersReceiver::class.java)
+                            intent.action = "DOWNLOAD_NEW_CHAPTERS_ACTION"
+                            intent.putExtra("url", pair.second.url)
+                            intent.putExtra("source", pair.second.source)
+                            intent.putExtra("count", newChapters.size)
+                            intent.putExtra("id", notificationId)
+                            PendingIntent.getBroadcast(context, notificationId + 1, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
                         }
                     }
                     deleteIntent { context ->
@@ -183,27 +204,6 @@ class UpdateNotification(
         }
     }
 
-    suspend fun sendRunningNotification(max: Int, progress: Int, contextText: CharSequence = "") {
-        val notification = NotificationDslBuilder.builder(
-            context,
-            NotificationChannels.UpdateCheck.id,
-            icon.notificationId
-        ) {
-            onlyAlertOnce = true
-            ongoing = true
-            progress {
-                this.max = max
-                this.progress = progress
-                indeterminate = progress == 0
-            }
-            showWhen = true
-            message = contextText
-            subText = getString(Res.string.checking)
-        }
-        notificationManager?.notify(13, notification)
-        logFirebaseMessage("Checking for $contextText")
-    }
-
     suspend fun sendRunningNotificationLongTerm(
         max: Int,
         progress: Int,
@@ -232,16 +232,39 @@ class UpdateNotification(
         return notification
     }
 
-    suspend fun sendFinishedNotification() {
+    suspend fun buildProgressNotification(progress: UpdateCheckProgress, cancelIntent: PendingIntent): Notification =
+        buildCheckProgressNotification(context, icon, progress, cancelIntent)
+
+    /** Posts nothing when [report] is null (nothing ran). */
+    suspend fun sendFinishedNotification(report: UpdateCheckReport?) {
+        if (report == null) return
+        val title = report.finishedTitle()
+        val text = report.finishedText()
         val notification = NotificationDslBuilder.builder(
             context,
             NotificationChannels.UpdateCheck.id,
             icon.notificationId
         ) {
             onlyAlertOnce = true
+            this.title = title
+            message = text
             subText = getString(Res.string.finishedChecking)
-            timeoutAfter = 750L
+            if (report.hasProblems) {
+                autoCancel = true
+                pendingIntent { context -> info.deepLinkUpdateCheckErrors(context) }
+            } else {
+                timeoutAfter = 4000L
+            }
         }
-        notificationManager?.notify(13, notification)
+        notificationManager?.notify(UPDATE_CHECK_FINISHED_ID, notification)
+    }
+
+    fun cancelProgressNotification() {
+        notificationManager?.cancel(UPDATE_CHECK_PROGRESS_ID)
+    }
+
+    /** A new check replaces the last report, so its finished notification is stale. */
+    fun cancelFinishedNotification() {
+        notificationManager?.cancel(UPDATE_CHECK_FINISHED_ID)
     }
 }

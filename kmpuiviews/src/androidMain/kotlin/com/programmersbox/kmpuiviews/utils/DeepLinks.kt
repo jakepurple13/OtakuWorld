@@ -28,9 +28,17 @@ class DeepLinks(
         )
     }
 
+    val updateCheckErrors by lazy {
+        DeepLinkRoute(
+            serializer = Screen.UpdateCheckErrors.serializer(),
+            schemeAndHost = genericInfo.deepLinkUri
+        )
+    }
+
     val deepLinkMatching = listOf(
         details.toMatcher(),
         notification.toMatcher(),
-        settings.toMatcher()
+        settings.toMatcher(),
+        updateCheckErrors.toMatcher(),
     )
 }

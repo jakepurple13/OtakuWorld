@@ -34,6 +34,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.notifications.Notific
 import com.programmersbox.kmpuiviews.presentation.settings.prerelease.PrereleaseViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.translationmodels.TranslationViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfoViewModel
+import com.programmersbox.kmpuiviews.presentation.updatecheck.UpdateCheckErrorsViewModel
 import com.programmersbox.kmpuiviews.presentation.urlopener.UrlOpenerViewModel
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
 import com.programmersbox.kmpuiviews.utils.Backup
@@ -102,6 +103,7 @@ val viewModels: Module = module {
     viewModelOf(::DictionaryDetailViewModel)
     viewModelOf(::DictionaryFormViewModel)
     viewModelOf(::AccountStatDetailsViewModel)
+    viewModelOf(::UpdateCheckErrorsViewModel)
 
     includes(platformViewModels())
 }
