@@ -278,6 +278,9 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   ([#2656](https://github.com/jakepurple13/OtakuWorld/pull/2656))
 - Cover images are now cached in memory, so going back to Recent or another cover grid no longer
   reloads every cover ([#2662](https://github.com/jakepurple13/OtakuWorld/pull/2662))
+- Update notifications: the group summary now goes away once every title is cleared, swiping a
+  title away no longer marks a different title as seen, and the summary's update count is no
+  longer one short ([#2673](https://github.com/jakepurple13/OtakuWorld/pull/2673))
 
 ### Desktop Only
 

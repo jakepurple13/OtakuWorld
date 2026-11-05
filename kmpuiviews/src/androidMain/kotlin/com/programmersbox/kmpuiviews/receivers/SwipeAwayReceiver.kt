@@ -31,12 +31,7 @@ class SwipeAwayReceiver : BroadcastReceiver(), KoinComponent {
             id
                 ?.takeIf { it != -1 }
                 ?.let { notificationManager?.cancel(it) }
-            val g = notificationManager
-                ?.activeNotifications
-                ?.map { it.notification }
-                ?.filter { it.group == "otakuGroup" }
-                .orEmpty()
-            if (g.size == 1) notificationManager?.cancel(42)
+            notificationManager?.cancelUpdateSummaryIfEmpty(cancelledId = id)
         }
     }
 }
