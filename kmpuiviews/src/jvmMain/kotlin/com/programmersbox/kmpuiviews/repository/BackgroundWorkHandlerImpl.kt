@@ -192,6 +192,7 @@ class BackgroundWorkHandlerImpl(
 class SyncCheckWorker : DesktopTask, KoinComponent {
     private val mediaUpdateChecker: MediaUpdateChecker by inject()
     private val dataStoreHandling: DataStoreHandling by inject()
+    private val tracker: DesktopManualCheckTracker by inject()
 
     override suspend fun doWork(context: TaskContext): TaskResult {
         return try {
@@ -222,7 +223,7 @@ class SyncCheckWorker : DesktopTask, KoinComponent {
                     //runCatching { setForeground(createNotification(max, progress, source)) }
                 },
                 setProgress = { max, progress, source ->
-                    println("Progress: $progress, Max: $max, Source: $source")
+                    tracker.progress(max, progress, source)
                     /*setProgress(
                         workDataOf(
                             "max" to max,
