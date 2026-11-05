@@ -24,7 +24,7 @@ object OfflineSubtitles {
         return (indexed + sidecars(folder, base).map { it.second } + index).filter { it.isFile }.distinct()
     }
 
-    private fun readIndex(index: File): List<SidecarEntry>? =
+    internal fun readIndex(index: File): List<SidecarEntry>? =
         index.takeIf { it.isFile }
             ?.let { runCatching { Json.decodeFromString<List<SidecarEntry>>(it.readText()) }.getOrNull() }
 

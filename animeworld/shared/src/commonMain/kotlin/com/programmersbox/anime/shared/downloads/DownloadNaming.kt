@@ -83,4 +83,4 @@ fun sidecarName(videoBase: String, index: Int, label: String, format: SubtitleFo
 fun sidecarIndexName(videoBase: String): String = "$videoBase.subtitles.json"
 
 @Serializable
-data class SidecarEntry(val file: String, val lang: String, val label: String)
+data class SidecarEntry(val file: String, val lang: String, val label: String, val generated: Boolean = false)

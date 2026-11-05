@@ -170,6 +170,7 @@ actual class VideoLibrarySource(
         dateAddedMs = file.lastModified(),
         isDownload = isDownload,
         folder = folder,
+        subtitleLabels = if (isDownload) OfflineSubtitles.find(file).map { it.lang } else emptyList(),
     )
 
     private fun scan(config: ScanConfig): List<SharedVideoContent> {
