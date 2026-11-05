@@ -13,6 +13,7 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -34,8 +35,10 @@ class DownloadNewChaptersReceiver : BroadcastReceiver(), KoinComponent {
                     val favorite = url?.let { dao.getDbModelSync(it) } ?: return@runCatching
                     val api = source?.let { sourceRepository.toSourceByApiServiceName(it) }?.apiService
                         ?: return@runCatching
-                    val info = favorite.toItemModel(api).toInfoModel().firstOrNull()?.getOrNull()
-                        ?: return@runCatching
+                    // Bounded so a slow source can't outlive the receiver; a timeout is recorded below.
+                    val info = withTimeout(8_000) {
+                        favorite.toItemModel(api).toInfoModel().firstOrNull()?.getOrNull()
+                    } ?: return@runCatching
                     val chapters = newChapters(info, info.chapters.size - count)
                     if (chapters.isNotEmpty()) genericInfo.batchDownloadChapters(chapters, info)
                     clearUpdateNotification(context, dao, favorite.url, id)

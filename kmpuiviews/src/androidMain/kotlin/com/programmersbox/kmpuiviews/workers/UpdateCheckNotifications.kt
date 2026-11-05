@@ -62,6 +62,7 @@ suspend fun buildCheckProgressNotification(
                         layout.points.map { NotificationCompat.ProgressStyle.Point(it).setColor(UPDATE_POINT_COLOR) }
                     )
                     .setProgress(layout.progress)
+                    .setProgressIndeterminate(progress.loadingRecents)
             )
             .addAction(0, cancelTitle, cancelIntent)
             .build()
