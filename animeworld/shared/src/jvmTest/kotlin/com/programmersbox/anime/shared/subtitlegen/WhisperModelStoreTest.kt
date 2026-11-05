@@ -73,7 +73,7 @@ class WhisperModelStoreTest {
     fun downloadWritesPartThenRenames() {
         serve(1_000)
         store.download(BuiltInWhisperModel.TINY)
-        waitFor { store.rows.value.first().download == ModelDownload.Ready }
+        waitFor { store.rows.value.first().download == ModelDownload.Ready && store.downloadedBytes.value == 1_000L }
 
         assertEquals(1_000L, File(modelsDir, "ggml-tiny.bin").length())
         assertFalse(File(modelsDir, "ggml-tiny.bin.part").exists())
@@ -154,5 +154,56 @@ class WhisperModelStoreTest {
 
         val e = assertFailsWith<ModelMissingException> { store.ensureSelected {} }
         assertEquals("Model file not found", e.message)
+    }
+
+    private fun notFound() = server.enqueue(MockResponse.Builder().code(404).build())
+
+    @Test
+    fun httpErrorMarksFailedCleansPartAndRetrySucceeds() {
+        notFound()
+        store.download(BuiltInWhisperModel.TINY)
+        waitFor { store.rows.value.first().download is ModelDownload.Failed }
+
+        assertEquals(ModelDownload.Failed("Download failed: HTTP 404"), store.rows.value.first().download)
+        assertFalse(File(modelsDir, "ggml-tiny.bin.part").exists())
+        assertFalse(File(modelsDir, "ggml-tiny.bin").exists())
+
+        serve(1_000)
+        store.download(BuiltInWhisperModel.TINY)
+        waitFor { store.rows.value.first().download == ModelDownload.Ready }
+        assertEquals(1_000L, File(modelsDir, "ggml-tiny.bin").length())
+    }
+
+    @Test
+    fun ensureSelectedThrowsTheDownloadFailure() = runBlocking {
+        notFound()
+        store.select(WhisperModelChoice.BuiltIn(BuiltInWhisperModel.BASE))
+
+        val e = assertFailsWith<java.io.IOException> { store.ensureSelected {} }
+        assertEquals("Download failed: HTTP 404", e.message)
+    }
+
+    @Test
+    fun deleteThenRedownloadWorks() {
+        serve(1_000)
+        store.download(BuiltInWhisperModel.TINY)
+        waitFor { store.rows.value.first().download == ModelDownload.Ready }
+
+        store.delete(BuiltInWhisperModel.TINY)
+        assertEquals(ModelDownload.Missing, store.rows.value.first().download)
+        assertFalse(File(modelsDir, "ggml-tiny.bin").exists())
+
+        serve(2_000)
+        store.download(BuiltInWhisperModel.TINY)
+        waitFor { store.rows.value.first().download == ModelDownload.Ready }
+        assertEquals(2_000L, File(modelsDir, "ggml-tiny.bin").length())
+        assertFalse(File(modelsDir, "ggml-tiny.bin.part").exists())
+    }
+
+    @Test
+    fun selectionPersistsAcrossStoreInstances() {
+        store.select(WhisperModelChoice.BuiltIn(BuiltInWhisperModel.BASE))
+
+        waitFor { newStore().rows.value.single { it.selected }.choice == WhisperModelChoice.BuiltIn(BuiltInWhisperModel.BASE) }
     }
 }

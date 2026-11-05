@@ -1,7 +1,9 @@
 package com.programmersbox.anime.shared.subtitlegen
 
 import com.programmersbox.anime.shared.AnimeDesktopSettings
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
@@ -21,6 +23,8 @@ import java.io.IOException
 sealed interface ModelDownload {
     data object Missing : ModelDownload
     data class Downloading(val fraction: Float, val bytes: Long) : ModelDownload
+    /** The last download failed; [message] is a short reason. Calling `download()` again retries. */
+    data class Failed(val message: String) : ModelDownload
     data object Ready : ModelDownload
 }
 
@@ -55,11 +59,13 @@ class WhisperModelStore(
     private data class State(
         val selected: WhisperModelChoice,
         val custom: List<String>,
-        val downloading: Map<BuiltInWhisperModel, ModelDownload.Downloading>,
+        val downloading: Map<BuiltInWhisperModel, ModelDownload>,
     )
 
     private val lock = Any()
     private val jobs = mutableMapOf<BuiltInWhisperModel, Job>()
+    /** Jobs cancelled by [delete]; a new download waits for them before reusing the `.part`. */
+    private val retired = mutableMapOf<BuiltInWhisperModel, Job>()
 
     private var state: State = runBlocking {
         State(
@@ -83,8 +89,8 @@ class WhisperModelStore(
     private val customPersist = MutableStateFlow(state.custom)
 
     init {
-        scope.launch { selectedPersist.drop(1).collect { settings.whisperModel.set(it) } }
-        scope.launch { customPersist.drop(1).collect { settings.customWhisperModels.set(it.toCollection(LinkedHashSet())) } }
+        scope.launch(start = CoroutineStart.UNDISPATCHED) { selectedPersist.drop(1).collect { settings.whisperModel.set(it) } }
+        scope.launch(start = CoroutineStart.UNDISPATCHED) { customPersist.drop(1).collect { settings.customWhisperModels.set(it.toCollection(LinkedHashSet())) } }
     }
 
     fun select(choice: WhisperModelChoice) = update { it.copy(selected = choice) }
@@ -93,8 +99,9 @@ class WhisperModelStore(
         startDownload(model)
     }
 
-    fun delete(model: BuiltInWhisperModel) {
-        jobs[model]?.cancel()
+    fun delete(model: BuiltInWhisperModel) = synchronized(lock) {
+        // Dropping the job from [jobs] makes it a non-current job: it stops without touching state or files.
+        jobs.remove(model)?.also { it.cancel(); retired[model] = it }
         File(modelsDir, model.fileName).delete()
         File(modelsDir, model.fileName + ".part").delete()
         update { it.copy(downloading = it.downloading - model) }
@@ -141,7 +148,10 @@ class WhisperModelStore(
                     job.join()
                     progress.cancel()
                 }
-                if (!file.isFile) throw IOException("Couldn't download ${choice.model.fileName}")
+                if (!file.isFile) {
+                    val failed = state.downloading[choice.model] as? ModelDownload.Failed
+                    throw IOException(failed?.message ?: "Download of ${choice.model.fileName} was cancelled")
+                }
                 onProgress(1f)
                 return file
             }
@@ -150,17 +160,26 @@ class WhisperModelStore(
 
     private fun startDownload(model: BuiltInWhisperModel): Job = synchronized(lock) {
         jobs[model]?.takeIf { it.isActive }?.let { return it }
+        val previous = jobs[model] ?: retired[model]
         update { it.copy(downloading = it.downloading + (model to ModelDownload.Downloading(0f, 0L))) }
         scope.launch(Dispatchers.IO) {
+            val self = currentCoroutineContext()[Job]
             val target = File(modelsDir, model.fileName)
             val part = File(modelsDir, model.fileName + ".part")
+            // Only the current job for this model may touch its state or .part; a deleted job just stops.
+            fun isCurrent() = synchronized(lock) { jobs[model] === self }
+            var failure: String? = null
             try {
+                // A cancelled predecessor (delete then download) must be done with the .part before we reuse it.
+                previous?.join()
                 modelsDir.mkdirs()
                 client.newCall(Request.Builder().url(baseUrl + model.fileName).build()).execute().use { response ->
                     if (!response.isSuccessful) throw IOException("HTTP ${response.code}")
                     val body = response.body
                     val total = body.contentLength()
                     var written = 0L
+                    var lastPercent = -1
+                    var lastAt = 0L
                     body.byteStream().use { input ->
                         part.outputStream().use { output ->
                             val buffer = ByteArray(64 * 1024)
@@ -171,16 +190,32 @@ class WhisperModelStore(
                                 output.write(buffer, 0, read)
                                 written += read
                                 val fraction = if (total > 0) (written.toFloat() / total).coerceIn(0f, 1f) else 0f
-                                update { it.copy(downloading = it.downloading + (model to ModelDownload.Downloading(fraction, written))) }
+                                // Throttle: publish when the percent changes or 100 ms passed.
+                                val percent = (fraction * 100).toInt()
+                                val now = System.nanoTime()
+                                if (percent != lastPercent || now - lastAt >= 100_000_000L) {
+                                    lastPercent = percent
+                                    lastAt = now
+                                    update { it.copy(downloading = it.downloading + (model to ModelDownload.Downloading(fraction, written))) }
+                                }
                             }
                         }
                     }
                 }
+                currentCoroutineContext().ensureActive()
                 target.delete()
                 if (!part.renameTo(target)) throw IOException("Couldn't move ${part.name} into place")
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                failure = "Download failed: " + (e.message ?: e::class.simpleName)
             } finally {
-                part.delete()
-                update { it.copy(downloading = it.downloading - model) }
+                if (isCurrent()) {
+                    part.delete()
+                    update {
+                        it.copy(downloading = if (failure != null) it.downloading + (model to ModelDownload.Failed(failure)) else it.downloading - model)
+                    }
+                }
             }
         }.also { jobs[model] = it }
     }
