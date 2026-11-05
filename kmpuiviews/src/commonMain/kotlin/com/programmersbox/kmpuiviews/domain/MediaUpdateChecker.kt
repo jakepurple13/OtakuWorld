@@ -19,10 +19,13 @@ import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckProgress
 import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckReport
 import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckReportStore
 import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckResult
+import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateUnit
 import com.programmersbox.kmpuiviews.domain.updatecheck.UpdatedItem
+import com.programmersbox.kmpuiviews.domain.updatecheck.chapterRange
 import com.programmersbox.kmpuiviews.domain.updatecheck.classifyFailure
 import com.programmersbox.kmpuiviews.domain.updatecheck.mergeRetry
 import com.programmersbox.kmpuiviews.domain.updatecheck.newChapters
+import com.programmersbox.kmpuiviews.domain.updatecheck.updateTitle
 import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.recordFirebaseException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -188,6 +191,7 @@ class MediaUpdateChecker(
      */
     suspend fun mapDbModel(
         list: List<UpdatedItem>,
+        unit: UpdateUnit = UpdateUnit.Chapters,
         notificationUpdate: suspend (max: Int, progress: Int, source: String) -> Unit,
     ) = list.mapIndexed { index, updated ->
         val dbModel = updated.dbModel
@@ -205,11 +209,7 @@ class MediaUpdateChecker(
             NotificationItem(
                 id = notificationId,
                 url = dbModel.url,
-                summaryText = getString(
-                    Res.string.hadAnUpdate,
-                    dbModel.title,
-                    updated.info.chapters.firstOrNull()?.name ?: ""
-                ),
+                summaryText = "${updateTitle(dbModel.title, updated.newChapters.size, unit)}: ${chapterRange(updated.newChapters)}",
                 notiTitle = dbModel.title,
                 imageUrl = dbModel.imageUrl,
                 source = dbModel.source,

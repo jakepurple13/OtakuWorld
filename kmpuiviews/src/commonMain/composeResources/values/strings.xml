@@ -385,6 +385,10 @@
         <item quantity="one">%1$s · 1 new chapter</item>
         <item quantity="other">%1$s · %2$d new chapters</item>
     </plurals>
+    <plurals name="uc_download_action">
+        <item quantity="one">Download</item>
+        <item quantity="other">Download %1$d</item>
+    </plurals>
     <plurals name="uc_title_episodes">
         <item quantity="one">%1$s · 1 new episode</item>
         <item quantity="other">%1$s · %2$d new episodes</item>

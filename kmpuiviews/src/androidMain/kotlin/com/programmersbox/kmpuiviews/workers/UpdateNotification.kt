@@ -16,7 +16,12 @@ import com.programmersbox.kmpuiviews.PlatformGenericInfo
 import com.programmersbox.kmpuiviews.domain.MediaUpdateChecker
 import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckProgress
 import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckReport
+import com.programmersbox.kmpuiviews.domain.UpdateModel
 import com.programmersbox.kmpuiviews.domain.updatecheck.UpdatedItem
+import com.programmersbox.kmpuiviews.domain.updatecheck.chapterRange
+import com.programmersbox.kmpuiviews.domain.updatecheck.inboxLines
+import com.programmersbox.kmpuiviews.domain.updatecheck.updateTitle
+import com.programmersbox.kmpuiviews.receivers.DownloadNewChaptersReceiver
 import com.programmersbox.kmpuiviews.domain.updatecheck.finishedText
 import com.programmersbox.kmpuiviews.domain.updatecheck.finishedTitle
 import com.programmersbox.kmpuiviews.logFirebaseMessage
@@ -36,7 +41,7 @@ import org.jetbrains.compose.resources.getString
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.checking
 import otakuworld.kmpuiviews.generated.resources.finishedChecking
-import otakuworld.kmpuiviews.generated.resources.hadAnUpdate
+import otakuworld.kmpuiviews.generated.resources.uc_download_action
 import otakuworld.kmpuiviews.generated.resources.mark_read
 import otakuworld.kmpuiviews.generated.resources.updateAmount
 
@@ -60,40 +65,37 @@ class UpdateNotification(
         }
     }
 
+    private suspend fun getTitle(updateModel: UpdateModel) = updateTitle(
+        updateModel.item.dbModel.title,
+        updateModel.item.newChapters.size,
+        info.updateUnit,
+    )
+
     suspend fun mapDbModel(list: List<UpdatedItem>): List<Pair<Int, Notification>> {
         return mediaUpdateChecker.mapDbModel(
             list = list,
-            notificationUpdate = { max, progress, source -> sendRunningNotification(max, progress, source) }
+            notificationUpdate = { max, progress, source -> sendRunningNotification(max, progress, source) },
+            unit = info.updateUnit,
         )
             .map { updateModel ->
                 val notificationId = updateModel.notificationId
                 val pair: Pair<KmpInfoModel?, DbModel> = updateModel.item.info to updateModel.item.dbModel
+                val newChapters = updateModel.item.newChapters
+                val notificationTitle = getTitle(updateModel)
                 notificationId to NotificationDslBuilder.builder(
                     context,
                     NotificationChannels.Otaku.id,
                     icon.notificationId
                 ) {
-                    title = pair.second.title
+                    title = notificationTitle
+                    message = chapterRange(newChapters)
                     subText = pair.first?.source?.displayName ?: pair.second.source
                     client.getBitmapFromURL(pair.second.imageUrl, pair.first?.extras.orEmpty())?.let {
                         largeIconBitmap = it
-                        pictureStyle {
-                            bigPicture = it
-                            largeIcon = it
-                            contentTitle = pair.first?.chapters?.firstOrNull()?.name ?: ""
-                            summaryText = getString(
-                                Res.string.hadAnUpdate,
-                                pair.second.title,
-                                pair.first?.chapters?.firstOrNull()?.name ?: ""
-                            )
-                        }
-                    } ?: bigTextStyle {
-                        contentTitle = pair.first?.chapters?.firstOrNull()?.name ?: ""
-                        bigText = getString(
-                            Res.string.hadAnUpdate,
-                            pair.second.title,
-                            pair.first?.chapters?.firstOrNull()?.name.orEmpty()
-                        )
+                    }
+                    inboxStyle {
+                        contentTitle = notificationTitle
+                        inboxLines(newChapters).forEach { addLine(it) }
                     }
                     showWhen = true
                     groupId = NotificationGroups.Otaku.id
@@ -107,6 +109,19 @@ class UpdateNotification(
                             intent.putExtra("url", pair.second.url)
                             intent.putExtra("id", notificationId)
                             PendingIntent.getBroadcast(context, notificationId, intent, PendingIntent.FLAG_IMMUTABLE)
+                        }
+                    }
+                    if (info.supportsBatchDownload && newChapters.isNotEmpty()) addAction {
+                        actionTitle = getPluralString(Res.plurals.uc_download_action, newChapters.size, newChapters.size)
+                        actionIcon = icon.notificationId
+                        pendingActionIntent {
+                            val intent = Intent(context, DownloadNewChaptersReceiver::class.java)
+                            intent.action = "DOWNLOAD_NEW_CHAPTERS_ACTION"
+                            intent.putExtra("url", pair.second.url)
+                            intent.putExtra("source", pair.second.source)
+                            intent.putExtra("count", newChapters.size)
+                            intent.putExtra("id", notificationId)
+                            PendingIntent.getBroadcast(context, notificationId + 1, intent, PendingIntent.FLAG_IMMUTABLE)
                         }
                     }
                     deleteIntent { context ->
