@@ -46,6 +46,10 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 
 #### New Features
 
+- Quick actions: a bolt button at the end of the top bar on Recent and Settings opens a card with
+  Check for updates, Scan QR code, and Background tasks. Checking for updates runs in place with
+  progress in a snackbar. On Desktop, press Cmd/Ctrl+K or use the Actions menu. Desktop update
+  checks now report progress and can't run twice at once
 - AnimeWorld player styles: Classic (full-width bars), Floating (rounded pills and a control dock),
   and Theater (bars that fade in from the edges). Pick one in Play Settings or onboarding, with a
   live preview of the player while you choose. Classic is the default. The bars use your blur kind
