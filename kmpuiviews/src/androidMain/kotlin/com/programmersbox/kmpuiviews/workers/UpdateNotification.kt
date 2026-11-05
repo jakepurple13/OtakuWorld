@@ -14,7 +14,11 @@ import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpuiviews.PlatformGenericInfo
 import com.programmersbox.kmpuiviews.domain.MediaUpdateChecker
+import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckProgress
+import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckReport
 import com.programmersbox.kmpuiviews.domain.updatecheck.UpdatedItem
+import com.programmersbox.kmpuiviews.domain.updatecheck.finishedText
+import com.programmersbox.kmpuiviews.domain.updatecheck.finishedTitle
 import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.receivers.DeleteNotificationReceiver
 import com.programmersbox.kmpuiviews.receivers.SwipeAwayReceiver
@@ -233,16 +237,39 @@ class UpdateNotification(
         return notification
     }
 
-    suspend fun sendFinishedNotification() {
+    suspend fun buildProgressNotification(progress: UpdateCheckProgress, cancelIntent: PendingIntent): Notification =
+        buildCheckProgressNotification(context, icon, progress, cancelIntent)
+
+    /** Posts nothing when [report] is null (nothing ran). */
+    suspend fun sendFinishedNotification(report: UpdateCheckReport?) {
+        if (report == null) return
+        val title = report.finishedTitle()
+        val text = report.finishedText()
         val notification = NotificationDslBuilder.builder(
             context,
             NotificationChannels.UpdateCheck.id,
             icon.notificationId
         ) {
             onlyAlertOnce = true
+            this.title = title
+            message = text
             subText = getString(Res.string.finishedChecking)
-            timeoutAfter = 750L
+            if (report.hasProblems) {
+                autoCancel = true
+                pendingIntent { context -> info.deepLinkUpdateCheckErrors(context) }
+            } else {
+                timeoutAfter = 4000L
+            }
         }
-        notificationManager?.notify(13, notification)
+        notificationManager?.notify(UPDATE_CHECK_FINISHED_ID, notification)
+    }
+
+    fun cancelProgressNotification() {
+        notificationManager?.cancel(UPDATE_CHECK_PROGRESS_ID)
+    }
+
+    /** A new check replaces the last report, so its finished notification is stale. */
+    fun cancelFinishedNotification() {
+        notificationManager?.cancel(UPDATE_CHECK_FINISHED_ID)
     }
 }

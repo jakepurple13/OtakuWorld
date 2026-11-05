@@ -16,16 +16,24 @@ import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.PlatformGenericInfo
 import com.programmersbox.kmpuiviews.domain.MediaUpdateChecker
 import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckMode
+import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckProgress
+import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckReportStore
 import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.recordFirebaseException
 import com.programmersbox.kmpuiviews.utils.printLogs
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.getString
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.startingCheck
@@ -37,67 +45,82 @@ class UpdateFlowWorker(
     private val update: UpdateNotification,
     private val dataStoreHandling: DataStoreHandling,
     private val mediaUpdateChecker: MediaUpdateChecker,
+    private val reportStore: UpdateCheckReportStore,
 ) : CoroutineWorker(context, workerParams) {
 
     companion object {
         const val CHECK_ALL = "check_all"
         const val RETRY_FAILED = "retry_failed"
+        private const val PROGRESS_NOTIFICATION_INTERVAL_MS = 250L
     }
 
     override suspend fun doWork(): Result = trace("update_checker") {
         try {
+            update.cancelFinishedNotification()
             //update.sendRunningNotification(100, 0, getString(Res.string.startingCheck))
-            runCatching {
-                setForeground(
-                    createNotification(
-                        max = 100,
-                        progress = 0,
-                        contextText = getString(Res.string.startingCheck)
-                    )
-                )
-            }
+            runCatching { setForeground(createStartingNotification()) }
             logFirebaseMessage("Starting check here")
             dataStoreHandling.updateCheckingStart.set(System.currentTimeMillis())
             logFirebaseMessage("Start")
 
             val retryFailed = inputData.getBoolean(RETRY_FAILED, false)
-            val items = mediaUpdateChecker.getFavoritesThatNeedUpdates(
-                // A retry must see every favorite, or failed items that don't notify would be dropped.
-                checkAll = retryFailed || inputData.getBoolean(CHECK_ALL, false),
-                mode = if (retryFailed) UpdateCheckMode.RetryFailed else UpdateCheckMode.Full,
-                putMetric = { name, value -> putMetric(name, value) },
-                onProgress = { progress ->
-                    //update.sendRunningNotification(max, progress, source)
-                    if (!progress.loadingRecents) {
-                        runCatching {
-                            setForeground(createNotification(progress.total, progress.checked, progress.current.orEmpty()))
-                        }
-                    }
-                },
-                setProgress = { max, progress, source ->
-                    setProgress(
-                        workDataOf(
-                            "max" to max,
-                            "progress" to progress,
-                            "source" to source,
+            val result = withProgressNotifications { onProgress ->
+                mediaUpdateChecker.getFavoritesThatNeedUpdates(
+                    // A retry must see every favorite, or failed items that don't notify would be dropped.
+                    checkAll = retryFailed || inputData.getBoolean(CHECK_ALL, false),
+                    mode = if (retryFailed) UpdateCheckMode.RetryFailed else UpdateCheckMode.Full,
+                    putMetric = { name, value -> putMetric(name, value) },
+                    onProgress = onProgress,
+                    setProgress = { max, progress, source ->
+                        setProgress(
+                            workDataOf(
+                                "max" to max,
+                                "progress" to progress,
+                                "source" to source,
+                            )
                         )
-                    )
-                }
-            )
+                    }
+                )
+            }
 
-            update.onEnd(update.mapDbModel(items.updates))/* { id, notification -> setForegroundInfo(id, notification) }*/
+            update.onEnd(update.mapDbModel(result.updates))/* { id, notification -> setForegroundInfo(id, notification) }*/
             logFirebaseMessage("Finished!")
-
-            Result.success()
+            dataStoreHandling.updateCheckingEnd.set(System.currentTimeMillis())
+            update.sendFinishedNotification(result.report)
+        } catch (e: CancellationException) {
+            // A cancelled run stores nothing, so there is nothing to report.
+            withContext(NonCancellable) { dataStoreHandling.updateCheckingEnd.set(System.currentTimeMillis()) }
+            update.cancelProgressNotification()
+            throw e
         } catch (e: Exception) {
             recordFirebaseException(e)
             dataStoreHandling.updateCheckingEnd.set(System.currentTimeMillis())
-            update.sendFinishedNotification()
-            Result.success()
+            // The checker saved a stopped-early report before rethrowing.
+            update.sendFinishedNotification(reportStore.current())
+        }
+        Result.success()
+    }
+
+    /**
+     * Runs [block] while a separate coroutine mirrors its progress into the foreground notification.
+     * The checker only publishes the latest snapshot, so it never waits on a notification update.
+     * The notification refreshes at most every [PROGRESS_NOTIFICATION_INTERVAL_MS] and always catches up to the newest snapshot.
+     * Returns only after the notifier has stopped, so a late update can't overwrite what is posted next.
+     */
+    private suspend fun <T> withProgressNotifications(
+        block: suspend (onProgress: suspend (UpdateCheckProgress) -> Unit) -> T,
+    ): T = coroutineScope {
+        val latest = MutableStateFlow<UpdateCheckProgress?>(null)
+        val notifier = launch {
+            latest.filterNotNull().collect { progress ->
+                runCatching { setForeground(createNotification(progress)) }
+                delay(PROGRESS_NOTIFICATION_INTERVAL_MS)
+            }
+        }
+        try {
+            block { latest.value = it }
         } finally {
-            dataStoreHandling.updateCheckingEnd.set(System.currentTimeMillis())
-            update.sendFinishedNotification()
-            Result.success()
+            notifier.cancel()
         }
     }
 
@@ -139,13 +162,7 @@ class UpdateFlowWorker(
         }.firstOrNull()
     }.getOrNull()
 
-    override suspend fun getForegroundInfo(): ForegroundInfo {
-        return createNotification(
-            max = 100,
-            progress = 0,
-            contextText = getString(Res.string.startingCheck)
-        )
-    }
+    override suspend fun getForegroundInfo(): ForegroundInfo = createStartingNotification()
 
     private suspend fun setForegroundInfo(
         id: Int,
@@ -169,33 +186,33 @@ class UpdateFlowWorker(
         }
     }
 
-    private suspend fun createNotification(
-        max: Int,
-        progress: Int,
-        contextText: CharSequence = "",
-    ): ForegroundInfo {
-        val notification = update.sendRunningNotificationLongTerm(
-            max = max,
-            progress = progress,
-            contextText = contextText
+    private val cancelIntent by lazy { WorkManager.getInstance(applicationContext).createCancelPendingIntent(id) }
+
+    private suspend fun createStartingNotification(): ForegroundInfo = foregroundInfo(
+        update.sendRunningNotificationLongTerm(
+            max = 100,
+            progress = 0,
+            contextText = getString(Res.string.startingCheck)
         ) {
             addAction {
                 actionTitle = applicationContext.getString(android.R.string.cancel)
-                pendingActionIntent(
-                    WorkManager.getInstance(applicationContext)
-                        .createCancelPendingIntent(id)
-                )
+                pendingActionIntent(cancelIntent)
             }
         }
+    )
 
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+    private suspend fun createNotification(progress: UpdateCheckProgress): ForegroundInfo = foregroundInfo(
+        update.buildProgressNotification(progress, cancelIntent)
+    )
+
+    private fun foregroundInfo(notification: Notification): ForegroundInfo =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             ForegroundInfo(
-                13,
+                UPDATE_CHECK_PROGRESS_ID,
                 notification,
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
             )
         } else {
-            ForegroundInfo(13, notification)
+            ForegroundInfo(UPDATE_CHECK_PROGRESS_ID, notification)
         }
-    }
 }

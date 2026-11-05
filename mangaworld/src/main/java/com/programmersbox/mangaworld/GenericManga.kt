@@ -116,4 +116,12 @@ class GenericManga(
             activity = MainActivity::class.java
         )
     }
+
+    override fun deepLinkUpdateCheckErrors(context: Context): PendingIntent? {
+        return deepLinkSetup(
+            context = context,
+            uri = deepLinkUpdateCheckErrorsUri(),
+            activity = MainActivity::class.java
+        )
+    }
 }

@@ -615,6 +615,14 @@ class GenericAnime(
             activity = MainActivity::class.java
         )
     }
+
+    override fun deepLinkUpdateCheckErrors(context: Context): PendingIntent? {
+        return deepLinkSetup(
+            context = context,
+            uri = deepLinkUpdateCheckErrorsUri(),
+            activity = MainActivity::class.java
+        )
+    }
 }
 
 private enum class StorageAccessPrompt(val title: String, val message: String, val action: String) {
