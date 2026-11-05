@@ -30,4 +30,14 @@ class WorkerRepositoryImpl : WorkRepository {
             )
         }
     }
+
+    override fun retryFailedUpdates() {
+        scope.launch {
+            TestTaskRunner.runTask(
+                SyncCheckWorker(),
+                ManualSyncId,
+                inputData = TaskData.of(SyncCheckWorker.SyncCheckData(cancel = true, retryFailed = true))
+            )
+        }
+    }
 }

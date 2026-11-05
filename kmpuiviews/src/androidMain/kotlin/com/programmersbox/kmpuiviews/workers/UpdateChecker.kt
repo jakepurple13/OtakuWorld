@@ -15,6 +15,7 @@ import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.PlatformGenericInfo
 import com.programmersbox.kmpuiviews.domain.MediaUpdateChecker
+import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckMode
 import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.recordFirebaseException
 import com.programmersbox.kmpuiviews.utils.printLogs
@@ -40,6 +41,7 @@ class UpdateFlowWorker(
 
     companion object {
         const val CHECK_ALL = "check_all"
+        const val RETRY_FAILED = "retry_failed"
     }
 
     override suspend fun doWork(): Result = trace("update_checker") {
@@ -58,8 +60,11 @@ class UpdateFlowWorker(
             dataStoreHandling.updateCheckingStart.set(System.currentTimeMillis())
             logFirebaseMessage("Start")
 
+            val retryFailed = inputData.getBoolean(RETRY_FAILED, false)
             val items = mediaUpdateChecker.getFavoritesThatNeedUpdates(
-                checkAll = inputData.getBoolean(CHECK_ALL, false),
+                // A retry must see every favorite, or failed items that don't notify would be dropped.
+                checkAll = retryFailed || inputData.getBoolean(CHECK_ALL, false),
+                mode = if (retryFailed) UpdateCheckMode.RetryFailed else UpdateCheckMode.Full,
                 putMetric = { name, value -> putMetric(name, value) },
                 onProgress = { progress ->
                     //update.sendRunningNotification(max, progress, source)

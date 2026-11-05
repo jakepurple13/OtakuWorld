@@ -11,6 +11,9 @@ interface WorkRepository {
     val allWorkCheck: Flow<List<WorkInfoKmp>>
     fun pruneWork()
     fun checkManually()
+
+    /** Rechecks only the failed items of the last update check and merges the result into it. */
+    fun retryFailedUpdates()
 }
 
 data class WorkInfoKmp(

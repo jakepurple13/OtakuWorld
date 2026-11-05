@@ -20,6 +20,8 @@ import com.programmersbox.kmpuiviews.TranslationModelHandlerImpl
 import com.programmersbox.kmpuiviews.domain.TranslationHandler
 import com.programmersbox.kmpuiviews.domain.TranslationModelHandler
 import com.programmersbox.kmpuiviews.presentation.settings.extensions.ExtensionShareHandler
+import com.programmersbox.kmpuiviews.presentation.updatecheck.ClipboardUpdateCheckReportSharer
+import com.programmersbox.kmpuiviews.presentation.updatecheck.UpdateCheckReportSharer
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandlerImpl
 import com.programmersbox.kmpuiviews.repository.BackupResultsHolder
@@ -40,6 +42,7 @@ actual fun platformModule(): Module = module {
     singleOf(::PlatformDataStoreHandling)
     single { Zipper(getAll()) }
     singleOf(::ExtensionShareHandler)
+    singleOf(::ClipboardUpdateCheckReportSharer) { bind<UpdateCheckReportSharer>() }
     factoryOf(::ImageModifier)
     singleOf(::SystemAlerter)
     singleOf(::DownloadAndInstaller)

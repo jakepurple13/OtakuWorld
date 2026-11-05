@@ -2,6 +2,7 @@ package com.programmersbox.kmpuiviews.repository
 
 import android.content.Context
 import androidx.work.Constraints
+import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
@@ -61,11 +62,25 @@ class WorkRepositoryImpl(
     }
 
     override fun checkManually() {
+        enqueueOneTimeUpdate(workDataOf(UpdateFlowWorker.CHECK_ALL to true))
+    }
+
+    override fun retryFailedUpdates() {
+        // Same unique name as a manual check so a retry never runs alongside a full check.
+        enqueueOneTimeUpdate(
+            workDataOf(
+                UpdateFlowWorker.CHECK_ALL to true,
+                UpdateFlowWorker.RETRY_FAILED to true,
+            )
+        )
+    }
+
+    private fun enqueueOneTimeUpdate(inputData: Data) {
         workManager.enqueueUniqueWork(
             "oneTimeUpdate",
             ExistingWorkPolicy.KEEP,
             OneTimeWorkRequestBuilder<UpdateFlowWorker>()
-                .setInputData(workDataOf(UpdateFlowWorker.CHECK_ALL to true))
+                .setInputData(inputData)
                 .addTag("ManualCheck")
                 .setConstraints(
                     Constraints.Builder()

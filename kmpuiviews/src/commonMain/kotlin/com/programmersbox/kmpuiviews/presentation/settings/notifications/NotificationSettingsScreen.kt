@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Battery1Bar
 import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.PowerSettingsNew
@@ -43,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.datastore.MediaCheckerNetworkType
 import com.programmersbox.favoritesdatabase.ItemDao
+import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.components.settings.ListSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
@@ -52,6 +54,7 @@ import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSett
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
 import com.programmersbox.kmpuiviews.repository.WorkInfoKmp
 import com.programmersbox.kmpuiviews.utils.LocalItemDao
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
@@ -73,6 +76,7 @@ import otakuworld.kmpuiviews.generated.resources.last_update_check_time
 import otakuworld.kmpuiviews.generated.resources.no
 import otakuworld.kmpuiviews.generated.resources.notification_settings
 import otakuworld.kmpuiviews.generated.resources.ok
+import otakuworld.kmpuiviews.generated.resources.uc_errors_title
 import otakuworld.kmpuiviews.generated.resources.yes
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
@@ -153,6 +157,19 @@ fun NotificationSettings(
                         interactionSource = null,
                         onClick = viewModel::checkManually
                     )
+                )
+            }
+
+            item {
+                val navActions = LocalNavActions.current
+                PreferenceSetting(
+                    settingTitle = { Text(stringResource(Res.string.uc_errors_title)) },
+                    summaryValue = { Text(viewModel.updateCheckErrorsSummary) },
+                    settingIcon = { Icon(Icons.Default.ErrorOutline, null) },
+                    modifier = Modifier.clickable(
+                        indication = ripple(),
+                        interactionSource = null,
+                    ) { navActions.navigate(Screen.UpdateCheckErrors) }
                 )
             }
 

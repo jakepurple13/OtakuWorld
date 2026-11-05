@@ -12,6 +12,8 @@ import com.programmersbox.datastore.MediaCheckerNetworkType
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.kmpuiviews.DateTimeFormatHandler
+import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckReportStore
+import com.programmersbox.kmpuiviews.domain.updatecheck.finishedText
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
 import com.programmersbox.kmpuiviews.repository.WorkRepository
 import com.programmersbox.kmpuiviews.utils.DateTimeFormatItem
@@ -22,6 +24,10 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
+import otakuworld.kmpuiviews.generated.resources.Res
+import otakuworld.kmpuiviews.generated.resources.uc_no_errors
+import otakuworld.kmpuiviews.generated.resources.uc_no_report
 
 class NotificationSettingsViewModel(
     dao: ItemDao,
@@ -30,6 +36,7 @@ class NotificationSettingsViewModel(
     dateTimeFormatHandler: DateTimeFormatHandler,
     workRepository: WorkRepository,
     private val notificationRepository: NotificationRepository,
+    updateCheckReportStore: UpdateCheckReportStore,
 ) : ViewModel(), WorkRepository by workRepository {
 
     var savedNotifications by mutableIntStateOf(0)
@@ -39,6 +46,9 @@ class NotificationSettingsViewModel(
     var updateHourCheck by mutableLongStateOf(0L)
 
     var time by mutableStateOf("")
+
+    var updateCheckErrorsSummary by mutableStateOf("")
+        private set
 
     val notifyOnBoot = settingsHandling.notifyOnReboot
 
@@ -74,6 +84,17 @@ class NotificationSettingsViewModel(
         ) { s, e -> s to e }
             .map { "${it.first}\n${it.second}" }
             .onEach { time = it }
+            .launchIn(viewModelScope)
+
+        updateCheckReportStore
+            .report
+            .map { report ->
+                when (report) {
+                    null -> getString(Res.string.uc_no_report)
+                    else -> report.finishedText() ?: getString(Res.string.uc_no_errors)
+                }
+            }
+            .onEach { updateCheckErrorsSummary = it }
             .launchIn(viewModelScope)
     }
 

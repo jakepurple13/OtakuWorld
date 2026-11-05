@@ -421,4 +421,28 @@
     <string name="uc_failure_http">HTTP %1$d</string>
     <string name="uc_failure_http_cloudflare">HTTP %1$d · likely Cloudflare</string>
     <string name="uc_failure_unreadable">Couldn't read the page</string>
+    <string name="uc_failure_source_failed">Not checked: source failed</string>
+    <string name="uc_errors_title">Update check errors</string>
+    <string name="uc_retry_failed">Retry failed</string>
+    <string name="uc_share">Share</string>
+    <string name="uc_no_errors">No errors in the last check</string>
+    <string name="uc_no_report">No update check yet</string>
+    <string name="uc_source_banner_title">Couldn't load %1$s's recent updates</string>
+    <string name="uc_source_banner_body">None of its favorites were checked.</string>
+    <string name="uc_stopped_early">Check stopped early</string>
+    <string name="uc_share_header">Update check · %1$s</string>
+    <string name="uc_share_summary">%1$d favorites · %2$d updated · %3$d failed</string>
+    <string name="uc_errors_when">Last check · %1$s · took %2$s</string>
+    <string name="uc_stat_checked">checked</string>
+    <string name="uc_stat_updated">updated</string>
+    <string name="uc_stat_failed">failed</string>
+    <string name="uc_pill_source_failed">recent list failed</string>
+    <string name="uc_pill_timed_out">timed out</string>
+    <string name="uc_pill_http">HTTP error</string>
+    <string name="uc_pill_unreadable">unreadable</string>
+    <plurals name="uc_group_items">
+        <item quantity="one">%1$d item</item>
+        <item quantity="other">%1$d items</item>
+    </plurals>
+    <string name="uc_open_details">Open details</string>
 </resources>
