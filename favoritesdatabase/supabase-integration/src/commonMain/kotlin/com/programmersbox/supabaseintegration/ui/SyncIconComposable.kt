@@ -1,6 +1,11 @@
 package com.programmersbox.supabaseintegration.ui
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -110,33 +115,40 @@ fun SyncIconComposable(
         )
     }
 
-    IconButton(
-        onClick = { showInformation = !showInformation },
-        enabled = state != SyncConnectedStatus.Idle,
-        modifier = modifier
+    // Idle has nothing to show, so take no space (the caller's padding included) rather than a blank slot
+    AnimatedVisibility(
+        visible = state != SyncConnectedStatus.Idle,
+        enter = expandHorizontally() + fadeIn(),
+        exit = shrinkHorizontally() + fadeOut(),
     ) {
-        Crossfade(state) { target ->
-            when (target) {
-                SyncConnectedStatus.Idle -> {}
+        IconButton(
+            onClick = { showInformation = !showInformation },
+            enabled = state != SyncConnectedStatus.Idle,
+            modifier = modifier
+        ) {
+            Crossfade(state) { target ->
+                when (target) {
+                    SyncConnectedStatus.Idle -> {}
 
-                SyncConnectedStatus.Offline -> Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = null,
-                    tint = Alizarin
-                )
+                    SyncConnectedStatus.Offline -> Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = null,
+                        tint = Alizarin
+                    )
 
-                SyncConnectedStatus.Polling -> Icon(
-                    imageVector = Icons.Default.Sync,
-                    contentDescription = null,
-                    tint = Emerald
-                )
+                    SyncConnectedStatus.Polling -> Icon(
+                        imageVector = Icons.Default.Sync,
+                        contentDescription = null,
+                        tint = Emerald
+                    )
 
-                SyncConnectedStatus.Realtime -> Box(
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .background(Emerald)
-                        .size(24.dp)
-                )
+                    SyncConnectedStatus.Realtime -> Box(
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(Emerald)
+                            .size(24.dp)
+                    )
+                }
             }
         }
     }

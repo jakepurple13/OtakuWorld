@@ -7,6 +7,7 @@ import com.programmersbox.kmpuiviews.presentation.dictionary.DictionaryDetailVie
 import com.programmersbox.kmpuiviews.presentation.dictionary.DictionaryFormViewModel
 import com.programmersbox.kmpuiviews.presentation.dictionary.DictionaryListViewModel
 import com.programmersbox.kmpuiviews.presentation.favorite.FavoriteViewModel
+import com.programmersbox.kmpuiviews.presentation.quickactions.QuickActionsViewModel
 import com.programmersbox.kmpuiviews.presentation.globalsearch.GlobalSearchViewModel
 import com.programmersbox.kmpuiviews.presentation.globalsearch.SourceSearchViewModel
 import com.programmersbox.kmpuiviews.presentation.history.HistoryViewModel
@@ -104,6 +105,7 @@ val viewModels: Module = module {
     viewModelOf(::DictionaryFormViewModel)
     viewModelOf(::AccountStatDetailsViewModel)
     viewModelOf(::UpdateCheckErrorsViewModel)
+    viewModelOf(::QuickActionsViewModel)
 
     includes(platformViewModels())
 }
