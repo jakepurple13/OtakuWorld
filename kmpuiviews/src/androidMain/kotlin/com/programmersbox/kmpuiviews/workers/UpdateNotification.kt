@@ -14,6 +14,7 @@ import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpuiviews.PlatformGenericInfo
 import com.programmersbox.kmpuiviews.domain.MediaUpdateChecker
+import com.programmersbox.kmpuiviews.domain.updatecheck.UpdatedItem
 import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.receivers.DeleteNotificationReceiver
 import com.programmersbox.kmpuiviews.receivers.SwipeAwayReceiver
@@ -55,14 +56,14 @@ class UpdateNotification(
         }
     }
 
-    suspend fun mapDbModel(list: List<Pair<KmpInfoModel?, DbModel>>): List<Pair<Int, Notification>> {
+    suspend fun mapDbModel(list: List<UpdatedItem>): List<Pair<Int, Notification>> {
         return mediaUpdateChecker.mapDbModel(
             list = list,
             notificationUpdate = { max, progress, source -> sendRunningNotification(max, progress, source) }
         )
             .map { updateModel ->
                 val notificationId = updateModel.notificationId
-                val pair = updateModel.infoModel to updateModel.dbModel
+                val pair: Pair<KmpInfoModel?, DbModel> = updateModel.item.info to updateModel.item.dbModel
                 notificationId to NotificationDslBuilder.builder(
                     context,
                     NotificationChannels.Otaku.id,

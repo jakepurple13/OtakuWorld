@@ -61,9 +61,13 @@ class UpdateFlowWorker(
             val items = mediaUpdateChecker.getFavoritesThatNeedUpdates(
                 checkAll = inputData.getBoolean(CHECK_ALL, false),
                 putMetric = { name, value -> putMetric(name, value) },
-                notificationUpdate = { max, progress, source ->
+                onProgress = { progress ->
                     //update.sendRunningNotification(max, progress, source)
-                    runCatching { setForeground(createNotification(max, progress, source)) }
+                    if (!progress.loadingRecents) {
+                        runCatching {
+                            setForeground(createNotification(progress.total, progress.checked, progress.current.orEmpty()))
+                        }
+                    }
                 },
                 setProgress = { max, progress, source ->
                     setProgress(
@@ -76,7 +80,7 @@ class UpdateFlowWorker(
                 }
             )
 
-            update.onEnd(update.mapDbModel(items))/* { id, notification -> setForegroundInfo(id, notification) }*/
+            update.onEnd(update.mapDbModel(items.updates))/* { id, notification -> setForegroundInfo(id, notification) }*/
             logFirebaseMessage("Finished!")
 
             Result.success()

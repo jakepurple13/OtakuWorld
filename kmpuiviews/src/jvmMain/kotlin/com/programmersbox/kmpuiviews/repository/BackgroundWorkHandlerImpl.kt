@@ -214,8 +214,8 @@ class SyncCheckWorker : DesktopTask, KoinComponent {
             val items = mediaUpdateChecker.getFavoritesThatNeedUpdates(
                 checkAll = true,
                 putMetric = { name, value -> },
-                notificationUpdate = { max, progress, source ->
-                    println("Progress: $progress, Max: $max, Source: $source")
+                onProgress = { progress ->
+                    println("Progress: ${progress.checked}, Max: ${progress.total}, Source: ${progress.current}")
                     //update.sendRunningNotification(max, progress, source)
                     //runCatching { setForeground(createNotification(max, progress, source)) }
                 },
@@ -231,7 +231,7 @@ class SyncCheckWorker : DesktopTask, KoinComponent {
                 }
             )
 
-            println("Items: $items")
+            println("Items: ${items.updates}")
 
             //update.onEnd(update.mapDbModel(items))/* { id, notification -> setForegroundInfo(id, notification) }*/
             logFirebaseMessage("Finished!")
