@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
+import com.programmersbox.anime.shared.subtitlegen.SubtitleGenerator
 import com.programmersbox.anime.shared.videoexport.VideoExportRoute
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -86,3 +87,6 @@ internal actual fun VideoThumbnail(path: String, modifier: Modifier) {
 }
 
 internal actual fun videoExportRoute(path: String): NavKey? = VideoExportRoute(path)
+
+@Composable
+internal actual fun rememberSubtitleGenerator(): SubtitleGenerator? = koinInject<SubtitleGenerator>()

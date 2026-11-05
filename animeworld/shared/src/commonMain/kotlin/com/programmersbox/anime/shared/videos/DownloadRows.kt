@@ -1,6 +1,12 @@
 package com.programmersbox.anime.shared.videos
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -11,6 +17,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -20,6 +27,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ClosedCaption
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -49,6 +57,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.programmersbox.anime.shared.downloads.QueuedDownload
+import com.programmersbox.anime.shared.subtitlegen.GenerationProgress
+import com.programmersbox.anime.shared.subtitlegen.GenerationStatus
 import com.programmersbox.anime.shared.downloads.QueuedDownloadState
 import com.programmersbox.anime.shared.downloads.formatBytes
 import com.programmersbox.anime.shared.downloads.splitEpisodeTitle
@@ -94,42 +104,101 @@ fun VideoRow(
     onRemove: () -> Unit,
     modifier: Modifier = Modifier,
     onExport: (() -> Unit)? = null,
+    onGenerateSubtitles: (() -> Unit)? = null,
+    generation: GenerationStatus? = null,
+    onCancelGeneration: () -> Unit = {},
+    onRetryGeneration: () -> Unit = {},
+    onDismissGeneration: () -> Unit = {},
 ) {
     VideoRowContent(
         item = item,
         modifier = modifier
             .background(MaterialTheme.colorScheme.surface)
             .clickable(onClick = onClick),
-    ) {
-        var showDropDown by remember { mutableStateOf(false) }
-        Box {
-            IconButton(onClick = { showDropDown = true }) {
-                Icon(
-                    Icons.Default.MoreVert,
-                    contentDescription = "More options",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            DropdownMenu(
-                expanded = showDropDown,
-                onDismissRequest = { showDropDown = false }
+        below = {
+            // Keeps the last status on screen while the progress collapses away.
+            var shown by remember { mutableStateOf(generation) }
+            if (generation != null) shown = generation
+            AnimatedVisibility(
+                visible = generation != null,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
             ) {
-                if (onExport != null) {
-                    DropdownMenuItem(
-                        onClick = {
-                            showDropDown = false
-                            onExport()
-                        },
-                        text = { Text("Export…") }
+                shown?.let {
+                    GenerationProgress(
+                        status = it,
+                        onRetry = onRetryGeneration,
+                        onDismiss = onDismissGeneration
                     )
                 }
-                DropdownMenuItem(
-                    onClick = {
-                        showDropDown = false
-                        onRemove()
-                    },
-                    text = { Text("Remove") }
-                )
+            }
+        }
+    ) {
+        val generating = generation != null && generation !is GenerationStatus.Failed
+        AnimatedContent(
+            targetState = generating,
+            transitionSpec = { (scaleIn() + fadeIn()) togetherWith (scaleOut() + fadeOut()) },
+            label = "rowTrailing"
+        ) { isGenerating ->
+            if (isGenerating) {
+                IconButton(onClick = onCancelGeneration) {
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = "Cancel generating subtitles",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            } else {
+                var showDropDown by remember { mutableStateOf(false) }
+                Box {
+                    IconButton(onClick = { showDropDown = true }) {
+                        Icon(
+                            Icons.Default.MoreVert,
+                            contentDescription = "More options",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = showDropDown,
+                        onDismissRequest = { showDropDown = false }
+                    ) {
+                        if (onGenerateSubtitles != null && item.isDownload) {
+                            DropdownMenuItem(
+                                onClick = {
+                                    showDropDown = false
+                                    onGenerateSubtitles()
+                                },
+                                leadingIcon = { Icon(Icons.Default.ClosedCaption, contentDescription = null) },
+                                text = {
+                                    Column {
+                                        Text("Generate subtitles…")
+                                        Text(
+                                            "Runs on this computer",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            )
+                        }
+                        if (onExport != null) {
+                            DropdownMenuItem(
+                                onClick = {
+                                    showDropDown = false
+                                    onExport()
+                                },
+                                text = { Text("Export…") }
+                            )
+                        }
+                        DropdownMenuItem(
+                            onClick = {
+                                showDropDown = false
+                                onRemove()
+                            },
+                            text = { Text("Remove") }
+                        )
+                    }
+                }
             }
         }
     }
@@ -142,6 +211,7 @@ internal fun VideoRowContent(
     modifier: Modifier = Modifier,
     selected: Boolean = false,
     leading: @Composable RowScope.() -> Unit = {},
+    below: @Composable ColumnScope.() -> Unit = {},
     trailing: @Composable RowScope.() -> Unit = {},
 ) {
     Row(
@@ -228,6 +298,7 @@ internal fun VideoRowContent(
                     maxLines = 1
                 )
             }
+            below()
         }
 
         trailing()

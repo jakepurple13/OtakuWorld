@@ -31,6 +31,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavKey
+import com.programmersbox.anime.shared.subtitlegen.GeneratedSubtitlesSettings
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
 import kotlinx.serialization.Serializable
@@ -109,6 +110,7 @@ fun SubtitleSettingsScreen(
             checked = style.skipSignsAndSongs,
             onCheckedChange = { on -> viewModel.update { it.copy(skipSignsAndSongs = on) } },
         )
+        GeneratedSubtitlesSettings()
         Spacer(Modifier.height(24.dp))
     }
 

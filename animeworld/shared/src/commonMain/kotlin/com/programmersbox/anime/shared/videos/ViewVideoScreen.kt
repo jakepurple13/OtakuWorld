@@ -70,6 +70,18 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TextButton
 import androidx.compose.ui.graphics.graphicsLayer
 import org.koin.compose.koinInject
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberUpdatedState
+import com.programmersbox.anime.shared.downloads.splitEpisodeTitle
+import com.programmersbox.anime.shared.subtitlegen.GenerateSubtitlesDialog
+import com.programmersbox.anime.shared.subtitlegen.GenerationStatus
+import com.programmersbox.anime.shared.subtitlegen.SubtitleGenerator
+import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRoute
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 
 @Serializable
 data object VideoViewerRoute : NavKey
@@ -92,6 +104,10 @@ internal expect fun VideoThumbnail(path: String, modifier: Modifier)
 
 /** Where the row menu's "Export…" goes for the video at [path]; null hides it (only desktop has ffmpeg export). */
 internal expect fun videoExportRoute(path: String): NavKey?
+
+/** The local subtitle generator; null hides "Generate subtitles…" (only desktop runs whisper.cpp). */
+@Composable
+internal expect fun rememberSubtitleGenerator(): SubtitleGenerator?
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -141,6 +157,49 @@ private fun VideoLoad(
     // null = all; "" = AnimeWorld downloads only; otherwise a library folder label.
     var folderFilter by rememberSaveable { mutableStateOf<String?>(null) }
 
+    val generator = rememberSubtitleGenerator()
+    val generations by remember(generator) { generator?.statuses ?: flowOf(emptyMap()) }
+        .collectAsStateWithLifecycle(emptyMap())
+    var generateFor by remember { mutableStateOf<SharedVideoContent?>(null) }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val currentItems by rememberUpdatedState(items)
+    LaunchedEffect(generator) {
+        generator?.finished?.collect { path ->
+            val item = currentItems.firstOrNull { it.path == path } ?: return@collect
+            // Launched so a second finish queues its snackbar instead of waiting to be collected.
+            launch {
+                val title = splitEpisodeTitle(item.videoName.substringBeforeLast('.'))
+                val result = snackbarHostState.showSnackbar(
+                    "Subtitles ready for ${title.episode ?: title.show}",
+                    actionLabel = "Play"
+                )
+                if (result == SnackbarResult.ActionPerformed) navActions.navigate(item.videoScreen())
+            }
+        }
+    }
+
+    if (generator != null) {
+        generateFor?.let { item ->
+            val model by generator.model.collectAsStateWithLifecycle()
+            val initial = remember(item) { generator.lastRequest.value }
+            GenerateSubtitlesDialog(
+                title = remember(item) { splitEpisodeTitle(item.videoName.substringBeforeLast('.')) },
+                initial = initial,
+                model = model,
+                onOpenSettings = {
+                    generateFor = null
+                    navActions.navigate(SubtitleSettingsRoute)
+                },
+                onGenerate = { request, rememberChoices ->
+                    generator.enqueue(item.path, request, rememberChoices)
+                    generateFor = null
+                },
+                onDismiss = { generateFor = null }
+            )
+        }
+    }
+
     val surface = MaterialTheme.colorScheme.surface
 
     Box(
@@ -171,6 +230,7 @@ private fun VideoLoad(
                     )
                 )
             },
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             containerColor = Color.Transparent,
         ) { p ->
             if (items.isEmpty() && queue.isEmpty()) {
@@ -250,6 +310,9 @@ private fun VideoLoad(
                             isCastActive = isCastActive,
                             onCastLoad = onCastLoad,
                             deleteDialog = deleteDialog,
+                            generation = generations[it.path],
+                            generator = generator,
+                            onGenerateSubtitles = { generateFor = it },
                             modifier = Modifier.animateItem()
                         )
                     }
@@ -305,6 +368,9 @@ private fun VideoLoad(
                                             isCastActive = isCastActive,
                                             onCastLoad = onCastLoad,
                                             deleteDialog = deleteDialog,
+                                            generation = generations[it.path],
+                                            generator = generator,
+                                            onGenerateSubtitles = { generateFor = it },
                                             modifier = Modifier.animateItem()
                                         )
                                     }
@@ -401,6 +467,9 @@ private fun VideoContentView(
     isCastActive: () -> Boolean,
     onCastLoad: (SharedVideoContent) -> Unit,
     deleteDialog: @Composable (SharedVideoContent, (Boolean) -> Unit) -> Unit,
+    generation: GenerationStatus?,
+    generator: SubtitleGenerator?,
+    onGenerateSubtitles: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val deleteVideos = rememberVideoDeleter()
@@ -457,20 +526,28 @@ private fun VideoContentView(
                     if (isCastActive()) {
                         onCastLoad(item)
                     } else {
-                        navController.navigate(
-                            VideoScreen(
-                                showPath = item.path,
-                                showName = item.videoName,
-                                downloadOrStream = true,
-                                referer = ""
-                            )
-                        )
+                        navController.navigate(item.videoScreen())
                     }
                 },
                 onRemove = { showDeleteDialog = true },
                 onExport = videoExportRoute(item.path)?.let { route -> { navController.navigate(route) } },
+                onGenerateSubtitles = if (generator != null) onGenerateSubtitles else null,
+                generation = generation,
+                onCancelGeneration = { generator?.cancel(item.path) },
+                onRetryGeneration = {
+                    (generation as? GenerationStatus.Failed)?.let { generator?.enqueue(item.path, it.request, false) }
+                },
+                onDismissGeneration = { generator?.dismiss(item.path) },
             )
         },
         modifier = modifier
     )
 }
+
+/** The player route for a library video; the row tap and the "Subtitles ready" snackbar both use it. */
+private fun SharedVideoContent.videoScreen() = VideoScreen(
+    showPath = path,
+    showName = videoName,
+    downloadOrStream = true,
+    referer = ""
+)

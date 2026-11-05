@@ -3,8 +3,14 @@ package com.programmersbox.desktop
 import ca.gosyer.appdirs.AppDirs
 import com.programmersbox.anime.shared.AnimeDesktopSettings
 import com.programmersbox.anime.shared.StorageHolder
+import com.programmersbox.anime.shared.subtitlegen.DesktopSubtitleGenerator
+import com.programmersbox.anime.shared.subtitlegen.SubtitleGenerator
+import com.programmersbox.anime.shared.subtitlegen.WhisperCliInstaller
+import com.programmersbox.anime.shared.subtitlegen.WhisperModelStore
 import com.programmersbox.anime.shared.subtitles.JvmSubtitleSettingsRepository
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRepository
+import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRoute
+import com.programmersbox.anime.shared.subtitles.SubtitleSettingsScreen
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsViewModel
 import com.programmersbox.anime.shared.VideoScreen
 import com.programmersbox.anime.shared.downloads.AnimeDownloadManager
@@ -32,6 +38,7 @@ import dev.nucleusframework.systeminfo.SystemInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import okhttp3.OkHttpClient
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.core.module.dsl.viewModelOf
@@ -86,6 +93,32 @@ fun main(args: Array<String>) {
                     trayState = get(),
                 )
             }
+            single {
+                WhisperModelStore(
+                    settings = get(),
+                    modelsDir = File(get<AppDirs>().getUserDataDir(), "whisper-models"),
+                    client = OkHttpClient.Builder().followSslRedirects(false).build(),
+                    scope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
+                )
+            }
+            single {
+                WhisperCliInstaller(
+                    installRoot = File(get<AppDirs>().getUserDataDir(), "whisper-cli"),
+                    client = OkHttpClient.Builder().followSslRedirects(false).build(),
+                    scope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
+                )
+            }
+            single {
+                DesktopSubtitleGenerator(
+                    scope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
+                    settings = get(),
+                    models = get(),
+                    ffmpeg = { get<VideoExportManager>().ffmpeg() },
+                    installer = get(),
+                    onSidecarsChanged = { get<VideoLibrarySource>().rescan() },
+                    trayState = get(),
+                )
+            } bind SubtitleGenerator::class
 
             navigation<VideoScreen> { VideoPlayerUi(it) }
             navigation<PlatformSettings> { JvmSettingsScreen() }
@@ -93,6 +126,7 @@ fun main(args: Array<String>) {
             navigation<FreeUpSpaceRoute> { FreeUpSpaceScreen() }
             navigation<LibraryFoldersRoute> { LibraryFoldersScreen() }
             navigation<VideoExportRoute> { VideoExportScreen(it) }
+            navigation<SubtitleSettingsRoute> { SubtitleSettingsScreen() }
 
             includes(aniyomiModule, cloudstreamModule)
         }

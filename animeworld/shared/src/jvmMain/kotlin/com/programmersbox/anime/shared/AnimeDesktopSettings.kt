@@ -51,6 +51,36 @@ class AnimeDesktopSettings(
         defaultValue = true
     )
 
+    /** whisper.cpp binary for subtitle generation; blank means look it up on PATH. */
+    val whisperPath = DataStoreHandler(
+        key = stringPreferencesKey("whisperPath"),
+        defaultValue = ""
+    )
+
+    /** Selected whisper model, encoded as `builtin:<id>` or `file:<path>`. */
+    val whisperModel = DataStoreHandler(
+        key = stringPreferencesKey("whisperModel"),
+        defaultValue = "builtin:small"
+    )
+
+    /** Absolute paths of the user's own whisper models; the files are never deleted by the app. */
+    val customWhisperModels = DataStoreHandler(
+        key = stringSetPreferencesKey("customWhisperModels"),
+        defaultValue = emptySet()
+    )
+
+    /** Spoken language of the video ("From") last used for subtitle generation. */
+    val generateFrom = DataStoreHandler(
+        key = stringPreferencesKey("generateFrom"),
+        defaultValue = "ja"
+    )
+
+    /** Subtitle language ("To") last used for subtitle generation. */
+    val generateTo = DataStoreHandler(
+        key = stringPreferencesKey("generateTo"),
+        defaultValue = "en"
+    )
+
     companion object {
         /** Well-known video folders offered by default; only the ones that exist are shown. */
         val DEFAULT_LIBRARY_FOLDERS: List<String> = System.getProperty("user.home").let { home ->
