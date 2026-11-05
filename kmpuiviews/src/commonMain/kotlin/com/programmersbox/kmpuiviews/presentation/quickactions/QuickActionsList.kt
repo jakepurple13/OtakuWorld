@@ -31,6 +31,9 @@ import androidx.compose.ui.unit.dp
 import com.programmersbox.showcase.annotations.ShowcaseComponent
 import org.jetbrains.compose.resources.stringResource
 import otakuworld.kmpuiviews.generated.resources.Res
+import otakuworld.kmpuiviews.generated.resources.qa_ago_days
+import otakuworld.kmpuiviews.generated.resources.qa_ago_hours
+import otakuworld.kmpuiviews.generated.resources.qa_ago_minutes
 import otakuworld.kmpuiviews.generated.resources.qa_background_tasks
 import otakuworld.kmpuiviews.generated.resources.qa_background_tasks_sub
 import otakuworld.kmpuiviews.generated.resources.qa_check_updates
@@ -127,10 +130,11 @@ private fun checkSupportingText(state: QuickActionsUiState): String {
     }
 }
 
+@Composable
 private fun agoText(minutes: Long): String = when {
-    minutes < 60 -> "${minutes}m ago"
-    minutes < 60 * 24 -> "${minutes / 60}h ago"
-    else -> "${minutes / (60 * 24)}d ago"
+    minutes < 60 -> stringResource(Res.string.qa_ago_minutes, minutes)
+    minutes < 60 * 24 -> stringResource(Res.string.qa_ago_hours, minutes / 60)
+    else -> stringResource(Res.string.qa_ago_days, minutes / (60 * 24))
 }
 
 @Composable
@@ -146,6 +150,7 @@ private fun QuickActionRow(
 ) {
     Surface(
         onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
         shape = shape,
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
