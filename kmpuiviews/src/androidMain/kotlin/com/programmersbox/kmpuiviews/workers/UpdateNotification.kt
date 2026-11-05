@@ -121,7 +121,7 @@ class UpdateNotification(
                             intent.putExtra("source", pair.second.source)
                             intent.putExtra("count", newChapters.size)
                             intent.putExtra("id", notificationId)
-                            PendingIntent.getBroadcast(context, notificationId + 1, intent, PendingIntent.FLAG_IMMUTABLE)
+                            PendingIntent.getBroadcast(context, notificationId + 1, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
                         }
                     }
                     deleteIntent { context ->

@@ -1,10 +1,8 @@
 package com.programmersbox.kmpuiviews.receivers
 
-import android.app.NotificationManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import androidx.core.content.getSystemService
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.kmpmodels.SourceRepository
@@ -25,7 +23,6 @@ class DownloadNewChaptersReceiver : BroadcastReceiver(), KoinComponent {
         val dao: ItemDao by inject()
         val sourceRepository: SourceRepository by inject()
         val genericInfo: KmpGenericInfo by inject()
-        val notificationManager = context?.getSystemService<NotificationManager>()
         val url = intent?.getStringExtra("url")
         val source = intent?.getStringExtra("source")
         val count = intent?.getIntExtra("count", 0) ?: 0
@@ -41,14 +38,7 @@ class DownloadNewChaptersReceiver : BroadcastReceiver(), KoinComponent {
                         ?: return@runCatching
                     val chapters = newChapters(info, info.chapters.size - count)
                     if (chapters.isNotEmpty()) genericInfo.batchDownloadChapters(chapters, info)
-                    dao.getNotificationItem(favorite.url)?.let { dao.deleteNotification(it) }
-                    if (id != -1) notificationManager?.cancel(id)
-                    val g = notificationManager
-                        ?.activeNotifications
-                        ?.map { it.notification }
-                        ?.filter { it.group == "otakuGroup" }
-                        .orEmpty()
-                    if (g.size == 1) notificationManager?.cancel(42)
+                    clearUpdateNotification(context, dao, favorite.url, id)
                 }.onFailure { recordFirebaseException(it) }
             } finally {
                 pending.finish()
