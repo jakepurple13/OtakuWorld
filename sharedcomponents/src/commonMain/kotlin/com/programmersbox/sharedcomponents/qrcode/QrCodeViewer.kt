@@ -77,8 +77,8 @@ data class QrShareCardColors(
 object QrShareDefaults {
     @Composable
     fun cardColors() = QrShareCardColors(
-        container = MaterialTheme.colorScheme.primaryContainer,
-        content = MaterialTheme.colorScheme.onPrimaryContainer,
+        container = MaterialTheme.colorScheme.surfaceContainerHighest,
+        content = MaterialTheme.colorScheme.onSurface,
     )
 
     /** How long Share and Save wait for [ShareViaQrCode]'s `captureReady` before capturing anyway */
