@@ -9,6 +9,7 @@ import com.programmersbox.kmpmodels.NativeCatalogs
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.OtakuWorldCatalog
 import com.programmersbox.kmpuiviews.domain.AppUpdateCheck
+import com.programmersbox.kmpuiviews.presentation.quickactions.QuickActionsController
 import com.programmersbox.kmpuiviews.domain.MediaUpdateChecker
 import com.programmersbox.kmpuiviews.domain.updatecheck.DataStoreUpdateCheckReportStore
 import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckReportStore
@@ -56,6 +57,7 @@ import kotlin.time.Duration.Companion.minutes
 
 val appModule = module {
     singleOf(::AppUpdateCheck)
+    singleOf(::QuickActionsController)
     single { JsExtensionSourceBridge(get(), get()) }
     single { NativeCatalogs(getAll()) }
     single {
