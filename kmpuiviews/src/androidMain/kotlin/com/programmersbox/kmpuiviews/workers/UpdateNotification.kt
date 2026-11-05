@@ -5,7 +5,6 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
 import androidx.core.content.getSystemService
 import com.programmersbox.favoritesdatabase.DbModel
@@ -129,7 +128,9 @@ class UpdateNotification(
                         val intent = Intent(context, SwipeAwayReceiver::class.java)
                         intent.action = "NOTIFICATION_DELETED_ACTION"
                         intent.putExtra("url", pair.second.url)
-                        PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+                        intent.putExtra("id", notificationId)
+                        // Per-notification request code: with a shared one, every swipe would carry the first title's url.
+                        PendingIntent.getBroadcast(context, notificationId, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
                     }
                     pendingIntent { context ->
                         info.deepLinkDetails(context, pair.second.toItemModel(pair.first!!.source))
@@ -138,15 +139,21 @@ class UpdateNotification(
             }
     }
 
+    /** Update notifications already showing that [list] doesn't replace. Skips the summary and non-update notifications. */
+    private fun otherUpdateNotificationCount(list: List<Pair<Int, Notification>>): Int = notificationManager
+        ?.activeNotifications
+        ?.count {
+            it.notification.group == NotificationGroups.Otaku.id &&
+                it.notification.flags and Notification.FLAG_GROUP_SUMMARY == 0 &&
+                list.none { l -> l.first == it.id }
+        }
+        ?: 0
+
     suspend fun onEnd(
         list: List<Pair<Int, Notification>>,
         notificationId: Int = 42,
     ) {
-        val currentNotificationSize = notificationManager
-            ?.activeNotifications
-            ?.filterNot { list.fastAny { l -> l.first == it.id } }
-            .orEmpty()
-            .size - 1
+        val currentNotificationSize = otherUpdateNotificationCount(list)
 
         list.fastForEach { pair -> notificationManager?.notify(pair.first, pair.second) }
         if (list.isNotEmpty()) {
@@ -176,11 +183,7 @@ class UpdateNotification(
         info: PlatformGenericInfo,
         onNotify: suspend (Int, Notification) -> Unit,
     ) {
-        val currentNotificationSize = notificationManager
-            ?.activeNotifications
-            ?.filterNot { list.fastAny { l -> l.first == it.id } }
-            .orEmpty()
-            .size - 1
+        val currentNotificationSize = otherUpdateNotificationCount(list)
 
         list.fastForEach { pair -> notificationManager?.notify(pair.first, pair.second) }
         if (list.isNotEmpty()) {
