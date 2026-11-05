@@ -63,6 +63,8 @@ data class ModelSummary(
     val sizeLabel: String,
     val translatesWell: Boolean,
     val englishOnly: Boolean,
+    /** A selected custom model whose file no longer exists. */
+    val missing: Boolean = false,
 )
 
 /** Map key and [finished] value are the video's absolute path. */

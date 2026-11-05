@@ -134,8 +134,11 @@ fun GenerateSubtitlesDialog(
 
                 val translatesPoorly = !model.translatesWell && request.translate
                 val linkColor = MaterialTheme.colorScheme.primary
-                AnimatedContent(targetState = translatesPoorly, label = "modelHint") { poor ->
-                    val hint = if (poor) {
+                val missing = model.missing
+                AnimatedContent(targetState = translatesPoorly to missing, label = "modelHint") { (poor, gone) ->
+                    val hint = if (gone) {
+                        modelHint("Model: ${model.name} (file not found) · ", "Change", linkColor, onOpenSettings)
+                    } else if (poor) {
                         modelHint("${model.name} translates poorly into English. ", "Choose another model", linkColor, onOpenSettings)
                     } else {
                         val name = if (model.downloaded) model.name else "${model.name} (downloads first, ${model.sizeLabel})"
@@ -144,7 +147,7 @@ fun GenerateSubtitlesDialog(
                     Text(
                         hint,
                         style = MaterialTheme.typography.bodySmall,
-                        color = if (poor) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                        color = if (poor || gone) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 

@@ -188,6 +188,33 @@ class WhisperModelStoreTest {
     }
 
     @Test
+    fun deleteDuringDownloadCancelsAndCleansPart() {
+        server.enqueue(
+            MockResponse.Builder().body(Buffer().write(ByteArray(40_000))).throttleBody(1_000, 25, java.util.concurrent.TimeUnit.MILLISECONDS).build()
+        )
+        store.download(BuiltInWhisperModel.TINY)
+        waitFor { store.rows.value.first().download is ModelDownload.Downloading && File(modelsDir, "ggml-tiny.bin.part").exists() }
+
+        store.delete(BuiltInWhisperModel.TINY)
+        assertEquals(ModelDownload.Missing, store.rows.value.first().download)
+        runBlocking { delay(300) }
+        assertEquals(ModelDownload.Missing, store.rows.value.first().download)
+        assertFalse(File(modelsDir, "ggml-tiny.bin.part").exists())
+        assertFalse(File(modelsDir, "ggml-tiny.bin").exists())
+    }
+
+    @Test
+    fun missingCustomSummaryIsFlagged() = runBlocking {
+        val custom = userModel("ggml-mine.bin", "lmgg")
+        store.addCustom(custom)
+        assertFalse(store.summary.value.missing)
+        custom.delete()
+        store.select(WhisperModelChoice.BuiltIn(BuiltInWhisperModel.SMALL))
+        store.select(WhisperModelChoice.Custom(custom.absolutePath))
+        assertTrue(store.summary.value.missing)
+    }
+
+    @Test
     fun selectionPersistsAcrossStoreInstances() {
         store.select(WhisperModelChoice.BuiltIn(BuiltInWhisperModel.BASE))
 

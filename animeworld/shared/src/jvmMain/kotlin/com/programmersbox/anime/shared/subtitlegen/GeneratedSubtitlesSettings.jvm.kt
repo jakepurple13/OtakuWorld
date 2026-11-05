@@ -33,6 +33,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -166,7 +167,7 @@ internal actual fun GeneratedSubtitlesSettings() {
             Text(
                 when {
                     !lookedUp -> ""
-                    configuredPath.isNotBlank() && !File(configuredPath).canExecute() ->
+                    badConfigured ->
                         configuredPath + "\n" + "Chosen file can't be run. Choose another, or clear it to search automatically."
                     file == null -> "Not found. Install whisper.cpp (brew install whisper-cpp) or choose the file."
                     configuredPath.isNotBlank() && file.path == configuredPath -> file.path
@@ -177,11 +178,16 @@ internal actual fun GeneratedSubtitlesSettings() {
             )
         },
         trailingContent = {
-            OutlinedButton(onClick = {
-                chooseFile("Choose whisper-cli")?.let { file ->
-                    scope.launch { settings.whisperPath.set(file.absolutePath) }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                if (configuredPath.isNotBlank()) {
+                    TextButton(onClick = { scope.launch { settings.whisperPath.set("") } }) { Text("Use automatic") }
                 }
-            }) { Text("Choose…") }
+                OutlinedButton(onClick = {
+                    chooseFile("Choose whisper-cli")?.let { file ->
+                        scope.launch { settings.whisperPath.set(file.absolutePath) }
+                    }
+                }) { Text("Choose…") }
+            }
         },
     )
 
@@ -261,7 +267,9 @@ private fun ModelListItem(
                         is ModelDownload.Missing, is ModelDownload.Failed ->
                             OutlinedButton(onClick = onDownload) { Text("Download") }
 
-                        is ModelDownload.Downloading -> Unit
+                        is ModelDownload.Downloading -> IconButton(onClick = onDelete) {
+                            Icon(Icons.Default.Close, contentDescription = "Cancel download")
+                        }
                         is ModelDownload.Ready -> Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Check, contentDescription = "Downloaded", tint = MaterialTheme.colorScheme.primary)
                             IconButton(onClick = onDelete) {

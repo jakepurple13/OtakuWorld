@@ -196,7 +196,12 @@ class WhisperModelStore(
                                 if (percent != lastPercent || now - lastAt >= 100_000_000L) {
                                     lastPercent = percent
                                     lastAt = now
-                                    update { it.copy(downloading = it.downloading + (model to ModelDownload.Downloading(fraction, written))) }
+                                    // A deleted (non-current) job must not bring the row back to Downloading.
+                                    synchronized(lock) {
+                                        if (jobs[model] === self) {
+                                            update { it.copy(downloading = it.downloading + (model to ModelDownload.Downloading(fraction, written))) }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -267,6 +272,7 @@ class WhisperModelStore(
                 sizeLabel = if (file.isFile) formatSize(file.length()) else "Missing file",
                 translatesWell = true,
                 englishOnly = isEnglishOnlyModel(file.name),
+                missing = !file.isFile,
             )
         }
     }

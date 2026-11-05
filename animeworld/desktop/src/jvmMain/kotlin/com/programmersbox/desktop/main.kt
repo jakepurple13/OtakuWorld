@@ -94,7 +94,7 @@ fun main(args: Array<String>) {
                 WhisperModelStore(
                     settings = get(),
                     modelsDir = File(get<AppDirs>().getUserDataDir(), "whisper-models"),
-                    client = OkHttpClient(),
+                    client = OkHttpClient.Builder().followSslRedirects(false).build(),
                     scope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
                 )
             }
