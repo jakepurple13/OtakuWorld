@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.di
 
 import com.programmersbox.kmpuiviews.presentation.notifications.NotificationScreenInterface
+import com.programmersbox.kmpuiviews.repository.DesktopManualCheckTracker
 import com.programmersbox.kmpuiviews.repository.DownloadStateInterface
 import com.programmersbox.kmpuiviews.repository.DownloadStateRepository
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
@@ -21,6 +22,7 @@ import java.io.File
 
 actual fun platformRepositories(): Module = module {
     singleOf(::NotificationRepository)
+    singleOf(::DesktopManualCheckTracker)
     singleOf(::WorkerRepositoryImpl) { bind<WorkRepository>() }
     single {
         DownloadStateRepository(
