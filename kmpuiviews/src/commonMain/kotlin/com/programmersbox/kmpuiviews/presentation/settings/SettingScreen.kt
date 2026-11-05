@@ -53,6 +53,7 @@ import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroupListItem
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
+import com.programmersbox.kmpuiviews.presentation.quickactions.QuickActionsBolt
 import com.programmersbox.kmpuiviews.presentation.settings.search.SettingsScreenDisplayNames
 import com.programmersbox.kmpuiviews.presentation.settings.search.SettingsSearchViewModel
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
@@ -109,6 +110,7 @@ fun SettingScreen(
                         }
                     },
                     actions = {
+                        QuickActionsBolt()
                         SyncIconComposable(modifier = Modifier.padding(horizontal = 16.dp))
                     },
                     scrollBehavior = scrollBehavior,

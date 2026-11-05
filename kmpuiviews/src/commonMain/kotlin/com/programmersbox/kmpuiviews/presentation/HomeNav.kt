@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -75,7 +76,11 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -112,6 +117,7 @@ import com.programmersbox.kmpuiviews.theme.OtakuMaterialTheme
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
+import com.programmersbox.kmpuiviews.presentation.quickactions.QuickActionsOverlay
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalWindowSizeClass
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalSharedElementScope
@@ -185,76 +191,86 @@ fun HomeNav(
 
                 genericInfo.DialogSetups()
 
-                SharedTransitionLayout {
-                    Row(Modifier.fillMaxSize()) {
-                        Rail(
-                            navActions = navigationActions,
-                            showNavBar = showNavBar,
-                            navType = navType,
-                            showAllItem = showAllItem,
-                        )
+                // The overlay sits outside the scaffold, so it reads the nav padding through this
+                var navHostPadding by remember { mutableStateOf(PaddingValues()) }
 
-                        //TODO: Look into the global states again for the navigation stuff
-                        // Use the metadata to know whether to show it or not
-                        HazeScaffold(
-                            blurKindState = blurKindState,
-                            bottomBar = {
-                                if (!floatingNavigation) {
-                                    BottomNav(
-                                        navActions = navigationActions,
-                                        showNavBar = showNavBar,
-                                        navType = navType,
-                                        showBlur = showBlur,
-                                        isAmoledMode = isAmoledMode,
-                                        middleNavItem = middleNavItem,
-                                        multipleActions = multipleActions,
-                                        bottomBarAdditions = bottomBarAdditions,
-                                        modifier = Modifier.setBlurKind(blurKindState = blurKindState)
-                                        //modifier = Modifier.renderInSharedTransitionScopeOverlay()
-                                    )
-                                } else {
-                                    val shape = MaterialTheme.shapes.extraLarge
-                                    Column {
-                                        bottomBarAdditions()
-                                        HomeNavigationBar(
+                SharedTransitionLayout {
+                    Box(Modifier.fillMaxSize()) {
+                        Row(Modifier.fillMaxSize()) {
+                            Rail(
+                                navActions = navigationActions,
+                                showNavBar = showNavBar,
+                                navType = navType,
+                                showAllItem = showAllItem,
+                            )
+
+                            //TODO: Look into the global states again for the navigation stuff
+                            // Use the metadata to know whether to show it or not
+                            HazeScaffold(
+                                blurKindState = blurKindState,
+                                bottomBar = {
+                                    if (!floatingNavigation) {
+                                        BottomNav(
+                                            navActions = navigationActions,
                                             showNavBar = showNavBar,
                                             navType = navType,
                                             showBlur = showBlur,
                                             isAmoledMode = isAmoledMode,
                                             middleNavItem = middleNavItem,
-                                            //scrollBehavior = null,
                                             multipleActions = multipleActions,
-                                            navActions = navigationActions,
-                                            modifier = Modifier
-                                                .padding(horizontal = 24.dp)
-                                                .windowInsetsPadding(WindowInsets.navigationBars)
-                                                .clip(shape)
-                                                .setBlurKind(
-                                                    blurKindState = blurKindState,
-                                                    liquidGlassShape = { shape }
-                                                )
-                                                .fillMaxWidth()
-                                            //.renderInSharedTransitionScopeOverlay()
+                                            bottomBarAdditions = bottomBarAdditions,
+                                            modifier = Modifier.setBlurKind(blurKindState = blurKindState)
+                                            //modifier = Modifier.renderInSharedTransitionScopeOverlay()
                                         )
+                                    } else {
+                                        val shape = MaterialTheme.shapes.extraLarge
+                                        Column {
+                                            bottomBarAdditions()
+                                            HomeNavigationBar(
+                                                showNavBar = showNavBar,
+                                                navType = navType,
+                                                showBlur = showBlur,
+                                                isAmoledMode = isAmoledMode,
+                                                middleNavItem = middleNavItem,
+                                                //scrollBehavior = null,
+                                                multipleActions = multipleActions,
+                                                navActions = navigationActions,
+                                                modifier = Modifier
+                                                    .padding(horizontal = 24.dp)
+                                                    .windowInsetsPadding(WindowInsets.navigationBars)
+                                                    .clip(shape)
+                                                    .setBlurKind(
+                                                        blurKindState = blurKindState,
+                                                        liquidGlassShape = { shape }
+                                                    )
+                                                    .fillMaxWidth()
+                                                //.renderInSharedTransitionScopeOverlay()
+                                            )
+                                        }
                                     }
+                                },
+                                contentWindowInsets = WindowInsets(0.dp),
+                                //blurBottomBar = showBlur && !floatingNavigation,
+                            ) { innerPadding ->
+                                SideEffect { navHostPadding = innerPadding }
+                                CompositionLocalProvider(
+                                    LocalNavHostPadding provides innerPadding,
+                                    LocalSharedElementScope provides this@SharedTransitionLayout,
+                                    //For later maybe
+                                    //LocalBottomAppBarScrollBehavior provides bottomAppBarScrollBehavior
+                                ) {
+                                    Nav3(
+                                        genericInfo = genericInfo,
+                                        navigation3Actions = navigationActions as Navigation3Actions,
+                                        windowSize = windowSize,
+                                        customPreferences = customPreferences,
+                                    )
                                 }
-                            },
-                            contentWindowInsets = WindowInsets(0.dp),
-                            //blurBottomBar = showBlur && !floatingNavigation,
-                        ) { innerPadding ->
-                            CompositionLocalProvider(
-                                LocalNavHostPadding provides innerPadding,
-                                LocalSharedElementScope provides this@SharedTransitionLayout,
-                                //For later maybe
-                                //LocalBottomAppBarScrollBehavior provides bottomAppBarScrollBehavior
-                            ) {
-                                Nav3(
-                                    genericInfo = genericInfo,
-                                    navigation3Actions = navigationActions as Navigation3Actions,
-                                    windowSize = windowSize,
-                                    customPreferences = customPreferences,
-                                )
                             }
+                        }
+
+                        CompositionLocalProvider(LocalNavHostPadding provides navHostPadding) {
+                            QuickActionsOverlay()
                         }
                     }
                 }

@@ -53,6 +53,7 @@ import com.programmersbox.kmpuiviews.presentation.components.OtakuHazeScaffold
 import com.programmersbox.kmpuiviews.presentation.components.OtakuPullToRefreshBox
 import com.programmersbox.kmpuiviews.presentation.components.ToolTipWrapper
 import com.programmersbox.kmpuiviews.presentation.components.optionsKmpSheet
+import com.programmersbox.kmpuiviews.presentation.quickactions.QuickActionsBolt
 import com.programmersbox.kmpuiviews.presentation.settings.utils.showSourceChooser
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.composables.InfiniteListHandler
@@ -166,6 +167,7 @@ fun RecentView(
                     }
                 },
                 actions = {
+                    QuickActionsBolt()
                     // Bounded height, otherwise each page is screen-tall and short swipes snap back
                     VerticalPager(
                         state = pagerState,
