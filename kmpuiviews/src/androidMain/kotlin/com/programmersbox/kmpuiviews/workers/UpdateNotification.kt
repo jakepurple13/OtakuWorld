@@ -74,7 +74,8 @@ class UpdateNotification(
     suspend fun mapDbModel(list: List<UpdatedItem>): List<Pair<Int, Notification>> {
         return mediaUpdateChecker.mapDbModel(
             list = list,
-            notificationUpdate = { max, progress, source -> sendRunningNotification(max, progress, source) },
+            // No progress here: the mapping phase is short, and a plain notify on the foreground id outlives the worker.
+            notificationUpdate = { _, _, _ -> },
             unit = info.updateUnit,
         )
             .map { updateModel ->
@@ -201,27 +202,6 @@ class UpdateNotification(
                 }
             )
         }
-    }
-
-    suspend fun sendRunningNotification(max: Int, progress: Int, contextText: CharSequence = "") {
-        val notification = NotificationDslBuilder.builder(
-            context,
-            NotificationChannels.UpdateCheck.id,
-            icon.notificationId
-        ) {
-            onlyAlertOnce = true
-            ongoing = true
-            progress {
-                this.max = max
-                this.progress = progress
-                indeterminate = progress == 0
-            }
-            showWhen = true
-            message = contextText
-            subText = getString(Res.string.checking)
-        }
-        notificationManager?.notify(13, notification)
-        logFirebaseMessage("Checking for $contextText")
     }
 
     suspend fun sendRunningNotificationLongTerm(

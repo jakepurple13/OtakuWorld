@@ -86,6 +86,7 @@ class UpdateFlowWorker(
             update.onEnd(update.mapDbModel(result.updates))/* { id, notification -> setForegroundInfo(id, notification) }*/
             logFirebaseMessage("Finished!")
             dataStoreHandling.updateCheckingEnd.set(System.currentTimeMillis())
+            update.cancelProgressNotification()
             update.sendFinishedNotification(result.report)
         } catch (e: CancellationException) {
             // A cancelled run stores nothing, so there is nothing to report.
@@ -95,6 +96,7 @@ class UpdateFlowWorker(
         } catch (e: Exception) {
             recordFirebaseException(e)
             dataStoreHandling.updateCheckingEnd.set(System.currentTimeMillis())
+            update.cancelProgressNotification()
             // The checker saved a stopped-early report before rethrowing.
             update.sendFinishedNotification(reportStore.current())
         }
