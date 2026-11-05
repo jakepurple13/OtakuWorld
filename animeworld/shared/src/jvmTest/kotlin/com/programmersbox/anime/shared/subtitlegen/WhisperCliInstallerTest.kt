@@ -15,6 +15,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
 import java.security.MessageDigest
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import kotlin.io.path.createTempDirectory
@@ -57,7 +58,11 @@ class WhisperCliInstallerTest {
     private val server = MockWebServer().apply { start() }
     private val zip = testWhisperZip()
 
-    private fun installer(isWindows: Boolean = true, asset: WhisperCliAsset? = testWhisperAsset(zip)) = WhisperCliInstaller(
+    private fun installer(
+        isWindows: Boolean = true,
+        asset: WhisperCliAsset? = testWhisperAsset(zip),
+        rename: (File, File) -> Boolean = { from, to -> from.renameTo(to) },
+    ) = WhisperCliInstaller(
         installRoot = installRoot,
         client = OkHttpClient(),
         scope = scope,
@@ -65,7 +70,35 @@ class WhisperCliInstallerTest {
         arch = "amd64",
         baseUrl = server.url("/").toString(),
         asset = if (isWindows) asset else null,
+        rename = rename,
     )
+
+    @Test
+    fun renameIsRetriedWhenTheFilesAreHeld() {
+        serve(zip)
+        val attempts = AtomicInteger()
+        // The first attempt fails, as when an antivirus scanner still holds the new .exe.
+        val installer = installer(rename = { from, to -> attempts.incrementAndGet() > 1 && from.renameTo(to) })
+        installer.install()
+        waitFor { installer.state.value !is CliInstall.Installing }
+
+        assertEquals(CliInstall.Ready(File(installRoot, "b5454/whisper-cli.exe")), installer.state.value)
+        assertEquals(2, attempts.get())
+        assertEquals(listOf("b5454"), installRoot.list()!!.toList())
+    }
+
+    @Test
+    fun renameGivesUpAfterFiveAttempts() {
+        serve(zip)
+        val attempts = AtomicInteger()
+        val installer = installer(rename = { _, _ -> attempts.incrementAndGet(); false })
+        installer.install()
+        waitFor { installer.state.value !is CliInstall.Installing }
+
+        assertEquals(CliInstall.Failed("Download failed: Couldn't move b5454.tmp into place"), installer.state.value)
+        assertEquals(5, attempts.get())
+        assertTrue(installRoot.list().orEmpty().isEmpty())
+    }
 
     private fun serve(body: ByteArray) = server.enqueue(MockResponse.Builder().body(Buffer().write(body)).build())
 

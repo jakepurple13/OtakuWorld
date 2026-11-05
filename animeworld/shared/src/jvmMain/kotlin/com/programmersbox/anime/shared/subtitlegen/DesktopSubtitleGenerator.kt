@@ -214,9 +214,13 @@ class DesktopSubtitleGenerator(
         val video = File(entry.path)
         val ffmpeg = ffmpeg() ?: throw GenerationFailure("ffmpeg not found. Install it or set its location in Video export.")
         var downloaded = false
-        val whisper = whisper { fraction ->
-            downloaded = true
-            set(entry, GenerationStatus.DownloadingModel("whisper.cpp", fraction))
+        val whisper = try {
+            whisper { fraction ->
+                downloaded = true
+                set(entry, GenerationStatus.DownloadingModel("whisper.cpp", fraction))
+            }
+        } catch (e: WhisperCliDownloadException) {
+            throw GenerationFailure("Couldn't download whisper.cpp: ${e.message}")
         } ?: throw GenerationFailure(
             if (isMac) "whisper-cli not found. Install it with brew install whisper-cpp, or set its location in Settings › Subtitles."
             else "whisper-cli not found. Set its location in Settings › Subtitles."

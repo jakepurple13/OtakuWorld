@@ -7,6 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -46,6 +47,9 @@ sealed interface CliInstall {
 
 private const val CLI_EXE = "whisper-cli.exe"
 
+/** Thrown by [WhisperCliInstaller.ensureInstalled] when the install fails; [message] is the Failed state's message. */
+class WhisperCliDownloadException(message: String) : IOException(message)
+
 /**
  * Downloads whisper.cpp's Windows build into `<installRoot>/<version>/`: whisper-cli.exe plus the dlls it loads.
  * The zip goes to `<fileName>.part`, is checked against its sha256, and is extracted into `<version>.tmp/`, which
@@ -60,6 +64,8 @@ class WhisperCliInstaller(
     private val baseUrl: String = "https://github.com/ggml-org/whisper.cpp/releases/download/",
     /** The zip to install; tests pass their own so the checksum matches. */
     val asset: WhisperCliAsset? = if (isWindows) windowsWhisperAsset(arch) else null,
+    /** Renames a directory; tests make it fail to exercise the retry. */
+    private val rename: (from: File, to: File) -> Boolean = { from, to -> from.renameTo(to) },
 ) {
     private val lock = Any()
     private var job: Job? = null
@@ -92,12 +98,24 @@ class WhisperCliInstaller(
         }
         return when (val s = state.value) {
             is CliInstall.Ready -> s.file.also { onProgress(1f) }
-            is CliInstall.Failed -> throw IOException(s.message)
-            else -> throw IOException("Download of whisper.cpp was cancelled")
+            is CliInstall.Failed -> throw WhisperCliDownloadException(s.message)
+            else -> throw WhisperCliDownloadException("Download of whisper.cpp was cancelled")
         }
     }
 
     private fun installedExe(asset: WhisperCliAsset) = File(File(installRoot, asset.version), CLI_EXE)
+
+    /**
+     * Replaces [target] with [tmp]. Antivirus scanners (Windows Defender) briefly hold handles on freshly written
+     * .exe/.dll files, which makes the delete or rename fail, so this retries with a growing delay before giving up.
+     */
+    private suspend fun moveIntoPlace(tmp: File, target: File) {
+        repeat(5) { attempt ->
+            if (attempt > 0) delay(200L * attempt)
+            if (target.deleteRecursively() && rename(tmp, target)) return
+        }
+        throw IOException("Couldn't move ${tmp.name} into place")
+    }
 
     /** The running install, a new one, or null when there is nothing to install. */
     private fun startInstall(): Job? = synchronized(lock) {
@@ -115,13 +133,12 @@ class WhisperCliInstaller(
                 installRoot.mkdirs()
                 val sha256 = download(asset, part)
                 if (sha256 != asset.sha256) throw IOException("checksum mismatch")
-                tmp.deleteRecursively()
+                if (!tmp.deleteRecursively()) throw IOException("Couldn't clear ${tmp.name}")
                 tmp.mkdirs()
                 extract(part, tmp)
                 if (!File(tmp, CLI_EXE).isFile) throw IOException("$CLI_EXE missing from ${asset.fileName}")
                 currentCoroutineContext().ensureActive()
-                target.deleteRecursively()
-                if (!tmp.renameTo(target)) throw IOException("Couldn't move ${tmp.name} into place")
+                moveIntoPlace(tmp, target)
                 result = CliInstall.Ready(File(target, CLI_EXE))
             } catch (e: CancellationException) {
                 throw e

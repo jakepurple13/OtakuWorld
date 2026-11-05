@@ -350,6 +350,32 @@ class DesktopSubtitleGeneratorTest {
     }
 
     @Test
+    fun failedWhisperCliDownloadSaysWhatFailed() {
+        val server = MockWebServer().apply { start() }
+        try {
+            server.enqueue(MockResponse.Builder().code(404).build())
+            val installer = WhisperCliInstaller(
+                installRoot = File(root, "cli"),
+                client = OkHttpClient(),
+                scope = scope,
+                baseUrl = server.url("/").toString(),
+                asset = testWhisperAsset(testWhisperZip()),
+            )
+            val gen = generator(whisper = { p -> locateWhisperCli(settings, installer, p, search = { null }) })
+            val a = video("Frieren - Episode 07")
+            gen.enqueue(a.absolutePath, jaToEn, remember = false)
+
+            waitFor { gen.statuses.value[a.absolutePath] is GenerationStatus.Failed }
+            assertEquals(
+                GenerationStatus.Failed("Couldn't download whisper.cpp: Download failed: HTTP 404", jaToEn),
+                gen.statuses.value[a.absolutePath],
+            )
+        } finally {
+            server.close()
+        }
+    }
+
+    @Test
     fun resolveOrder() = runBlocking {
         val installer = WhisperCliInstaller(File(root, "cli"), OkHttpClient(), scope, isWindows = false)
         val searched = File("/usr/bin/whisper-cli")

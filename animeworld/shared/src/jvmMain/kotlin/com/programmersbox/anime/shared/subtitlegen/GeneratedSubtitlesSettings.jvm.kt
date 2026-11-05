@@ -170,8 +170,10 @@ internal actual fun GeneratedSubtitlesSettings() {
             // Windows with a prebuilt whisper.cpp for this CPU: AnimeWorld downloads it instead of the user.
             val downloadable = install !is CliInstall.NotNeeded
             val failed = install as? CliInstall.Failed
+            // While downloading, the progress line below says it all.
+            val installing = file == null && !badConfigured && install is CliInstall.Installing
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(
+                if (!installing) Text(
                     when {
                         !lookedUp -> ""
                         badConfigured ->
