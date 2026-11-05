@@ -25,6 +25,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.IOException
 import kotlin.io.path.createTempDirectory
 
 /** Runs a command line; returns its exit code. */
@@ -35,20 +36,35 @@ fun interface CommandRunner {
 /** Runs the command with [ProcessBuilder], stdout and stderr merged into [CommandRunner.run]'s `onLine`. */
 object ProcessCommandRunner : CommandRunner {
     override suspend fun run(args: List<String>, onLine: (String) -> Unit): Int {
-        val process = withContext(Dispatchers.IO) { ProcessBuilder(args).redirectErrorStream(true).start() }
+        var process: Process? = null
         try {
+            // Started on the caller's thread, not in withContext: a cancelled withContext would drop the started process.
+            val started = ProcessBuilder(args).redirectErrorStream(true).start().also { process = it }
             // Reading a process pipe can't be interrupted, so lines are read on their own thread and only the
             // (interruptible) waits run here; destroying the process on cancellation closes the pipe and ends it.
             val reader = Thread {
-                runCatching { process.inputStream.bufferedReader().forEachLine(onLine) }
+                // Keep draining even if onLine throws, or a full pipe would stall the process.
+                started.inputStream.bufferedReader().use { input ->
+                    while (true) {
+                        val line = try {
+                            input.readLine()
+                        } catch (_: IOException) {
+                            null
+                        } ?: break
+                        try {
+                            onLine(line)
+                        } catch (_: Throwable) {
+                        }
+                    }
+                }
             }.apply { isDaemon = true; start() }
             return runInterruptible(Dispatchers.IO) {
-                val code = process.waitFor()
+                val code = started.waitFor()
                 reader.join()
                 code
             }
         } finally {
-            process.destroy()
+            process?.destroy()
         }
     }
 }
@@ -104,7 +120,16 @@ class DesktopSubtitleGenerator(
                         map + (entry.path to GenerationStatus.ExtractingAudio) + pending.keys.associateWith { ahead }
                     }
                     // A child of the worker: cancelling it ends only this job, and join() waits for its cleanup.
-                    launch { run(entry) }.also { entry.job = it }
+                    launch {
+                        // Nothing may escape a job: a failure here would cancel the worker and stall the queue for good.
+                        try {
+                            run(entry)
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (t: Throwable) {
+                            set(entry, GenerationStatus.Failed(t.message ?: t::class.simpleName.orEmpty(), entry.request))
+                        }
+                    }.also { entry.job = it }
                 } ?: continue
                 job.join()
                 synchronized(lock) { if (active === entry) active = null }
@@ -147,52 +172,71 @@ class DesktopSubtitleGenerator(
     }
 
     private suspend fun run(entry: Entry) {
-        val video = File(entry.path)
-        val title = video.nameWithoutExtension
-        val temp = createTempDirectory("animeworld-subgen").toFile()
-        try {
-            val ffmpeg = ffmpeg() ?: throw GenerationFailure("ffmpeg not found. Install it or set its location in Video export.")
-            val whisper = whisper()
-                ?: throw GenerationFailure("whisper-cli not found. Install whisper.cpp or set its location in Settings › Subtitles.")
-
-            val wav = File(temp, "audio.wav")
-            exec(extractAudioArgs(ffmpeg.path, video, wav), "ffmpeg")
-
-            val model = models.ensureSelected { fraction ->
-                set(entry, GenerationStatus.DownloadingModel(models.summary.value.name, fraction))
-            }
-
-            val (from, to) = entry.request
-            set(entry, GenerationStatus.Transcribing(from, to, 0f, null))
-            val outBase = File(temp, "subtitles")
-            val started = System.currentTimeMillis()
-            exec(whisperArgs(whisper.path, model, wav, outBase, entry.request), "whisper-cli") { line ->
-                val percent = parseWhisperProgress(line) ?: return@exec
-                val fraction = percent / 100f
-                set(entry, GenerationStatus.Transcribing(from, to, fraction, remainingMs(System.currentTimeMillis() - started, fraction)))
-            }
-            val vtt = File(outBase.path + ".vtt")
-            if (!vtt.isFile) throw GenerationFailure("whisper-cli didn't write any subtitles")
-
-            // A job cancelled up to here leaves nothing behind. Saving holds the lock so cancel() can't land midway.
-            currentCoroutineContext().ensureActive()
-            val language = if (to.code == "auto") WhisperLanguage("auto", "Original") else to
-            synchronized(lock) {
-                if (entry.cancelled) throw CancellationException("Cancelled")
-                GeneratedSidecars.add(video, vtt, language)
-                _statuses.update { it - entry.path }
-            }
-            _finished.tryEmit(entry.path)
-            onSidecarsChanged()
-            notify("Subtitles ready", title, isError = false)
+        val title = File(entry.path).nameWithoutExtension
+        var temp: File? = null
+        val failure: String? = try {
+            generate(entry, createTempDirectory("animeworld-subgen").toFile().also { temp = it })
+            null
         } catch (e: CancellationException) {
             throw e
         } catch (t: Throwable) {
-            val message = t.message ?: t::class.simpleName.orEmpty()
-            set(entry, GenerationStatus.Failed(message, entry.request))
-            notify("Subtitles Failed", "$title: $message", isError = true)
+            t.message ?: t::class.simpleName.orEmpty()
         } finally {
-            temp.deleteRecursively()
+            temp?.deleteRecursively()
+        }
+        if (failure == null) {
+            // The track is saved and the status cleared; listeners failing must not turn that into a failure.
+            _finished.tryEmit(entry.path)
+            quietly { onSidecarsChanged() }
+            quietly { notify("Subtitles ready", title, isError = false) }
+        } else {
+            set(entry, GenerationStatus.Failed(failure, entry.request))
+            quietly { notify("Subtitles Failed", "$title: $failure", isError = true) }
+        }
+    }
+
+    /** Extracts, transcribes and saves the track in [temp]; returns once the sidecar is saved and the status cleared. */
+    private suspend fun generate(entry: Entry, temp: File) {
+        val video = File(entry.path)
+        val ffmpeg = ffmpeg() ?: throw GenerationFailure("ffmpeg not found. Install it or set its location in Video export.")
+        val whisper = whisper()
+            ?: throw GenerationFailure("whisper-cli not found. Install whisper.cpp or set its location in Settings › Subtitles.")
+
+        val wav = File(temp, "audio.wav")
+        exec(extractAudioArgs(ffmpeg.path, video, wav), "ffmpeg")
+
+        val model = models.ensureSelected { fraction ->
+            set(entry, GenerationStatus.DownloadingModel(models.summary.value.name, fraction))
+        }
+
+        val (from, to) = entry.request
+        set(entry, GenerationStatus.Transcribing(from, to, 0f, null))
+        val outBase = File(temp, "subtitles")
+        val started = System.currentTimeMillis()
+        exec(whisperArgs(whisper.path, model, wav, outBase, entry.request), "whisper-cli") { line ->
+            val percent = parseWhisperProgress(line) ?: return@exec
+            val fraction = percent / 100f
+            set(entry, GenerationStatus.Transcribing(from, to, fraction, remainingMs(System.currentTimeMillis() - started, fraction)))
+        }
+        val vtt = File(outBase.path + ".vtt")
+        if (!vtt.isFile) throw GenerationFailure("whisper-cli didn't write any subtitles")
+
+        // A job cancelled up to here leaves nothing behind. Saving holds the lock so cancel() can't land midway.
+        currentCoroutineContext().ensureActive()
+        val language = if (to.code == "auto") WhisperLanguage("auto", "Original") else to
+        synchronized(lock) {
+            if (entry.cancelled) throw CancellationException("Cancelled")
+            GeneratedSidecars.add(video, vtt, language)
+            _statuses.update { it - entry.path }
+        }
+    }
+
+    private suspend fun quietly(block: suspend () -> Unit) {
+        try {
+            block()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Throwable) {
         }
     }
 

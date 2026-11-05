@@ -7,6 +7,7 @@ import com.programmersbox.datastore.otakuDataStore
 import kotlinx.coroutines.CoroutineScope
 import okio.Path.Companion.toOkioPath
 import java.io.File
+import kotlin.io.path.createTempDirectory
 
 /** Points the global [otakuDataStore] at a fresh DataStore in [root] for one test; [close] restores the previous one. */
 class TestDesktopSettings(root: File, scope: CoroutineScope) : AutoCloseable {
@@ -22,6 +23,10 @@ class TestDesktopSettings(root: File, scope: CoroutineScope) : AutoCloseable {
     }
 
     override fun close() {
-        if (previousStore != null) otakuDataStore = previousStore
+        // With no previous store, leave a live one: ours dies with the test's scope, and DataStoreSettings in
+        // later test classes only initializes the global when it is unset.
+        otakuDataStore = previousStore ?: PreferenceDataStoreFactory.createWithPath(
+            produceFile = { File(createTempDirectory("otaku-datastore").toFile(), "otaku.preferences_pb").toOkioPath() },
+        )
     }
 }

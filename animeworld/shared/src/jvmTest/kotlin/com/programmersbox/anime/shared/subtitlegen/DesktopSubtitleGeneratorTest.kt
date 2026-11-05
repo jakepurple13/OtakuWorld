@@ -11,10 +11,14 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
+import mockwebserver3.MockResponse
+import mockwebserver3.MockWebServer
 import okhttp3.OkHttpClient
+import okio.Buffer
 import java.io.File
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.io.path.createTempDirectory
 import kotlin.test.AfterTest
@@ -42,14 +46,19 @@ class DesktopSubtitleGeneratorTest {
     private val en = whisperLanguages.first { it.code == "en" }
     private val jaToEn = GenerationRequest(ja, en)
 
-    private fun generator(whisper: suspend () -> File? = { File("/fake/whisper-cli") }) = DesktopSubtitleGenerator(
+    private fun generator(
+        whisper: suspend () -> File? = { File("/fake/whisper-cli") },
+        ffmpeg: suspend () -> File? = { File("/fake/ffmpeg") },
+        models: WhisperModelStore = this.models,
+        onSidecarsChanged: () -> Unit = {},
+    ) = DesktopSubtitleGenerator(
         scope = scope,
         settings = settings,
         models = models,
-        ffmpeg = { File("/fake/ffmpeg") },
+        ffmpeg = ffmpeg,
         whisper = whisper,
         runner = runner,
-        onSidecarsChanged = { sidecarsChanged.incrementAndGet() },
+        onSidecarsChanged = { sidecarsChanged.incrementAndGet(); onSidecarsChanged() },
         trayState = null,
     ).also { gen ->
         scope.launch(start = CoroutineStart.UNDISPATCHED) { gen.finished.collect { finished += it } }
@@ -77,6 +86,8 @@ class DesktopSubtitleGeneratorTest {
         val calls = CopyOnWriteArrayList<List<String>>()
         val gates = ConcurrentLinkedQueue<CompletableDeferred<Unit>>()
         val failures = ConcurrentLinkedQueue<String>()
+        /** Awaited after `progress = 50%` is printed. */
+        val midGates = ConcurrentLinkedQueue<CompletableDeferred<Unit>>()
         val whisperStarted = AtomicInteger()
 
         override suspend fun run(args: List<String>, onLine: (String) -> Unit): Int {
@@ -85,6 +96,7 @@ class DesktopSubtitleGeneratorTest {
             whisperStarted.incrementAndGet()
             gates.poll()?.await()
             onLine("progress = 50%")
+            midGates.poll()?.await()
             onLine("progress = 100%")
             failures.poll()?.let { line ->
                 onLine(line)
@@ -264,5 +276,77 @@ class DesktopSubtitleGeneratorTest {
         job.cancel()
         withTimeout(5_000) { job.join() }
         assertTrue(System.currentTimeMillis() - started < 10_000)
+    }
+
+    @Test
+    fun unexpectedErrorFailsJobAndQueueMovesOn() {
+        val calls = AtomicInteger()
+        val gen = generator(ffmpeg = {
+            if (calls.getAndIncrement() == 0) throw RuntimeException("boom") else File("/fake/ffmpeg")
+        })
+        val a = video("Frieren - Episode 07")
+        val b = video("Frieren - Episode 08")
+        gen.enqueue(a.absolutePath, jaToEn, remember = false)
+        gen.enqueue(b.absolutePath, jaToEn, remember = false)
+
+        waitFor { finished.isNotEmpty() }
+        assertEquals(listOf(b.absolutePath), finished)
+        assertEquals(mapOf(a.absolutePath to GenerationStatus.Failed("boom", jaToEn)), gen.statuses.value)
+    }
+
+    @Test
+    fun listenerErrorKeepsSuccessAndQueueMovesOn() {
+        val gen = generator(onSidecarsChanged = { throw IllegalStateException("listener broke") })
+        val a = video("Frieren - Episode 07")
+        val b = video("Frieren - Episode 08")
+        gen.enqueue(a.absolutePath, jaToEn, remember = false)
+        gen.enqueue(b.absolutePath, jaToEn, remember = false)
+
+        waitFor { finished.size == 2 }
+        assertEquals(emptyMap(), gen.statuses.value)
+        assertEquals(listOf("English (generated)"), OfflineSubtitles.find(a).map { it.lang })
+    }
+
+    @Test
+    fun transcribingReportsProgress() {
+        val gen = generator()
+        val mid = CompletableDeferred<Unit>().also { runner.midGates += it }
+        val a = video("Frieren - Episode 07")
+        gen.enqueue(a.absolutePath, jaToEn, remember = false)
+
+        waitFor { (gen.statuses.value[a.absolutePath] as? GenerationStatus.Transcribing)?.fraction == 0.5f }
+        val status = gen.statuses.value[a.absolutePath] as GenerationStatus.Transcribing
+        assertEquals(ja, status.from)
+        assertEquals(en, status.to)
+        assertTrue(status.remainingMs != null)
+
+        mid.complete(Unit)
+        waitFor { finished.isNotEmpty() }
+        assertEquals(emptyMap(), gen.statuses.value)
+    }
+
+    @Test
+    fun missingBuiltInModelDownloadsFirst() {
+        val server = MockWebServer().apply { start() }
+        try {
+            // 20 KB at 1 KB per 25 ms: slow enough to observe the download status.
+            server.enqueue(
+                MockResponse.Builder().body(Buffer().write(ByteArray(20_000))).throttleBody(1_000, 25, TimeUnit.MILLISECONDS).build()
+            )
+            val emptyModels = WhisperModelStore(settings, File(root, "empty-models"), OkHttpClient(), scope, server.url("/").toString())
+            val gen = generator(models = emptyModels)
+            val a = video("Frieren - Episode 07")
+            gen.enqueue(a.absolutePath, jaToEn, remember = false)
+
+            waitFor { gen.statuses.value[a.absolutePath] is GenerationStatus.DownloadingModel }
+            assertEquals("Small", (gen.statuses.value[a.absolutePath] as GenerationStatus.DownloadingModel).modelName)
+
+            waitFor { finished.isNotEmpty() }
+            assertEquals("/ggml-small.bin", server.takeRequest().url.encodedPath)
+            val whisper = runner.calls.single { "-ovtt" in it }
+            assertEquals(File(File(root, "empty-models"), "ggml-small.bin").path, whisper[whisper.indexOf("-m") + 1])
+        } finally {
+            server.close()
+        }
     }
 }
