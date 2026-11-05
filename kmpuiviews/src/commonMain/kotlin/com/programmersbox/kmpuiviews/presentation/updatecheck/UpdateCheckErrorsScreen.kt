@@ -5,11 +5,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -33,6 +35,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -49,6 +52,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -265,29 +269,64 @@ private fun SummaryCard(report: UpdateCheckReport, modifier: Modifier = Modifier
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-                Stat(report.checkedCount, stringResource(Res.string.uc_stat_checked))
-                Stat(report.updatedCount, stringResource(Res.string.uc_stat_updated))
-                Stat(
-                    report.itemFailures.size,
-                    stringResource(Res.string.uc_stat_failed),
-                    color = if (report.itemFailures.isNotEmpty()) MaterialTheme.colorScheme.error else Color.Unspecified,
-                )
+            Surface(
+                color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                shape = MaterialTheme.shapes.medium,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .height(IntrinsicSize.Min)
+                        .padding(vertical = 12.dp)
+                ) {
+                    Stat(
+                        report.checkedCount,
+                        stringResource(Res.string.uc_stat_checked),
+                        modifier = Modifier.weight(1f),
+                    )
+                    VerticalDivider()
+                    Stat(
+                        report.updatedCount,
+                        stringResource(Res.string.uc_stat_updated),
+                        modifier = Modifier.weight(1f),
+                    )
+                    VerticalDivider()
+                    Stat(
+                        report.itemFailures.size,
+                        stringResource(Res.string.uc_stat_failed),
+                        color = if (report.itemFailures.isNotEmpty()) MaterialTheme.colorScheme.error else Color.Unspecified,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun Stat(value: Int, label: String, color: Color = Color.Unspecified) {
-    Column {
+private fun Stat(
+    value: Int,
+    label: String,
+    modifier: Modifier = Modifier,
+    color: Color = Color.Unspecified,
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+    ) {
         Text(
             value.toString(),
             style = MaterialTheme.typography.headlineSmall.merge(TabularNumbers),
             fontWeight = FontWeight.SemiBold,
             color = color,
+            textAlign = TextAlign.Center,
         )
-        Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(
+            label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 
