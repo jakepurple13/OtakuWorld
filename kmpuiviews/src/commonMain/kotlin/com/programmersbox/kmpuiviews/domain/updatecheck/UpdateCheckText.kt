@@ -93,11 +93,10 @@ suspend fun UpdateCheckReport.finishedTitle(): String =
 
 suspend fun UpdateCheckReport.finishedText(): String? = when {
     !hasProblems -> null
+    // A failed source already has an ItemFailure per favorite, so only items are counted.
+    itemFailures.isNotEmpty() -> getPluralString(Res.plurals.uc_finished_text, itemFailures.size, itemFailures.size)
     stoppedEarly != null -> getString(Res.string.uc_finished_stopped)
-    else -> {
-        val count = itemFailures.size + sourceFailures.size
-        getPluralString(Res.plurals.uc_finished_text, count, count)
-    }
+    else -> null
 }
 
 suspend fun failureMessage(kind: FailureKind, httpCode: Int?): String = when (kind) {

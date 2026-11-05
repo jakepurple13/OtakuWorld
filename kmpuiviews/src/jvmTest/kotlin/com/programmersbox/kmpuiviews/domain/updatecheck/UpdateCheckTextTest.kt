@@ -142,6 +142,17 @@ class UpdateCheckTextTest {
     }
 
     @Test
+    fun `finishedText counts items once when source failed`() = runTest {
+        fun item(i: Int, sourceFailed: Boolean) =
+            ItemFailure("u$i", "t", "", "S", FailureKind.TimedOut, null, "", sourceFailed)
+        val r = report().copy(
+            sourceFailures = listOf(SourceFailure("S", FailureKind.TimedOut, null, "")),
+            itemFailures = listOf(item(0, true), item(1, true), item(2, false)),
+        )
+        assertEquals("3 couldn't be checked. Tap to see why.", r.finishedText())
+    }
+
+    @Test
     fun `segmentLayout`() {
         val p = progress(
             listOf(
