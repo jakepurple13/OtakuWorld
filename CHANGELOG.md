@@ -634,7 +634,8 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   ([#2667](https://github.com/jakepurple13/OtakuWorld/pull/2667))
 - **Generate subtitles on Desktop (AnimeWorld).** Downloaded episodes can get subtitles made on
   your computer with whisper.cpp, from the Downloads menu. Pick From and To languages, track
-  progress under the episode, and choose or add your own speech model in Settings › Subtitles.
+  progress under the episode, and choose or add your own speech model in Settings › Subtitles
+  ([#2671](https://github.com/jakepurple13/OtakuWorld/pull/2671))
 
 ---
 
