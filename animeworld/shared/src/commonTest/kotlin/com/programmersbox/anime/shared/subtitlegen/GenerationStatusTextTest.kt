@@ -36,7 +36,13 @@ class GenerationStatusTextTest {
     @Test
     fun autoTargetSaysTranscribingAndNoEtaWhenUnknown() {
         val status = GenerationStatus.Transcribing(WhisperAuto, WhisperLanguage("auto", "Same as spoken"), 0f, null)
-        assertEquals("Transcribing Detect automatically · 0%", generationStatusText(status))
+        assertEquals("Transcribing · 0%", generationStatusText(status))
+    }
+
+    @Test
+    fun autoDetectTranslatingNamesTarget() {
+        val status = GenerationStatus.Transcribing(WhisperAuto, lang("en"), 0.1f, null)
+        assertEquals("Auto-detect → English · 10%", generationStatusText(status))
     }
 
     @Test

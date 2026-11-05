@@ -30,7 +30,14 @@ fun generationStatusText(status: GenerationStatus): String = when (status) {
     is GenerationStatus.DownloadingModel -> "Downloading ${status.modelName} · ${percent(status.fraction)}"
     is GenerationStatus.Transcribing -> buildString {
         val sameLanguage = status.to.code == "auto" || status.to == status.from
-        append(if (sameLanguage) "Transcribing ${status.from.name}" else "${status.from.name} → ${status.to.name}")
+        val fromAuto = status.from.code == "auto"
+        append(
+            when {
+                sameLanguage -> if (fromAuto) "Transcribing" else "Transcribing ${status.from.name}"
+                fromAuto -> "Auto-detect → ${status.to.name}"
+                else -> "${status.from.name} → ${status.to.name}"
+            }
+        )
         append(" · ").append(percent(status.fraction))
         status.remainingMs?.let { append(" · ").append(remainingText(it)) }
     }

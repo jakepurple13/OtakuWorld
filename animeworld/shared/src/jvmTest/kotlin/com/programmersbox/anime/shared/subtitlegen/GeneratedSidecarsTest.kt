@@ -69,4 +69,21 @@ class GeneratedSidecarsTest {
         assertEquals(listOf("English"), labels())
         assertFalse(OfflineSubtitles.readIndex(indexFile)!!.single().generated)
     }
+
+    @Test
+    fun bracketedNameWithGlobSidecarKeepsItAndIndexesNext() {
+        val v = File(dir, "[SubsPlease] Frieren - 07 (1080p).mkv").also { it.writeText("v") }
+        File(dir, "[SubsPlease] Frieren - 07 (1080p).0.English.vtt").writeText("WEBVTT")
+        val target = GeneratedSidecars.add(v, vtt(), japanese)
+        assertEquals(listOf("English", "Japanese (generated)"), OfflineSubtitles.find(v).map { it.lang })
+        assertTrue(target.name.startsWith("[SubsPlease] Frieren - 07 (1080p).1."), target.name)
+    }
+
+    @Test
+    fun nonAsciiNameWorks() {
+        val v = File(dir, "葬送のフリーレン 07.mkv").also { it.writeText("v") }
+        val target = GeneratedSidecars.add(v, vtt(), english)
+        assertTrue(target.isFile)
+        assertEquals(listOf("English (generated)"), OfflineSubtitles.find(v).map { it.lang })
+    }
 }
