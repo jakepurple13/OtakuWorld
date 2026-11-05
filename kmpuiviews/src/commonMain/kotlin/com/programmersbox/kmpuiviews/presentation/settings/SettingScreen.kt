@@ -110,8 +110,8 @@ fun SettingScreen(
                         }
                     },
                     actions = {
-                        SyncIconComposable(modifier = Modifier.padding(horizontal = 16.dp))
                         QuickActionsBolt()
+                        SyncIconComposable(modifier = Modifier.padding(horizontal = 16.dp))
                     },
                     scrollBehavior = scrollBehavior,
                 )
