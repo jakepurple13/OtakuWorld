@@ -445,4 +445,10 @@
         <item quantity="other">%1$d items</item>
     </plurals>
     <string name="uc_open_details">Open details</string>
+    <plurals name="uc_rechecking">
+        <item quantity="one">Rechecking 1 item…</item>
+        <item quantity="other">Rechecking %1$d items…</item>
+    </plurals>
+    <string name="uc_already_running">A check is already running. Try again when it finishes.</string>
+    <string name="uc_report_copied">Report copied to clipboard</string>
 </resources>

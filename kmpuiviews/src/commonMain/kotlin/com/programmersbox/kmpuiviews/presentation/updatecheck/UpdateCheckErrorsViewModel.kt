@@ -10,13 +10,19 @@ import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckReport
 import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckReportStore
 import com.programmersbox.kmpuiviews.domain.updatecheck.failureMessage
 import com.programmersbox.kmpuiviews.repository.WorkRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
@@ -111,6 +117,13 @@ suspend fun UpdateCheckReport.toShareText(
     }
 }
 
+/** One-shot snackbar messages from [UpdateCheckErrorsViewModel]. */
+sealed interface UpdateCheckErrorsMessage {
+    data class Rechecking(val count: Int) : UpdateCheckErrorsMessage
+    data object AlreadyRunning : UpdateCheckErrorsMessage
+    data object Copied : UpdateCheckErrorsMessage
+}
+
 class UpdateCheckErrorsViewModel(
     private val store: UpdateCheckReportStore,
     private val workRepository: WorkRepository,
@@ -135,14 +148,25 @@ class UpdateCheckErrorsViewModel(
         .map { it?.itemFailures?.isNotEmpty() == true }
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
+    private val messageChannel = Channel<UpdateCheckErrorsMessage>(Channel.BUFFERED)
+    val messages: Flow<UpdateCheckErrorsMessage> = messageChannel.receiveAsFlow()
+
     fun retryFailed() {
-        workRepository.retryFailedUpdates()
+        viewModelScope.launch {
+            val count = store.current()?.itemFailures?.size ?: 0
+            // Android checks WorkManager state with blocking calls.
+            val started = withContext(Dispatchers.IO) { workRepository.retryFailedUpdates() }
+            messageChannel.send(
+                if (started) UpdateCheckErrorsMessage.Rechecking(count) else UpdateCheckErrorsMessage.AlreadyRunning
+            )
+        }
     }
 
     fun share() {
         viewModelScope.launch {
             val report = store.current() ?: return@launch
-            sharer.share(report.toShareText(displayName = sourceRepository::displayNameFor))
+            val copied = sharer.share(report.toShareText(displayName = sourceRepository::displayNameFor))
+            if (copied) messageChannel.send(UpdateCheckErrorsMessage.Copied)
         }
     }
 }

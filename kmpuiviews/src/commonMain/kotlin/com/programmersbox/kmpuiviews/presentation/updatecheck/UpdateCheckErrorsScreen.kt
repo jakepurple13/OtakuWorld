@@ -28,13 +28,17 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -61,11 +65,14 @@ import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
 import com.programmersbox.kmpuiviews.utils.toLocalDateTime
+import org.jetbrains.compose.resources.getPluralString
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import otakuworld.kmpuiviews.generated.resources.Res
+import otakuworld.kmpuiviews.generated.resources.uc_already_running
 import otakuworld.kmpuiviews.generated.resources.uc_errors_title
 import otakuworld.kmpuiviews.generated.resources.uc_errors_when
 import otakuworld.kmpuiviews.generated.resources.uc_group_items
@@ -76,6 +83,8 @@ import otakuworld.kmpuiviews.generated.resources.uc_pill_http
 import otakuworld.kmpuiviews.generated.resources.uc_pill_source_failed
 import otakuworld.kmpuiviews.generated.resources.uc_pill_timed_out
 import otakuworld.kmpuiviews.generated.resources.uc_pill_unreadable
+import otakuworld.kmpuiviews.generated.resources.uc_rechecking
+import otakuworld.kmpuiviews.generated.resources.uc_report_copied
 import otakuworld.kmpuiviews.generated.resources.uc_retry_failed
 import otakuworld.kmpuiviews.generated.resources.uc_share
 import otakuworld.kmpuiviews.generated.resources.uc_source_banner_body
@@ -99,8 +108,24 @@ fun UpdateCheckErrorsScreen(
     val report by viewModel.report.collectAsStateWithLifecycle()
     val groups by viewModel.groups.collectAsStateWithLifecycle()
     val canRetry by viewModel.canRetry.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(viewModel) {
+        viewModel.messages.collect { message ->
+            snackbarHostState.showSnackbar(
+                when (message) {
+                    is UpdateCheckErrorsMessage.Rechecking ->
+                        getPluralString(Res.plurals.uc_rechecking, message.count, message.count)
+
+                    UpdateCheckErrorsMessage.AlreadyRunning -> getString(Res.string.uc_already_running)
+                    UpdateCheckErrorsMessage.Copied -> getString(Res.string.uc_report_copied)
+                }
+            )
+        }
+    }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(Res.string.uc_errors_title)) },

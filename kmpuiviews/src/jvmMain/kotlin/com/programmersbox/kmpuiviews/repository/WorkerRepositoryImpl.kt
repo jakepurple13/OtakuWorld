@@ -5,6 +5,7 @@ import dev.nucleusframework.scheduler.TaskData
 import dev.nucleusframework.scheduler.testing.TestTaskRunner
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
@@ -21,8 +22,10 @@ class WorkerRepositoryImpl : WorkRepository {
 
     private val scope = CoroutineScope(Dispatchers.IO)
 
+    private var manualRun: Job? = null
+
     override fun checkManually() {
-        scope.launch {
+        manualRun = scope.launch {
             TestTaskRunner.runTask(
                 SyncCheckWorker(),
                 ManualSyncId,
@@ -31,13 +34,15 @@ class WorkerRepositoryImpl : WorkRepository {
         }
     }
 
-    override fun retryFailedUpdates() {
-        scope.launch {
+    override fun retryFailedUpdates(): Boolean {
+        if (manualRun?.isActive == true) return false
+        manualRun = scope.launch {
             TestTaskRunner.runTask(
                 SyncCheckWorker(),
                 ManualSyncId,
                 inputData = TaskData.of(SyncCheckWorker.SyncCheckData(cancel = true, retryFailed = true))
             )
         }
+        return true
     }
 }

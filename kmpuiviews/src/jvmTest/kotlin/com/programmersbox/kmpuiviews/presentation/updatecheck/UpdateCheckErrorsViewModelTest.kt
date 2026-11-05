@@ -11,16 +11,19 @@ import com.programmersbox.kmpuiviews.testing.FakeUpdateCheckReportStore
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.datetime.TimeZone
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -28,10 +31,11 @@ class UpdateCheckErrorsViewModelTest {
 
     private val viewModelStore = ViewModelStore()
 
-    private class FakeSharer : UpdateCheckReportSharer {
+    private class FakeSharer(private val copiedToClipboard: Boolean = false) : UpdateCheckReportSharer {
         val shared = CompletableDeferred<String>()
-        override fun share(text: String) {
+        override fun share(text: String): Boolean {
             shared.complete(text)
+            return copiedToClipboard
         }
     }
 
@@ -125,8 +129,42 @@ class UpdateCheckErrorsViewModelTest {
         val vm = viewModel(mixedReport, workRepository = workRepository)
 
         vm.retryFailed()
+        vm.messages.first()
 
         assertEquals(1, workRepository.retryCount)
+    }
+
+    @Test
+    fun `retryFailed emits rechecking message with count`() = runTest {
+        val vm = viewModel(mixedReport)
+
+        vm.retryFailed()
+
+        assertEquals(UpdateCheckErrorsMessage.Rechecking(4), vm.messages.first())
+    }
+
+    @Test
+    fun `retryFailed emits already running when refused`() = runTest {
+        val vm = viewModel(mixedReport, workRepository = FakeWorkRepository(retryAccepted = false))
+
+        vm.retryFailed()
+
+        assertEquals(UpdateCheckErrorsMessage.AlreadyRunning, vm.messages.first())
+    }
+
+    @Test
+    fun `share emits copied message only when sharer copied`() = runTest {
+        val copying = FakeSharer(copiedToClipboard = true)
+        val copyingVm = viewModel(mixedReport, sharer = copying)
+        copyingVm.share()
+        assertEquals(UpdateCheckErrorsMessage.Copied, copyingVm.messages.first())
+
+        val chooser = FakeSharer(copiedToClipboard = false)
+        val chooserVm = viewModel(mixedReport, sharer = chooser)
+        chooserVm.share()
+        chooser.shared.await()
+        // Nothing was copied, so no message may be waiting.
+        assertNull(withTimeoutOrNull(200) { chooserVm.messages.first() })
     }
 
     @Test

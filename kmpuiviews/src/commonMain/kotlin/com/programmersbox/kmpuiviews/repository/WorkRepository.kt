@@ -12,8 +12,11 @@ interface WorkRepository {
     fun pruneWork()
     fun checkManually()
 
-    /** Rechecks only the failed items of the last update check and merges the result into it. */
-    fun retryFailedUpdates()
+    /**
+     * Rechecks only the failed items of the last update check and merges the result into it.
+     * Returns false, without starting anything, when an update check is already running or queued.
+     */
+    fun retryFailedUpdates(): Boolean
 }
 
 data class WorkInfoKmp(

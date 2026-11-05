@@ -36,7 +36,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-class FakeWorkRepository : WorkRepository {
+class FakeWorkRepository(private val retryAccepted: Boolean = true) : WorkRepository {
     override val manualCheck: Flow<List<WorkInfoKmp>> = flowOf(emptyList())
     override val allWorkCheck: Flow<List<WorkInfoKmp>> = flowOf(emptyList())
     override fun pruneWork() {}
@@ -45,8 +45,9 @@ class FakeWorkRepository : WorkRepository {
     var retryCount = 0
         private set
 
-    override fun retryFailedUpdates() {
+    override fun retryFailedUpdates(): Boolean {
         retryCount++
+        return retryAccepted
     }
 }
 

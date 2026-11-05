@@ -65,14 +65,20 @@ class WorkRepositoryImpl(
         enqueueOneTimeUpdate(workDataOf(UpdateFlowWorker.CHECK_ALL to true))
     }
 
-    override fun retryFailedUpdates() {
-        // Same unique name as a manual check so a retry never runs alongside a full check.
+    override fun retryFailedUpdates(): Boolean {
+        val oneTimeBusy = workManager.getWorkInfosForUniqueWork("oneTimeUpdate").get()
+            .any { it.state == WorkInfo.State.RUNNING || it.state == WorkInfo.State.ENQUEUED || it.state == WorkInfo.State.BLOCKED }
+        val periodicRunning = workManager.getWorkInfosForUniqueWork("updateFlowChecks").get()
+            .any { it.state == WorkInfo.State.RUNNING }
+        if (oneTimeBusy || periodicRunning) return false
+        // Shares the manual check's unique name, so a retry can't overlap a manual check.
         enqueueOneTimeUpdate(
             workDataOf(
                 UpdateFlowWorker.CHECK_ALL to true,
                 UpdateFlowWorker.RETRY_FAILED to true,
             )
         )
+        return true
     }
 
     private fun enqueueOneTimeUpdate(inputData: Data) {
