@@ -1,9 +1,5 @@
 package com.programmersbox.anime.shared.subtitlegen
 
-import androidx.datastore.preferences.core.PreferenceDataStoreFactory
-import ca.gosyer.appdirs.AppDirs
-import com.programmersbox.anime.shared.AnimeDesktopSettings
-import com.programmersbox.datastore.otakuDataStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -15,7 +11,6 @@ import okhttp3.OkHttpClient
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
 import okio.Buffer
-import okio.Path.Companion.toOkioPath
 import java.io.File
 import kotlin.io.path.createTempDirectory
 import kotlin.test.AfterTest
@@ -31,17 +26,9 @@ class WhisperModelStoreTest {
     private val modelsDir = File(root, "models")
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val server = MockWebServer().apply { start() }
-    private val previousStore = runCatching { otakuDataStore }.getOrNull()
-    private val settings: AnimeDesktopSettings
-
-    init {
-        // A fresh DataStore per test; the previous global one is restored in cleanup().
-        otakuDataStore = PreferenceDataStoreFactory.createWithPath(
-            scope = scope,
-            produceFile = { File(root, "settings.preferences_pb").toOkioPath() },
-        )
-        settings = AnimeDesktopSettings(AppDirs { appName = "ModelStoreTest"; appAuthor = "test" })
-    }
+    // A fresh DataStore per test; the previous global one is restored in cleanup().
+    private val testSettings = TestDesktopSettings(root, scope)
+    private val settings = testSettings.settings
 
     private fun newStore() = WhisperModelStore(settings, modelsDir, OkHttpClient(), scope, server.url("/").toString())
 
@@ -51,7 +38,7 @@ class WhisperModelStoreTest {
     fun cleanup() {
         scope.cancel()
         server.close()
-        if (previousStore != null) otakuDataStore = previousStore
+        testSettings.close()
         root.deleteRecursively()
     }
 

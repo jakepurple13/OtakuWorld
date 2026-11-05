@@ -3,6 +3,9 @@ package com.programmersbox.desktop
 import ca.gosyer.appdirs.AppDirs
 import com.programmersbox.anime.shared.AnimeDesktopSettings
 import com.programmersbox.anime.shared.StorageHolder
+import com.programmersbox.anime.shared.subtitlegen.DesktopSubtitleGenerator
+import com.programmersbox.anime.shared.subtitlegen.SubtitleGenerator
+import com.programmersbox.anime.shared.subtitlegen.WhisperModelStore
 import com.programmersbox.anime.shared.subtitles.JvmSubtitleSettingsRepository
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRepository
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsViewModel
@@ -32,6 +35,7 @@ import dev.nucleusframework.systeminfo.SystemInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import okhttp3.OkHttpClient
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.core.module.dsl.viewModelOf
@@ -86,6 +90,24 @@ fun main(args: Array<String>) {
                     trayState = get(),
                 )
             }
+            single {
+                WhisperModelStore(
+                    settings = get(),
+                    modelsDir = File(get<AppDirs>().getUserDataDir(), "whisper-models"),
+                    client = OkHttpClient(),
+                    scope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
+                )
+            }
+            single {
+                DesktopSubtitleGenerator(
+                    scope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
+                    settings = get(),
+                    models = get(),
+                    ffmpeg = { get<VideoExportManager>().ffmpeg() },
+                    onSidecarsChanged = { get<VideoLibrarySource>().rescan() },
+                    trayState = get(),
+                )
+            } bind SubtitleGenerator::class
 
             navigation<VideoScreen> { VideoPlayerUi(it) }
             navigation<PlatformSettings> { JvmSettingsScreen() }
