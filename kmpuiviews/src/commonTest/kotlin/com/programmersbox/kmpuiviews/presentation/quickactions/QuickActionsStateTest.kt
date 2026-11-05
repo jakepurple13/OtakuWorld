@@ -25,7 +25,31 @@ class QuickActionsStateTest {
 
     @Test
     fun enqueuedCountsAsRunning() = assertEquals(
-        ManualCheckState.Running(null, null), manualCheckState(listOf(work("ENQUEUED")), null, false)
+        ManualCheckState.Running(null, null, waitingToStart = true), manualCheckState(listOf(work("ENQUEUED")), null, false)
+    )
+
+    @Test
+    fun requeuedAfterRunningIsNotWaiting() = assertEquals(
+        ManualCheckState.Running(null, null, waitingToStart = false),
+        manualCheckState(listOf(work("ENQUEUED")), null, sawRunning = true, everRunning = true),
+    )
+
+    @Test
+    fun runningIsNotWaiting() = assertEquals(
+        ManualCheckState.Running(1, 2, waitingToStart = false),
+        manualCheckState(listOf(work("RUNNING", 1, 2)), null, sawRunning = true),
+    )
+
+    @Test
+    fun freshReportFinishesWithoutSeenActiveWork() = assertEquals(
+        ManualCheckState.Finished(CheckOutcome.Updates(3)),
+        manualCheckState(emptyList(), report(3).copy(startedAt = 10), sawRunning = false, requestedAtMillis = 10),
+    )
+
+    @Test
+    fun staleReportWithoutSeenActiveWorkStaysIdle() = assertEquals(
+        ManualCheckState.Idle,
+        manualCheckState(emptyList(), report(3).copy(startedAt = 9), sawRunning = false, requestedAtMillis = 10),
     )
 
     @Test
@@ -50,13 +74,13 @@ class QuickActionsStateTest {
     )
 
     @Test
-    fun noReportAfterRunIsSourcesFailed() = assertEquals(
-        ManualCheckState.Finished(CheckOutcome.SourcesFailed), manualCheckState(listOf(work("SUCCEEDED")), null, true)
+    fun noReportAfterRunIsCheckFailed() = assertEquals(
+        ManualCheckState.Finished(CheckOutcome.CheckFailed), manualCheckState(listOf(work("SUCCEEDED")), null, true)
     )
 
     @Test
-    fun staleReportIsSourcesFailed() = assertEquals(
-        ManualCheckState.Finished(CheckOutcome.SourcesFailed),
+    fun staleReportIsCheckFailed() = assertEquals(
+        ManualCheckState.Finished(CheckOutcome.CheckFailed),
         manualCheckState(emptyList(), report(3), true, requestedAtMillis = 10)
     )
 
@@ -69,5 +93,5 @@ class QuickActionsStateTest {
     fun neverChecked() = assertEquals(LastChecked.Never, lastCheckedLabel(null, 1_000))
 
     @Test
-    fun minutesAgo() = assertEquals(LastChecked.Ago(180), lastCheckedLabel(report(0).copy(finishedAt = 0), 180 * 60_000L))
+    fun minutesAgo() = assertEquals(LastChecked.Ago(180), lastCheckedLabel(0, 180 * 60_000L))
 }

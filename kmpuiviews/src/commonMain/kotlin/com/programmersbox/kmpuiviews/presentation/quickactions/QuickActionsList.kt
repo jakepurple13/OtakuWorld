@@ -21,14 +21,19 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.programmersbox.showcase.annotations.ShowcaseComponent
+import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.qa_ago_days
@@ -46,6 +51,7 @@ import otakuworld.kmpuiviews.generated.resources.qa_scan_qr
 import otakuworld.kmpuiviews.generated.resources.qa_scan_qr_sub
 import otakuworld.kmpuiviews.generated.resources.qa_scheduled
 import otakuworld.kmpuiviews.generated.resources.quick_actions
+import kotlin.time.Clock
 
 private val FirstShape = RoundedCornerShape(18.dp, 18.dp, 6.dp, 6.dp)
 private val MiddleShape = RoundedCornerShape(6.dp)
@@ -56,6 +62,8 @@ fun QuickActionsList(
     state: QuickActionsUiState,
     onAction: (QuickAction) -> Unit,
     modifier: Modifier = Modifier,
+    /** Attached to the first row so keyboard-opened cards can focus it. */
+    firstRowFocusRequester: FocusRequester? = null,
 ) {
     Column(modifier = modifier) {
         Row(
@@ -85,6 +93,7 @@ fun QuickActionsList(
                 supporting = checkSupportingText(state),
                 onClick = { onAction(QuickAction.CheckForUpdates) },
                 trailing = { RunChip() },
+                modifier = firstRowFocusRequester?.let { Modifier.focusRequester(it) } ?: Modifier,
             )
             QuickActionRow(
                 shape = MiddleShape,
@@ -124,7 +133,14 @@ private fun checkSupportingText(state: QuickActionsUiState): String {
             stringResource(Res.string.qa_checking_indeterminate)
         }
     }
-    return when (val last = state.lastChecked) {
+    // Ticks once a minute so "Last checked" keeps counting while the card stays open
+    val now by produceState(Clock.System.now().toEpochMilliseconds()) {
+        while (true) {
+            delay(60_000)
+            value = Clock.System.now().toEpochMilliseconds()
+        }
+    }
+    return when (val last = lastCheckedLabel(state.lastCheckedAt, now)) {
         LastChecked.Never -> stringResource(Res.string.qa_never_checked)
         is LastChecked.Ago -> stringResource(Res.string.qa_last_checked, agoText(last.minutes))
     }
@@ -147,10 +163,11 @@ private fun QuickActionRow(
     supporting: String,
     onClick: () -> Unit,
     trailing: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Surface(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         shape = shape,
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
@@ -211,7 +228,7 @@ private fun Chevron() {
 @Composable
 fun QuickActionsListIdleSample() {
     QuickActionsList(
-        state = QuickActionsUiState(ManualCheckState.Idle, LastChecked.Ago(12), 4),
+        state = QuickActionsUiState(ManualCheckState.Idle, minutesAgo(12), 4),
         onAction = {},
     )
 }
@@ -224,7 +241,7 @@ fun QuickActionsListIdleSample() {
 @Composable
 fun QuickActionsListRunningSample() {
     QuickActionsList(
-        state = QuickActionsUiState(ManualCheckState.Running(3, 12), LastChecked.Ago(12), 4),
+        state = QuickActionsUiState(ManualCheckState.Running(3, 12), minutesAgo(12), 4),
         onAction = {},
     )
 }
@@ -237,7 +254,9 @@ fun QuickActionsListRunningSample() {
 @Composable
 fun QuickActionsListNeverCheckedSample() {
     QuickActionsList(
-        state = QuickActionsUiState(ManualCheckState.Idle, LastChecked.Never, null),
+        state = QuickActionsUiState(ManualCheckState.Idle, null, null),
         onAction = {},
     )
 }
+
+private fun minutesAgo(minutes: Long): Long = Clock.System.now().toEpochMilliseconds() - minutes * 60_000L

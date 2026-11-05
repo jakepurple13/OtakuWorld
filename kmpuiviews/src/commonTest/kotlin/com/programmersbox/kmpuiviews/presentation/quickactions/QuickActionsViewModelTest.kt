@@ -175,10 +175,10 @@ private fun report(updated: Int, startedAt: Long = NEW) = UpdateCheckReport(
     itemFailures = emptyList(),
 )
 
-private fun workerModel() = WorkerInfoModel(
+private fun workerModel(status: String = "ENQUEUED") = WorkerInfoModel(
     id = "1",
     progress = emptyMap(),
-    status = "ENQUEUED",
+    status = status,
     nextScheduleTimeMillis = LocalDateTime(2026, 1, 1, 0, 0),
     tags = emptySet(),
     isPeriodic = true,
@@ -341,7 +341,7 @@ class QuickActionsViewModelTest {
     }
 
     @Test
-    fun runEndedWithoutNewReportIsSourcesFailed() = runTest {
+    fun runEndedWithoutNewReportIsCheckFailed() = runTest {
         fakeReports.reportFlow.value = report(updated = 3, startedAt = OLD)
         val vm = vm()
         vm.uiState.test {
@@ -351,7 +351,89 @@ class QuickActionsViewModelTest {
             runCurrent()
             fakeWork.manual.value = emptyList()
             runCurrent()
-            assertEquals(ManualCheckState.Finished(CheckOutcome.SourcesFailed), expectMostRecentItem().checkState)
+            assertEquals(ManualCheckState.Finished(CheckOutcome.CheckFailed), expectMostRecentItem().checkState)
+        }
+    }
+
+    @Test
+    fun fastRunWithoutObservedActiveWorkFinishes() = runTest {
+        val vm = vm()
+        vm.uiState.test {
+            runCurrent()
+            vm.run(QuickAction.CheckForUpdates)
+            // WorkManager coalescing: manual goes straight from empty to SUCCEEDED
+            fakeWork.manual.value = listOf(succeeded())
+            fakeReports.reportFlow.value = report(updated = 4)
+            runCurrent()
+            assertEquals(ManualCheckState.Finished(CheckOutcome.Updates(4)), expectMostRecentItem().checkState)
+        }
+    }
+
+    @Test
+    fun scheduledRunAfterDismissIsNotUserRequested() = runTest {
+        val allWork = MutableStateFlow<List<WorkInfoKmp>>(emptyList())
+        val vm = vm(FakeWork(allWork).also { fakeWork = it })
+        vm.uiState.test {
+            runCurrent()
+            vm.run(QuickAction.CheckForUpdates)
+            fakeWork.manual.value = listOf(succeeded())
+            fakeReports.reportFlow.value = report(updated = 1)
+            runCurrent()
+            assertIs<ManualCheckState.Finished>(expectMostRecentItem().checkState)
+            vm.dismissResult()
+            runCurrent()
+
+            allWork.value = listOf(running(null, null))
+            runCurrent()
+            val scheduled = expectMostRecentItem()
+            assertIs<ManualCheckState.Running>(scheduled.checkState)
+            assertFalse(scheduled.userRequested)
+        }
+    }
+
+    @Test
+    fun queuedManualRunIsWaitingUntilItRuns() = runTest {
+        val vm = vm()
+        vm.uiState.test {
+            runCurrent()
+            vm.run(QuickAction.CheckForUpdates)
+            fakeWork.manual.value = listOf(work("ENQUEUED"))
+            runCurrent()
+            assertEquals(ManualCheckState.Running(null, null, waitingToStart = true), expectMostRecentItem().checkState)
+            fakeWork.manual.value = listOf(running(1, 5))
+            runCurrent()
+            assertEquals(ManualCheckState.Running(1, 5), expectMostRecentItem().checkState)
+            // A retry re-queues the work; it has already run, so it is not "waiting to start"
+            fakeWork.manual.value = listOf(work("ENQUEUED"))
+            runCurrent()
+            assertEquals(ManualCheckState.Running(null, null), expectMostRecentItem().checkState)
+        }
+    }
+
+    @Test
+    fun finishedWorkersAreNotCounted() = runTest {
+        fakeHandler.workers.value = listOf(
+            workerModel("ENQUEUED"),
+            workerModel("RUNNING"),
+            workerModel("BLOCKED"),
+            workerModel("SUCCEEDED"),
+            workerModel("FAILED"),
+            workerModel("CANCELLED"),
+        )
+        val vm = vm()
+        vm.uiState.test {
+            runCurrent()
+            assertEquals(3, expectMostRecentItem().scheduledCount)
+        }
+    }
+
+    @Test
+    fun onlyFinishedWorkersHidesCount() = runTest {
+        fakeHandler.workers.value = listOf(workerModel("SUCCEEDED"), workerModel("CANCELLED"))
+        val vm = vm()
+        vm.uiState.test {
+            runCurrent()
+            assertNull(expectMostRecentItem().scheduledCount)
         }
     }
 
@@ -384,7 +466,7 @@ class QuickActionsViewModelTest {
             runCurrent()
             val state = expectMostRecentItem()
             assertEquals(ManualCheckState.Idle, state.checkState)
-            assertIs<LastChecked.Ago>(state.lastChecked)
+            assertEquals(0L, state.lastCheckedAt)
         }
     }
 }

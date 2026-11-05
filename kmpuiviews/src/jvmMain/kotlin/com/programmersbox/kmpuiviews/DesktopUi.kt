@@ -102,6 +102,11 @@ private class DesktopViewModelStoreOwner : ViewModelStoreOwner {
     override val viewModelStore: ViewModelStore = ViewModelStore()
 }
 
+/** Puts the Actions menu in the macOS menu bar. Must run before any window is created. */
+private fun useScreenMenuBarOnMac() {
+    if (isMacOs) System.setProperty("apple.laf.useScreenMenuBar", "true")
+}
+
 fun desktopSetup(
     args: Array<String>,
     name: String,
@@ -111,6 +116,7 @@ fun desktopSetup(
     genericInfo: Module.() -> KoinDefinition<PlatformGenericInfo>,
     moduleBlock: Module.() -> Unit,
 ) {
+    useScreenMenuBarOnMac()
     DataStoreSettings { File(appDirs.getUserDataDir(), it).absolutePath }
 
     if (BackgroundWorkHandlerImpl.setupSyncCheckers(args)) return
@@ -150,6 +156,7 @@ fun baseDesktopSetup(
     moduleBlock: Module.() -> Unit,
     content: @Composable () -> Unit,
 ) {
+    useScreenMenuBarOnMac()
     DataStoreSettings { File(appDirs.getUserDataDir(), it).absolutePath }
 
     if (BackgroundWorkHandlerImpl.setupSyncCheckers(args)) return

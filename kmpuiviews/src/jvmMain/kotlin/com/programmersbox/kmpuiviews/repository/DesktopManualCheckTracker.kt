@@ -16,6 +16,8 @@ class DesktopManualCheckTracker {
     private val _state = MutableStateFlow<List<WorkInfoKmp>>(emptyList())
     val state: StateFlow<List<WorkInfoKmp>> = _state.asStateFlow()
 
+    val isRunning: Boolean get() = _state.value.any { it.state == RUNNING }
+
     fun tryStart(): Boolean {
         var started = false
         _state.update { current ->

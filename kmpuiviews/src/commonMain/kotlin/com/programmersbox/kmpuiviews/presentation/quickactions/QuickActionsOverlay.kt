@@ -12,6 +12,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
@@ -26,6 +28,10 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDuration
@@ -44,6 +50,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -54,21 +61,24 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import otakuworld.kmpuiviews.generated.resources.Res
+import otakuworld.kmpuiviews.generated.resources.qa_check_failed
 import otakuworld.kmpuiviews.generated.resources.qa_checking
 import otakuworld.kmpuiviews.generated.resources.qa_checking_indeterminate
+import otakuworld.kmpuiviews.generated.resources.qa_dismiss
 import otakuworld.kmpuiviews.generated.resources.qa_new_updates
 import otakuworld.kmpuiviews.generated.resources.qa_no_updates
 import otakuworld.kmpuiviews.generated.resources.qa_sources_failed
 import otakuworld.kmpuiviews.generated.resources.qa_view
+import otakuworld.kmpuiviews.generated.resources.qa_waiting_to_start
 
 private val CardShape = RoundedCornerShape(26.dp)
 
 // Marks the progress snackbar; its text is read live from the state so progress updates don't
-// replace (and re-animate) the snackbar.
+// replace (and re-animate) the snackbar. Dismissing it hides it until the check phase changes.
 private object RunningVisuals : SnackbarVisuals {
     override val message: String = ""
     override val actionLabel: String? = null
-    override val withDismissAction: Boolean = false
+    override val withDismissAction: Boolean = true
     override val duration: SnackbarDuration = SnackbarDuration.Indefinite
 }
 
@@ -155,7 +165,10 @@ fun SharedTransitionScope.QuickActionsOverlay() {
                 .padding(8.dp)
                 .then(cardWidth),
         ) {
-            QuickActionsCard(state = uiState, onAction = vm::run)
+            // Opened from the keyboard: focus the first row so the card is usable without a pointer
+            val firstRow = remember { FocusRequester() }
+            LaunchedEffect(Unit) { firstRow.requestFocus() }
+            QuickActionsCard(state = uiState, onAction = vm::run, firstRowFocusRequester = firstRow)
         }
 
         QuickActionsSnackbar(
@@ -180,6 +193,7 @@ private fun AnimatedVisibilityScope.QuickActionsCard(
     state: QuickActionsUiState,
     onAction: (QuickAction) -> Unit,
     modifier: Modifier = Modifier,
+    firstRowFocusRequester: FocusRequester? = null,
 ) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainer,
@@ -190,11 +204,14 @@ private fun AnimatedVisibilityScope.QuickActionsCard(
         QuickActionsList(
             state = state,
             onAction = onAction,
+            firstRowFocusRequester = firstRowFocusRequester,
             modifier = Modifier
                 .animateEnterExit(
                     enter = fadeIn(tween(delayMillis = 150)),
                     exit = fadeOut(tween(100)),
                 )
+                // Keeps the last row reachable at large font scales in landscape
+                .verticalScroll(rememberScrollState())
                 .padding(8.dp),
         )
     }
@@ -229,6 +246,8 @@ private fun QuickActionsSnackbar(
                         getString(Res.string.qa_sources_failed),
                         getString(Res.string.qa_view),
                     )
+                    // No report was written, so there is nothing to view
+                    CheckOutcome.CheckFailed -> ResultVisuals(getString(Res.string.qa_check_failed), null)
                 }
                 if (hostState.showSnackbar(visuals) == SnackbarResult.ActionPerformed) onView()
                 onResultDismissed()
@@ -241,12 +260,22 @@ private fun QuickActionsSnackbar(
             val running = checkState as? ManualCheckState.Running
             val checked = running?.checked
             val total = running?.total
-            Snackbar(modifier = Modifier.padding(12.dp)) {
+            Snackbar(
+                modifier = Modifier.padding(12.dp),
+                dismissAction = {
+                    IconButton(onClick = data::dismiss) {
+                        Icon(Icons.Default.Close, contentDescription = stringResource(Res.string.qa_dismiss))
+                    }
+                },
+            ) {
                 Text(
-                    if (checked != null && total != null && total > 0)
-                        stringResource(Res.string.qa_checking, checked, total)
-                    else
-                        stringResource(Res.string.qa_checking_indeterminate)
+                    when {
+                        running?.waitingToStart == true -> stringResource(Res.string.qa_waiting_to_start)
+                        checked != null && total != null && total > 0 ->
+                            stringResource(Res.string.qa_checking, checked, total)
+
+                        else -> stringResource(Res.string.qa_checking_indeterminate)
+                    }
                 )
             }
         } else {

@@ -54,6 +54,8 @@ private fun QuickAction.label(): StringResource = when (this) {
 @Composable
 fun FrameWindowScope.QuickActionsMenuBar() {
     val controller = koinInject<QuickActionsController>()
+    // Not scoped to this menu: it resolves to the same ViewModelStoreOwner as QuickActionsOverlay,
+    // so it shares the overlay's instance and a run started here shows the overlay's snackbar.
     val viewModel = koinViewModel<QuickActionsViewModel>()
     val menuTitle = stringResource(Res.string.qa_menu_actions)
     val openLabel = stringResource(Res.string.qa_menu_open)
@@ -76,6 +78,8 @@ fun FrameWindowScope.QuickActionsMenuBar() {
 @Composable
 fun QuickActionsTitleBarMenu() {
     val controller = koinInject<QuickActionsController>()
+    // Not scoped to this menu: it resolves to the same ViewModelStoreOwner as QuickActionsOverlay,
+    // so it shares the overlay's instance and a run started here shows the overlay's snackbar.
     val viewModel = koinViewModel<QuickActionsViewModel>()
     var expanded by remember { mutableStateOf(false) }
     TextButton(onClick = { expanded = true }) { Text(stringResource(Res.string.qa_menu_actions)) }

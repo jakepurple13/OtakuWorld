@@ -1,9 +1,12 @@
 package com.programmersbox.kmpuiviews.repository
 
+import com.programmersbox.kmpuiviews.logFirebaseMessage
+import com.programmersbox.kmpuiviews.recordFirebaseException
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandlerImpl.Companion.ManualSyncId
 import dev.nucleusframework.scheduler.TaskData
 import dev.nucleusframework.scheduler.TaskResult
 import dev.nucleusframework.scheduler.testing.TestTaskRunner
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -41,8 +44,14 @@ class WorkerRepositoryImpl(
                     inputData = TaskData.of(data)
                 )
                 tracker.finish(result !is TaskResult.Failure)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                tracker.finish(false)
+                logFirebaseMessage("Manual update check failed: ${e.message}")
+                recordFirebaseException(e)
+            } finally {
+                // Whatever ended the run (exception, error, cancellation), never leave it RUNNING
+                if (tracker.isRunning) tracker.finish(false)
             }
         }
         return true

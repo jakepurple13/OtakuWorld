@@ -10,6 +10,16 @@ class DesktopManualCheckTrackerTest {
     fun startsEmpty() = assertEquals(emptyList(), DesktopManualCheckTracker().state.value)
 
     @Test
+    fun isRunningTracksTheRun() {
+        val t = DesktopManualCheckTracker()
+        assertFalse(t.isRunning)
+        t.tryStart()
+        assertTrue(t.isRunning)
+        t.finish(success = true)
+        assertFalse(t.isRunning)
+    }
+
+    @Test
     fun secondStartRejectedWhileRunning() {
         val t = DesktopManualCheckTracker()
         assertTrue(t.tryStart())

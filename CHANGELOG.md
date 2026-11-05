@@ -46,7 +46,7 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 
 #### New Features
 
-- Quick actions: a bolt button at the end of the top bar on Recent and Settings opens a card with
+- Quick actions: a bolt button in the top bar on Recent and Settings opens a card with
   Check for updates, Scan QR code, and Background tasks. Checking for updates runs in place with
   progress in a snackbar. On Desktop, press Cmd/Ctrl+K or use the Actions menu. Desktop update
   checks now report progress and can't run twice at once

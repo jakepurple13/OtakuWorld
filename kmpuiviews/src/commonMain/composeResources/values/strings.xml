@@ -481,4 +481,7 @@
     <string name="qa_ago_minutes">%1$dm ago</string>
     <string name="qa_ago_hours">%1$dh ago</string>
     <string name="qa_ago_days">%1$dd ago</string>
+    <string name="qa_waiting_to_start">Waiting to start…</string>
+    <string name="qa_check_failed">Check failed</string>
+    <string name="qa_dismiss">Dismiss</string>
 </resources>

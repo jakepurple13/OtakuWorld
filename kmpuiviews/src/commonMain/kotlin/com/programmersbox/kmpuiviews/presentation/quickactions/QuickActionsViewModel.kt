@@ -22,7 +22,8 @@ import kotlin.time.Clock
 
 data class QuickActionsUiState(
     val checkState: ManualCheckState,
-    val lastChecked: LastChecked,
+    /** Finish time of the last report in epoch millis; null when no check has run. */
+    val lastCheckedAt: Long?,
     /** Null when there are no scheduled workers; the UI hides the count. */
     val scheduledCount: Int?,
     /** True from Run until the result is dismissed; scheduled checks alone leave it false. */
@@ -38,8 +39,10 @@ class QuickActionsViewModel(
 ) : ViewModel() {
     // Set by run(); null until a check is requested. sawRunning flips once work is actually active,
     // so stale finished work and reports from earlier runs never show as this run's result.
+    // everRunning flips once that work is RUNNING, not just queued.
     private val requestedAt = MutableStateFlow<Long?>(null)
     private val sawRunning = MutableStateFlow(false)
+    private val everRunning = MutableStateFlow(false)
 
     // Each source starts with an initial value: on desktop allWorkCheck is emptyFlow(), and
     // combine would never emit otherwise.
@@ -59,26 +62,31 @@ class QuickActionsViewModel(
     init {
         work.onEach { list ->
             if (requestedAt.value != null && list.any { it.state in activeStates }) sawRunning.value = true
+            if (requestedAt.value != null && list.any { it.state == "RUNNING" }) everRunning.value = true
         }.launchIn(viewModelScope)
+    }
+
+    private val runFlags = combine(sawRunning, requestedAt, everRunning) { saw, requested, ever ->
+        Triple(saw, requested, ever)
     }
 
     val uiState: StateFlow<QuickActionsUiState> = combine(
         work,
         reportStore.report.onStart { emit(null) },
         backgroundWorkHandler.workerInfoFlow().onStart { emit(emptyList()) },
-        sawRunning,
-        requestedAt,
-    ) { work, report, workers, saw, requested ->
+        runFlags,
+    ) { work, report, workers, (saw, requested, ever) ->
         QuickActionsUiState(
-            checkState = manualCheckState(work, report, saw, requested ?: 0L),
-            lastChecked = lastCheckedLabel(report, Clock.System.now().toEpochMilliseconds()),
-            scheduledCount = workers.size.takeIf { it > 0 },
+            checkState = manualCheckState(work, report, saw, requested, ever),
+            lastCheckedAt = report?.finishedAt,
+            // Android keeps finished work in the list; only count work that is still scheduled.
+            scheduledCount = workers.count { it.status in activeStates }.takeIf { it > 0 },
             userRequested = requested != null,
         )
     }.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
-        QuickActionsUiState(ManualCheckState.Idle, LastChecked.Never, null),
+        QuickActionsUiState(ManualCheckState.Idle, null, null),
     )
 
     fun run(action: QuickAction) {
@@ -87,6 +95,7 @@ class QuickActionsViewModel(
             QuickAction.CheckForUpdates -> {
                 if (!isRunning.value) {
                     sawRunning.value = false
+                    everRunning.value = false
                     requestedAt.value = Clock.System.now().toEpochMilliseconds()
                     workRepository.checkManually()
                 }
@@ -104,10 +113,7 @@ class QuickActionsViewModel(
 
     fun dismissResult() {
         sawRunning.value = false
+        everRunning.value = false
         requestedAt.value = null
-    }
-
-    private companion object {
-        val activeStates = setOf("RUNNING", "ENQUEUED", "BLOCKED")
     }
 }
