@@ -115,10 +115,8 @@ class DesktopSubtitleGenerator(
                     if (pending[entry.path] !== entry) return@synchronized null
                     pending.remove(entry.path)
                     active = entry
-                    val ahead = GenerationStatus.Queued(titleOf(entry.path))
-                    _statuses.update { map ->
-                        map + (entry.path to GenerationStatus.ExtractingAudio) + pending.keys.associateWith { ahead }
-                    }
+                    _statuses.update { it + (entry.path to GenerationStatus.ExtractingAudio) }
+                    relabelQueued()
                     // A child of the worker: cancelling it ends only this job, and join() waits for its cleanup.
                     launch {
                         // Nothing may escape a job: a failure here would cancel the worker and stall the queue for good.
@@ -148,7 +146,7 @@ class DesktopSubtitleGenerator(
             // A cancelled job may still be cleaning up; the same video can be queued again meanwhile.
             val running = active?.takeIf { !it.cancelled }
             if (videoPath in pending || running?.path == videoPath) return
-            val ahead = running ?: pending.values.firstOrNull()
+            val ahead = pending.values.lastOrNull() ?: running
             val entry = Entry(videoPath, request)
             pending[videoPath] = entry
             _statuses.update {
@@ -164,7 +162,19 @@ class DesktopSubtitleGenerator(
             entry.cancelled = true
             entry.job?.cancel()
             _statuses.update { it - videoPath }
+            relabelQueued()
         }
+    }
+
+    /** Re-titles each queued job after the one immediately ahead of it. Call with [lock] held. */
+    private fun relabelQueued() {
+        var ahead: Entry? = active?.takeIf { !it.cancelled }
+        val updates = HashMap<String, GenerationStatus>()
+        for (entry in pending.values) {
+            if (ahead != null) updates[entry.path] = GenerationStatus.Queued(titleOf(ahead.path))
+            ahead = entry
+        }
+        if (updates.isNotEmpty()) _statuses.update { it + updates }
     }
 
     override fun dismiss(videoPath: String) = _statuses.update { map ->
@@ -226,6 +236,7 @@ class DesktopSubtitleGenerator(
         val language = if (to.code == "auto") WhisperLanguage("auto", "Original") else to
         synchronized(lock) {
             if (entry.cancelled) throw CancellationException("Cancelled")
+            if (!video.isFile) throw GenerationFailure("The episode was deleted.")
             GeneratedSidecars.add(video, vtt, language)
             _statuses.update { it - entry.path }
         }

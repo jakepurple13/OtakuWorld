@@ -151,6 +151,48 @@ class DesktopSubtitleGeneratorTest {
     }
 
     @Test
+    fun queuedJobsNameTheJobImmediatelyAhead() {
+        val gen = generator()
+        val gate = CompletableDeferred<Unit>().also { runner.gates += it }
+        runner.gates += CompletableDeferred<Unit>().also { it.complete(Unit) }
+        val a = video("Frieren - Episode 07")
+        val b = video("Frieren - Episode 08")
+        val c = video("Frieren - Episode 09")
+        gen.enqueue(a.absolutePath, jaToEn, remember = false)
+        waitFor { runner.whisperStarted.get() == 1 }
+        gen.enqueue(b.absolutePath, jaToEn, remember = false)
+        gen.enqueue(c.absolutePath, jaToEn, remember = false)
+        assertEquals(GenerationStatus.Queued("Episode 07"), gen.statuses.value[b.absolutePath])
+        assertEquals(GenerationStatus.Queued("Episode 08"), gen.statuses.value[c.absolutePath])
+
+        gen.cancel(b.absolutePath)
+        assertEquals(GenerationStatus.Queued("Episode 07"), gen.statuses.value[c.absolutePath])
+
+        val d = video("Frieren - Episode 10")
+        gen.enqueue(d.absolutePath, jaToEn, remember = false)
+        assertEquals(GenerationStatus.Queued("Episode 09"), gen.statuses.value[d.absolutePath])
+
+        gate.complete(Unit)
+        waitFor { finished.size == 3 }
+    }
+
+    @Test
+    fun deletedVideoFailsWithoutSidecar() {
+        val gen = generator()
+        val gate = CompletableDeferred<Unit>().also { runner.gates += it }
+        val a = video("Frieren - Episode 07")
+        gen.enqueue(a.absolutePath, jaToEn, remember = false)
+        waitFor { runner.whisperStarted.get() == 1 }
+        a.delete()
+        gate.complete(Unit)
+
+        waitFor { gen.statuses.value[a.absolutePath] is GenerationStatus.Failed }
+        assertEquals(GenerationStatus.Failed("The episode was deleted.", jaToEn), gen.statuses.value[a.absolutePath])
+        assertEquals(emptyList(), a.parentFile.listFiles { f -> f.name.contains(".vtt") || f.name.endsWith(".subtitles.json") }!!.toList())
+        assertTrue(finished.isEmpty())
+    }
+
+    @Test
     fun cancelActiveCleansUpAndStartsNext() {
         val gen = generator()
         runner.gates += CompletableDeferred()
