@@ -23,6 +23,7 @@ import io.ktor.client.engine.mock.toByteArray
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -49,7 +50,7 @@ class DesktopTranslationViewModelTest {
     private class FakeEngine(
         override val kind: EngineKind,
         var targetList: List<String>,
-        private val onTranslate: (String) -> String = { "T:$it" },
+        private val onTranslate: suspend (String) -> String = { "T:$it" },
     ) : TranslationEngine {
         val calls = mutableListOf<Triple<String, String, String>>()
         override suspend fun targets(): List<String> = targetList
@@ -121,7 +122,10 @@ class DesktopTranslationViewModelTest {
 
     private val store = BergamotModelStore(server.index(), dir, server.client, scope)
 
-    private fun viewModel(detected: String? = "ja", vararg overrides: FakeEngine) = DesktopTranslationViewModel(
+    private fun viewModel(
+        detected: String? = "ja",
+        vararg overrides: FakeEngine,
+    ) = DesktopTranslationViewModel(
         settings = settings,
         appSettings = appSettings,
         engines = (listOf(bergamot, ollama, custom) + overrides).associateBy { it.kind },
@@ -249,5 +253,38 @@ class DesktopTranslationViewModelTest {
         vm.confirmDelete()
         vm.awaitState { s -> s.bergamotRows.single { it.source == "ja" }.state == ModelState.NotDownloaded }
         assertTrue(!dir.resolve("ja-en").exists())
+    }
+
+    @Test
+    fun `switching engine cancels in-flight test`() = runBlocking<Unit> {
+        val started = CompletableDeferred<Unit>()
+        val cancelled = CompletableDeferred<Unit>()
+        val hanging = FakeEngine(EngineKind.Bergamot, listOf("en")) {
+            started.complete(Unit)
+            try {
+                CompletableDeferred<String>().await()
+            } finally {
+                cancelled.complete(Unit)
+            }
+        }
+        val vm = viewModel("ja", hanging)
+        vm.awaitState { it.engine == EngineKind.Bergamot }
+        vm.runTest()
+        withTimeout(10_000) { started.await() }
+        assertTrue(vm.state.value.testRunning)
+
+        vm.setEngine(EngineKind.Ollama)
+        withTimeout(10_000) { cancelled.await() }
+        val s = vm.awaitState { it.engine == EngineKind.Ollama }
+        delay(100)
+        assertEquals(false, vm.state.value.testRunning)
+        assertEquals(null, vm.state.value.testOutput)
+        assertEquals(null, vm.state.value.testTiming)
+        assertEquals(null, s.testError)
+
+        // A new run under the new engine still works.
+        vm.runTest()
+        val done = vm.awaitState { !it.testRunning && it.testOutput != null }
+        assertTrue(done.testTiming!!.startsWith("Ollama · ja→en · "))
     }
 }

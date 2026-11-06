@@ -266,9 +266,7 @@ internal fun ColumnScope.BergamotPanel(state: DesktopTranslationState, vm: Deskt
     }
 
     val rows = state.bergamotRows
-    if (rows.isEmpty() && state.bergamotIndexError == null) {
-        PanelNote("Loading the model list…")
-    }
+    if (rows.isEmpty() && state.bergamotIndexError == null) PanelNote("Loading the model list…")
     Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
         rows.forEachIndexed { i, row ->
             key(row.source) {

@@ -136,6 +136,7 @@ class DesktopTranslationViewModel(
     val state: StateFlow<DesktopTranslationState> = _state.asStateFlow()
 
     private var pullJob: Job? = null
+    private var testJob: Job? = null
 
     private val engineFlow: Flow<EngineKind> = settings.engine.asFlow()
         .map { runCatching { EngineKind.valueOf(it) }.getOrDefault(EngineKind.Bergamot) }
@@ -198,13 +199,15 @@ class DesktopTranslationViewModel(
     // ---------- top ----------
 
     fun setTarget(code: String) {
-        _state.update { it.copy(target = code, testOutput = null, testTiming = null, testError = null) }
+        cancelTest()
+        _state.update { it.copy(target = code) }
         viewModelScope.launch { appSettings.translationTargetLanguage.set(code) }
     }
 
     fun setEngine(kind: EngineKind) {
         if (_state.value.engine == kind) return
-        _state.update { it.copy(engine = kind, confirmingId = null, testOutput = null, testTiming = null, testError = null) }
+        cancelTest()
+        _state.update { it.copy(engine = kind, confirmingId = null) }
         viewModelScope.launch { settings.engine.set(kind.name) }
         if (kind == EngineKind.Ollama) viewModelScope.launch { checkOllama() }
     }
@@ -370,10 +373,17 @@ class DesktopTranslationViewModel(
 
     fun setTestInput(text: String) = _state.update { it.copy(testInput = text) }
 
+    /** Stops a running test and clears its result, so it never shows under another engine or target. */
+    private fun cancelTest() {
+        testJob?.cancel()
+        testJob = null
+        _state.update { it.copy(testRunning = false, testOutput = null, testTiming = null, testError = null) }
+    }
+
     fun runTest() {
         if (_state.value.testRunning) return
         _state.update { it.copy(testRunning = true, testOutput = null, testTiming = null, testError = null) }
-        viewModelScope.launch {
+        testJob = viewModelScope.launch {
             val s = _state.value
             try {
                 val source = withContext(Dispatchers.Default) { detector.detect(s.testInput) }
@@ -399,7 +409,7 @@ class DesktopTranslationViewModel(
             } catch (e: Exception) {
                 fail(e.message ?: "Something went wrong")
             } finally {
-                _state.update { it.copy(testRunning = false) }
+                if (testJob == coroutineContext[Job]) _state.update { it.copy(testRunning = false) }
             }
         }
     }
