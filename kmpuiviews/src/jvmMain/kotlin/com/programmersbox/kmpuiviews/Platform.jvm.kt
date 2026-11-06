@@ -26,8 +26,8 @@ import com.mikepenz.aboutlibraries.Libs
 import com.programmersbox.datastore.DataStoreHandler
 import com.programmersbox.favoritesdatabase.DatabaseBuilder
 import com.programmersbox.kmpmodels.KmpSourceInformation
-import com.programmersbox.kmpuiviews.domain.KmpCustomRemoteModel
 import com.programmersbox.kmpuiviews.domain.TranslationHandler
+import com.programmersbox.kmpuiviews.domain.TranslationModel
 import com.programmersbox.kmpuiviews.domain.TranslationModelHandler
 import com.programmersbox.kmpuiviews.utils.JvmAppLogo
 import dev.nucleusframework.systemcolor.isSystemInHighContrast
@@ -39,6 +39,7 @@ import io.kamel.core.config.takeFrom
 import io.kamel.image.config.Default
 import io.kamel.image.config.animatedImageDecoder
 import io.kamel.image.config.resourcesFetcher
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.koinInject
 import org.koin.core.module.Module
@@ -241,19 +242,12 @@ class TranslationItemHandler : TranslationHandler {
 }
 
 class TranslationModelHandlerImpl : TranslationModelHandler {
-    override fun getModels(onSuccess: (List<KmpCustomRemoteModel>) -> Unit) {
-        onSuccess(emptyList())
-    }
-
-    override suspend fun deleteModel(model: KmpCustomRemoteModel) {
-
-    }
-
-    override suspend fun modelList(): List<KmpCustomRemoteModel> = emptyList()
-
-    override suspend fun delete(model: KmpCustomRemoteModel) {
-
-    }
+    override val isAvailable: Boolean = false
+    override val models = MutableStateFlow<List<TranslationModel>>(emptyList())
+    override suspend fun refresh() {}
+    override fun download(code: String) {}
+    override fun cancelDownload(code: String) {}
+    override suspend fun delete(codes: Set<String>) {}
 }
 
 class MangaDesktopSettings(

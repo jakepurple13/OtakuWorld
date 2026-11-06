@@ -5,13 +5,14 @@ import androidx.compose.ui.graphics.Color
 import com.programmersbox.favoritesdatabase.BlurHashDao
 import com.programmersbox.favoritesdatabase.ExceptionDao
 import com.programmersbox.kmpuiviews.BuildType
+import com.programmersbox.kmpuiviews.domain.ModelState
 import com.programmersbox.kmpuiviews.domain.TranslationModelHandler
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.sharedcomponents.stats.StatData
 import com.programmersbox.sharedcomponents.stats.StatisticsProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 
 class SystemStatisticsProvider(
@@ -28,7 +29,7 @@ class SystemStatisticsProvider(
     override fun observeStats(): Flow<List<StatData>> = combine(
         exceptionDao.getExceptionCount(),
         blurHashDao.getAllHashesCount(),
-        flow { emit(translationModelHandler.modelList().size) }
+        translationModelHandler.models.map { models -> models.count { it.state is ModelState.Downloaded } }
     ) { exceptions, blurHashes, translationModels ->
         listOfNotNull(
             StatData(

@@ -2,15 +2,14 @@ package com.programmersbox.uiviews.di
 
 import android.content.Context
 import com.programmersbox.kmpuiviews.BuildType
-import com.programmersbox.kmpuiviews.domain.KmpCustomRemoteModel
 import com.programmersbox.kmpuiviews.domain.TranslationHandler
+import com.programmersbox.kmpuiviews.domain.TranslationModel
 import com.programmersbox.kmpuiviews.domain.TranslationModelHandler
 import com.programmersbox.kmpuiviews.utils.AppConfig
-import com.programmersbox.sharedutils.CustomRemoteModel
 import com.programmersbox.sharedutils.TranslateItems
-import com.programmersbox.sharedutils.TranslatorUtils
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.R
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.koin.dsl.module
 
 val kmpInterop = module {
@@ -30,29 +29,12 @@ val kmpInterop = module {
 }
 
 class TranslationModelHandlerImpl : TranslationModelHandler {
-    override fun getModels(onSuccess: (List<KmpCustomRemoteModel>) -> Unit) = TranslatorUtils.getModels {
-        onSuccess(it.map(::toRemoteModel))
-    }
-
-    override suspend fun deleteModel(model: KmpCustomRemoteModel) = TranslatorUtils
-        .deleteModel(toRemoteModel(model))
-
-    override suspend fun modelList(): List<KmpCustomRemoteModel> = TranslatorUtils
-        .modelList()
-        .map(::toRemoteModel)
-
-    override suspend fun delete(model: KmpCustomRemoteModel) = TranslatorUtils
-        .delete(toRemoteModel(model))
-
-    private fun toRemoteModel(kmpCustomRemoteModel: KmpCustomRemoteModel) = CustomRemoteModel(
-        hash = kmpCustomRemoteModel.hash,
-        language = kmpCustomRemoteModel.language
-    )
-
-    private fun toRemoteModel(customRemoteModel: CustomRemoteModel) = KmpCustomRemoteModel(
-        hash = customRemoteModel.hash.orEmpty(),
-        language = customRemoteModel.language
-    )
+    override val isAvailable: Boolean = false
+    override val models = MutableStateFlow<List<TranslationModel>>(emptyList())
+    override suspend fun refresh() {}
+    override fun download(code: String) {}
+    override fun cancelDownload(code: String) {}
+    override suspend fun delete(codes: Set<String>) {}
 }
 
 

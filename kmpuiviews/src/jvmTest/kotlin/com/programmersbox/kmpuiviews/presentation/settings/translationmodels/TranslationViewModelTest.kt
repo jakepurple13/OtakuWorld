@@ -1,8 +1,11 @@
 package com.programmersbox.kmpuiviews.presentation.settings.translationmodels
 
 import androidx.lifecycle.ViewModelStore
-import com.programmersbox.kmpuiviews.domain.KmpCustomRemoteModel
-import com.programmersbox.kmpuiviews.domain.TranslationModelHandler
+import com.programmersbox.kmpuiviews.domain.ModelState
+import com.programmersbox.kmpuiviews.domain.TranslationLanguages
+import com.programmersbox.kmpuiviews.domain.TranslationModel
+import com.programmersbox.kmpuiviews.testing.FakeTranslationModelHandler
+import com.programmersbox.kmpuiviews.testing.createTestNewSettingsHandling
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -15,11 +18,13 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class TranslationViewModelTest {
 
     private val viewModelStore = ViewModelStore()
+    private val settings = createTestNewSettingsHandling()
 
     private suspend fun awaitCondition(condition: suspend () -> Boolean) {
         withContext(Dispatchers.Default.limitedParallelism(1)) {
@@ -29,31 +34,30 @@ class TranslationViewModelTest {
         }
     }
 
-    private fun model(language: String) = KmpCustomRemoteModel(hash = "hash-$language", language = language)
+    private fun row(code: String, downloaded: Boolean, size: Long = 1_000L) = TranslationModel(
+        language = TranslationLanguages.byCode(code)!!,
+        state = if (downloaded) ModelState.Downloaded else ModelState.NotDownloaded,
+        sizeBytes = if (downloaded) size else null,
+        sizeIsEstimate = !downloaded,
+        required = code == "en",
+        lastUsedMillis = null,
+    )
 
-    private class FakeHandler(
-        initialModels: List<KmpCustomRemoteModel> = emptyList(),
-    ) : TranslationModelHandler {
-        val models = initialModels.toMutableList()
+    private fun seeded() = FakeTranslationModelHandler(
+        initial = listOf(
+            row("en", true, 100),
+            row("ja", true, 200),
+            row("ko", true, 300),
+            row("zh", true, 400),
+            row("es", true, 500),
+            row("fr", false),
+            row("de", false),
+        ),
+    )
 
-        override fun getModels(onSuccess: (List<KmpCustomRemoteModel>) -> Unit) {
-            onSuccess(models)
-        }
-
-        override suspend fun deleteModel(model: KmpCustomRemoteModel) {
-            models.remove(model)
-        }
-
-        override suspend fun delete(model: KmpCustomRemoteModel) {
-            models.remove(model)
-        }
-
-        override suspend fun modelList(): List<KmpCustomRemoteModel> = models
-    }
-
-    private fun viewModel(handler: TranslationModelHandler) = TranslationViewModel(
-        translationModelHandler = handler,
-    ).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
+    private fun viewModel(handler: FakeTranslationModelHandler) =
+        TranslationViewModel(handler, settings)
+            .also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @BeforeTest
@@ -69,34 +73,132 @@ class TranslationViewModelTest {
         Dispatchers.resetMain()
     }
 
-    @Test fun `starts with empty translation models`() = runTest {
-        val vm = viewModel(FakeHandler())
+    @Test fun `delete of target resets target to en`() = runTest {
+        val handler = seeded()
+        val vm = viewModel(handler)
+        settings.translationTargetLanguage.set("ja")
+        awaitCondition { vm.state.value.target.code == "ja" }
 
-        assertTrue(vm.translationModels.isEmpty())
+        vm.askDelete("ja")
+        awaitCondition { vm.state.value.confirmingCode == "ja" }
+        vm.confirmDelete()
+        awaitCondition { vm.state.value.target.code == "en" }
+
+        assertEquals(listOf(setOf("ja")), handler.deleted)
     }
 
-    @Test fun `loadModels populates translationModels from handler`() = runTest {
-        val handler = FakeHandler(listOf(model("en"), model("jp")))
+    @Test fun `bulk delete of target resets target to en`() = runTest {
+        val handler = seeded()
         val vm = viewModel(handler)
+        settings.translationTargetLanguage.set("ja")
+        awaitCondition { vm.state.value.target.code == "ja" }
 
-        vm.loadModels()
-        awaitCondition { vm.translationModels.isNotEmpty() }
+        vm.enterSelect("ja")
+        vm.toggle("ko")
+        awaitCondition { vm.state.value.selected == setOf("ja", "ko") }
+        vm.askBulkDelete()
+        awaitCondition { vm.state.value.confirmingBulk }
+        vm.confirmBulkDelete()
+        awaitCondition { vm.state.value.target.code == "en" }
 
-        assertEquals(2, vm.translationModels.size)
-        assertEquals(listOf("en", "jp"), vm.translationModels.map { it.language })
+        assertEquals(listOf(setOf("ja", "ko")), handler.deleted)
     }
 
-    @Test fun `deleteModel removes model and refreshes translationModels`() = runTest {
-        val enModel = model("en")
-        val handler = FakeHandler(listOf(enModel, model("jp")))
+    @Test fun `english is never selectable`() = runTest {
+        val vm = viewModel(seeded())
+
+        vm.enterSelect()
+        vm.toggle("en")
+        vm.selectAll()
+        awaitCondition { vm.state.value.selected.isNotEmpty() }
+
+        assertFalse("en" in vm.state.value.selected)
+        assertEquals(setOf("ja", "ko", "zh", "es"), vm.state.value.selected)
+    }
+
+    @Test fun `selectAll twice clears`() = runTest {
+        val vm = viewModel(seeded())
+
+        vm.enterSelect()
+        vm.selectAll()
+        awaitCondition { vm.state.value.selected.size == 4 }
+        vm.selectAll()
+        awaitCondition { vm.state.value.selected.isEmpty() }
+
+        assertTrue(vm.state.value.selected.isEmpty())
+    }
+
+    @Test fun `selectedBytes sums selected sizes`() = runTest {
+        val vm = viewModel(seeded())
+
+        vm.enterSelect("ja")
+        vm.toggle("ko")
+        awaitCondition { vm.state.value.selectedBytes == 500L }
+
+        assertEquals(500L, vm.state.value.selectedBytes)
+    }
+
+    @Test fun `totalBytes sums downloaded sizes`() = runTest {
+        val vm = viewModel(seeded())
+
+        awaitCondition { vm.state.value.downloaded.size == 5 }
+
+        assertEquals(1_500L, vm.state.value.totalBytes)
+        assertEquals("en", vm.state.value.downloaded.first().language.code)
+    }
+
+    @Test fun `onBack exits select before closing`() = runTest {
+        val vm = viewModel(seeded())
+
+        vm.enterSelect("ja")
+        awaitCondition { vm.state.value.selecting }
+
+        assertTrue(vm.onBack())
+        awaitCondition { !vm.state.value.selecting }
+        assertFalse(vm.onBack())
+    }
+
+    @Test fun `onBack closes picker first`() = runTest {
+        val vm = viewModel(seeded())
+
+        vm.openPicker()
+        awaitCondition { vm.state.value.pickerOpen }
+
+        assertTrue(vm.onBack())
+        awaitCondition { !vm.state.value.pickerOpen }
+        assertFalse(vm.onBack())
+    }
+
+    @Test fun `setTarget not downloaded triggers download`() = runTest {
+        val handler = seeded()
         val vm = viewModel(handler)
 
-        vm.loadModels()
-        awaitCondition { vm.translationModels.size == 2 }
+        vm.openPicker()
+        awaitCondition { vm.state.value.pickerOpen }
+        vm.setTarget("fr")
+        awaitCondition { vm.state.value.target.code == "fr" }
 
-        vm.deleteModel(enModel)
-        awaitCondition { vm.translationModels.size == 1 }
+        assertEquals(listOf("fr"), handler.downloads)
+        assertFalse(vm.state.value.pickerOpen)
+    }
 
-        assertEquals("jp", vm.translationModels[0].language)
+    @Test fun `query filters notDownloaded and picker by english or native name`() = runTest {
+        val vm = viewModel(seeded())
+
+        vm.setQuery("deut")
+        awaitCondition { vm.state.value.query == "deut" }
+
+        assertEquals(listOf("de"), vm.state.value.notDownloaded.map { it.language.code })
+        assertEquals(listOf("de"), vm.state.value.pickerLanguages.map { it.language.code })
+
+        vm.setQuery("french")
+        awaitCondition { vm.state.value.query == "french" }
+        assertEquals(listOf("fr"), vm.state.value.notDownloaded.map { it.language.code })
+    }
+
+    @Test fun `unavailable handler gives available false`() = runTest {
+        val vm = viewModel(FakeTranslationModelHandler(isAvailable = false))
+
+        assertFalse(vm.state.value.available)
     }
 }

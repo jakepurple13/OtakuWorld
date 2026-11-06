@@ -7,10 +7,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.text.intl.Locale
-import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomScreen
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomSheetItemModel
 import org.jetbrains.compose.resources.stringResource
@@ -37,23 +37,20 @@ fun showTranslationScreen(): MutableState<Boolean> {
 
 @Composable
 fun TranslationScreen(vm: TranslationViewModel = koinViewModel()) {
-    LifecycleResumeEffect(Unit) {
-        vm.loadModels()
-        onPauseOrDispose {}
-    }
+    val state by vm.state.collectAsStateWithLifecycle()
 
+    // Minimal placeholder until the sheet UI is rewritten.
     ListBottomScreen(
         title = stringResource(Res.string.chooseModelToDelete),
-        list = vm.translationModels.toList(),
-        onClick = { item -> vm.deleteModel(item) },
+        list = state.downloaded.filter { !it.required },
+        onClick = { item ->
+            vm.askDelete(item.language.code)
+            vm.confirmDelete()
+        },
     ) {
         ListBottomSheetItemModel(
-            primaryText = it.language,
-            overlineText = try {
-                Locale(it.language).region
-            } catch (_: Exception) {
-                null
-            },
+            primaryText = it.language.englishName,
+            overlineText = it.language.nativeName,
             icon = Icons.Default.Delete
         )
     }
