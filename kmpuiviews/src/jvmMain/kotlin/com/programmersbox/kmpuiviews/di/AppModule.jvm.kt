@@ -22,6 +22,7 @@ import com.programmersbox.kmpuiviews.translation.LibraryLanguageDetector
 import com.programmersbox.kmpuiviews.translation.TranslationEngine
 import com.programmersbox.kmpuiviews.translation.ollama.OllamaClient
 import com.programmersbox.kmpuiviews.translation.ollama.OllamaEngine
+import com.programmersbox.kmpuiviews.translation.ollama.installOllamaTimeouts
 import com.programmersbox.kmpuiviews.TranslationModelHandlerImpl
 import com.programmersbox.kmpuiviews.domain.TranslationHandler
 import com.programmersbox.kmpuiviews.domain.TranslationModelHandler
@@ -58,7 +59,7 @@ actual fun platformModule(): Module = module {
     singleOf(::BackgroundWorkHandlerImpl) { bind<BackgroundWorkHandler>() }
     single { DesktopTranslationSettings(get()) }
     single<LanguageDetector> { LibraryLanguageDetector() }
-    single { OllamaClient(HttpClient(), get()) }
+    single { OllamaClient(HttpClient { installOllamaTimeouts() }, get()) }
     // Later engines register their own single<TranslationEngine> (distinct qualifier); handler maps them by kind.
     single<TranslationEngine>(named("ollama")) { OllamaEngine(get(), get()) }
     factory<TranslationHandler> {

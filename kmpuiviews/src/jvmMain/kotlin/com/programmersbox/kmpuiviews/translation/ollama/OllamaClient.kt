@@ -2,6 +2,10 @@ package com.programmersbox.kmpuiviews.translation.ollama
 
 import com.programmersbox.kmpuiviews.translation.DesktopTranslationSettings
 import io.ktor.client.HttpClient
+import io.ktor.client.HttpClientConfig
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.HttpTimeoutConfig
+import io.ktor.client.plugins.timeout
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.post
@@ -30,6 +34,15 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
+private const val STATUS_TIMEOUT_MS = 5_000L
+private const val CHAT_TIMEOUT_MS = 5 * 60_000L
+private const val CONNECT_TIMEOUT_MS = 5_000L
+
+/** Ollama HttpClient config: short connect timeout; per-call timeouts are set on each request. */
+fun HttpClientConfig<*>.installOllamaTimeouts() {
+    install(HttpTimeout) { connectTimeoutMillis = CONNECT_TIMEOUT_MS }
+}
+
 data class OllamaModel(val name: String, val sizeBytes: Long)
 
 sealed interface OllamaStatus {
@@ -48,11 +61,11 @@ class OllamaClient(
     suspend fun status(): OllamaStatus {
         val base = baseUrl()
         return try {
-            val version = http.get("$base/api/version")
+            val version = http.get("$base/api/version") { timeout { requestTimeoutMillis = STATUS_TIMEOUT_MS } }
             check(version.status.isSuccess()) { "HTTP ${version.status.value}" }
             val versionText = json.parseToJsonElement(version.bodyAsText()).jsonObject["version"]
                 ?.jsonPrimitive?.contentOrNull.orEmpty()
-            val tags = http.get("$base/api/tags")
+            val tags = http.get("$base/api/tags") { timeout { requestTimeoutMillis = STATUS_TIMEOUT_MS } }
             check(tags.status.isSuccess()) { "HTTP ${tags.status.value}" }
             val models = json.parseToJsonElement(tags.bodyAsText()).jsonObject["models"]
                 ?.jsonArray.orEmpty()
@@ -77,6 +90,10 @@ class OllamaClient(
         http.prepareRequest {
             method = HttpMethod.Post
             url("$base/api/pull")
+            timeout {
+                requestTimeoutMillis = HttpTimeoutConfig.INFINITE_TIMEOUT_MS
+                socketTimeoutMillis = HttpTimeoutConfig.INFINITE_TIMEOUT_MS
+            }
             contentType(ContentType.Application.Json)
             setBody(buildJsonObject { put("model", name); put("stream", true) }.toString())
         }.execute { response ->
@@ -107,6 +124,10 @@ class OllamaClient(
     suspend fun chat(model: String, system: String, user: String): String {
         val base = baseUrl()
         val response = http.post("$base/api/chat") {
+            timeout {
+                requestTimeoutMillis = CHAT_TIMEOUT_MS
+                socketTimeoutMillis = CHAT_TIMEOUT_MS
+            }
             contentType(ContentType.Application.Json)
             setBody(
                 buildJsonObject {

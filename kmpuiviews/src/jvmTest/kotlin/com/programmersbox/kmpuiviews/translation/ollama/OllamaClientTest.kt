@@ -7,6 +7,8 @@ import com.programmersbox.kmpuiviews.translation.EngineKind
 import com.programmersbox.kmpuiviews.translation.TranslationUnavailable
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
+import io.ktor.client.network.sockets.ConnectTimeoutException
+import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.engine.mock.toByteArray
@@ -133,6 +135,29 @@ class OllamaClientTest {
             OllamaEngine(client { throw IOException("refused") }, settings).translate("x", "ja", "en")
         }
         assertEquals("Can't reach Ollama at http://localhost:11434. Is it running?", e.message)
+    }
+
+    @Test
+    fun `engine maps request timeout to unavailable`() = runBlocking {
+        settings.ollamaModel.set("m")
+        settings.ollamaUrl.set("http://localhost:11434/")
+        val c = OllamaClient(
+            HttpClient(MockEngine { throw HttpRequestTimeoutException("http://localhost:11434/api/chat", 1L) }),
+            settings
+        )
+        val e = assertFailsWith<TranslationUnavailable> { OllamaEngine(c, settings).translate("x", "ja", "en") }
+        assertEquals("Ollama took too long to answer at http://localhost:11434.", e.message)
+    }
+
+    @Test
+    fun `engine maps connect timeout to unavailable`() = runBlocking {
+        settings.ollamaModel.set("m")
+        val c = OllamaClient(
+            HttpClient(MockEngine { throw ConnectTimeoutException("connect timed out") }),
+            settings
+        )
+        val e = assertFailsWith<TranslationUnavailable> { OllamaEngine(c, settings).translate("x", "ja", "en") }
+        assertEquals("Ollama took too long to answer at http://localhost:11434.", e.message)
     }
 
     @Test
