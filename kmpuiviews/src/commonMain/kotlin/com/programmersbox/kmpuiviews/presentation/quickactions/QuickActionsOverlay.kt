@@ -36,7 +36,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -191,8 +190,8 @@ private fun QuickActionsBanners(
     val checkState = state.checkState
     val userRequested = state.userRequested
     var handle by remember { mutableStateOf<ProgressHandle?>(null) }
-    val currentHandle by rememberUpdatedState(handle)
-    DisposableEffect(Unit) { onDispose { currentHandle?.dismiss() } }
+    // handle is snapshot state, so reading it in onDispose is always current
+    DisposableEffect(Unit) { onDispose { handle?.dismiss() } }
 
     // Keyed on the phase, not the state: progress ticks update the running banner in place.
     val phase: Any = when (checkState) {

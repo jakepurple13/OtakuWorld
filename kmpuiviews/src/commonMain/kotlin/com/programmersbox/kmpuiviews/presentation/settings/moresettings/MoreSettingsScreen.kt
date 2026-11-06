@@ -43,7 +43,7 @@ fun MoreSettingsScreen(
             .onEach {
                 when (it) {
                     is ImportExportListStatus.Error -> {
-                        progressBanner.error(errorTitle, "Error: ${it.throwable.message}")
+                        progressBanner.error(errorTitle, it.throwable.message)
                         viewModel.importExportListStatus = ImportExportListStatus.Idle
                     }
 
