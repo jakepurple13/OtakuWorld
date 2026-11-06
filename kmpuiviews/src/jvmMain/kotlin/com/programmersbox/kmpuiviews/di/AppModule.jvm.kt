@@ -25,6 +25,7 @@ import com.programmersbox.kmpuiviews.translation.bergamot.BergamotEngine
 import com.programmersbox.kmpuiviews.translation.bergamot.BergamotIndex
 import com.programmersbox.kmpuiviews.translation.bergamot.BergamotModelStore
 import com.programmersbox.kmpuiviews.translation.bergamot.BergamotRuntime
+import com.programmersbox.kmpuiviews.translation.bergamot.installBergamotTimeouts
 import com.programmersbox.kmpuiviews.translation.custom.CustomEngine
 import com.programmersbox.kmpuiviews.translation.custom.OpenAiCompatClient
 import com.programmersbox.kmpuiviews.translation.custom.installOpenAiCompatTimeouts
@@ -77,7 +78,7 @@ actual fun platformModule(): Module = module {
     single {
         val modelsDir = File(get<AppDirs>().getUserDataDir(), "translation/bergamot")
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-        val client = HttpClient()
+        val client = HttpClient { installBergamotTimeouts() }
         BergamotModelStore(
             index = BergamotIndex(client, cacheFile = File(modelsDir, "index.json")),
             dir = modelsDir,

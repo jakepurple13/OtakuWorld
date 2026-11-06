@@ -43,14 +43,17 @@ class BergamotIndexTest {
         requireNotNull(javaClass.getResource("/bergamot/records.json")) { "fixture missing" }.readText()
 
     @Test
-    fun `index keeps latest version per pair`() = runBlocking {
+    fun `index keeps latest desktop version per pair`() = runBlocking {
         val server = FakeServer(emptyList(), indexBody = ::fixture)
         val pairs = server.index().pairs().associateBy { "${it.from}-${it.to}" }
 
         assertEquals(setOf("bn-en", "en-fr", "en-ja", "fr-en", "ja-en", "ko-en"), pairs.keys)
         val jaEn = pairs.getValue("ja-en")
-        // v2.1 (model 43,977,787 bytes) beats 2.0 and 2.0a1 (59,504,955).
-        assertEquals(43_977_787L, jaEn.files.single { it.type == "model" }.sizeBytes)
+        // 2.0 (model 59,504,955 bytes), what desktop Firefox release gets: 2.1 (43,977,787) is Android-only
+        // and 2.0a1 is nightly/beta-only.
+        assertEquals(59_504_955L, jaEn.files.single { it.type == "model" }.sizeBytes)
+        assertEquals(9_346_816L, jaEn.files.single { it.type == "lex" }.sizeBytes)
+        assertEquals(59_504_955L, pairs.getValue("ko-en").files.single { it.type == "model" }.sizeBytes)
         assertEquals(setOf("model", "lex", "vocab"), jaEn.files.map { it.type }.toSet())
         assertTrue(jaEn.files.all { it.pair == "ja-en" })
         assertEquals(31_561_787L, pairs.getValue("en-fr").files.single { it.type == "model" }.sizeBytes)
@@ -64,24 +67,26 @@ class BergamotIndexTest {
     }
 
     @Test
-    fun `index skips prerelease versions when a release exists`() = runBlocking {
-        // Real data: bn-en has 1.0 and a nightly-only 2.0a1 (Firefox release ships 1.0).
-        val bnEn = FakeServer(emptyList(), indexBody = ::fixture).index().pairs()
-            .single { it.from == "bn" && it.to == "en" }
-        assertEquals(3, bnEn.files.size)
-        val prerelease = FakeServer(emptyList(), indexBody = {
-            recordsJson(listOf(FakeFile("bn", "en", "model", byteArrayOf(1), version = "2.0a1")))
-        }).index().pairs()
-        assertEquals(1, prerelease.single().files.size) // prerelease used when it's all there is
-        val released = FakeServer(emptyList(), indexBody = {
-            recordsJson(
-                listOf(
-                    FakeFile("bn", "en", "model", byteArrayOf(1), version = "1.0"),
-                    FakeFile("bn", "en", "model", byteArrayOf(2), version = "2.0a1"),
-                )
-            )
-        }).index().pairs().single()
-        assertTrue(released.files.single().url.endsWith("bnen-1.0-model.bin"))
+    fun `index skips android-only, channel-gated and too-new records`() = runBlocking {
+        suspend fun pick(vararg files: FakeFile) =
+            FakeServer(emptyList(), indexBody = { recordsJson(files.toList()) }).index().pairs()
+
+        val picked = pick(
+            FakeFile("bn", "en", "model", byteArrayOf(1), version = "1.0"),
+            FakeFile("bn", "en", "model", byteArrayOf(2), version = "2.0a1", filter = "env.channel == 'default' || env.channel == 'nightly'"),
+            FakeFile("bn", "en", "model", byteArrayOf(3), version = "2.1", filter = "env.appinfo.OS == 'Android' "),
+            FakeFile("bn", "en", "model", byteArrayOf(4), version = "3.0"),
+        ).single()
+        assertTrue(picked.files.single().url.endsWith("bnen-1.0-model.bin"), picked.files.toString())
+
+        // Desktop matches this one, so it is kept.
+        val desktop = pick(
+            FakeFile("ja", "en", "model", byteArrayOf(1), version = "2.0", filter = "env.appinfo.OS != 'Android' || env.channel != 'release'"),
+        ).single()
+        assertTrue(desktop.files.single().url.endsWith("jaen-2.0-model.bin"))
+
+        // A pair with nothing desktop can use is left out.
+        assertEquals(emptyList<BergamotPair>(), pick(FakeFile("xx", "en", "model", byteArrayOf(1), version = "3.0")))
     }
 
     @Test

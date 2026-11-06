@@ -9,6 +9,7 @@ import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.isSuccess
 import io.ktor.utils.io.readAvailable
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
@@ -119,7 +120,8 @@ class BergamotModelStore(
         val key = RowKey(source, state.value.target)
         if (jobs[key]?.isActive == true) return
         state.update { it.copy(failures = it.failures - key, progress = it.progress + (key to 0f)) }
-        val job = scope.launch(Dispatchers.IO) {
+        // Lazy so the job is in [jobs] (where delete() looks for chains in use) before it does anything.
+        val job = scope.launch(Dispatchers.IO, start = CoroutineStart.LAZY) {
             try {
                 val chain = planChain(key.source, key.target, state.value.pairs)
                     ?: throw IOException("No model for ${bergamotLanguageName(key.source)} → ${bergamotLanguageName(key.target)}")
@@ -139,6 +141,9 @@ class BergamotModelStore(
                         }
                     }
                 }
+                if (chain.any { it.key !in state.value.installed }) {
+                    throw IOException("Part of this download was removed. Try again.")
+                }
                 state.update { it.copy(downloaded = it.downloaded + key) }
                 writeDownloaded()
             } catch (e: CancellationException) {
@@ -151,18 +156,19 @@ class BergamotModelStore(
         }
         jobs[key] = job
         job.invokeOnCompletion { jobs.remove(key, job) }
+        job.start()
     }
 
     fun cancel(source: String) {
         jobs[RowKey(source, state.value.target)]?.cancel()
     }
 
-    /** Removes the row and every pair of its chain no other downloaded row uses. */
+    /** Removes the row and every pair of its chain no other downloaded or downloading row uses. */
     suspend fun delete(source: String) = withContext(Dispatchers.IO) {
         val key = RowKey(source, state.value.target)
         jobs[key]?.cancelAndJoin()
         val current = state.value
-        val keep = usedPairs(current, current.downloaded - key)
+        val keep = usedPairs(current, current.downloaded + activeDownloads() - key)
         val remove = planChain(key.source, key.target, current.pairs).orEmpty()
             .map { it.key }
             .filter { it in current.installed && it !in keep }
@@ -176,9 +182,17 @@ class BergamotModelStore(
         }
         writeDownloaded()
         remove.forEach { pairKey ->
-            pairLocks.getOrPut(pairKey) { Mutex() }.withLock { File(dir, pairKey).deleteRecursively() }
+            pairLocks.getOrPut(pairKey) { Mutex() }.withLock {
+                // A download may have started (and even reinstalled the pair) since the state update above.
+                val now = state.value
+                if (pairKey !in now.installed && pairKey !in usedPairs(now, activeDownloads())) {
+                    File(dir, pairKey).deleteRecursively()
+                }
+            }
         }
     }
+
+    private fun activeDownloads(): Set<RowKey> = jobs.filterValues { it.isActive }.keys
 
     /** The model files for each step of [source] → [target] using installed pairs, or null if any are missing. */
     fun filesFor(source: String, target: String): List<BergamotModelFiles>? {

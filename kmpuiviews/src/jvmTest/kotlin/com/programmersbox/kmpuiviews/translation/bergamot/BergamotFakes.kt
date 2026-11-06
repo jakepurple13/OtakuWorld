@@ -4,8 +4,17 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.http.HttpStatusCode
+import io.ktor.utils.io.ByteChannel
 import io.ktor.utils.io.ByteReadChannel
+import io.ktor.utils.io.writeFully
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import java.security.MessageDigest
+import java.util.concurrent.ConcurrentHashMap
 
 internal const val TEST_RECORDS_URL = "https://settings.test/records"
 internal const val TEST_ATTACHMENT_BASE = "https://cdn.test/"
@@ -21,6 +30,7 @@ internal class FakeFile(
     val bytes: ByteArray,
     val version: String = "1.0",
     val hash: String = sha256Hex(bytes),
+    val filter: String = "",
 ) {
     val location = "loc/$from$to-$version-$type.bin"
 }
@@ -30,12 +40,13 @@ internal fun fakePair(from: String, to: String, size: Int): List<FakeFile> =
     listOf("model", "lex", "vocab").map { type -> FakeFile(from, to, type, ByteArray(size) { (it + type.length).toByte() }) }
 
 internal fun recordsJson(files: List<FakeFile>): String = files.joinToString(",", prefix = "{\"data\":[", postfix = "]}") {
-    """{"fromLang":"${it.from}","toLang":"${it.to}","version":"${it.version}","fileType":"${it.type}","filter_expression":"",""" +
+    """{"fromLang":"${it.from}","toLang":"${it.to}","version":"${it.version}","fileType":"${it.type}","filter_expression":"${it.filter}",""" +
             """"attachment":{"hash":"${it.hash}","size":${it.bytes.size},"location":"${it.location}","filename":"x","mimetype":"application/octet-stream"}}"""
 }
 
 /**
  * Serves [files] and their index. [failures] maps a location to how many requests fail with 500 before it succeeds.
+ * A location in [gates] sends half its body, then waits for the gate before sending the rest.
  */
 internal class FakeServer(
     var files: List<FakeFile>,
@@ -43,6 +54,10 @@ internal class FakeServer(
     var indexBody: () -> String = { recordsJson(files) },
 ) {
     val requests = mutableListOf<String>()
+    val gates = ConcurrentHashMap<String, CompletableDeferred<Unit>>()
+    private val writers = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    fun close() = writers.cancel()
 
     val client = HttpClient(MockEngine { request ->
         val url = request.url.toString()
@@ -55,8 +70,17 @@ internal class FakeServer(
             synchronized(failures) { failures[file.location] = left - 1 }
             return@MockEngine respond("boom", HttpStatusCode.InternalServerError)
         }
-        respond(ByteReadChannel(file.bytes), HttpStatusCode.OK)
-    })
+        val gate = gates[file.location] ?: return@MockEngine respond(ByteReadChannel(file.bytes), HttpStatusCode.OK)
+        val body = ByteChannel(autoFlush = true)
+        writers.launch {
+            val half = file.bytes.size / 2
+            body.writeFully(file.bytes, 0, half)
+            gate.await()
+            body.writeFully(file.bytes, half, file.bytes.size)
+            body.flushAndClose()
+        }
+        respond(body, HttpStatusCode.OK)
+    }) { installBergamotTimeouts() }
 
     fun index(cacheFile: java.io.File? = null) =
         BergamotIndex(client, cacheFile = cacheFile, recordsUrl = TEST_RECORDS_URL, attachmentBase = TEST_ATTACHMENT_BASE)

@@ -2,6 +2,10 @@ package com.programmersbox.kmpuiviews.translation.bergamot
 
 import com.programmersbox.kmpuiviews.translation.LanguagePair
 import io.ktor.client.HttpClient
+import io.ktor.client.HttpClientConfig
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.HttpTimeoutConfig
+import io.ktor.client.plugins.timeout
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.isSuccess
@@ -13,6 +17,20 @@ import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.IOException
 import kotlin.coroutines.cancellation.CancellationException
+
+private const val INDEX_TIMEOUT_MS = 15_000L
+
+/**
+ * Bergamot HttpClient config. Model files are 30–60 MB, so there is no whole-request limit (a stalled socket
+ * still fails after 60 s); the index fetch sets its own 15 s limit. Overrides engine defaults such as CIO's 15 s.
+ */
+fun HttpClientConfig<*>.installBergamotTimeouts() {
+    install(HttpTimeout) {
+        connectTimeoutMillis = 10_000
+        socketTimeoutMillis = 60_000
+        requestTimeoutMillis = HttpTimeoutConfig.INFINITE_TIMEOUT_MS
+    }
+}
 
 /** One model file of a pair. [type] is Mozilla's `fileType`: `model`, `lex`, `vocab`, `srcvocab` or `trgvocab`. */
 @Serializable
@@ -35,7 +53,7 @@ class BergamotIndex(
     private val attachmentBase: String = ATTACHMENT_BASE,
 ) {
     suspend fun pairs(): List<BergamotPair> = try {
-        val response = client.get(recordsUrl)
+        val response = client.get(recordsUrl) { timeout { requestTimeoutMillis = INDEX_TIMEOUT_MS } }
         if (!response.status.isSuccess()) throw IOException("HTTP ${response.status.value}")
         val text = response.bodyAsText()
         parse(text).also { // parsed first so a body we can't read never replaces the cache
@@ -62,7 +80,7 @@ class BergamotIndex(
         json.decodeFromString<Records>(text).data
             .groupBy { it.fromLang to it.toLang }
             .mapNotNull { (langs, records) ->
-                val releases = records.filterNot { isPrerelease(it.version) }.ifEmpty { records }
+                val releases = records.filter { forDesktopRelease(it.filterExpression) && major(it.version) <= SUPPORTED_MAJOR }
                 val latest = releases.maxWithOrNull { a, b -> compareVersions(a.version, b.version) }?.version
                     ?: return@mapNotNull null
                 val pair = "${langs.first}-${langs.second}"
@@ -91,6 +109,7 @@ class BergamotIndex(
         val version: String,
         val fileType: String,
         val attachment: Attachment,
+        @SerialName("filter_expression") val filterExpression: String? = null,
     )
 
     @Serializable
@@ -106,12 +125,24 @@ class BergamotIndex(
 
         private val json = Json { ignoreUnknownKeys = true }
 
-        /** `2.0a1`-style versions are nightly/beta-only in Firefox. */
-        private fun isPrerelease(version: String) = version.any { it.isLetter() }
+        /** Newest model major version the pinned `translator-cli` (Bergamot v0.6.0) loads; newer majors are skipped. */
+        const val SUPPORTED_MAJOR = 2
+
+        /**
+         * What desktop Firefox on the release channel gets, by matching the filter forms Remote Settings uses:
+         * drops `env.appinfo.OS == 'Android'` records and channel-only ones (`env.channel == 'nightly'` etc.).
+         * `env.appinfo.OS != 'Android' || env.channel != 'release'` and empty filters stay.
+         */
+        private fun forDesktopRelease(filter: String?): Boolean {
+            val f = filter.orEmpty()
+            return !f.contains("env.appinfo.OS == 'Android'") && !f.contains("env.channel ==")
+        }
 
         private fun numbers(version: String) = version.split('.').map { part -> part.takeWhile { it.isDigit() }.toIntOrNull() ?: 0 }
 
-        /** Numeric by part; a prerelease sorts below the release with the same numbers (`2.0a1` < `2.0`). */
+        private fun major(version: String) = numbers(version).first()
+
+        /** Numeric by part (`2.10` > `2.9`). */
         private fun compareVersions(a: String, b: String): Int {
             val x = numbers(a)
             val y = numbers(b)
@@ -119,7 +150,7 @@ class BergamotIndex(
                 val c = x.getOrElse(i) { 0 }.compareTo(y.getOrElse(i) { 0 })
                 if (c != 0) return c
             }
-            return isPrerelease(b).compareTo(isPrerelease(a))
+            return 0
         }
     }
 }

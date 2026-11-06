@@ -2,10 +2,12 @@ package com.programmersbox.kmpuiviews.translation.bergamot
 
 import com.programmersbox.kmpuiviews.domain.ModelState
 import com.programmersbox.kmpuiviews.translation.TranslationUnavailable
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
@@ -34,7 +36,13 @@ class BergamotModelStoreTest {
     @AfterTest
     fun tearDown() {
         scope.cancel()
+        server.close()
         dir.deleteRecursively()
+    }
+
+    /** Waits until a `.part` file exists, i.e. a gated download is mid-body. */
+    private suspend fun awaitPartFile() = withTimeout(10_000) {
+        while (partFiles().isEmpty()) delay(10)
     }
 
     private suspend fun store(target: String = "fr"): BergamotModelStore {
@@ -168,6 +176,41 @@ class BergamotModelStoreTest {
         store.downloadAndWait("ja")
         assertNotNull(store.filesFor("ja", "fr"))
         assertEquals(emptyList(), partFiles())
+    }
+
+    @Test
+    fun `cancel removes the part file and returns to NotDownloaded`() = runBlocking<Unit> {
+        server.gates[jaEn.first { it.type == "model" }.location] = CompletableDeferred()
+        val store = store()
+        store.download("ja")
+        awaitPartFile()
+        assertIs<ModelState.Downloading>(store.row("ja") { it.state is ModelState.Downloading }.state)
+
+        store.cancel("ja")
+
+        assertEquals(ModelState.NotDownloaded, store.row("ja") { it.state == ModelState.NotDownloaded }.state)
+        withTimeout(10_000) { while (partFiles().isNotEmpty()) delay(10) }
+        assertNull(store.filesFor("ja", "fr"))
+    }
+
+    @Test
+    fun `delete keeps a pivot an in-flight download needs`() = runBlocking<Unit> {
+        val store = store()
+        store.downloadAndWait("ja")
+        // ko→fr only needs ko-en; hold it mid-body so the download is in flight during the delete.
+        val gate = CompletableDeferred<Unit>()
+        server.gates[koEn.first { it.type == "model" }.location] = gate
+        store.download("ko")
+        awaitPartFile()
+
+        store.delete("ja")
+
+        assertFalse(pairDir("ja-en").exists())
+        assertTrue(pairDir("en-fr").listFiles()!!.isNotEmpty())
+        gate.complete(Unit)
+        store.row("ko") { it.state == ModelState.Downloaded }
+        assertNotNull(store.filesFor("ko", "fr"))
+        store.total(180)
     }
 
     @Test
