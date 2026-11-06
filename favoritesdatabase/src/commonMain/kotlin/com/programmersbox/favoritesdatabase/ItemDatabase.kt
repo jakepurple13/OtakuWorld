@@ -9,8 +9,8 @@ import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.execSQL
 
 @Database(
-    entities = [DbModel::class, DbModelFts::class, ChapterWatched::class, NotificationItem::class, SourceOrder::class, IncognitoSource::class],
-    version = 8,
+    entities = [DbModel::class, DbModelFts::class, ChapterWatched::class, NotificationItem::class, SourceOrder::class, IncognitoSource::class, SkippedUpdateSource::class],
+    version = 9,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(
@@ -67,7 +67,13 @@ abstract class ItemDatabase : RoomDatabase() {
             }
         }
 
-        internal val MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
+        private val MIGRATION_8_9 = object : Migration(8, 9) {
+            override suspend fun migrate(connection: SQLiteConnection) {
+                connection.execSQL("CREATE TABLE IF NOT EXISTS `SkippedUpdateSource` (`source` TEXT NOT NULL, PRIMARY KEY(`source`))")
+            }
+        }
+
+        internal val MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
 
         fun getInstance(databaseBuilder: DatabaseBuilder): ItemDatabase = databaseBuilder
             .build<ItemDatabase>("favoriteItems.db")

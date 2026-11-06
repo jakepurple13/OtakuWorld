@@ -159,3 +159,11 @@ data class IncognitoSource(
     @ColumnInfo(name = "is_dirty", defaultValue = "1")
     val isDirty: Boolean = true,
 )
+/** A source the update checker skips. [source] matches [DbModel.source] (the service name). */
+@Serializable
+@Entity("SkippedUpdateSource")
+data class SkippedUpdateSource(
+    @PrimaryKey
+    @ColumnInfo(name = "source")
+    val source: String,
+)
