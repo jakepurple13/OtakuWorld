@@ -64,10 +64,10 @@ Source: `mozilla/translations` @ `8eada038fd45bbf6fa58a412b22f80c79887fabc`, `in
 
 | platform | translator download | status |
 |---|---|---|
-| macos-arm64 | 7.7 MB (stripped binary) | built and run locally with the same flags as the CI leg; the CI leg itself has not run |
-| macos-x64 | about 8–10 MB expected (intgemm + Accelerate) | not built |
-| linux-x64 | 38.1 MB, stripped (static OpenBLAS with all its CPU kernels; dynamic deps: glibc ≥ 2.35, libstdc++, libgcc_s, libm only) | built by CI in `bergamot-cli-0.1.0`, not run yet |
-| windows-x64 | unknown | best effort: float GEMM through ruy (`USE_RUY_SGEMM`), MSVC `/WX` removed; not built anywhere yet |
+| macos-arm64 | 7.7 MB (7,714,944 bytes) | `bergamot-cli-0.1.1`; installed through `BergamotCliRuntime.install()` and translated ja→en on this Mac |
+| macos-x64 | 8.6 MB (8,646,656 bytes) | `bergamot-cli-0.1.1`; not run (no Intel Mac at hand) |
+| linux-x64 | 38.1 MB, stripped (static OpenBLAS with all its CPU kernels; dynamic deps: glibc ≥ 2.35, libstdc++, libgcc_s, libm only) | `bergamot-cli-0.1.1`; not run (no Linux machine at hand) |
+| windows-x64 | none | no build: 0.1.1 failed at configure (see below); the app reports "Bergamot isn't available for Windows yet. Use Ollama or Custom instead." |
 
 Models are separate downloads: about 55 MB per direction for ja↔en, uncompressed.
 
@@ -96,7 +96,18 @@ Steps:
 
 **Linux size:** 38 MB is mostly static OpenBLAS. Switching Linux to `USE_RUY_SGEMM` like Windows would probably bring it near 10 MB. It is untested, so it was not changed while the leg works.
 
-**Still to do:** After the first green run, copy each URL, sha256 and size into `pinnedBergamotCliAssets`. Until then, `BergamotCliRuntime.unavailableReason()` reports "not available for this computer yet" unless `BERGAMOT_CLI` points at a local binary.
+**CI run 2, `bergamot-cli-0.1.1`:**
+- macos-arm64, macos-x64 and linux-x64 succeeded. Their URLs, sha256 values and sizes are pinned in `pinnedBergamotCliAssets`.
+- windows-x64 failed at configure: `configure_file` at `marian-fork/CMakeLists.txt:758` reported `Doxyfile.in does not exist`. The Windows runner has Doxygen installed, so marian's default `USE_DOXYGEN=ON` tried to generate docs, and mozilla/translations doesn't ship marian's Doxyfile.in. Fix: `-DUSE_DOXYGEN=OFF` on all legs.
+- That error came at the very end of configure, so ruy, cpuinfo and PCRE2 configured under MSVC. Compiling and linking on Windows is still unproven.
+
+**Platforms without a pinned build:** `BergamotRuntime.isSupported` is false, and `unavailableReason()` returns "Bergamot isn't available for <OS> yet. Use Ollama or Custom instead." Using a local binary via `BERGAMOT_CLI` still works.
+
+**Install check (2026-11-06, this Mac):** the env-gated `BergamotCliRuntimeSmokeTest` "installs the pinned build and translates" (`BERGAMOT_INSTALL_SMOKE=1`) passed:
+- download plus sha256 check took 1.7 s (7,714,944 bytes)
+- the exec bit was set
+- the release binary returned "He pulled out his sword quietly." in 319 ms
+- the temp install root was deleted afterwards
 
 ## Implementation
 

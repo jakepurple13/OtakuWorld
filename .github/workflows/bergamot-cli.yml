@@ -4,10 +4,9 @@ name: Bergamot CLI
 # publishes the binaries on a GitHub release. The desktop apps download them on demand with a pinned sha256
 # (see kmpuiviews/.../translation/bergamot/BergamotRuntime.kt, `pinnedBergamotCliAssets`).
 #
-# CI status: linux-x64 built and released in bergamot-cli-0.1.0. The macOS and Windows legs failed there at
-# configure (runner CMake 4.4 rejects cmake_minimum_required < 3.5; fixed by CMAKE_POLICY_VERSION_MINIMUM below).
-# The macos-arm64 leg's exact configuration was built and run locally with CMake 4.4. macos-x64 is untested.
-# windows-x64 is best effort (ruy for float GEMM instead of a BLAS; not built anywhere yet).
+# CI status: bergamot-cli-0.1.1 built macos-arm64, macos-x64 and linux-x64. windows-x64 failed at configure
+# (marian tried to generate docs: Doxyfile.in isn't in mozilla/translations; now -DUSE_DOXYGEN=OFF). Windows is
+# still best effort (ruy for float GEMM instead of a BLAS; it has never got past configure).
 # The release job publishes whichever legs succeeded.
 
 on:
@@ -99,6 +98,7 @@ jobs:
           cmake -S translations/inference -B build \
             -DCMAKE_BUILD_TYPE=Release \
             -DCOMPILE_CPU=on -DCOMPILE_CUDA=off -DUSE_FBGEMM=off \
+            -DUSE_DOXYGEN=OFF \
             -DBUILD_ARCH=${{ matrix.arch }} \
             -DSSPLIT_USE_INTERNAL_PCRE2=ON \
             -DUSE_STATIC_LIBS=${{ matrix.static }} \

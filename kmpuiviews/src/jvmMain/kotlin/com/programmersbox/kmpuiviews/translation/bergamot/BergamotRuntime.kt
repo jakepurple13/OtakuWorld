@@ -22,6 +22,12 @@ interface BergamotRuntime {
     suspend fun unavailableReason(): String?
     suspend fun install(onProgress: (Float) -> Unit)   // no-op if nothing to install
     suspend fun translate(text: String, model: BergamotModelFiles): String
+
+    /**
+     * False when this computer has no translator build, so [install] can't help: hide Install and show
+     * [unavailableReason] (which then suggests another engine) instead.
+     */
+    val isSupported: Boolean get() = true
 }
 
 /** One Bergamot model: the int8 model, the optional shortlist, and the vocabs (same file twice for a shared vocab). */
@@ -30,11 +36,40 @@ data class BergamotModelFiles(val model: File, val lex: File?, val srcVocab: Fil
 /** A pinned `translator-cli` build published as a release asset by `.github/workflows/bergamot-cli.yml`. */
 data class BergamotCliAsset(val url: String, val sha256: String, val sizeLabel: String)
 
+private const val BERGAMOT_CLI_RELEASE = "https://github.com/jakepurple13/OtakuWorld/releases/download/bergamot-cli-0.1.1/"
+
 /**
- * Pinned CLI builds keyed by [bergamotPlatformKey]. Empty until the first `bergamot-cli` workflow release is
- * published: fill in the asset URL, sha256 and size per platform from that release.
+ * Pinned CLI builds keyed by [bergamotPlatformKey], from the `bergamot-cli-0.1.1` release (its SHA256SUMS).
+ * windows-x64 has no build yet.
  */
-val pinnedBergamotCliAssets: Map<String, BergamotCliAsset> = emptyMap()
+val pinnedBergamotCliAssets: Map<String, BergamotCliAsset> = mapOf(
+    "macos-arm64" to BergamotCliAsset(
+        BERGAMOT_CLI_RELEASE + "translator-cli-macos-arm64",
+        "bd65f0f2e63259fe3cde393d66aeddbfcfb0e1a52787e7f7daa919a4cb879eaf",
+        "7.7 MB",
+    ),
+    "macos-x64" to BergamotCliAsset(
+        BERGAMOT_CLI_RELEASE + "translator-cli-macos-x64",
+        "cb8c52f416f677c6d9ba9b5792428b77d71efcff82539e09730b760c8f5b8e7e",
+        "8.6 MB",
+    ),
+    "linux-x64" to BergamotCliAsset(
+        BERGAMOT_CLI_RELEASE + "translator-cli-linux-x64",
+        "a545695ccd9c7b6571713675384d43b8d6ef814fe5d18850b2eb457dae4e2eb1",
+        "38 MB",
+    ),
+)
+
+/** Shown when there is no pinned build for [platformKey] (a [bergamotPlatformKey] value, or null). */
+fun bergamotUnsupportedReason(platformKey: String?): String {
+    val os = when (platformKey?.substringBefore('-')) {
+        "macos" -> "this Mac"
+        "windows" -> "Windows"
+        "linux" -> "this Linux computer"
+        else -> "this computer"
+    }
+    return "Bergamot isn't available for $os yet. Use Ollama or Custom instead."
+}
 
 /** `macos-arm64`, `macos-x64`, `windows-x64`, `linux-x64`, or null for other platforms. */
 fun bergamotPlatformKey(
@@ -99,7 +134,8 @@ internal fun bergamotConfigYaml(model: BergamotModelFiles): String = buildString
 class BergamotCliRuntime(
     private val installRoot: File,
     private val cliOverride: File? = System.getenv("BERGAMOT_CLI")?.takeIf { it.isNotBlank() }?.let(::File),
-    private val asset: BergamotCliAsset? = bergamotPlatformKey()?.let(pinnedBergamotCliAssets::get),
+    private val platformKey: String? = bergamotPlatformKey(),
+    private val asset: BergamotCliAsset? = platformKey?.let(pinnedBergamotCliAssets::get),
     private val threads: Int = Runtime.getRuntime().availableProcessors().coerceIn(1, 4),
     private val timeoutSeconds: Long = 60,
 ) : BergamotRuntime {
@@ -110,11 +146,13 @@ class BergamotCliRuntime(
 
     private fun cli(): File? = cliOverride?.takeIf { it.canExecute() } ?: installed.takeIf { it.canExecute() }
 
+    override val isSupported: Boolean get() = asset != null || cli() != null
+
     override suspend fun unavailableReason(): String? = withContext(Dispatchers.IO) {
         when {
             cli() != null -> null
             asset != null -> "Install the translator (${asset.sizeLabel})"
-            else -> "The offline translator isn't available for this computer yet"
+            else -> bergamotUnsupportedReason(platformKey)
         }
     }
 

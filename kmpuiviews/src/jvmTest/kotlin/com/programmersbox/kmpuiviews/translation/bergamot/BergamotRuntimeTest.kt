@@ -1,6 +1,8 @@
 package com.programmersbox.kmpuiviews.translation.bergamot
 
+import kotlinx.coroutines.runBlocking
 import java.io.File
+import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -18,6 +20,31 @@ class BergamotRuntimeTest {
         assertNull(bergamotPlatformKey("Linux", "aarch64"))
         assertNull(bergamotPlatformKey("FreeBSD", "amd64"))
         assertNull(bergamotPlatformKey("Linux", "riscv64"))
+    }
+
+    @Test
+    fun `pinned builds cover every platform except windows`() {
+        assertEquals(setOf("macos-arm64", "macos-x64", "linux-x64"), pinnedBergamotCliAssets.keys)
+        pinnedBergamotCliAssets.forEach { (key, asset) ->
+            assertTrue(asset.url.endsWith("/bergamot-cli-0.1.1/translator-cli-$key"), asset.url)
+            assertTrue(Regex("[0-9a-f]{64}").matches(asset.sha256), key)
+        }
+    }
+
+    @Test
+    fun `unsupported platform is reported, not offered for install`() = runBlocking {
+        val root = Files.createTempDirectory("bergamot-unsupported").toFile()
+        try {
+            val runtime = BergamotCliRuntime(installRoot = root, cliOverride = null, platformKey = "windows-x64", asset = null)
+            assertFalse(runtime.isSupported)
+            assertEquals("Bergamot isn't available for Windows yet. Use Ollama or Custom instead.", runtime.unavailableReason())
+
+            val mac = BergamotCliRuntime(installRoot = root, cliOverride = null, platformKey = "macos-arm64")
+            assertTrue(mac.isSupported)
+            assertEquals("Install the translator (7.7 MB)", mac.unavailableReason())
+        } finally {
+            root.deleteRecursively()
+        }
     }
 
     @Test
