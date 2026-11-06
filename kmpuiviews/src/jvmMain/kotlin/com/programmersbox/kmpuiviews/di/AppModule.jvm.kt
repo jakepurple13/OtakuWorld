@@ -15,7 +15,10 @@ import com.programmersbox.kmpuiviews.IconLoader
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.MangaDesktopSettings
 import com.programmersbox.kmpuiviews.SystemAlerter
-import com.programmersbox.kmpuiviews.TranslationItemHandler
+import com.programmersbox.kmpuiviews.translation.DesktopTranslationHandler
+import com.programmersbox.kmpuiviews.translation.DesktopTranslationSettings
+import com.programmersbox.kmpuiviews.translation.LanguageDetector
+import com.programmersbox.kmpuiviews.translation.LibraryLanguageDetector
 import com.programmersbox.kmpuiviews.TranslationModelHandlerImpl
 import com.programmersbox.kmpuiviews.domain.TranslationHandler
 import com.programmersbox.kmpuiviews.domain.TranslationModelHandler
@@ -48,7 +51,18 @@ actual fun platformModule(): Module = module {
     singleOf(::DownloadAndInstaller)
     singleOf(::BackupResultsHolder)
     singleOf(::BackgroundWorkHandlerImpl) { bind<BackgroundWorkHandler>() }
-    factory<TranslationHandler> { TranslationItemHandler() }
+    single { DesktopTranslationSettings(get()) }
+    single<LanguageDetector> { LibraryLanguageDetector() }
+    // Engines are registered as single<TranslationEngine> by later tasks; none yet.
+    factory<TranslationHandler> {
+        DesktopTranslationHandler(
+            engines = emptyMap(),
+            detector = get(),
+            settings = get(),
+            appSettings = get(),
+            notifier = get(),
+        )
+    }
     factory<TranslationModelHandler> { TranslationModelHandlerImpl() }
     singleOf(::TrayState)
     singleOf(::AboutLibraryBuilder)

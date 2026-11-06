@@ -26,7 +26,6 @@ import com.mikepenz.aboutlibraries.Libs
 import com.programmersbox.datastore.DataStoreHandler
 import com.programmersbox.favoritesdatabase.DatabaseBuilder
 import com.programmersbox.kmpmodels.KmpSourceInformation
-import com.programmersbox.kmpuiviews.domain.TranslationHandler
 import com.programmersbox.kmpuiviews.domain.TranslationModel
 import com.programmersbox.kmpuiviews.domain.TranslationModelHandler
 import com.programmersbox.kmpuiviews.utils.JvmAppLogo
@@ -224,21 +223,6 @@ actual class SystemAlerter {
 @Composable
 actual fun ReportDrawnWhen(predicate: () -> Boolean) {
     // No-op on Desktop — TTFD tracking is Android-only
-}
-
-class TranslationItemHandler : TranslationHandler {
-    override fun translateDescription(
-        textToTranslate: String,
-        progress: (Boolean) -> Unit,
-        translatedText: (String) -> Unit,
-    ) {
-        translatedText(textToTranslate)
-    }
-
-    override suspend fun translate(textToTranslate: String): String = textToTranslate
-
-    override fun clear() {
-    }
 }
 
 class TranslationModelHandlerImpl : TranslationModelHandler {
