@@ -38,7 +38,8 @@ val kmpInterop = module {
     }
 
     factory<TranslationHandler> { TranslationItemHandler(get()) }
-    factory<TranslationModelHandler> {
+    // Single so the sheet and the stats screen share download state.
+    single<TranslationModelHandler> {
         MlKitTranslationModelHandler(
             context = get(),
             settings = get(),
