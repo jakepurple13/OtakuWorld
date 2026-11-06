@@ -17,6 +17,11 @@ class LanguageDetectorTest {
             "de" to "Ein ganz gewöhnlicher Schüler erhält plötzlich eine geheimnisvolle Kraft und zieht aus, um die Welt zu retten.",
             "en" to "An ordinary high school boy suddenly gains a mysterious power and sets out on an adventure to save the world.",
             "ru" to "Обычный старшеклассник внезапно получает таинственную силу и отправляется в приключение, чтобы спасти мир.",
+            "it" to "Un normale studente delle superiori ottiene all'improvviso un potere misterioso e parte per un'avventura per salvare il mondo.",
+            "pt" to "Um estudante comum do ensino médio de repente ganha um poder misterioso e parte em uma aventura para salvar o mundo.",
+            "vi" to "Một cậu học sinh trung học bình thường bỗng nhiên có được sức mạnh bí ẩn và bắt đầu cuộc phiêu lưu để cứu thế giới.",
+            "th" to "เด็กมัธยมปลายธรรมดาคนหนึ่งได้รับพลังลึกลับอย่างกะทันหันและออกเดินทางผจญภัยเพื่อช่วยโลก",
+            "id" to "Seorang siswa sekolah menengah biasa tiba-tiba mendapatkan kekuatan misterius dan memulai petualangan untuk menyelamatkan dunia.",
         )
         samples.forEach { (code, text) -> assertEquals(code, detector.detect(text), "for $code") }
     }
@@ -24,5 +29,17 @@ class LanguageDetectorTest {
     @Test
     fun `blank returns null`() {
         assertEquals(null, detector.detect("   "))
+    }
+
+    @Test
+    fun `short text returns null`() {
+        assertEquals(null, detector.detect("Naruto"))
+        assertEquals(null, detector.detect("進撃の巨人"))
+    }
+
+    @Test
+    fun `low confidence returns null`() {
+        // Danish/Norwegian split (about 0.71 / 0.29): too close to call, so leave it untranslated.
+        assertEquals(null, detector.detect("Jeg har en bil og en hund"))
     }
 }
