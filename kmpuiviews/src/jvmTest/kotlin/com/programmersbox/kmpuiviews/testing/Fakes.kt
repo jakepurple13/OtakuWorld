@@ -173,9 +173,15 @@ class FakeTranslationModelHandler(
     val deleted = mutableListOf<Set<String>>()
     val downloads = mutableListOf<String>()
     val cancelled = mutableListOf<String>()
+    @Volatile var refreshCount = 0
+
+    /** When set, the next [refresh] publishes these rows, like a model downloaded elsewhere. */
+    @Volatile var onRefresh: List<TranslationModel>? = null
 
     override suspend fun refresh() {
+        refreshCount++
         refreshError?.let { throw it }
+        onRefresh?.let { models.value = it }
     }
 
     override fun download(code: String) {

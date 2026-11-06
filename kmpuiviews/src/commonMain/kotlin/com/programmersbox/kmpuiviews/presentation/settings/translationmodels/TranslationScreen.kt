@@ -29,6 +29,7 @@ import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -56,6 +57,8 @@ fun showTranslationScreen(): MutableState<Boolean> {
 
     if (showTranslationScreen.value) {
         val vm: TranslationViewModel = koinViewModel()
+        // The VM outlives the sheet (scoped to the screen), so reload models each time it opens.
+        LaunchedEffect(Unit) { vm.refresh() }
         val sheetState = rememberModalBottomSheetState(
             skipPartiallyExpanded = true,
             // Swipe-down / scrim tap backs out of select mode, the picker or a confirm before closing.

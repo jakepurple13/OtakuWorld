@@ -243,4 +243,52 @@ class TranslationViewModelTest {
             notifier.banners.value.any { it.title == "Couldn't load translation models" && it.subtitle == "nope" }
         }
     }
+
+    @Test fun `refresh reloads models`() = runTest {
+        val handler = seeded()
+        val vm = viewModel(handler)
+        awaitCondition { handler.refreshCount == 1 && vm.state.value.downloaded.size == 5 }
+
+        // A model downloaded elsewhere (e.g. while translating) shows up on the next refresh.
+        handler.onRefresh = handler.models.value.map {
+            if (it.language.code == "fr") it.copy(state = ModelState.Downloaded, sizeBytes = 600) else it
+        }
+        vm.refresh()
+        awaitCondition { handler.refreshCount == 2 }
+        awaitCondition { vm.state.value.downloaded.any { it.language.code == "fr" } }
+        assertTrue(vm.state.value.notDownloaded.none { it.language.code == "fr" })
+    }
+
+    @Test fun `openPicker exits select and clears confirms`() = runTest {
+        val vm = viewModel(seeded())
+        awaitCondition { vm.state.value.downloaded.size == 5 }
+
+        vm.askDelete("ja")
+        vm.enterSelect("ko")
+        vm.toggle("zh")
+        vm.askBulkDelete()
+        awaitCondition { vm.state.value.confirmingBulk && vm.state.value.confirmingCode == "ja" }
+
+        vm.openPicker()
+        awaitCondition { vm.state.value.pickerOpen }
+        val s = vm.state.value
+        assertFalse(s.selecting)
+        assertTrue(s.selected.isEmpty())
+        assertFalse(s.confirmingBulk)
+        assertEquals(null, s.confirmingCode)
+    }
+
+    @Test fun `onBack closes picker in one press after select mode`() = runTest {
+        val vm = viewModel(seeded())
+        awaitCondition { vm.state.value.downloaded.size == 5 }
+
+        vm.enterSelect("ja")
+        vm.openPicker()
+        awaitCondition { vm.state.value.pickerOpen }
+
+        assertTrue(vm.onBack())
+        awaitCondition { !vm.state.value.pickerOpen }
+        assertFalse(vm.state.value.selecting)
+        assertFalse(vm.onBack())
+    }
 }

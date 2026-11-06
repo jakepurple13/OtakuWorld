@@ -104,6 +104,11 @@ class TranslationViewModel(
     )
 
     init {
+        refresh()
+    }
+
+    /** Re-reads models from the engine, e.g. each time the sheet opens. */
+    fun refresh() {
         viewModelScope.launch {
             try {
                 handler.refresh()
@@ -120,7 +125,17 @@ class TranslationViewModel(
         .map { it.language.code }
         .toSet()
 
-    fun openPicker() = ui.update { it.copy(pickerOpen = true, query = "") }
+    /** Leaves select mode and drops any open confirm, so one back press returns from the picker. */
+    fun openPicker() = ui.update {
+        it.copy(
+            pickerOpen = true,
+            query = "",
+            selecting = false,
+            selected = emptySet(),
+            confirmingBulk = false,
+            confirmingCode = null,
+        )
+    }
     fun closePicker() = ui.update { it.copy(pickerOpen = false, query = "") }
 
     fun setTarget(code: String) {
