@@ -30,6 +30,7 @@ import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.qa_background_tasks
 import otakuworld.kmpuiviews.generated.resources.qa_check_updates
 import otakuworld.kmpuiviews.generated.resources.qa_scan_qr
+import otakuworld.kmpuiviews.generated.resources.qa_update_errors
 import otakuworld.kmpuiviews.generated.resources.qa_menu_actions
 import otakuworld.kmpuiviews.generated.resources.qa_menu_open
 import otakuworld.kmpuiviews.generated.resources.qa_menu_open_shortcut
@@ -49,6 +50,7 @@ private fun QuickAction.label(): StringResource = when (this) {
     QuickAction.CheckForUpdates -> Res.string.qa_check_updates
     QuickAction.ScanQrCode -> Res.string.qa_scan_qr
     QuickAction.BackgroundTasks -> Res.string.qa_background_tasks
+    QuickAction.UpdateErrors -> Res.string.qa_update_errors
 }
 
 @Composable

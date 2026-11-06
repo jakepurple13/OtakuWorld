@@ -1,6 +1,11 @@
 package com.programmersbox.kmpuiviews.presentation.updatecheck
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,7 +17,6 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,6 +24,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -33,6 +38,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import com.programmersbox.sharedcomponents.notifier.InAppNotifier
@@ -45,6 +51,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -64,10 +71,10 @@ import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.utils.DateTimeFormatItem
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
-import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
 import com.programmersbox.kmpuiviews.utils.toLocalDateTime
+import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
 import org.jetbrains.compose.resources.getPluralString
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.pluralStringResource
@@ -113,6 +120,10 @@ fun UpdateCheckErrorsScreen(
     val canRetry by viewModel.canRetry.collectAsStateWithLifecycle()
     val notifier = koinInject<InAppNotifier>()
 
+    HideNavBarWhileOnScreen()
+
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+
     LaunchedEffect(viewModel) {
         viewModel.messages.collect { message ->
             when (message) {
@@ -126,6 +137,7 @@ fun UpdateCheckErrorsScreen(
     }
 
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(Res.string.uc_errors_title)) },
@@ -133,28 +145,33 @@ fun UpdateCheckErrorsScreen(
                     IconButton(onClick = { navActions.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
                     }
-                }
+                },
+                scrollBehavior = scrollBehavior,
             )
         },
         bottomBar = {
-            if (report?.hasProblems == true) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = LocalNavHostPadding.current.calculateBottomPadding())
-                        .navigationBarsPadding()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
+            AnimatedVisibility(
+                visible = report?.hasProblems == true,
+                enter = slideInVertically { it } + expandVertically(expandFrom = Alignment.Top),
+                exit = slideOutVertically { it } + shrinkVertically(shrinkTowards = Alignment.Top),
+            ) {
+                BottomAppBar(
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 ) {
-                    OutlinedButton(
-                        onClick = viewModel::share,
-                        modifier = Modifier.weight(1f)
-                    ) { Text(stringResource(Res.string.uc_share)) }
-                    Button(
-                        onClick = viewModel::retryFailed,
-                        enabled = canRetry,
-                        modifier = Modifier.weight(1f)
-                    ) { Text(stringResource(Res.string.uc_retry_failed)) }
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        OutlinedButton(
+                            onClick = viewModel::share,
+                            modifier = Modifier.weight(1f)
+                        ) { Text(stringResource(Res.string.uc_share)) }
+                        Button(
+                            onClick = viewModel::retryFailed,
+                            enabled = canRetry,
+                            modifier = Modifier.weight(1f)
+                        ) { Text(stringResource(Res.string.uc_retry_failed)) }
+                    }
                 }
             }
         }
