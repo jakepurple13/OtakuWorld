@@ -19,10 +19,12 @@ top of the screen, and sending any kind of message should take one line of code.
 - Four kinds, each sent in one line: **success**, **info** (neutral, often with Undo), **error**,
   **progress** (ongoing work that turns into a result in place).
 - Replace every snackbar, the Sonner toaster, and every system toast shown from a screen
-  (47 messages; see "Migration").
+  (46 messages; see "Migration").
 - Remove the Sonner dependency.
-- Works in all three apps (MangaWorld, AnimeWorld, NovelWorld) on Android and desktop, plus the
-  OtakuWorld companion app. Lives in `kmpuiviews/commonMain`, so iOS gets it for free.
+- Works in all three apps (MangaWorld, AnimeWorld, NovelWorld) on Android and desktop. Lives in
+  `kmpuiviews/commonMain`, so iOS gets it for free.
+- The `:app` companion module is commented out in `settings.gradle.kts` and is not built, so its
+  QR toast (`app/.../otakuworld/QrCode.kt:238`) is left as is.
 
 ## Non-goals
 
@@ -123,8 +125,10 @@ call `SnackbarHost` makes), so users with accessibility services get longer time
 
 ## API
 
-All in `kmpuiviews/commonMain`, package `com.programmersbox.kmpuiviews.notifier` (exact package
-decided in plan).
+The model, the interfaces and `DefaultInAppNotifier` live in `sharedcomponents/commonMain`,
+package `com.programmersbox.sharedcomponents.notifier`. `kmpuiviews` already depends on that
+module (`api`), and `sharedcomponents` has to post the QR messages itself. The host UI lives in
+`kmpuiviews`.
 
 ```kotlin
 interface InAppNotifier {
@@ -186,8 +190,7 @@ Reads `koinInject<InAppNotifier>().banners` and draws the stack. It is added at:
 1. `kmpuiviews/.../presentation/HomeNav.kt`: inside the root `Box`, after `QuickActionsOverlay()`.
    This covers all three apps on Android and desktop (desktop reaches `HomeNav` through
    `DesktopUi.kt`).
-2. `app/.../otakuworld/MainActivity.kt`: the companion app's own root (for its QR save message).
-3. `UIViews/.../NotificationSettingsActivity.kt`: a separate activity that shows
+2. `UIViews/.../NotificationSettingsActivity.kt`: a separate activity that shows
    `NotificationSettingsScreen`, whose two messages move to the notifier.
 
 Because the notifier is a singleton, a banner sent while another activity is in front (for
@@ -222,7 +225,6 @@ Every row in the inventory artifact marked **Move to stack**. Summary by file:
 | `animeworld/.../DeleteDialog.kt:56, 60` | toasts: deleted / not deleted / went wrong | `success` / `error` |
 | `sharedcomponents/.../qrcode/QrCodeViewer.kt:283` | snackbar "Link copied" | `success` (keep the existing skip when Android shows its own copy confirmation) |
 | `sharedcomponents/.../qrcode/QrCodeRepository.android.kt:68, 160` | toasts: saved / copied | `success` |
-| `app/.../otakuworld/QrCode.kt:238` | toast: saved | `success` |
 | `kmpuiviews/koogintegration/.../ChatViewModel.kt:340, 347`, `ChatScreen.kt:181` | saved / deleted / copied | `success` / `info` / `success` |
 | `kmpuiviews/src/jvmMain/.../updates/UpdateLaunchDialog.kt:126` | "Updated to …" + What's new | `success` + "What's new" |
 | `source_utilities/cloudstream/.../CloudstreamSettingsActivity.kt:44` | toast: could not open settings | `error` |
@@ -250,7 +252,7 @@ wording and string resources.
   the same id and position; the 20-item cap drops the oldest; `onAction` runs once and dismisses;
   `dismissAll`.
 - **Build:** `./gradlew :mangaworld:assembleNoFirebaseDebug :animeworld:assembleNoFirebaseDebug
-  :novelworld:assembleNoFirebaseDebug :app:assembleNoFirebaseDebug` and the desktop compile.
+  :novelworld:assembleNoFirebaseDebug` and the desktop compile.
 - **Device check (adb, Android):** add to list from Details, History remove + Undo, quick-action
   update check (progress → result), reader chapter change (one card replacing itself),
   AnimeWorld download started. Check light and dark, swipe dismiss, fan-out with 3 banners.
