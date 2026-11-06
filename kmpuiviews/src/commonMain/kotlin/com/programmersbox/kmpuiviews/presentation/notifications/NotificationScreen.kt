@@ -72,6 +72,7 @@ import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -595,6 +596,12 @@ private fun NotificationRow(
                 false
             }
         )
+        // A restored row (after Undo) must not come back parked in a saved swiped state.
+        LaunchedEffect(dismissState) {
+            if (dismissState.currentValue != SwipeToDismissBoxValue.Settled) {
+                dismissState.snapTo(SwipeToDismissBoxValue.Settled)
+            }
+        }
 
         SwipeToDismissBox(
             state = dismissState,

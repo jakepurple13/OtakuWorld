@@ -63,6 +63,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -650,6 +651,13 @@ fun HistoryItem(
             false
         }
     )
+    // The saved state can come back as EndToStart (the row was removed mid-swipe), which parks the
+    // restored row off-screen after Undo.
+    LaunchedEffect(dismissState) {
+        if (dismissState.currentValue != SwipeToDismissBoxValue.Settled) {
+            dismissState.snapTo(SwipeToDismissBoxValue.Settled)
+        }
+    }
 
     SwipeToDismissBox(
         state = dismissState,

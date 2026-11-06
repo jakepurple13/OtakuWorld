@@ -1,9 +1,12 @@
 package com.programmersbox.kmpuiviews.notifier
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -22,6 +25,8 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
@@ -128,11 +133,15 @@ fun InAppBannerHost(
     val animatedDeckHeight by animateFloatAsState(deckHeightPx, Spec)
 
     Box(modifier.fillMaxSize()) {
-        if (isExpanded) {
+        AnimatedVisibility(
+            visible = isExpanded,
+            enter = fadeIn(),
+            exit = fadeOut(),
+        ) {
             Box(
                 Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.32f))
+                    .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.5f))
                     .clickable { expanded = false },
             )
         }
@@ -215,6 +224,8 @@ fun InAppBannerHost(
                 AssistChip(
                     onClick = { notifier.dismissAll() },
                     label = { Text(stringResource(Res.string.banner_clear_all)) },
+                    colors = AssistChipDefaults.assistChipColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+                    elevation = AssistChipDefaults.assistChipElevation(elevation = 6.dp),
                     modifier = Modifier
                         .align(Alignment.TopCenter)
                         .zIndex(0f)

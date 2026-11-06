@@ -1,5 +1,7 @@
 package com.programmersbox.kmpuiviews.notifier
 
+import androidx.compose.animation.core.animate
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.foundation.gestures.Orientation
@@ -24,8 +26,9 @@ import androidx.compose.ui.unit.dp
 private enum class SwipeValue { Start, Settled, End }
 
 private const val DismissThreshold = 0.4f
+private const val UpFlingVelocity = 800f
 
-/** Swipe sideways (past 40% of the width) or flick up (past 40dp) to dismiss. */
+/** Swipe sideways (past 40% of the width) or swipe up (past 40dp, or flung faster than 800px/s) to dismiss. */
 @Composable
 internal fun SwipeToDismissBanner(
     enabled: Boolean,
@@ -37,7 +40,6 @@ internal fun SwipeToDismissBanner(
     val currentOnDismiss by rememberUpdatedState(onDismiss)
     val state = remember { AnchoredDraggableState(SwipeValue.Settled) }
     var width by remember { mutableFloatStateOf(0f) }
-    var upDrag by remember { mutableFloatStateOf(0f) }
     val upThresholdPx = with(density) { 40.dp.toPx() }
 
     LaunchedEffect(width) {
@@ -57,12 +59,10 @@ internal fun SwipeToDismissBanner(
         }
     }
 
+    var upOffset by remember { mutableFloatStateOf(0f) }
     val verticalState = rememberDraggableState { delta ->
-        upDrag += delta
-        if (upDrag <= -upThresholdPx) {
-            upDrag = 0f
-            currentOnDismiss()
-        }
+        // Upward only: the card follows the finger up and never past its resting place downward.
+        upOffset = (upOffset + delta).coerceAtMost(0f)
     }
 
     Box(
@@ -70,6 +70,7 @@ internal fun SwipeToDismissBanner(
             .onSizeChanged { width = it.width.toFloat() }
             .graphicsLayer {
                 translationX = if (width > 0f) state.offset.takeUnless { it.isNaN() } ?: 0f else 0f
+                translationY = upOffset
             }
             .anchoredDraggable(
                 state = state,
@@ -84,7 +85,13 @@ internal fun SwipeToDismissBanner(
                 state = verticalState,
                 orientation = Orientation.Vertical,
                 enabled = enabled,
-                onDragStopped = { upDrag = 0f },
+                onDragStopped = { velocity ->
+                    if (upOffset <= -upThresholdPx || velocity < -UpFlingVelocity) {
+                        currentOnDismiss()
+                    } else {
+                        animate(upOffset, 0f, animationSpec = spring()) { value, _ -> upOffset = value }
+                    }
+                },
             ),
     ) {
         content()
