@@ -26,7 +26,7 @@ class DefaultInAppNotifier(
     private val timeSource: TimeSource.WithComparableMarks = TimeSource.Monotonic,
 ) : InAppNotifier {
 
-    private class Timer(var remaining: Long) {
+    private class Timer(val banner: Banner, var remaining: Long) {
         var startedAt: ComparableTimeMark? = null
         var job: Job? = null
     }
@@ -113,6 +113,7 @@ class DefaultInAppNotifier(
         dismiss(id)
         scope.launch {
             runCatching { banner.onAction() }
+                .onFailure { if (it is kotlinx.coroutines.CancellationException) throw it }
                 .onFailure { println("InAppNotifier: action for '${banner.title}' failed: $it") }
         }
     }
@@ -163,7 +164,7 @@ class DefaultInAppNotifier(
             pruneNow()
             val banner = state.value.firstOrNull { it.id == id } ?: return@launch
             val millis = banner.durationMillis ?: return@launch
-            val timer = Timer(adjuster(millis, banner.action != null))
+            val timer = Timer(banner, adjuster(millis, banner.action != null))
             timers[id] = timer
             if (pausedBy.isEmpty()) start(id, timer)
         }
@@ -174,8 +175,9 @@ class DefaultInAppNotifier(
         timer.startedAt = timeSource.markNow()
         timer.job = scope.launch {
             delay(timer.remaining)
-            timers.remove(id)
-            state.update { list -> list.filterNot { it.id == id } }
+            // Only remove the exact banner this timer was scheduled for; a keyed replacement keeps the id.
+            if (timers[id] === timer) timers.remove(id)
+            state.update { list -> list.filterNot { it === timer.banner } }
         }
     }
 

@@ -3,6 +3,8 @@ package com.programmersbox.sharedcomponents.notifier
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
@@ -11,6 +13,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -159,13 +162,29 @@ class DefaultInAppNotifierTest {
         val n = notifier()
         var ran = false
         val callerJob = Job()
-        val caller = CoroutineScope(callerJob)
+        val caller = CoroutineScope(callerJob + StandardTestDispatcher(testScheduler))
         var id: BannerId? = null
-        caller.run { id = n.success("A", action = "Go", onAction = { ran = true }) }
+        caller.launch { id = n.success("A", action = "Go", onAction = { ran = true }) }
+        runCurrent()
+        assertNotNull(id)
         callerJob.cancel()
         n.performAction(id!!)
         runCurrent()
         assertTrue(ran)
+    }
+
+    @Test
+    fun oldTimerDoesNotRemoveKeyedReplacementAtExpiryInstant() = runTest {
+        val n = notifier()
+        n.info("Ch 1", key = "r", durationMillis = 2_000)
+        advanceTimeBy(2_000) // old expiry is queued at exactly t=2000 but has not run
+        n.info("Ch 2", key = "r", durationMillis = 2_000)
+        runCurrent()
+        assertEquals(listOf("Ch 2"), n.titles())
+        advanceTimeBy(1_999)
+        assertEquals(listOf("Ch 2"), n.titles())
+        advanceTimeBy(2)
+        assertTrue(n.banners.value.isEmpty())
     }
 
     @Test
