@@ -47,6 +47,8 @@ class BergamotRuntimeTest {
         assertEquals("Run! Now? Yes.", spaceBetweenSentences("Run!Now?Yes."))
         assertEquals("He said “go.” Then left.", spaceBetweenSentences("He said “go.”Then left."))
         assertEquals("It was 3. “Fine,” she said.", spaceBetweenSentences("It was 3.“Fine,” she said."))
+        assertEquals("Done. (Then more.)", spaceBetweenSentences("Done.(Then more.)"))
+        assertEquals("Wait. I know.", spaceBetweenSentences("Wait.I know."))
     }
 
     @Test
@@ -58,6 +60,12 @@ class BergamotRuntimeTest {
             "Version 1.2.3 ships.",
             "See example.com today.",
             "Already spaced. Fine.",
+            "He said \"go.\" Then left.",
+            "\"Go.\" she said",
+            // A straight quote can open or close, so glued text next to one is left as is.
+            "quietly.\"Then she laughed.\"",
+            "Built on Node.JS today.",
+            "Visit example.COM now.",
             "",
         ).forEach { assertEquals(it, spaceBetweenSentences(it)) }
     }

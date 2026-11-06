@@ -26,9 +26,11 @@ class PrereleaseRepository {
         }
     }
 
+    /** App releases only: tool releases such as `bergamot-cli-*` are dropped. */
     suspend fun getReleases() = client
         .get("https://api.github.com/repos/jakepurple13/OtakuWorld/releases")
         .body<List<GitHubPrerelease>>()
+        .filterNot { it.isToolRelease }
 }
 
 @Serializable

@@ -58,12 +58,16 @@ fun bergamotPlatformKey(
 /**
  * Bergamot joins translated sentences with the whitespace that followed each source sentence. Japanese and Chinese
  * put none after `。`, so English output comes back glued: "quietly.Then she laughed." This adds a space where
- * sentence punctuation (plus an optional closing quote or bracket) after a lowercase letter or digit runs straight
- * into an uppercase letter or opening quote. Decimals ("3.14"), abbreviations ("e.g. this", "U.S.A.") are untouched.
+ * `.`/`!`/`?` (plus an optional closing curly quote or bracket) after a lowercase letter or digit runs straight into
+ * a capitalized word, an opening curly quote, or `(`.
+ *
+ * Left alone: decimals ("3.14"), abbreviations ("e.g. this", "U.S.A."), all-caps words after a dot ("Node.JS",
+ * "example.COM"), and anything next to a straight `"`, which can't be told apart as opening or closing
+ * (`quietly."Then` stays as is).
  */
 fun spaceBetweenSentences(text: String): String = sentenceGlue.replace(text, "$1 ")
 
-private val sentenceGlue = Regex("""(?<=[\p{Ll}\p{Nd}])([.!?]+[”’)\]]?)(?=[\p{Lu}“‘"(])""")
+private val sentenceGlue = Regex("""(?<=[\p{Ll}\p{Nd}])([.!?]+[”’)\]]?)(?=\p{Lu}(?!\p{Lu})|[“‘(])""")
 
 /** The Marian options Firefox uses for its Bergamot models, plus this model's files. */
 internal fun bergamotConfigYaml(model: BergamotModelFiles): String = buildString {

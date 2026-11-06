@@ -47,7 +47,7 @@ class PrereleaseViewModel(
             uiState = runCatching { prereleaseRepository.getReleases() }
                 .mapCatching {
                     it
-                        .filter { it.prerelease && !it.isToolRelease }
+                        .filter { it.prerelease }
                         .maxBy { it.createdAt }
                 }
                 .map { release ->

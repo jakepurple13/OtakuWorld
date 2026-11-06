@@ -73,13 +73,19 @@ Models are separate downloads: about 55 MB per direction for ja↔en, uncompress
 
 ### CI
 
-`.github/workflows/bergamot-cli.yml` (`workflow_dispatch` with a `tag` input):
+`.github/workflows/bergamot-cli.yml`.
+
+Triggers:
+- Pushing a `bergamot-cli-*` tag. This works before the file reaches the default branch, which `workflow_dispatch` requires. The release is created for the existing tag with `--verify-tag`.
+- `workflow_dispatch` with a `tag` input. A new tag is created at the commit the run built from.
+
+Steps:
 - Checks out the pinned `mozilla/translations` commit and only the submodules the CLI needs.
 - Applies the 3 patches with `sed`.
 - Builds `translator-cli` for each of the 4 platforms. `USE_STATIC_LIBS` is set only on Linux; on macOS it makes CMake look for `.a` files the SDK doesn't ship, so the macOS legs match the local build.
 - Strips the binaries and re-signs the macOS ones ad hoc (`codesign -s - -f`). Stripping removes the signature, and macOS kills unsigned arm64 binaries.
 - The release job runs even when some legs fail (`if: !cancelled()`). It publishes only the legs that uploaded an artifact, as `translator-cli-<key>[.exe]`, plus `SHA256SUMS`.
-- The tag must match `bergamot-cli-<version>`. The release is created with `--prerelease --latest=false`, so the app's `/releases/latest` links keep pointing at app releases. `selectStable` (`v*` tags only) and `selectNightly` (`nightly_*` only) already ignore it. The pre-release list in settings filters out `bergamot-cli-*` tags (`GitHubPrerelease.isToolRelease`).
+- The tag must match `bergamot-cli-<version>`. The release is created with `--prerelease --latest=false`, so the app's `/releases/latest` links keep pointing at app releases. `selectStable` (`v*` tags only) and `selectNightly` (`nightly_*` only) already ignore it. `PrereleaseRepository.getReleases()` drops `bergamot-cli-*` tags (`GitHubPrerelease.isToolRelease`). Its only caller is `PrereleaseViewModel`.
 - Permissions: `contents: read` for the workflow, and `contents: write` only for the release job.
 
 It has not run yet. After the first green run, copy each URL, sha256 and size into `pinnedBergamotCliAssets`. Until then, `BergamotCliRuntime.unavailableReason()` reports "not available for this computer yet" unless `BERGAMOT_CLI` points at a local binary.
@@ -99,7 +105,15 @@ Smoke test: `kmpuiviews/src/jvmTest/.../translation/bergamot/BergamotCliRuntimeS
 - The model is reloaded on every call (about 0.1 s warm, cold disk slower). Long-running modes would need a small C++ driver of our own around `BlockingService`. For descriptions this is fine.
 - **Glued sentences, fixed in the runtime.** With 2 sentences in one paragraph, the CLI returned "…quietly.Then she laughed."
   - Cause: Bergamot joins the target sentences with the whitespace that followed each source sentence, and Japanese puts none after `。`. No CLI option changes this.
-  - Fix: `spaceBetweenSentences()` runs on every result. It inserts a space where `.`, `!` or `?` (plus an optional closing quote or bracket) after a lowercase letter or digit is directly followed by an uppercase letter or an opening quote.
-  - Decimals ("3.14"), "e.g. this" and "U.S.A." are left alone. These cases are unit-tested in `BergamotRuntimeTest`.
+  - Fix: `spaceBetweenSentences()` runs on every result. It inserts a space where `.`, `!` or `?` comes after a lowercase letter or digit, plus an optional closing curly quote or bracket, and is directly followed by one of these:
+    - a capitalized word (not all-caps)
+    - an opening curly quote
+    - `(`
+  - Left alone:
+    - decimals ("3.14")
+    - abbreviations ("e.g. this", "U.S.A.")
+    - all-caps words after a dot ("Node.JS", "example.COM")
+    - anything next to a straight `"`. It can't be told apart as opening or closing, so `quietly."Then` stays glued.
+  - These cases are unit-tested in `BergamotRuntimeTest`.
 - **Cancellation.** `translate` waits for the process inside `runInterruptible`. On timeout, cancellation or any failure, it kills the process before the pipe jobs are awaited.
 - Licenses were not checked in this spike. bergamot-translator/marian are MPL-2.0 and MIT. Check the model license before shipping, and add attribution to the app's licenses screen.

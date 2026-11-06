@@ -9,10 +9,14 @@ name: Bergamot CLI
 # a BLAS (MKL or OpenBLAS) step is added. The release job publishes whichever legs succeeded.
 
 on:
+  # Pushing a bergamot-cli-* tag builds and releases that tag. This works before the workflow reaches the default
+  # branch, which workflow_dispatch needs.
+  push:
+    tags: ['bergamot-cli-*']
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release tag to create or update; must start with bergamot-cli-, e.g. bergamot-cli-1'
+        description: 'Release tag to create (at this commit) or update; must look like bergamot-cli-1'
         required: true
         type: string
 
@@ -20,6 +24,8 @@ permissions:
   contents: read
 
 env:
+  # The pushed tag, or the dispatch input. Validated in both jobs before use.
+  TAG: ${{ github.event_name == 'push' && github.ref_name || inputs.tag }}
   # mozilla/translations commit whose inference/ is built (BERGAMOT_VERSION v0.6.0).
   TRANSLATIONS_SHA: 8eada038fd45bbf6fa58a412b22f80c79887fabc
 
@@ -42,8 +48,6 @@ jobs:
         shell: bash
     steps:
       - name: Check the tag
-        env:
-          TAG: ${{ inputs.tag }}
         run: |
           # The app's updater and pre-release list ignore this prefix; anything else could be mistaken for an app release.
           [[ "$TAG" =~ ^bergamot-cli-[0-9A-Za-z.]+$ ]] || { echo "tag must look like bergamot-cli-1"; exit 1; }
@@ -133,7 +137,6 @@ jobs:
       - name: Publish release assets
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ inputs.tag }}
         run: |
           [[ "$TAG" =~ ^bergamot-cli-[0-9A-Za-z.]+$ ]] || { echo "tag must look like bergamot-cli-1"; exit 1; }
           ls assets/sha256-*.txt >/dev/null 2>&1 || { echo "no build leg succeeded"; exit 1; }
@@ -141,8 +144,11 @@ jobs:
           rm assets/sha256-*.txt
           ls -la assets
           # Pre-release and never "Latest": /releases/latest links in the app must keep pointing at app releases.
+          # A pushed tag already exists: --verify-tag makes gh fail instead of creating a tag.
+          # A dispatch may name a new tag: it is created at the commit this run built from.
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then where=(--verify-tag); else where=(--target "$GITHUB_SHA"); fi
           gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
-            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" "${where[@]}" \
               --prerelease --latest=false --title "Bergamot CLI $TAG" \
               --notes "translator-cli from mozilla/translations@${TRANSLATIONS_SHA} (inference/). Used by the desktop apps' offline translation; not an app release."
           gh release upload "$TAG" assets/* --repo "$GITHUB_REPOSITORY" --clobber
