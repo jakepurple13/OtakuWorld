@@ -25,6 +25,9 @@ import com.programmersbox.kmpuiviews.translation.bergamot.BergamotEngine
 import com.programmersbox.kmpuiviews.translation.bergamot.BergamotIndex
 import com.programmersbox.kmpuiviews.translation.bergamot.BergamotModelStore
 import com.programmersbox.kmpuiviews.translation.bergamot.BergamotRuntime
+import com.programmersbox.kmpuiviews.translation.custom.CustomEngine
+import com.programmersbox.kmpuiviews.translation.custom.OpenAiCompatClient
+import com.programmersbox.kmpuiviews.translation.custom.installOpenAiCompatTimeouts
 import com.programmersbox.kmpuiviews.translation.ollama.OllamaClient
 import com.programmersbox.kmpuiviews.translation.ollama.OllamaEngine
 import com.programmersbox.kmpuiviews.translation.ollama.installOllamaTimeouts
@@ -90,6 +93,8 @@ actual fun platformModule(): Module = module {
         BergamotCliRuntime(installRoot = File(get<AppDirs>().getUserDataDir(), "translation/bergamot-runtime"))
     }
     single<TranslationEngine>(named("bergamot")) { BergamotEngine(get(), get()) }
+    single { OpenAiCompatClient(HttpClient { installOpenAiCompatTimeouts() }, get()) }
+    single<TranslationEngine>(named("custom")) { CustomEngine(get(), get(), get()) }
     factory<TranslationHandler> {
         DesktopTranslationHandler(
             engines = getAll<TranslationEngine>().associateBy { it.kind },
