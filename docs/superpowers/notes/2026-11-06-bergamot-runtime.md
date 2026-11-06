@@ -1,0 +1,99 @@
+# Bergamot runtime on desktop: decision record (2026-11-06)
+
+**Decision: option 2. Use the native `translator-cli` built per OS in CI. Download it on demand with a pinned sha256 and run it with `ProcessBuilder` (text on stdin, translation on stdout).**
+
+Option 1 (WASM in the JVM under Chicory) does not work with Mozilla's builds. The reasons are below.
+
+## Models (Step 1)
+
+- Index: `https://firefox.settings.services.mozilla.com/v1/buckets/main/collections/translations-models/records` (742 records).
+- Attachment base: `https://firefox-settings-attachments.cdn.mozilla.net/`, then `attachment.location`.
+- Each record is one file. It has `fromLang`, `toLang`, `fileType` (`model`, `lex`, `vocab`, or `srcvocab` + `trgvocab`), `version`, and `attachment.{filename,size,hash(sha256),location,mimetype}`. A pair can appear in several versions, so pick the highest `version`.
+- Attachments are **not compressed**. The CDN sends `content-encoding: identity`. Store the files as they arrive and check them against `attachment.hash`.
+- ja→en v2.1 (the latest) has 3 files, 54.8 MB in total:
+
+| file | bytes | gzip -6 (for reference) |
+|---|---|---|
+| `model.jaen.intgemm.alphas.bin` | 43,977,787 | 32.6 MB |
+| `lex.50.50.jaen.s2t.bin` | 9,348,172 | 4.8 MB |
+| `vocab.jaen.spm` (shared src/trg vocab) | 1,443,222 | 0.7 MB |
+
+- en→ja v2.3 uses separate `srcvocab.enja.spm` and `trgvocab.enja.spm` files. This is why `BergamotModelFiles` has `srcVocab` and `trgVocab`. For a shared vocab, pass the same file twice.
+
+## Option 1: Bergamot WASM under Chicory (rejected)
+
+Two builds were tried:
+- Firefox's current engine: Remote Settings `translations-wasm`, `bergamot-translator` 3.0, 4.96 MB.
+- The last GitHub release: `mozilla/bergamot-translator` v0.4.4, `bergamot-translator-worker-without-wormhole.wasm`, 5.18 MB.
+
+Results:
+
+- **SIMD.** Both builds contain wasm SIMD128. Chicory 1.7.5's AOT compiler (`MachineFactoryCompiler`) rejects both, with `InterpreterFallback.FAIL` and with `WARN`, with this error: `ChicoryException: Unhandled opcode: V128_CONST`. Chicory supports SIMD only in its interpreter (`chicory-simd`, which uses the incubator Vector API). Running a 44 MB int8 model in an interpreter cannot meet the < 2 s gate.
+- **Emscripten/embind glue.** The API (`BlockingService`, `TranslationModel`, `AlignedMemory`, …) exists only through `_embind_register_*` and `_emval_*` imports. To use it, we would have to rewrite emscripten's embind JS runtime in Kotlin. About 40 `env.__syscall_*` and `_mmap_js` imports, plus WASI imports, also need host functions.
+- **wasm_gemm imports.** The int8 GEMM comes in as 7 `wasm_gemm.int8_*` imports. Firefox implements them natively. The wasm exports `*Fallback` versions, but they are SIMD too.
+- Threads were not a blocker: the memory is unshared and there are no atomics imports.
+- The only way left for option 1 is a custom non-SIMD, non-embind (C ABI) wasm build. That means a second toolchain (emscripten or wasi-sdk) and a scalar GEMM running in JVM bytecode. It would cost more than option 2 and run slower.
+
+## Option 2: native `translator-cli` (chosen)
+
+Source: `mozilla/translations` @ `8eada038fd45bbf6fa58a412b22f80c79887fabc`, `inference/` (BERGAMOT_VERSION v0.6.0). The old `mozilla/bergamot-translator` repo has been moved here. The CLI is `inference/src/app/translator_cli.cpp`. It reads all of stdin as one request and prints only the translated text.
+
+### Local build on this Mac (macOS 26, Apple clang 21, arm64)
+
+- Configure: about 3 min. Most of that time is Bergamot's CMake running `git submodule update`, which also pulls submodules it does not need (fbgemm, marian-dev, kenlm, emsdk).
+- Clean build of `translator-cli` with `-j16`: **34 s**.
+- Blockers found, all fixed:
+  1. zlib `zutil.h` defines `fdopen(fd,mode) NULL` when `TARGET_OS_MAC` is set, which breaks the SDK's `_stdio.h`. Fix: also require `!defined(__APPLE__)`.
+  2. sentencepiece `trainer_interface.cc`: `constexpr ScriptType kAnyType = static_cast<ScriptType>(-1)` is a hard error in clang 21. Fix: `const`.
+  3. marian builds with `-Werror`, and clang 21 adds `-Wvla-cxx-extension`. Fix: `-Wno-error`.
+  4. The arm64 defines (`ARM FMA SSE`, `-flax-vector-conversions`) are only set inside `marian-fork/`, so `src/translator` fails to compile with `_mm_*` errors. Fix: pass them through `CMAKE_CXX_FLAGS` at the root.
+- The native build of `inference/` is only maintained by Mozilla for x86-64 Linux (`scripts/build.py`: fbgemm + MKL). Every other OS is our own work.
+- Flags used: `-DCMAKE_BUILD_TYPE=Release -DCOMPILE_CPU=on -DCOMPILE_CUDA=off -DUSE_FBGEMM=off -DBUILD_ARCH=armv8-a -DSSPLIT_USE_INTERNAL_PCRE2=ON -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 -DCMAKE_CXX_FLAGS="-DARM -DFMA -DSSE -flax-vector-conversions -fno-strict-aliasing"`. GEMM goes through ruy for int8 and Apple Accelerate for sgemm.
+
+### Results (macOS arm64)
+
+- Binary: 10.1 MB, **7.7 MB stripped**, 3.2 MB gzip -9. It links only system libraries (Accelerate, libiconv, libc++, libSystem). Minimum OS: macOS 12.0.
+- `彼は静かに剣を抜いた。` gives **"He pulled out his sword quietly."**
+- Latency: one new process per call, including loading the model:
+  - first run: 0.38 s
+  - warm page cache: **0.12 s**
+  - 2 paragraphs / 3 sentences: 0.18 s
+- Smoke test from Kotlin (`BergamotCliRuntime` → `ProcessBuilder`): passed, 360 ms on the first call inside the JVM test.
+
+### Install size per OS
+
+| platform | translator download | status |
+|---|---|---|
+| macos-arm64 | 7.7 MB (stripped binary) | built and run locally |
+| macos-x64 | about 8–10 MB expected (intgemm + Accelerate) | not built |
+| linux-x64 | about 10–15 MB expected (intgemm + OpenBLAS, static) | not built |
+| windows-x64 | unknown (needs a BLAS: MKL or OpenBLAS via vcpkg) | not built; highest risk |
+
+Models are separate downloads: about 55 MB per direction for ja↔en, uncompressed.
+
+### CI
+
+`.github/workflows/bergamot-cli.yml` (`workflow_dispatch` with a `tag` input):
+- Checks out the pinned `mozilla/translations` commit and only the submodules the CLI needs.
+- Applies the 3 patches with `sed`.
+- Builds `translator-cli` for each of the 4 platforms.
+- Strips the binaries.
+- Uploads `translator-cli-<key>[.exe]` and `SHA256SUMS` to a release in this repo.
+
+It has not run yet. After the first green run, copy each URL, sha256 and size into `pinnedBergamotCliAssets`. Until then, `BergamotCliRuntime.unavailableReason()` reports "not available for this computer yet" unless `BERGAMOT_CLI` points at a local binary.
+
+## Implementation
+
+`kmpuiviews/src/jvmMain/.../translation/bergamot/BergamotRuntime.kt`:
+- `BergamotRuntime`, `BergamotModelFiles`.
+- `BergamotCliRuntime`. It finds the CLI in this order: env `BERGAMOT_CLI`, then `<installRoot>/translator-cli`, then the pinned download.
+- `bergamotConfigYaml`, which uses Firefox's Marian options with `gemm-precision: int8shiftAlphaAll`. It writes one config per model under `<installRoot>/configs/`.
+- `bergamotPlatformKey`.
+
+Smoke test: `kmpuiviews/src/jvmTest/.../translation/bergamot/BergamotCliRuntimeSmokeTest.kt`. The project's JVM tests use JUnit 4, so the env gate is `Assume.assumeTrue(BERGAMOT_SMOKE == "1")` instead of JUnit 5's `@EnabledIfEnvironmentVariable`.
+
+## Open points
+
+- The model is reloaded on every call (about 0.1 s warm, cold disk slower). Long-running modes would need a small C++ driver of our own around `BlockingService`. For descriptions this is fine.
+- With 2 sentences in one paragraph, the output lost the space between them: "…quietly.Then she laughed." The caller may need to split sentences, or patch the joining.
+- Licenses were not checked in this spike. bergamot-translator/marian are MPL-2.0 and MIT. Check the model license before shipping, and add attribution to the app's licenses screen.

@@ -1,0 +1,125 @@
+name: Bergamot CLI
+
+# Builds bergamot-translator's native `translator-cli` (mozilla/translations, inference/) per desktop OS and
+# publishes the binaries on a GitHub release. The desktop apps download them on demand with a pinned sha256
+# (see kmpuiviews/.../translation/bergamot/BergamotRuntime.kt, `pinnedBergamotCliAssets`).
+#
+# Only macOS arm64 has been built and run locally (2026-11-06); the other legs are untested.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to create or update, e.g. bergamot-cli-1'
+        required: true
+        type: string
+
+env:
+  # mozilla/translations commit whose inference/ is built (BERGAMOT_VERSION v0.6.0).
+  TRANSLATIONS_SHA: 8eada038fd45bbf6fa58a412b22f80c79887fabc
+
+jobs:
+  build:
+    name: Build ${{ matrix.key }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-latest, key: macos-arm64, arch: armv8-a, cxxflags: '-DARM -DFMA -DSSE -flax-vector-conversions -fno-strict-aliasing', exe: translator-cli }
+          - { os: macos-15-intel, key: macos-x64, arch: x86-64, cxxflags: '', exe: translator-cli }
+          - { os: ubuntu-22.04, key: linux-x64, arch: x86-64, cxxflags: '', exe: translator-cli }
+          - { os: windows-latest, key: windows-x64, arch: x86-64, cxxflags: '', exe: translator-cli.exe }
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out mozilla/translations
+        uses: actions/checkout@v7
+        with:
+          repository: mozilla/translations
+          ref: ${{ env.TRANSLATIONS_SHA }}
+          path: translations
+
+      - name: Check out the submodules translator-cli needs
+        working-directory: translations
+        run: |
+          git submodule update --init --depth 1 \
+            inference/3rd_party/ssplit-cpp \
+            inference/marian-fork/src/3rd_party/sentencepiece \
+            inference/marian-fork/src/3rd_party/intgemm \
+            inference/marian-fork/src/3rd_party/ruy \
+            inference/marian-fork/src/3rd_party/simd_utils
+          git -C inference/marian-fork/src/3rd_party/ruy submodule update --init --depth 1 third_party/cpuinfo
+
+      # Fixes for current compilers (found building on Apple clang 21 / macOS 26 SDK):
+      # zlib's old fdopen macro breaks the SDK's stdio.h, sentencepiece casts -1 to an enum in a constexpr,
+      # and marian builds with -Werror, which newer clang warnings (e.g. -Wvla-cxx-extension) trip.
+      - name: Patch sources
+        working-directory: translations/inference/marian-fork
+        run: |
+          sed -i.bak 's/^#if defined(MACOS) || defined(TARGET_OS_MAC)$/#if (defined(MACOS) || defined(TARGET_OS_MAC)) \&\& !defined(__APPLE__)/' src/3rd_party/zlib/zutil.h
+          sed -i.bak 's/  constexpr unicode_script::ScriptType kAnyType =/  const unicode_script::ScriptType kAnyType =/' src/3rd_party/sentencepiece/src/trainer_interface.cc
+          sed -i.bak 's/-Wall; -Werror;/-Wall; -Wno-error;/' CMakeLists.txt
+
+      # x86 marian needs a CPU BLAS (macOS uses Accelerate). Untested: Windows has no BLAS step yet.
+      - name: Install BLAS (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libopenblas-dev
+
+      - name: Configure
+        run: |
+          # Bergamot's CMake runs `git submodule update` itself; the checkout above already has what we need.
+          cmake -S translations/inference -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCOMPILE_CPU=on -DCOMPILE_CUDA=off -DUSE_FBGEMM=off \
+            -DBUILD_ARCH=${{ matrix.arch }} \
+            -DSSPLIT_USE_INTERNAL_PCRE2=ON \
+            -DUSE_STATIC_LIBS=ON \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 \
+            -DCMAKE_CXX_FLAGS="${{ matrix.cxxflags }}"
+
+      - name: Build
+        run: cmake --build build --config Release --target translator-cli --parallel 4
+
+      - name: Package
+        run: |
+          mkdir out
+          exe=$(find build -name '${{ matrix.exe }}' -type f | head -n 1)
+          cp "$exe" "out/translator-cli-${{ matrix.key }}${{ runner.os == 'Windows' && '.exe' || '' }}"
+          if [ "$RUNNER_OS" != "Windows" ]; then strip out/*; fi
+          ls -la out
+          (cd out && { command -v sha256sum >/dev/null && sha256sum * || shasum -a 256 *; } | tee ../sha256-${{ matrix.key }}.txt)
+          mv sha256-${{ matrix.key }}.txt out/
+
+      - name: Upload
+        uses: actions/upload-artifact@v7
+        with:
+          name: bergamot-cli-${{ matrix.key }}
+          path: out/*
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: bergamot-cli-*
+          merge-multiple: true
+          path: assets
+
+      - name: Publish release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          cat assets/sha256-*.txt > assets/SHA256SUMS
+          rm assets/sha256-*.txt
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --title "Bergamot CLI $TAG" \
+              --notes "translator-cli from mozilla/translations@${TRANSLATIONS_SHA} (inference/)."
+          gh release upload "$TAG" assets/* --repo "$GITHUB_REPOSITORY" --clobber
