@@ -3,6 +3,7 @@ package com.programmersbox.kmpuiviews.notifier
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -24,7 +25,9 @@ import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,9 +47,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.programmersbox.kmpuiviews.utils.LocalWindowSizeClass
+import com.programmersbox.sharedcomponents.notifier.Banner
 import com.programmersbox.sharedcomponents.notifier.BannerId
 import com.programmersbox.sharedcomponents.notifier.InAppNotifier
 import com.programmersbox.sharedcomponents.notifier.PauseReason
+import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import otakuworld.kmpuiviews.generated.resources.Res
@@ -71,13 +76,14 @@ fun InAppBannerHost(
     val isExpanded = expanded && banners.size >= 2
 
     LaunchedEffect(banners.size) { if (banners.size < 2) expanded = false }
-    LaunchedEffect(isExpanded) { notifier.setPaused(PauseReason.Expanded, isExpanded) }
-    LifecycleResumeEffect(Unit) {
-        notifier.setPaused(PauseReason.Background, false)
-        onPauseOrDispose { notifier.setPaused(PauseReason.Background, true) }
+    DisposableEffect(isExpanded) {
+        notifier.setPaused(PauseReason.Expanded, isExpanded)
+        onDispose { notifier.setPaused(PauseReason.Expanded, false) }
     }
     val accessibility = LocalAccessibilityManager.current
-    LaunchedEffect(accessibility) {
+    // Whichever host is in the foreground owns the adjuster; it is cleared so no Context is retained.
+    LifecycleResumeEffect(accessibility) {
+        notifier.setPaused(PauseReason.Background, false)
         notifier.setTimeoutAdjuster { ms, hasAction ->
             accessibility?.calculateRecommendedTimeoutMillis(
                 ms,
@@ -86,9 +92,23 @@ fun InAppBannerHost(
                 containsControls = hasAction,
             ) ?: ms
         }
+        onPauseOrDispose {
+            notifier.setPaused(PauseReason.Background, true)
+            notifier.setTimeoutAdjuster { ms, _ -> ms }
+        }
     }
 
-    if (banners.isEmpty()) return
+    // Removed banners stay composed (same keyed instance) for their exit animation.
+    var leavingTick by remember { mutableIntStateOf(0) }
+    val leaving = remember { LinkedHashMap<BannerId, Banner>() }
+    val previous = remember { arrayOf(emptyList<Banner>()) }
+    val liveIds = banners.map { it.id }.toSet()
+    previous[0].filter { it.id !in liveIds }.forEach { leaving.getOrPut(it.id) { it } }
+    leaving.keys.removeAll(liveIds)
+    previous[0] = banners
+    @Suppress("UNUSED_VARIABLE") val tick = leavingTick
+
+    if (banners.isEmpty() && leaving.isEmpty()) return
 
     val density = LocalDensity.current
     val peekPx = with(density) { 9.dp.toPx() }
@@ -96,6 +116,7 @@ fun InAppBannerHost(
     val chipPx = with(density) { 48.dp.toPx() }
     val fallbackHeight = with(density) { 72.dp.toPx() }
     val heights = remember { mutableStateMapOf<BannerId, Float>() }
+    val lastSlots = remember { HashMap<BannerId, CardSlot>() }
     val heightList = banners.map { heights[it.id] ?: fallbackHeight }
     val slots = bannerSlots(heightList, isExpanded, peekPx, gapPx)
 
@@ -126,19 +147,42 @@ fun InAppBannerHost(
                 .then(if (topEnd) Modifier.width(360.dp) else Modifier.fillMaxWidth().widthIn(max = 480.dp))
                 .height(with(density) { animatedDeckHeight.toDp() }),
         ) {
-            banners.forEachIndexed { index, banner ->
+            (banners.map { it to false } + leaving.values.map { it to true }).forEach { (banner, isLeaving) ->
                 key(banner.id) {
-                    val slot = slots[index]
-                    val height = heightList[index]
+                    val index = banners.indexOfFirst { it.id == banner.id }
+                    val slot = if (index >= 0) slots[index] else lastSlots[banner.id] ?: CardSlot(0f, 1f, 1f, 1f, 0f, false)
+                    if (index >= 0) lastSlots[banner.id] = slot
+                    val height = heights[banner.id] ?: fallbackHeight
                     var entered by remember { mutableStateOf(false) }
                     LaunchedEffect(Unit) { entered = true }
-                    val ty by animateFloatAsState(if (entered) slot.translationY else -height, Spec)
+                    val exitPx = with(density) { 24.dp.toPx() }
+                    val exit = tween<Float>(200)
+                    val ty by animateFloatAsState(
+                        when {
+                            isLeaving -> slot.translationY - exitPx
+                            entered -> slot.translationY
+                            else -> -height
+                        },
+                        if (isLeaving) exit else Spec,
+                    )
                     val scale by animateFloatAsState(slot.scale, Spec)
-                    val alpha by animateFloatAsState(if (entered) slot.alpha else 0f, Spec)
+                    val alpha by animateFloatAsState(
+                        if (isLeaving || !entered) 0f else slot.alpha,
+                        if (isLeaving) exit else Spec,
+                    )
                     val contentAlpha by animateFloatAsState(slot.contentAlpha, Spec)
+                    if (isLeaving) {
+                        LaunchedEffect(Unit) {
+                            delay(260)
+                            leaving.remove(banner.id)
+                            lastSlots.remove(banner.id)
+                            heights.remove(banner.id)
+                            leavingTick++
+                        }
+                    }
 
                     SwipeToDismissBanner(
-                        enabled = slot.interactive,
+                        enabled = slot.interactive && !isLeaving,
                         onDismiss = { notifier.dismiss(banner.id) },
                         modifier = Modifier
                             .fillMaxWidth()
