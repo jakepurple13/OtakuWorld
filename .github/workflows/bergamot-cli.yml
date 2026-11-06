@@ -4,9 +4,11 @@ name: Bergamot CLI
 # publishes the binaries on a GitHub release. The desktop apps download them on demand with a pinned sha256
 # (see kmpuiviews/.../translation/bergamot/BergamotRuntime.kt, `pinnedBergamotCliAssets`).
 #
-# Not yet proven on CI. Locally (2026-11-06) only the macOS arm64 configuration was built and run, with the same
-# flags as the macos-arm64 leg below. macos-x64 and linux-x64 are untested; windows-x64 is expected to fail until
-# a BLAS (MKL or OpenBLAS) step is added. The release job publishes whichever legs succeeded.
+# CI status: linux-x64 built and released in bergamot-cli-0.1.0. The macOS and Windows legs failed there at
+# configure (runner CMake 4.4 rejects cmake_minimum_required < 3.5; fixed by CMAKE_POLICY_VERSION_MINIMUM below).
+# The macos-arm64 leg's exact configuration was built and run locally with CMake 4.4. macos-x64 is untested.
+# windows-x64 is best effort (ruy for float GEMM instead of a BLAS; not built anywhere yet).
+# The release job publishes whichever legs succeeded.
 
 on:
   # Pushing a bergamot-cli-* tag builds and releases that tag. This works before the workflow reaches the default
@@ -24,6 +26,9 @@ permissions:
   contents: read
 
 env:
+  # Runner CMake is 4.x, which refuses projects declaring cmake_minimum_required < 3.5 (clog, sentencepiece, pcre2).
+  # As an env var it also reaches ExternalProject sub-builds (ssplit's internal PCRE2), which -D would not.
+  CMAKE_POLICY_VERSION_MINIMUM: '3.5'
   # The pushed tag, or the dispatch input. Validated in both jobs before use.
   TAG: ${{ github.event_name == 'push' && github.ref_name || inputs.tag }}
   # mozilla/translations commit whose inference/ is built (BERGAMOT_VERSION v0.6.0).
@@ -39,10 +44,11 @@ jobs:
       matrix:
         include:
           # static: USE_STATIC_LIBS. Linux only; on macOS it makes CMake look for .a files the SDK doesn't ship.
-          - { os: macos-latest, key: macos-arm64, arch: armv8-a, static: 'OFF', cxxflags: '-DARM -DFMA -DSSE -flax-vector-conversions -fno-strict-aliasing', exe: translator-cli }
-          - { os: macos-15-intel, key: macos-x64, arch: x86-64, static: 'OFF', cxxflags: '', exe: translator-cli }
-          - { os: ubuntu-22.04, key: linux-x64, arch: x86-64, static: 'ON', cxxflags: '', exe: translator-cli }
-          - { os: windows-latest, key: windows-x64, arch: x86-64, static: 'OFF', cxxflags: '', exe: translator-cli.exe }
+          # extra: Windows has no system BLAS, so float GEMM goes through ruy (marian's USE_RUY_SGEMM path) instead.
+          - { os: macos-latest, key: macos-arm64, arch: armv8-a, static: 'OFF', extra: '', cxxflags: '-DARM -DFMA -DSSE -flax-vector-conversions -fno-strict-aliasing', exe: translator-cli }
+          - { os: macos-15-intel, key: macos-x64, arch: x86-64, static: 'OFF', extra: '', cxxflags: '', exe: translator-cli }
+          - { os: ubuntu-22.04, key: linux-x64, arch: x86-64, static: 'ON', extra: '', cxxflags: '', exe: translator-cli }
+          - { os: windows-latest, key: windows-x64, arch: x86-64, static: 'OFF', extra: '-DUSE_MKL=OFF -DUSE_RUY=ON -DUSE_RUY_SGEMM=ON', cxxflags: '', exe: translator-cli.exe }
     defaults:
       run:
         shell: bash
@@ -79,8 +85,10 @@ jobs:
           sed -i.bak 's/^#if defined(MACOS) || defined(TARGET_OS_MAC)$/#if (defined(MACOS) || defined(TARGET_OS_MAC)) \&\& !defined(__APPLE__)/' src/3rd_party/zlib/zutil.h
           sed -i.bak 's/  constexpr unicode_script::ScriptType kAnyType =/  const unicode_script::ScriptType kAnyType =/' src/3rd_party/sentencepiece/src/trainer_interface.cc
           sed -i.bak 's/-Wall; -Werror;/-Wall; -Wno-error;/' CMakeLists.txt
+          # MSVC counterpart of -Werror.
+          sed -i.bak 's#list(APPEND ALL_WARNINGS /WX; /W4;)#list(APPEND ALL_WARNINGS /W4;)#' CMakeLists.txt
 
-      # x86 marian needs a CPU BLAS (macOS uses Accelerate). Untested: Windows has no BLAS step yet.
+      # x86 marian needs a float GEMM: Accelerate on macOS, OpenBLAS (static) on Linux, ruy on Windows.
       - name: Install BLAS (Linux)
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y libopenblas-dev
@@ -95,7 +103,8 @@ jobs:
             -DSSPLIT_USE_INTERNAL_PCRE2=ON \
             -DUSE_STATIC_LIBS=${{ matrix.static }} \
             -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 \
-            -DCMAKE_CXX_FLAGS="${{ matrix.cxxflags }}"
+            -DCMAKE_CXX_FLAGS="${{ matrix.cxxflags }}" \
+            ${{ matrix.extra }}
 
       - name: Build
         run: cmake --build build --config Release --target translator-cli --parallel 4

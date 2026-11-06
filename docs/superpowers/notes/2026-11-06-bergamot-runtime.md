@@ -66,8 +66,8 @@ Source: `mozilla/translations` @ `8eada038fd45bbf6fa58a412b22f80c79887fabc`, `in
 |---|---|---|
 | macos-arm64 | 7.7 MB (stripped binary) | built and run locally with the same flags as the CI leg; the CI leg itself has not run |
 | macos-x64 | about 8–10 MB expected (intgemm + Accelerate) | not built |
-| linux-x64 | about 10–15 MB expected (intgemm + OpenBLAS, `USE_STATIC_LIBS=ON`) | not built |
-| windows-x64 | unknown | not built; expected to fail until a BLAS step (MKL or OpenBLAS via vcpkg) is added |
+| linux-x64 | 38.1 MB, stripped (static OpenBLAS with all its CPU kernels; dynamic deps: glibc ≥ 2.35, libstdc++, libgcc_s, libm only) | built by CI in `bergamot-cli-0.1.0`, not run yet |
+| windows-x64 | unknown | best effort: float GEMM through ruy (`USE_RUY_SGEMM`), MSVC `/WX` removed; not built anywhere yet |
 
 Models are separate downloads: about 55 MB per direction for ja↔en, uncompressed.
 
@@ -88,7 +88,15 @@ Steps:
 - The tag must match `bergamot-cli-<version>`. The release is created with `--prerelease --latest=false`, so the app's `/releases/latest` links keep pointing at app releases. `selectStable` (`v*` tags only) and `selectNightly` (`nightly_*` only) already ignore it. `PrereleaseRepository.getReleases()` drops `bergamot-cli-*` tags (`GitHubPrerelease.isToolRelease`). Its only caller is `PrereleaseViewModel`.
 - Permissions: `contents: read` for the workflow, and `contents: write` only for the release job.
 
-It has not run yet. After the first green run, copy each URL, sha256 and size into `pinnedBergamotCliAssets`. Until then, `BergamotCliRuntime.unavailableReason()` reports "not available for this computer yet" unless `BERGAMOT_CLI` points at a local binary.
+**CI run 1, `bergamot-cli-0.1.0`:**
+- linux-x64 succeeded and was published as a prerelease.
+- The macOS and Windows legs failed at configure. Their runners have CMake 4.4, which removed compatibility with `cmake_minimum_required` < 3.5, and three projects declare an older minimum: ruy's clog, sentencepiece, and ssplit's ExternalProject PCRE2. The Linux runner had a CMake 3.x.
+
+**Fix:** the workflow-level env var `CMAKE_POLICY_VERSION_MINIMUM=3.5`. It has to be an env var because `-D` does not reach the PCRE2 ExternalProject; a local CMake 4.4 build failed there with `-D` alone. With the env var, the macos-arm64 leg's configuration built and translated correctly locally under CMake 4.4.
+
+**Linux size:** 38 MB is mostly static OpenBLAS. Switching Linux to `USE_RUY_SGEMM` like Windows would probably bring it near 10 MB. It is untested, so it was not changed while the leg works.
+
+**Still to do:** After the first green run, copy each URL, sha256 and size into `pinnedBergamotCliAssets`. Until then, `BergamotCliRuntime.unavailableReason()` reports "not available for this computer yet" unless `BERGAMOT_CLI` points at a local binary.
 
 ## Implementation
 
