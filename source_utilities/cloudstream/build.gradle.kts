@@ -54,6 +54,7 @@ kotlin {
             dependencies {
                 implementation(commonLibs.ktorOkHttp)
                 implementation(projects.datastore)
+                implementation(projects.sharedcomponents)
                 implementation(project.dependencies.platform(commonLibs.koin.bom))
                 implementation(commonLibs.koinCores)
                 // CloudStream plugins compile against these; the host must provide them.

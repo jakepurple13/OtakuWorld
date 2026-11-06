@@ -25,12 +25,12 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearWavyProgressIndicator
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import org.koin.compose.koinInject
+import com.programmersbox.sharedcomponents.notifier.InAppNotifier
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -85,7 +85,7 @@ fun NotificationSettings(
     dao: ItemDao = LocalItemDao.current,
     viewModel: NotificationSettingsViewModel = koinViewModel(),
 ) {
-    val snackbarHost = remember { SnackbarHostState() }
+    val notifier = koinInject<InAppNotifier>()
 
     val workInfo by viewModel
         .allWorkCheck
@@ -98,12 +98,6 @@ fun NotificationSettings(
     SettingsScaffold(
         title = stringResource(Res.string.notification_settings),
         verticalArrangement = Arrangement.spacedBy(16.dp),
-        snackbarHost = {
-            SnackbarHost(
-                hostState = snackbarHost,
-                modifier = Modifier.padding(LocalNavHostPadding.current)
-            )
-        }
     ) {
         val scope = rememberCoroutineScope()
         ShowWhen(viewModel.savedNotifications > 0) {
@@ -120,7 +114,7 @@ fun NotificationSettings(
                                     onClick = {
                                         scope.launch {
                                             val number = dao.deleteAllNotifications()
-                                            snackbarHost.showSnackbar(
+                                            notifier.success(
                                                 getString(Res.string.deleted_notifications, number)
                                             )
                                             viewModel.cancelGroup()
@@ -329,7 +323,7 @@ fun NotificationSettings(
                                         viewModel.pruneWork()
                                         viewModel.updateShouldCheck(!viewModel.canCheck)
                                         viewModel.updateShouldCheck(!viewModel.canCheck)
-                                        snackbarHost.showSnackbar(getString(Res.string.cleared))
+                                        notifier.success(getString(Res.string.cleared))
                                     }
                                 }
                         )

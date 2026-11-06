@@ -1,31 +1,22 @@
 package com.programmersbox.kmpuiviews.updates
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import com.programmersbox.kmpuiviews.utils.AppConfig
+import com.programmersbox.sharedcomponents.notifier.InAppNotifier
 import org.koin.compose.koinInject
 import java.util.Locale
 
@@ -119,19 +110,13 @@ fun UpdateLaunchDialog(updater: DesktopUpdater) {
 
 @Composable
 fun JustUpdatedSnackbar(updater: DesktopUpdater) {
-    val hostState = remember { SnackbarHostState() }
+    val notifier = koinInject<InAppNotifier>()
     val uriHandler = LocalUriHandler.current
     LaunchedEffect(Unit) {
         val version = updater.consumeJustUpdated() ?: return@LaunchedEffect
-        val result = hostState.showSnackbar(
-            message = "Updated to $version",
-            actionLabel = "What’s new",
-            duration = SnackbarDuration.Long,
-        )
-        if (result == SnackbarResult.ActionPerformed) uriHandler.openUri(updater.releasePageUrl())
-    }
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
-        SnackbarHost(hostState, modifier = Modifier.padding(16.dp)) { Snackbar(it) }
+        notifier.success("Updated to $version", action = "What’s new") {
+            uriHandler.openUri(updater.releasePageUrl())
+        }
     }
 }
 

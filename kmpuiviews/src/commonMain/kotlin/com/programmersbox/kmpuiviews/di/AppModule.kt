@@ -39,6 +39,8 @@ import com.programmersbox.kmpuiviews.utils.backupproccesor.NotesBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.NotificationsBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.RecommendationsBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.SourceOrderBackupProcessor
+import com.programmersbox.sharedcomponents.notifier.DefaultInAppNotifier
+import com.programmersbox.sharedcomponents.notifier.InAppNotifier
 import com.programmersbox.sharedcomponents.qrcode.qrCodeModule
 import com.programmersbox.sharedcomponents.stats.StatisticsProvider
 import com.programmersbox.sharedtools.SearchRegistryItem
@@ -57,6 +59,7 @@ import kotlin.time.Duration.Companion.minutes
 
 val appModule = module {
     singleOf(::AppUpdateCheck)
+    single<InAppNotifier> { DefaultInAppNotifier() }
     singleOf(::QuickActionsController)
     single { JsExtensionSourceBridge(get(), get()) }
     single { NativeCatalogs(getAll()) }

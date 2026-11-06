@@ -43,10 +43,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -82,6 +78,9 @@ import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.SourceRepository
+import com.programmersbox.kmpuiviews.notifier.rememberScreenBannerSlot
+import com.programmersbox.kmpuiviews.notifier.showUndoable
+import com.programmersbox.kmpuiviews.notifier.sourceMissing
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuImageElement
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuTitleElement
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.SharedItemKey
@@ -94,11 +93,11 @@ import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.Cached
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
-import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
 import com.programmersbox.kmpuiviews.utils.dispatchIo
 import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
 import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
+import com.programmersbox.sharedcomponents.notifier.InAppNotifier
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
@@ -112,6 +111,8 @@ import org.koin.compose.viewmodel.koinViewModel
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.all_caught_up
 import otakuworld.kmpuiviews.generated.resources.back_to_list
+import otakuworld.kmpuiviews.generated.resources.banner_more_options
+import otakuworld.kmpuiviews.generated.resources.banner_source_missing
 import otakuworld.kmpuiviews.generated.resources.cancel
 import otakuworld.kmpuiviews.generated.resources.catch_up_delete_body
 import otakuworld.kmpuiviews.generated.resources.catch_up_delete_title
@@ -153,7 +154,10 @@ fun CatchUpScreen(
         onDismissRequest = { showLoadingDialog = false }
     )
 
-    val snackbarHostState = remember { SnackbarHostState() }
+    val notifier = koinInject<InAppNotifier>()
+    val missingBanner = rememberScreenBannerSlot(notifier)
+    val missingLabel = stringResource(Res.string.banner_source_missing)
+    val moreOptionsLabel = stringResource(Res.string.banner_more_options)
     val scope = rememberCoroutineScope()
     val biometricOpen = rememberBiometricOpening()
 
@@ -169,19 +173,13 @@ fun CatchUpScreen(
     val toSource: (String) -> KmpApiService? = { s -> sourceRepository.toSourceByApiServiceName(s)?.apiService }
 
     val onError: (NotificationItem) -> Unit = {
-        scope.launch {
-            snackbarHostState.currentSnackbarData?.dismiss()
-            val result = snackbarHostState.showSnackbar(
-                "Something went wrong. Source might not be installed",
-                duration = SnackbarDuration.Long,
-                actionLabel = "More Options",
-                withDismissAction = true
-            )
-            showNotificationItem = when (result) {
-                SnackbarResult.Dismissed -> null
-                SnackbarResult.ActionPerformed -> it
-            }
-        }
+        missingBanner.id = notifier.sourceMissing(
+            title = it.notiTitle,
+            sourceName = it.source,
+            missingLabel = missingLabel,
+            moreOptionsLabel = moreOptionsLabel,
+            onMoreOptions = { showNotificationItem = it },
+        )
     }
 
     val openItem: (NotificationItem) -> Unit = { item ->
@@ -214,22 +212,18 @@ fun CatchUpScreen(
         if (toDelete.isNotEmpty()) {
             val batch = vm.deleteWithUndo(toDelete)
             scope.launch {
-                snackbarHostState.currentSnackbarData?.dismiss()
                 var undone = false
                 try {
                     val message = toDelete.singleOrNull()
                         ?.let { getString(Res.string.deleted_notification, it.notiTitle) }
                         ?: getString(Res.string.deleted_notification_count, toDelete.size)
-                    val result = snackbarHostState.showSnackbar(
-                        message = message,
-                        actionLabel = getString(Res.string.undo),
-                        withDismissAction = true,
-                        duration = SnackbarDuration.Short,
+                    undone = notifier.showUndoable(
+                        title = message,
+                        undoLabel = getString(Res.string.undo),
+                        onUndo = { vm.undoDeletion(batch) },
                     )
-                    undone = result == SnackbarResult.ActionPerformed
-                    if (undone) vm.undoDeletion(batch)
                 } finally {
-                    // Also runs when the screen leaves composition mid-snackbar.
+                    // Also runs when the screen leaves composition mid-banner.
                     if (!undone) vm.commitDeletion(batch)
                 }
             }
@@ -242,7 +236,6 @@ fun CatchUpScreen(
         total = state?.urls?.size ?: 0,
         title = vm.filter.catchUpTitle(),
         colorFilter = colorFilter,
-        snackbarHostState = snackbarHostState,
         notificationScreenInterface = notificationScreenInterface,
         onClose = { navController.popBackStack() },
         swipeDeletes = catchUpSwipeDeletes,
@@ -273,7 +266,6 @@ internal fun CatchUpDeck(
     total: Int,
     title: String,
     colorFilter: ColorFilter?,
-    snackbarHostState: SnackbarHostState,
     notificationScreenInterface: NotificationScreenInterface,
     swipeDeletes: Boolean,
     onSwipeDeletesChange: (Boolean) -> Unit,
@@ -401,12 +393,6 @@ internal fun CatchUpDeck(
                             Icon(Icons.Default.Close, stringResource(Res.string.back_to_list))
                         }
                     }
-                )
-            },
-            snackbarHost = {
-                SnackbarHost(
-                    snackbarHostState,
-                    modifier = Modifier.padding(LocalNavHostPadding.current)
                 )
             },
         ) { p ->

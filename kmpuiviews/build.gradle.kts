@@ -111,7 +111,6 @@ kotlin {
                 implementation(commonLibs.aboutLibrariesCore)
                 implementation(commonLibs.aboutLibrariesCompose)
 
-                implementation(commonLibs.sonner)
 
                 implementation(commonLibs.urlencoder.lib)
                 //implementation(commonLibs.blurhash)
@@ -237,6 +236,8 @@ kotlin {
                 implementation(project.dependencies.platform(commonLibs.supabase.bom))
                 implementation(commonLibs.supabase.auth)
                 implementation(commonLibs.zipline)
+                implementation(commonLibs.cmp.ui.test)
+                implementation(compose.desktop.currentOs)
             }
         }
 
@@ -387,4 +388,8 @@ fun Project.exec(command: String): String {
         .asText
         .get()
         .trim()
+}
+compose.resources {
+    // Lets mangaworld/novelworld shared modules use kmpuiviews strings (reader banner)
+    publicResClass = true
 }

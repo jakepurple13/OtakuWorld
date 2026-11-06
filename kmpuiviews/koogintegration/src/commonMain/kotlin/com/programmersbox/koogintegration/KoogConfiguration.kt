@@ -41,7 +41,7 @@ import org.koin.dsl.navigation3.navigation
 fun buildKoogModule() = module {
     singleOf(::AgentMaker)
     single<AgentProvider>(named("otaku_agent")) { new(::OtakuAgentProvider) }
-    viewModel { ChatViewModel(get<AgentProvider>(named(it[0])), get(), get()) }
+    viewModel { ChatViewModel(get<AgentProvider>(named(it[0])), get(), get(), get()) }
     viewModelOf(::KoogSettingsViewModel)
     factoryOf(::RecommendationTools)
     factoryOf(::MathTools)

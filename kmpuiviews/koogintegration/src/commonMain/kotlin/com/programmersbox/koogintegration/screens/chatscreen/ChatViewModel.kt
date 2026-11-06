@@ -9,7 +9,6 @@ import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
-import androidx.compose.material3.SnackbarHostState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mikepenz.markdown.model.parseMarkdown
@@ -33,6 +32,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.programmersbox.sharedcomponents.notifier.InAppNotifier
 import java.util.UUID
 import kotlin.uuid.Uuid
 
@@ -40,9 +40,8 @@ class ChatViewModel(
     private val agentProvider: AgentProvider,
     private val listDao: ListDao,
     private val recommendationDao: RecommendationDao,
+    private val notifier: InAppNotifier,
 ) : ViewModel() {
-    val snackbarHostState = SnackbarHostState()
-
     val uiState: StateFlow<ChatUiState>
         field = MutableStateFlow(
             ChatUiState(
@@ -337,14 +336,14 @@ class ChatViewModel(
                     genre = chatUiEvents.recommendation.genre,
                 )
             )
-            snackbarHostState.showSnackbar("${chatUiEvents.recommendation.title} saved")
+            notifier.success("${chatUiEvents.recommendation.title} saved")
         }
     }
 
     private fun deleteRecommendation(recommendation: Recommendation) {
         viewModelScope.launch(Dispatchers.IO) {
             recommendationDao.deleteRecommendation(recommendation)
-            snackbarHostState.showSnackbar("${recommendation.title} deleted")
+            notifier.info("${recommendation.title} deleted")
         }
     }
 

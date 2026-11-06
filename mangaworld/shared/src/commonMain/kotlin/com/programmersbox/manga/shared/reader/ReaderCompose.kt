@@ -34,8 +34,6 @@ import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
@@ -87,6 +85,10 @@ import kotlinx.coroutines.launch
 import net.engawapg.lib.zoomable.ExperimentalZoomableApi
 import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomableWithScroll
+import com.programmersbox.sharedcomponents.notifier.InAppNotifier
+import otakuworld.kmpuiviews.generated.resources.Res
+import otakuworld.kmpuiviews.generated.resources.banner_marked_read
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.math.absoluteValue
@@ -123,7 +125,6 @@ private fun ReadViewContent(
     val includeInsets by mangaSettingsHandling.rememberIncludeInsetsForReader()
     var insetsController by insetsController(includeInsets)
 
-    val snackbarHostState = remember { SnackbarHostState() }
 
     val scope = rememberCoroutineScope()
 
@@ -188,11 +189,16 @@ private fun ReadViewContent(
     // Kept locally so dragging the dividers doesn't write to the datastore every frame
     var readerWidthFraction by remember(savedWidthFraction) { mutableFloatStateOf(savedWidthFraction) }
 
-    fun showToast() {
-        scope.launch {
-            snackbarHostState.currentSnackbarData?.dismiss()
-            snackbarHostState.showSnackbar("Added Chapter")
-        }
+    val notifier = koinInject<InAppNotifier>()
+    val markedReadTitle = stringResource(Res.string.banner_marked_read)
+
+    fun showToast(chapterName: String) {
+        notifier.info(
+            title = markedReadTitle,
+            subtitle = chapterName,
+            key = "reader-chapter",
+            durationMillis = 2_000,
+        )
     }
 
     val listShowItems by remember { derivedStateOf { listState.isScrolledToTheEnd() && readerType == ReaderType.List } }
@@ -479,8 +485,7 @@ private fun ReadViewContent(
                         )
                     }
                 }
-            },
-            snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+            }
         ) { p ->
             val density = LocalDensity.current
             var readerContainerWidth by remember { mutableStateOf(0.dp) }

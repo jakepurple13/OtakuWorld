@@ -15,6 +15,7 @@ import com.skydoves.landscapist.components.rememberImageComponent
 import com.skydoves.landscapist.crossfade.CrossfadePlugin
 import com.skydoves.landscapist.glide.GlideImage
 import com.skydoves.landscapist.glide.GlideImageState
+import com.skydoves.landscapist.glide.GlideRequestType
 
 @Composable
 actual fun CustomImageChoice(
@@ -45,6 +46,11 @@ actual fun CustomImageChoice(
 
     GlideImage(
         imageModel = { url },
+        // Decode as a Bitmap, never a GifDrawable. clearTarget can release a request whose image
+        // is still on screen (landscapist re-keys its target on every recomposition), and a
+        // recycled GifDrawable shares a frame loader whose frame is then null, so drawing it or
+        // calling toBitmap() on it throws an NPE. Animated GIF covers show their first frame.
+        glideRequestType = GlideRequestType.BITMAP,
         // Release the request when this leaves composition so Glide moves the bitmap into its
         // LRU memory cache. Without this it stays a weakly-held "active resource" and is lost on
         // GC, so returning to a screen (e.g. Recent) reloads every cover.

@@ -62,8 +62,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -107,6 +105,8 @@ import com.programmersbox.koogintegration.AppDimension
 import com.programmersbox.koogintegration.agentresponse.AgentResult
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.programmersbox.sharedcomponents.notifier.InAppNotifier
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -130,7 +130,6 @@ fun ChatScreen(
         hideEmptyState = uiState.hideEmptyState,
         onEvent = viewModel::onEvent,
         koogNavigation = koogNavigation,
-        snackbarHostState = viewModel.snackbarHostState,
         savedRecommendations = savedRecommendations
     )
 }
@@ -147,7 +146,6 @@ private fun ChatScreenContent(
     hideEmptyState: Boolean,
     onEvent: (ChatUiEvents) -> Unit,
     koogNavigation: KoogNavigation,
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     savedRecommendations: List<Recommendation>,
 ) {
     val listState = rememberLazyListState()
@@ -174,12 +172,11 @@ private fun ChatScreenContent(
 
     val scope = rememberCoroutineScope()
 
+    val notifier = koinInject<InAppNotifier>()
     val clipboardManager = LocalClipboardManager.current
     val onCopyEvent: (String) -> Unit = {
         clipboardManager.setText(AnnotatedString(it))
-        scope.launch {
-            snackbarHostState.showSnackbar("Copied to clipboard")
-        }
+        notifier.success("Copied to clipboard")
     }
 
     val drawerState = rememberDrawerState(DrawerValue.Closed)
@@ -211,7 +208,6 @@ private fun ChatScreenContent(
                     }
                 )
             },
-            snackbarHost = { SnackbarHost(snackbarHostState) },
             containerColor = MaterialTheme.colorScheme.background,
             bottomBar = {
                 Surface(

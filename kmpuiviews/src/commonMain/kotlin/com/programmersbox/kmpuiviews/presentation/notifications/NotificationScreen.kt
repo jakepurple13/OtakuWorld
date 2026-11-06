@@ -27,7 +27,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
@@ -58,10 +60,6 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SelectableDates
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
@@ -107,6 +105,9 @@ import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.DateTimeFormatHandler
+import com.programmersbox.kmpuiviews.notifier.rememberScreenBannerSlot
+import com.programmersbox.kmpuiviews.notifier.showUndoable
+import com.programmersbox.kmpuiviews.notifier.sourceMissing
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.AnimatedSelectedText
@@ -117,6 +118,7 @@ import com.programmersbox.kmpuiviews.presentation.components.OptionsSheetValues
 import com.programmersbox.kmpuiviews.presentation.components.SourceNotInstalledModal
 import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.presentation.components.optionsSheet
+import com.programmersbox.kmpuiviews.presentation.components.revealRestored
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
 import com.programmersbox.kmpuiviews.utils.Cached
@@ -129,6 +131,7 @@ import com.programmersbox.kmpuiviews.utils.composables.sharedelements.SharedItem
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.customSharedElement
 import com.programmersbox.kmpuiviews.utils.dispatchIo
 import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
+import com.programmersbox.sharedcomponents.notifier.InAppNotifier
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -150,6 +153,8 @@ import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.all
+import otakuworld.kmpuiviews.generated.resources.banner_more_options
+import otakuworld.kmpuiviews.generated.resources.banner_source_missing
 import otakuworld.kmpuiviews.generated.resources.cancel
 import otakuworld.kmpuiviews.generated.resources.catch_up
 import otakuworld.kmpuiviews.generated.resources.clear_selection
@@ -203,7 +208,10 @@ fun NotificationScreen(
         onDismissRequest = { showLoadingDialog = false }
     )
 
-    val snackbarHostState = remember { SnackbarHostState() }
+    val notifier = koinInject<InAppNotifier>()
+    val missingBanner = rememberScreenBannerSlot(notifier)
+    val missingLabel = stringResource(Res.string.banner_source_missing)
+    val moreOptionsLabel = stringResource(Res.string.banner_more_options)
     val scope = rememberCoroutineScope()
     val biometricOpen = rememberBiometricOpening()
 
@@ -219,19 +227,13 @@ fun NotificationScreen(
     val toSource: (String) -> KmpApiService? = { s -> sourceRepository.toSourceByApiServiceName(s)?.apiService }
 
     val onError: (NotificationItem) -> Unit = {
-        scope.launch {
-            snackbarHostState.currentSnackbarData?.dismiss()
-            val result = snackbarHostState.showSnackbar(
-                "Something went wrong. Source might not be installed",
-                duration = SnackbarDuration.Long,
-                actionLabel = "More Options",
-                withDismissAction = true
-            )
-            showNotificationItem = when (result) {
-                SnackbarResult.Dismissed -> null
-                SnackbarResult.ActionPerformed -> it
-            }
-        }
+        missingBanner.id = notifier.sourceMissing(
+            title = it.notiTitle,
+            sourceName = it.source,
+            missingLabel = missingLabel,
+            moreOptionsLabel = moreOptionsLabel,
+            onMoreOptions = { showNotificationItem = it },
+        )
     }
 
     val openItem: (NotificationItem) -> Unit = { item ->
@@ -260,26 +262,30 @@ fun NotificationScreen(
         }
     }
 
+    val listState = rememberLazyListState()
+
     val deleteWithUndo: (List<NotificationItem>) -> Unit = { toDelete ->
         if (toDelete.isNotEmpty()) {
             val batch = vm.deleteWithUndo(toDelete)
             scope.launch {
-                snackbarHostState.currentSnackbarData?.dismiss()
                 var undone = false
                 try {
                     val message = toDelete.singleOrNull()
                         ?.let { getString(Res.string.deleted_notification, it.notiTitle) }
                         ?: getString(Res.string.deleted_notification_count, toDelete.size)
-                    val result = snackbarHostState.showSnackbar(
-                        message = message,
-                        actionLabel = getString(Res.string.undo),
-                        withDismissAction = true,
-                        duration = SnackbarDuration.Short,
+                    undone = notifier.showUndoable(
+                        title = message,
+                        undoLabel = getString(Res.string.undo),
+                        onUndo = {
+                            vm.undoDeletion(batch)
+                            listState.revealRestored(
+                                keys = vm.dayBuckets.flatMap { (day, list) -> listOf(day) + list.map { it.url } },
+                                restored = batch.items.mapTo(HashSet()) { it.url },
+                            )
+                        },
                     )
-                    undone = result == SnackbarResult.ActionPerformed
-                    if (undone) vm.undoDeletion(batch)
                 } finally {
-                    // Also runs when the screen leaves composition mid-snackbar.
+                    // Also runs when the screen leaves composition mid-banner.
                     if (!undone) vm.commitDeletion(batch)
                 }
             }
@@ -290,10 +296,10 @@ fun NotificationScreen(
 
     NotificationTimeline(
         vm = vm,
+        listState = listState,
         navController = navController,
         itemDao = itemDao,
         colorFilter = colorFilter,
-        snackbarHostState = snackbarHostState,
         notificationScreenInterface = notificationScreenInterface,
         toSource = toSource,
         onError = onError,
@@ -306,8 +312,7 @@ fun NotificationScreen(
                 withContext(Dispatchers.IO) {
                     selected.forEach { notificationScreenInterface.notifyItem(it) }
                 }
-                snackbarHostState.currentSnackbarData?.dismiss()
-                snackbarHostState.showSnackbar(getString(Res.string.sent_to_tray, selected.size))
+                notifier.success(getString(Res.string.sent_to_tray, selected.size))
             }
         },
         navToCatch = {
@@ -320,10 +325,10 @@ fun NotificationScreen(
 @Composable
 private fun NotificationTimeline(
     vm: NotificationScreenViewModel,
+    listState: LazyListState,
     navController: NavigationActions,
     itemDao: ItemDao,
     colorFilter: ColorFilter?,
-    snackbarHostState: SnackbarHostState,
     notificationScreenInterface: NotificationScreenInterface,
     toSource: (String) -> KmpApiService?,
     onError: (NotificationItem) -> Unit,
@@ -400,12 +405,6 @@ private fun NotificationTimeline(
                 }
             }
         },
-        snackbarHost = {
-            SnackbarHost(
-                snackbarHostState,
-                modifier = Modifier.padding(LocalNavHostPadding.current)
-            )
-        },
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
     ) { p ->
         Box(
@@ -420,6 +419,7 @@ private fun NotificationTimeline(
                     EmptyTimeline(Modifier.fillMaxSize())
                 } else {
                     LazyColumn(
+                        state = listState,
                         contentPadding = LocalNavHostPadding.current,
                         modifier = Modifier.fillMaxSize()
                     ) {

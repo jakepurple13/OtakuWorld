@@ -143,7 +143,7 @@ class ReadViewModel(
 
     var showInfo by mutableStateOf(true)
 
-    fun addChapterToWatched(newChapter: Int, chapter: () -> Unit) {
+    fun addChapterToWatched(newChapter: Int, chapter: (String) -> Unit) {
         currentChapter = newChapter
         addToFavorites = addToFavorites.copy(count = addToFavorites.count + 1)
         list.getOrNull(newChapter)?.let { item ->
@@ -153,7 +153,7 @@ class ReadViewModel(
                         if (!favoritesRepository.isIncognito(item.source.serviceName)) {
                             favoritesRepository.addWatched(it)
                         }
-                        withContext(Dispatchers.Main) { chapter() }
+                        withContext(Dispatchers.Main) { chapter(item.name) }
                     }
                 }
 

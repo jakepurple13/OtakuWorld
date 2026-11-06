@@ -27,8 +27,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -51,6 +49,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.kmpuiviews.painterLogo
+import otakuworld.kmpuiviews.generated.resources.banner_couldnt_import
+import com.programmersbox.kmpuiviews.notifier.rememberScreenProgressBanner
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.NormalOtakuScaffold
 import com.programmersbox.kmpuiviews.repository.ListRepository
@@ -84,21 +84,13 @@ fun ImportListScreen(
     val navController = LocalNavActions.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
-    val snackbarHostState = remember { SnackbarHostState() }
+    val progressBanner = rememberScreenProgressBanner()
+    val couldntImport = stringResource(Res.string.banner_couldnt_import)
 
-    Scaffold(
-        snackbarHost = {
-            SnackbarHost(
-                hostState = snackbarHostState,
-                modifier = Modifier.padding(LocalNavHostPadding.current)
-            )
-        }
-    ) { _ ->
+    Scaffold { _ ->
         when (val status = vm.importStatus) {
             ImportListStatus.Loading -> {
-                LaunchedEffect(Unit) {
-                    snackbarHostState.showSnackbar("Importing...")
-                }
+                LaunchedEffect(Unit) { progressBanner.start("Importing...") }
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier.fillMaxSize()
@@ -107,8 +99,7 @@ fun ImportListScreen(
 
             is ImportListStatus.Error -> {
                 LaunchedEffect(Unit) {
-                    snackbarHostState.currentSnackbarData?.dismiss()
-                    snackbarHostState.showSnackbar("Error")
+                    progressBanner.error(couldntImport, status.throwable.message)
                 }
                 NormalOtakuScaffold(
                     topBar = {
@@ -139,10 +130,7 @@ fun ImportListScreen(
             }
 
             is ImportListStatus.Success -> {
-                LaunchedEffect(Unit) {
-                    snackbarHostState.currentSnackbarData?.dismiss()
-                    snackbarHostState.showSnackbar("Completed!")
-                }
+                LaunchedEffect(Unit) { progressBanner.success("Completed!") }
                 val lists by listDao.getAllLists().collectAsStateWithLifecycle(emptyList())
                 var name by remember(status.customList?.item) { mutableStateOf(status.customList?.item?.name.orEmpty()) }
                 NormalOtakuScaffold(

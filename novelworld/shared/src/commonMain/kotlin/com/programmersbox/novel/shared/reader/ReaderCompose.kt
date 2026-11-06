@@ -32,8 +32,6 @@ import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
@@ -64,6 +62,11 @@ import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
 import dev.chrisbanes.haze.HazeProgressive
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.programmersbox.sharedcomponents.notifier.InAppNotifier
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
+import otakuworld.kmpuiviews.generated.resources.Res
+import otakuworld.kmpuiviews.generated.resources.banner_marked_read
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -96,7 +99,6 @@ private fun NovelReadViewContent(
 
     var insetsController by insetsController(true)
 
-    val snackbarHostState = remember { SnackbarHostState() }
 
     val scope = rememberCoroutineScope()
 
@@ -105,11 +107,16 @@ private fun NovelReadViewContent(
     val showBlur by settings.rememberShowBlur()
     val isAmoledMode by settings.rememberIsAmoledMode()
 
-    fun showToast() {
-        scope.launch {
-            snackbarHostState.currentSnackbarData?.dismiss()
-            snackbarHostState.showSnackbar("Added Chapter")
-        }
+    val notifier = koinInject<InAppNotifier>()
+    val markedReadTitle = stringResource(Res.string.banner_marked_read)
+
+    fun showToast(chapterName: String) {
+        notifier.info(
+            title = markedReadTitle,
+            subtitle = chapterName,
+            key = "reader-chapter",
+            durationMillis = 2_000,
+        )
     }
 
     val showItems by remember { derivedStateOf { viewModel.showInfo } }
@@ -219,8 +226,7 @@ private fun NovelReadViewContent(
                     )
                     //}
                 }
-            },
-            snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+            }
         ) { p ->
             Box(
                 modifier = Modifier.setBlurKindSource(blurKindState),

@@ -43,10 +43,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -78,6 +74,8 @@ import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.kmpmodels.SourceRepository
+import com.programmersbox.kmpuiviews.notifier.rememberScreenBannerSlot
+import com.programmersbox.kmpuiviews.notifier.sourceMissing
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomScreen
@@ -92,6 +90,7 @@ import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
 import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
+import com.programmersbox.sharedcomponents.notifier.InAppNotifier
 import dev.chrisbanes.haze.HazeProgressive
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
@@ -99,6 +98,8 @@ import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.add_a_favorite
+import otakuworld.kmpuiviews.generated.resources.banner_more_options
+import otakuworld.kmpuiviews.generated.resources.banner_source_missing
 import otakuworld.kmpuiviews.generated.resources.chooseASource
 import otakuworld.kmpuiviews.generated.resources.fav_clear_search
 import otakuworld.kmpuiviews.generated.resources.fav_filter
@@ -132,7 +133,10 @@ fun FavoriteScreen(
     var optionsSheet by optionsKmpSheetList()
     val scope = rememberCoroutineScope()
     val biometric = rememberBiometricOpening()
-    val snackbarHostState = remember { SnackbarHostState() }
+    val notifier = koinInject<InAppNotifier>()
+    val missingBanner = rememberScreenBannerSlot(notifier)
+    val missingLabel = stringResource(Res.string.banner_source_missing)
+    val moreOptionsLabel = stringResource(Res.string.banner_more_options)
 
     var showDbModel by remember { mutableStateOf<DbModel?>(null) }
     var showFilters by remember { mutableStateOf(false) }
@@ -147,19 +151,13 @@ fun FavoriteScreen(
     }
 
     fun moreInfoClick(dbModel: DbModel) {
-        scope.launch {
-            snackbarHostState.currentSnackbarData?.dismiss()
-            val result = snackbarHostState.showSnackbar(
-                "Something went wrong. Source might not be installed",
-                duration = SnackbarDuration.Long,
-                actionLabel = "More Options",
-                withDismissAction = true
-            )
-            showDbModel = when (result) {
-                SnackbarResult.Dismissed -> null
-                SnackbarResult.ActionPerformed -> dbModel
-            }
-        }
+        missingBanner.id = notifier.sourceMissing(
+            title = dbModel.title,
+            sourceName = displayName(dbModel.source),
+            missingLabel = missingLabel,
+            moreOptionsLabel = moreOptionsLabel,
+            onMoreOptions = { showDbModel = dbModel },
+        )
     }
 
     fun openDetails(dbModel: DbModel) {
@@ -258,12 +256,6 @@ fun FavoriteScreen(
     val navHostPadding = LocalNavHostPadding.current
 
     OtakuHazeScaffold(
-        snackbarHost = {
-            SnackbarHost(
-                snackbarHostState,
-                modifier = Modifier.padding(navHostPadding)
-            )
-        },
         topBar = {
             Surface(color = if (showBlur) Color.Transparent else MaterialTheme.colorScheme.surface) {
                 Column(Modifier.statusBarsPadding()) {

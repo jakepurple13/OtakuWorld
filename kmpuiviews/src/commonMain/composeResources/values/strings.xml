@@ -103,7 +103,6 @@
     <string name="updateTo">Update to %1$s</string>
     <string name="finishing_dots">Finishing…</string>
     <string name="downloading_dots">Downloading…%1$d%%</string>
-    <string name="downloading_dots_no_percent">Downloading…</string>
     <string name="updating_dots">Updating…</string>
     <string name="finishedDownloading">Finished Downloading</string>
     <string name="errorTryAgain">Error: Try Again</string>
@@ -485,5 +484,14 @@
     <string name="qa_ago_days">%1$dd ago</string>
     <string name="qa_waiting_to_start">Waiting to start…</string>
     <string name="qa_check_failed">Check failed</string>
-    <string name="qa_dismiss">Dismiss</string>
+    <string name="banner_dismiss">Dismiss</string>
+    <string name="banner_clear_all">Clear all</string>
+    <string name="banner_source_missing">Source not installed</string>
+    <string name="banner_more_options">More options</string>
+    <string name="banner_couldnt_load">Couldn’t load %1$s</string>
+    <string name="banner_retry">Retry</string>
+    <string name="banner_couldnt_import">Couldn’t import list</string>
+    <string name="banner_error">Error</string>
+    <string name="banner_link_copied">Link copied</string>
+    <string name="banner_marked_read">Marked as read</string>
 </resources>

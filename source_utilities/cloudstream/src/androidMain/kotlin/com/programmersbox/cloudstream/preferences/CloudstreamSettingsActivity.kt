@@ -3,12 +3,12 @@ package com.programmersbox.cloudstream.preferences
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import com.programmersbox.cloudstream.ConfigurableCloudstreamApiService
 import com.programmersbox.kmpmodels.SourceRepository
+import com.programmersbox.sharedcomponents.notifier.InAppNotifier
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -19,6 +19,7 @@ import org.koin.core.component.inject
  */
 class CloudstreamSettingsActivity : AppCompatActivity(), KoinComponent {
     private val sourceRepository: SourceRepository by inject()
+    private val notifier: InAppNotifier by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Plugin fragments live in the plugin's class loader and cannot be restored; start over.
@@ -41,7 +42,7 @@ class CloudstreamSettingsActivity : AppCompatActivity(), KoinComponent {
             service.openSettings(this)
         } catch (t: Throwable) {
             t.printStackTrace()
-            Toast.makeText(this, "Could not open settings: ${t.message ?: t}", Toast.LENGTH_SHORT).show()
+            notifier.error("Could not open settings", t.message ?: t.toString())
             finish()
         }
     }
