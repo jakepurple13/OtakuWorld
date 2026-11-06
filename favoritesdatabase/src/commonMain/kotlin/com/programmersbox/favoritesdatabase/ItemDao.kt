@@ -56,6 +56,31 @@ interface ItemDao {
     @Query("SELECT * FROM FavoriteItem where shouldCheckForUpdate = 1")
     fun getAllNotifyingFavorites(): Flow<List<DbModel>>
 
+    /**
+     * Favorites the update checker should look at: every favorite when [checkAll], otherwise only those with
+     * updates turned on. Favorites from a [SkippedUpdateSource] are always left out.
+     */
+    @Query(
+        """
+        SELECT * FROM FavoriteItem
+        WHERE (:checkAll OR shouldCheckForUpdate = 1)
+          AND sources NOT IN (SELECT source FROM SkippedUpdateSource)
+        """
+    )
+    suspend fun getFavoritesToCheckSync(checkAll: Boolean): List<DbModel>
+
+    @Query("SELECT sources AS source, COUNT(url) AS count FROM FavoriteItem WHERE is_deleted = 0 GROUP BY sources")
+    fun getFavoriteCountsBySource(): Flow<List<SourceCount>>
+
+    @Query("SELECT source FROM SkippedUpdateSource")
+    fun getSkippedUpdateSources(): Flow<List<String>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSkippedUpdateSources(sources: List<SkippedUpdateSource>)
+
+    @Query("DELETE FROM SkippedUpdateSource WHERE source IN (:sources)")
+    suspend fun deleteSkippedUpdateSources(sources: List<String>)
+
     @Update(onConflict = OnConflictStrategy.REPLACE)
     suspend fun updateFavoriteItem(dbModel: DbModel)
 

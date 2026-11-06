@@ -20,6 +20,7 @@ object SettingsScreenDisplayNames {
         Screen.ColorHelper -> "Color Helper"
         Screen.TipsScreen -> "Tips & Gestures"
         Screen.IncognitoScreen -> "Incognito Sources"
+        Screen.UpdateSourcesSettings -> "Update Sources"
         Screen.DebugScreen -> "Debug Menu"
         Screen.OtherSettings -> "Player"
         // New Screen.Settings.* keys — added in Task 5

@@ -24,6 +24,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -103,6 +104,7 @@ import otakuworld.kmpuiviews.generated.resources.uc_stat_checked
 import otakuworld.kmpuiviews.generated.resources.uc_stat_failed
 import otakuworld.kmpuiviews.generated.resources.uc_stat_updated
 import otakuworld.kmpuiviews.generated.resources.uc_stopped_early
+import otakuworld.kmpuiviews.generated.resources.us_title
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -144,6 +146,11 @@ fun UpdateCheckErrorsScreen(
                 navigationIcon = {
                     IconButton(onClick = { navActions.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { navActions.navigate(Screen.UpdateSourcesSettings) }) {
+                        Icon(Icons.Default.FilterList, stringResource(Res.string.us_title))
                     }
                 },
                 scrollBehavior = scrollBehavior,
