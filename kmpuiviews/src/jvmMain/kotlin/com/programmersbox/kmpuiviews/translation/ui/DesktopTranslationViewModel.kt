@@ -8,12 +8,7 @@ import com.programmersbox.kmpuiviews.translation.DesktopTranslationSettings
 import com.programmersbox.kmpuiviews.translation.EngineKind
 import com.programmersbox.kmpuiviews.translation.LanguageDetector
 import com.programmersbox.kmpuiviews.translation.TranslationEngine
-import com.programmersbox.kmpuiviews.translation.bergamot.BergamotModelStore
-import com.programmersbox.kmpuiviews.translation.bergamot.BergamotRow
-import com.programmersbox.kmpuiviews.translation.bergamot.BergamotRuntime
-import com.programmersbox.kmpuiviews.translation.custom.FolderCheck
 import com.programmersbox.kmpuiviews.translation.custom.OpenAiCompatClient
-import com.programmersbox.kmpuiviews.translation.custom.inspectFolder
 import com.programmersbox.kmpuiviews.translation.ollama.OllamaClient
 import com.programmersbox.kmpuiviews.translation.ollama.OllamaModel
 import com.programmersbox.kmpuiviews.translation.ollama.OllamaStatus
@@ -28,7 +23,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
@@ -36,10 +30,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
 import kotlin.time.TimeSource
-
-data class CustomFolder(val path: String, val check: FolderCheck)
 
 /** An Ollama pull in progress; [fraction] is null while Ollama doesn't report a total. */
 data class OllamaPull(val name: String, val fraction: Float?)
@@ -53,15 +44,7 @@ sealed interface ServerCheck {
 data class DesktopTranslationState(
     val target: String = "en",
     val targets: List<String> = listOf("en"),
-    val engine: EngineKind = EngineKind.Bergamot,
-    // Bergamot
-    val bergamotRows: List<BergamotRow> = emptyList(),
-    val bergamotBytes: Long = 0,
-    val bergamotPairs: Int = 0,
-    val bergamotIndexError: String? = null,
-    val runtimeIssue: String? = null,
-    /** Non-null while the translator is being installed. */
-    val runtimeInstall: Float? = null,
+    val engine: EngineKind = EngineKind.Ollama,
     // Ollama
     val ollamaUrl: String = "",
     /** Null until the first check finishes. */
@@ -70,9 +53,7 @@ data class DesktopTranslationState(
     val ollamaModel: String = "",
     val pullName: String = "",
     val pull: OllamaPull? = null,
-    // Custom
-    val customMode: String = CUSTOM_FOLDER,
-    val customFolders: List<CustomFolder> = emptyList(),
+    // Custom (OpenAI-compatible server)
     val serverUrl: String = "",
     val serverModel: String = "",
     val serverKey: String = "",
@@ -84,7 +65,7 @@ data class DesktopTranslationState(
     val testTiming: String? = null,
     val testError: String? = null,
     val testRunning: Boolean = false,
-    /** [bergamotDeleteId] or [ollamaDeleteId] of the row showing its delete confirmation. */
+    /** [ollamaDeleteId] of the row showing its delete confirmation. */
     val confirmingId: String? = null,
 ) {
     val ollamaModels: List<OllamaModel> get() = (ollamaStatus as? OllamaStatus.Connected)?.models.orEmpty()
@@ -92,24 +73,19 @@ data class DesktopTranslationState(
     /** Bytes the selected engine keeps on disk; null when the app can't count them. */
     val storageBytes: Long?
         get() = when (engine) {
-            EngineKind.Bergamot -> bergamotBytes
             EngineKind.Ollama -> (ollamaStatus as? OllamaStatus.Connected)?.models?.sumOf { it.sizeBytes }
             EngineKind.Custom -> null
         }
 
     val storageLabel: String
         get() = when (engine) {
-            EngineKind.Bergamot -> if (bergamotPairs == 1) "1 language pair" else "$bergamotPairs language pairs"
             EngineKind.Ollama -> "Ollama models (managed by Ollama)"
-            EngineKind.Custom -> "Your files aren't counted"
+            EngineKind.Custom -> "Your server's models aren't counted"
         }
 }
 
-const val CUSTOM_FOLDER = "folder"
-const val CUSTOM_SERVER = "server"
 private const val SAMPLE_TEXT = "彼は静かに剣を抜き、雨の中へ踏み出した。"
 
-fun bergamotDeleteId(source: String) = "bergamot:$source"
 fun ollamaDeleteId(name: String) = "ollama:$name"
 
 internal fun languageName(code: String) = TranslationLanguages.byCode(code)?.englishName ?: code
@@ -123,8 +99,6 @@ class DesktopTranslationViewModel(
     private val settings: DesktopTranslationSettings,
     private val appSettings: NewSettingsHandling,
     private val engines: Map<EngineKind, TranslationEngine>,
-    private val store: BergamotModelStore,
-    private val runtime: BergamotRuntime,
     private val ollama: OllamaClient,
     private val server: OpenAiCompatClient,
     private val detector: LanguageDetector,
@@ -138,8 +112,9 @@ class DesktopTranslationViewModel(
     private var pullJob: Job? = null
     private var testJob: Job? = null
 
+    /** An unknown stored name (e.g. the removed "Bergamot") reads as Ollama, like [DesktopTranslationHandler]. */
     private val engineFlow: Flow<EngineKind> = settings.engine.asFlow()
-        .map { runCatching { EngineKind.valueOf(it) }.getOrDefault(EngineKind.Bergamot) }
+        .map { runCatching { EngineKind.valueOf(it) }.getOrDefault(EngineKind.Ollama) }
         .distinctUntilChanged()
 
     init {
@@ -148,27 +123,14 @@ class DesktopTranslationViewModel(
             .onEach { code -> _state.update { it.copy(target = code) } }
             .launchIn(viewModelScope)
         settings.ollamaModel.asFlow().onEach { m -> _state.update { it.copy(ollamaModel = m) } }.launchIn(viewModelScope)
-        settings.customMode.asFlow().onEach { m -> _state.update { it.copy(customMode = m) } }.launchIn(viewModelScope)
-        settings.customFolders.asFlow()
-            .map { paths -> paths.sorted().map { CustomFolder(it, inspectFolder(File(it))) } }
-            .flowOn(Dispatchers.IO)
-            .onEach { folders -> _state.update { it.copy(customFolders = folders) } }
-            .launchIn(viewModelScope)
-
-        store.rows.onEach { rows -> _state.update { it.copy(bergamotRows = rows) } }.launchIn(viewModelScope)
-        store.indexError.onEach { e -> _state.update { it.copy(bergamotIndexError = e) } }.launchIn(viewModelScope)
-        store.totalBytes
-            .onEach { bytes -> _state.update { it.copy(bergamotBytes = bytes, bergamotPairs = store.installedPairs().size) } }
-            .launchIn(viewModelScope)
 
         combine(
             engineFlow,
-            store.rows,
             settings.ollamaModel.asFlow(),
-            settings.customFolders.asFlow(),
-            combine(settings.customMode.asFlow(), settings.customServerModel.asFlow(), appSettings.translationTargetLanguage.asFlow()) { a, b, c -> Triple(a, b, c) },
-        ) { kind, rows, _, _, triple -> Triple(kind, rows, triple.third) }
-            .mapLatest { (kind, rows, target) -> computeTargets(kind, rows, target) }
+            settings.customServerModel.asFlow(),
+            appSettings.translationTargetLanguage.asFlow(),
+        ) { kind, _, _, target -> kind to target }
+            .mapLatest { (kind, target) -> computeTargets(kind, target) }
             .onEach { list -> _state.update { it.copy(targets = list) } }
             .launchIn(viewModelScope)
 
@@ -183,17 +145,12 @@ class DesktopTranslationViewModel(
             }
             checkOllama()
         }
-        viewModelScope.launch {
-            val reason = runCatching { runtime.unavailableReason() }.getOrElse { it.message }
-            _state.update { it.copy(runtimeIssue = reason) }
-        }
     }
 
-    /** The engine's targets plus the current one; Bergamot also offers every language its model list covers. */
-    private suspend fun computeTargets(kind: EngineKind, rows: List<BergamotRow>, target: String): List<String> {
+    /** The engine's targets plus the current one, so the dropdown always shows what's selected. */
+    private suspend fun computeTargets(kind: EngineKind, target: String): List<String> {
         val fromEngine = runCatching { engines[kind]?.targets().orEmpty() }.getOrDefault(emptyList())
-        val fromIndex = if (kind == EngineKind.Bergamot) rows.flatMap { r -> r.chain.flatMap { listOf(it.from, it.to) } } else emptyList()
-        return (fromEngine + fromIndex + target).distinct().sortedBy(::languageName)
+        return (fromEngine + target).distinct().sortedBy(::languageName)
     }
 
     // ---------- top ----------
@@ -221,42 +178,7 @@ class DesktopTranslationViewModel(
     fun confirmDelete() {
         val id = _state.value.confirmingId ?: return
         _state.update { it.copy(confirmingId = null) }
-        viewModelScope.launch {
-            when {
-                id.startsWith("bergamot:") -> {
-                    val source = id.removePrefix("bergamot:")
-                    runAction("Couldn't delete ${languageName(source)}") { store.delete(source) }
-                }
-
-                id.startsWith("ollama:") -> deleteOllamaModel(id.removePrefix("ollama:"))
-            }
-        }
-    }
-
-    // ---------- Bergamot ----------
-
-    fun download(source: String) = store.download(source)
-
-    fun cancelDownload(source: String) = store.cancel(source)
-
-    fun retryIndex() {
-        viewModelScope.launch { store.refresh() }
-    }
-
-    fun installRuntime() {
-        if (_state.value.runtimeInstall != null) return
-        _state.update { it.copy(runtimeInstall = 0f) }
-        viewModelScope.launch {
-            try {
-                runAction("Couldn't install the translator") {
-                    runtime.install { p -> _state.update { it.copy(runtimeInstall = p) } }
-                }
-                val reason = runCatching { runtime.unavailableReason() }.getOrElse { it.message }
-                _state.update { it.copy(runtimeIssue = reason) }
-            } finally {
-                _state.update { it.copy(runtimeInstall = null) }
-            }
-        }
+        if (id.startsWith("ollama:")) viewModelScope.launch { deleteOllamaModel(id.removePrefix("ollama:")) }
     }
 
     // ---------- Ollama ----------
@@ -325,21 +247,6 @@ class DesktopTranslationViewModel(
     }
 
     // ---------- Custom ----------
-
-    fun setCustomMode(mode: String) {
-        _state.update { it.copy(customMode = mode) }
-        viewModelScope.launch { settings.customMode.set(mode) }
-    }
-
-    /** Adds [path] to the list; the folder itself is never touched. */
-    fun addFolder(path: String) {
-        viewModelScope.launch { settings.customFolders.set(settings.customFolders.get() + path) }
-    }
-
-    /** Removes [path] from the list only; nothing is deleted from disk. */
-    fun removeFolder(path: String) {
-        viewModelScope.launch { settings.customFolders.set(settings.customFolders.get() - path) }
-    }
 
     fun setServerUrl(value: String) {
         _state.update { it.copy(serverUrl = value, serverCheck = null) }

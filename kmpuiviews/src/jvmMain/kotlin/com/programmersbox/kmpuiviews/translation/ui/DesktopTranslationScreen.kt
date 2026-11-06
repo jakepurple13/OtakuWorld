@@ -79,12 +79,6 @@ private data class EngineInfo(val kind: EngineKind, val title: String, val descr
 
 private val engineInfo = listOf(
     EngineInfo(
-        EngineKind.Bergamot,
-        "Bergamot",
-        "Firefox's offline translator. One small model per language pair.",
-        listOf("~35 MB per pair", "Fast", "Offline"),
-    ),
-    EngineInfo(
         EngineKind.Ollama,
         "Ollama",
         "A local LLM from your running Ollama. One model covers many languages.",
@@ -93,8 +87,8 @@ private val engineInfo = listOf(
     EngineInfo(
         EngineKind.Custom,
         "Custom",
-        "Your own model folder, or any OpenAI-compatible server like LM Studio or llama.cpp.",
-        listOf("Your files", "Your server"),
+        "Any OpenAI-compatible server, like LM Studio, llama.cpp or vLLM.",
+        listOf("Your server", "Any model it loads"),
     ),
 )
 
@@ -161,7 +155,6 @@ fun DesktopTranslationScreen(vm: DesktopTranslationViewModel = koinViewModel()) 
                     ) { engine ->
                         EnginePanelSurface {
                             when (engine) {
-                                EngineKind.Bergamot -> BergamotPanel(state, vm)
                                 EngineKind.Ollama -> OllamaPanel(state, vm)
                                 EngineKind.Custom -> CustomPanel(state, vm)
                             }

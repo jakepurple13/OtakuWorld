@@ -1,17 +1,16 @@
 package com.programmersbox.kmpuiviews.translation
 
 import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.core.stringSetPreferencesKey
 import ca.gosyer.appdirs.AppDirs
 import com.programmersbox.datastore.DataStoreHandler
 
 class DesktopTranslationSettings(
     @Suppress("unused") appDirs: AppDirs,
 ) {
-    /** [EngineKind] name. */
+    /** [EngineKind] name. An unknown stored value (e.g. the removed "Bergamot") reads as Ollama. */
     val engine = DataStoreHandler(
         key = stringPreferencesKey("translationEngine"),
-        defaultValue = EngineKind.Bergamot.name
+        defaultValue = EngineKind.Ollama.name
     )
 
     val ollamaUrl = DataStoreHandler(
@@ -22,18 +21,6 @@ class DesktopTranslationSettings(
     val ollamaModel = DataStoreHandler(
         key = stringPreferencesKey("translationOllamaModel"),
         defaultValue = ""
-    )
-
-    /** "folder" or "server". */
-    val customMode = DataStoreHandler(
-        key = stringPreferencesKey("translationCustomMode"),
-        defaultValue = "folder"
-    )
-
-    /** Absolute paths. */
-    val customFolders = DataStoreHandler(
-        key = stringSetPreferencesKey("translationCustomFolders"),
-        defaultValue = emptySet<String>()
     )
 
     val customServerUrl = DataStoreHandler(

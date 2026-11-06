@@ -3,7 +3,6 @@ package com.programmersbox.kmpuiviews.translation.ui
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -19,30 +18,23 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
@@ -66,20 +58,13 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import com.programmersbox.kmpuiviews.domain.ModelState
-import com.programmersbox.kmpuiviews.domain.TranslationLanguages
 import com.programmersbox.kmpuiviews.presentation.settings.translationmodels.ConfirmActions
-import com.programmersbox.kmpuiviews.presentation.settings.translationmodels.LanguageAvatar
 import com.programmersbox.kmpuiviews.presentation.settings.translationmodels.SectionLabel
 import com.programmersbox.kmpuiviews.presentation.settings.translationmodels.SmallChip
 import com.programmersbox.kmpuiviews.presentation.settings.translationmodels.formatModelSize
 import com.programmersbox.kmpuiviews.presentation.settings.translationmodels.groupShape
-import com.programmersbox.kmpuiviews.translation.bergamot.BergamotRow
-import com.programmersbox.kmpuiviews.translation.custom.FolderCheck
 import com.programmersbox.kmpuiviews.translation.ollama.OllamaModel
 import com.programmersbox.kmpuiviews.translation.ollama.OllamaStatus
-import io.github.vinceglb.filekit.absolutePath
-import io.github.vinceglb.filekit.dialogs.compose.rememberDirectoryPickerLauncher
 
 // ---------- shared bits ----------
 
@@ -200,178 +185,6 @@ private fun FieldRow(
         FilledTonalButton(onClick = onButton, enabled = buttonEnabled, modifier = Modifier.padding(bottom = 4.dp)) {
             leadingButtonIcon?.invoke()
             Text(buttonText)
-        }
-    }
-}
-
-/** The translator CLI isn't ready: show why, and offer to install it. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-private fun RuntimeBanner(issue: String?, installing: Float?, onInstall: () -> Unit) {
-    AnimatedVisibility(
-        visible = issue != null || installing != null,
-        enter = fadeIn() + expandVertically(),
-        exit = fadeOut() + shrinkVertically(),
-    ) {
-        val colors = MaterialTheme.colorScheme
-        Column(
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(colors.tertiaryContainer)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        "The translator isn't installed",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = colors.onTertiaryContainer,
-                    )
-                    if (issue != null) {
-                        Text(issue, style = MaterialTheme.typography.bodySmall, color = colors.onTertiaryContainer)
-                    }
-                }
-                if (installing == null) FilledTonalButton(onClick = onInstall) { Text("Install") }
-            }
-            if (installing != null) {
-                val animated by animateFloatAsState(installing, label = "runtimeInstall")
-                LinearWavyProgressIndicator(progress = { animated }, modifier = Modifier.fillMaxWidth())
-            }
-        }
-    }
-}
-
-// ---------- Bergamot ----------
-
-@Composable
-internal fun ColumnScope.BergamotPanel(state: DesktopTranslationState, vm: DesktopTranslationViewModel) {
-    RuntimeBanner(state.runtimeIssue, state.runtimeInstall, vm::installRuntime)
-
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        SectionLabel("Language pairs", Modifier.weight(1f))
-        Text(
-            "Into ${languageName(state.target)}",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-
-    state.bergamotIndexError?.let { error ->
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            StatusLine(error, ok = false, modifier = Modifier.weight(1f))
-            TextButton(onClick = vm::retryIndex) { Text("Retry") }
-        }
-    }
-
-    val rows = state.bergamotRows
-    if (rows.isEmpty() && state.bergamotIndexError == null) PanelNote("Loading the model list…")
-    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-        rows.forEachIndexed { i, row ->
-            key(row.source) {
-                val shape = groupShape(i, rows.size)
-                val source = languageName(row.source)
-                val shared = if (row.sharedBytes > 0) " ${formatModelSize(row.sharedBytes)} stays for other languages." else ""
-                ConfirmableRow(
-                    confirming = state.confirmingId == bergamotDeleteId(row.source),
-                    shape = shape,
-                    title = "Delete $source → ${languageName(row.target)}?",
-                    body = "Frees ${formatModelSize(row.freedOnDelete)}.$shared $source text won't translate until you download it again.",
-                    onCancel = vm::cancelDelete,
-                    onConfirm = vm::confirmDelete,
-                ) {
-                    BergamotRowContent(row, vm)
-                }
-            }
-        }
-    }
-    PanelNote("Models come from Mozilla's Firefox Translations repository. Saved in the app's data folder.")
-}
-
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-private fun BergamotRowContent(row: BergamotRow, vm: DesktopTranslationViewModel) {
-    val colors = MaterialTheme.colorScheme
-    val state = row.state
-    val downloading = state as? ModelState.Downloading
-    val downloaded = state == ModelState.Downloaded
-    val glyph = TranslationLanguages.byCode(row.source)?.glyph ?: row.source.uppercase()
-    val via = if (row.chain.size > 1) " · via English" else ""
-
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 56.dp)
-            .padding(start = 14.dp, end = 6.dp, top = 8.dp, bottom = 8.dp),
-    ) {
-        LanguageAvatar(glyph, downloaded = downloaded)
-        Column(Modifier.weight(1f)) {
-            Text(
-                "${languageName(row.source)} → ${languageName(row.target)}",
-                style = MaterialTheme.typography.bodyLarge,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            val meta = when {
-                downloading?.fraction != null ->
-                    "${formatModelSize((row.ownBytes * downloading.fraction).toLong())} of ${formatModelSize(row.ownBytes)}"
-
-                downloading != null -> "Downloading…"
-                state is ModelState.Failed -> "Download failed: ${state.message}"
-                downloaded -> "${formatModelSize(row.ownBytes)} · downloaded$via"
-                else -> formatModelSize(row.ownBytes) + via
-            }
-            Text(
-                meta,
-                style = MaterialTheme.typography.bodySmall,
-                color = if (state is ModelState.Failed) colors.error else colors.onSurfaceVariant,
-            )
-            AnimatedVisibility(
-                visible = downloading != null,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically(),
-            ) {
-                val fraction = downloading?.fraction
-                val progressModifier = Modifier
-                    .widthIn(max = 260.dp)
-                    .fillMaxWidth()
-                    .padding(top = 6.dp)
-                if (fraction == null) {
-                    LinearWavyProgressIndicator(modifier = progressModifier)
-                } else {
-                    val animated by animateFloatAsState(fraction, label = "pairProgress")
-                    LinearWavyProgressIndicator(progress = { animated }, modifier = progressModifier)
-                }
-            }
-        }
-        AnimatedContent(
-            targetState = when {
-                downloaded -> 0
-                downloading != null -> 1
-                else -> 2
-            },
-            transitionSpec = {
-                (fadeIn() + scaleIn(initialScale = 0.8f)) togetherWith (fadeOut() + scaleOut(targetScale = 0.8f))
-            },
-            label = "pairAction",
-        ) { action ->
-            when (action) {
-                0 -> IconButton(onClick = { vm.askDelete(bergamotDeleteId(row.source)) }) {
-                    Icon(Icons.Default.Delete, "Delete ${languageName(row.source)}")
-                }
-
-                1 -> IconButton(onClick = { vm.cancelDownload(row.source) }) {
-                    Icon(Icons.Default.Close, "Cancel download")
-                }
-
-                else -> FilledTonalButton(
-                    onClick = { vm.download(row.source) },
-                    modifier = Modifier.padding(end = 8.dp),
-                ) { Text(if (state is ModelState.Failed) "Retry" else "Download") }
-            }
         }
     }
 }
@@ -505,90 +318,9 @@ private fun OllamaModelRow(model: OllamaModel, inUse: Boolean, vm: DesktopTransl
 
 // ---------- Custom ----------
 
+/** Any OpenAI-compatible server, like LM Studio or llama.cpp. */
 @Composable
 internal fun ColumnScope.CustomPanel(state: DesktopTranslationState, vm: DesktopTranslationViewModel) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        FilterChip(
-            selected = state.customMode == CUSTOM_FOLDER,
-            onClick = { vm.setCustomMode(CUSTOM_FOLDER) },
-            label = { Text("Model folder") },
-        )
-        FilterChip(
-            selected = state.customMode == CUSTOM_SERVER,
-            onClick = { vm.setCustomMode(CUSTOM_SERVER) },
-            label = { Text("OpenAI-compatible server") },
-        )
-    }
-    AnimatedContent(
-        targetState = state.customMode == CUSTOM_SERVER,
-        transitionSpec = { fadeIn(tween(220, delayMillis = 90)) togetherWith fadeOut(tween(90)) using SizeTransform(clip = false) },
-        label = "customMode",
-    ) { server ->
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            if (server) ServerSection(state, vm) else FolderSection(state, vm)
-        }
-    }
-}
-
-@Composable
-private fun ColumnScope.FolderSection(state: DesktopTranslationState, vm: DesktopTranslationViewModel) {
-    val picker = rememberDirectoryPickerLauncher { picked ->
-        picked?.absolutePath()?.let(vm::addFolder)
-    }
-    RuntimeBanner(state.runtimeIssue, state.runtimeInstall, vm::installRuntime)
-
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        SectionLabel("Folder with a Bergamot (Marian) model", Modifier.weight(1f))
-        OutlinedButton(onClick = { picker.launch() }) {
-            Icon(Icons.Default.Add, null, Modifier.size(18.dp))
-            Spacer(Modifier.size(6.dp))
-            Text("Choose…")
-        }
-    }
-    val folders = state.customFolders
-    if (folders.isEmpty()) PanelNote("No folders yet. Choose one with model*.bin and vocab*.spm files, e.g. model.jaen.intgemm.alphas.bin.")
-    Column(verticalArrangement = Arrangement.spacedBy(3.dp), modifier = Modifier.animateContentSize()) {
-        folders.forEachIndexed { i, folder ->
-            key(folder.path) {
-                PanelRow(groupShape(i, folders.size)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(14.dp),
-                        modifier = Modifier
-                            .heightIn(min = 56.dp)
-                            .padding(start = 14.dp, end = 6.dp, top = 8.dp, bottom = 8.dp),
-                    ) {
-                        Icon(Icons.Default.Folder, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                            Text(
-                                folder.path,
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontFamily = FontFamily.Monospace,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                            when (val check = folder.check) {
-                                is FolderCheck.Valid -> StatusLine(
-                                    "${languageName(check.from)} → ${languageName(check.to)} · ${formatModelSize(check.sizeBytes)}",
-                                    ok = true,
-                                )
-
-                                is FolderCheck.Invalid -> StatusLine(check.reason, ok = false)
-                            }
-                        }
-                        IconButton(onClick = { vm.removeFolder(folder.path) }) {
-                            Icon(Icons.Default.Close, "Remove from list")
-                        }
-                    }
-                }
-            }
-        }
-    }
-    PanelNote("The folder stays where it is. Removing it here only removes it from the app.")
-}
-
-@Composable
-private fun ColumnScope.ServerSection(state: DesktopTranslationState, vm: DesktopTranslationViewModel) {
     FieldRow(
         value = state.serverUrl,
         onValueChange = vm::setServerUrl,

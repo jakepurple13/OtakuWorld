@@ -20,12 +20,6 @@ import com.programmersbox.kmpuiviews.translation.DesktopTranslationSettings
 import com.programmersbox.kmpuiviews.translation.LanguageDetector
 import com.programmersbox.kmpuiviews.translation.LibraryLanguageDetector
 import com.programmersbox.kmpuiviews.translation.TranslationEngine
-import com.programmersbox.kmpuiviews.translation.bergamot.BergamotCliRuntime
-import com.programmersbox.kmpuiviews.translation.bergamot.BergamotEngine
-import com.programmersbox.kmpuiviews.translation.bergamot.BergamotIndex
-import com.programmersbox.kmpuiviews.translation.bergamot.BergamotModelStore
-import com.programmersbox.kmpuiviews.translation.bergamot.BergamotRuntime
-import com.programmersbox.kmpuiviews.translation.bergamot.installBergamotTimeouts
 import com.programmersbox.kmpuiviews.translation.custom.CustomEngine
 import com.programmersbox.kmpuiviews.translation.custom.OpenAiCompatClient
 import com.programmersbox.kmpuiviews.translation.custom.installOpenAiCompatTimeouts
@@ -46,10 +40,6 @@ import com.programmersbox.kmpuiviews.utils.DownloadAndInstaller
 import com.programmersbox.kmpuiviews.utils.ImageModifier
 import com.programmersbox.kmpuiviews.utils.Zipper
 import io.ktor.client.HttpClient
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.core.module.dsl.bind
@@ -75,27 +65,8 @@ actual fun platformModule(): Module = module {
     single { OllamaClient(HttpClient { installOllamaTimeouts() }, get()) }
     // Later engines register their own single<TranslationEngine> (distinct qualifier); handler maps them by kind.
     single<TranslationEngine>(named("ollama")) { OllamaEngine(get(), get()) }
-    single {
-        val modelsDir = File(get<AppDirs>().getUserDataDir(), "translation/bergamot")
-        val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-        val client = HttpClient { installBergamotTimeouts() }
-        BergamotModelStore(
-            index = BergamotIndex(client, cacheFile = File(modelsDir, "index.json")),
-            dir = modelsDir,
-            client = client,
-            scope = scope,
-        ).also { store ->
-            val appSettings = get<NewSettingsHandling>()
-            scope.launch { appSettings.translationTargetLanguage.asFlow().collect(store::setTarget) }
-            scope.launch { store.refresh() }
-        }
-    }
-    single<BergamotRuntime> {
-        BergamotCliRuntime(installRoot = File(get<AppDirs>().getUserDataDir(), "translation/bergamot-runtime"))
-    }
-    single<TranslationEngine>(named("bergamot")) { BergamotEngine(get(), get()) }
     single { OpenAiCompatClient(HttpClient { installOpenAiCompatTimeouts() }, get()) }
-    single<TranslationEngine>(named("custom")) { CustomEngine(get(), get(), get()) }
+    single<TranslationEngine>(named("custom")) { CustomEngine(get(), get()) }
     factory<TranslationHandler> {
         DesktopTranslationHandler(
             engines = getAll<TranslationEngine>().associateBy { it.kind },

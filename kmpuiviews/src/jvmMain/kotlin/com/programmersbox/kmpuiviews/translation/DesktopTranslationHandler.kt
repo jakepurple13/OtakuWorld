@@ -42,7 +42,7 @@ class DesktopTranslationHandler(
         if (source == null || source == target) return textToTranslate
         return try {
             val kind = runCatching { EngineKind.valueOf(settings.engine.get()) }
-                .getOrDefault(EngineKind.Bergamot)
+                .getOrDefault(EngineKind.Ollama)
             val engine = engines[kind]
                 ?: throw TranslationUnavailable("Pick a translation engine in Settings → Translation")
             engine.translate(textToTranslate, source, target)

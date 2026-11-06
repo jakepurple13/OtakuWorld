@@ -58,32 +58,42 @@ class DesktopTranslationHandlerTest {
 
     @Test
     fun `same language returns input without engine call`() = runBlocking {
-        val engine = FakeEngine(EngineKind.Bergamot)
+        val engine = FakeEngine(EngineKind.Ollama)
         assertEquals("hello", handler("en", engine).translate("hello"))
         assertTrue(engine.calls.isEmpty())
     }
 
     @Test
     fun `undetected returns input`() = runBlocking {
-        val engine = FakeEngine(EngineKind.Bergamot)
+        val engine = FakeEngine(EngineKind.Ollama)
         assertEquals("???", handler(null, engine).translate("???"))
         assertTrue(engine.calls.isEmpty())
     }
 
     @Test
     fun `routes to selected engine`() = runBlocking {
-        settings.engine.set("Ollama")
-        val bergamot = FakeEngine(EngineKind.Bergamot)
+        settings.engine.set("Custom")
         val ollama = FakeEngine(EngineKind.Ollama)
-        assertEquals("T:konnichiwa", handler("ja", bergamot, ollama).translate("konnichiwa"))
-        assertEquals(listOf(Triple("konnichiwa", "ja", "en")), ollama.calls)
-        assertTrue(bergamot.calls.isEmpty())
+        val custom = FakeEngine(EngineKind.Custom)
+        assertEquals("T:konnichiwa", handler("ja", ollama, custom).translate("konnichiwa"))
+        assertEquals(listOf(Triple("konnichiwa", "ja", "en")), custom.calls)
+        assertTrue(ollama.calls.isEmpty())
+    }
+
+    @Test
+    fun `stored Bergamot engine falls back to Ollama`() = runBlocking {
+        settings.engine.set("Bergamot") // the engine removed from the app; old installs may still have it stored
+        val ollama = FakeEngine(EngineKind.Ollama)
+        val custom = FakeEngine(EngineKind.Custom)
+        assertEquals("T:konnichiwa", handler("ja", ollama, custom).translate("konnichiwa"))
+        assertEquals(1, ollama.calls.size)
+        assertTrue(custom.calls.isEmpty())
     }
 
     @Test
     fun `unavailable returns input and shows one error banner with the message`() = runBlocking {
         notifier.dismissAll()
-        val engine = FakeEngine(EngineKind.Bergamot) { throw TranslationUnavailable("No model") }
+        val engine = FakeEngine(EngineKind.Ollama) { throw TranslationUnavailable("No model") }
         assertEquals("hola", handler("es", engine).translate("hola"))
         val banner = notifier.banners.value.single()
         assertEquals("Couldn't translate", banner.title)
@@ -103,7 +113,7 @@ class DesktopTranslationHandlerTest {
     @Test
     fun `generic engine exception returns input with banner`() = runBlocking {
         notifier.dismissAll()
-        val engine = FakeEngine(EngineKind.Bergamot) { throw IllegalStateException("bad json") }
+        val engine = FakeEngine(EngineKind.Ollama) { throw IllegalStateException("bad json") }
         assertEquals("hola", handler("es", engine).translate("hola"))
         assertEquals("bad json", notifier.banners.value.single().subtitle)
     }
@@ -111,7 +121,7 @@ class DesktopTranslationHandlerTest {
     @Test
     fun `cancellation propagates`() = runBlocking {
         notifier.dismissAll()
-        val engine = FakeEngine(EngineKind.Bergamot) { throw kotlin.coroutines.cancellation.CancellationException("c") }
+        val engine = FakeEngine(EngineKind.Ollama) { throw kotlin.coroutines.cancellation.CancellationException("c") }
         var thrown: Throwable? = null
         try {
             handler("es", engine).translate("hola")
@@ -127,7 +137,7 @@ class DesktopTranslationHandlerTest {
         val started = CompletableDeferred<Unit>()
         val done = CompletableDeferred<Unit>()
         val engine = object : TranslationEngine {
-            override val kind = EngineKind.Bergamot
+            override val kind = EngineKind.Ollama
             override suspend fun targets() = listOf("en")
             override suspend fun translate(text: String, source: String, target: String): String {
                 started.complete(Unit)
@@ -154,7 +164,7 @@ class DesktopTranslationHandlerTest {
 
     @Test
     fun `translateDescription always ends progress false`()= runBlocking {
-        val engine = FakeEngine(EngineKind.Bergamot) { throw TranslationUnavailable("boom") }
+        val engine = FakeEngine(EngineKind.Ollama) { throw TranslationUnavailable("boom") }
         val done = CompletableDeferred<Unit>()
         val progress = mutableListOf<Boolean>()
         var out: String? = null

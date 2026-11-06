@@ -2,17 +2,12 @@ package com.programmersbox.kmpuiviews.translation.ui
 
 import androidx.lifecycle.ViewModelStore
 import ca.gosyer.appdirs.AppDirs
-import com.programmersbox.kmpuiviews.domain.ModelState
 import com.programmersbox.kmpuiviews.testing.createTestDataStoreHandling
 import com.programmersbox.kmpuiviews.testing.createTestNewSettingsHandling
 import com.programmersbox.kmpuiviews.translation.DesktopTranslationSettings
 import com.programmersbox.kmpuiviews.translation.EngineKind
 import com.programmersbox.kmpuiviews.translation.LanguageDetector
 import com.programmersbox.kmpuiviews.translation.TranslationEngine
-import com.programmersbox.kmpuiviews.translation.bergamot.BergamotModelStore
-import com.programmersbox.kmpuiviews.translation.bergamot.FakeRuntime
-import com.programmersbox.kmpuiviews.translation.bergamot.FakeServer
-import com.programmersbox.kmpuiviews.translation.bergamot.fakePair
 import com.programmersbox.kmpuiviews.translation.custom.OpenAiCompatClient
 import com.programmersbox.kmpuiviews.translation.ollama.OllamaClient
 import com.programmersbox.sharedcomponents.notifier.DefaultInAppNotifier
@@ -35,7 +30,6 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
-import java.nio.file.Files
 import java.util.Collections
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -62,8 +56,6 @@ class DesktopTranslationViewModelTest {
 
     private val viewModelStore = ViewModelStore()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-    private val dir = Files.createTempDirectory("desktop-translation-vm").toFile()
-    private val server = FakeServer(fakePair("ja", "en", 10) + fakePair("ko", "en", 20))
     private val notifier = DefaultInAppNotifier(scope)
     private val appSettings = createTestNewSettingsHandling()
     private lateinit var settings: DesktopTranslationSettings
@@ -92,7 +84,6 @@ class DesktopTranslationViewModelTest {
         }
     })
 
-    private val bergamot = FakeEngine(EngineKind.Bergamot, listOf("en"))
     private val ollama = FakeEngine(EngineKind.Ollama, listOf("en", "ja", "ko"))
     private val custom = FakeEngine(EngineKind.Custom, listOf("en", "fr"))
     private val timeSource = TestTimeSource()
@@ -104,7 +95,7 @@ class DesktopTranslationViewModelTest {
         createTestDataStoreHandling()
         settings = DesktopTranslationSettings(AppDirs { appName = "test"; appAuthor = "test" })
         runBlocking {
-            settings.engine.set(EngineKind.Bergamot.name)
+            settings.engine.set(EngineKind.Ollama.name)
             settings.ollamaModel.set("qwen2.5:7b")
         }
     }
@@ -114,23 +105,14 @@ class DesktopTranslationViewModelTest {
     fun tearDown() {
         viewModelStore.clear()
         scope.cancel()
-        server.close()
-        dir.deleteRecursively()
         Thread.sleep(50)
         Dispatchers.resetMain()
     }
 
-    private val store = BergamotModelStore(server.index(), dir, server.client, scope)
-
-    private fun viewModel(
-        detected: String? = "ja",
-        vararg overrides: FakeEngine,
-    ) = DesktopTranslationViewModel(
+    private fun viewModel(detected: String? = "ja", vararg overrides: FakeEngine) = DesktopTranslationViewModel(
         settings = settings,
         appSettings = appSettings,
-        engines = (listOf(bergamot, ollama, custom) + overrides).associateBy { it.kind },
-        store = store,
-        runtime = FakeRuntime(),
+        engines = (listOf(ollama, custom) + overrides).associateBy { it.kind },
         ollama = OllamaClient(ollamaHttp, settings),
         server = OpenAiCompatClient(HttpClient(MockEngine { respond("", HttpStatusCode.NotFound) }), settings),
         detector = object : LanguageDetector {
@@ -152,30 +134,27 @@ class DesktopTranslationViewModelTest {
     @Test
     fun `switching engine changes storage label`() = runBlocking<Unit> {
         val vm = viewModel()
-        vm.awaitState { it.engine == EngineKind.Bergamot && it.storageLabel == "0 language pairs" }
-
-        vm.setEngine(EngineKind.Ollama)
         val ollamaState = vm.awaitState { it.engine == EngineKind.Ollama && it.storageBytes == 3000L }
         assertEquals("Ollama models (managed by Ollama)", ollamaState.storageLabel)
-        assertEquals(EngineKind.Ollama.name, settings.engine.get())
 
         vm.setEngine(EngineKind.Custom)
         val customState = vm.awaitState { it.engine == EngineKind.Custom }
-        assertEquals("Your files aren't counted", customState.storageLabel)
+        assertEquals("Your server's models aren't counted", customState.storageLabel)
         assertEquals(null, customState.storageBytes)
+        withTimeout(10_000) { while (settings.engine.get() != EngineKind.Custom.name) delay(10) }
+    }
 
-        store.refresh()
-        vm.setEngine(EngineKind.Bergamot)
-        store.download("ja")
-        vm.awaitState { s -> s.bergamotRows.any { it.source == "ja" && it.state == ModelState.Downloaded } }
-        val bergamotState = vm.awaitState { it.storageLabel == "1 language pair" }
-        assertEquals(30L, bergamotState.storageBytes)
+    @Test
+    fun `stored Bergamot engine reads as Ollama`() = runBlocking<Unit> {
+        settings.engine.set("Bergamot") // removed engine; old installs may still have it stored
+        val vm = viewModel()
+        delay(200)
+        assertEquals(EngineKind.Ollama, vm.awaitState { it.targets.toSet() == setOf("en", "ja", "ko") }.engine)
     }
 
     @Test
     fun `target list follows engine targets`() = runBlocking<Unit> {
         val vm = viewModel()
-        vm.setEngine(EngineKind.Ollama)
         vm.awaitState { it.engine == EngineKind.Ollama && it.targets.toSet() == setOf("en", "ja", "ko") }
 
         vm.setEngine(EngineKind.Custom)
@@ -189,7 +168,6 @@ class DesktopTranslationViewModelTest {
     @Test
     fun `delete ollama model in use selects next`() = runBlocking<Unit> {
         val vm = viewModel()
-        vm.setEngine(EngineKind.Ollama)
         vm.awaitState { it.ollamaModels.size == 3 && it.ollamaModel == "qwen2.5:7b" }
 
         vm.askDelete(ollamaDeleteId("qwen2.5:7b"))
@@ -203,8 +181,29 @@ class DesktopTranslationViewModelTest {
     }
 
     @Test
+    fun `confirm needed before delete`() = runBlocking<Unit> {
+        val vm = viewModel()
+        vm.awaitState { it.ollamaModels.size == 3 }
+
+        vm.askDelete(ollamaDeleteId("gemma3:4b"))
+        vm.awaitState { it.confirmingId == ollamaDeleteId("gemma3:4b") }
+        delay(200)
+        assertTrue(ollamaDeletes.isEmpty())
+
+        vm.cancelDelete()
+        vm.awaitState { it.confirmingId == null }
+        delay(200)
+        assertTrue(ollamaDeletes.isEmpty())
+
+        vm.askDelete(ollamaDeleteId("gemma3:4b"))
+        vm.confirmDelete()
+        vm.awaitState { s -> s.ollamaModels.none { it.name == "gemma3:4b" } }
+        assertEquals(listOf("gemma3:4b"), ollamaDeletes.toList())
+    }
+
+    @Test
     fun `runTest records timing and engine label`() = runBlocking<Unit> {
-        val slow = FakeEngine(EngineKind.Bergamot, listOf("en")) {
+        val slow = FakeEngine(EngineKind.Ollama, listOf("en")) {
             timeSource += 1_234.milliseconds
             "He drew his sword."
         }
@@ -214,7 +213,7 @@ class DesktopTranslationViewModelTest {
 
         val s = vm.awaitState { !it.testRunning && it.testOutput != null }
         assertEquals("He drew his sword.", s.testOutput)
-        assertEquals("Bergamot · ja→en · 1.2 s", s.testTiming)
+        assertEquals("Ollama · ja→en · 1.2 s", s.testTiming)
         assertEquals("ja", s.detectedSource)
         assertEquals(listOf(Triple("彼は剣を抜いた。", "ja", "en")), slow.calls)
 
@@ -232,34 +231,10 @@ class DesktopTranslationViewModelTest {
     }
 
     @Test
-    fun `confirm needed before delete`() = runBlocking<Unit> {
-        store.refresh()
-        val vm = viewModel()
-        store.download("ja")
-        vm.awaitState { s -> s.bergamotRows.any { it.source == "ja" && it.state == ModelState.Downloaded } }
-
-        vm.askDelete(bergamotDeleteId("ja"))
-        val asked = vm.awaitState { it.confirmingId == bergamotDeleteId("ja") }
-        delay(200)
-        assertTrue(asked.bergamotRows.single { it.source == "ja" }.state == ModelState.Downloaded)
-        assertEquals(ModelState.Downloaded, store.rows.value.single { it.source == "ja" }.state)
-        assertTrue(dir.resolve("ja-en").exists())
-
-        vm.cancelDelete()
-        vm.awaitState { it.confirmingId == null }
-        assertTrue(dir.resolve("ja-en").exists())
-
-        vm.askDelete(bergamotDeleteId("ja"))
-        vm.confirmDelete()
-        vm.awaitState { s -> s.bergamotRows.single { it.source == "ja" }.state == ModelState.NotDownloaded }
-        assertTrue(!dir.resolve("ja-en").exists())
-    }
-
-    @Test
     fun `switching engine cancels in-flight test`() = runBlocking<Unit> {
         val started = CompletableDeferred<Unit>()
         val cancelled = CompletableDeferred<Unit>()
-        val hanging = FakeEngine(EngineKind.Bergamot, listOf("en")) {
+        val hanging = FakeEngine(EngineKind.Ollama, listOf("en")) {
             started.complete(Unit)
             try {
                 CompletableDeferred<String>().await()
@@ -268,23 +243,24 @@ class DesktopTranslationViewModelTest {
             }
         }
         val vm = viewModel("ja", hanging)
-        vm.awaitState { it.engine == EngineKind.Bergamot }
+        vm.awaitState { it.engine == EngineKind.Ollama }
         vm.runTest()
         withTimeout(10_000) { started.await() }
         assertTrue(vm.state.value.testRunning)
 
-        vm.setEngine(EngineKind.Ollama)
+        vm.setEngine(EngineKind.Custom)
         withTimeout(10_000) { cancelled.await() }
-        val s = vm.awaitState { it.engine == EngineKind.Ollama }
+        vm.awaitState { it.engine == EngineKind.Custom }
         delay(100)
-        assertEquals(false, vm.state.value.testRunning)
-        assertEquals(null, vm.state.value.testOutput)
-        assertEquals(null, vm.state.value.testTiming)
+        val s = vm.state.value
+        assertEquals(false, s.testRunning)
+        assertEquals(null, s.testOutput)
+        assertEquals(null, s.testTiming)
         assertEquals(null, s.testError)
 
         // A new run under the new engine still works.
         vm.runTest()
         val done = vm.awaitState { !it.testRunning && it.testOutput != null }
-        assertTrue(done.testTiming!!.startsWith("Ollama · ja→en · "))
+        assertTrue(done.testTiming!!.startsWith("Custom · ja→en · "))
     }
 }

@@ -26,11 +26,9 @@ class PrereleaseRepository {
         }
     }
 
-    /** App releases only: tool releases such as `bergamot-cli-*` are dropped. */
     suspend fun getReleases() = client
         .get("https://api.github.com/repos/jakepurple13/OtakuWorld/releases")
         .body<List<GitHubPrerelease>>()
-        .filterNot { it.isToolRelease }
 }
 
 @Serializable
@@ -43,12 +41,7 @@ data class GitHubPrerelease(
     @SerialName("published_at")
     val publishedAt: String,
     val name: String,
-    @SerialName("tag_name")
-    val tagName: String = "",
 ) {
-    /** Releases of tools the app downloads (e.g. `bergamot-cli-*`), not app builds. */
-    val isToolRelease: Boolean get() = tagName.startsWith("bergamot-cli-")
-
     fun getUpdatedTime() = runCatching {
         assets
             .maxByOrNull { Instant.parse(it.updatedAt) }

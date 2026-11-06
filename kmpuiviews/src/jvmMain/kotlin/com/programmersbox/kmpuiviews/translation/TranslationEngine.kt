@@ -1,6 +1,6 @@
 package com.programmersbox.kmpuiviews.translation
 
-enum class EngineKind { Bergamot, Ollama, Custom }
+enum class EngineKind { Ollama, Custom }
 
 interface TranslationEngine {
     val kind: EngineKind

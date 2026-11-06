@@ -4,8 +4,6 @@ import ca.gosyer.appdirs.AppDirs
 import com.programmersbox.kmpuiviews.testing.createTestDataStoreHandling
 import com.programmersbox.kmpuiviews.translation.DesktopTranslationSettings
 import com.programmersbox.kmpuiviews.translation.TranslationUnavailable
-import com.programmersbox.kmpuiviews.translation.bergamot.BergamotModelFiles
-import com.programmersbox.kmpuiviews.translation.bergamot.BergamotRuntime
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
@@ -38,7 +36,6 @@ class OpenAiCompatClientTest {
             settings.customServerUrl.set("http://localhost:1234/v1/")
             settings.customServerModel.set("m")
             settings.customServerKey.set("")
-            settings.customMode.set("server")
         }
     }
 
@@ -97,16 +94,10 @@ class OpenAiCompatClientTest {
     @Test
     fun `engine strips quotes and requires model`() = runBlocking {
         val c = client { respond("""{"choices":[{"message":{"content":"\"Hello\""}}]}""", headers = json) }
-        val engine = CustomEngine(settings, NoRuntime, c)
+        val engine = CustomEngine(settings, c)
         assertEquals("Hello", engine.translate("x", "ja", "en"))
         settings.customServerModel.set("")
         val e = assertFailsWith<TranslationUnavailable> { engine.translate("x", "ja", "en") }
         assertEquals("Pick a model in Settings → Translation", e.message)
-    }
-
-    private object NoRuntime : BergamotRuntime {
-        override suspend fun unavailableReason(): String? = null
-        override suspend fun install(onProgress: (Float) -> Unit) {}
-        override suspend fun translate(text: String, model: BergamotModelFiles) = text
     }
 }

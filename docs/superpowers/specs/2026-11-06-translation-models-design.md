@@ -1,5 +1,7 @@
 # Translation models: better sheet + desktop local translation
 
+> **2026-11-06:** Bergamot removed from scope by user; desktop engines are Ollama and Custom (OpenAI-compatible server). Custom model folders removed with it.
+
 Date: 2026-11-06
 Mockup (approved): https://claude.ai/artifact/RmpP9QQ8FQg1spu9Um3oVe — "A, with B's select mode" for phone, and the desktop section.
 
