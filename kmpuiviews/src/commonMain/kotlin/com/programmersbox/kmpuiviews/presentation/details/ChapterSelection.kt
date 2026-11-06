@@ -50,9 +50,6 @@ import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -61,7 +58,6 @@ import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -72,8 +68,9 @@ import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpuiviews.ChapterDownloadUiState
 import com.programmersbox.kmpuiviews.presentation.components.AnimatedSelectedText
-import kotlinx.coroutines.launch
+import com.programmersbox.sharedcomponents.notifier.InAppNotifier
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.clear_selection
 
@@ -234,10 +231,9 @@ fun ChapterSelectionToolbarHost(
     detailsActions: DetailsActions,
     downloadStates: Map<String, ChapterDownloadUiState>,
     canDownload: Boolean,
-    snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier,
 ) {
-    val scope = rememberCoroutineScope()
+    val notifier = koinInject<InAppNotifier>()
     val selection = detailsActions.selection
     val selected = chapters.filter { it.url in selection.selectedUrls }
     val readUrls = remember(read) { read.map { it.url }.toSet() }
@@ -254,18 +250,11 @@ fun ChapterSelectionToolbarHost(
     val state = rememberLastNonEmpty(liveState, selected.isEmpty())
 
     fun showUndo(message: String, undo: () -> Unit) {
-        scope.launch {
-            val result = snackbarHostState.showSnackbar(
-                message = message,
-                actionLabel = "Undo",
-                duration = SnackbarDuration.Long
-            )
-            if (result == SnackbarResult.ActionPerformed) undo()
-        }
+        notifier.info(message, action = "Undo", onAction = { undo() })
     }
 
     fun showMessage(message: String) {
-        scope.launch { snackbarHostState.showSnackbar(message) }
+        notifier.info(message)
     }
 
     AnimatedVisibility(

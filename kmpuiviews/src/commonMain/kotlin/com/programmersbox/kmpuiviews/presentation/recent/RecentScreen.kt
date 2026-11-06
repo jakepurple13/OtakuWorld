@@ -27,7 +27,6 @@ import androidx.compose.material.icons.filled.Source
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -55,7 +54,6 @@ import com.programmersbox.kmpuiviews.presentation.components.ToolTipWrapper
 import com.programmersbox.kmpuiviews.presentation.components.optionsKmpSheet
 import com.programmersbox.kmpuiviews.presentation.quickactions.QuickActionsBolt
 import com.programmersbox.kmpuiviews.presentation.settings.utils.showSourceChooser
-import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.composables.InfiniteListHandler
 import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
 import dev.chrisbanes.haze.HazeProgressive
@@ -203,12 +201,6 @@ fun RecentView(
                 )
             )
         },
-        snackbarHost = {
-            SnackbarHost(
-                viewModel.snackbarHostState,
-                modifier = Modifier.padding(LocalNavHostPadding.current)
-            )
-        }
     ) { p ->
         val biometric = rememberBiometricOpening()
 

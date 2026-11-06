@@ -1,7 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.recent
 
 import androidx.compose.foundation.lazy.grid.LazyGridState
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -26,6 +25,11 @@ import com.programmersbox.kmpuiviews.repository.CurrentSourceRepository
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.repository.combineSources
 import com.programmersbox.kmpuiviews.utils.dispatchIo
+import com.programmersbox.sharedcomponents.notifier.InAppNotifier
+import org.jetbrains.compose.resources.getString
+import otakuworld.kmpuiviews.generated.resources.Res
+import otakuworld.kmpuiviews.generated.resources.banner_couldnt_load
+import otakuworld.kmpuiviews.generated.resources.banner_retry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.catch
@@ -49,6 +53,7 @@ class RecentViewModel(
     settings: NewSettingsHandling,
     private val favoritesRepository: FavoritesRepository,
     private val exceptionDao: ExceptionDao,
+    private val notifier: InAppNotifier,
 ) : ViewModel() {
 
     var isRefreshing by mutableStateOf(false)
@@ -70,8 +75,6 @@ class RecentViewModel(
     val gridState = LazyGridState(0, 0)
 
     val sources = mutableStateListOf<KmpSourceInformation>()
-
-    val snackbarHostState = SnackbarHostState()
 
     var isIncognitoSource by mutableStateOf(false)
 
@@ -142,9 +145,11 @@ class RecentViewModel(
                 it.printStackTrace()
                 exceptionDao.insertException(it)
                 withContext(Dispatchers.Main) {
-                    snackbarHostState.showSnackbar(
-                        "Something went wrong",
-                        withDismissAction = true
+                    notifier.error(
+                        title = getString(Res.string.banner_couldnt_load, currentSource?.serviceName.orEmpty()),
+                        subtitle = it.message,
+                        action = getString(Res.string.banner_retry),
+                        onAction = { reset() },
                     )
                 }
                 emit(emptyList())

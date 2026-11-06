@@ -67,9 +67,6 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetState
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -135,6 +132,7 @@ import com.programmersbox.kmpuiviews.utils.dispatchIo
 import com.programmersbox.kmpuiviews.utils.loadItem
 import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
 import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
+import com.programmersbox.sharedcomponents.notifier.InAppNotifier
 import com.programmersbox.sharedcomponents.qrcode.QrCodeRepository
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
@@ -232,7 +230,7 @@ fun OtakuCustomListScreen(
     val blurKindState = rememberBlurKindState()
     val navController = LocalNavActions.current
     val scope = rememberCoroutineScope()
-    val snackbarHostState = remember { SnackbarHostState() }
+    val notifier = koinInject<InAppNotifier>()
 
     val colorBlindness: ColorBlindnessType by koinInject<NewSettingsHandling>().rememberColorBlindType()
     val colorFilter by remember { derivedStateOf { colorFilterBlind(colorBlindness) } }
@@ -279,10 +277,7 @@ fun OtakuCustomListScreen(
     }
 
     fun showMessage(message: String) {
-        scope.launch {
-            snackbarHostState.currentSnackbarData?.dismiss()
-            snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short)
-        }
+        notifier.info(message)
     }
 
     var deleteList by remember { mutableStateOf(false) }
@@ -731,13 +726,6 @@ fun OtakuCustomListScreen(
             )
         }
 
-        SnackbarHost(
-            snackbarHostState,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .windowInsetsPadding(bottomInsets)
-                .padding(bottom = toolbarClearance)
-        )
     }
 }
 

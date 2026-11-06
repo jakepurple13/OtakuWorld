@@ -37,9 +37,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -95,6 +92,7 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
+import com.programmersbox.sharedcomponents.notifier.InAppNotifier
 import org.koin.compose.koinInject
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.added_to_list
@@ -133,7 +131,7 @@ fun DetailsViewLandscape(
 
     var reverseChapters by remember { mutableStateOf(false) }
 
-    val hostState = remember { SnackbarHostState() }
+    val notifier = koinInject<InAppNotifier>()
     val listState = rememberLazyListState()
 
     val scope = rememberCoroutineScope()
@@ -152,7 +150,6 @@ fun DetailsViewLandscape(
         showListsChange = { showLists = it },
         info = info,
         listDao = listDao,
-        hostState = hostState,
         scope = scope,
     )
 
@@ -212,17 +209,15 @@ fun DetailsViewLandscape(
                                             )
                                         } ?: false
 
-                                        hostState.showSnackbar(
-                                            getString(
-                                                if (result) {
-                                                    Res.string.added_to_list
-                                                } else {
-                                                    Res.string.already_in_list
-                                                },
-                                                getString(Res.string.for_later)
-                                            ),
-                                            withDismissAction = true
+                                        val message = getString(
+                                            if (result) {
+                                                Res.string.added_to_list
+                                            } else {
+                                                Res.string.already_in_list
+                                            },
+                                            getString(Res.string.for_later)
                                         )
+                                        if (result) notifier.success(message) else notifier.info(message)
                                     }
                                 },
                                 onNoteClick = { showNoteSheet = true },
@@ -230,11 +225,6 @@ fun DetailsViewLandscape(
                         }
                     )
                 }
-            }
-        },
-        snackbarHost = {
-            SnackbarHost(hostState) { data ->
-                Snackbar(snackbarData = data)
             }
         },
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
@@ -307,7 +297,6 @@ private fun DetailsLandscapeContent(
         showListsChange = { showLists = it },
         info = info,
         listDao = koinInject(),
-        hostState = null,
         scope = scope,
     )
 
@@ -442,7 +431,6 @@ private fun DetailsLandscapeContent(
             }
             val selection = detailsActions.selection
             val isSelecting = selection.selectedUrls.isNotEmpty()
-            val paneSnackbarState = remember { SnackbarHostState() }
             Box(modifier = Modifier.fillMaxSize()) {
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -479,13 +467,6 @@ private fun DetailsLandscapeContent(
                     }
                 }
 
-                SnackbarHost(
-                    paneSnackbarState,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = SelectionToolbarListPadding)
-                )
-
                 ChapterSelectionToolbarHost(
                     visible = isSelecting,
                     chapters = info.chapters,
@@ -493,7 +474,6 @@ private fun DetailsLandscapeContent(
                     detailsActions = detailsActions,
                     downloadStates = downloadStates,
                     canDownload = info.source.canDownload,
-                    snackbarHostState = paneSnackbarState,
                     modifier = Modifier.align(Alignment.BottomCenter)
                 )
             }

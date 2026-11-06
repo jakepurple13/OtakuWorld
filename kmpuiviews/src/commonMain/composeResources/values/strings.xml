@@ -486,4 +486,8 @@
     <string name="qa_dismiss">Dismiss</string>
     <string name="banner_dismiss">Dismiss</string>
     <string name="banner_clear_all">Clear all</string>
+    <string name="banner_source_missing">Source not installed</string>
+    <string name="banner_more_options">More options</string>
+    <string name="banner_couldnt_load">Couldn’t load %1$s</string>
+    <string name="banner_retry">Retry</string>
 </resources>

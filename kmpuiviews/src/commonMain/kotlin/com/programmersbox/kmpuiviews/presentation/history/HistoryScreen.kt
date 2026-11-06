@@ -51,10 +51,6 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumFlexibleTopAppBar
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
@@ -101,6 +97,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.datastore.ColorBlindnessType
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.RecentModel
+import com.programmersbox.kmpuiviews.notifier.sourceMissing
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.components.AnimatedSelectedText
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
@@ -115,7 +112,6 @@ import com.programmersbox.kmpuiviews.presentation.components.placeholder.Placeho
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
-import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuImageElement
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuTitleElement
@@ -123,7 +119,11 @@ import com.programmersbox.kmpuiviews.utils.composables.sharedelements.SharedItem
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.customSharedElement
 import com.programmersbox.kmpuiviews.utils.dispatchIo
 import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
+import com.programmersbox.sharedcomponents.notifier.BannerDefaults
+import com.programmersbox.sharedcomponents.notifier.BannerId
+import com.programmersbox.sharedcomponents.notifier.InAppNotifier
 import dev.chrisbanes.haze.HazeProgressive
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
@@ -137,6 +137,8 @@ import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.all
+import otakuworld.kmpuiviews.generated.resources.banner_more_options
+import otakuworld.kmpuiviews.generated.resources.banner_source_missing
 import otakuworld.kmpuiviews.generated.resources.cancel
 import otakuworld.kmpuiviews.generated.resources.clear_all
 import otakuworld.kmpuiviews.generated.resources.clear_all_history
@@ -171,7 +173,9 @@ fun HistoryUi(
     vm: HistoryViewModel = koinViewModel(),
 ) {
     val scope = rememberCoroutineScope()
-    val snackbarHostState = remember { SnackbarHostState() }
+    val notifier = koinInject<InAppNotifier>()
+    val missingLabel = stringResource(Res.string.banner_source_missing)
+    val moreOptionsLabel = stringResource(Res.string.banner_more_options)
     val biometrics = rememberBiometricOpening()
     val sourceRepository = LocalSourcesRepository.current
     val navController = LocalNavActions.current
@@ -195,42 +199,40 @@ fun HistoryUi(
         if (toRemove.isNotEmpty()) {
             val batch = vm.removeWithUndo(toRemove)
             scope.launch {
-                snackbarHostState.currentSnackbarData?.dismiss()
                 var undone = false
+                var banner: BannerId? = null
                 try {
                     val message = toRemove.singleOrNull()
                         ?.let { getString(Res.string.removed, it.title) }
                         ?: getString(Res.string.history_removed_count, toRemove.size)
-                    val result = snackbarHostState.showSnackbar(
-                        message = message,
-                        actionLabel = getString(Res.string.undo),
-                        withDismissAction = true,
-                        duration = SnackbarDuration.Short,
+                    banner = notifier.info(
+                        title = message,
+                        action = getString(Res.string.undo),
+                        onAction = {
+                            undone = true
+                            vm.undoRemoval(batch)
+                        },
                     )
-                    undone = result == SnackbarResult.ActionPerformed
-                    if (undone) vm.undoRemoval(batch)
+                    delay(BannerDefaults.WithActionMillis)
                 } finally {
-                    // Also runs when the screen leaves composition mid-snackbar.
-                    if (!undone) vm.commitRemoval(batch)
+                    // Also runs when the screen leaves composition mid-banner.
+                    if (!undone) {
+                        banner?.let(notifier::dismiss)
+                        vm.commitRemoval(batch)
+                    }
                 }
             }
         }
     }
 
     val onError: (RecentModel) -> Unit = { item ->
-        scope.launch {
-            snackbarHostState.currentSnackbarData?.dismiss()
-            val result = snackbarHostState.showSnackbar(
-                "Something went wrong. Source might not be installed",
-                duration = SnackbarDuration.Long,
-                actionLabel = "More Options",
-                withDismissAction = true
-            )
-            showRecentModel = when (result) {
-                SnackbarResult.Dismissed -> null
-                SnackbarResult.ActionPerformed -> item
-            }
-        }
+        notifier.sourceMissing(
+            title = item.title,
+            sourceName = item.source,
+            missingLabel = missingLabel,
+            moreOptionsLabel = moreOptionsLabel,
+            onMoreOptions = { showRecentModel = item },
+        )
     }
 
     val openItem: (RecentModel) -> Unit = { item ->
@@ -318,16 +320,8 @@ fun HistoryUi(
     BackHandler(vm.isSelecting) { vm.clearSelection() }
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
-    val navHostPadding = LocalNavHostPadding.current
-
     OtakuHazeScaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        snackbarHost = {
-            SnackbarHost(
-                snackbarHostState,
-                modifier = Modifier.padding(navHostPadding)
-            )
-        },
         topBar = {
             Column {
                 AnimatedContent(

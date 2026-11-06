@@ -32,10 +32,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scrim
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarDefaults
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -83,6 +79,7 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
+import com.programmersbox.sharedcomponents.notifier.InAppNotifier
 import org.koin.compose.koinInject
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.added_to_list
@@ -124,7 +121,7 @@ fun DetailsView(
     val settingsHandling = koinInject<NewSettingsHandling>()
     val swipeBehavior by settingsHandling.detailsChapterSwipeBehavior.rememberPreference()
 
-    val hostState = remember { SnackbarHostState() }
+    val notifier = koinInject<InAppNotifier>()
 
     val listState = rememberLazyListState()
 
@@ -151,7 +148,6 @@ fun DetailsView(
         showListsChange = { showLists = it },
         info = info,
         listDao = listDao,
-        hostState = hostState,
         scope = scope,
     )
 
@@ -230,13 +226,11 @@ fun DetailsView(
                                                 info.source.serviceName
                                             )
                                         } == true
-                                        hostState.showSnackbar(
-                                            getString(
-                                                if (result) Res.string.added_to_list else Res.string.already_in_list,
-                                                getString(Res.string.for_later)
-                                            ),
-                                            withDismissAction = true
+                                        val message = getString(
+                                            if (result) Res.string.added_to_list else Res.string.already_in_list,
+                                            getString(Res.string.for_later)
                                         )
+                                        if (result) notifier.success(message) else notifier.info(message)
                                     }
                                 },
                                 onNoteClick = { showNoteSheet = true },
@@ -291,16 +285,6 @@ fun DetailsView(
                 onFabMenuExpandedChange = { fabMenuExpanded = it },
                 modifier = Modifier.padding(LocalNavHostPadding.current)
             )
-        },
-        snackbarHost = {
-            SnackbarHost(hostState) { data ->
-                val font = SnackbarDefaults.contentColor
-                Snackbar(
-                    containerColor = MaterialTheme.colorScheme.onSurface,
-                    contentColor = font,
-                    snackbarData = data
-                )
-            }
         },
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
     ) { p ->
@@ -417,7 +401,6 @@ fun DetailsView(
                 detailsActions = detailsActions,
                 downloadStates = downloadStates,
                 canDownload = info.source.canDownload,
-                snackbarHostState = hostState,
             )
         }
 

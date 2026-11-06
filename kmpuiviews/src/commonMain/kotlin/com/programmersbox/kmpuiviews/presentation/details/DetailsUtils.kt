@@ -46,7 +46,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleFloatingActionButton
 import androidx.compose.material3.ToggleFloatingActionButtonDefaults.animateIcon
@@ -89,6 +88,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import com.programmersbox.sharedcomponents.notifier.InAppNotifier
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
@@ -110,10 +110,10 @@ internal fun AddToList(
     showListsChange: (Boolean) -> Unit,
     info: KmpInfoModel,
     listDao: ListRepository,
-    hostState: SnackbarHostState?,
     scope: CoroutineScope,
 ) {
     if (showLists) {
+        val notifier = koinInject<InAppNotifier>()
         val sheetState = rememberModalBottomSheetState(true)
         BackHandler { showListsChange(false) }
 
@@ -138,10 +138,7 @@ internal fun AddToList(
                             )
                         }
                         sheetState.hide()
-                        hostState?.showSnackbar(
-                            addedToListsMessage(added),
-                            withDismissAction = true
-                        )
+                        notifier.success(addedToListsMessage(added))
                     }.invokeOnCompletion { showListsChange(false) }
                 },
                 navigationIcon = {
