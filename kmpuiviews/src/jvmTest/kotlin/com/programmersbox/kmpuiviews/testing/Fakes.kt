@@ -166,13 +166,18 @@ class FakeBackgroundWorkHandler : BackgroundWorkHandler {
 class FakeTranslationModelHandler(
     override val isAvailable: Boolean = true,
     initial: List<TranslationModel> = emptyList(),
+    private val deleteError: Exception? = null,
+    private val refreshError: Exception? = null,
 ) : TranslationModelHandler {
     override val models = MutableStateFlow(initial)
     val deleted = mutableListOf<Set<String>>()
     val downloads = mutableListOf<String>()
     val cancelled = mutableListOf<String>()
 
-    override suspend fun refresh() {}
+    override suspend fun refresh() {
+        refreshError?.let { throw it }
+    }
+
     override fun download(code: String) {
         downloads += code
     }
@@ -182,6 +187,7 @@ class FakeTranslationModelHandler(
     }
 
     override suspend fun delete(codes: Set<String>) {
+        deleteError?.let { throw it }
         deleted += codes
         models.value = models.value.map {
             if (it.language.code in codes) it.copy(state = ModelState.NotDownloaded) else it

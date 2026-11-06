@@ -8,6 +8,8 @@ import com.programmersbox.kmpuiviews.domain.TranslationLanguage
 import com.programmersbox.kmpuiviews.domain.TranslationLanguages
 import com.programmersbox.kmpuiviews.domain.TranslationModel
 import com.programmersbox.kmpuiviews.domain.TranslationModelHandler
+import com.programmersbox.sharedcomponents.notifier.InAppNotifier
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -46,6 +48,7 @@ private val EnglishFallback = TranslationLanguage("en", "English", "English", "E
 class TranslationViewModel(
     private val handler: TranslationModelHandler,
     private val settings: NewSettingsHandling,
+    private val notifier: InAppNotifier,
 ) : ViewModel() {
 
     private val ui = MutableStateFlow(UiState())
@@ -101,7 +104,15 @@ class TranslationViewModel(
     )
 
     init {
-        viewModelScope.launch { handler.refresh() }
+        viewModelScope.launch {
+            try {
+                handler.refresh()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                notifier.error(title = "Couldn't load translation models", subtitle = e.message)
+            }
+        }
     }
 
     private fun selectableCodes() = handler.models.value
@@ -121,7 +132,10 @@ class TranslationViewModel(
         }
     }
 
-    fun askDelete(code: String) = ui.update { it.copy(confirmingCode = code) }
+    fun askDelete(code: String) {
+        if (code !in selectableCodes()) return
+        ui.update { it.copy(confirmingCode = code) }
+    }
     fun cancelDelete() = ui.update { it.copy(confirmingCode = null) }
 
     fun confirmDelete() {
@@ -178,7 +192,14 @@ class TranslationViewModel(
 
     private fun deleteCodes(codes: Set<String>) {
         viewModelScope.launch {
-            handler.delete(codes)
+            try {
+                handler.delete(codes)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                notifier.error(title = "Couldn't delete", subtitle = e.message)
+                return@launch
+            }
             if (settings.translationTargetLanguage.get() in codes) {
                 settings.translationTargetLanguage.set("en")
             }

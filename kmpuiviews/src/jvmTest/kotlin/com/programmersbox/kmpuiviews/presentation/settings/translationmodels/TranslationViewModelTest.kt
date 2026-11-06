@@ -6,7 +6,10 @@ import com.programmersbox.kmpuiviews.domain.TranslationLanguages
 import com.programmersbox.kmpuiviews.domain.TranslationModel
 import com.programmersbox.kmpuiviews.testing.FakeTranslationModelHandler
 import com.programmersbox.kmpuiviews.testing.createTestNewSettingsHandling
+import com.programmersbox.sharedcomponents.notifier.DefaultInAppNotifier
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.resetMain
@@ -55,8 +58,10 @@ class TranslationViewModelTest {
         ),
     )
 
+    private val notifier = DefaultInAppNotifier(CoroutineScope(SupervisorJob() + Dispatchers.Default))
+
     private fun viewModel(handler: FakeTranslationModelHandler) =
-        TranslationViewModel(handler, settings)
+        TranslationViewModel(handler, settings, notifier)
             .also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -200,5 +205,42 @@ class TranslationViewModelTest {
         val vm = viewModel(FakeTranslationModelHandler(isAvailable = false))
 
         assertFalse(vm.state.value.available)
+    }
+
+    @Test fun `english cannot be deleted`() = runTest {
+        val handler = seeded()
+        val vm = viewModel(handler)
+
+        vm.askDelete("en")
+        vm.confirmDelete()
+        delay(200)
+
+        assertTrue(handler.deleted.isEmpty())
+        assertEquals(null, vm.state.value.confirmingCode)
+    }
+
+    @Test fun `delete failure shows error and keeps target`() = runTest {
+        val handler = FakeTranslationModelHandler(
+            initial = seeded().models.value,
+            deleteError = IllegalStateException("boom"),
+        )
+        val vm = viewModel(handler)
+        settings.translationTargetLanguage.set("ja")
+        awaitCondition { vm.state.value.target.code == "ja" }
+
+        vm.askDelete("ja")
+        awaitCondition { vm.state.value.confirmingCode == "ja" }
+        vm.confirmDelete()
+        awaitCondition { notifier.banners.value.any { it.title == "Couldn't delete" && it.subtitle == "boom" } }
+
+        assertEquals("ja", vm.state.value.target.code)
+    }
+
+    @Test fun `refresh failure shows error`() = runTest {
+        viewModel(FakeTranslationModelHandler(refreshError = IllegalStateException("nope")))
+
+        awaitCondition {
+            notifier.banners.value.any { it.title == "Couldn't load translation models" && it.subtitle == "nope" }
+        }
     }
 }
