@@ -101,7 +101,59 @@ class DesktopTranslationHandlerTest {
     }
 
     @Test
-    fun `translateDescription always ends progress false`() = runBlocking {
+    fun `generic engine exception returns input with banner`() = runBlocking {
+        notifier.dismissAll()
+        val engine = FakeEngine(EngineKind.Bergamot) { throw IllegalStateException("bad json") }
+        assertEquals("hola", handler("es", engine).translate("hola"))
+        assertEquals("bad json", notifier.banners.value.single().subtitle)
+    }
+
+    @Test
+    fun `cancellation propagates`() = runBlocking {
+        notifier.dismissAll()
+        val engine = FakeEngine(EngineKind.Bergamot) { throw kotlin.coroutines.cancellation.CancellationException("c") }
+        var thrown: Throwable? = null
+        try {
+            handler("es", engine).translate("hola")
+        } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+            thrown = e
+        }
+        assertTrue(thrown != null)
+        assertTrue(notifier.banners.value.isEmpty())
+    }
+
+    @Test
+    fun `clear cancels in-flight translateDescription`() = runBlocking {
+        val started = CompletableDeferred<Unit>()
+        val done = CompletableDeferred<Unit>()
+        val engine = object : TranslationEngine {
+            override val kind = EngineKind.Bergamot
+            override suspend fun targets() = listOf("en")
+            override suspend fun translate(text: String, source: String, target: String): String {
+                started.complete(Unit)
+                kotlinx.coroutines.awaitCancellation()
+            }
+        }
+        var out: String? = null
+        val progress = mutableListOf<Boolean>()
+        val h = handler("es", engine)
+        h.translateDescription(
+            "hola",
+            progress = {
+                progress += it
+                if (!it) done.complete(Unit)
+            },
+            translatedText = { out = it },
+        )
+        withTimeout(5_000) { started.await() }
+        h.clear()
+        withTimeout(5_000) { done.await() }
+        assertEquals(false, progress.last())
+        assertEquals(null, out)
+    }
+
+    @Test
+    fun `translateDescription always ends progress false`()= runBlocking {
         val engine = FakeEngine(EngineKind.Bergamot) { throw TranslationUnavailable("boom") }
         val done = CompletableDeferred<Unit>()
         val progress = mutableListOf<Boolean>()

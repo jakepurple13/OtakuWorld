@@ -8,7 +8,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
-import java.io.IOException
+import kotlinx.coroutines.withContext
+import kotlin.coroutines.cancellation.CancellationException
 
 class DesktopTranslationHandler(
     private val engines: Map<EngineKind, TranslationEngine>,
@@ -37,7 +38,7 @@ class DesktopTranslationHandler(
 
     override suspend fun translate(textToTranslate: String): String {
         val target = appSettings.translationTargetLanguage.get()
-        val source = detector.detect(textToTranslate)
+        val source = withContext(Dispatchers.Default) { detector.detect(textToTranslate) }
         if (source == null || source == target) return textToTranslate
         return try {
             val kind = runCatching { EngineKind.valueOf(settings.engine.get()) }
@@ -45,17 +46,16 @@ class DesktopTranslationHandler(
             val engine = engines[kind]
                 ?: throw TranslationUnavailable("Pick a translation engine in Settings → Translation")
             engine.translate(textToTranslate, source, target)
-        } catch (e: TranslationUnavailable) {
-            fail(e)
-            textToTranslate
-        } catch (e: IOException) {
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
             fail(e)
             textToTranslate
         }
     }
 
     private fun fail(e: Exception) {
-        notifier.error(title = "Couldn't translate", subtitle = e.message)
+        notifier.error(title = "Couldn't translate", subtitle = e.message ?: "Something went wrong")
     }
 
     override fun clear() {
