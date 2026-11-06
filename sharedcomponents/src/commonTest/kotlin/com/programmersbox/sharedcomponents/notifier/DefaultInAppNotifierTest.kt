@@ -175,14 +175,28 @@ class DefaultInAppNotifierTest {
     }
 
     @Test
-    fun concurrentPerformActionRunsOnce() = runTest {
+    fun reentrantPerformActionRunsOnce() = runTest {
         val n = notifier()
         var count = 0
-        val id = n.success("A", action = "Go", onAction = { count++ })
-        n.performAction(id)
+        var id: BannerId? = null
+        id = n.success("A", action = "Go", onAction = {
+            count++
+            if (count < 5) n.performAction(id!!)
+        })
         n.performAction(id)
         runCurrent()
         assertEquals(1, count)
+    }
+
+    @Test
+    fun keyedReplacementPostedByActionSurvives() = runTest {
+        val n = notifier()
+        val id = n.error("Failed", key = "k", action = "Retry", onAction = {
+            n.error("Retry failed", key = "k")
+        })
+        n.performAction(id)
+        runCurrent()
+        assertEquals(listOf("Retry failed"), n.titles())
     }
 
     @Test

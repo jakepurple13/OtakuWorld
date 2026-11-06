@@ -114,6 +114,11 @@ class DefaultInAppNotifier(
         val banner = state.value.firstOrNull { it.id == id } ?: return
         // Claim atomically so two concurrent calls cannot both run the action.
         if (id in acting.getAndUpdate { it + id }) return
+        // A concurrent call may have run and removed this banner after we read it.
+        if (state.value.none { it === banner }) {
+            acting.update { it - id }
+            return
+        }
         // Start before the banner leaves state: the action's synchronous prefix (e.g. the
         // "undone" flag showUndoable reads) must run before any collector sees the removal.
         scope.launch(start = CoroutineStart.UNDISPATCHED) {
@@ -121,7 +126,9 @@ class DefaultInAppNotifier(
                 .onFailure { if (it is kotlinx.coroutines.CancellationException) throw it }
                 .onFailure { println("InAppNotifier: action for '${banner.title}' failed: $it") }
         }
-        dismiss(id)
+        // Remove only the acted-on instance: the action may have posted a keyed replacement under the same id.
+        state.update { list -> list.filterNot { it === banner } }
+        prune()
         acting.update { it - id }
     }
 
