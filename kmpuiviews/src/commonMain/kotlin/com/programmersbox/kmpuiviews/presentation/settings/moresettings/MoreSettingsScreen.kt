@@ -26,7 +26,7 @@ import kotlinx.coroutines.flow.onEach
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import otakuworld.kmpuiviews.generated.resources.Res
-import otakuworld.kmpuiviews.generated.resources.banner_couldnt_import
+import otakuworld.kmpuiviews.generated.resources.banner_error
 import otakuworld.kmpuiviews.generated.resources.more_settings
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,14 +36,14 @@ fun MoreSettingsScreen(
 ) {
     val navController = LocalNavActions.current
     val progressBanner = rememberScreenProgressBanner()
-    val couldntImport = stringResource(Res.string.banner_couldnt_import)
+    val errorTitle = stringResource(Res.string.banner_error)
 
     LaunchedEffect(Unit) {
         snapshotFlow { viewModel.importExportListStatus }
             .onEach {
                 when (it) {
                     is ImportExportListStatus.Error -> {
-                        progressBanner.error(couldntImport, "Error: ${it.throwable.message}")
+                        progressBanner.error(errorTitle, "Error: ${it.throwable.message}")
                         viewModel.importExportListStatus = ImportExportListStatus.Idle
                     }
 
@@ -54,7 +54,7 @@ fun MoreSettingsScreen(
 
                     ImportExportListStatus.Loading -> progressBanner.start("Working...")
 
-                    else -> {}
+                    else -> progressBanner.dismissIfRunning()
                 }
             }
             .launchIn(this)

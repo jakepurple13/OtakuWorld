@@ -30,11 +30,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -64,7 +66,7 @@ private val CardShape = RoundedCornerShape(26.dp)
 
 /**
  * Root overlay for quick actions: scrim, the card (grown from the bolt, or centered when opened
- * from the keyboard) and and sends update-check banners. Place it last inside the root
+ * from the keyboard) and sends update-check banners. Place it last inside the root
  * [SharedTransitionScope] so the card shares bounds with [QuickActionsBolt].
  */
 @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalComposeUiApi::class)
@@ -189,6 +191,8 @@ private fun QuickActionsBanners(
     val checkState = state.checkState
     val userRequested = state.userRequested
     var handle by remember { mutableStateOf<ProgressHandle?>(null) }
+    val currentHandle by rememberUpdatedState(handle)
+    DisposableEffect(Unit) { onDispose { currentHandle?.dismiss() } }
 
     // Keyed on the phase, not the state: progress ticks update the running banner in place.
     val phase: Any = when (checkState) {
@@ -206,32 +210,32 @@ private fun QuickActionsBanners(
                 handle = notifier.progress(getString(Res.string.qa_checking_indeterminate))
             }
             is ManualCheckState.Finished -> {
+                val onViewAction: suspend () -> Unit = { onView() }
+                // Resolve strings before taking the handle: a cancellation in between would orphan it
+                val outcome = checkState.outcome
+                val title = when (outcome) {
+                    is CheckOutcome.Updates -> getString(Res.string.qa_new_updates, outcome.count)
+                    CheckOutcome.NoUpdates -> getString(Res.string.qa_no_updates)
+                    CheckOutcome.SourcesFailed -> getString(Res.string.qa_sources_failed)
+                    // No report was written, so there is nothing to view
+                    CheckOutcome.CheckFailed -> getString(Res.string.qa_check_failed)
+                }
+                val view = if (outcome == CheckOutcome.SourcesFailed) getString(Res.string.qa_view) else null
                 val progress = handle
                 handle = null
-                val onViewAction: suspend () -> Unit = { onView() }
-                when (val outcome = checkState.outcome) {
-                    is CheckOutcome.Updates -> {
-                        val title = getString(Res.string.qa_new_updates, outcome.count)
+                when (outcome) {
+                    is CheckOutcome.Updates ->
                         if (progress != null) progress.success(title) else notifier.success(title)
-                    }
 
-                    CheckOutcome.NoUpdates -> {
-                        val title = getString(Res.string.qa_no_updates)
+                    CheckOutcome.NoUpdates ->
                         if (progress != null) progress.info(title) else notifier.info(title)
-                    }
 
-                    CheckOutcome.SourcesFailed -> {
-                        val title = getString(Res.string.qa_sources_failed)
-                        val view = getString(Res.string.qa_view)
+                    CheckOutcome.SourcesFailed ->
                         if (progress != null) progress.error(title, action = view, onAction = onViewAction)
                         else notifier.error(title, action = view, onAction = onViewAction)
-                    }
 
-                    // No report was written, so there is nothing to view
-                    CheckOutcome.CheckFailed -> {
-                        val title = getString(Res.string.qa_check_failed)
+                    CheckOutcome.CheckFailed ->
                         if (progress != null) progress.error(title) else notifier.error(title)
-                    }
                 }
                 onResultDismissed()
             }
