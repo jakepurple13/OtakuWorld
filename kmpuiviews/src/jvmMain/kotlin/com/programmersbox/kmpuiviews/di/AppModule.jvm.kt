@@ -19,6 +19,9 @@ import com.programmersbox.kmpuiviews.translation.DesktopTranslationHandler
 import com.programmersbox.kmpuiviews.translation.DesktopTranslationSettings
 import com.programmersbox.kmpuiviews.translation.LanguageDetector
 import com.programmersbox.kmpuiviews.translation.LibraryLanguageDetector
+import com.programmersbox.kmpuiviews.translation.TranslationEngine
+import com.programmersbox.kmpuiviews.translation.ollama.OllamaClient
+import com.programmersbox.kmpuiviews.translation.ollama.OllamaEngine
 import com.programmersbox.kmpuiviews.TranslationModelHandlerImpl
 import com.programmersbox.kmpuiviews.domain.TranslationHandler
 import com.programmersbox.kmpuiviews.domain.TranslationModelHandler
@@ -32,7 +35,9 @@ import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstaller
 import com.programmersbox.kmpuiviews.utils.ImageModifier
 import com.programmersbox.kmpuiviews.utils.Zipper
+import io.ktor.client.HttpClient
 import org.koin.core.module.Module
+import org.koin.core.qualifier.named
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
@@ -53,10 +58,12 @@ actual fun platformModule(): Module = module {
     singleOf(::BackgroundWorkHandlerImpl) { bind<BackgroundWorkHandler>() }
     single { DesktopTranslationSettings(get()) }
     single<LanguageDetector> { LibraryLanguageDetector() }
-    // Engines are registered as single<TranslationEngine> by later tasks; none yet.
+    single { OllamaClient(HttpClient(), get()) }
+    // Later engines register their own single<TranslationEngine> (distinct qualifier); handler maps them by kind.
+    single<TranslationEngine>(named("ollama")) { OllamaEngine(get(), get()) }
     factory<TranslationHandler> {
         DesktopTranslationHandler(
-            engines = emptyMap(),
+            engines = getAll<TranslationEngine>().associateBy { it.kind },
             detector = get(),
             settings = get(),
             appSettings = get(),
