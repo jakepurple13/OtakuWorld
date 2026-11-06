@@ -262,3 +262,5 @@ class MangaDesktopSettings(
         defaultValue = ""
     )
 }
+
+actual val hasTranslationSettingsPage: Boolean = true

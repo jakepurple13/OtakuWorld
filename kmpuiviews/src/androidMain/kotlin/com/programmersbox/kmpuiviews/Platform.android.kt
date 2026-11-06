@@ -364,3 +364,5 @@ actual class SystemAlerter(
 actual fun ReportDrawnWhen(predicate: () -> Boolean) {
     androidx.activity.compose.ReportDrawnWhen(predicate)
 }
+
+actual val hasTranslationSettingsPage: Boolean = false

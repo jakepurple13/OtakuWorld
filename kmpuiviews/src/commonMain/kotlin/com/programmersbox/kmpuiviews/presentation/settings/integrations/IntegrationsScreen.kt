@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
+import com.programmersbox.kmpuiviews.hasTranslationSettingsPage
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroupListItem
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
 import com.programmersbox.kmpuiviews.presentation.settings.translationmodels.showTranslationScreen
@@ -44,7 +45,7 @@ fun IntegrationsScreen(
             segmentedListItem(
                 content = { Text(stringResource(Res.string.viewTranslationModels)) },
                 leadingContent = { Icon(Icons.Default.Language, null) },
-                onClick = { showTranslation = true },
+                onClick = { if (hasTranslationSettingsPage) navActions.translationSettings() else showTranslation = true },
             )
             apply(composeSettingsDsl.integrationsSettings)
         }

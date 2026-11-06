@@ -157,7 +157,7 @@ internal fun groupShape(index: Int, count: Int): Shape {
 // ---------- shared bits ----------
 
 @Composable
-private fun LanguageAvatar(glyph: String, downloaded: Boolean) {
+internal fun LanguageAvatar(glyph: String, downloaded: Boolean) {
     val colors = MaterialTheme.colorScheme
     Box(
         contentAlignment = Alignment.Center,
@@ -175,7 +175,7 @@ private fun LanguageAvatar(glyph: String, downloaded: Boolean) {
 }
 
 @Composable
-private fun SmallChip(text: String, container: Color, content: Color) {
+internal fun SmallChip(text: String, container: Color, content: Color) {
     Surface(shape = RoundedCornerShape(6.dp), color = container, contentColor = content) {
         Text(
             text,
@@ -653,7 +653,7 @@ private fun DeleteConfirm(
 }
 
 @Composable
-private fun ConfirmActions(confirmText: String, onCancel: () -> Unit, onConfirm: () -> Unit) {
+internal fun ConfirmActions(confirmText: String, onCancel: () -> Unit, onConfirm: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),

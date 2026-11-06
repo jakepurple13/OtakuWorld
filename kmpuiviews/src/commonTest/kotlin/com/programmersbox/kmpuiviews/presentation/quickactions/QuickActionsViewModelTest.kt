@@ -136,6 +136,7 @@ private class RecordingNav : NavigationActions {
     override fun discover() = Unit
     override fun sources() = Unit
     override fun integrations() = Unit
+    override fun translationSettings() = Unit
     override fun appearance() = Unit
     override fun colors() = Unit
     override fun behaviorSettings() = Unit
