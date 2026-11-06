@@ -46,6 +46,11 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 
 #### New Features
 
+- In-app banners: messages that used to appear as snackbars and toasts now show as a floating
+  banner stack above the screen, on every screen. Banners can carry Undo or Retry actions, swipe
+  away to dismiss, expand when tapped, and fan out when several are showing, with a Clear all
+  button. Progress banners turn into their result in place. On Desktop the stack sits at the top
+  right under the title bar
 - Quick actions: a bolt button in the top bar on Recent and Settings opens a card with
   Check for updates, Scan QR code, and Background tasks. Checking for updates runs in place with
   progress in a snackbar. On Desktop, press Cmd/Ctrl+K or use the Actions menu. Desktop update
