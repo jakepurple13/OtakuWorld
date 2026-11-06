@@ -103,6 +103,7 @@ import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.DateTimeFormatHandler
+import com.programmersbox.kmpuiviews.notifier.showUndoable
 import com.programmersbox.kmpuiviews.notifier.sourceMissing
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.Screen
@@ -126,13 +127,10 @@ import com.programmersbox.kmpuiviews.utils.composables.sharedelements.SharedItem
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.customSharedElement
 import com.programmersbox.kmpuiviews.utils.dispatchIo
 import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
-import com.programmersbox.sharedcomponents.notifier.BannerDefaults
-import com.programmersbox.sharedcomponents.notifier.BannerId
 import com.programmersbox.sharedcomponents.notifier.InAppNotifier
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
@@ -264,26 +262,18 @@ fun NotificationScreen(
             val batch = vm.deleteWithUndo(toDelete)
             scope.launch {
                 var undone = false
-                var banner: BannerId? = null
                 try {
                     val message = toDelete.singleOrNull()
                         ?.let { getString(Res.string.deleted_notification, it.notiTitle) }
                         ?: getString(Res.string.deleted_notification_count, toDelete.size)
-                    banner = notifier.info(
+                    undone = notifier.showUndoable(
                         title = message,
-                        action = getString(Res.string.undo),
-                        onAction = {
-                            undone = true
-                            vm.undoDeletion(batch)
-                        },
+                        undoLabel = getString(Res.string.undo),
+                        onUndo = { vm.undoDeletion(batch) },
                     )
-                    delay(BannerDefaults.WithActionMillis)
                 } finally {
                     // Also runs when the screen leaves composition mid-banner.
-                    if (!undone) {
-                        banner?.let(notifier::dismiss)
-                        vm.commitDeletion(batch)
-                    }
+                    if (!undone) vm.commitDeletion(batch)
                 }
             }
         }

@@ -97,6 +97,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.datastore.ColorBlindnessType
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.RecentModel
+import com.programmersbox.kmpuiviews.notifier.showUndoable
 import com.programmersbox.kmpuiviews.notifier.sourceMissing
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.components.AnimatedSelectedText
@@ -119,11 +120,8 @@ import com.programmersbox.kmpuiviews.utils.composables.sharedelements.SharedItem
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.customSharedElement
 import com.programmersbox.kmpuiviews.utils.dispatchIo
 import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
-import com.programmersbox.sharedcomponents.notifier.BannerDefaults
-import com.programmersbox.sharedcomponents.notifier.BannerId
 import com.programmersbox.sharedcomponents.notifier.InAppNotifier
 import dev.chrisbanes.haze.HazeProgressive
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
@@ -200,26 +198,18 @@ fun HistoryUi(
             val batch = vm.removeWithUndo(toRemove)
             scope.launch {
                 var undone = false
-                var banner: BannerId? = null
                 try {
                     val message = toRemove.singleOrNull()
                         ?.let { getString(Res.string.removed, it.title) }
                         ?: getString(Res.string.history_removed_count, toRemove.size)
-                    banner = notifier.info(
+                    undone = notifier.showUndoable(
                         title = message,
-                        action = getString(Res.string.undo),
-                        onAction = {
-                            undone = true
-                            vm.undoRemoval(batch)
-                        },
+                        undoLabel = getString(Res.string.undo),
+                        onUndo = { vm.undoRemoval(batch) },
                     )
-                    delay(BannerDefaults.WithActionMillis)
                 } finally {
                     // Also runs when the screen leaves composition mid-banner.
-                    if (!undone) {
-                        banner?.let(notifier::dismiss)
-                        vm.commitRemoval(batch)
-                    }
+                    if (!undone) vm.commitRemoval(batch)
                 }
             }
         }
