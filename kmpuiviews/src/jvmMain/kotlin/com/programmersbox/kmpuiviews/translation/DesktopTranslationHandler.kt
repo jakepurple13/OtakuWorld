@@ -37,10 +37,11 @@ class DesktopTranslationHandler(
     }
 
     override suspend fun translate(textToTranslate: String): String {
-        val target = appSettings.translationTargetLanguage.get()
-        val source = withContext(Dispatchers.Default) { detector.detect(textToTranslate) }
-        if (source == null || source == target) return textToTranslate
         return try {
+            // Detection and settings reads can throw too (profile load, disk); keep them inside the catch.
+            val target = appSettings.translationTargetLanguage.get()
+            val source = withContext(Dispatchers.Default) { detector.detect(textToTranslate) }
+            if (source == null || source == target) return textToTranslate
             val kind = runCatching { EngineKind.valueOf(settings.engine.get()) }
                 .getOrDefault(EngineKind.Ollama)
             val engine = engines[kind]

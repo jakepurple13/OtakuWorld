@@ -60,7 +60,7 @@ actual fun platformModule(): Module = module {
     singleOf(::DownloadAndInstaller)
     singleOf(::BackupResultsHolder)
     singleOf(::BackgroundWorkHandlerImpl) { bind<BackgroundWorkHandler>() }
-    single { DesktopTranslationSettings(get()) }
+    single { DesktopTranslationSettings() }
     single<LanguageDetector> { LibraryLanguageDetector() }
     single { OllamaClient(HttpClient { installOllamaTimeouts() }, get()) }
     // Later engines register their own single<TranslationEngine> (distinct qualifier); handler maps them by kind.

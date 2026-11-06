@@ -1,6 +1,5 @@
 package com.programmersbox.kmpuiviews.translation
 
-import ca.gosyer.appdirs.AppDirs
 import com.programmersbox.kmpuiviews.testing.createTestDataStoreHandling
 import com.programmersbox.kmpuiviews.testing.createTestNewSettingsHandling
 import com.programmersbox.sharedcomponents.notifier.DefaultInAppNotifier
@@ -40,12 +39,7 @@ class DesktopTranslationHandlerTest {
     @BeforeTest
     fun setUp() {
         createTestDataStoreHandling()
-        settings = DesktopTranslationSettings(
-            AppDirs {
-                appName = "test"
-                appAuthor = "test"
-            }
-        )
+        settings = DesktopTranslationSettings()
     }
 
     private fun handler(detected: String?, vararg engines: TranslationEngine) = DesktopTranslationHandler(
@@ -116,6 +110,24 @@ class DesktopTranslationHandlerTest {
         val engine = FakeEngine(EngineKind.Ollama) { throw IllegalStateException("bad json") }
         assertEquals("hola", handler("es", engine).translate("hola"))
         assertEquals("bad json", notifier.banners.value.single().subtitle)
+    }
+
+    @Test
+    fun `detector failure returns input with banner`() = runBlocking {
+        notifier.dismissAll()
+        val engine = FakeEngine(EngineKind.Ollama)
+        val h = DesktopTranslationHandler(
+            engines = mapOf(EngineKind.Ollama to engine),
+            detector = object : LanguageDetector {
+                override fun detect(text: String): String? = throw IllegalStateException("profiles missing")
+            },
+            settings = settings,
+            appSettings = appSettings,
+            notifier = notifier,
+        )
+        assertEquals("hola", h.translate("hola"))
+        assertTrue(engine.calls.isEmpty())
+        assertEquals("profiles missing", notifier.banners.value.single().subtitle)
     }
 
     @Test

@@ -1,6 +1,5 @@
 package com.programmersbox.kmpuiviews.translation.custom
 
-import ca.gosyer.appdirs.AppDirs
 import com.programmersbox.kmpuiviews.testing.createTestDataStoreHandling
 import com.programmersbox.kmpuiviews.translation.DesktopTranslationSettings
 import com.programmersbox.kmpuiviews.translation.TranslationUnavailable
@@ -31,7 +30,7 @@ class OpenAiCompatClientTest {
     @BeforeTest
     fun setUp() {
         createTestDataStoreHandling()
-        settings = DesktopTranslationSettings(AppDirs { appName = "test"; appAuthor = "test" })
+        settings = DesktopTranslationSettings()
         runBlocking {
             settings.customServerUrl.set("http://localhost:1234/v1/")
             settings.customServerModel.set("m")

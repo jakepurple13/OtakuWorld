@@ -1,7 +1,6 @@
 package com.programmersbox.kmpuiviews.translation.ui
 
 import androidx.lifecycle.ViewModelStore
-import ca.gosyer.appdirs.AppDirs
 import com.programmersbox.kmpuiviews.testing.createTestDataStoreHandling
 import com.programmersbox.kmpuiviews.testing.createTestNewSettingsHandling
 import com.programmersbox.kmpuiviews.translation.DesktopTranslationSettings
@@ -93,7 +92,7 @@ class DesktopTranslationViewModelTest {
     fun setUp() {
         Dispatchers.setMain(Dispatchers.Default)
         createTestDataStoreHandling()
-        settings = DesktopTranslationSettings(AppDirs { appName = "test"; appAuthor = "test" })
+        settings = DesktopTranslationSettings()
         runBlocking {
             settings.engine.set(EngineKind.Ollama.name)
             settings.ollamaModel.set("qwen2.5:7b")

@@ -36,6 +36,7 @@ import kotlinx.serialization.json.put
 
 private const val STATUS_TIMEOUT_MS = 5_000L
 private const val CHAT_TIMEOUT_MS = 5 * 60_000L
+private const val DELETE_TIMEOUT_MS = 30_000L // removing a multi-GB model can take a while on slow disks
 private const val CONNECT_TIMEOUT_MS = 5_000L
 
 /** Ollama HttpClient config: short connect timeout; per-call timeouts are set on each request. */
@@ -115,6 +116,7 @@ class OllamaClient(
     suspend fun delete(name: String) {
         val base = baseUrl()
         val response = http.delete("$base/api/delete") {
+            timeout { requestTimeoutMillis = DELETE_TIMEOUT_MS }
             contentType(ContentType.Application.Json)
             setBody(buildJsonObject { put("model", name) }.toString())
         }

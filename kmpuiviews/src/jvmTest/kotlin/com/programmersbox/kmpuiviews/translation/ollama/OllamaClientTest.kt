@@ -1,6 +1,5 @@
 package com.programmersbox.kmpuiviews.translation.ollama
 
-import ca.gosyer.appdirs.AppDirs
 import com.programmersbox.kmpuiviews.testing.createTestDataStoreHandling
 import com.programmersbox.kmpuiviews.translation.DesktopTranslationSettings
 import com.programmersbox.kmpuiviews.translation.EngineKind
@@ -34,7 +33,7 @@ class OllamaClientTest {
     @BeforeTest
     fun setUp() {
         createTestDataStoreHandling()
-        settings = DesktopTranslationSettings(AppDirs { appName = "test"; appAuthor = "test" })
+        settings = DesktopTranslationSettings()
         runBlocking {
             settings.ollamaUrl.set("http://localhost:11434")
             settings.ollamaModel.set("")

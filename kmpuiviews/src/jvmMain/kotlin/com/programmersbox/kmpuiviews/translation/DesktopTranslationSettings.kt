@@ -1,12 +1,9 @@
 package com.programmersbox.kmpuiviews.translation
 
 import androidx.datastore.preferences.core.stringPreferencesKey
-import ca.gosyer.appdirs.AppDirs
 import com.programmersbox.datastore.DataStoreHandler
 
-class DesktopTranslationSettings(
-    @Suppress("unused") appDirs: AppDirs,
-) {
+class DesktopTranslationSettings {
     /** [EngineKind] name. An unknown stored value (e.g. the removed "Bergamot") reads as Ollama. */
     val engine = DataStoreHandler(
         key = stringPreferencesKey("translationEngine"),
