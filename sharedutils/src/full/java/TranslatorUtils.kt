@@ -1,166 +1,84 @@
 package com.programmersbox.sharedutils
 
+import android.content.Context
 import com.google.mlkit.common.model.DownloadConditions
 import com.google.mlkit.common.model.RemoteModelManager
 import com.google.mlkit.nl.languageid.LanguageIdentification
-import com.google.mlkit.nl.translate.*
+import com.google.mlkit.nl.translate.TranslateLanguage
+import com.google.mlkit.nl.translate.TranslateRemoteModel
+import com.google.mlkit.nl.translate.Translation
+import com.google.mlkit.nl.translate.Translator
+import com.google.mlkit.nl.translate.TranslatorOptions
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.tasks.await
 
 class TranslateItems {
-    private var englishTranslator: Translator? = null
+    private var translator: Translator? = null
+    private var translatorKey: Pair<String, String>? = null
+    private val mutex = Mutex()
 
-    val languageIdentifier = LanguageIdentification.getClient()
+    private val languageIdentifier by lazy { LanguageIdentification.getClient() }
 
-    fun translateDescription(textToTranslate: String, progress: (Boolean) -> Unit, translatedText: (String) -> Unit) {
-        progress(true)
-        languageIdentifier.identifyLanguage(textToTranslate)
-            .addOnSuccessListener { languageCode ->
-                if (languageCode == "und") {
-                    println("Can't identify language.")
-                } else if (languageCode != "en") {
-                    println("Language: $languageCode")
+    /** Returns [text] unchanged when the language is unknown, already [target], or unsupported. */
+    suspend fun translate(text: String, target: String, onTranslated: suspend (source: String) -> Unit = {}): String {
+        val source = languageIdentifier.identifyLanguage(text).await()
+        if (!shouldTranslate(source, target)) return text
+        val sourceTag = TranslateLanguage.fromLanguageTag(source) ?: return text
+        val targetTag = TranslateLanguage.fromLanguageTag(target) ?: return text
 
-                    try {
-                        if (englishTranslator == null) {
-                            val options = TranslatorOptions.Builder()
-                                .setSourceLanguage(TranslateLanguage.fromLanguageTag(languageCode)!!)
-                                .setTargetLanguage(TranslateLanguage.ENGLISH)
-                                .build()
-                            englishTranslator = Translation.getClient(options)
-
-                            val conditions = DownloadConditions.Builder()
-                                .requireWifi()
-                                .build()
-
-                            englishTranslator!!.downloadModelIfNeeded(conditions)
-                                .addOnSuccessListener { _ ->
-                                    // Model downloaded successfully. Okay to start translating.
-                                    // (Set a flag, unhide the translation UI, etc.)
-                                    englishTranslator!!.translate(textToTranslate)
-                                        .addOnSuccessListener { translated ->
-                                            // Model downloaded successfully. Okay to start translating.
-                                            // (Set a flag, unhide the translation UI, etc.)
-
-                                            translatedText(translated)
-                                            progress(false)
-                                        }
-                                }
-                                .addOnFailureListener { exception ->
-                                    // Model couldn’t be downloaded or other internal error.
-                                    // ...
-                                    progress(false)
-                                }
-                        } else {
-                            englishTranslator!!.translate(textToTranslate)
-                                .addOnSuccessListener { translated ->
-                                    // Model downloaded successfully. Okay to start translating.
-                                    // (Set a flag, unhide the translation UI, etc.)
-
-                                    translatedText(translated)
-                                    progress(false)
-                                }
-                                .addOnFailureListener { progress(false) }
-                        }
-                    } catch (e: Exception) {
-                        progress(false)
-                    }
-
-                } else {
-                    progress(false)
-                }
+        return mutex.withLock {
+            val key = sourceTag to targetTag
+            if (translatorKey != key) {
+                translator?.close()
+                translator = Translation.getClient(
+                    TranslatorOptions.Builder()
+                        .setSourceLanguage(sourceTag)
+                        .setTargetLanguage(targetTag)
+                        .build()
+                )
+                translatorKey = key
             }
-            .addOnFailureListener {
-                // Model couldn’t be loaded or other internal error.
-                // ...
-                progress(false)
-            }
-    }
-
-    suspend fun translate(textToTranslate: String): String {
-        val language = languageIdentifier.identifyLanguage(textToTranslate).await()
-
-        println("Language: $language")
-
-        if (language == "und") return textToTranslate
-        if (language == "en") return textToTranslate
-
-        val options = TranslatorOptions.Builder()
-            .setSourceLanguage(TranslateLanguage.fromLanguageTag(language) ?: TranslateLanguage.JAPANESE)
-            .setTargetLanguage(TranslateLanguage.ENGLISH)
-            .build()
-
-        if (englishTranslator == null) {
-            englishTranslator = Translation.getClient(options)
+            val current = translator!!
+            current.downloadModelIfNeeded(DownloadConditions.Builder().requireWifi().build()).await()
+            current.translate(text).await().also { onTranslated(source) }
         }
-
-        englishTranslator
-            ?.downloadModelIfNeeded(
-                DownloadConditions.Builder()
-                    .requireWifi()
-                    .build()
-            )
-            ?.await()
-
-        return englishTranslator
-            ?.translate(textToTranslate)
-            ?.await()
-            ?: textToTranslate
     }
 
     fun clear() {
-        englishTranslator?.close()
-        englishTranslator = null
+        translator?.close()
+        translator = null
+        translatorKey = null
     }
 }
 
 object TranslatorUtils {
     private val modelManager by lazy { RemoteModelManager.getInstance() }
 
-    fun getModels(onSuccess: (List<CustomRemoteModel>) -> Unit) {
-        modelManager.getDownloadedModels(TranslateRemoteModel::class.java)
-            .addOnSuccessListener { models ->
-                onSuccess(
-                    models.mapNotNull {
-                        try {
-                            CustomRemoteModel(it.modelHash, it.language)
-                        } catch (e: Exception) {
-                            null
-                        }
-                    }
-                )
-            }
-            .addOnFailureListener { }
-    }
+    val isAvailable: Boolean = true
 
-    suspend fun modelList() = modelManager
+    /** Language tags of the translation models currently on the device. */
+    suspend fun downloadedCodes(): Set<String> = modelManager
         .getDownloadedModels(TranslateRemoteModel::class.java)
         .await()
-        .mapNotNull {
-            runCatching { CustomRemoteModel(it.modelHash, it.language) }
-                .onFailure { it.printStackTrace() }
-                .getOrNull()
-        }
+        .map { it.language }
+        .toSet()
 
-    suspend fun delete(model: CustomRemoteModel) {
+    /** Downloads one language model (Wi-Fi only). */
+    suspend fun download(code: String) {
         modelManager
-            .getDownloadedModels(TranslateRemoteModel::class.java)
+            .download(TranslateRemoteModel.Builder(code).build(), DownloadConditions.Builder().requireWifi().build())
             .await()
-            .find { it.modelHash == model.hash }
-            ?.let {
-                modelManager
-                    .deleteDownloadedModel(it)
-                    .await()
-            }
     }
 
-    suspend fun deleteModel(model: CustomRemoteModel) {
-        modelManager.getDownloadedModels(TranslateRemoteModel::class.java).await().find { it.modelHash == model.hash }?.let {
-            modelManager
-                .deleteDownloadedModel(it)
-                .addOnSuccessListener {}
-                .addOnFailureListener {}
-        }
+    suspend fun delete(code: String) {
+        modelManager.deleteDownloadedModel(TranslateRemoteModel.Builder(code).build()).await()
     }
+
+    /**
+     * On-disk size of one language model, or null so callers use an estimate.
+     * The ML Kit model directory layout was not verified on a device (no UI existed to trigger a
+     * download), so no per-language directory is assumed.
+     */
+    fun modelSizeBytes(context: Context, code: String): Long? = null
 }
-
-data class CustomRemoteModel(val hash: String?, val language: String)
