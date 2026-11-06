@@ -47,13 +47,14 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 #### New Features
 
 - In-app banners: messages that used to appear as snackbars and toasts now show as a floating
-  banner stack above the screen, on every screen. Banners can carry Undo or Retry actions, swipe
-  away to dismiss, expand when tapped, and fan out when several are showing, with a Clear all
-  button. Progress banners turn into their result in place. On Desktop the stack sits at the top
-  right under the title bar
+  banner stack above the screen. The QR code sheet keeps its own messages. Banners can carry Undo
+  or Retry actions, swipe away to dismiss, and fan out when you tap the stack while two or more
+  are showing, with a Clear all button. Progress banners turn into their result in place. On
+  Desktop and wide windows the stack sits at the top right; on narrow windows it sits at the top
+  center
 - Quick actions: a bolt button in the top bar on Recent and Settings opens a card with
   Check for updates, Scan QR code, and Background tasks. Checking for updates runs in place with
-  progress in a snackbar. On Desktop, press Cmd/Ctrl+K or use the Actions menu. Desktop update
+  progress in a banner. On Desktop, press Cmd/Ctrl+K or use the Actions menu. Desktop update
   checks now report progress and can't run twice at once
   ([#2674](https://github.com/jakepurple13/OtakuWorld/pull/2674))
 - AnimeWorld player styles: Classic (full-width bars), Floating (rounded pills and a control dock),
@@ -197,6 +198,8 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 
 #### Bug Fixes
 
+- Rows restored with Undo in History and Notifications now reappear in view, instead of staying
+  scrolled off the top
 - Fixed removing items from a custom list
   ([#2598](https://github.com/jakepurple13/OtakuWorld/pull/2598))
 - Fixed custom list items being soft-deleted by the parent list's id instead of their own
