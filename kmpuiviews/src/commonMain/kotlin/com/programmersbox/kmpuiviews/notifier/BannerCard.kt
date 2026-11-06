@@ -84,6 +84,7 @@ fun BannerCard(
     onDismiss: () -> Unit,
     onAction: () -> Unit,
     modifier: Modifier = Modifier,
+    paused: Boolean = false,
 ) {
     val (container, content) = bannerColors(banner.kind)
     Surface(
@@ -147,13 +148,13 @@ fun BannerCard(
                     )
                 }
             }
-            BannerProgressBar(banner, content, Modifier.graphicsLayer { alpha = contentAlpha })
+            BannerProgressBar(banner, content, paused, Modifier.graphicsLayer { alpha = contentAlpha })
         }
     }
 }
 
 @Composable
-private fun BannerProgressBar(banner: Banner, color: Color, modifier: Modifier) {
+private fun BannerProgressBar(banner: Banner, color: Color, paused: Boolean, modifier: Modifier) {
     val trackColor = color.copy(alpha = 0.15f)
     val barModifier = modifier
         .fillMaxWidth()
@@ -176,9 +177,11 @@ private fun BannerProgressBar(banner: Banner, color: Color, modifier: Modifier) 
 
         duration != null -> {
             val remaining = remember(banner) { Animatable(1f) }
-            LaunchedEffect(banner) {
-                remaining.snapTo(1f)
-                remaining.animateTo(0f, tween(duration.toInt(), easing = LinearEasing))
+            // Freezes while paused and resumes from where it stopped.
+            LaunchedEffect(banner, paused) {
+                if (!paused) {
+                    remaining.animateTo(0f, tween((duration * remaining.value).toInt(), easing = LinearEasing))
+                }
             }
             LinearProgressIndicator(
                 progress = { remaining.value },

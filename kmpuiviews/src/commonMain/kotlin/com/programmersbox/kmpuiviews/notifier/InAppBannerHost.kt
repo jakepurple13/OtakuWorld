@@ -77,6 +77,7 @@ fun InAppBannerHost(
 ) {
     val notifier = koinInject<InAppNotifier>()
     val banners by notifier.banners.collectAsState()
+    val pauseReasons by notifier.paused.collectAsState()
     var expanded by rememberSaveable { mutableStateOf(false) }
     val isExpanded = expanded && banners.size >= 2
 
@@ -211,6 +212,8 @@ fun InAppBannerHost(
                             contentAlpha = contentAlpha,
                             onDismiss = { notifier.dismiss(banner.id) },
                             onAction = { notifier.performAction(banner.id) },
+                            paused = PauseReason.Expanded in pauseReasons ||
+                                (PauseReason.Background in pauseReasons && banner.action == null),
                             modifier = if (index == 0 && !isExpanded && banners.size >= 2) {
                                 Modifier.clickable { expanded = true }
                             } else {
