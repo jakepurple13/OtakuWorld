@@ -5,6 +5,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
@@ -53,6 +54,16 @@ fun bergamotPlatformKey(
     }
     return "$os-$cpu".takeIf { it != "windows-arm64" && it != "linux-arm64" }
 }
+
+/**
+ * Bergamot joins translated sentences with the whitespace that followed each source sentence. Japanese and Chinese
+ * put none after `。`, so English output comes back glued: "quietly.Then she laughed." This adds a space where
+ * sentence punctuation (plus an optional closing quote or bracket) after a lowercase letter or digit runs straight
+ * into an uppercase letter or opening quote. Decimals ("3.14"), abbreviations ("e.g. this", "U.S.A.") are untouched.
+ */
+fun spaceBetweenSentences(text: String): String = sentenceGlue.replace(text, "$1 ")
+
+private val sentenceGlue = Regex("""(?<=[\p{Ll}\p{Nd}])([.!?]+[”’)\]]?)(?=[\p{Lu}“‘"(])""")
 
 /** The Marian options Firefox uses for its Bergamot models, plus this model's files. */
 internal fun bergamotConfigYaml(model: BergamotModelFiles): String = buildString {
@@ -133,21 +144,26 @@ class BergamotCliRuntime(
             ).start()
             try {
                 coroutineScope {
-                    // Drain both pipes concurrently so a chatty stderr can't block the process.
+                    // Pipes are written and drained concurrently so neither side can block the other.
                     val out = async { process.inputStream.readBytes().decodeToString() }
                     val err = async { process.errorStream.readBytes().decodeToString() }
-                    process.outputStream.use { it.write(text.toByteArray()) }
-                    if (!process.waitFor(timeoutSeconds, TimeUnit.SECONDS)) {
-                        // Kill first: the pipe readers above only finish once the process is gone.
+                    val write = async { process.outputStream.use { it.write(text.toByteArray()) } }
+                    try {
+                        val exited = runInterruptible { process.waitFor(timeoutSeconds, TimeUnit.SECONDS) }
+                        if (!exited) throw IOException("Translation timed out")
+                    } catch (t: Throwable) {
+                        // Timeout, cancellation or failure: kill first, because the pipe jobs above only finish once
+                        // the process is gone and coroutineScope waits for them.
                         process.destroyForcibly()
-                        throw IOException("Translation timed out")
+                        throw t
                     }
+                    write.await()
                     val stdout = out.await()
                     val stderr = err.await()
                     if (process.exitValue() != 0) {
                         throw IOException("Translator exited with ${process.exitValue()}: ${stderr.trim().takeLast(300)}")
                     }
-                    stdout.trim()
+                    spaceBetweenSentences(stdout.trim())
                 }
             } finally {
                 process.destroyForcibly()

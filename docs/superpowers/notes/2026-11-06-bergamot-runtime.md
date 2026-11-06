@@ -64,10 +64,10 @@ Source: `mozilla/translations` @ `8eada038fd45bbf6fa58a412b22f80c79887fabc`, `in
 
 | platform | translator download | status |
 |---|---|---|
-| macos-arm64 | 7.7 MB (stripped binary) | built and run locally |
+| macos-arm64 | 7.7 MB (stripped binary) | built and run locally with the same flags as the CI leg; the CI leg itself has not run |
 | macos-x64 | about 8–10 MB expected (intgemm + Accelerate) | not built |
-| linux-x64 | about 10–15 MB expected (intgemm + OpenBLAS, static) | not built |
-| windows-x64 | unknown (needs a BLAS: MKL or OpenBLAS via vcpkg) | not built; highest risk |
+| linux-x64 | about 10–15 MB expected (intgemm + OpenBLAS, `USE_STATIC_LIBS=ON`) | not built |
+| windows-x64 | unknown | not built; expected to fail until a BLAS step (MKL or OpenBLAS via vcpkg) is added |
 
 Models are separate downloads: about 55 MB per direction for ja↔en, uncompressed.
 
@@ -76,9 +76,11 @@ Models are separate downloads: about 55 MB per direction for ja↔en, uncompress
 `.github/workflows/bergamot-cli.yml` (`workflow_dispatch` with a `tag` input):
 - Checks out the pinned `mozilla/translations` commit and only the submodules the CLI needs.
 - Applies the 3 patches with `sed`.
-- Builds `translator-cli` for each of the 4 platforms.
-- Strips the binaries.
-- Uploads `translator-cli-<key>[.exe]` and `SHA256SUMS` to a release in this repo.
+- Builds `translator-cli` for each of the 4 platforms. `USE_STATIC_LIBS` is set only on Linux; on macOS it makes CMake look for `.a` files the SDK doesn't ship, so the macOS legs match the local build.
+- Strips the binaries and re-signs the macOS ones ad hoc (`codesign -s - -f`). Stripping removes the signature, and macOS kills unsigned arm64 binaries.
+- The release job runs even when some legs fail (`if: !cancelled()`). It publishes only the legs that uploaded an artifact, as `translator-cli-<key>[.exe]`, plus `SHA256SUMS`.
+- The tag must match `bergamot-cli-<version>`. The release is created with `--prerelease --latest=false`, so the app's `/releases/latest` links keep pointing at app releases. `selectStable` (`v*` tags only) and `selectNightly` (`nightly_*` only) already ignore it. The pre-release list in settings filters out `bergamot-cli-*` tags (`GitHubPrerelease.isToolRelease`).
+- Permissions: `contents: read` for the workflow, and `contents: write` only for the release job.
 
 It has not run yet. After the first green run, copy each URL, sha256 and size into `pinnedBergamotCliAssets`. Until then, `BergamotCliRuntime.unavailableReason()` reports "not available for this computer yet" unless `BERGAMOT_CLI` points at a local binary.
 
@@ -95,5 +97,9 @@ Smoke test: `kmpuiviews/src/jvmTest/.../translation/bergamot/BergamotCliRuntimeS
 ## Open points
 
 - The model is reloaded on every call (about 0.1 s warm, cold disk slower). Long-running modes would need a small C++ driver of our own around `BlockingService`. For descriptions this is fine.
-- With 2 sentences in one paragraph, the output lost the space between them: "…quietly.Then she laughed." The caller may need to split sentences, or patch the joining.
+- **Glued sentences, fixed in the runtime.** With 2 sentences in one paragraph, the CLI returned "…quietly.Then she laughed."
+  - Cause: Bergamot joins the target sentences with the whitespace that followed each source sentence, and Japanese puts none after `。`. No CLI option changes this.
+  - Fix: `spaceBetweenSentences()` runs on every result. It inserts a space where `.`, `!` or `?` (plus an optional closing quote or bracket) after a lowercase letter or digit is directly followed by an uppercase letter or an opening quote.
+  - Decimals ("3.14"), "e.g. this" and "U.S.A." are left alone. These cases are unit-tested in `BergamotRuntimeTest`.
+- **Cancellation.** `translate` waits for the process inside `runInterruptible`. On timeout, cancellation or any failure, it kills the process before the pipe jobs are awaited.
 - Licenses were not checked in this spike. bergamot-translator/marian are MPL-2.0 and MIT. Check the model license before shipping, and add attribution to the app's licenses screen.

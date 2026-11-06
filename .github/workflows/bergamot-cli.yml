@@ -4,15 +4,20 @@ name: Bergamot CLI
 # publishes the binaries on a GitHub release. The desktop apps download them on demand with a pinned sha256
 # (see kmpuiviews/.../translation/bergamot/BergamotRuntime.kt, `pinnedBergamotCliAssets`).
 #
-# Only macOS arm64 has been built and run locally (2026-11-06); the other legs are untested.
+# Not yet proven on CI. Locally (2026-11-06) only the macOS arm64 configuration was built and run, with the same
+# flags as the macos-arm64 leg below. macos-x64 and linux-x64 are untested; windows-x64 is expected to fail until
+# a BLAS (MKL or OpenBLAS) step is added. The release job publishes whichever legs succeeded.
 
 on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release tag to create or update, e.g. bergamot-cli-1'
+        description: 'Release tag to create or update; must start with bergamot-cli-, e.g. bergamot-cli-1'
         required: true
         type: string
+
+permissions:
+  contents: read
 
 env:
   # mozilla/translations commit whose inference/ is built (BERGAMOT_VERSION v0.6.0).
@@ -27,14 +32,22 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: macos-latest, key: macos-arm64, arch: armv8-a, cxxflags: '-DARM -DFMA -DSSE -flax-vector-conversions -fno-strict-aliasing', exe: translator-cli }
-          - { os: macos-15-intel, key: macos-x64, arch: x86-64, cxxflags: '', exe: translator-cli }
-          - { os: ubuntu-22.04, key: linux-x64, arch: x86-64, cxxflags: '', exe: translator-cli }
-          - { os: windows-latest, key: windows-x64, arch: x86-64, cxxflags: '', exe: translator-cli.exe }
+          # static: USE_STATIC_LIBS. Linux only; on macOS it makes CMake look for .a files the SDK doesn't ship.
+          - { os: macos-latest, key: macos-arm64, arch: armv8-a, static: 'OFF', cxxflags: '-DARM -DFMA -DSSE -flax-vector-conversions -fno-strict-aliasing', exe: translator-cli }
+          - { os: macos-15-intel, key: macos-x64, arch: x86-64, static: 'OFF', cxxflags: '', exe: translator-cli }
+          - { os: ubuntu-22.04, key: linux-x64, arch: x86-64, static: 'ON', cxxflags: '', exe: translator-cli }
+          - { os: windows-latest, key: windows-x64, arch: x86-64, static: 'OFF', cxxflags: '', exe: translator-cli.exe }
     defaults:
       run:
         shell: bash
     steps:
+      - name: Check the tag
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          # The app's updater and pre-release list ignore this prefix; anything else could be mistaken for an app release.
+          [[ "$TAG" =~ ^bergamot-cli-[0-9A-Za-z.]+$ ]] || { echo "tag must look like bergamot-cli-1"; exit 1; }
+
       - name: Check out mozilla/translations
         uses: actions/checkout@v7
         with:
@@ -76,7 +89,7 @@ jobs:
             -DCOMPILE_CPU=on -DCOMPILE_CUDA=off -DUSE_FBGEMM=off \
             -DBUILD_ARCH=${{ matrix.arch }} \
             -DSSPLIT_USE_INTERNAL_PCRE2=ON \
-            -DUSE_STATIC_LIBS=ON \
+            -DUSE_STATIC_LIBS=${{ matrix.static }} \
             -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 \
             -DCMAKE_CXX_FLAGS="${{ matrix.cxxflags }}"
 
@@ -89,8 +102,11 @@ jobs:
           exe=$(find build -name '${{ matrix.exe }}' -type f | head -n 1)
           cp "$exe" "out/translator-cli-${{ matrix.key }}${{ runner.os == 'Windows' && '.exe' || '' }}"
           if [ "$RUNNER_OS" != "Windows" ]; then strip out/*; fi
+          # Stripping drops the arm64 ad-hoc signature, and macOS kills unsigned arm64 binaries; re-sign ad hoc.
+          if [ "$RUNNER_OS" = "macOS" ]; then codesign -s - -f out/*; fi
           ls -la out
-          (cd out && { command -v sha256sum >/dev/null && sha256sum * || shasum -a 256 *; } | tee ../sha256-${{ matrix.key }}.txt)
+          if command -v sha256sum >/dev/null; then sum="sha256sum"; else sum="shasum -a 256"; fi
+          (cd out && $sum -- translator-cli-* | tee ../sha256-${{ matrix.key }}.txt)
           mv sha256-${{ matrix.key }}.txt out/
 
       - name: Upload
@@ -100,8 +116,10 @@ jobs:
           path: out/*
           if-no-files-found: error
 
+  # Runs even when some legs fail, and publishes only the legs that uploaded an artifact.
   release:
     needs: build
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -117,9 +135,14 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ inputs.tag }}
         run: |
+          [[ "$TAG" =~ ^bergamot-cli-[0-9A-Za-z.]+$ ]] || { echo "tag must look like bergamot-cli-1"; exit 1; }
+          ls assets/sha256-*.txt >/dev/null 2>&1 || { echo "no build leg succeeded"; exit 1; }
           cat assets/sha256-*.txt > assets/SHA256SUMS
           rm assets/sha256-*.txt
+          ls -la assets
+          # Pre-release and never "Latest": /releases/latest links in the app must keep pointing at app releases.
           gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
-            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --title "Bergamot CLI $TAG" \
-              --notes "translator-cli from mozilla/translations@${TRANSLATIONS_SHA} (inference/)."
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+              --prerelease --latest=false --title "Bergamot CLI $TAG" \
+              --notes "translator-cli from mozilla/translations@${TRANSLATIONS_SHA} (inference/). Used by the desktop apps' offline translation; not an app release."
           gh release upload "$TAG" assets/* --repo "$GITHUB_REPOSITORY" --clobber

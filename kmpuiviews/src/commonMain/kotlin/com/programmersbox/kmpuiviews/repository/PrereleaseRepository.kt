@@ -41,7 +41,12 @@ data class GitHubPrerelease(
     @SerialName("published_at")
     val publishedAt: String,
     val name: String,
+    @SerialName("tag_name")
+    val tagName: String = "",
 ) {
+    /** Releases of tools the app downloads (e.g. `bergamot-cli-*`), not app builds. */
+    val isToolRelease: Boolean get() = tagName.startsWith("bergamot-cli-")
+
     fun getUpdatedTime() = runCatching {
         assets
             .maxByOrNull { Instant.parse(it.updatedAt) }
