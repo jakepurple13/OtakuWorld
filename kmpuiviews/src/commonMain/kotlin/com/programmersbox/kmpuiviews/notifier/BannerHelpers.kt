@@ -1,8 +1,13 @@
 package com.programmersbox.kmpuiviews.notifier
 
 import com.programmersbox.sharedcomponents.notifier.BannerId
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.remember
 import com.programmersbox.sharedcomponents.notifier.InAppNotifier
+import com.programmersbox.sharedcomponents.notifier.ProgressHandle
 import kotlinx.coroutines.flow.first
+import org.koin.compose.koinInject
 
 /**
  * "Source not installed" error banner with a More options action.
@@ -42,4 +47,43 @@ internal suspend fun InAppNotifier.showUndoable(
         if (!undone) dismiss(id)
     }
     return undone
+}
+
+/**
+ * A progress banner owned by a screen. [start] shows it, [success]/[error] morph it into the result.
+ * If the screen leaves composition while it is still running, it is dismissed
+ * (progress banners never time out, so it would otherwise spin forever).
+ */
+internal class ScreenProgressBanner(private val notifier: InAppNotifier) {
+    private var handle: ProgressHandle? = null
+
+    fun start(title: String) {
+        handle?.dismiss()
+        handle = notifier.progress(title)
+    }
+
+    fun success(title: String) {
+        val current = handle
+        handle = null
+        if (current != null) current.success(title) else notifier.success(title)
+    }
+
+    fun error(title: String, subtitle: String?) {
+        val current = handle
+        handle = null
+        if (current != null) current.error(title, subtitle) else notifier.error(title, subtitle)
+    }
+
+    fun dismissIfRunning() {
+        handle?.dismiss()
+        handle = null
+    }
+}
+
+@Composable
+internal fun rememberScreenProgressBanner(): ScreenProgressBanner {
+    val notifier = koinInject<InAppNotifier>()
+    val banner = remember(notifier) { ScreenProgressBanner(notifier) }
+    DisposableEffect(banner) { onDispose { banner.dismissIfRunning() } }
+    return banner
 }

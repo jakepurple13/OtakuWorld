@@ -202,7 +202,6 @@ paging-compose-common = { module = "app.cash.paging:paging-compose-common", vers
 qrose = { module = "io.github.alexzhirkevich:qrose", version.ref = "qrose" }
 reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reorderable" }
 scanner = { module = "io.github.kalinjul.easyqrscan:scanner", version.ref = "scanner" }
-sonner = { module = "io.github.dokar3:sonner", version = "0.4.0" }
 urlencoder-lib = { module = "net.thauvin.erik.urlencoder:urlencoder-lib", version.ref = "urlencoderLib" }
 zoomableModifier = "net.engawapg.lib:zoomable:2.16.0"
 

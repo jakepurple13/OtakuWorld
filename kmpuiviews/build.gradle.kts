@@ -111,7 +111,6 @@ kotlin {
                 implementation(commonLibs.aboutLibrariesCore)
                 implementation(commonLibs.aboutLibrariesCompose)
 
-                implementation(commonLibs.sonner)
 
                 implementation(commonLibs.urlencoder.lib)
                 //implementation(commonLibs.blurhash)

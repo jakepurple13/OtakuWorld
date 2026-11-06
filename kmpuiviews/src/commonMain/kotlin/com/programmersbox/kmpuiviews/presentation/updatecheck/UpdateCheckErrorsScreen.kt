@@ -30,13 +30,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import com.programmersbox.sharedcomponents.notifier.InAppNotifier
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -112,24 +111,21 @@ fun UpdateCheckErrorsScreen(
     val report by viewModel.report.collectAsStateWithLifecycle()
     val groups by viewModel.groups.collectAsStateWithLifecycle()
     val canRetry by viewModel.canRetry.collectAsStateWithLifecycle()
-    val snackbarHostState = remember { SnackbarHostState() }
+    val notifier = koinInject<InAppNotifier>()
 
     LaunchedEffect(viewModel) {
         viewModel.messages.collect { message ->
-            snackbarHostState.showSnackbar(
-                when (message) {
-                    is UpdateCheckErrorsMessage.Rechecking ->
-                        getPluralString(Res.plurals.uc_rechecking, message.count, message.count)
+            when (message) {
+                is UpdateCheckErrorsMessage.Rechecking ->
+                    notifier.info(getPluralString(Res.plurals.uc_rechecking, message.count, message.count))
 
-                    UpdateCheckErrorsMessage.AlreadyRunning -> getString(Res.string.uc_already_running)
-                    UpdateCheckErrorsMessage.Copied -> getString(Res.string.uc_report_copied)
-                }
-            )
+                UpdateCheckErrorsMessage.AlreadyRunning -> notifier.info(getString(Res.string.uc_already_running))
+                UpdateCheckErrorsMessage.Copied -> notifier.success(getString(Res.string.uc_report_copied))
+            }
         }
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(Res.string.uc_errors_title)) },

@@ -41,8 +41,6 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -60,6 +58,10 @@ import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaf
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.runtime.Composable
+import otakuworld.kmpuiviews.generated.resources.banner_link_copied
+import otakuworld.kmpuiviews.generated.resources.Res
+import org.jetbrains.compose.resources.getString
+import com.programmersbox.sharedcomponents.notifier.InAppNotifier
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -294,7 +296,7 @@ private fun CustomUrlDialog(
     onRemoveUrl: (String) -> Unit,
     urls: List<String>,
 ) {
-    val snackbarHostState = remember { SnackbarHostState() }
+    val notifier = koinInject<InAppNotifier>()
     val sourceInfoRepository = koinInject<SourceInfoRepository>()
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
@@ -314,7 +316,6 @@ private fun CustomUrlDialog(
                     actions = { Text(urls.size.toString()) }
                 )
             },
-            snackbarHost = { SnackbarHost(snackbarHostState) },
             bottomBar = {
                 var customUrl by remember { mutableStateOf("") }
 
@@ -399,7 +400,7 @@ private fun CustomUrlDialog(
                         onClick = {
                             scope.launch {
                                 sourceInfoRepository.copyUrl(clipboard, it)
-                                snackbarHostState.showSnackbar("Copied")
+                                notifier.success(getString(Res.string.banner_link_copied))
                             }
                         }
                     ) {

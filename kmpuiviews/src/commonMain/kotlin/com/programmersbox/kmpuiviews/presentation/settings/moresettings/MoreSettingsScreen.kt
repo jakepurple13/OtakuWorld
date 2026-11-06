@@ -14,23 +14,20 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.dokar.sonner.ToastType
-import com.dokar.sonner.rememberToasterState
+import com.programmersbox.kmpuiviews.notifier.rememberScreenProgressBanner
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.categorySetting
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
-import com.programmersbox.kmpuiviews.utils.ToasterSetup
-import com.programmersbox.kmpuiviews.utils.ToasterUtils
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import otakuworld.kmpuiviews.generated.resources.Res
+import otakuworld.kmpuiviews.generated.resources.banner_couldnt_import
 import otakuworld.kmpuiviews.generated.resources.more_settings
-import kotlin.time.Duration
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,31 +35,24 @@ fun MoreSettingsScreen(
     viewModel: MoreSettingsViewModel = koinViewModel(),
 ) {
     val navController = LocalNavActions.current
-    val toaster = rememberToasterState(
-        onToastDismissed = { viewModel.importExportListStatus = ImportExportListStatus.Idle }
-    )
+    val progressBanner = rememberScreenProgressBanner()
+    val couldntImport = stringResource(Res.string.banner_couldnt_import)
 
     LaunchedEffect(Unit) {
         snapshotFlow { viewModel.importExportListStatus }
             .onEach {
-                toaster.dismiss(ToasterUtils.LOADING_TOAST_ID)
                 when (it) {
-                    is ImportExportListStatus.Error -> toaster.show(
-                        "Error: ${it.throwable.message}",
-                        type = ToastType.Error,
-                    )
+                    is ImportExportListStatus.Error -> {
+                        progressBanner.error(couldntImport, "Error: ${it.throwable.message}")
+                        viewModel.importExportListStatus = ImportExportListStatus.Idle
+                    }
 
-                    ImportExportListStatus.Success -> toaster.show(
-                        "Completed!",
-                        type = ToastType.Success,
-                    )
+                    ImportExportListStatus.Success -> {
+                        progressBanner.success("Completed!")
+                        viewModel.importExportListStatus = ImportExportListStatus.Idle
+                    }
 
-                    ImportExportListStatus.Loading -> toaster.show(
-                        "Working...",
-                        id = ToasterUtils.LOADING_TOAST_ID,
-                        icon = ToasterUtils.LOADING_TOAST_ID,
-                        duration = Duration.INFINITE,
-                    )
+                    ImportExportListStatus.Loading -> progressBanner.start("Working...")
 
                     else -> {}
                 }
@@ -106,7 +96,4 @@ fun MoreSettingsScreen(
             }
         }
     }
-
-    //TODO: Remove toaster and switch back to snackbar
-    ToasterSetup(toaster = toaster)
 }

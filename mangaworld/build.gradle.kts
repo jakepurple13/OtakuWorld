@@ -102,7 +102,6 @@ dependencies {
 
     implementation(androidLibs.telephoto.zoomable.image.glide)
 
-    implementation(commonLibs.sonner)
 
     implementation(commonLibs.lifecycle.viewmodel.compose)
     implementation(androidLibs.brotli)

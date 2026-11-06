@@ -490,4 +490,6 @@
     <string name="banner_more_options">More options</string>
     <string name="banner_couldnt_load">Couldn’t load %1$s</string>
     <string name="banner_retry">Retry</string>
+    <string name="banner_couldnt_import">Couldn’t import list</string>
+    <string name="banner_link_copied">Link copied</string>
 </resources>

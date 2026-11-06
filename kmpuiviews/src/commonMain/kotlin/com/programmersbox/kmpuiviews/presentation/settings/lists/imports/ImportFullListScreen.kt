@@ -58,8 +58,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.SheetState
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -85,6 +83,8 @@ import androidx.compose.ui.unit.dp
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.kmpuiviews.painterLogo
+import otakuworld.kmpuiviews.generated.resources.banner_couldnt_import
+import com.programmersbox.kmpuiviews.notifier.rememberScreenProgressBanner
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
 import com.programmersbox.kmpuiviews.presentation.components.NormalOtakuScaffold
@@ -124,13 +124,12 @@ fun ImportFullListScreen(
     val navController = LocalNavActions.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
-    val snackbarHostState = remember { SnackbarHostState() }
+    val progressBanner = rememberScreenProgressBanner()
+    val couldntImport = stringResource(Res.string.banner_couldnt_import)
 
     when (val status = vm.importStatus) {
         ImportFullListStatus.Loading -> {
-            LaunchedEffect(Unit) {
-                snackbarHostState.showSnackbar("Importing...")
-            }
+            LaunchedEffect(Unit) { progressBanner.start("Importing...") }
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier.fillMaxSize()
@@ -139,8 +138,7 @@ fun ImportFullListScreen(
 
         is ImportFullListStatus.Error -> {
             LaunchedEffect(Unit) {
-                snackbarHostState.currentSnackbarData?.dismiss()
-                snackbarHostState.showSnackbar("Error")
+                progressBanner.error(couldntImport, status.throwable.message)
             }
             NormalOtakuScaffold(
                 topBar = {
@@ -150,7 +148,6 @@ fun ImportFullListScreen(
                         scrollBehavior = scrollBehavior
                     )
                 },
-                snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
                 contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
             ) { padding ->
                 Column(
@@ -173,10 +170,7 @@ fun ImportFullListScreen(
         }
 
         is ImportFullListStatus.Success -> {
-            LaunchedEffect(Unit) {
-                snackbarHostState.currentSnackbarData?.dismiss()
-                snackbarHostState.showSnackbar("Completed!")
-            }
+            LaunchedEffect(Unit) { progressBanner.success("Completed!") }
             NormalOtakuScaffold(
                 topBar = {
                     TopAppBar(
@@ -202,7 +196,6 @@ fun ImportFullListScreen(
                     }
                 },
                 contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
-                snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
                 modifier = Modifier
                     .padding(LocalNavHostPadding.current)
                     .nestedScroll(scrollBehavior.nestedScrollConnection)
