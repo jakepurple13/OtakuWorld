@@ -9,6 +9,10 @@ import com.google.mlkit.nl.translate.TranslateRemoteModel
 import com.google.mlkit.nl.translate.Translation
 import com.google.mlkit.nl.translate.Translator
 import com.google.mlkit.nl.translate.TranslatorOptions
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.tasks.await
@@ -17,6 +21,7 @@ class TranslateItems {
     private var translator: Translator? = null
     private var translatorKey: Pair<String, String>? = null
     private val mutex = Mutex()
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     private val languageIdentifier by lazy { LanguageIdentification.getClient() }
 
@@ -45,10 +50,15 @@ class TranslateItems {
         }
     }
 
+    /** Closes the cached translator once any in-flight translation releases the lock. */
     fun clear() {
-        translator?.close()
-        translator = null
-        translatorKey = null
+        scope.launch {
+            mutex.withLock {
+                translator?.close()
+                translator = null
+                translatorKey = null
+            }
+        }
     }
 }
 

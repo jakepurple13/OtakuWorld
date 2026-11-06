@@ -20,6 +20,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.koin.dsl.module
 
@@ -68,6 +69,13 @@ fun mlKitRows(
     )
 }
 
+/** Message naming the languages that failed to delete, or null when none did. */
+fun deleteFailureMessage(failedCodes: List<String>): String? {
+    if (failedCodes.isEmpty()) return null
+    val names = failedCodes.joinToString { TranslationLanguages.byCode(it)?.englishName ?: it }
+    return "Couldn't delete $names"
+}
+
 class MlKitTranslationModelHandler(
     private val context: Context,
     private val settings: NewSettingsHandling,
@@ -76,23 +84,23 @@ class MlKitTranslationModelHandler(
     override val isAvailable: Boolean = TranslatorUtils.isAvailable
 
     private val downloading = MutableStateFlow<Map<String, ModelState>>(emptyMap())
-    private val jobs = mutableMapOf<String, Job>()
+    private val jobs = mutableMapOf<String, Job>() // guarded by synchronized(jobs)
     private val _models = MutableStateFlow(
         mlKitRows(emptySet(), emptyMap(), { null }, emptyMap())
     )
     override val models: StateFlow<List<TranslationModel>> = _models
 
-    private var downloaded: Set<String> = emptySet()
+    private val downloaded = MutableStateFlow<Set<String>>(emptySet())
 
     override suspend fun refresh() {
         if (!isAvailable) return
-        downloaded = runCatching { TranslatorUtils.downloadedCodes() }.getOrDefault(downloaded)
+        downloaded.value = TranslatorUtils.downloadedCodes()
         publish(settings.translationLastUsed.get())
     }
 
     private suspend fun publish(lastUsed: Map<String, Long>) {
         _models.value = mlKitRows(
-            downloaded = downloaded,
+            downloaded = downloaded.value,
             downloading = downloading.value,
             sizes = { TranslatorUtils.modelSizeBytes(context, it) },
             lastUsed = lastUsed,
@@ -100,34 +108,47 @@ class MlKitTranslationModelHandler(
     }
 
     override fun download(code: String) {
-        if (!isAvailable || jobs[code]?.isActive == true) return
-        jobs[code] = scope.launch {
-            setState(code, ModelState.Downloading(fraction = null))
-            try {
-                TranslatorUtils.download(code)
-                setState(code, null)
-                refresh()
-            } catch (e: CancellationException) {
-                setState(code, null)
-                throw e
-            } catch (e: Exception) {
-                setState(code, ModelState.Failed(e.message ?: "Download failed"))
+        if (!isAvailable) return
+        synchronized(jobs) {
+            if (jobs[code]?.isActive == true) return
+            jobs[code] = scope.launch {
+                setState(code, ModelState.Downloading(fraction = null))
+                try {
+                    TranslatorUtils.download(code)
+                    setState(code, null)
+                    refresh()
+                } catch (e: CancellationException) {
+                    setState(code, null)
+                    throw e
+                } catch (e: Exception) {
+                    setState(code, ModelState.Failed(e.message ?: "Download failed"))
+                }
             }
         }
     }
 
     override fun cancelDownload(code: String) {
-        jobs.remove(code)?.cancel()
+        synchronized(jobs) { jobs.remove(code) }?.cancel()
         // ML Kit keeps downloading in the background; the next refresh reflects reality.
     }
 
     override suspend fun delete(codes: Set<String>) {
-        codes.filter { it != "en" }.forEach { runCatching { TranslatorUtils.delete(it) } }
+        val failed = mutableListOf<String>()
+        codes.filter { it != "en" }.forEach {
+            try {
+                TranslatorUtils.delete(it)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                failed += it
+            }
+        }
         refresh()
+        deleteFailureMessage(failed)?.let { throw IllegalStateException(it) }
     }
 
     private suspend fun setState(code: String, state: ModelState?) {
-        downloading.value = if (state == null) downloading.value - code else downloading.value + (code to state)
+        downloading.update { if (state == null) it - code else it + (code to state) }
         publish(settings.translationLastUsed.get())
     }
 }

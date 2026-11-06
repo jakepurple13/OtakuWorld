@@ -45,4 +45,10 @@ class MlKitModelRowsTest {
         assertEquals(42L, r.getValue("fr").lastUsedMillis)
         assertNull(r.getValue("de").lastUsedMillis)
     }
+
+    @Test
+    fun `delete failure message names languages`() {
+        assertNull(deleteFailureMessage(emptyList()))
+        assertEquals("Couldn't delete Japanese, Korean", deleteFailureMessage(listOf("ja", "ko")))
+    }
 }
