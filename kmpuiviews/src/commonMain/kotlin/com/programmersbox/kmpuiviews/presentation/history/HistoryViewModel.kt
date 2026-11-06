@@ -70,8 +70,10 @@ class HistoryViewModel(private val dao: HistoryDao) : ViewModel() {
 
     private val pending = mutableStateListOf<PendingRemoval>()
 
+    private fun hiddenUrls() = pending.flatMap { batch -> batch.items.map { it.url } }.toSet()
+
     private val visibleItems by derivedStateOf {
-        val hidden = pending.flatMap { batch -> batch.items.map { it.url } }.toSet()
+        val hidden = hiddenUrls()
         items
             .filterNot { it.url in hidden }
             .sortedByDescending { it.timestamp }
@@ -134,9 +136,16 @@ class HistoryViewModel(private val dao: HistoryDao) : ViewModel() {
     /**
      * Hides [items] right away. The caller shows an Undo snackbar and then calls
      * [commitRemoval] or [undoRemoval] with the returned batch.
+     *
+     * Items that are already hidden are skipped, and null is returned when nothing is left:
+     * one swipe can confirm the dismiss more than once, and a second batch would keep the row
+     * hidden after Undo.
      */
-    fun removeWithUndo(items: List<RecentModel>): PendingRemoval {
-        val batch = PendingRemoval(items)
+    fun removeWithUndo(items: List<RecentModel>): PendingRemoval? {
+        val hidden = hiddenUrls()
+        val fresh = items.filterNot { it.url in hidden }
+        if (fresh.isEmpty()) return null
+        val batch = PendingRemoval(fresh)
         pending.add(batch)
         items.forEach { selected.remove(it.url) }
         resetFilterIfEmpty()

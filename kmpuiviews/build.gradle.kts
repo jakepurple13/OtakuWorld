@@ -236,6 +236,8 @@ kotlin {
                 implementation(project.dependencies.platform(commonLibs.supabase.bom))
                 implementation(commonLibs.supabase.auth)
                 implementation(commonLibs.zipline)
+                implementation(commonLibs.cmp.ui.test)
+                implementation(compose.desktop.currentOs)
             }
         }
 

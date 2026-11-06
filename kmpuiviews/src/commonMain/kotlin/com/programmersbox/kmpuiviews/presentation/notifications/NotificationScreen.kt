@@ -27,7 +27,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
@@ -72,7 +74,6 @@ import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -116,6 +117,7 @@ import com.programmersbox.kmpuiviews.presentation.components.OptionsSheetValues
 import com.programmersbox.kmpuiviews.presentation.components.SourceNotInstalledModal
 import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.presentation.components.optionsSheet
+import com.programmersbox.kmpuiviews.presentation.components.revealRestored
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
 import com.programmersbox.kmpuiviews.utils.Cached
@@ -258,6 +260,8 @@ fun NotificationScreen(
         }
     }
 
+    val listState = rememberLazyListState()
+
     val deleteWithUndo: (List<NotificationItem>) -> Unit = { toDelete ->
         if (toDelete.isNotEmpty()) {
             val batch = vm.deleteWithUndo(toDelete)
@@ -270,7 +274,13 @@ fun NotificationScreen(
                     undone = notifier.showUndoable(
                         title = message,
                         undoLabel = getString(Res.string.undo),
-                        onUndo = { vm.undoDeletion(batch) },
+                        onUndo = {
+                            vm.undoDeletion(batch)
+                            listState.revealRestored(
+                                keys = vm.dayBuckets.flatMap { (day, list) -> listOf(day) + list.map { it.url } },
+                                restored = batch.items.mapTo(HashSet()) { it.url },
+                            )
+                        },
                     )
                 } finally {
                     // Also runs when the screen leaves composition mid-banner.
@@ -284,6 +294,7 @@ fun NotificationScreen(
 
     NotificationTimeline(
         vm = vm,
+        listState = listState,
         navController = navController,
         itemDao = itemDao,
         colorFilter = colorFilter,
@@ -312,6 +323,7 @@ fun NotificationScreen(
 @Composable
 private fun NotificationTimeline(
     vm: NotificationScreenViewModel,
+    listState: LazyListState,
     navController: NavigationActions,
     itemDao: ItemDao,
     colorFilter: ColorFilter?,
@@ -405,6 +417,7 @@ private fun NotificationTimeline(
                     EmptyTimeline(Modifier.fillMaxSize())
                 } else {
                     LazyColumn(
+                        state = listState,
                         contentPadding = LocalNavHostPadding.current,
                         modifier = Modifier.fillMaxSize()
                     ) {
@@ -596,12 +609,6 @@ private fun NotificationRow(
                 false
             }
         )
-        // A restored row (after Undo) must not come back parked in a saved swiped state.
-        LaunchedEffect(dismissState) {
-            if (dismissState.currentValue != SwipeToDismissBoxValue.Settled) {
-                dismissState.snapTo(SwipeToDismissBoxValue.Settled)
-            }
-        }
 
         SwipeToDismissBox(
             state = dismissState,

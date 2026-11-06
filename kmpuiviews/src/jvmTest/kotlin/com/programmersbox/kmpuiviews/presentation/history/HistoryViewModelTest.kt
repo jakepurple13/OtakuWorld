@@ -133,11 +133,25 @@ class HistoryViewModelTest {
         val vm = viewModel()
         awaitCondition { vm.items.size == 2 }
 
-        val batch = vm.removeWithUndo(vm.filteredItems.filter { it.url == "1" })
+        val batch = vm.removeWithUndo(vm.filteredItems.filter { it.url == "1" })!!
         assertEquals(listOf("2"), vm.filteredItems.map { it.url })
         assertEquals(1, vm.historyCount)
 
         vm.undoRemoval(batch)
+        assertEquals(listOf("2", "1"), vm.filteredItems.map { it.url })
+    }
+
+    // One swipe can confirm the dismiss more than once; a second batch would keep the row hidden after Undo.
+    @Test fun `removing an already hidden item again adds no batch, so one undo restores it`() = runTest {
+        insert(recent("1", timestamp = 1), recent("2", timestamp = 2))
+        val vm = viewModel()
+        awaitCondition { vm.items.size == 2 }
+        val item = vm.filteredItems.first { it.url == "1" }
+
+        val batch = vm.removeWithUndo(listOf(item))
+        assertNull(vm.removeWithUndo(listOf(item)))
+
+        vm.undoRemoval(batch!!)
         assertEquals(listOf("2", "1"), vm.filteredItems.map { it.url })
     }
 
@@ -146,7 +160,7 @@ class HistoryViewModelTest {
         val vm = viewModel()
         awaitCondition { vm.items.size == 2 }
 
-        vm.commitRemoval(vm.removeWithUndo(vm.filteredItems.filter { it.url == "1" }))
+        vm.commitRemoval(vm.removeWithUndo(vm.filteredItems.filter { it.url == "1" })!!)
 
         awaitCondition { vm.items.size == 1 }
         assertEquals(listOf("2"), vm.filteredItems.map { it.url })

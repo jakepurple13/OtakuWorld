@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -63,7 +64,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -113,6 +113,7 @@ import com.programmersbox.kmpuiviews.presentation.components.optionsSheet
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.PlaceholderHighlight
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
+import com.programmersbox.kmpuiviews.presentation.components.revealRestored
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuImageElement
@@ -194,19 +195,27 @@ fun HistoryUi(
         onDismissRequest = { showLoadingDialog = false }
     )
 
+    val listState = rememberLazyListState()
+
     val removeWithUndo: (List<RecentModel>) -> Unit = { toRemove ->
-        if (toRemove.isNotEmpty()) {
-            val batch = vm.removeWithUndo(toRemove)
+        // Null when the rows are already hidden (one swipe can confirm the dismiss more than once).
+        vm.removeWithUndo(toRemove)?.let { batch ->
             scope.launch {
                 var undone = false
                 try {
-                    val message = toRemove.singleOrNull()
+                    val message = batch.items.singleOrNull()
                         ?.let { getString(Res.string.removed, it.title) }
-                        ?: getString(Res.string.history_removed_count, toRemove.size)
+                        ?: getString(Res.string.history_removed_count, batch.items.size)
                     undone = notifier.showUndoable(
                         title = message,
                         undoLabel = getString(Res.string.undo),
-                        onUndo = { vm.undoRemoval(batch) },
+                        onUndo = {
+                            vm.undoRemoval(batch)
+                            listState.revealRestored(
+                                keys = vm.groups.flatMap { (group, list) -> listOf(group.key) + list.map { it.url } },
+                                restored = batch.items.mapTo(HashSet()) { it.url },
+                            )
+                        },
                     )
                 } finally {
                     // Also runs when the screen leaves composition mid-banner.
@@ -392,6 +401,7 @@ fun HistoryUi(
         val timeZone = TimeZone.currentSystemDefault()
 
         LazyColumn(
+            state = listState,
             // Top padding goes on the list itself so sticky headers pin below the top bar, not behind it.
             contentPadding = PaddingValues(bottom = p.calculateBottomPadding()),
             modifier = Modifier
@@ -651,13 +661,6 @@ fun HistoryItem(
             false
         }
     )
-    // The saved state can come back as EndToStart (the row was removed mid-swipe), which parks the
-    // restored row off-screen after Undo.
-    LaunchedEffect(dismissState) {
-        if (dismissState.currentValue != SwipeToDismissBoxValue.Settled) {
-            dismissState.snapTo(SwipeToDismissBoxValue.Settled)
-        }
-    }
 
     SwipeToDismissBox(
         state = dismissState,
