@@ -90,6 +90,42 @@ class DefaultInAppNotifierTest {
     }
 
     @Test
+    fun backgroundPauseDoesNotHoldBannerWithAction() = runTest {
+        val n = notifier()
+        n.success("A", action = "Undo", durationMillis = 2_000)
+        n.setPaused(PauseReason.Background, true)
+        advanceTimeBy(1_999)
+        assertEquals(1, n.banners.value.size)
+        advanceTimeBy(2)
+        assertTrue(n.banners.value.isEmpty())
+    }
+
+    @Test
+    fun backgroundPauseStillHoldsBannerWithoutAction() = runTest {
+        val n = notifier()
+        n.success("A", durationMillis = 2_000)
+        n.setPaused(PauseReason.Background, true)
+        advanceTimeBy(10_000)
+        assertEquals(1, n.banners.value.size)
+        n.setPaused(PauseReason.Background, false)
+        advanceTimeBy(2_001)
+        assertTrue(n.banners.value.isEmpty())
+    }
+
+    @Test
+    fun expandedPauseHoldsBothKinds() = runTest {
+        val n = notifier()
+        n.success("A", action = "Undo", durationMillis = 2_000)
+        n.success("B", durationMillis = 2_000)
+        n.setPaused(PauseReason.Expanded, true)
+        advanceTimeBy(10_000)
+        assertEquals(2, n.banners.value.size)
+        n.setPaused(PauseReason.Expanded, false)
+        advanceTimeBy(2_001)
+        assertTrue(n.banners.value.isEmpty())
+    }
+
+    @Test
     fun sameKeyReplacesInPlaceAndResetsTimer() = runTest {
         val n = notifier()
         val first = n.info("Ch 1", key = "r", durationMillis = 2_000)

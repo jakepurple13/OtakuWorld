@@ -40,7 +40,9 @@ class DefaultInAppNotifier(
 
     // Only touched inside scope.launch blocks.
     private val timers = HashMap<BannerId, Timer>()
-    private val pausedBy = HashSet<PauseReason>()
+    private val pausedBy = MutableStateFlow<Set<PauseReason>>(emptySet())
+
+    override val paused: StateFlow<Set<PauseReason>> = pausedBy.asStateFlow()
 
     @kotlin.concurrent.Volatile
     private var adjuster: (Long, Boolean) -> Long = { millis, _ -> millis }
@@ -133,22 +135,30 @@ class DefaultInAppNotifier(
     }
 
     override fun setPaused(reason: PauseReason, paused: Boolean) {
+        pausedBy.update { if (paused) it + reason else it - reason }
         scope.launch {
-            val wasPaused = pausedBy.isNotEmpty()
-            if (paused) pausedBy.add(reason) else pausedBy.remove(reason)
-            val isPaused = pausedBy.isNotEmpty()
-            if (isPaused && !wasPaused) {
-                timers.values.forEach { timer ->
+            // Reconcile every timer against the latest pause state; both transitions are idempotent.
+            timers.forEach { (id, timer) ->
+                if (isHeld(timer.banner)) {
                     val started = timer.startedAt ?: return@forEach
                     timer.job?.cancel()
                     timer.job = null
                     timer.startedAt = null
                     timer.remaining = (timer.remaining - started.elapsedNow().inWholeMilliseconds).coerceAtLeast(0)
+                } else {
+                    start(id, timer)
                 }
-            } else if (!isPaused && wasPaused) {
-                timers.forEach { (id, timer) -> start(id, timer) }
             }
         }
+    }
+
+    /**
+     * Expanded holds every banner. Background holds only banners without an action, so
+     * Undo/Retry banners keep counting down and their deferred work still commits.
+     */
+    private fun isHeld(banner: Banner): Boolean {
+        val reasons = pausedBy.value
+        return PauseReason.Expanded in reasons || (PauseReason.Background in reasons && banner.action == null)
     }
 
     override fun setTimeoutAdjuster(adjust: (millis: Long, hasAction: Boolean) -> Long) {
@@ -180,7 +190,7 @@ class DefaultInAppNotifier(
             val millis = banner.durationMillis ?: return@launch
             val timer = Timer(banner, adjuster(millis, banner.action != null))
             timers[id] = timer
-            if (pausedBy.isEmpty()) start(id, timer)
+            if (!isHeld(banner)) start(id, timer)
         }
     }
 

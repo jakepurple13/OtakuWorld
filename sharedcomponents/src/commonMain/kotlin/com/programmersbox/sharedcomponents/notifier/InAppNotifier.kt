@@ -46,6 +46,9 @@ interface InAppNotifier {
     /** Runs the banner's action in the notifier scope, then dismisses it. */
     fun performAction(id: BannerId)
 
+    /** Active pause reasons. Background holds only banners without an action; Expanded holds all. */
+    val paused: StateFlow<Set<PauseReason>>
+
     fun setPaused(reason: PauseReason, paused: Boolean)
 
     fun setTimeoutAdjuster(adjust: (millis: Long, hasAction: Boolean) -> Long)
