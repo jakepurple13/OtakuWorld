@@ -70,9 +70,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TextButton
 import androidx.compose.ui.graphics.graphicsLayer
 import org.koin.compose.koinInject
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberUpdatedState
 import com.programmersbox.anime.shared.downloads.splitEpisodeTitle
@@ -81,7 +78,7 @@ import com.programmersbox.anime.shared.subtitlegen.GenerationStatus
 import com.programmersbox.anime.shared.subtitlegen.SubtitleGenerator
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRoute
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.launch
+import com.programmersbox.sharedcomponents.notifier.InAppNotifier
 
 @Serializable
 data object VideoViewerRoute : NavKey
@@ -162,20 +159,17 @@ private fun VideoLoad(
         .collectAsStateWithLifecycle(emptyMap())
     var generateFor by remember { mutableStateOf<SharedVideoContent?>(null) }
 
-    val snackbarHostState = remember { SnackbarHostState() }
+    val notifier = koinInject<InAppNotifier>()
     val currentItems by rememberUpdatedState(items)
     LaunchedEffect(generator) {
         generator?.finished?.collect { path ->
             val item = currentItems.firstOrNull { it.path == path } ?: return@collect
-            // Launched so a second finish queues its snackbar instead of waiting to be collected.
-            launch {
-                val title = splitEpisodeTitle(item.videoName.substringBeforeLast('.'))
-                val result = snackbarHostState.showSnackbar(
-                    "Subtitles ready for ${title.episode ?: title.show}",
-                    actionLabel = "Play"
-                )
-                if (result == SnackbarResult.ActionPerformed) navActions.navigate(item.videoScreen())
-            }
+            val title = splitEpisodeTitle(item.videoName.substringBeforeLast('.'))
+            notifier.success(
+                "Subtitles ready",
+                subtitle = title.episode ?: title.show,
+                action = "Play",
+            ) { navActions.navigate(item.videoScreen()) }
         }
     }
 
@@ -230,7 +224,6 @@ private fun VideoLoad(
                     )
                 )
             },
-            snackbarHost = { SnackbarHost(snackbarHostState) },
             containerColor = Color.Transparent,
         ) { p ->
             if (items.isEmpty() && queue.isEmpty()) {

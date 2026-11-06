@@ -6,7 +6,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
-import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -20,6 +19,7 @@ import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
+import com.programmersbox.sharedcomponents.notifier.InAppNotifier
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.datastore.updatePref
 import kotlinx.coroutines.flow.launchIn
@@ -32,6 +32,7 @@ class MainActivity : BaseMainActivity() {
     val animeDataStoreHandling by inject<AnimeDataStoreHandling>()
     private val castController by inject<CastController>()
     private val navigationActions by inject<NavigationActions>()
+    private val notifier by inject<InAppNotifier>()
     private var keyVolume: Float? = null
 
     companion object {
@@ -63,7 +64,7 @@ class MainActivity : BaseMainActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 castController.playbackErrors.collect {
-                    Toast.makeText(this@MainActivity, it, Toast.LENGTH_LONG).show()
+                    notifier.error(it)
                 }
             }
         }

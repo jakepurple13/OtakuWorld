@@ -51,6 +51,8 @@
     <string name="in_progress_downloads">In Progress Downloads</string>
     <string name="fileDeleted">File Deleted</string>
     <string name="fileNotDeleted">File Not Deleted</string>
+    <string name="download_started">Download started</string>
+    <string name="couldnt_cast">Couldn’t cast</string>
     <string name="locked">Locked</string>
     <string name="unlocked">Unlocked</string>
     <string name="source_no_stream">%s cannot stream at the moment</string>

@@ -8,7 +8,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Environment
 import android.provider.Settings
-import android.widget.Toast
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxSize
@@ -86,7 +85,6 @@ import com.programmersbox.aniyomi.aniyomiModule
 import com.programmersbox.cloudstream.cloudstreamModule
 import com.programmersbox.datastore.asState
 import com.programmersbox.helpfulutils.requestPermissions
-import com.programmersbox.helpfulutils.runOnUIThread
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
@@ -106,6 +104,8 @@ import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.NotificationLogo
 import com.programmersbox.kmpuiviews.utils.Zipper
+import com.programmersbox.sharedcomponents.notifier.InAppNotifier
+import com.programmersbox.sharedcomponents.notifier.ProgressHandle
 import com.programmersbox.sharedtools.BackupProcessor
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.bindsGenericInfo
@@ -191,6 +191,7 @@ class GenericAnime(
     private val navController: NavigationActions,
     private val castController: CastController,
     private val subtitleSettings: SubtitleSettingsRepository,
+    private val notifier: InAppNotifier,
 ) : GenericSharedAnime(appConfig = appConfig), GenericInfo {
 
     private val scope = CoroutineScope(Job() + Dispatchers.Main)
@@ -203,9 +204,7 @@ class GenericAnime(
 
     override fun onResolveFailed(storage: KmpStorage, error: Throwable) {
         val name = listOfNotNull(storage.source, storage.quality).joinToString(" ").ifBlank { "stream" }
-        runOnUIThread {
-            Toast.makeText(context, "Couldn't load $name: ${error.message ?: error::class.simpleName}", Toast.LENGTH_LONG).show()
-        }
+        notifier.error("Couldn't load $name", error.message ?: error::class.simpleName)
     }
 
     override fun playOrCast(
@@ -216,8 +215,9 @@ class GenericAnime(
         seedColor: Int?,
     ) {
         if (isCasting()) {
-            launchCast {
+            launchCast { progress ->
                 startCast(
+                    progress,
                     CastRequest(
                         showTitle = infoModel.title,
                         episodeName = model.name,
@@ -252,12 +252,13 @@ class GenericAnime(
 
     /** Casts a downloaded episode from the Videos screen, replacing whatever is on the TV. */
     fun castDownload(content: SharedVideoContent) {
-        launchCast {
+        launchCast { progress ->
             val (file, subtitles) = withContext(Dispatchers.IO) {
                 val file = OfflineSubtitles.resolveVideoFile(context, content.path) ?: File(content.path)
                 file to OfflineSubtitles.find(file)
             }
             startCast(
+                progress,
                 CastRequest(
                     showTitle = "",
                     episodeName = content.videoName,
@@ -292,24 +293,31 @@ class GenericAnime(
     private val castInFlight = AtomicBoolean(false)
 
     /** Runs [block] unless a cast is already starting, so a double tap doesn't load twice. */
-    private fun launchCast(block: suspend () -> Unit) {
+    private fun launchCast(block: suspend (ProgressHandle) -> Unit) {
         if (!castInFlight.compareAndSet(false, true)) return
+        val progress = notifier.progress("Casting…")
         scope.launch {
             try {
-                Toast.makeText(context, "Casting…", Toast.LENGTH_SHORT).show()
-                block()
+                // startCast resolves the handle itself; dismissing afterwards would remove its error banner.
+                block(progress)
+            } catch (t: Throwable) {
+                // Exception or cancellation before startCast resolved it: clear the spinner.
+                progress.dismiss()
+                throw t
             } finally {
                 castInFlight.set(false)
             }
         }
     }
 
-    private suspend fun startCast(request: CastRequest) {
+    private suspend fun startCast(progress: ProgressHandle, request: CastRequest) {
         val result = castController.cast(request)
         if (result == CastResult.Started) {
+            progress.dismiss()
             navController.navigate(CastRemoteRoute)
         } else {
-            result.errorMessage()?.let { Toast.makeText(context, it, Toast.LENGTH_LONG).show() }
+            val message = result.errorMessage()
+            if (message != null) progress.error(context.getString(R.string.couldnt_cast), message) else progress.dismiss()
         }
     }
 
@@ -324,11 +332,7 @@ class GenericAnime(
                 model = model,
                 infoModel = infoModel,
                 onNone = {
-                    Toast.makeText(
-                        context,
-                        context.getString(R.string.source_no_download, model.source.serviceName),
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    notifier.error(context.getString(R.string.source_no_download, model.source.serviceName))
                 },
                 download = { downloadResolved(model, infoModel, it) },
             )
@@ -377,9 +381,7 @@ class GenericAnime(
                 folder = context.folderLocation,
             )
         )
-        withContext(Dispatchers.Main) {
-            Toast.makeText(context, R.string.downloading_dots_no_percent, Toast.LENGTH_SHORT).show()
-        }
+        notifier.success(context.getString(R.string.download_started))
     }
 
     @Composable

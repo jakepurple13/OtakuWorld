@@ -13,7 +13,6 @@ import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
@@ -115,6 +114,7 @@ import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.RecordTimeSpentDoing
 import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
 import com.programmersbox.sharedcomponents.components.HideSystemBarsWhileOnScreen
+import com.programmersbox.sharedcomponents.notifier.InAppNotifier
 import com.programmersbox.uiviews.GenericInfo
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
@@ -207,25 +207,32 @@ private fun VideoPlayerContent(videoScreen: VideoScreen) {
     val playerStyle by videoPlayerStyle.asState()
 
     val castController = koinInject<CastController>()
+    val notifier = koinInject<InAppNotifier>()
     val castScope = rememberCoroutineScope()
     var castPickerOpen by remember { mutableStateOf(false) }
     var castInFlight by remember { mutableStateOf(false) }
     val startCast = {
         if (!castInFlight) {
             castInFlight = true
-            Toast.makeText(context, "Casting…", Toast.LENGTH_SHORT).show()
+            val progress = notifier.progress("Casting…")
             val request = viewModel.castRequest()
             viewModel.exoPlayer?.pause()
             castScope.launch {
+                var resolved = false
                 try {
                     val result = castController.cast(request)
                     if (result == CastResult.Started) {
+                        progress.dismiss()
+                        resolved = true
                         navController.popBackStack()
                         navController.navigate(CastRemoteRoute)
                     } else {
-                        result.errorMessage()?.let { Toast.makeText(context, it, Toast.LENGTH_LONG).show() }
+                        val message = result.errorMessage()
+                        if (message != null) progress.error("Couldn't cast", message) else progress.dismiss()
+                        resolved = true
                     }
                 } finally {
+                    if (!resolved) progress.dismiss()
                     castInFlight = false
                 }
             }
@@ -374,6 +381,7 @@ fun VideoPlayer(
 ) {
     val navController = LocalNavActions.current
     val context = LocalContext.current
+    val notifier = koinInject<InAppNotifier>()
 
     val exoPlayer = remember {
         ExoPlayer.Builder(context)
@@ -415,7 +423,7 @@ fun VideoPlayer(
                 object : Player.Listener {
                     override fun onPlayerError(error: PlaybackException) {
                         super.onPlayerError(error)
-                        Toast.makeText(context, "Error: ${error.message}", Toast.LENGTH_SHORT).show()
+                        notifier.error("Playback failed", error.message)
                         navController.popBackStack()
                     }
 

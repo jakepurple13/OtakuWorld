@@ -2,7 +2,6 @@ package com.programmersbox.animeworld
 
 import android.os.Build
 import android.provider.MediaStore
-import android.widget.Toast
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +25,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import com.programmersbox.helpfulutils.runOnUIThread
+import com.programmersbox.sharedcomponents.notifier.InAppNotifier
+import org.koin.compose.koinInject
 import java.io.File
 
 @ExperimentalAnimationApi
@@ -36,6 +37,7 @@ fun SlideToDeleteDialog(
     video: VideoContent
 ) {
     val context = LocalContext.current
+    val notifier = koinInject<InAppNotifier>()
     SlideToDeleteDialog(
         title = video.videoName.orEmpty(),
         showDialog = showDialog,
@@ -53,11 +55,12 @@ fun SlideToDeleteDialog(
                                         ?.delete(it1, "${MediaStore.Video.Media._ID} = ?", arrayOf(video.videoId.toString()))
                                 }
                         } else {
-                            Toast.makeText(context, if (file.delete()) R.string.fileDeleted else R.string.fileNotDeleted, Toast.LENGTH_SHORT).show()
+                            if (file.delete()) notifier.success(context.getString(R.string.fileDeleted))
+                            else notifier.error(context.getString(R.string.fileNotDeleted))
                         }
                     }
                 } catch (e: Exception) {
-                    Toast.makeText(context, R.string.something_went_wrong, Toast.LENGTH_SHORT).show()
+                    notifier.error(context.getString(R.string.something_went_wrong))
                 }
             }
         },
