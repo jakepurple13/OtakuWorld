@@ -60,7 +60,7 @@ import kotlinx.coroutines.flow.onEach
 @Composable
 internal fun DrawerView(
     readVm: ReadViewModel,
-    showToast: () -> Unit,
+    showToast: (String) -> Unit,
 ) {
     val drawerScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val state = rememberLazyListState(

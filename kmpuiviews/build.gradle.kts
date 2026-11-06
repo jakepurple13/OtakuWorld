@@ -387,3 +387,7 @@ fun Project.exec(command: String): String {
         .get()
         .trim()
 }
+compose.resources {
+    // Lets mangaworld/novelworld shared modules use kmpuiviews strings (reader banner)
+    publicResClass = true
+}

@@ -225,15 +225,15 @@ class ReadViewModel(
 
     var firstScroll by mutableStateOf(true)
 
-    fun loadPreviousChapter(chapter: () -> Unit) {
+    fun loadPreviousChapter(chapter: (String) -> Unit) {
         loadChapter(++currentChapter, chapter)
     }
 
-    fun loadNextChapter(chapter: () -> Unit) {
+    fun loadNextChapter(chapter: (String) -> Unit) {
         loadChapter(--currentChapter, chapter)
     }
 
-    private fun loadChapter(newChapter: Int, chapter: () -> Unit) {
+    private fun loadChapter(newChapter: Int, chapter: (String) -> Unit) {
         currentChapter = newChapter
         addToFavorites = addToFavorites.copy(count = addToFavorites.count + 1)
         list.getOrNull(newChapter)?.let { item ->
@@ -242,7 +242,7 @@ class ReadViewModel(
                 if (!favoritesRepository.isIncognito(item.source.serviceName)) {
                     favoritesRepository.addWatched(ChapterWatched(item.url, item.name, mangaUrl))
                 }
-                withContext(Dispatchers.Main) { chapter() }
+                withContext(Dispatchers.Main) { chapter(item.name) }
             }
 
             loadedChapterWindow.clear()
@@ -266,7 +266,7 @@ class ReadViewModel(
 
     fun addChapterToWatched(
         newChapter: Int,
-        chapter: () -> Unit,
+        chapter: (String) -> Unit,
     ) {
         loadChapter(newChapter, chapter)
     }

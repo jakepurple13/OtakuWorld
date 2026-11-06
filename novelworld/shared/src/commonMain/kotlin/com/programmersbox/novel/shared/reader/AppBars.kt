@@ -96,7 +96,7 @@ internal fun FloatingFloatingActionButton(
     vm: ReadViewModel,
     onPageSelectClick: () -> Unit,
     onSettingsClick: () -> Unit,
-    chapterChange: () -> Unit,
+    chapterChange: (String) -> Unit,
     onChapterShow: () -> Unit,
     modifier: Modifier = Modifier,
     showFloatBar: Boolean = true,
@@ -166,7 +166,7 @@ internal fun BottomBar(
     vm: ReadViewModel,
     onPageSelectClick: () -> Unit,
     onSettingsClick: () -> Unit,
-    chapterChange: () -> Unit,
+    chapterChange: (String) -> Unit,
     onChapterShow: () -> Unit,
     showBlur: Boolean,
     isAmoledMode: Boolean,
@@ -269,7 +269,7 @@ private fun GoBackButton(modifier: Modifier = Modifier) {
 private fun NextButton(
     vm: ReadViewModel,
     modifier: Modifier = Modifier,
-    nextChapter: () -> Unit,
+    nextChapter: (String) -> Unit,
 ) {
     Button(
         onClick = { vm.addChapterToWatched(--vm.currentChapter, nextChapter) },
@@ -281,7 +281,7 @@ private fun NextButton(
 private fun PreviousButton(
     vm: ReadViewModel,
     modifier: Modifier = Modifier,
-    previousChapter: () -> Unit,
+    previousChapter: (String) -> Unit,
 ) {
     TextButton(
         onClick = { vm.addChapterToWatched(++vm.currentChapter, previousChapter) },
@@ -293,7 +293,7 @@ private fun PreviousButton(
 private fun PreviousIconButton(
     vm: ReadViewModel,
     modifier: Modifier = Modifier,
-    previousChapter: () -> Unit,
+    previousChapter: (String) -> Unit,
 ) {
     IconButton(
         onClick = { vm.addChapterToWatched(++vm.currentChapter, previousChapter) },
@@ -315,7 +315,7 @@ private fun GoBackIconButton(modifier: Modifier = Modifier) {
 private fun NextIconButton(
     vm: ReadViewModel,
     modifier: Modifier = Modifier,
-    nextChapter: () -> Unit,
+    nextChapter: (String) -> Unit,
 ) {
     FilledIconButton(
         onClick = { vm.addChapterToWatched(--vm.currentChapter, nextChapter) },

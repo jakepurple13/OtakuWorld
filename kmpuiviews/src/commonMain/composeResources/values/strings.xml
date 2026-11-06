@@ -492,4 +492,5 @@
     <string name="banner_couldnt_import">Couldn’t import list</string>
     <string name="banner_error">Error</string>
     <string name="banner_link_copied">Link copied</string>
+    <string name="banner_marked_read">Marked as read</string>
 </resources>
