@@ -103,7 +103,6 @@
     <string name="updateTo">Update to %1$s</string>
     <string name="finishing_dots">Finishing…</string>
     <string name="downloading_dots">Downloading…%1$d%%</string>
-    <string name="downloading_dots_no_percent">Downloading…</string>
     <string name="updating_dots">Updating…</string>
     <string name="finishedDownloading">Finished Downloading</string>
     <string name="errorTryAgain">Error: Try Again</string>
