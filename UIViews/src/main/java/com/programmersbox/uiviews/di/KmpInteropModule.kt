@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.dsl.module
 
 val kmpInterop = module {
@@ -99,12 +100,15 @@ class MlKitTranslationModelHandler(
     }
 
     private suspend fun publish(lastUsed: Map<String, Long>) {
-        _models.value = mlKitRows(
-            downloaded = downloaded.value,
-            downloading = downloading.value,
-            sizes = { TranslatorUtils.modelSizeBytes(context, it) },
-            lastUsed = lastUsed,
-        )
+        // Sizes walk the model directories on disk.
+        _models.value = withContext(Dispatchers.IO) {
+            mlKitRows(
+                downloaded = downloaded.value,
+                downloading = downloading.value,
+                sizes = { TranslatorUtils.modelSizeBytes(context, it) },
+                lastUsed = lastUsed,
+            )
+        }
     }
 
     override fun download(code: String) {

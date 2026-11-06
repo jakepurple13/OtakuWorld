@@ -87,8 +87,17 @@ object TranslatorUtils {
 
     /**
      * On-disk size of one language model, or null so callers use an estimate.
-     * The ML Kit model directory layout was not verified on a device (no UI existed to trigger a
-     * download), so no per-language directory is assumed.
+     *
+     * Layout verified on a device (ML Kit translate, 2026-11): each downloaded language lives in
+     * `<noBackupFilesDir>/com.google.mlkit.translate.models/en_<code>/`, holding both directions
+     * (`translate_en<code>/`, `translate_<code>en/`) plus `merged_dict_en_<code>_*.bin` files.
+     * In-progress downloads sit under `temp/` and are not counted. English is the pivot and has no
+     * directory of its own, so it takes no space.
      */
-    fun modelSizeBytes(context: Context, code: String): Long? = null
+    fun modelSizeBytes(context: Context, code: String): Long? {
+        if (code == "en") return 0L
+        val dir = java.io.File(context.noBackupFilesDir, "com.google.mlkit.translate.models/en_$code")
+        if (!dir.isDirectory) return null
+        return dir.walkTopDown().filter { it.isFile }.sumOf { it.length() }
+    }
 }
