@@ -268,6 +268,12 @@ class QuickActionsViewModelTest {
     }
 
     @Test
+    fun updateErrorsNavigates() = runTest {
+        vm().run(QuickAction.UpdateErrors)
+        assertEquals(listOf("navigate:${Screen.UpdateCheckErrors}"), nav.calls)
+    }
+
+    @Test
     fun openErrorsNavigatesAndCloses() = runTest {
         val vm = vm()
         controller.open(OpenOrigin.Keyboard)
