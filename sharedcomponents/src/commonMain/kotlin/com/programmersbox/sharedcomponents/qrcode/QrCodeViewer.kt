@@ -27,6 +27,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -58,7 +60,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import com.programmersbox.sharedcomponents.notifier.InAppNotifier
 import org.koin.compose.koinInject
 
 interface QrCodeInfo {
@@ -174,7 +175,7 @@ fun QrShareSheet(
 
     @Suppress("DEPRECATION")
     val clipboard = LocalClipboardManager.current
-    val notifier = koinInject<InAppNotifier>()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     var waitedOut by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
@@ -277,7 +278,10 @@ fun QrShareSheet(
                             icon = Icons.Default.ContentCopy,
                             onClick = {
                                 clipboard.setText(AnnotatedString(url))
-                                if (!systemConfirmsCopy) notifier.success("Link copied")
+                                if (!systemConfirmsCopy) scope.launch {
+                                    snackbarHostState.currentSnackbarData?.dismiss()
+                                    snackbarHostState.showSnackbar("Link copied")
+                                }
                             }
                         )
                     }
@@ -290,6 +294,12 @@ fun QrShareSheet(
                     }
                 }
             }
+
+            // Inside the sheet, since an app-level snackbar would sit behind the scrim
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier.align(Alignment.BottomCenter)
+            )
         }
     }
 }

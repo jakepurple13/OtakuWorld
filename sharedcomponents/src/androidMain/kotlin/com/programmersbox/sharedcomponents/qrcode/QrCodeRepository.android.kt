@@ -11,13 +11,13 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
+import android.widget.Toast
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.core.content.FileProvider
 import androidx.core.content.getSystemService
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
-import com.programmersbox.sharedcomponents.notifier.InAppNotifier
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
@@ -27,7 +27,6 @@ import java.io.OutputStream
 
 actual class QrCodeRepository(
     private val context: Context,
-    private val notifier: InAppNotifier,
 ) {
     private val clipboardManager by lazy {
         context.getSystemService<ClipboardManager>()
@@ -66,7 +65,7 @@ actual class QrCodeRepository(
 
     actual suspend fun saveImage(bitmap: ImageBitmap, title: String) {
         runCatching { bitmap.asAndroidBitmap().saveToDisk(title) }
-            .onSuccess { notifier.success("Qr Code Saved!") }
+            .onSuccess { Toast.makeText(context, "Qr Code Saved!", Toast.LENGTH_LONG).show() }
     }
 
     private suspend fun Bitmap.saveToDisk(title: String): Uri {
@@ -158,6 +157,6 @@ actual class QrCodeRepository(
     private fun shareBitmap(context: Context, uri: Uri, title: String) {
         clipboardManager?.setPrimaryClip(ClipData.newUri(context.contentResolver, title, uri))
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2)
-            notifier.success("Qr Code Copied!")
+            Toast.makeText(context, "Qr Code Copied!", Toast.LENGTH_LONG).show()
     }
 }
