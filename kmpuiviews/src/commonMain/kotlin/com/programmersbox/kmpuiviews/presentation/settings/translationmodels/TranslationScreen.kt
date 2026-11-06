@@ -72,7 +72,7 @@ fun showTranslationScreen(): MutableState<Boolean> {
                 showTranslationScreen.value = false
             },
             sheetState = sheetState,
-            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            containerColor = MaterialTheme.colorScheme.surface,
         ) {
             TranslationScreen(vm)
         }

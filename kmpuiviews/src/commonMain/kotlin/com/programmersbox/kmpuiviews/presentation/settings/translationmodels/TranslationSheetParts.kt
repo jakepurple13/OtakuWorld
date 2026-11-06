@@ -275,8 +275,8 @@ private fun segmentColors(): List<Color> {
         c.primary,
         c.tertiary,
         c.secondary,
-        c.primary.copy(alpha = 0.55f).compositeOver(c.surface),
-        c.tertiary.copy(alpha = 0.55f).compositeOver(c.surface),
+        c.primary.copy(alpha = 0.55f).compositeOver(c.surfaceContainer),
+        c.tertiary.copy(alpha = 0.55f).compositeOver(c.surfaceContainer),
     )
 }
 
@@ -296,7 +296,7 @@ internal fun StorageMeter(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .background(MaterialTheme.colorScheme.surface)
+            .background(MaterialTheme.colorScheme.surfaceContainer)
             .padding(16.dp),
     ) {
         Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -504,7 +504,7 @@ private fun DownloadedRowContent(
     val colors = MaterialTheme.colorScheme
     val haptics = LocalHapticFeedback.current
     val background by animateColorAsState(
-        if (selected) colors.primaryContainer.copy(alpha = 0.55f).compositeOver(colors.surface) else colors.surface,
+        if (selected) colors.primaryContainer.copy(alpha = 0.55f).compositeOver(colors.surfaceContainer) else colors.surfaceContainer,
         label = "rowBg",
     )
     val name = model.language.englishName
@@ -697,7 +697,7 @@ internal fun AvailableRow(
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         modifier = modifier
             .clip(shape)
-            .background(colors.surface)
+            .background(colors.surfaceContainer)
             .heightIn(min = 64.dp)
             .padding(start = 14.dp, end = 6.dp, top = 10.dp, bottom = 10.dp),
     ) {
@@ -920,7 +920,7 @@ internal fun LanguagePicker(
                     .animateItem()
                     .padding(top = if (i > 0) 2.dp else 0.dp)
                     .clip(groupShape(i, languages.size))
-                    .background(colors.surface)
+                    .background(colors.surfaceContainer)
                     .selectable(selected = code == targetCode, role = Role.RadioButton, onClick = { onPick(code) })
                     .fillMaxWidth()
                     .heightIn(min = 64.dp)
