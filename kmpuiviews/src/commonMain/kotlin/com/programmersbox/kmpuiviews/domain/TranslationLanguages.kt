@@ -1,0 +1,77 @@
+package com.programmersbox.kmpuiviews.domain
+
+data class TranslationLanguage(
+    val code: String,
+    val englishName: String,
+    val nativeName: String,
+    val glyph: String,
+)
+
+/** The languages supported by ML Kit translation, sorted by [TranslationLanguage.englishName]. */
+object TranslationLanguages {
+    val all: List<TranslationLanguage> = listOf(
+        TranslationLanguage("af", "Afrikaans", "Afrikaans", "Af"),
+        TranslationLanguage("sq", "Albanian", "Shqip", "Sq"),
+        TranslationLanguage("ar", "Arabic", "العربية", "ا"),
+        TranslationLanguage("be", "Belarusian", "Беларуская", "Б"),
+        TranslationLanguage("bn", "Bengali", "বাংলা", "ব"),
+        TranslationLanguage("bg", "Bulgarian", "Български", "Б"),
+        TranslationLanguage("ca", "Catalan", "Català", "Ca"),
+        TranslationLanguage("zh", "Chinese", "中文", "中"),
+        TranslationLanguage("hr", "Croatian", "Hrvatski", "Hr"),
+        TranslationLanguage("cs", "Czech", "Čeština", "Cs"),
+        TranslationLanguage("da", "Danish", "Dansk", "Da"),
+        TranslationLanguage("nl", "Dutch", "Nederlands", "Nl"),
+        TranslationLanguage("en", "English", "English", "En"),
+        TranslationLanguage("eo", "Esperanto", "Esperanto", "Eo"),
+        TranslationLanguage("et", "Estonian", "Eesti", "Et"),
+        TranslationLanguage("fi", "Finnish", "Suomi", "Fi"),
+        TranslationLanguage("fr", "French", "Français", "Fr"),
+        TranslationLanguage("gl", "Galician", "Galego", "Gl"),
+        TranslationLanguage("ka", "Georgian", "ქართული", "ქ"),
+        TranslationLanguage("de", "German", "Deutsch", "De"),
+        TranslationLanguage("el", "Greek", "Ελληνικά", "Ε"),
+        TranslationLanguage("gu", "Gujarati", "ગુજરાતી", "ગ"),
+        TranslationLanguage("ht", "Haitian Creole", "Kreyòl ayisyen", "Ht"),
+        TranslationLanguage("he", "Hebrew", "עברית", "ע"),
+        TranslationLanguage("hi", "Hindi", "हिन्दी", "ह"),
+        TranslationLanguage("hu", "Hungarian", "Magyar", "Hu"),
+        TranslationLanguage("is", "Icelandic", "Íslenska", "Is"),
+        TranslationLanguage("id", "Indonesian", "Bahasa Indonesia", "Id"),
+        TranslationLanguage("ga", "Irish", "Gaeilge", "Ga"),
+        TranslationLanguage("it", "Italian", "Italiano", "It"),
+        TranslationLanguage("ja", "Japanese", "日本語", "日"),
+        TranslationLanguage("kn", "Kannada", "ಕನ್ನಡ", "ಕ"),
+        TranslationLanguage("ko", "Korean", "한국어", "한"),
+        TranslationLanguage("lv", "Latvian", "Latviešu", "Lv"),
+        TranslationLanguage("lt", "Lithuanian", "Lietuvių", "Lt"),
+        TranslationLanguage("mk", "Macedonian", "Македонски", "М"),
+        TranslationLanguage("ms", "Malay", "Bahasa Melayu", "Ms"),
+        TranslationLanguage("mt", "Maltese", "Malti", "Mt"),
+        TranslationLanguage("mr", "Marathi", "मराठी", "म"),
+        TranslationLanguage("no", "Norwegian", "Norsk", "No"),
+        TranslationLanguage("fa", "Persian", "فارسی", "ف"),
+        TranslationLanguage("pl", "Polish", "Polski", "Pl"),
+        TranslationLanguage("pt", "Portuguese", "Português", "Pt"),
+        TranslationLanguage("ro", "Romanian", "Română", "Ro"),
+        TranslationLanguage("ru", "Russian", "Русский", "Р"),
+        TranslationLanguage("sk", "Slovak", "Slovenčina", "Sk"),
+        TranslationLanguage("sl", "Slovenian", "Slovenščina", "Sl"),
+        TranslationLanguage("es", "Spanish", "Español", "Es"),
+        TranslationLanguage("sw", "Swahili", "Kiswahili", "Sw"),
+        TranslationLanguage("sv", "Swedish", "Svenska", "Sv"),
+        TranslationLanguage("tl", "Tagalog", "Tagalog", "Tl"),
+        TranslationLanguage("ta", "Tamil", "தமிழ்", "த"),
+        TranslationLanguage("te", "Telugu", "తెలుగు", "త"),
+        TranslationLanguage("th", "Thai", "ไทย", "ไ"),
+        TranslationLanguage("tr", "Turkish", "Türkçe", "Tr"),
+        TranslationLanguage("uk", "Ukrainian", "Українська", "У"),
+        TranslationLanguage("ur", "Urdu", "اردو", "ا"),
+        TranslationLanguage("vi", "Vietnamese", "Tiếng Việt", "Vi"),
+        TranslationLanguage("cy", "Welsh", "Cymraeg", "Cy"),
+    )
+
+    private val byCode = all.associateBy { it.code }
+
+    fun byCode(code: String): TranslationLanguage? = byCode[code]
+}

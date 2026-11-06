@@ -52,6 +52,10 @@ message Settings {
   bool favoritesGridView = 44;
   // Favorites reopens on the Library tab instead of Overview.
   bool favoritesOpenLibrary = 45;
+  // Global translation target language code. Empty means "en".
+  string translationTargetLanguage = 46;
+  // Epoch millis a target language was last used, keyed by language code.
+  map<string, int64> translationLastUsed = 47;
 }
 
 message GlobalSearchLanguageOverride {
