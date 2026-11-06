@@ -51,6 +51,10 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   progress in a snackbar. On Desktop, press Cmd/Ctrl+K or use the Actions menu. Desktop update
   checks now report progress and can't run twice at once
   ([#2674](https://github.com/jakepurple13/OtakuWorld/pull/2674))
+- Quick actions now include Update check errors. On that screen, the Share and Retry failed bar
+  is no longer see-through and slides in when a check finishes with errors, the app's navigation
+  bar is hidden, and the top bar stays pinned while you scroll
+  ([#2675](https://github.com/jakepurple13/OtakuWorld/pull/2675))
 - AnimeWorld player styles: Classic (full-width bars), Floating (rounded pills and a control dock),
   and Theater (bars that fade in from the edges). Pick one in Play Settings or onboarding, with a
   live preview of the player while you choose. Classic is the default. The bars use your blur kind

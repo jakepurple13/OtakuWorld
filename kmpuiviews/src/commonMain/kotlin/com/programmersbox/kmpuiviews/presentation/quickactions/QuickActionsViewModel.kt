@@ -103,6 +103,7 @@ class QuickActionsViewModel(
 
             QuickAction.ScanQrCode -> navigationActions.scanQrCode()
             QuickAction.BackgroundTasks -> navigationActions.workerInfo()
+            QuickAction.UpdateErrors -> navigationActions.navigate(Screen.UpdateCheckErrors)
         }
     }
 

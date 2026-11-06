@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Schedule
@@ -50,6 +51,8 @@ import otakuworld.kmpuiviews.generated.resources.qa_run
 import otakuworld.kmpuiviews.generated.resources.qa_scan_qr
 import otakuworld.kmpuiviews.generated.resources.qa_scan_qr_sub
 import otakuworld.kmpuiviews.generated.resources.qa_scheduled
+import otakuworld.kmpuiviews.generated.resources.qa_update_errors
+import otakuworld.kmpuiviews.generated.resources.qa_update_errors_sub
 import otakuworld.kmpuiviews.generated.resources.quick_actions
 import kotlin.time.Clock
 
@@ -106,7 +109,7 @@ fun QuickActionsList(
                 trailing = { Chevron() },
             )
             QuickActionRow(
-                shape = LastShape,
+                shape = MiddleShape,
                 icon = Icons.Default.Schedule,
                 iconContainer = MaterialTheme.colorScheme.secondaryContainer,
                 iconContent = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -115,6 +118,16 @@ fun QuickActionsList(
                     ?.let { stringResource(Res.string.qa_scheduled, it) }
                     ?: stringResource(Res.string.qa_background_tasks_sub),
                 onClick = { onAction(QuickAction.BackgroundTasks) },
+                trailing = { Chevron() },
+            )
+            QuickActionRow(
+                shape = LastShape,
+                icon = Icons.Default.ErrorOutline,
+                iconContainer = MaterialTheme.colorScheme.errorContainer,
+                iconContent = MaterialTheme.colorScheme.onErrorContainer,
+                title = stringResource(Res.string.qa_update_errors),
+                supporting = stringResource(Res.string.qa_update_errors_sub),
+                onClick = { onAction(QuickAction.UpdateErrors) },
                 trailing = { Chevron() },
             )
         }

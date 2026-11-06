@@ -469,6 +469,8 @@
     <string name="qa_background_tasks">Background tasks</string>
     <string name="qa_scheduled">%1$d scheduled</string>
     <string name="qa_background_tasks_sub">See what\'s scheduled</string>
+    <string name="qa_update_errors">Update check errors</string>
+    <string name="qa_update_errors_sub">See what failed in the last check</string>
     <string name="qa_last_checked">Last checked %1$s</string>
     <string name="qa_never_checked">Never checked</string>
     <string name="qa_run">Run</string>
