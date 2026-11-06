@@ -98,6 +98,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.datastore.ColorBlindnessType
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.RecentModel
+import com.programmersbox.kmpuiviews.notifier.rememberScreenBannerSlot
 import com.programmersbox.kmpuiviews.notifier.showUndoable
 import com.programmersbox.kmpuiviews.notifier.sourceMissing
 import com.programmersbox.kmpuiviews.painterLogo
@@ -174,6 +175,7 @@ fun HistoryUi(
 ) {
     val scope = rememberCoroutineScope()
     val notifier = koinInject<InAppNotifier>()
+    val missingBanner = rememberScreenBannerSlot(notifier)
     val missingLabel = stringResource(Res.string.banner_source_missing)
     val moreOptionsLabel = stringResource(Res.string.banner_more_options)
     val biometrics = rememberBiometricOpening()
@@ -226,7 +228,7 @@ fun HistoryUi(
     }
 
     val onError: (RecentModel) -> Unit = { item ->
-        notifier.sourceMissing(
+        missingBanner.id = notifier.sourceMissing(
             title = item.title,
             sourceName = item.source,
             missingLabel = missingLabel,

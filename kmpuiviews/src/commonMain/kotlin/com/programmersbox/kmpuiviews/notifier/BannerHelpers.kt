@@ -9,6 +9,21 @@ import com.programmersbox.sharedcomponents.notifier.ProgressHandle
 import kotlinx.coroutines.flow.first
 import org.koin.compose.koinInject
 
+/** Holds a banner whose action targets screen-local state, so it can be dismissed when the screen leaves. */
+internal class ScreenBannerSlot {
+    var id: BannerId? = null
+}
+
+/** The slot's banner is dismissed when the calling composable leaves composition. */
+@Composable
+internal fun rememberScreenBannerSlot(notifier: InAppNotifier): ScreenBannerSlot {
+    val slot = remember { ScreenBannerSlot() }
+    DisposableEffect(notifier, slot) {
+        onDispose { slot.id?.let(notifier::dismiss) }
+    }
+    return slot
+}
+
 /**
  * "Source not installed" error banner with a More options action.
  * The labels are resolved by the caller because the notifier is not suspending.

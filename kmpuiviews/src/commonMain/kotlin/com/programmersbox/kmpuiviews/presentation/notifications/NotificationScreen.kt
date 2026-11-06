@@ -105,6 +105,7 @@ import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.DateTimeFormatHandler
+import com.programmersbox.kmpuiviews.notifier.rememberScreenBannerSlot
 import com.programmersbox.kmpuiviews.notifier.showUndoable
 import com.programmersbox.kmpuiviews.notifier.sourceMissing
 import com.programmersbox.kmpuiviews.painterLogo
@@ -208,6 +209,7 @@ fun NotificationScreen(
     )
 
     val notifier = koinInject<InAppNotifier>()
+    val missingBanner = rememberScreenBannerSlot(notifier)
     val missingLabel = stringResource(Res.string.banner_source_missing)
     val moreOptionsLabel = stringResource(Res.string.banner_more_options)
     val scope = rememberCoroutineScope()
@@ -225,7 +227,7 @@ fun NotificationScreen(
     val toSource: (String) -> KmpApiService? = { s -> sourceRepository.toSourceByApiServiceName(s)?.apiService }
 
     val onError: (NotificationItem) -> Unit = {
-        notifier.sourceMissing(
+        missingBanner.id = notifier.sourceMissing(
             title = it.notiTitle,
             sourceName = it.source,
             missingLabel = missingLabel,

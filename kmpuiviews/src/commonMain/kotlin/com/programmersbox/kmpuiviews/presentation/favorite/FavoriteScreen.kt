@@ -74,6 +74,7 @@ import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.kmpmodels.SourceRepository
+import com.programmersbox.kmpuiviews.notifier.rememberScreenBannerSlot
 import com.programmersbox.kmpuiviews.notifier.sourceMissing
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
@@ -133,6 +134,7 @@ fun FavoriteScreen(
     val scope = rememberCoroutineScope()
     val biometric = rememberBiometricOpening()
     val notifier = koinInject<InAppNotifier>()
+    val missingBanner = rememberScreenBannerSlot(notifier)
     val missingLabel = stringResource(Res.string.banner_source_missing)
     val moreOptionsLabel = stringResource(Res.string.banner_more_options)
 
@@ -149,7 +151,7 @@ fun FavoriteScreen(
     }
 
     fun moreInfoClick(dbModel: DbModel) {
-        notifier.sourceMissing(
+        missingBanner.id = notifier.sourceMissing(
             title = dbModel.title,
             sourceName = displayName(dbModel.source),
             missingLabel = missingLabel,
