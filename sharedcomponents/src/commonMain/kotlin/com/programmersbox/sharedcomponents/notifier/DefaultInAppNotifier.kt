@@ -2,6 +2,7 @@ package com.programmersbox.sharedcomponents.notifier
 
 import androidx.compose.ui.graphics.vector.ImageVector
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -33,6 +34,7 @@ class DefaultInAppNotifier(
 
     private val state = MutableStateFlow<List<Banner>>(emptyList())
     private val nextId = MutableStateFlow(0L)
+    private val acting = MutableStateFlow<Set<BannerId>>(emptySet())
 
     override val banners: StateFlow<List<Banner>> = state.asStateFlow()
 
@@ -110,12 +112,17 @@ class DefaultInAppNotifier(
 
     override fun performAction(id: BannerId) {
         val banner = state.value.firstOrNull { it.id == id } ?: return
-        dismiss(id)
-        scope.launch {
+        // Claim atomically so two concurrent calls cannot both run the action.
+        if (id in acting.getAndUpdate { it + id }) return
+        // Start before the banner leaves state: the action's synchronous prefix (e.g. the
+        // "undone" flag showUndoable reads) must run before any collector sees the removal.
+        scope.launch(start = CoroutineStart.UNDISPATCHED) {
             runCatching { banner.onAction() }
                 .onFailure { if (it is kotlinx.coroutines.CancellationException) throw it }
                 .onFailure { println("InAppNotifier: action for '${banner.title}' failed: $it") }
         }
+        dismiss(id)
+        acting.update { it - id }
     }
 
     override fun setPaused(reason: PauseReason, paused: Boolean) {

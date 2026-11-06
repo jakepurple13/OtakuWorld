@@ -158,6 +158,34 @@ class DefaultInAppNotifierTest {
     }
 
     @Test
+    fun actionStartsBeforeBannerLeaves() = runTest {
+        val n = notifier()
+        var started = false
+        var startedWhenGone: Boolean? = null
+        val id = n.success("A", action = "Go", onAction = { started = true })
+        backgroundScope.launch {
+            n.banners.collect { list ->
+                if (startedWhenGone == null && list.none { it.id == id }) startedWhenGone = started
+            }
+        }
+        runCurrent()
+        n.performAction(id)
+        runCurrent()
+        assertEquals(true, startedWhenGone)
+    }
+
+    @Test
+    fun concurrentPerformActionRunsOnce() = runTest {
+        val n = notifier()
+        var count = 0
+        val id = n.success("A", action = "Go", onAction = { count++ })
+        n.performAction(id)
+        n.performAction(id)
+        runCurrent()
+        assertEquals(1, count)
+    }
+
+    @Test
     fun actionRunsAfterCallerScopeCancelled() = runTest {
         val n = notifier()
         var ran = false
