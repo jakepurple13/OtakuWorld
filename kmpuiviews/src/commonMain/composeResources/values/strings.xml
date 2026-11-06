@@ -484,4 +484,6 @@
     <string name="qa_waiting_to_start">Waiting to start…</string>
     <string name="qa_check_failed">Check failed</string>
     <string name="qa_dismiss">Dismiss</string>
+    <string name="banner_dismiss">Dismiss</string>
+    <string name="banner_clear_all">Clear all</string>
 </resources>

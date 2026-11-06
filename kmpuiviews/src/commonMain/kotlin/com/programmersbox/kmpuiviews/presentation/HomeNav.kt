@@ -104,6 +104,7 @@ import com.programmersbox.kmpuiviews.appVersion
 import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.domain.AppUpdateCheck
 import com.programmersbox.kmpuiviews.painterLogo
+import com.programmersbox.kmpuiviews.notifier.InAppBannerHost
 import com.programmersbox.kmpuiviews.presentation.components.HazeScaffold
 import com.programmersbox.kmpuiviews.presentation.components.MultipleActions
 import com.programmersbox.kmpuiviews.presentation.components.ScreenBottomItem
@@ -272,6 +273,8 @@ fun HomeNav(
                         CompositionLocalProvider(LocalNavHostPadding provides navHostPadding) {
                             QuickActionsOverlay()
                         }
+
+                        InAppBannerHost()
                     }
                 }
             }
