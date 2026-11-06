@@ -51,7 +51,7 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   or Retry actions, swipe away to dismiss, and fan out when you tap the stack while two or more
   are showing, with a Clear all button. Progress banners turn into their result in place. On
   Desktop and wide windows the stack sits at the top right; on narrow windows it sits at the top
-  center
+  center ([#2676](https://github.com/jakepurple13/OtakuWorld/pull/2676))
 - Quick actions: a bolt button in the top bar on Recent and Settings opens a card with
   Check for updates, Scan QR code, and Background tasks. Checking for updates runs in place with
   progress in a banner. On Desktop, press Cmd/Ctrl+K or use the Actions menu. Desktop update
@@ -203,7 +203,7 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 #### Bug Fixes
 
 - Rows restored with Undo in History and Notifications now reappear in view, instead of staying
-  scrolled off the top
+  scrolled off the top ([#2676](https://github.com/jakepurple13/OtakuWorld/pull/2676))
 - Fixed removing items from a custom list
   ([#2598](https://github.com/jakepurple13/OtakuWorld/pull/2598))
 - Fixed custom list items being soft-deleted by the parent list's id instead of their own
@@ -298,6 +298,8 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 - Update notifications: the group summary now goes away once every title is cleared, swiping a
   title away no longer marks a different title as seen, and the summary's update count is no
   longer one short ([#2673](https://github.com/jakepurple13/OtakuWorld/pull/2673))
+- Fixed a crash when a cover was an animated GIF. Covers now load as still images, so animated
+  covers show their first frame ([#2676](https://github.com/jakepurple13/OtakuWorld/pull/2676))
 
 ### Desktop Only
 
