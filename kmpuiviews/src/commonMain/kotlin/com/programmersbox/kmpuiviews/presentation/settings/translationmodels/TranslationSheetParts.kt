@@ -149,9 +149,18 @@ internal fun formatModelSize(bytes: Long, estimate: Boolean = false): String {
 internal fun rowSizeText(model: TranslationModel): String? =
     if (model.required) null else formatModelSize(model.sizeBytes ?: 0L, model.sizeIsEstimate)
 
-/** Models drawn in the storage meter and its legend: built-in ones take no space worth showing. */
+/** Models drawn in the storage meter and its legend, built-in (required) ones first. */
 internal fun meterModels(downloaded: List<TranslationModel>): List<TranslationModel> =
-    downloaded.filterNot { it.required }
+    downloaded.sortedByDescending { it.required }
+
+/**
+ * Bar weight for [model]. Built-in English has no files of its own (ML Kit stores it inside each
+ * en_<code> pair), so it gets a fixed visible share instead of a size-based one: 8% of the total,
+ * and the whole bar when nothing else is downloaded.
+ */
+internal fun meterWeight(model: TranslationModel, totalBytes: Long): Float =
+    if (model.required) (totalBytes * 0.08f / 1_000_000f).coerceAtLeast(2f)
+    else ((model.sizeBytes ?: 0L) / 1_000_000f).coerceAtLeast(0.5f)
 
 private const val DAY_MILLIS = 86_400_000L
 
@@ -318,10 +327,11 @@ internal fun StorageMeter(
             ) { Text(it, style = MaterialTheme.typography.headlineSmall) }
             val subtitle = if (selecting && selected.isNotEmpty()) {
                 stringResource(Res.string.translation_after_delete, formatModelSize(totalBytes - selectedBytes, estimate))
-            } else if (extras.isEmpty()) {
+            } else if (downloaded.isEmpty()) {
                 stringResource(Res.string.translation_no_extra_languages)
             } else {
-                pluralStringResource(Res.plurals.translation_for_languages, extras.size, extras.size)
+                // English counts as a language even though its files live inside each en_<code> pair.
+                pluralStringResource(Res.plurals.translation_for_languages, downloaded.size, downloaded.size)
             }
             AnimatedContent(
                 targetState = subtitle,
@@ -345,7 +355,7 @@ internal fun StorageMeter(
         ) {
             extras.forEachIndexed { i, model ->
                 key(model.language.code) {
-                    val targetWeight = ((model.sizeBytes ?: 0L) / 1_000_000f).coerceAtLeast(0.5f)
+                    val targetWeight = meterWeight(model, totalBytes)
                     // Starts near zero so a newly downloaded language grows into the bar.
                     val weight = remember { Animatable(0.001f) }
                     LaunchedEffect(targetWeight) {
@@ -382,7 +392,11 @@ internal fun StorageMeter(
                         )
                         Spacer(Modifier.size(4.dp))
                         Text(
-                            model.language.englishName,
+                            if (model.required) {
+                                "${model.language.englishName} · ${stringResource(Res.string.translation_built_in)}"
+                            } else {
+                                model.language.englishName
+                            },
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
