@@ -42,4 +42,24 @@ class LanguageDetectorTest {
         // Danish/Norwegian split (about 0.71 / 0.29): too close to call, so leave it untranslated.
         assertEquals(null, detector.detect("Jeg har en bil og en hund"))
     }
+
+    @Test
+    fun `detects traditional chinese as zh`() {
+        assertEquals("zh", detector.detect("一個普通的高中少年有一天突然獲得了神秘的力量，從此踏上了拯救世界的冒險旅程。"))
+    }
+
+    @Test
+    fun `pickLanguage sums chinese profiles`() {
+        assertEquals("zh", pickLanguage(listOf("zh-CN" to 0.6, "zh-TW" to 0.4)))
+    }
+
+    @Test
+    fun `pickLanguage below floor returns null`() {
+        assertEquals(null, pickLanguage(listOf("es" to 0.5, "pt" to 0.45)))
+    }
+
+    @Test
+    fun `pickLanguage single confident language`() {
+        assertEquals("ja", pickLanguage(listOf("ja" to 0.9)))
+    }
 }

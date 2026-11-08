@@ -29,16 +29,29 @@ class LibraryLanguageDetector : LanguageDetector {
 
     override fun detect(text: String): String? {
         if (text.count { it.isLetter() } < MIN_LETTERS) return null
-        val result = detector.getProbabilities(textFactory.forText(text))
-            .maxByOrNull { it.probability }
-            ?: return null
-        if (result.probability < MIN_PROBABILITY) return null
-        return result.locale.language.takeIf { it.isNotBlank() }
+        return pickLanguage(
+            detector.getProbabilities(textFactory.forText(text))
+                .map { it.locale.toString() to it.probability }
+        )
     }
 
     private companion object {
         /** Shorter text is too ambiguous to guess; leave it untranslated. */
         const val MIN_LETTERS = 12
-        const val MIN_PROBABILITY = 0.75
     }
+}
+
+private const val MIN_PROBABILITY = 0.75
+
+/**
+ * Sums probabilities per language (zh-CN + zh-TW both count as "zh") and returns the best
+ * language, or null when even the summed best is under [floor].
+ */
+fun pickLanguage(probabilities: List<Pair<String, Double>>, floor: Double = MIN_PROBABILITY): String? {
+    val best = probabilities
+        .groupBy({ it.first.substringBefore('-').substringBefore('_') }, { it.second })
+        .mapValues { it.value.sum() }
+        .maxByOrNull { it.value }
+        ?: return null
+    return best.key.takeIf { best.value >= floor && it.isNotBlank() }
 }
