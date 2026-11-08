@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.SkippedUpdateSource
 import com.programmersbox.favoritesdatabase.SourceCount
+import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckReportStore
 import kotlinx.coroutines.flow.Flow
@@ -13,7 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 
-/** One source that has favorites, as shown on the update sources screen. [source] is the service name. */
+/** One source installed in this app, as shown on the update sources screen. [source] is the service name. */
 data class UpdateSourceRow(
     val source: String,
     val name: String,
@@ -22,29 +23,39 @@ data class UpdateSourceRow(
     val failedLastCheck: Boolean,
 )
 
-/** Emits (checked, total) for sources that have favorites. */
-fun ItemDao.updateSourcesCheckedCount(): Flow<Pair<Int, Int>> =
-    combine(getFavoriteCountsBySource(), getSkippedUpdateSources()) { counts, skipped ->
-        counts.count { it.source !in skipped } to counts.size
+/**
+ * Emits (checked, total) for the sources installed in this app. Skipped entries for sources that aren't
+ * installed (e.g. another app's, or an uninstalled extension) don't count.
+ */
+fun ItemDao.updateSourcesCheckedCount(sourceRepository: SourceRepository): Flow<Pair<Int, Int>> =
+    combine(getSkippedUpdateSources(), sourceRepository.sources) { skipped, sources ->
+        val installed = sources.serviceNames()
+        installed.count { it !in skipped } to installed.size
     }
 
-/** Builds one row per source with favorites, sorted by name. */
+private fun List<KmpSourceInformation>.serviceNames(): Set<String> = mapTo(LinkedHashSet()) { it.apiService.serviceName }
+
+/** Builds one row per installed source, with its favorite count (0 if none), sorted by name. */
 fun buildUpdateSourceRows(
+    installed: Set<String>,
     counts: List<SourceCount>,
     skipped: Set<String>,
     failedSources: Set<String>,
     displayName: (String) -> String,
-): List<UpdateSourceRow> = counts
-    .map {
-        UpdateSourceRow(
-            source = it.source,
-            name = displayName(it.source),
-            favorites = it.count,
-            skipped = it.source in skipped,
-            failedLastCheck = it.source in failedSources,
-        )
-    }
-    .sortedBy { it.name.lowercase() }
+): List<UpdateSourceRow> {
+    val favoritesBySource = counts.associate { it.source to it.count }
+    return installed
+        .map {
+            UpdateSourceRow(
+                source = it,
+                name = displayName(it),
+                favorites = favoritesBySource[it] ?: 0,
+                skipped = it in skipped,
+                failedLastCheck = it in failedSources,
+            )
+        }
+        .sortedBy { it.name.lowercase() }
+}
 
 class UpdateSourcesViewModel(
     private val itemDao: ItemDao,
@@ -57,10 +68,11 @@ class UpdateSourcesViewModel(
         itemDao.getFavoriteCountsBySource(),
         itemDao.getSkippedUpdateSources(),
         reportStore.report,
-        // Re-map names once sources finish loading.
+        // Rows are the sources installed in this app; re-emits as sources finish loading.
         sourceRepository.sources,
-    ) { counts, skipped, report, _ ->
+    ) { counts, skipped, report, sources ->
         buildUpdateSourceRows(
+            installed = sources.serviceNames(),
             counts = counts,
             skipped = skipped.toSet(),
             failedSources = report?.sourceFailures.orEmpty().mapTo(HashSet()) { it.source },

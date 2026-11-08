@@ -27,6 +27,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.utils.showSourceChoos
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.LocalCurrentSource
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
+import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import otakuworld.kmpuiviews.generated.resources.Res
@@ -46,7 +47,9 @@ fun SourcesScreen(
     val uriHandler = LocalUriHandler.current
     val source by LocalCurrentSource.current.asFlow().collectAsStateWithLifecycle(null)
     var showSourceChooser by showSourceChooser()
-    val updateSourcesCount by remember(itemDao) { itemDao.updateSourcesCheckedCount() }.collectAsStateWithLifecycle(null)
+    val sourceRepository = LocalSourcesRepository.current
+    val updateSourcesCount by remember(itemDao, sourceRepository) { itemDao.updateSourcesCheckedCount(sourceRepository) }
+        .collectAsStateWithLifecycle(null)
 
     SettingsScaffold(
         title = "Sources & Extensions",

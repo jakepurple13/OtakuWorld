@@ -553,6 +553,6 @@
     <string name="us_failed_last_check">Failed last check</string>
     <string name="us_none_checked">Nothing will be checked.</string>
     <string name="us_none_skipped">Every source is checked.</string>
-    <string name="us_no_favorites">Favorite something to choose its source here.</string>
+    <string name="us_no_sources">Install a source to choose it here.</string>
     <string name="us_no_matches">No sources match “%1$s”</string>
 </resources>
