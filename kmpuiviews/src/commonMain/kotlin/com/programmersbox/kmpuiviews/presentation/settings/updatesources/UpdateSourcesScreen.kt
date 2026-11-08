@@ -59,8 +59,8 @@ import otakuworld.kmpuiviews.generated.resources.us_checking
 import otakuworld.kmpuiviews.generated.resources.us_description
 import otakuworld.kmpuiviews.generated.resources.us_failed_last_check
 import otakuworld.kmpuiviews.generated.resources.us_favorites
-import otakuworld.kmpuiviews.generated.resources.us_no_favorites
 import otakuworld.kmpuiviews.generated.resources.us_no_matches
+import otakuworld.kmpuiviews.generated.resources.us_no_sources
 import otakuworld.kmpuiviews.generated.resources.us_none_checked
 import otakuworld.kmpuiviews.generated.resources.us_none_skipped
 import otakuworld.kmpuiviews.generated.resources.us_search
@@ -125,7 +125,7 @@ fun UpdateSourcesScreen(
 
             if (all.isEmpty()) {
                 item(key = "empty") {
-                    EmptyText(stringResource(Res.string.us_no_favorites), Modifier.animateItem())
+                    EmptyText(stringResource(Res.string.us_no_sources), Modifier.animateItem())
                 }
                 return@LazyColumn
             }
