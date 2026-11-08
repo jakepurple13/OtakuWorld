@@ -78,6 +78,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.utils.ColorHelperScre
 import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfoScreen
 import com.programmersbox.kmpuiviews.presentation.tips.TipsScreen
 import com.programmersbox.kmpuiviews.presentation.updatecheck.UpdateCheckErrorsScreen
+import com.programmersbox.kmpuiviews.presentation.settings.updatesources.UpdateSourcesScreen
 import com.programmersbox.kmpuiviews.presentation.urlopener.UrlOpenerScreen
 import com.programmersbox.kmpuiviews.presentation.webview.WebViewScreen
 import com.programmersbox.kmpuiviews.utils.AppConfig
@@ -212,6 +213,8 @@ fun buildKmpGraph(): Module = module {
     }
 
     detailEntry<Screen.UpdateCheckErrors> { UpdateCheckErrorsScreen() }
+
+    detailEntry<Screen.UpdateSourcesSettings> { UpdateSourcesScreen() }
 
     detailEntry<Screen.NotificationsSettings> {
         NotificationSettings()

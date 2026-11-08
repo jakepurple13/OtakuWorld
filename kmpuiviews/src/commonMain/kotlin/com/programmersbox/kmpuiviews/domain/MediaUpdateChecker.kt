@@ -227,7 +227,7 @@ class MediaUpdateChecker(
     }
 
     private suspend fun getConsolidatedFavoriteItems(checkAll: Boolean): List<DbModel> {
-        return if (checkAll) dao.getAllFavoritesSync() else dao.getAllNotifyingFavoritesSync()
+        return dao.getFavoritesToCheckSync(checkAll)
     }
 
     private suspend fun ensureSourcesLoaded() {

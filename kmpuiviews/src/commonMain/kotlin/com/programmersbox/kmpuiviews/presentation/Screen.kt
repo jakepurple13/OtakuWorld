@@ -107,6 +107,9 @@ sealed class Screen(val route: String) : NavKey {
     data object UpdateCheckErrors : Screen("update_check_errors")
 
     @Serializable
+    data object UpdateSourcesSettings : Screen("update_sources_settings")
+
+    @Serializable
     data object AccountInfo : Screen("account_info") {
         @Serializable
         data object AccountStatDetails : Screen("account_stat_details")

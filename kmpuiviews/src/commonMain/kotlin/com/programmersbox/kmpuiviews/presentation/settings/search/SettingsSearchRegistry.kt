@@ -293,6 +293,14 @@ class DefaultSettingsItems : SearchRegistryItem {
                 targetScreen = Screen.NotificationsSettings,
                 highlightKey = "notify_boot",
             ),
+            // ── Sources & Extensions ─────────────────────────────────
+            SettingSearchItem(
+                displayName = "Update Sources",
+                keywords = listOf("update", "skip", "source", "check", "extension"),
+                breadcrumb = listOf(Screen.Settings.Sources, Screen.UpdateSourcesSettings),
+                targetScreen = Screen.UpdateSourcesSettings,
+                highlightKey = "update_sources",
+            ),
             // ── Behavior > Privacy & Security ────────────────────────
             SettingSearchItem(
                 displayName = "Biometric Lock",
