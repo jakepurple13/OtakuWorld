@@ -29,6 +29,7 @@ object SettingsScreenDisplayNames {
         Screen.Settings.Discover -> "Discover"
         Screen.Settings.Sources -> "Sources & Extensions"
         Screen.Settings.Integrations -> "Integrations"
+        Screen.Settings.Translation -> "Translation"
         Screen.Settings.Appearance -> "Appearance"
         Screen.Settings.Colors -> "Colors"
         Screen.Settings.Behavior -> "Behavior"

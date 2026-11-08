@@ -106,3 +106,6 @@ expect class SystemAlerter {
  */
 @Composable
 expect fun ReportDrawnWhen(predicate: () -> Boolean)
+
+/** True where translation settings are a full page (desktop) rather than the Android bottom sheet. */
+expect val hasTranslationSettingsPage: Boolean

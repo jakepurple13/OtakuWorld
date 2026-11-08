@@ -191,6 +191,7 @@ class Navigation3Actions : NavigationActions, Navigator {
     override fun discover() = navigate(Screen.Settings.Discover)
     override fun sources() = navigate(Screen.Settings.Sources)
     override fun integrations() = navigate(Screen.Settings.Integrations)
+    override fun translationSettings() = navigate(Screen.Settings.Translation)
     override fun appearance() = navigate(Screen.Settings.Appearance)
     override fun colors() = navigate(Screen.Settings.Colors)
     override fun behaviorSettings() = navigate(Screen.Settings.Behavior)

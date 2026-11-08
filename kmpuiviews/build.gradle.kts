@@ -220,6 +220,7 @@ kotlin {
                 api(desktopLibs.github.nucleus.notifications.common)
                 api(desktopLibs.nucleus.system.info)
                 implementation(desktopLibs.ksafe.biometrics)
+                implementation(desktopLibs.language.detector)
                 api(desktopLibs.nucleus.core.runtime)
                 api(desktopLibs.nucleus.aot.runtime)
                 api(desktopLibs.nucleus.updater.runtime)

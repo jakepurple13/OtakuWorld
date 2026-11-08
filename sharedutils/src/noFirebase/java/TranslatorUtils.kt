@@ -1,20 +1,16 @@
 package com.programmersbox.sharedutils
 
-class TranslateItems {
-    fun translateDescription(textToTranslate: String, progress: (Boolean) -> Unit, translatedText: (String) -> Unit) =
-        translatedText(textToTranslate)
+import android.content.Context
 
-    suspend fun translate(textToTranslate: String): String = textToTranslate
+class TranslateItems {
+    suspend fun translate(text: String, target: String, onTranslated: suspend (source: String) -> Unit = {}): String = text
     fun clear() = Unit
 }
 
 object TranslatorUtils {
-    fun getModels(onSuccess: (List<CustomRemoteModel>) -> Unit) = Unit
-    suspend fun deleteModel(model: CustomRemoteModel) = Unit
-
-    suspend fun modelList() = emptyList<CustomRemoteModel>()
-
-    suspend fun delete(model: CustomRemoteModel) = Unit
+    val isAvailable: Boolean = false
+    suspend fun downloadedCodes(): Set<String> = emptySet()
+    suspend fun download(code: String) = Unit
+    suspend fun delete(code: String) = Unit
+    fun modelSizeBytes(context: Context, code: String): Long? = null
 }
-
-data class CustomRemoteModel(val hash: String?, val language: String)
