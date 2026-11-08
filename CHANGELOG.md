@@ -262,6 +262,7 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   download languages for offline use, and deletes one language or several at once, always with a
   confirm. A new "Translate into" setting picks the language every translation uses; it is English
   by default
+  ([#2678](https://github.com/jakepurple13/OtakuWorld/pull/2678))
 - Screensaver (Daydream) with adaptive layout, date and battery card, and sensor-based rotation.
   Includes cover carousel, history feed, stats, and custom-list screensavers, and a link to the
   system screensaver settings ([#2577](https://github.com/jakepurple13/OtakuWorld/pull/2577),
@@ -312,6 +313,7 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 - Local translation on Desktop: a new Translation settings page with two engines, Ollama and
   Custom (any OpenAI-compatible server). Pick the language to translate into, check the server
   connection, manage Ollama models, and try a translation before using it on descriptions
+  ([#2678](https://github.com/jakepurple13/OtakuWorld/pull/2678))
 - AnimeWorld Desktop player: click the video to show or hide the bars, double-click for
   fullscreen, and the mouse cursor hides with the bars. Keyboard shortcuts for play/pause, seeking,
   skipping the opening, volume, mute, captions, speed, and jumping by percent (press `?` in the
