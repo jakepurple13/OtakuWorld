@@ -23,7 +23,8 @@ import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.domain.AppUpdate
-import com.programmersbox.kmpuiviews.domain.KmpCustomRemoteModel
+import com.programmersbox.kmpuiviews.domain.ModelState
+import com.programmersbox.kmpuiviews.domain.TranslationModel
 import com.programmersbox.kmpuiviews.domain.TranslationHandler
 import com.programmersbox.kmpuiviews.domain.TranslationModelHandler
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
@@ -162,14 +163,42 @@ class FakeBackgroundWorkHandler : BackgroundWorkHandler {
     override fun restoreResultsFlow(): Flow<List<ItemResult>> = flowOf(emptyList())
 }
 
-class FakeTranslationModelHandler : TranslationModelHandler {
-    override fun getModels(onSuccess: (List<KmpCustomRemoteModel>) -> Unit) {
-        onSuccess(emptyList())
+class FakeTranslationModelHandler(
+    override val isAvailable: Boolean = true,
+    initial: List<TranslationModel> = emptyList(),
+    private val deleteError: Exception? = null,
+    private val refreshError: Exception? = null,
+) : TranslationModelHandler {
+    override val models = MutableStateFlow(initial)
+    val deleted = mutableListOf<Set<String>>()
+    val downloads = mutableListOf<String>()
+    val cancelled = mutableListOf<String>()
+    @Volatile var refreshCount = 0
+
+    /** When set, the next [refresh] publishes these rows, like a model downloaded elsewhere. */
+    @Volatile var onRefresh: List<TranslationModel>? = null
+
+    override suspend fun refresh() {
+        refreshCount++
+        refreshError?.let { throw it }
+        onRefresh?.let { models.value = it }
     }
 
-    override suspend fun deleteModel(model: KmpCustomRemoteModel) {}
-    override suspend fun modelList(): List<KmpCustomRemoteModel> = emptyList()
-    override suspend fun delete(model: KmpCustomRemoteModel) {}
+    override fun download(code: String) {
+        downloads += code
+    }
+
+    override fun cancelDownload(code: String) {
+        cancelled += code
+    }
+
+    override suspend fun delete(codes: Set<String>) {
+        deleteError?.let { throw it }
+        deleted += codes
+        models.value = models.value.map {
+            if (it.language.code in codes) it.copy(state = ModelState.NotDownloaded) else it
+        }
+    }
 }
 
 class FakeTranslationHandler : TranslationHandler {

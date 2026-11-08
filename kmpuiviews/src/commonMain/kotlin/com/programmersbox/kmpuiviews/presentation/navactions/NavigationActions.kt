@@ -67,6 +67,7 @@ interface NavigationActions {
     fun discover()
     fun sources()
     fun integrations()
+    fun translationSettings()
     fun appearance()
     fun colors()
     fun behaviorSettings()

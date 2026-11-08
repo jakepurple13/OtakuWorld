@@ -9,6 +9,7 @@ connectivity = "2.5.3"
 camerak = "1.2"
 ksafe = "3.3.0"
 vlcj = "4.12.1"
+languageDetector = "0.6"
 
 [libraries]
 core = { module = "com.google.zxing:core", version.ref = "javase" }
@@ -37,5 +38,6 @@ camerak-ocr = { module = "io.github.kashif-mehmood-km:ocr_plugin", version.ref =
 camerak-analyzer = { module = "io.github.kashif-mehmood-km:analyzer_plugin", version.ref = "camerak" }
 ksafe-biometrics = { module = "eu.anifantakis:ksafe-biometrics", version.ref = "ksafe" }
 vlcj = { module = "uk.co.caprica:vlcj", version.ref = "vlcj" }
+language-detector = { module = "com.optimaize.languagedetector:language-detector", version.ref = "languageDetector" }
 
 [bundles]

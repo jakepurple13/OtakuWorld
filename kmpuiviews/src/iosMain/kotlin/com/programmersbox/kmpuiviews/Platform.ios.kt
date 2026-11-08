@@ -210,3 +210,5 @@ actual class SystemAlerter {
     actual fun alertIncognitoChange() {
     }
 }
+
+actual val hasTranslationSettingsPage: Boolean = false

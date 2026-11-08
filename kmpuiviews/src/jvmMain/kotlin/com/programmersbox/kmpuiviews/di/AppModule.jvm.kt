@@ -15,7 +15,17 @@ import com.programmersbox.kmpuiviews.IconLoader
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.MangaDesktopSettings
 import com.programmersbox.kmpuiviews.SystemAlerter
-import com.programmersbox.kmpuiviews.TranslationItemHandler
+import com.programmersbox.kmpuiviews.translation.DesktopTranslationHandler
+import com.programmersbox.kmpuiviews.translation.DesktopTranslationSettings
+import com.programmersbox.kmpuiviews.translation.LanguageDetector
+import com.programmersbox.kmpuiviews.translation.LibraryLanguageDetector
+import com.programmersbox.kmpuiviews.translation.TranslationEngine
+import com.programmersbox.kmpuiviews.translation.custom.CustomEngine
+import com.programmersbox.kmpuiviews.translation.custom.OpenAiCompatClient
+import com.programmersbox.kmpuiviews.translation.custom.installOpenAiCompatTimeouts
+import com.programmersbox.kmpuiviews.translation.ollama.OllamaClient
+import com.programmersbox.kmpuiviews.translation.ollama.OllamaEngine
+import com.programmersbox.kmpuiviews.translation.ollama.installOllamaTimeouts
 import com.programmersbox.kmpuiviews.TranslationModelHandlerImpl
 import com.programmersbox.kmpuiviews.domain.TranslationHandler
 import com.programmersbox.kmpuiviews.domain.TranslationModelHandler
@@ -29,7 +39,9 @@ import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstaller
 import com.programmersbox.kmpuiviews.utils.ImageModifier
 import com.programmersbox.kmpuiviews.utils.Zipper
+import io.ktor.client.HttpClient
 import org.koin.core.module.Module
+import org.koin.core.qualifier.named
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
@@ -48,7 +60,22 @@ actual fun platformModule(): Module = module {
     singleOf(::DownloadAndInstaller)
     singleOf(::BackupResultsHolder)
     singleOf(::BackgroundWorkHandlerImpl) { bind<BackgroundWorkHandler>() }
-    factory<TranslationHandler> { TranslationItemHandler() }
+    single { DesktopTranslationSettings() }
+    single<LanguageDetector> { LibraryLanguageDetector() }
+    single { OllamaClient(HttpClient { installOllamaTimeouts() }, get()) }
+    // Later engines register their own single<TranslationEngine> (distinct qualifier); handler maps them by kind.
+    single<TranslationEngine>(named("ollama")) { OllamaEngine(get(), get()) }
+    single { OpenAiCompatClient(HttpClient { installOpenAiCompatTimeouts() }, get()) }
+    single<TranslationEngine>(named("custom")) { CustomEngine(get(), get()) }
+    factory<TranslationHandler> {
+        DesktopTranslationHandler(
+            engines = getAll<TranslationEngine>().associateBy { it.kind },
+            detector = get(),
+            settings = get(),
+            appSettings = get(),
+            notifier = get(),
+        )
+    }
     factory<TranslationModelHandler> { TranslationModelHandlerImpl() }
     singleOf(::TrayState)
     singleOf(::AboutLibraryBuilder)

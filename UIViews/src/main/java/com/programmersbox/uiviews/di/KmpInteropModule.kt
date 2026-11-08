@@ -1,16 +1,28 @@
 package com.programmersbox.uiviews.di
 
 import android.content.Context
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.kmpuiviews.BuildType
-import com.programmersbox.kmpuiviews.domain.KmpCustomRemoteModel
+import com.programmersbox.kmpuiviews.domain.ModelState
 import com.programmersbox.kmpuiviews.domain.TranslationHandler
+import com.programmersbox.kmpuiviews.domain.TranslationLanguages
+import com.programmersbox.kmpuiviews.domain.TranslationModel
 import com.programmersbox.kmpuiviews.domain.TranslationModelHandler
 import com.programmersbox.kmpuiviews.utils.AppConfig
-import com.programmersbox.sharedutils.CustomRemoteModel
 import com.programmersbox.sharedutils.TranslateItems
 import com.programmersbox.sharedutils.TranslatorUtils
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.R
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.dsl.module
 
 val kmpInterop = module {
@@ -25,46 +37,159 @@ val kmpInterop = module {
         )
     }
 
-    factory<TranslationHandler> { TranslationItemHandler() }
-    factory<TranslationModelHandler> { TranslationModelHandlerImpl() }
+    factory<TranslationHandler> { TranslationItemHandler(get()) }
+    // Single so the sheet and the stats screen share download state.
+    single<TranslationModelHandler> {
+        MlKitTranslationModelHandler(
+            context = get(),
+            settings = get(),
+            scope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
+        )
+    }
 }
 
-class TranslationModelHandlerImpl : TranslationModelHandler {
-    override fun getModels(onSuccess: (List<KmpCustomRemoteModel>) -> Unit) = TranslatorUtils.getModels {
-        onSuccess(it.map(::toRemoteModel))
+private const val ESTIMATED_MODEL_BYTES = 30_000_000L
+
+/** One row per catalog language. `en` is required; unknown sizes fall back to a 30 MB estimate. */
+fun mlKitRows(
+    downloaded: Set<String>,
+    downloading: Map<String, ModelState>,
+    sizes: (String) -> Long?,
+    lastUsed: Map<String, Long>,
+): List<TranslationModel> = TranslationLanguages.all.map { language ->
+    val code = language.code
+    val state = downloading[code]
+        ?: if (code in downloaded) ModelState.Downloaded else ModelState.NotDownloaded
+    val size = if (code in downloaded) sizes(code) else null
+    TranslationModel(
+        language = language,
+        state = state,
+        sizeBytes = size ?: ESTIMATED_MODEL_BYTES,
+        sizeIsEstimate = size == null,
+        required = code == "en",
+        lastUsedMillis = lastUsed[code],
+    )
+}
+
+/** Message naming the languages that failed to delete, or null when none did. */
+fun deleteFailureMessage(failedCodes: List<String>): String? {
+    if (failedCodes.isEmpty()) return null
+    val names = failedCodes.joinToString { TranslationLanguages.byCode(it)?.englishName ?: it }
+    return "Couldn't delete $names"
+}
+
+class MlKitTranslationModelHandler(
+    private val context: Context,
+    private val settings: NewSettingsHandling,
+    private val scope: CoroutineScope,
+) : TranslationModelHandler {
+    override val isAvailable: Boolean = TranslatorUtils.isAvailable
+
+    private val downloading = MutableStateFlow<Map<String, ModelState>>(emptyMap())
+    private val jobs = mutableMapOf<String, Job>() // guarded by synchronized(jobs)
+    private val _models = MutableStateFlow(
+        mlKitRows(emptySet(), emptyMap(), { null }, emptyMap())
+    )
+    override val models: StateFlow<List<TranslationModel>> = _models
+
+    private val downloaded = MutableStateFlow<Set<String>>(emptySet())
+
+    override suspend fun refresh() {
+        if (!isAvailable) return
+        downloaded.value = TranslatorUtils.downloadedCodes()
+        publish(settings.translationLastUsed.get())
     }
 
-    override suspend fun deleteModel(model: KmpCustomRemoteModel) = TranslatorUtils
-        .deleteModel(toRemoteModel(model))
+    private suspend fun publish(lastUsed: Map<String, Long>) {
+        // Sizes walk the model directories on disk.
+        _models.value = withContext(Dispatchers.IO) {
+            mlKitRows(
+                downloaded = downloaded.value,
+                downloading = downloading.value,
+                sizes = { TranslatorUtils.modelSizeBytes(context, it) },
+                lastUsed = lastUsed,
+            )
+        }
+    }
 
-    override suspend fun modelList(): List<KmpCustomRemoteModel> = TranslatorUtils
-        .modelList()
-        .map(::toRemoteModel)
+    override fun download(code: String) {
+        if (!isAvailable) return
+        synchronized(jobs) {
+            if (jobs[code]?.isActive == true) return
+            jobs[code] = scope.launch {
+                setState(code, ModelState.Downloading(fraction = null))
+                try {
+                    TranslatorUtils.download(code)
+                    setState(code, null)
+                    refresh()
+                } catch (e: CancellationException) {
+                    setState(code, null)
+                    throw e
+                } catch (e: Exception) {
+                    setState(code, ModelState.Failed(e.message ?: "Download failed"))
+                }
+            }
+        }
+    }
 
-    override suspend fun delete(model: KmpCustomRemoteModel) = TranslatorUtils
-        .delete(toRemoteModel(model))
+    override fun cancelDownload(code: String) {
+        synchronized(jobs) { jobs.remove(code) }?.cancel()
+        // ML Kit keeps downloading in the background; the next refresh reflects reality.
+    }
 
-    private fun toRemoteModel(kmpCustomRemoteModel: KmpCustomRemoteModel) = CustomRemoteModel(
-        hash = kmpCustomRemoteModel.hash,
-        language = kmpCustomRemoteModel.language
-    )
+    override suspend fun delete(codes: Set<String>) {
+        val failed = mutableListOf<String>()
+        codes.filter { it != "en" }.forEach {
+            try {
+                TranslatorUtils.delete(it)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                failed += it
+            }
+        }
+        refresh()
+        deleteFailureMessage(failed)?.let { throw IllegalStateException(it) }
+    }
 
-    private fun toRemoteModel(customRemoteModel: CustomRemoteModel) = KmpCustomRemoteModel(
-        hash = customRemoteModel.hash.orEmpty(),
-        language = customRemoteModel.language
-    )
+    private suspend fun setState(code: String, state: ModelState?) {
+        downloading.update { if (state == null) it - code else it + (code to state) }
+        publish(settings.translationLastUsed.get())
+    }
 }
 
-
 class TranslationItemHandler(
+    private val settings: NewSettingsHandling,
     private val translateItems: TranslateItems = TranslateItems(),
+    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main),
 ) : TranslationHandler {
     override fun translateDescription(
         textToTranslate: String,
         progress: (Boolean) -> Unit,
         translatedText: (String) -> Unit,
-    ) = translateItems.translateDescription(textToTranslate, progress, translatedText)
+    ) {
+        progress(true)
+        scope.launch {
+            try {
+                val translated = translate(textToTranslate)
+                if (translated != textToTranslate) translatedText(translated)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+            } finally {
+                progress(false)
+            }
+        }
+    }
 
-    override suspend fun translate(textToTranslate: String): String = translateItems.translate(textToTranslate)
+    override suspend fun translate(textToTranslate: String): String {
+        val target = settings.translationTargetLanguage.get()
+        return translateItems.translate(textToTranslate, target) { source ->
+            settings.translationLastUsed.set(
+                settings.translationLastUsed.get() + (source to System.currentTimeMillis())
+            )
+        }
+    }
+
     override fun clear() = translateItems.clear()
 }

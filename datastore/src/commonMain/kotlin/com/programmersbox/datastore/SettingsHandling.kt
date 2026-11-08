@@ -221,6 +221,20 @@ class NewSettingsHandling(
             )
         }
 
+    val translationTargetLanguage = ProtoStoreHandler(
+        preferences = preferences,
+        key = { it.translationTargetLanguage.ifBlank { "en" } },
+        update = { copy(translationTargetLanguage = it) },
+        defaultValue = "en"
+    )
+
+    val translationLastUsed = ProtoStoreHandler(
+        preferences = preferences,
+        key = { it.translationLastUsed },
+        update = { copy(translationLastUsed = it) },
+        defaultValue = emptyMap()
+    )
+
     @Composable
     fun rememberShowDownload() = preferences.rememberPreference(
         key = { it.showDownload },
