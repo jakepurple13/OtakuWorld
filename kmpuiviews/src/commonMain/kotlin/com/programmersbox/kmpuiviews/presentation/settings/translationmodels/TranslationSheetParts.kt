@@ -97,6 +97,7 @@ import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.translation_after_delete
 import otakuworld.kmpuiviews.generated.resources.translation_bulk_body
 import otakuworld.kmpuiviews.generated.resources.translation_bulk_summary
+import otakuworld.kmpuiviews.generated.resources.translation_built_in
 import otakuworld.kmpuiviews.generated.resources.translation_cancel
 import otakuworld.kmpuiviews.generated.resources.translation_cd_back
 import otakuworld.kmpuiviews.generated.resources.translation_cd_cancel_download
@@ -117,6 +118,7 @@ import otakuworld.kmpuiviews.generated.resources.translation_download_progress
 import otakuworld.kmpuiviews.generated.resources.translation_downloaded
 import otakuworld.kmpuiviews.generated.resources.translation_downloading
 import otakuworld.kmpuiviews.generated.resources.translation_for_languages
+import otakuworld.kmpuiviews.generated.resources.translation_no_extra_languages
 import otakuworld.kmpuiviews.generated.resources.translation_picker_downloaded
 import otakuworld.kmpuiviews.generated.resources.translation_picker_note
 import otakuworld.kmpuiviews.generated.resources.translation_search_languages
@@ -142,6 +144,14 @@ internal fun formatModelSize(bytes: Long, estimate: Boolean = false): String {
     }
     return if (estimate) "about $text" else text
 }
+
+/** Size shown in a downloaded row; null for built-in models, which have no meaningful size. */
+internal fun rowSizeText(model: TranslationModel): String? =
+    if (model.required) null else formatModelSize(model.sizeBytes ?: 0L, model.sizeIsEstimate)
+
+/** Models drawn in the storage meter and its legend: built-in ones take no space worth showing. */
+internal fun meterModels(downloaded: List<TranslationModel>): List<TranslationModel> =
+    downloaded.filterNot { it.required }
 
 private const val DAY_MILLIS = 86_400_000L
 
@@ -291,6 +301,7 @@ internal fun StorageMeter(
 ) {
     val colors = segmentColors()
     val estimate = downloaded.any { it.sizeIsEstimate }
+    val extras = meterModels(downloaded)
     Column(
         verticalArrangement = Arrangement.spacedBy(10.dp),
         modifier = modifier
@@ -307,8 +318,10 @@ internal fun StorageMeter(
             ) { Text(it, style = MaterialTheme.typography.headlineSmall) }
             val subtitle = if (selecting && selected.isNotEmpty()) {
                 stringResource(Res.string.translation_after_delete, formatModelSize(totalBytes - selectedBytes, estimate))
+            } else if (extras.isEmpty()) {
+                stringResource(Res.string.translation_no_extra_languages)
             } else {
-                pluralStringResource(Res.plurals.translation_for_languages, downloaded.size, downloaded.size)
+                pluralStringResource(Res.plurals.translation_for_languages, extras.size, extras.size)
             }
             AnimatedContent(
                 targetState = subtitle,
@@ -330,7 +343,7 @@ internal fun StorageMeter(
                 .clip(RoundedCornerShape(6.dp))
                 .background(MaterialTheme.colorScheme.surfaceContainerHighest),
         ) {
-            downloaded.forEachIndexed { i, model ->
+            extras.forEachIndexed { i, model ->
                 key(model.language.code) {
                     val targetWeight = ((model.sizeBytes ?: 0L) / 1_000_000f).coerceAtLeast(0.5f)
                     // Starts near zero so a newly downloaded language grows into the bar.
@@ -354,7 +367,7 @@ internal fun StorageMeter(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            downloaded.forEachIndexed { i, model ->
+            extras.forEachIndexed { i, model ->
                 key(model.language.code) {
                     val alpha by animateFloatAsState(if (model.language.code in selected) 0.45f else 1f, label = "legendAlpha")
                     Row(
@@ -584,7 +597,7 @@ private fun DownloadedRowContent(
                     )
                 }
             }
-            val size = formatModelSize(model.sizeBytes ?: 0L, model.sizeIsEstimate)
+            val size = rowSizeText(model) ?: stringResource(Res.string.translation_built_in)
             Text(
                 usageText(model, nowMillis)?.let { "$size · $it" } ?: size,
                 style = MaterialTheme.typography.bodySmall,

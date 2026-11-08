@@ -206,6 +206,8 @@
         <item quantity="one">for %1$d language</item>
         <item quantity="other">for %1$d languages</item>
     </plurals>
+    <string name="translation_no_extra_languages">No extra languages yet</string>
+    <string name="translation_built_in">Built in</string>
     <string name="translation_after_delete">→ %1$s after delete</string>
     <string name="translation_downloaded">Downloaded</string>
     <string name="translation_selected_count">%1$d selected</string>
