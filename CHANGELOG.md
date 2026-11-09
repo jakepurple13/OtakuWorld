@@ -533,7 +533,7 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 #### New Features
 
 - **Episode loading screen**
-  ([#PR](https://github.com/jakepurple13/OtakuWorld/pull/PR)):
+  ([#2684](https://github.com/jakepurple13/OtakuWorld/pull/2684)):
   - Tapping an episode shows a full-screen loading screen (cover, progress checklist, Cancel)
     while sources are found and the stream resolves, and holds it until the player is on screen
   - Picking from several sources happens in a sheet
@@ -671,7 +671,7 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 #### New Features
 
 - **Episode loading screen**
-  ([#PR](https://github.com/jakepurple13/OtakuWorld/pull/PR)): the same full-screen loading
+  ([#2684](https://github.com/jakepurple13/OtakuWorld/pull/2684)): the same full-screen loading
   screen, source sheet, and Retry / Try another source as Android; the player shows a buffering
   percentage before the first frame
 - **New: AnimeWorld Desktop app** (`:animeworld:desktop`)
