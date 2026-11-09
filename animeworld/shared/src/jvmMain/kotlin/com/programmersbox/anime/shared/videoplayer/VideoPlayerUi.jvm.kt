@@ -1,5 +1,7 @@
 package com.programmersbox.anime.shared.videoplayer
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.material3.MaterialTheme
 import com.programmersbox.kmpuiviews.theme.SeedColorTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -36,19 +38,26 @@ private fun VideoPlayerContent(videoScreen: VideoScreen) {
         value = withContext(Dispatchers.IO) { VlcRuntime.factory() }
     }
 
-    when (val result = factory) {
-        null -> Box(Modifier.fillMaxSize().background(Color.Black)) {
-            CircularProgressIndicator(Modifier.align(Alignment.Center), color = Color.White)
-        }
+    // Black behind both states so the swap from the startup spinner to the player never flashes
+    Crossfade(
+        targetState = factory,
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+        modifier = Modifier.fillMaxSize().background(Color.Black),
+    ) { result ->
+        when (result) {
+            null -> Box(Modifier.fillMaxSize()) {
+                CircularProgressIndicator(Modifier.align(Alignment.Center), color = Color.White)
+            }
 
-        else -> result.fold(
-            onSuccess = {
-                val source = remember(videoScreen) { playerSource(videoScreen, storageHolder) }
-                val subtitles = remember(source) { externalSubtitles(source, storageHolder) }
-                PlayerHost(it, videoScreen, source, subtitles, storageHolder.storageModel?.headers.orEmpty())
-            },
-            onFailure = { PlayerUnavailable("The video player couldn't start: libVLC failed to load (${it.message}).") },
-        )
+            else -> result.fold(
+                onSuccess = {
+                    val source = remember(videoScreen) { playerSource(videoScreen, storageHolder) }
+                    val subtitles = remember(source) { externalSubtitles(source, storageHolder) }
+                    PlayerHost(it, videoScreen, source, subtitles, storageHolder.storageModel?.headers.orEmpty())
+                },
+                onFailure = { PlayerUnavailable("The video player couldn't start: libVLC failed to load (${it.message}).") },
+            )
+        }
     }
 }
 

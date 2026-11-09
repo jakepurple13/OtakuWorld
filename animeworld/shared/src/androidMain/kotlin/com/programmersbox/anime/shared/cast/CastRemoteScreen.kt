@@ -1,5 +1,11 @@
 package com.programmersbox.anime.shared.cast
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -303,11 +309,20 @@ private fun TransportRow(playing: Boolean, onTogglePlay: () -> Unit, onJump: (Lo
         JumpButton(Icons.Default.FastRewind, "15", "Back 15 seconds") { onJump(CastJumps.BACK_15) }
         JumpButton(Icons.Default.Replay10, null, "Back 10 seconds") { onJump(CastJumps.BACK_10) }
         FilledIconButton(onClick = onTogglePlay, modifier = Modifier.size(72.dp)) {
-            Icon(
-                if (playing) Icons.Default.Pause else Icons.Default.PlayArrow,
-                contentDescription = if (playing) "Pause" else "Play",
-                modifier = Modifier.size(36.dp),
-            )
+            val motion = MaterialTheme.motionScheme
+            AnimatedContent(
+                targetState = playing,
+                transitionSpec = {
+                    (fadeIn(motion.fastEffectsSpec()) + scaleIn(motion.fastSpatialSpec(), initialScale = 0.7f)) togetherWith
+                            (fadeOut(motion.fastEffectsSpec()) + scaleOut(motion.fastSpatialSpec(), targetScale = 0.7f))
+                },
+            ) { isPlaying ->
+                Icon(
+                    if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                    contentDescription = if (isPlaying) "Pause" else "Play",
+                    modifier = Modifier.size(36.dp),
+                )
+            }
         }
         JumpButton(Icons.AutoMirrored.Filled.Forward, "85", "Skip 85 seconds") { onJump(CastJumps.OPENING) }
         JumpButton(Icons.Default.FastForward, "15", "Forward 15 seconds") { onJump(CastJumps.FORWARD_15) }
