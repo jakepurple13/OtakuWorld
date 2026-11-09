@@ -15,6 +15,7 @@ import com.programmersbox.anime.shared.GenericSharedAnime
 import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.anime.shared.VideoScreen
 import com.programmersbox.anime.shared.downloads.EpisodeDownloadQueue
+import com.programmersbox.anime.shared.episodeload.EpisodeLoadDecision
 import com.programmersbox.anime.shared.videochoice.VideoChoiceScreen
 import com.programmersbox.anime.shared.videoexport.VideoExportRoute
 import com.programmersbox.anime.shared.videoexport.VideoExportScreen
@@ -38,7 +39,6 @@ import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.domain.AppUpdate
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -66,8 +66,7 @@ open class GenericAnimeDesktop(
                 genericInfo = this,
                 navController = navController,
                 onPlay = { s ->
-                    if (it.isStreaming) playResolved(navController, s, it.model, it.infoModel, it.seedColor)
-                    else downloadResolved(it.model, it.infoModel, s)
+                    episodeLoader.decide(EpisodeLoadDecision.Pick(s))
                 }
             )
         }
@@ -129,37 +128,15 @@ open class GenericAnimeDesktop(
     }
 
     internal suspend fun startDownload(model: KmpChapterModel, infoModel: KmpInfoModel) {
-        downloadOnClick(
-            model = model,
-            infoModel = infoModel,
-            onNone = {
-                notifyUser("Download Failed", "${model.name}: no videos found", isError = true)
-            },
-            download = { downloadResolved(model, infoModel, it) },
-        )
+        loadForDownload(model, infoModel)
     }
 
-    /** Lets the source resolve a lazily-described stream first, then hands it to the downloader. */
-    suspend fun downloadResolved(model: KmpChapterModel, infoModel: KmpInfoModel, storage: KmpStorage) {
-        val resolved = try {
-            withContext(Dispatchers.IO) { model.source.resolve(storage) }.also { r ->
-                if (r !== storage) {
-                    if (r.headers.isEmpty()) r.headers.putAll(storage.headers)
-                    if (r.extras.isEmpty()) r.extras.putAll(storage.extras)
-                }
-            }
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            e.printStackTrace()
-            onResolveFailed(storage, e)
-            return
-        }
-        if (resolved.link.isNullOrBlank()) {
-            onResolveFailed(storage, IllegalStateException("No link"))
-            return
-        }
-        enqueueDownload(resolved, model, infoModel)
+    override fun onNoDownloadSources(model: KmpChapterModel) {
+        notifyUser("Download Failed", "${model.name}: no videos found", isError = true)
+    }
+
+    override suspend fun enqueueResolved(storage: KmpStorage, model: KmpChapterModel, infoModel: KmpInfoModel) {
+        enqueueDownload(storage, model, infoModel)
     }
 
     /** The single hand-off to the downloader. */
