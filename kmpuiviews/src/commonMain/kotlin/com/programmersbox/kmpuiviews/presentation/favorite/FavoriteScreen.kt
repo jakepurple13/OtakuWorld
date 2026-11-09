@@ -61,8 +61,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.platform.LocalFocusManager
@@ -179,9 +177,7 @@ fun FavoriteScreen(
         }
     }
 
-    val haptic = LocalHapticFeedback.current
     fun longPress(group: FavoriteGroup) {
-        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
         val installed = group.items.mapNotNull { item ->
             sourceRepository
                 .toSourceByApiServiceName(item.source)

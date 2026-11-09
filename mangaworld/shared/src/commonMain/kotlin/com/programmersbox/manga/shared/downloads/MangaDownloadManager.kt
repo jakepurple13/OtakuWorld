@@ -20,6 +20,15 @@ data class ChapterDownloadProgress(
     val state: DownloadState,
 )
 
+/**
+ * Queued or downloading chapters, one per url. Re-queuing a chapter that is still running can
+ * report it twice (WorkManager keeps the running and the appended work), and the Downloads list
+ * keys rows by url.
+ */
+fun List<ChapterDownloadProgress>.inProgressRows(): List<ChapterDownloadProgress> =
+    filter { it.state is DownloadState.Queued || it.state is DownloadState.Downloading }
+        .distinctBy { it.chapterUrl }
+
 expect class MangaDownloadManager {
     fun downloadChapter(chapter: KmpChapterModel, mangaTitle: String)
     fun downloadChapters(chapters: List<KmpChapterModel>, mangaTitle: String)

@@ -3,7 +3,7 @@ package com.programmersbox.kmpuiviews.presentation.settings.utils
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBars
@@ -318,7 +318,7 @@ fun <T> GroupBottomScreen(
         modifier = Modifier.navigationBarsPadding()
     ) {
         stickyHeader {
-            Box(Modifier.animateItem()) {
+            Column(Modifier.animateItem()) {
                 TopAppBar(
                     windowInsets = if (includeInsetPadding) WindowInsets.statusBars else WindowInsets(0.dp),
                     title = { Text(title) },
@@ -330,7 +330,7 @@ fun <T> GroupBottomScreen(
         }
         lazyListContent()
         itemsIndexed(list.entries.toList(), key = { _, e -> e.key }) { index, it ->
-            Box(Modifier.animateItem()) {
+            Column(Modifier.animateItem()) {
                 val c = itemContent(it.value)
                 ListItem(
                     modifier = Modifier.clickable { onClick(it.value) },

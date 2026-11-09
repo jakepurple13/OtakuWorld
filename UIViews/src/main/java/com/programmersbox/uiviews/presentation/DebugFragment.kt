@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.text.format.DateFormat
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -127,7 +126,7 @@ fun DebugView() {
             }*/
 
             item {
-                Box(Modifier.animateItem()) {
+                Column(Modifier.animateItem()) {
                     var showDatePicker by remember { mutableStateOf(false) }
                     var showTimePicker by remember { mutableStateOf(false) }
 
@@ -222,7 +221,7 @@ fun DebugView() {
             }
 
             item {
-                Box(Modifier.animateItem()) {
+                Column(Modifier.animateItem()) {
                     PreferenceSetting(
                         settingTitle = { Text("Title") },
                         summaryValue = { Text("Summary") },
@@ -249,7 +248,7 @@ fun DebugView() {
             }
 
             item {
-                Box(Modifier.animateItem()) {
+                Column(Modifier.animateItem()) {
                     var showMoreOptions by remember { mutableStateOf(false) }
 
                     SwitchSetting(
@@ -284,7 +283,7 @@ fun DebugView() {
             }
 
             item {
-                Box(Modifier.animateItem()) {
+                Column(Modifier.animateItem()) {
                     ShowMoreSetting(
                         settingTitle = { Text("Show More") },
                         summaryValue = { Text("More Options Here") },
@@ -314,7 +313,7 @@ fun DebugView() {
             }
 
             item {
-                Box(Modifier.animateItem()) {
+                Column(Modifier.animateItem()) {
                     var value by remember { mutableStateOf(false) }
 
                     SwitchSetting(
@@ -345,7 +344,7 @@ fun DebugView() {
             }
 
             item {
-                Box(Modifier.animateItem()) {
+                Column(Modifier.animateItem()) {
                     var value by remember { mutableStateOf(false) }
 
                     CheckBoxSetting(
@@ -377,7 +376,7 @@ fun DebugView() {
             }
 
             itemsIndexed(moreSettings) { index, build ->
-                Box(Modifier.animateItem()) {
+                Column(Modifier.animateItem()) {
                     build()
                     if (index < moreSettings.size - 1) HorizontalDivider()
                 }

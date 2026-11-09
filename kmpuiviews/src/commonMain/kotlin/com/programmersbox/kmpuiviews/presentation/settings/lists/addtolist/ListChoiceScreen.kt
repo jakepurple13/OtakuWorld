@@ -1,7 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.settings.lists.addtolist
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -121,7 +120,7 @@ fun ListChoiceScreen(
             modifier = Modifier.weight(1f, fill = false)
         ) {
             item {
-                Box(Modifier.animateItem()) {
+                Column(Modifier.animateItem()) {
                     var showAdd by remember { mutableStateOf(false) }
                     if (showAdd) {
                         var name by remember { mutableStateOf("") }

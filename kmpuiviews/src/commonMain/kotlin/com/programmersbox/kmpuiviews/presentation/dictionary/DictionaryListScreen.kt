@@ -1,6 +1,5 @@
 package com.programmersbox.kmpuiviews.presentation.dictionary
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -144,7 +143,7 @@ fun DictionaryListScreen(
                     entries,
                     key = { it.id }
                 ) { entry ->
-                    Box(Modifier.animateItem()) {
+                    Column(Modifier.animateItem()) {
                         ListItem(
                             content = { Text(entry.term) },
                             supportingContent = entry.definition?.let {

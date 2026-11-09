@@ -324,7 +324,7 @@ private fun Content(
                 }
             if (viewModel.isRefreshing) {
                 items(3) {
-       Box(Modifier.animateItem()) {
+       Column(Modifier.animateItem()) {
                         Surface(
                             modifier = Modifier.m3placeholder(
                                 true,

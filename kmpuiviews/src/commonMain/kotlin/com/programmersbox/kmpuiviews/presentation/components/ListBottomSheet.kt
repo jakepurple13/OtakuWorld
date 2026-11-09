@@ -3,7 +3,7 @@ package com.programmersbox.kmpuiviews.presentation.components
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -54,7 +54,7 @@ fun <T> ListBottomScreen(
         modifier = Modifier.navigationBarsPadding()
     ) {
         stickyHeader {
-            Box(Modifier.animateItem()) {
+            Column(Modifier.animateItem()) {
                 TopAppBar(
                     windowInsets = if (includeInsetPadding) WindowInsets.statusBars else WindowInsets(0.dp),
                     title = { Text(title) },
@@ -69,7 +69,7 @@ fun <T> ListBottomScreen(
         }
         lazyListContent()
         itemsIndexed(list) { index, it ->
-            Box(Modifier.animateItem()) {
+            Column(Modifier.animateItem()) {
                 val c = itemContent(it)
                 ListItem(
                     modifier = Modifier.clickable { onClick(it) },

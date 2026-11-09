@@ -1,7 +1,7 @@
 package com.programmersbox.desktop
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -73,7 +73,7 @@ fun JvmSettingsScreen() {
                 .padding(horizontal = 16.dp)
         ) {
             item(contentType = "downloadChapterPath") {
-                Box(Modifier.animateItem()) {
+                Column(Modifier.animateItem()) {
                     var downloadPath by settings
                         .downloadsDirectory
                         .asState()

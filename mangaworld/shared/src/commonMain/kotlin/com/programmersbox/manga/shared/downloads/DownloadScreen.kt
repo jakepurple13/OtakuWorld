@@ -116,9 +116,7 @@ private fun DownloadViewer(
 
     val inProgressDownloads by remember {
         derivedStateOf {
-            activeDownloads.filter {
-                it.state is DownloadState.Queued || it.state is DownloadState.Downloading
-            }
+            activeDownloads.inProgressRows()
         }
     }
 

@@ -210,8 +210,8 @@ fun SourceOrderScreen(
             ) { item ->
                 ReorderableItem(
                     state = reorderableLazyListState,
+                    // ReorderableItem already animates the other rows and leaves the dragged one alone
                     key = item.source,
-                    modifier = Modifier.animateItem(),
                 ) {
                     val interactionSource = remember { MutableInteractionSource() }
 

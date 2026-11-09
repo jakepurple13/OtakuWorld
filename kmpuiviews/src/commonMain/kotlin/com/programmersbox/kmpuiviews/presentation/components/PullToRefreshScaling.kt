@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import com.programmersbox.kmpuiviews.utils.ThresholdHaptic
+import com.programmersbox.kmpuiviews.utils.pullHapticFraction
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -88,7 +89,7 @@ object OtakuPullToRefreshDefaults {
         val scaleFraction =
             { if (isRefreshing) 1f else LinearOutSlowInEasing.transform(state.distanceFraction).coerceIn(0f, 1f) }
         // Tick when the pull passes the point where letting go refreshes
-        ThresholdHaptic(fraction = { state.distanceFraction })
+        ThresholdHaptic(fraction = { pullHapticFraction(isRefreshing, state.distanceFraction) })
         /*PullToRefreshDefaults.Indicator(
             modifier = modifier.graphicsLayer {
                 scaleX = scaleFraction()
