@@ -6,8 +6,6 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.animation.core.CubicBezierEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
@@ -20,6 +18,7 @@ import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MotionScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -37,13 +36,10 @@ import otakuworld.kmpuiviews.generated.resources.quick_actions
 
 const val QuickActionsSharedKey = "quick-actions-card"
 
-private val EmphasizedDecelerate = CubicBezierEasing(0.2f, 0f, 0f, 1f)
-private val EmphasizedAccelerate = CubicBezierEasing(0.3f, 0f, 0.8f, 0.15f)
-
-/** Open grows with emphasized decelerate; close shrinks back with emphasized accelerate. */
-internal fun quickActionsBoundsTransform(opening: Boolean) = BoundsTransform { _, _ ->
-    if (opening) tween(durationMillis = 400, easing = EmphasizedDecelerate)
-    else tween(durationMillis = 300, easing = EmphasizedAccelerate)
+/** Open grows with the default spatial spring; close shrinks back with the faster one. */
+internal fun quickActionsBoundsTransform(opening: Boolean, motion: MotionScheme) = BoundsTransform { _, _ ->
+    if (opening) motion.defaultSpatialSpec()
+    else motion.fastSpatialSpec()
 }
 
 /**
@@ -78,9 +74,9 @@ fun QuickActionsBolt(modifier: Modifier = Modifier) {
                 Modifier.sharedBounds(
                     sharedContentState = rememberSharedContentState(QuickActionsSharedKey),
                     animatedVisibilityScope = this@AnimatedVisibility,
-                    enter = fadeIn(tween(250)),
-                    exit = fadeOut(tween(150)),
-                    boundsTransform = quickActionsBoundsTransform(opening = open != null),
+                    enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()),
+                    exit = fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()),
+                    boundsTransform = quickActionsBoundsTransform(opening = open != null, MaterialTheme.motionScheme),
                     resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
                     clipInOverlayDuringTransition = OverlayClip(CircleShape),
                 )

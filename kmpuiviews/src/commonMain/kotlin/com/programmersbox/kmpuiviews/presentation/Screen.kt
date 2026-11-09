@@ -235,7 +235,10 @@ sealed class Screen(val route: String) : NavKey {
     data object BookmarkScreen : Screen("bookmarks")
 
     @Serializable
-    data object NotesScreen : Screen("notes")
+    data object NotesScreen : Screen("notes") {
+        @Serializable
+        data class Detail(val itemUrl: String) : Screen("notes_detail")
+    }
 
     @Serializable
     data object DictionaryScreen : Screen("dictionary") {

@@ -3,7 +3,6 @@ package com.programmersbox.kmpuiviews.presentation.settings.languageorder
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -91,6 +90,7 @@ fun LanguageOrderSheet(
                 .animateContentSize()
                 .verticalScroll(rememberScrollState())
         ) {
+            val motion = MaterialTheme.motionScheme
             AnimatedContent(
                 group,
                 transitionSpec = {
@@ -99,8 +99,8 @@ fun LanguageOrderSheet(
                     } else {
                         AnimatedContentTransitionScope.SlideDirection.Right
                     }
-                    slideIntoContainer(towards, tween(300)) + fadeIn() togetherWith
-                        slideOutOfContainer(towards, tween(300)) + fadeOut()
+                    slideIntoContainer(towards, motion.defaultSpatialSpec()) + fadeIn(motion.defaultEffectsSpec()) togetherWith
+                        slideOutOfContainer(towards, motion.defaultSpatialSpec()) + fadeOut(motion.fastEffectsSpec())
                 }
             ) { target ->
                 Column(

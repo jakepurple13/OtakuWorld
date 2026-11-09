@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import com.programmersbox.kmpuiviews.utils.ThresholdHaptic
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.PreviewTheme
 import kotlinx.coroutines.launch
@@ -114,6 +115,8 @@ fun SwipeButton(
                     }
                 )
             }
+            // Tick as the thumb nears the end, where releasing confirms
+            ThresholdHaptic(fraction = { swipeableState.offset / maxWidth }, threshold = 0.9f)
             Box(
                 modifier = Modifier
                     .onGloballyPositioned { iconSize = it.size }

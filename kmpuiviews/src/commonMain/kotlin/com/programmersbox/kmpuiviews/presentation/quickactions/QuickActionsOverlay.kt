@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
@@ -119,9 +120,9 @@ fun SharedTransitionScope.QuickActionsOverlay() {
                 modifier = Modifier.sharedBounds(
                     sharedContentState = rememberSharedContentState(QuickActionsSharedKey),
                     animatedVisibilityScope = this@AnimatedVisibility,
-                    enter = fadeIn(tween(150)),
-                    exit = fadeOut(tween(250)),
-                    boundsTransform = quickActionsBoundsTransform(opening = open != null),
+                    enter = fadeIn(MaterialTheme.motionScheme.fastEffectsSpec()),
+                    exit = fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec()),
+                    boundsTransform = quickActionsBoundsTransform(opening = open != null, MaterialTheme.motionScheme),
                     resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
                     clipInOverlayDuringTransition = OverlayClip(CardShape),
                 ),
@@ -170,8 +171,9 @@ private fun AnimatedVisibilityScope.QuickActionsCard(
             firstRowFocusRequester = firstRowFocusRequester,
             modifier = Modifier
                 .animateEnterExit(
+                    // Delay so the rows appear once the card has mostly grown
                     enter = fadeIn(tween(delayMillis = 150)),
-                    exit = fadeOut(tween(100)),
+                    exit = fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()),
                 )
                 // Keeps the last row reachable at large font scales in landscape
                 .verticalScroll(rememberScrollState())

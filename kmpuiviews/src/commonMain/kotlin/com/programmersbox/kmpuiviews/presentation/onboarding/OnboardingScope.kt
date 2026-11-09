@@ -34,6 +34,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.programmersbox.kmpuiviews.utils.composables.modifiers.pagerStagger
 
 interface OnboardingScope {
     fun item(content: @Composable () -> Unit)
@@ -100,7 +101,11 @@ fun Onboarding(
         overscrollEffect = overscrollEffect,
         pageSpacing = pageSpacing,
         verticalAlignment = verticalAlignment,
-        pageContent = { page -> stateHolder.SaveableStateProvider(page) { onboardingScope[page]() } }
+        pageContent = { page ->
+            Box(Modifier.pagerStagger(state, page, index = 0)) {
+                stateHolder.SaveableStateProvider(page) { onboardingScope[page]() }
+            }
+        }
     )
 }
 
@@ -122,10 +127,14 @@ fun OnboardingIndicator(
                     pagerState.currentPage == iteration -> MaterialTheme.colorScheme.primary
                     pagerState.currentPage > iteration -> MaterialTheme.colorScheme.primaryContainer
                     else -> MaterialTheme.colorScheme.surfaceVariant
-                }
+                },
+                MaterialTheme.motionScheme.fastEffectsSpec()
             )
             // The current page stretches into a pill so 8+ pages still fit.
-            val width by animateDpAsState(if (pagerState.currentPage == iteration) 20.dp else 8.dp)
+            val width by animateDpAsState(
+                if (pagerState.currentPage == iteration) 20.dp else 8.dp,
+                MaterialTheme.motionScheme.fastSpatialSpec(),
+            )
 
             Box(
                 modifier = Modifier

@@ -4,6 +4,7 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -86,39 +87,41 @@ internal fun DrawerView(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             itemsIndexed(readVm.list) { i, c ->
+                Column(Modifier.animateItem()) {
 
-                var showChangeChapter by remember { mutableStateOf(false) }
+                    var showChangeChapter by remember { mutableStateOf(false) }
 
-                if (showChangeChapter) {
-                    AlertDialog(
-                        onDismissRequest = { showChangeChapter = false },
-                        title = { Text("Change to chapter ${c.name}") },
-                        confirmButton = {
-                            TextButton(
-                                onClick = {
-                                    showChangeChapter = false
-                                    readVm.currentChapter = i
-                                    readVm.addChapterToWatched(readVm.currentChapter, showToast)
-                                }
-                            ) { Text("Yes") }
-                        },
-                        dismissButton = {
-                            TextButton(onClick = { showChangeChapter = false }) { Text("No") }
-                        }
+                    if (showChangeChapter) {
+                        AlertDialog(
+                            onDismissRequest = { showChangeChapter = false },
+                            title = { Text("Change to chapter ${c.name}") },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        showChangeChapter = false
+                                        readVm.currentChapter = i
+                                        readVm.addChapterToWatched(readVm.currentChapter, showToast)
+                                    }
+                                ) { Text("Yes") }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showChangeChapter = false }) { Text("No") }
+                            }
+                        )
+                    }
+
+                    WrapHeightNavigationDrawerItem(
+                        modifier = Modifier
+                            .padding(bottom = 4.dp)
+                            .padding(horizontal = 4.dp),
+                        label = { Text(c.name) },
+                        selected = readVm.currentChapter == i,
+                        onClick = { showChangeChapter = true },
+                        shape = RoundedCornerShape(8.0.dp)
                     )
+
+                    if (i < readVm.list.lastIndex) HorizontalDivider()
                 }
-
-                WrapHeightNavigationDrawerItem(
-                    modifier = Modifier
-                        .padding(bottom = 4.dp)
-                        .padding(horizontal = 4.dp),
-                    label = { Text(c.name) },
-                    selected = readVm.currentChapter == i,
-                    onClick = { showChangeChapter = true },
-                    shape = RoundedCornerShape(8.0.dp)
-                )
-
-                if (i < readVm.list.lastIndex) HorizontalDivider()
             }
         }
     }

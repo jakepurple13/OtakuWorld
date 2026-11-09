@@ -217,7 +217,7 @@ fun GlobalSearchScreen(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
-                    itemsIndexed(history) { index, historyModel ->
+                    itemsIndexed(history, key = { _, h -> h.searchText }) { index, historyModel ->
                         Card(
                             onClick = {
                                 viewModel.searchText = TextFieldState(historyModel.searchText)
@@ -233,7 +233,8 @@ fun GlobalSearchScreen(
                                     }
                                 }
                                 viewModel.searchForItems()
-                            }
+                            },
+                            modifier = Modifier.animateItem(),
                         ) {
                             ListItem(
                                 headlineContent = { Text(historyModel.searchText) },
@@ -310,7 +311,7 @@ private fun Content(
                 ?.takeIf { it.groups.isNotEmpty() }
                 ?.let { l ->
                     item {
-                        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp)) {
+                        Row(modifier = Modifier.animateItem().fillMaxWidth().padding(horizontal = 4.dp)) {
                             FilterChip(
                                 selected = true,
                                 onClick = onLanguagesClick,
@@ -323,33 +324,35 @@ private fun Content(
                 }
             if (viewModel.isRefreshing) {
                 items(3) {
-                    Surface(
-                        modifier = Modifier.m3placeholder(
-                            true,
-                            highlight = PlaceholderHighlight.shimmer()
-                        ),
-                        tonalElevation = 4.dp,
-                        shape = MaterialTheme.shapes.medium
-                    ) {
-                        Column {
-                            Box(modifier = Modifier.fillMaxWidth()) {
-                                Text(
-                                    "Otaku",
-                                    modifier = Modifier
-                                        .align(Alignment.CenterStart)
-                                        .padding(start = 4.dp)
-                                )
-                                IconButton(
-                                    onClick = {},
-                                    modifier = Modifier.align(Alignment.CenterEnd)
-                                ) { Icon(Icons.Default.ChevronRight, null) }
-                            }
-                            LazyRow {
-                                items(3) {
-                                    M3PlaceHolderCoverCard(placeHolder = painterLogo())
+       Column(Modifier.animateItem()) {
+                        Surface(
+                            modifier = Modifier.m3placeholder(
+                                true,
+                                highlight = PlaceholderHighlight.shimmer()
+                            ),
+                            tonalElevation = 4.dp,
+                            shape = MaterialTheme.shapes.medium
+                        ) {
+                            Column {
+                                Box(modifier = Modifier.fillMaxWidth()) {
+                                    Text(
+                                        "Otaku",
+                                        modifier = Modifier
+                                            .align(Alignment.CenterStart)
+                                            .padding(start = 4.dp)
+                                    )
+                                    IconButton(
+                                        onClick = {},
+                                        modifier = Modifier.align(Alignment.CenterEnd)
+                                    ) { Icon(Icons.Default.ChevronRight, null) }
+                                }
+                                LazyRow {
+                                    items(3) {
+                                        M3PlaceHolderCoverCard(placeHolder = painterLogo(), modifier = Modifier.animateItem())
+                                    }
                                 }
                             }
-                        }
+       }
                     }
                 }
             } else if (viewModel.searchListPublisher.isNotEmpty()) {
@@ -357,7 +360,8 @@ private fun Content(
                     Surface(
                         tonalElevation = 4.dp,
                         shape = MaterialTheme.shapes.medium,
-                        onClick = { onSearchModel(i) }
+                        onClick = { onSearchModel(i) },
+                        modifier = Modifier.animateItem(),
                     ) {
                         Column {
                             Box(modifier = Modifier.fillMaxWidth()) {
@@ -404,12 +408,12 @@ private fun Content(
                     }
                 }
                 if (viewModel.isSearching) {
-                    item { CircularProgressIndicator() }
+                    item(key = "searching") { CircularProgressIndicator(modifier = Modifier.animateItem()) }
                 }
             } else if (viewModel.searchListPublisher.isEmpty()) {
-                item {
+                item(key = "empty") {
                     Column(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.animateItem().fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {

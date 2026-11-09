@@ -3,7 +3,6 @@ package com.programmersbox.kmpuiviews.presentation.globalsearch
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -78,6 +77,7 @@ fun SearchLanguagesSheet(
                 .animateContentSize()
                 .verticalScroll(rememberScrollState())
         ) {
+            val motion = MaterialTheme.motionScheme
             AnimatedContent(
                 group,
                 transitionSpec = {
@@ -85,20 +85,20 @@ fun SearchLanguagesSheet(
                         // Sliding to the Right when going to OverrideContent
                         slideIntoContainer(
                             towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                            animationSpec = tween(300)
-                        ) + fadeIn() togetherWith slideOutOfContainer(
+                            animationSpec = motion.defaultSpatialSpec()
+                        ) + fadeIn(motion.defaultEffectsSpec()) togetherWith slideOutOfContainer(
                             towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                            animationSpec = tween(300)
-                        ) + fadeOut()
+                            animationSpec = motion.defaultSpatialSpec()
+                        ) + fadeOut(motion.fastEffectsSpec())
                     } else {
                         // Sliding to the Left when returning to DefaultsContent
                         slideIntoContainer(
                             towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                            animationSpec = tween(300)
-                        ) + fadeIn() togetherWith slideOutOfContainer(
+                            animationSpec = motion.defaultSpatialSpec()
+                        ) + fadeIn(motion.defaultEffectsSpec()) togetherWith slideOutOfContainer(
                             towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                            animationSpec = tween(300)
-                        ) + fadeOut()
+                            animationSpec = motion.defaultSpatialSpec()
+                        ) + fadeOut(motion.fastEffectsSpec())
                     }
                 }
             ) { target ->

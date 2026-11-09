@@ -3,6 +3,7 @@ package com.programmersbox.kmpuiviews.presentation.settings.utils
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBars
@@ -317,26 +318,30 @@ fun <T> GroupBottomScreen(
         modifier = Modifier.navigationBarsPadding()
     ) {
         stickyHeader {
-            TopAppBar(
-                windowInsets = if (includeInsetPadding) WindowInsets.statusBars else WindowInsets(0.dp),
-                title = { Text(title) },
-                navigationIcon = navigationIcon,
-                actions = { if (list.isNotEmpty()) Text("(${list.size})") }
-            )
-            HorizontalDivider()
+            Column(Modifier.animateItem()) {
+                TopAppBar(
+                    windowInsets = if (includeInsetPadding) WindowInsets.statusBars else WindowInsets(0.dp),
+                    title = { Text(title) },
+                    navigationIcon = navigationIcon,
+                    actions = { if (list.isNotEmpty()) Text("(${list.size})") }
+                )
+                HorizontalDivider()
+            }
         }
         lazyListContent()
-        itemsIndexed(list.entries.toList()) { index, it ->
-            val c = itemContent(it.value)
-            ListItem(
-                modifier = Modifier.clickable { onClick(it.value) },
-                leadingContent = c.icon?.let { i -> { Icon(i, null) } },
-                headlineContent = { Text(c.primaryText) },
-                supportingContent = c.secondaryText?.let { i -> { Text(i) } },
-                overlineContent = c.overlineText?.let { i -> { Text(i) } },
-                trailingContent = trailingContent?.let { t -> { t(it.value) } } ?: c.trailingText?.let { i -> { Text(i) } }
-            )
-            if (index < list.size - 1) HorizontalDivider()
+        itemsIndexed(list.entries.toList(), key = { _, e -> e.key }) { index, it ->
+            Column(Modifier.animateItem()) {
+                val c = itemContent(it.value)
+                ListItem(
+                    modifier = Modifier.clickable { onClick(it.value) },
+                    leadingContent = c.icon?.let { i -> { Icon(i, null) } },
+                    headlineContent = { Text(c.primaryText) },
+                    supportingContent = c.secondaryText?.let { i -> { Text(i) } },
+                    overlineContent = c.overlineText?.let { i -> { Text(i) } },
+                    trailingContent = trailingContent?.let { t -> { t(it.value) } } ?: c.trailingText?.let { i -> { Text(i) } }
+                )
+                if (index < list.size - 1) HorizontalDivider()
+            }
         }
     }
 }

@@ -51,12 +51,13 @@ fun ScreensaverTypeSettings(handling: NewSettingsHandling) {
             title = { Text("Screensaver") },
             text = {
                 LazyColumn {
-                    items(ScreensaverType.entries) {
+                    items(ScreensaverType.entries, key = { it.name }) {
                         Surface(
                             onClick = {
                                 screensaverType = it
                                 showScreensaverSettings = false
-                            }
+                            },
+                            modifier = Modifier.animateItem(),
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,

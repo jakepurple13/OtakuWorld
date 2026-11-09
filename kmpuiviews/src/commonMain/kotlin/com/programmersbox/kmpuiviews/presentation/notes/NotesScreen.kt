@@ -30,38 +30,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.programmersbox.favoritesdatabase.NoteItem
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.customSharedElement
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotesScreen(
     onBackPress: () -> Unit = {},
+    onNoteClick: (itemUrl: String) -> Unit = {},
     vm: AllNotesViewModel = koinViewModel(),
 ) {
     val notes by vm.notes.collectAsStateWithLifecycle()
-    var selectedNote by remember { mutableStateOf<NoteItem?>(null) }
-    var showNoteSheet by remember { mutableStateOf(false) }
-
-    if (showNoteSheet) {
-        val note = selectedNote
-        if (note != null) {
-            NoteBottomSheet(
-                note = note,
-                itemTitle = note.itemTitle,
-                onDismiss = { content ->
-                    vm.saveNote(note = note, content = content)
-                    showNoteSheet = false
-                    selectedNote = null
-                },
-                onDelete = {
-                    vm.deleteNote(note.itemUrl)
-                    showNoteSheet = false
-                    selectedNote = null
-                }
-            )
-        }
-    }
 
     Scaffold(
         topBar = {
@@ -111,11 +90,11 @@ fun NotesScreen(
                     key = { it.itemUrl }
                 ) { note ->
                     ElevatedCard(
-                        onClick = {
-                            selectedNote = note
-                            showNoteSheet = true
-                        },
-                        modifier = Modifier.fillMaxWidth()
+                        onClick = { onNoteClick(note.itemUrl) },
+                        modifier = Modifier
+                            .animateItem()
+                            .customSharedElement(noteSharedKey(note.itemUrl))
+                            .fillMaxWidth()
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp)

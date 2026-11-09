@@ -51,210 +51,240 @@ private fun ColorHelperContent(
             ColorItem(
                 backgroundColor = MaterialTheme.colorScheme.primary,
                 textColor = MaterialTheme.colorScheme.onPrimary,
-                text = "Primary/OnPrimary"
+                text = "Primary/OnPrimary",
+                modifier = Modifier.animateItem(),
             )
         }
         item {
             ColorItem(
                 backgroundColor = MaterialTheme.colorScheme.primaryContainer,
                 textColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                text = "Primary Container/OnPrimary Container"
+                text = "Primary Container/OnPrimary Container",
+                modifier = Modifier.animateItem(),
             )
         }
         item {
             ColorItem(
                 backgroundColor = MaterialTheme.colorScheme.inversePrimary,
                 textColor = MaterialTheme.colorScheme.onPrimary, // Assuming onPrimary for inversePrimary's text
-                text = "Inverse Primary"
+                text = "Inverse Primary",
+                modifier = Modifier.animateItem(),
             )
         }
         item {
             ColorItem(
                 backgroundColor = MaterialTheme.colorScheme.secondary,
                 textColor = MaterialTheme.colorScheme.onSecondary,
-                text = "Secondary/OnSecondary"
+                text = "Secondary/OnSecondary",
+                modifier = Modifier.animateItem(),
             )
         }
         item {
             ColorItem(
                 backgroundColor = MaterialTheme.colorScheme.secondaryContainer,
                 textColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                text = "Secondary Container/OnSecondary Container"
+                text = "Secondary Container/OnSecondary Container",
+                modifier = Modifier.animateItem(),
             )
         }
         item {
             ColorItem(
                 backgroundColor = MaterialTheme.colorScheme.tertiary,
                 textColor = MaterialTheme.colorScheme.onTertiary,
-                text = "Tertiary/OnTertiary"
+                text = "Tertiary/OnTertiary",
+                modifier = Modifier.animateItem(),
             )
         }
         item {
             ColorItem(
                 backgroundColor = MaterialTheme.colorScheme.tertiaryContainer,
                 textColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                text = "Tertiary Container/OnTertiary Container"
+                text = "Tertiary Container/OnTertiary Container",
+                modifier = Modifier.animateItem(),
             )
         }
         item {
             ColorItem(
                 backgroundColor = MaterialTheme.colorScheme.background,
                 textColor = MaterialTheme.colorScheme.onBackground,
-                text = "Background/OnBackground"
+                text = "Background/OnBackground",
+                modifier = Modifier.animateItem(),
             )
         }
         item {
             ColorItem(
                 backgroundColor = MaterialTheme.colorScheme.surface,
                 textColor = MaterialTheme.colorScheme.onSurface,
-                text = "Surface/OnSurface"
+                text = "Surface/OnSurface",
+                modifier = Modifier.animateItem(),
             )
         }
         item {
             ColorItem(
                 backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
                 textColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                text = "Surface Variant/OnSurface Variant"
+                text = "Surface Variant/OnSurface Variant",
+                modifier = Modifier.animateItem(),
             )
         }
         item {
             ColorItem(
                 backgroundColor = MaterialTheme.colorScheme.surfaceTint,
                 textColor = MaterialTheme.colorScheme.onSurface, // Assuming onSurface for surfaceTint's text
-                text = "Surface Tint"
+                text = "Surface Tint",
+                modifier = Modifier.animateItem(),
             )
         }
         item {
             ColorItem(
                 backgroundColor = MaterialTheme.colorScheme.inverseSurface,
                 textColor = MaterialTheme.colorScheme.inverseOnSurface,
-                text = "Inverse Surface/Inverse OnSurface"
+                text = "Inverse Surface/Inverse OnSurface",
+                modifier = Modifier.animateItem(),
             )
         }
         item {
             ColorItem(
                 backgroundColor = MaterialTheme.colorScheme.error,
                 textColor = MaterialTheme.colorScheme.onError,
-                text = "Error/OnError"
+                text = "Error/OnError",
+                modifier = Modifier.animateItem(),
             )
         }
         item {
             ColorItem(
                 backgroundColor = MaterialTheme.colorScheme.errorContainer,
                 textColor = MaterialTheme.colorScheme.onErrorContainer,
-                text = "Error Container/OnError Container"
+                text = "Error Container/OnError Container",
+                modifier = Modifier.animateItem(),
             )
         }
         item {
             ColorItem(
                 backgroundColor = MaterialTheme.colorScheme.outline,
                 textColor = MaterialTheme.colorScheme.onSurface, // Assuming onSurface for outline's text
-                text = "Outline"
+                text = "Outline",
+                modifier = Modifier.animateItem(),
             )
         }
         item {
             ColorItem(
                 backgroundColor = MaterialTheme.colorScheme.outlineVariant,
                 textColor = MaterialTheme.colorScheme.onSurfaceVariant, // Assuming onSurfaceVariant for outlineVariant's text
-                text = "Outline Variant"
+                text = "Outline Variant",
+                modifier = Modifier.animateItem(),
             )
         }
         item {
             ColorItem(
                 backgroundColor = MaterialTheme.colorScheme.scrim,
                 textColor = MaterialTheme.colorScheme.onSurface, // Assuming onSurface for scrim's text
-                text = "Scrim"
+                text = "Scrim",
+                modifier = Modifier.animateItem(),
             )
         }
         item {
             ColorItem(
                 backgroundColor = MaterialTheme.colorScheme.surfaceBright,
                 textColor = MaterialTheme.colorScheme.onSurface, // Assuming onSurface for surfaceBright's text
-                text = "Surface Bright"
+                text = "Surface Bright",
+                modifier = Modifier.animateItem(),
             )
         }
         item {
             ColorItem(
                 backgroundColor = MaterialTheme.colorScheme.surfaceDim,
                 textColor = MaterialTheme.colorScheme.onSurface, // Assuming onSurface for surfaceDim's text
-                text = "Surface Dim"
+                text = "Surface Dim",
+                modifier = Modifier.animateItem(),
             )
         }
         item {
             ColorItem(
                 backgroundColor = MaterialTheme.colorScheme.surfaceContainer,
                 textColor = MaterialTheme.colorScheme.onSurface, // Assuming onSurface for surfaceContainer's text
-                text = "Surface Container"
+                text = "Surface Container",
+                modifier = Modifier.animateItem(),
             )
         }
         item {
             ColorItem(
                 backgroundColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                 textColor = MaterialTheme.colorScheme.onSurface, // Assuming onSurface for surfaceContainerHigh's text
-                text = "Surface Container High"
+                text = "Surface Container High",
+                modifier = Modifier.animateItem(),
             )
         }
         item {
             ColorItem(
                 backgroundColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                 textColor = MaterialTheme.colorScheme.onSurface, // Assuming onSurface for surfaceContainerHighest's text
-                text = "Surface Container Highest"
+                text = "Surface Container Highest",
+                modifier = Modifier.animateItem(),
             )
         }
         item {
             ColorItem(
                 backgroundColor = MaterialTheme.colorScheme.surfaceContainerLow,
                 textColor = MaterialTheme.colorScheme.onSurface, // Assuming onSurface for surfaceContainerLow's text
-                text = "Surface Container Low"
+                text = "Surface Container Low",
+                modifier = Modifier.animateItem(),
             )
         }
         item {
             ColorItem(
                 backgroundColor = MaterialTheme.colorScheme.surfaceContainerLowest,
                 textColor = MaterialTheme.colorScheme.onSurface, // Assuming onSurface for surfaceContainerLowest's text
-                text = "Surface Container Lowest"
+                text = "Surface Container Lowest",
+                modifier = Modifier.animateItem(),
             )
         }
         item {
             ColorItem(
                 backgroundColor = MaterialTheme.colorScheme.primaryFixed,
                 textColor = MaterialTheme.colorScheme.onPrimaryFixed,
-                text = "Primary Fixed/OnPrimary Fixed"
+                text = "Primary Fixed/OnPrimary Fixed",
+                modifier = Modifier.animateItem(),
             )
         }
         item {
             ColorItem(
                 backgroundColor = MaterialTheme.colorScheme.primaryFixedDim,
                 textColor = MaterialTheme.colorScheme.onPrimaryFixedVariant, // Assuming onPrimaryFixedVariant for primaryFixedDim's text
-                text = "Primary Fixed Dim/OnPrimary Fixed Variant"
+                text = "Primary Fixed Dim/OnPrimary Fixed Variant",
+                modifier = Modifier.animateItem(),
             )
         }
         item {
             ColorItem(
                 backgroundColor = MaterialTheme.colorScheme.secondaryFixed,
                 textColor = MaterialTheme.colorScheme.onSecondaryFixed,
-                text = "Secondary Fixed/OnSecondary Fixed"
+                text = "Secondary Fixed/OnSecondary Fixed",
+                modifier = Modifier.animateItem(),
             )
         }
         item {
             ColorItem(
                 backgroundColor = MaterialTheme.colorScheme.secondaryFixedDim,
                 textColor = MaterialTheme.colorScheme.onSecondaryFixedVariant, // Assuming onSecondaryFixedVariant for secondaryFixedDim's text
-                text = "Secondary Fixed Dim/OnSecondary Fixed Variant"
+                text = "Secondary Fixed Dim/OnSecondary Fixed Variant",
+                modifier = Modifier.animateItem(),
             )
         }
         item {
             ColorItem(
                 backgroundColor = MaterialTheme.colorScheme.tertiaryFixed,
                 textColor = MaterialTheme.colorScheme.onTertiaryFixed,
-                text = "Tertiary Fixed/OnTertiary Fixed"
+                text = "Tertiary Fixed/OnTertiary Fixed",
+                modifier = Modifier.animateItem(),
             )
         }
         item {
             ColorItem(
                 backgroundColor = MaterialTheme.colorScheme.tertiaryFixedDim,
                 textColor = MaterialTheme.colorScheme.onTertiaryFixedVariant, // Assuming onTertiaryFixedVariant for tertiaryFixedDim's text
-                text = "Tertiary Fixed Dim/OnTertiary Fixed Variant"
+                text = "Tertiary Fixed Dim/OnTertiary Fixed Variant",
+                modifier = Modifier.animateItem(),
             )
         }
     }

@@ -143,21 +143,23 @@ fun DictionaryListScreen(
                     entries,
                     key = { it.id }
                 ) { entry ->
-                    ListItem(
-                        content = { Text(entry.term) },
-                        supportingContent = entry.definition?.let {
-                            { Text(it, maxLines = 2, overflow = TextOverflow.Ellipsis) }
-                        },
-                        leadingContent = { Icon(Icons.Default.MenuBook, contentDescription = null) },
-                        trailingContent = {
-                            IconButton(onClick = { entryPendingDelete = entry }) {
-                                Icon(Icons.Default.Delete, contentDescription = "Delete ${entry.term}")
-                            }
-                        },
-                        onClick = { onEntryClick(entry.id) },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    HorizontalDivider()
+                    Column(Modifier.animateItem()) {
+                        ListItem(
+                            content = { Text(entry.term) },
+                            supportingContent = entry.definition?.let {
+                                { Text(it, maxLines = 2, overflow = TextOverflow.Ellipsis) }
+                            },
+                            leadingContent = { Icon(Icons.Default.MenuBook, contentDescription = null) },
+                            trailingContent = {
+                                IconButton(onClick = { entryPendingDelete = entry }) {
+                                    Icon(Icons.Default.Delete, contentDescription = "Delete ${entry.term}")
+                                }
+                            },
+                            onClick = { onEntryClick(entry.id) },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        HorizontalDivider()
+                    }
                 }
             }
         }

@@ -1,5 +1,6 @@
 package com.programmersbox.manga.shared.downloads
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
@@ -61,6 +62,7 @@ import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
+import com.programmersbox.kmpuiviews.utils.composables.stateSwapTransition
 import com.programmersbox.manga.shared.ChapterHolder
 import com.programmersbox.manga.shared.reader.ReadViewModel
 import org.koin.compose.koinInject
@@ -114,58 +116,64 @@ private fun DownloadViewer(
 
     val inProgressDownloads by remember {
         derivedStateOf {
-            activeDownloads.filter {
-                it.state is DownloadState.Queued || it.state is DownloadState.Downloading
-            }
+            activeDownloads.inProgressRows()
         }
     }
 
-    if (fileList.isEmpty() && inProgressDownloads.isEmpty()) {
-        EmptyState(p1)
-    } else {
-        LazyColumn(
-            contentPadding = p1,
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(4.dp)
-        ) {
-            if (inProgressDownloads.isNotEmpty()) {
-                item {
-                    Text(
-                        text = "Active Downloads",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
-                    )
-                }
-                items(
-                    items = inProgressDownloads,
-                ) { download ->
-                    ActiveDownloadItem(
-                        download = download,
-                        onCancel = { viewModel.cancelDownload(it) }
-                    )
-                }
-            }
-
-            if (fileList.isNotEmpty()) {
+    AnimatedContent(
+        targetState = fileList.isEmpty() && inProgressDownloads.isEmpty(),
+        transitionSpec = stateSwapTransition(),
+    ) { empty ->
+        if (empty) {
+            EmptyState(p1)
+        } else {
+            LazyColumn(
+                contentPadding = p1,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(4.dp)
+            ) {
                 if (inProgressDownloads.isNotEmpty()) {
-                    item {
+                    item(key = "active-header") {
                         Text(
-                            text = "Downloaded",
+                            text = "Active Downloads",
                             style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                            modifier = Modifier.animateItem().padding(horizontal = 4.dp, vertical = 2.dp)
+                        )
+                    }
+                    items(
+                        items = inProgressDownloads,
+                        key = { it.chapterUrl },
+                    ) { download ->
+                        ActiveDownloadItem(
+                            download = download,
+                            onCancel = { viewModel.cancelDownload(it) },
+                            modifier = Modifier.animateItem(),
                         )
                     }
                 }
-                items(
-                    items = fileEntries,
-                    key = { it.key },
-                ) { file ->
-                    ChapterItem(
-                        file = file,
-                        onDeleted = viewModel::delete
-                    )
+
+                if (fileList.isNotEmpty()) {
+                    if (inProgressDownloads.isNotEmpty()) {
+                        item(key = "downloaded-header") {
+                            Text(
+                                text = "Downloaded",
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.animateItem().padding(horizontal = 4.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                    items(
+                        items = fileEntries,
+                        key = { it.key },
+                    ) { file ->
+                        ChapterItem(
+                            file = file,
+                            onDeleted = viewModel::delete,
+                            modifier = Modifier.animateItem(),
+                        )
+                    }
                 }
             }
         }
@@ -177,11 +185,12 @@ private fun DownloadViewer(
 private fun ActiveDownloadItem(
     download: ChapterDownloadProgress,
     onCancel: (String) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Surface(
         shape = MaterialTheme.shapes.medium,
         tonalElevation = 4.dp,
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
         ListItem(
             modifier = Modifier.padding(4.dp),
@@ -271,12 +280,13 @@ private fun EmptyState(p1: PaddingValues) {
 private fun ChapterItem(
     file: Map.Entry<String, Map<String, List<DownloadedChapters>>>,
     onDeleted: (DownloadedChapters) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val chapterHolder: ChapterHolder = koinInject()
     var expanded by remember { mutableStateOf(false) }
 
     Column(
-        modifier = Modifier.animateContentSize(),
+        modifier = modifier.animateContentSize(),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         ListItem(

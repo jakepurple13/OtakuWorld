@@ -129,6 +129,7 @@ private class RecordingNav : NavigationActions {
     override fun toOnboarding() = Unit
     override fun bookmarks() = Unit
     override fun notes() = Unit
+    override fun noteDetail(itemUrl: String) = Unit
     override fun dictionary() = Unit
     override fun dictionaryDetail(id: Long) = Unit
     override fun dictionaryForm(id: Long?) = Unit

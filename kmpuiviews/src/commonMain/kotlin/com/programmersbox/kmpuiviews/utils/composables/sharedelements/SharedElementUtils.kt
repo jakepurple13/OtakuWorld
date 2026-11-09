@@ -75,6 +75,13 @@ fun Modifier.customSharedElement(
                     zIndexInOverlay = 1f,
                     clipInOverlayDuringTransition = NoOverlayClip,
                 )
+
+                // Content re-lays out at each size so text reflows instead of stretching
+                OtakuSharedElementType.Container -> sharedBounds(
+                    sharedContentState = rememberSharedContentState(key = key),
+                    animatedVisibilityScope = animatedScope,
+                    resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
+                )
             }
         }
     } else {

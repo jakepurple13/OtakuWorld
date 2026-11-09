@@ -28,6 +28,7 @@ import com.programmersbox.kmpuiviews.presentation.favorite.FavoriteScreen
 import com.programmersbox.kmpuiviews.presentation.globalsearch.GlobalSearchScreen
 import com.programmersbox.kmpuiviews.presentation.globalsearch.SourceSearchScreen
 import com.programmersbox.kmpuiviews.presentation.history.HistoryUi
+import com.programmersbox.kmpuiviews.presentation.notes.NoteDetailScreen
 import com.programmersbox.kmpuiviews.presentation.notes.NotesScreen
 import com.programmersbox.kmpuiviews.presentation.notifications.CatchUpScreen
 import com.programmersbox.kmpuiviews.presentation.notifications.NotificationScreen
@@ -152,7 +153,21 @@ fun buildKmpGraph(): Module = module {
 
     navigation<Screen.NotesScreen> {
         val navActions = LocalNavActions.current
-        NotesScreen(onBackPress = { navActions.popBackStack() })
+        NotesScreen(
+            onBackPress = { navActions.popBackStack() },
+            onNoteClick = navActions::noteDetail,
+        )
+    }
+
+    // Full screen (not a detail pane) so the note card can grow into it
+    navigation<Screen.NotesScreen.Detail> {
+        val navActions = LocalNavActions.current
+        // The floating nav bar would cover the bottom of the editor
+        HideNavBarWhileOnScreen()
+        NoteDetailScreen(
+            onBackPress = { navActions.popBackStack() },
+            vm = koinViewModel { parametersOf(it.itemUrl) },
+        )
     }
 
     dialogEntry<Screen.ScanQrCodeScreen> { ScanQrCode() }

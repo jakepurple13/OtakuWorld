@@ -3,7 +3,6 @@ package com.programmersbox.kmpuiviews.presentation.tips
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -100,6 +99,7 @@ fun TipsContent(
 
     BackHandler(practicing != null) { practicing = null }
 
+    val motion = MaterialTheme.motionScheme
     AnimatedContent(
         targetState = practicing,
         transitionSpec = {
@@ -108,8 +108,8 @@ fun TipsContent(
             } else {
                 AnimatedContentTransitionScope.SlideDirection.Right
             }
-            slideIntoContainer(towards, tween(300)) + fadeIn() togetherWith
-                slideOutOfContainer(towards, tween(300)) + fadeOut()
+            slideIntoContainer(towards, motion.defaultSpatialSpec()) + fadeIn(motion.defaultEffectsSpec()) togetherWith
+                slideOutOfContainer(towards, motion.defaultSpatialSpec()) + fadeOut(motion.fastEffectsSpec())
         },
         modifier = modifier,
     ) { tip ->

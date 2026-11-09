@@ -68,7 +68,8 @@ fun JvmSettingsScreen() {
                         }
                     },
                     colors = colors,
-                    shapes = ListItemDefaults.segmentedShapes(index = 0, count = 1)
+                    shapes = ListItemDefaults.segmentedShapes(index = 0, count = 1),
+                    modifier = Modifier.animateItem(),
                 )
             }
 

@@ -66,6 +66,7 @@ fun BackupWizardScreen(
                                 onToggleSelected = { viewModel.toggleSelected(item.uiInfo.key) },
                                 onToggleExpanded = { viewModel.toggleExpanded(item.uiInfo.key) },
                                 onToggleListSelected = { listId -> viewModel.toggleListSelected(listId) },
+                                modifier = Modifier.animateItem(),
                             )
                         }
                     }
@@ -87,7 +88,8 @@ fun BackupWizardScreen(
                             WizardItemRow(
                                 item = item.copy(expanded = true),
                                 onToggleSelected = {},
-                                onToggleExpanded = {}
+                                onToggleExpanded = {},
+                                modifier = Modifier.animateItem(),
                             )
                         }
                     }

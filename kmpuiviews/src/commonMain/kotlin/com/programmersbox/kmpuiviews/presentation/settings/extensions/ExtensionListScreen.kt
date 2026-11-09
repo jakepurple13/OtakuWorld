@@ -3,6 +3,7 @@ package com.programmersbox.kmpuiviews.presentation.settings.extensions
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -373,52 +374,54 @@ private fun CustomUrlDialog(
                 verticalArrangement = Arrangement.spacedBy(2.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
-                items(urls) {
-                    var showDeleteDialog by remember { mutableStateOf(false) }
-                    if (showDeleteDialog) {
-                        AlertDialog(
-                            onDismissRequest = { showDeleteDialog = false },
-                            title = { Text("Are you sure you want to delete this?") },
-                            text = { Text(it) },
-                            confirmButton = {
-                                TextButton(
-                                    onClick = { onRemoveUrl(it) },
-                                    colors = ButtonDefaults.textButtonColors(
-                                        contentColor = MaterialTheme.colorScheme.error
-                                    )
-                                ) { Text("Delete") }
-                            },
-                            dismissButton = {
-                                TextButton(
-                                    onClick = { showDeleteDialog = false },
-                                ) { Text("No") }
-                            }
-                        )
-                    }
-                    val clipboard = LocalClipboard.current
-                    OutlinedCard(
-                        onClick = {
-                            scope.launch {
-                                sourceInfoRepository.copyUrl(clipboard, it)
-                                notifier.success(getString(Res.string.banner_link_copied))
-                            }
+                items(urls, key = { it }) {
+                    Column(Modifier.animateItem()) {
+                        var showDeleteDialog by remember { mutableStateOf(false) }
+                        if (showDeleteDialog) {
+                            AlertDialog(
+                                onDismissRequest = { showDeleteDialog = false },
+                                title = { Text("Are you sure you want to delete this?") },
+                                text = { Text(it) },
+                                confirmButton = {
+                                    TextButton(
+                                        onClick = { onRemoveUrl(it) },
+                                        colors = ButtonDefaults.textButtonColors(
+                                            contentColor = MaterialTheme.colorScheme.error
+                                        )
+                                    ) { Text("Delete") }
+                                },
+                                dismissButton = {
+                                    TextButton(
+                                        onClick = { showDeleteDialog = false },
+                                    ) { Text("No") }
+                                }
+                            )
                         }
-                    ) {
-                        ListItem(
-                            headlineContent = { Text(it) },
-                            leadingContent = { Icon(Icons.Default.CopyAll, null) },
-                            trailingContent = {
-                                IconButton(
-                                    onClick = { showDeleteDialog = true }
-                                ) {
-                                    Icon(
-                                        Icons.Default.Delete,
-                                        null,
-                                        tint = MaterialTheme.colorScheme.error
-                                    )
+                        val clipboard = LocalClipboard.current
+                        OutlinedCard(
+                            onClick = {
+                                scope.launch {
+                                    sourceInfoRepository.copyUrl(clipboard, it)
+                                    notifier.success(getString(Res.string.banner_link_copied))
                                 }
                             }
-                        )
+                        ) {
+                            ListItem(
+                                headlineContent = { Text(it) },
+                                leadingContent = { Icon(Icons.Default.CopyAll, null) },
+                                trailingContent = {
+                                    IconButton(
+                                        onClick = { showDeleteDialog = true }
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Delete,
+                                            null,
+                                            tint = MaterialTheme.colorScheme.error
+                                        )
+                                    }
+                                }
+                            )
+                        }
                     }
                 }
             }

@@ -10,6 +10,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -95,51 +96,53 @@ internal fun DrawerView(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             itemsIndexed(readVm.list) { i, c ->
+                Column(Modifier.animateItem()) {
 
-                var showChangeChapter by remember { mutableStateOf(false) }
+                    var showChangeChapter by remember { mutableStateOf(false) }
 
-                if (showChangeChapter) {
-                    AlertDialog(
-                        onDismissRequest = { showChangeChapter = false },
-                        title = { Text("Change to chapter ${c.name}") },
-                        confirmButton = {
-                            TextButton(
-                                onClick = {
-                                    showChangeChapter = false
-                                    readVm.addChapterToWatched(i, showToast)
-                                }
-                            ) { Text("Yes") }
+                    if (showChangeChapter) {
+                        AlertDialog(
+                            onDismissRequest = { showChangeChapter = false },
+                            title = { Text("Change to chapter ${c.name}") },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        showChangeChapter = false
+                                        readVm.addChapterToWatched(i, showToast)
+                                    }
+                                ) { Text("Yes") }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showChangeChapter = false }) { Text("No") }
+                            }
+                        )
+                    }
+
+                    WrapHeightNavigationDrawerItem(
+                        label = { Text(c.name) },
+                        selected = readVm.currentChapter == i,
+                        onClick = { showChangeChapter = true },
+                        icon = {
+                            AnimatedVisibility(
+                                !readVm.chapters.fastAny { it.url == c.url },
+                                enter = fadeIn() + expandHorizontally(),
+                                exit = fadeOut() + shrinkHorizontally()
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(12.dp)
+                                        .background(MaterialTheme.colorScheme.primary, CircleShape)
+                                )
+                            }
                         },
-                        dismissButton = {
-                            TextButton(onClick = { showChangeChapter = false }) { Text("No") }
-                        }
+                        shape = RoundedCornerShape(8.0.dp),
+                        modifier = Modifier
+                            .padding(bottom = 4.dp)
+                            .padding(horizontal = 4.dp)
                     )
+
+                    if (i < readVm.list.lastIndex) HorizontalDivider()
                 }
-
-                WrapHeightNavigationDrawerItem(
-                    label = { Text(c.name) },
-                    selected = readVm.currentChapter == i,
-                    onClick = { showChangeChapter = true },
-                    icon = {
-                        AnimatedVisibility(
-                            !readVm.chapters.fastAny { it.url == c.url },
-                            enter = fadeIn() + expandHorizontally(),
-                            exit = fadeOut() + shrinkHorizontally()
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(12.dp)
-                                    .background(MaterialTheme.colorScheme.primary, CircleShape)
-                            )
-                        }
-                    },
-                    shape = RoundedCornerShape(8.0.dp),
-                    modifier = Modifier
-                        .padding(bottom = 4.dp)
-                        .padding(horizontal = 4.dp)
-                )
-
-                if (i < readVm.list.lastIndex) HorizontalDivider()
             }
         }
     }

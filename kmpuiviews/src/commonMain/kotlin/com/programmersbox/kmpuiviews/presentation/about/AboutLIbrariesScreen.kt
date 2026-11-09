@@ -127,11 +127,13 @@ fun AboutLibrariesScreen() {
             verticalArrangement = Arrangement.spacedBy(2.dp),
             header = {
                 stickyHeader {
-                    DefaultHeader(
-                        logo = { Image(painterLogo(), null) },
-                        version = appVersion(),
-                        appName = appConfig.appName
-                    )
+                    Column(Modifier.animateItem()) {
+                        DefaultHeader(
+                            logo = { Image(painterLogo(), null) },
+                            version = appVersion(),
+                            appName = appConfig.appName,
+                        )
+                    }
                 }
             },
         ) { library ->
@@ -243,7 +245,7 @@ private fun LibrariesContainer(
             verticalArrangement = verticalArrangement
         ) {
             header?.invoke(this)
-            items(libs) { library -> customLibraryItem(library) }
+            items(libs, key = { it.uniqueId }) { library -> Column(Modifier.animateItem()) { customLibraryItem(library) } }
         }
     }
 }

@@ -290,7 +290,7 @@ internal fun SheetView(
         ) {
             itemsIndexed(pages) { i, it ->
                 Box(
-                    modifier = Modifier
+                    modifier = Modifier.animateItem()
                         .fillMaxSize()
                         .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                         .border(

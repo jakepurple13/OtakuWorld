@@ -63,7 +63,7 @@ fun <T> ListSetting(
                     items(options) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
+                            modifier = Modifier.animateItem()
                                 .fillMaxWidth()
                                 .clickable(
                                     indication = ripple(),
@@ -129,7 +129,7 @@ fun <T> settingsDialog(
                     items(options) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
+                            modifier = Modifier.animateItem()
                                 .fillMaxWidth()
                                 .clickable(
                                     indication = ripple(),
@@ -191,7 +191,7 @@ fun <T> MultiSelectListSetting(
                     items(options) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
+                            modifier = Modifier.animateItem()
                                 .fillMaxWidth()
                                 .clickable(
                                     indication = ripple(),
@@ -263,7 +263,7 @@ fun <T> DynamicListSetting(
                     items(options()) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
+                            modifier = Modifier.animateItem()
                                 .fillMaxWidth()
                                 .clickable(
                                     indication = ripple(),

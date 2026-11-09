@@ -1,6 +1,7 @@
 package com.programmersbox.desktop
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -71,57 +72,63 @@ fun JvmSettingsScreen() {
                 .padding(horizontal = 16.dp)
         ) {
             item(contentType = "downloadPath") {
-                var downloadPath by settings
-                    .extensionDirectory
-                    .asState()
+                Column(Modifier.animateItem()) {
+                    var downloadPath by settings
+                        .extensionDirectory
+                        .asState()
 
-                val directoryPicker = rememberDirectoryPickerLauncher(
-                    directory = PlatformFile(downloadPath)
-                ) { file -> file?.let { downloadPath = it.absolutePath() } }
+                    val directoryPicker = rememberDirectoryPickerLauncher(
+                        directory = PlatformFile(downloadPath)
+                    ) { file -> file?.let { downloadPath = it.absolutePath() } }
 
-                SegmentedListItem(
-                    content = { Text("Download Path") },
-                    supportingContent = { Text(downloadPath) },
-                    leadingContent = { Icon(Icons.Default.Download, null) },
-                    onClick = { directoryPicker.launch() },
-                    colors = colors,
-                    shapes = ListItemDefaults.segmentedShapes(index = 0, count = PLATFORM_SETTINGS_COUNT)
-                )
+                    SegmentedListItem(
+                        content = { Text("Download Path") },
+                        supportingContent = { Text(downloadPath) },
+                        leadingContent = { Icon(Icons.Default.Download, null) },
+                        onClick = { directoryPicker.launch() },
+                        colors = colors,
+                        shapes = ListItemDefaults.segmentedShapes(index = 0, count = PLATFORM_SETTINGS_COUNT)
+                    )
+                }
             }
 
             item(contentType = "downloadChapterPath") {
-                var downloadPath by settings
-                    .downloadsDirectory
-                    .asState()
+                Column(Modifier.animateItem()) {
+                    var downloadPath by settings
+                        .downloadsDirectory
+                        .asState()
 
-                val directoryPicker = rememberDirectoryPickerLauncher(
-                    directory = PlatformFile(downloadPath)
-                ) { file -> file?.let { downloadPath = it.absolutePath() } }
+                    val directoryPicker = rememberDirectoryPickerLauncher(
+                        directory = PlatformFile(downloadPath)
+                    ) { file -> file?.let { downloadPath = it.absolutePath() } }
 
-                SegmentedListItem(
-                    content = { Text("Download Chapter Path") },
-                    supportingContent = { Text(downloadPath) },
-                    leadingContent = { Icon(Icons.Default.Download, null) },
-                    onClick = { directoryPicker.launch() },
-                    colors = colors,
-                    shapes = ListItemDefaults.segmentedShapes(index = 1, count = PLATFORM_SETTINGS_COUNT)
-                )
+                    SegmentedListItem(
+                        content = { Text("Download Chapter Path") },
+                        supportingContent = { Text(downloadPath) },
+                        leadingContent = { Icon(Icons.Default.Download, null) },
+                        onClick = { directoryPicker.launch() },
+                        colors = colors,
+                        shapes = ListItemDefaults.segmentedShapes(index = 1, count = PLATFORM_SETTINGS_COUNT)
+                    )
+                }
             }
 
             item(contentType = "useWebView") {
-                var useWebView by settings
-                    .useWebViewForReader
-                    .asState()
+                Column(Modifier.animateItem()) {
+                    var useWebView by settings
+                        .useWebViewForReader
+                        .asState()
 
-                SegmentedListItem(
-                    content = { Text("Use WebView") },
-                    supportingContent = { Text("Use a webview instead of the built in reader") },
-                    leadingContent = { Icon(Icons.Default.OpenInBrowser, null) },
-                    checked = useWebView,
-                    onCheckedChange = { useWebView = !useWebView },
-                    colors = colors,
-                    shapes = ListItemDefaults.segmentedShapes(index = 2, count = PLATFORM_SETTINGS_COUNT)
-                )
+                    SegmentedListItem(
+                        content = { Text("Use WebView") },
+                        supportingContent = { Text("Use a webview instead of the built in reader") },
+                        leadingContent = { Icon(Icons.Default.OpenInBrowser, null) },
+                        checked = useWebView,
+                        onCheckedChange = { useWebView = !useWebView },
+                        colors = colors,
+                        shapes = ListItemDefaults.segmentedShapes(index = 2, count = PLATFORM_SETTINGS_COUNT)
+                    )
+                }
             }
 
             item(contentType = "viewFolders") {
@@ -135,7 +142,8 @@ fun JvmSettingsScreen() {
                         }
                     },
                     colors = colors,
-                    shapes = ListItemDefaults.segmentedShapes(index = 3, count = PLATFORM_SETTINGS_COUNT)
+                    shapes = ListItemDefaults.segmentedShapes(index = 3, count = PLATFORM_SETTINGS_COUNT),
+                    modifier = Modifier.animateItem(),
                 )
             }
 

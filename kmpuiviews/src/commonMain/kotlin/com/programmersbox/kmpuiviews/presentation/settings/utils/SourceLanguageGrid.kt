@@ -131,6 +131,7 @@ internal fun SourceLanguageGridSheet(
                         Text(
                             "No language matches \"$query\"",
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.animateItem(),
                         )
                     }
                 }
@@ -145,6 +146,7 @@ private fun LazyGridScope.header(text: String) {
             text,
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.animateItem(),
         )
     }
 }
@@ -161,6 +163,7 @@ private fun LazyGridScope.tiles(
             shape = MaterialTheme.shapes.large,
             color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
             border = if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
+            modifier = Modifier.animateItem(),
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,

@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.settings.extensions
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -42,6 +43,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
+import com.programmersbox.kmpuiviews.utils.composables.stateSwapTransition
 
 private const val SHELF_SIZE = 6
 
@@ -68,51 +70,65 @@ internal fun BrowsePane(
     Column(modifier = modifier.fillMaxSize()) {
         ExtensionSearchField(query, onQueryChange = { query = it }, placeholder = "Search all catalogs")
 
-        if (query.isNotBlank()) {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-                modifier = Modifier.fillMaxSize()
-            ) {
-                items(results, key = { it.key }, contentType = { "tile" }) { item ->
-                    ExtensionTile(item, showCatalog = true, onClick = { sheetKey = item.key })
-                }
-            }
-        } else {
-            LazyColumn(
-                contentPadding = PaddingValues(bottom = 24.dp),
-                modifier = Modifier.fillMaxSize()
-            ) {
-                viewModel.catalogs.forEach { (name, ui) ->
-                    item(key = "header:$name") {
-                        ShelfHeader(
-                            name = name,
-                            count = (ui as? CatalogUi.Loaded)?.items?.size,
-                            onSeeAll = { navActions.navigate(Screen.ExtensionListScreen.Catalog(name)) },
-                        )
+        AnimatedContent(
+            targetState = query.isNotBlank(),
+            transitionSpec = stateSwapTransition(),
+            modifier = Modifier.fillMaxSize(),
+        ) { searching ->
+            if (searching) {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(3),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(results, key = { it.key }, contentType = { "tile" }) { item ->
+                        ExtensionTile(item, showCatalog = true, onClick = { sheetKey = item.key }, modifier = Modifier.animateItem())
                     }
-                    item(key = "body:$name") {
-                        when (ui) {
-                            CatalogUi.Loading -> Box(
-                                contentAlignment = Alignment.Center,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(96.dp)
-                            ) { CircularProgressIndicator() }
-
-                            is CatalogUi.Error -> CatalogError(ui.message, onRetry = { viewModel.retry(name) })
-                            is CatalogUi.Loaded if ui.items.isEmpty() -> Text(
-                                "No extensions in this catalog",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                }
+            } else {
+                LazyColumn(
+                    contentPadding = PaddingValues(bottom = 24.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    viewModel.catalogs.forEach { (name, ui) ->
+                        item(key = "header:$name") {
+                            ShelfHeader(
+                                name = name,
+                                count = (ui as? CatalogUi.Loaded)?.items?.size,
+                                onSeeAll = { navActions.navigate(Screen.ExtensionListScreen.Catalog(name)) },
+                                modifier = Modifier.animateItem(),
                             )
+                        }
+                        item(key = "body:$name") {
+                            AnimatedContent(
+                                targetState = ui,
+                                contentKey = { it::class },
+                                transitionSpec = stateSwapTransition(),
+                                modifier = Modifier.animateItem(),
+                            ) { ui ->
+                                when (ui) {
+                                    CatalogUi.Loading -> Box(
+                                        contentAlignment = Alignment.Center,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(96.dp)
+                                    ) { CircularProgressIndicator() }
 
-                            is CatalogUi.Loaded -> TileRows(
-                                ui.items.take(SHELF_SIZE),
-                                showCatalog = false,
-                                onClick = { sheetKey = it.key }
-                            )
+                                    is CatalogUi.Error -> CatalogError(ui.message, onRetry = { viewModel.retry(name) })
+                                    is CatalogUi.Loaded if ui.items.isEmpty() -> Text(
+                                        "No extensions in this catalog",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                                    )
+
+                                    is CatalogUi.Loaded -> TileRows(
+                                        ui.items.take(SHELF_SIZE),
+                                        showCatalog = false,
+                                        onClick = { sheetKey = it.key }
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -143,10 +159,10 @@ internal fun ExtensionSearchField(query: String, onQueryChange: (String) -> Unit
 }
 
 @Composable
-private fun ShelfHeader(name: String, count: Int?, onSeeAll: () -> Unit) {
+private fun ShelfHeader(name: String, count: Int?, onSeeAll: () -> Unit, modifier: Modifier = Modifier) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(start = 16.dp, end = 4.dp, top = 12.dp)
     ) {

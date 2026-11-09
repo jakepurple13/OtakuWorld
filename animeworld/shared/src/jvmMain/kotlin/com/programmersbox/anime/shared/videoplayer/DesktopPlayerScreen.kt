@@ -1,5 +1,7 @@
 package com.programmersbox.anime.shared.videoplayer
 
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.getValue
@@ -355,8 +357,15 @@ fun DesktopPlayerScreen(
             )
         }
 
-        if (state.buffering) {
-            CircularProgressIndicator(Modifier.align(Alignment.Center), color = Color.White)
+        AnimatedVisibility(
+            visible = state.buffering,
+            enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()) +
+                    scaleIn(MaterialTheme.motionScheme.defaultSpatialSpec(), initialScale = 0.6f),
+            exit = fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()) +
+                    scaleOut(MaterialTheme.motionScheme.fastSpatialSpec(), targetScale = 0.6f),
+            modifier = Modifier.align(Alignment.Center),
+        ) {
+            CircularProgressIndicator(color = Color.White)
         }
 
         PlayerFeedbackOverlay(feedback)
