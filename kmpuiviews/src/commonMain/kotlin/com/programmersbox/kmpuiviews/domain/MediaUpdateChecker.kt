@@ -114,12 +114,12 @@ class MediaUpdateChecker(
         }
 
         return try {
-            // 1. Consolidate Favorites (only the failed ones when retrying)
+            // 1. Ensure Sources are Loaded (skipped extensions resolve to their sources)
+            ensureSourcesLoaded()
+
+            // 2. Consolidate Favorites (only the failed ones when retrying)
             val favoriteItems = getConsolidatedFavoriteItems(checkAll)
                 .let { all -> if (onlyUrls == null) all else all.filter { it.url in onlyUrls } }
-
-            // 2. Ensure Sources are Loaded
-            ensureSourcesLoaded()
 
             logFirebaseMessage("Sources: ${sourceRepository.apiServiceList.joinToString { it.serviceName }}")
             val sourceSize = sourceRepository.apiServiceList.size
@@ -227,7 +227,11 @@ class MediaUpdateChecker(
     }
 
     private suspend fun getConsolidatedFavoriteItems(checkAll: Boolean): List<DbModel> {
-        return dao.getFavoritesToCheckSync(checkAll)
+        val skippedPackages = dao.getSkippedUpdateSources().first().toSet()
+        val skippedServices = sourceRepository.list
+            .filter { it.packageName in skippedPackages }
+            .map { it.apiService.serviceName }
+        return dao.getFavoritesToCheckSync(checkAll, skippedServices)
     }
 
     private suspend fun ensureSourcesLoaded() {

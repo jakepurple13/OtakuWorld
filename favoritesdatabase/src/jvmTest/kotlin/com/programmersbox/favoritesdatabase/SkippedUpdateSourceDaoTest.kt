@@ -42,27 +42,24 @@ class SkippedUpdateSourceDaoTest {
     }
 
     @Test fun `favorites from skipped sources are not checked`() = runTest {
-        dao.insertFavorites(favorite("a1", "A"), favorite("b1", "B"), favorite("b2", "B"))
-        dao.insertSkippedUpdateSources(listOf(SkippedUpdateSource("B")))
+        dao.insertFavorites(favorite("a1", "A"), favorite("b1", "B"), favorite("c1", "C"))
 
-        assertEquals(listOf("a1"), dao.getFavoritesToCheckSync(checkAll = false).map { it.url })
-        assertEquals(listOf("a1"), dao.getFavoritesToCheckSync(checkAll = true).map { it.url })
+        assertEquals(listOf("a1"), dao.getFavoritesToCheckSync(checkAll = false, listOf("B", "C")).map { it.url })
+        assertEquals(listOf("a1"), dao.getFavoritesToCheckSync(checkAll = true, listOf("B", "C")).map { it.url })
     }
 
     @Test fun `checkAll includes favorites with updates turned off`() = runTest {
         dao.insertFavorites(favorite("a1", "A"), favorite("a2", "A", notify = false))
 
-        assertEquals(listOf("a1"), dao.getFavoritesToCheckSync(checkAll = false).map { it.url })
-        assertEquals(setOf("a1", "a2"), dao.getFavoritesToCheckSync(checkAll = true).map { it.url }.toSet())
+        assertEquals(listOf("a1"), dao.getFavoritesToCheckSync(checkAll = false, emptyList()).map { it.url })
+        assertEquals(setOf("a1", "a2"), dao.getFavoritesToCheckSync(checkAll = true, emptyList()).map { it.url }.toSet())
     }
 
-    @Test fun `deleting a skipped source checks it again`() = runTest {
-        dao.insertFavorites(favorite("a1", "A"))
-        dao.insertSkippedUpdateSources(listOf(SkippedUpdateSource("A")))
-        dao.deleteSkippedUpdateSources(listOf("A"))
+    @Test fun `deleting a skipped extension removes it`() = runTest {
+        dao.insertSkippedUpdateSources(listOf(SkippedUpdateSource("pkg.a"), SkippedUpdateSource("pkg.b")))
+        dao.deleteSkippedUpdateSources(listOf("pkg.a"))
 
-        assertEquals(emptyList(), dao.getSkippedUpdateSources().first())
-        assertEquals(listOf("a1"), dao.getFavoritesToCheckSync(checkAll = false).map { it.url })
+        assertEquals(listOf("pkg.b"), dao.getSkippedUpdateSources().first())
     }
 
     @Test fun `favorite counts group by source and ignore deleted favorites`() = runTest {

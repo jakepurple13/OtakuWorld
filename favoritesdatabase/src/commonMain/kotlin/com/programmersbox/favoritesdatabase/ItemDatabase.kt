@@ -10,7 +10,7 @@ import androidx.sqlite.execSQL
 
 @Database(
     entities = [DbModel::class, DbModelFts::class, ChapterWatched::class, NotificationItem::class, SourceOrder::class, IncognitoSource::class, SkippedUpdateSource::class],
-    version = 9,
+    version = 10,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(
@@ -73,7 +73,15 @@ abstract class ItemDatabase : RoomDatabase() {
             }
         }
 
-        internal val MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
+        // SkippedUpdateSource now holds extension package names instead of per-language service names.
+        // Old rows can't be mapped without the installed sources, so every source starts checked again.
+        private val MIGRATION_9_10 = object : Migration(9, 10) {
+            override suspend fun migrate(connection: SQLiteConnection) {
+                connection.execSQL("DELETE FROM `SkippedUpdateSource`")
+            }
+        }
+
+        internal val MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
 
         fun getInstance(databaseBuilder: DatabaseBuilder): ItemDatabase = databaseBuilder
             .build<ItemDatabase>("favoriteItems.db")
