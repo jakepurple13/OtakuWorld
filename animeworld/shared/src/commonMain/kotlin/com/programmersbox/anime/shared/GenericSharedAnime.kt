@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -23,6 +24,7 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.dp
 import com.programmersbox.anime.shared.episodeload.EpisodeAction
 import com.programmersbox.anime.shared.episodeload.EpisodeLoader
+import com.programmersbox.anime.shared.episodeload.downloadRowStates
 import com.programmersbox.datastore.ColorBlindnessType
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.DbModel
@@ -31,6 +33,7 @@ import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpStorage
 import com.programmersbox.kmpuiviews.BuildType
+import com.programmersbox.kmpuiviews.ChapterDownloadUiState
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.painterLogo
@@ -42,6 +45,7 @@ import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
+import kotlinx.coroutines.flow.Flow
 import org.koin.compose.koinInject
 
 abstract class GenericSharedAnime(
@@ -74,6 +78,11 @@ abstract class GenericSharedAnime(
             onResolved = { playOrCast(navController, it, model, infoModel, seedColor) },
         )
     }
+
+    override fun observeChapterDownloadStates(
+        chapters: List<KmpChapterModel>,
+        mangaTitle: String,
+    ): Flow<Map<String, ChapterDownloadUiState>> = snapshotFlow { downloadRowStates(episodeLoader.state) }
 
     /** Download counterpart of [chapterOnClick]; call from a coroutine (it suspends until the load finishes). */
     protected suspend fun loadForDownload(model: KmpChapterModel, infoModel: KmpInfoModel) {
