@@ -155,6 +155,13 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 
 #### Improvements
 
+- Motion pass: screens now move with a short slide and crossfade, and predictive back shrinks the
+  page you're leaving. List rows animate when they're added, removed or reordered. Loading,
+  results and empty states crossfade instead of cutting. Covers spring back on release. Timings
+  follow the expressiveness setting. Tapping a note on the Notes screen grows the card into a
+  full-screen editor that saves when you leave. Haptics added for pull-to-refresh, slide-to-confirm,
+  favoriting and long-pressing a favorites group. Settings groups cascade in when Settings opens,
+  onboarding pages drift as you swipe, and player spinners and the cast play/pause button animate
 - Extension screens updated to Material 3 Expressive components, with layout and visibility
   animations ([c532d1784](https://github.com/jakepurple13/OtakuWorld/commit/c532d1784),
   [809bf9625](https://github.com/jakepurple13/OtakuWorld/commit/809bf9625))
