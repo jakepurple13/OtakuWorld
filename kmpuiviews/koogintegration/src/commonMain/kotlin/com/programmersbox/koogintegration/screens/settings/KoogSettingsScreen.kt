@@ -86,14 +86,16 @@ fun KoogSettingsScreen(
                     value = state.apiKey,
                     onValueChange = { viewModel.screenState = viewModel.screenState.copy(apiKey = it) },
                     label = "API Key",
-                    onSave = { viewModel.updateApiKey(state.apiKey) }
+                    onSave = { viewModel.updateApiKey(state.apiKey) },
+                    modifier = Modifier.animateItem(),
                 )
             }
 
             item {
                 AIProviderDropdown(
                     selectedProvider = state.modelCompany,
-                    onProviderSelected = { viewModel.updateCompany(it.display) }
+                    onProviderSelected = { viewModel.updateCompany(it.display) },
+                    modifier = Modifier.animateItem(),
                 )
             }
 
@@ -102,7 +104,7 @@ fun KoogSettingsScreen(
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier
+                        modifier = Modifier.animateItem()
                             .fillMaxWidth()
                             .padding(16.dp)
                     ) {
@@ -136,7 +138,8 @@ fun KoogSettingsScreen(
                         OllamaLLMProvider -> OllamaModels.models
                         NoLLMProvider -> emptyList()
                         else -> platformModels(state.modelCompany.display)
-                    }
+                    },
+                    modifier = Modifier.animateItem(),
                 )
             }
         }
@@ -224,6 +227,7 @@ fun PreferenceTextField(
     label: String,
     onValueChange: (String) -> Unit,
     onSave: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     OutlinedTextField(
         value = value,
@@ -234,7 +238,7 @@ fun PreferenceTextField(
                 onClick = onSave
             ) { Icon(Icons.Default.Save, null) }
         },
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
     )

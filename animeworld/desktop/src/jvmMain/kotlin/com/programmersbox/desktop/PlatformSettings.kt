@@ -1,6 +1,7 @@
 package com.programmersbox.desktop
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -72,22 +73,24 @@ fun JvmSettingsScreen() {
                 .padding(horizontal = 16.dp)
         ) {
             item(contentType = "downloadChapterPath") {
-                var downloadPath by settings
-                    .downloadsDirectory
-                    .asState()
+                Box(Modifier.animateItem()) {
+                    var downloadPath by settings
+                        .downloadsDirectory
+                        .asState()
 
-                val directoryPicker = rememberDirectoryPickerLauncher(
-                    directory = PlatformFile(downloadPath)
-                ) { file -> file?.let { downloadPath = it.absolutePath() } }
+                    val directoryPicker = rememberDirectoryPickerLauncher(
+                        directory = PlatformFile(downloadPath)
+                    ) { file -> file?.let { downloadPath = it.absolutePath() } }
 
-                SegmentedListItem(
-                    content = { Text("Download Path") },
-                    supportingContent = { Text(downloadPath) },
-                    leadingContent = { Icon(Icons.Default.Download, null) },
-                    onClick = { directoryPicker.launch() },
-                    colors = colors,
-                    shapes = ListItemDefaults.segmentedShapes(index = 0, count = PLATFORM_SETTINGS_COUNT)
-                )
+                    SegmentedListItem(
+                        content = { Text("Download Path") },
+                        supportingContent = { Text(downloadPath) },
+                        leadingContent = { Icon(Icons.Default.Download, null) },
+                        onClick = { directoryPicker.launch() },
+                        colors = colors,
+                        shapes = ListItemDefaults.segmentedShapes(index = 0, count = PLATFORM_SETTINGS_COUNT)
+                    )
+                }
             }
 
             item(contentType = "viewFolders") {
@@ -101,7 +104,8 @@ fun JvmSettingsScreen() {
                         }
                     },
                     colors = colors,
-                    shapes = ListItemDefaults.segmentedShapes(index = 1, count = PLATFORM_SETTINGS_COUNT)
+                    shapes = ListItemDefaults.segmentedShapes(index = 1, count = PLATFORM_SETTINGS_COUNT),
+                    modifier = Modifier.animateItem(),
                 )
             }
 
@@ -113,7 +117,8 @@ fun JvmSettingsScreen() {
                     leadingContent = { Icon(Icons.Default.VideoLibrary, null) },
                     onClick = { navActions.navigate(LibraryFoldersRoute) },
                     colors = colors,
-                    shapes = ListItemDefaults.segmentedShapes(index = 2, count = PLATFORM_SETTINGS_COUNT)
+                    shapes = ListItemDefaults.segmentedShapes(index = 2, count = PLATFORM_SETTINGS_COUNT),
+                    modifier = Modifier.animateItem(),
                 )
             }
 

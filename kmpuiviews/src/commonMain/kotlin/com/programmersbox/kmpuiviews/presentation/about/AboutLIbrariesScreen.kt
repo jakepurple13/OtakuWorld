@@ -4,6 +4,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -127,11 +128,13 @@ fun AboutLibrariesScreen() {
             verticalArrangement = Arrangement.spacedBy(2.dp),
             header = {
                 stickyHeader {
-                    DefaultHeader(
-                        logo = { Image(painterLogo(), null) },
-                        version = appVersion(),
-                        appName = appConfig.appName
-                    )
+                    Box(Modifier.animateItem()) {
+                        DefaultHeader(
+                            logo = { Image(painterLogo(), null) },
+                            version = appVersion(),
+                            appName = appConfig.appName,
+                        )
+                    }
                 }
             },
         ) { library ->
@@ -243,7 +246,7 @@ private fun LibrariesContainer(
             verticalArrangement = verticalArrangement
         ) {
             header?.invoke(this)
-            items(libs) { library -> customLibraryItem(library) }
+            items(libs, key = { it.uniqueId }) { library -> Box(Modifier.animateItem()) { customLibraryItem(library) } }
         }
     }
 }

@@ -261,6 +261,7 @@ internal fun SourceChipsRow(
                 onClick = onShowAll,
                 label = { Text("All") },
                 trailingIcon = { Text(total.toString()) },
+                modifier = Modifier.animateItem(),
             )
         }
         items(sources, key = { it.first }) { (source, count) ->
@@ -269,6 +270,7 @@ internal fun SourceChipsRow(
                 onClick = { onSelectSource(source) },
                 label = { Text(LocalSourcesRepository.current.displayNameFor(source)) },
                 trailingIcon = { Text(count.toString()) },
+                modifier = Modifier.animateItem(),
             )
         }
     }

@@ -234,7 +234,7 @@ fun SettingScreen(
                             scope.launch { searchBarState.animateToCollapsed() }
                             navigationActions.navigate(item.targetScreen)
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.animateItem().fillMaxWidth()
                     )
                 }
             }

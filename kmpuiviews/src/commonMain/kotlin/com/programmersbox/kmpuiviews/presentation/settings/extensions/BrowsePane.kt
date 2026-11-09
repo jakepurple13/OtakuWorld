@@ -75,7 +75,7 @@ internal fun BrowsePane(
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(results, key = { it.key }, contentType = { "tile" }) { item ->
-                    ExtensionTile(item, showCatalog = true, onClick = { sheetKey = item.key })
+                    ExtensionTile(item, showCatalog = true, onClick = { sheetKey = item.key }, modifier = Modifier.animateItem())
                 }
             }
         } else {
@@ -89,30 +89,33 @@ internal fun BrowsePane(
                             name = name,
                             count = (ui as? CatalogUi.Loaded)?.items?.size,
                             onSeeAll = { navActions.navigate(Screen.ExtensionListScreen.Catalog(name)) },
+                            modifier = Modifier.animateItem(),
                         )
                     }
                     item(key = "body:$name") {
-                        when (ui) {
-                            CatalogUi.Loading -> Box(
-                                contentAlignment = Alignment.Center,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(96.dp)
-                            ) { CircularProgressIndicator() }
+                        Box(Modifier.animateItem()) {
+                            when (ui) {
+                                CatalogUi.Loading -> Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(96.dp)
+                                ) { CircularProgressIndicator() }
 
-                            is CatalogUi.Error -> CatalogError(ui.message, onRetry = { viewModel.retry(name) })
-                            is CatalogUi.Loaded if ui.items.isEmpty() -> Text(
-                                "No extensions in this catalog",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                            )
+                                is CatalogUi.Error -> CatalogError(ui.message, onRetry = { viewModel.retry(name) })
+                                is CatalogUi.Loaded if ui.items.isEmpty() -> Text(
+                                    "No extensions in this catalog",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                                )
 
-                            is CatalogUi.Loaded -> TileRows(
-                                ui.items.take(SHELF_SIZE),
-                                showCatalog = false,
-                                onClick = { sheetKey = it.key }
-                            )
+                                is CatalogUi.Loaded -> TileRows(
+                                    ui.items.take(SHELF_SIZE),
+                                    showCatalog = false,
+                                    onClick = { sheetKey = it.key }
+                                )
+                            }
                         }
                     }
                 }
@@ -143,10 +146,10 @@ internal fun ExtensionSearchField(query: String, onQueryChange: (String) -> Unit
 }
 
 @Composable
-private fun ShelfHeader(name: String, count: Int?, onSeeAll: () -> Unit) {
+private fun ShelfHeader(name: String, count: Int?, onSeeAll: () -> Unit, modifier: Modifier = Modifier) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(start = 16.dp, end = 4.dp, top = 12.dp)
     ) {

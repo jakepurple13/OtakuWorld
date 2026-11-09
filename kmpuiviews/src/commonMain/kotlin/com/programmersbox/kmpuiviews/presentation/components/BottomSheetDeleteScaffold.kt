@@ -203,7 +203,8 @@ fun <T> BottomSheetDeleteScaffold(
                             deleteTitle = deleteTitle,
                             customSingleRemoveDialog = customSingleRemoveDialog,
                             onRemove = onRemove,
-                            itemUi = itemUi
+                            itemUi = itemUi,
+                            modifier = Modifier.animateItem(),
                         )
                     }
                 }
@@ -222,7 +223,8 @@ fun <T> BottomSheetDeleteScaffold(
                             deleteTitle = deleteTitle,
                             customSingleRemoveDialog = customSingleRemoveDialog,
                             onRemove = onRemove,
-                            itemUi = itemUi
+                            itemUi = itemUi,
+                            modifier = Modifier.animateItem(),
                         )
                     }
                 }*/
@@ -343,7 +345,7 @@ fun <T> BottomSheetDeleteGridScaffold(
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items { m ->
-                        Box {
+                        Box(modifier = Modifier.animateItem()) {
                             DeleteItemDragSelectView(
                                 item = m,
                                 deleteTitle = deleteTitle,
@@ -495,32 +497,34 @@ fun <T> BottomSheetDeleteGridScaffold(
                     items(
                         span = span
                     ) { m ->
-                        if (isTitle(m)) {
-                            titleUi(m)
-                        } else {
-                            Box {
-                                DeleteItemDragSelectView(
-                                    item = m,
-                                    deleteTitle = deleteTitle,
-                                    customSingleRemoveDialog = customSingleRemoveDialog,
-                                    onRemove = onRemove,
-                                    itemUi = itemUi,
-                                    modifier = Modifier
-                                        .dragSelectToggleableItem(
-                                            state = dragState,
-                                            item = m,
-                                        )
-                                        .clickable {
-                                            if (dragState.isSelected(m)) dragState.removeSelected(m)
-                                            else dragState.addSelected(m)
-                                        }
-                                )
-                                if (dragState.inSelectionMode) {
-                                    Box(modifier = Modifier.matchParentSize()) {
-                                        if (dragState.isSelected(m)) {
-                                            SelectedIcon()
-                                        } else {
-                                            UnselectedIcon()
+                        Box(Modifier.animateItem()) {
+                            if (isTitle(m)) {
+                                titleUi(m)
+                            } else {
+                                Box {
+                                    DeleteItemDragSelectView(
+                                        item = m,
+                                        deleteTitle = deleteTitle,
+                                        customSingleRemoveDialog = customSingleRemoveDialog,
+                                        onRemove = onRemove,
+                                        itemUi = itemUi,
+                                        modifier = Modifier
+                                            .dragSelectToggleableItem(
+                                                state = dragState,
+                                                item = m,
+                                            )
+                                            .clickable {
+                                                if (dragState.isSelected(m)) dragState.removeSelected(m)
+                                                else dragState.addSelected(m)
+                                            }
+                                    )
+                                    if (dragState.inSelectionMode) {
+                                        Box(modifier = Modifier.matchParentSize()) {
+                                            if (dragState.isSelected(m)) {
+                                                SelectedIcon()
+                                            } else {
+                                                UnselectedIcon()
+                                            }
                                         }
                                     }
                                 }
@@ -657,32 +661,34 @@ fun <T> ModalBottomSheetDelete(
                 items(
                     span = span
                 ) { m ->
-                    if (isTitle(m)) {
-                        titleUi(m)
-                    } else {
-                        Box {
-                            DeleteItemDragSelectView(
-                                item = m,
-                                deleteTitle = deleteTitle,
-                                customSingleRemoveDialog = customSingleRemoveDialog,
-                                onRemove = onRemove,
-                                itemUi = itemUi,
-                                modifier = Modifier
-                                    .dragSelectToggleableItem(
-                                        state = dragState,
-                                        item = m,
-                                    )
-                                    .clickable {
-                                        if (dragState.isSelected(m)) dragState.removeSelected(m)
-                                        else dragState.addSelected(m)
-                                    }
-                            )
-                            if (dragState.inSelectionMode) {
-                                Box(modifier = Modifier.matchParentSize()) {
-                                    if (dragState.isSelected(m)) {
-                                        SelectedIcon()
-                                    } else {
-                                        UnselectedIcon()
+                    Box(Modifier.animateItem()) {
+                        if (isTitle(m)) {
+                            titleUi(m)
+                        } else {
+                            Box {
+                                DeleteItemDragSelectView(
+                                    item = m,
+                                    deleteTitle = deleteTitle,
+                                    customSingleRemoveDialog = customSingleRemoveDialog,
+                                    onRemove = onRemove,
+                                    itemUi = itemUi,
+                                    modifier = Modifier
+                                        .dragSelectToggleableItem(
+                                            state = dragState,
+                                            item = m,
+                                        )
+                                        .clickable {
+                                            if (dragState.isSelected(m)) dragState.removeSelected(m)
+                                            else dragState.addSelected(m)
+                                        }
+                                )
+                                if (dragState.inSelectionMode) {
+                                    Box(modifier = Modifier.matchParentSize()) {
+                                        if (dragState.isSelected(m)) {
+                                            SelectedIcon()
+                                        } else {
+                                            UnselectedIcon()
+                                        }
                                     }
                                 }
                             }

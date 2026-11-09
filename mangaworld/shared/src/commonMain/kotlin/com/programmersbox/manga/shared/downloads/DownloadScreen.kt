@@ -131,30 +131,32 @@ private fun DownloadViewer(
                 .padding(4.dp)
         ) {
             if (inProgressDownloads.isNotEmpty()) {
-                item {
+                item(key = "active-header") {
                     Text(
                         text = "Active Downloads",
                         style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                        modifier = Modifier.animateItem().padding(horizontal = 4.dp, vertical = 2.dp)
                     )
                 }
                 items(
                     items = inProgressDownloads,
+                    key = { it.chapterUrl },
                 ) { download ->
                     ActiveDownloadItem(
                         download = download,
-                        onCancel = { viewModel.cancelDownload(it) }
+                        onCancel = { viewModel.cancelDownload(it) },
+                        modifier = Modifier.animateItem(),
                     )
                 }
             }
 
             if (fileList.isNotEmpty()) {
                 if (inProgressDownloads.isNotEmpty()) {
-                    item {
+                    item(key = "downloaded-header") {
                         Text(
                             text = "Downloaded",
                             style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                            modifier = Modifier.animateItem().padding(horizontal = 4.dp, vertical = 2.dp)
                         )
                     }
                 }
@@ -164,7 +166,8 @@ private fun DownloadViewer(
                 ) { file ->
                     ChapterItem(
                         file = file,
-                        onDeleted = viewModel::delete
+                        onDeleted = viewModel::delete,
+                        modifier = Modifier.animateItem(),
                     )
                 }
             }
@@ -177,11 +180,12 @@ private fun DownloadViewer(
 private fun ActiveDownloadItem(
     download: ChapterDownloadProgress,
     onCancel: (String) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Surface(
         shape = MaterialTheme.shapes.medium,
         tonalElevation = 4.dp,
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
         ListItem(
             modifier = Modifier.padding(4.dp),
@@ -271,12 +275,13 @@ private fun EmptyState(p1: PaddingValues) {
 private fun ChapterItem(
     file: Map.Entry<String, Map<String, List<DownloadedChapters>>>,
     onDeleted: (DownloadedChapters) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val chapterHolder: ChapterHolder = koinInject()
     var expanded by remember { mutableStateOf(false) }
 
     Column(
-        modifier = Modifier.animateContentSize(),
+        modifier = modifier.animateContentSize(),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         ListItem(

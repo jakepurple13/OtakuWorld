@@ -86,39 +86,41 @@ internal fun DrawerView(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             itemsIndexed(readVm.list) { i, c ->
+                Box(Modifier.animateItem()) {
 
-                var showChangeChapter by remember { mutableStateOf(false) }
+                    var showChangeChapter by remember { mutableStateOf(false) }
 
-                if (showChangeChapter) {
-                    AlertDialog(
-                        onDismissRequest = { showChangeChapter = false },
-                        title = { Text("Change to chapter ${c.name}") },
-                        confirmButton = {
-                            TextButton(
-                                onClick = {
-                                    showChangeChapter = false
-                                    readVm.currentChapter = i
-                                    readVm.addChapterToWatched(readVm.currentChapter, showToast)
-                                }
-                            ) { Text("Yes") }
-                        },
-                        dismissButton = {
-                            TextButton(onClick = { showChangeChapter = false }) { Text("No") }
-                        }
+                    if (showChangeChapter) {
+                        AlertDialog(
+                            onDismissRequest = { showChangeChapter = false },
+                            title = { Text("Change to chapter ${c.name}") },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        showChangeChapter = false
+                                        readVm.currentChapter = i
+                                        readVm.addChapterToWatched(readVm.currentChapter, showToast)
+                                    }
+                                ) { Text("Yes") }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showChangeChapter = false }) { Text("No") }
+                            }
+                        )
+                    }
+
+                    WrapHeightNavigationDrawerItem(
+                        modifier = Modifier
+                            .padding(bottom = 4.dp)
+                            .padding(horizontal = 4.dp),
+                        label = { Text(c.name) },
+                        selected = readVm.currentChapter == i,
+                        onClick = { showChangeChapter = true },
+                        shape = RoundedCornerShape(8.0.dp)
                     )
+
+                    if (i < readVm.list.lastIndex) HorizontalDivider()
                 }
-
-                WrapHeightNavigationDrawerItem(
-                    modifier = Modifier
-                        .padding(bottom = 4.dp)
-                        .padding(horizontal = 4.dp),
-                    label = { Text(c.name) },
-                    selected = readVm.currentChapter == i,
-                    onClick = { showChangeChapter = true },
-                    shape = RoundedCornerShape(8.0.dp)
-                )
-
-                if (i < readVm.list.lastIndex) HorizontalDivider()
             }
         }
     }

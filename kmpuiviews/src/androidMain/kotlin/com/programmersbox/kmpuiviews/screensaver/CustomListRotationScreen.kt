@@ -104,7 +104,7 @@ private fun CustomListGrid(list: CustomList) {
                     list.item.name,
                     style = MaterialTheme.typography.headlineSmall,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.animateItem().fillMaxWidth()
                 )
             }
 
@@ -113,6 +113,7 @@ private fun CustomListGrid(list: CustomList) {
                     imageUrl = info.imageUrl,
                     name = info.title,
                     placeHolder = { rememberVectorPainter(Icons.Default.Settings) },
+                    modifier = Modifier.animateItem(),
                 )
             }
         }

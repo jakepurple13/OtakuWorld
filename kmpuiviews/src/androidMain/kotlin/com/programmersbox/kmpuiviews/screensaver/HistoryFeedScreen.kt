@@ -89,21 +89,21 @@ private fun HistoryFeedList(
                     "Recently Viewed",
                     style = MaterialTheme.typography.headlineSmall,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.animateItem().fillMaxWidth()
                 )
             }
 
             if (list.isEmpty()) {
-                item { Text("Nothing viewed yet") }
+                item { Text("Nothing viewed yet", modifier = Modifier.animateItem()) }
             }
 
-            items(list) { recent -> HistoryFeedRow(recent) }
+            items(list) { recent -> HistoryFeedRow(recent, modifier = Modifier.animateItem()) }
         }
     }
 }
 
 @Composable
-private fun HistoryFeedRow(recent: RecentModel) {
+private fun HistoryFeedRow(recent: RecentModel, modifier: Modifier = Modifier) {
     val dateTimeFormatHandler: DateTimeFormatHandler = koinInject()
     val is24Time = dateTimeFormatHandler.is24Time()
     val dateFormat = remember(is24Time) {
@@ -113,7 +113,7 @@ private fun HistoryFeedRow(recent: RecentModel) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
         M3CoverCard2(
             imageUrl = recent.imageUrl,

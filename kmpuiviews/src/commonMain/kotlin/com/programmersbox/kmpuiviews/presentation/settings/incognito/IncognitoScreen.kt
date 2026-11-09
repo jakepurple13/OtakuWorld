@@ -50,7 +50,8 @@ fun IncognitoScreen(
                 ListItem(
                     headlineContent = {
                         Text("Choose what sources you don't want to have recorded or saved")
-                    }
+                    },
+                    modifier = Modifier.animateItem(),
                 )
             }
 
@@ -58,7 +59,8 @@ fun IncognitoScreen(
                 ListItem(
                     headlineContent = {
                         Text("This affects favoriting, marking a chapter as read, and adding to history.")
-                    }
+                    },
+                    modifier = Modifier.animateItem(),
                 )
             }
 
@@ -71,6 +73,7 @@ fun IncognitoScreen(
                     elevation = CardDefaults.cardElevation(
                         defaultElevation = 4.dp
                     ),
+                    modifier = Modifier.animateItem(),
                 ) {
                     ListItem(
                         overlineContent = { Text(it.sourceInformation.packageName) },

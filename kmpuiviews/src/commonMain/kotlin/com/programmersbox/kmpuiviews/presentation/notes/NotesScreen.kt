@@ -115,7 +115,7 @@ fun NotesScreen(
                             selectedNote = note
                             showNoteSheet = true
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.animateItem().fillMaxWidth()
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp)

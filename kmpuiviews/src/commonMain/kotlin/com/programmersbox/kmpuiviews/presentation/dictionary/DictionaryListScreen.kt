@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.dictionary
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -143,21 +144,23 @@ fun DictionaryListScreen(
                     entries,
                     key = { it.id }
                 ) { entry ->
-                    ListItem(
-                        content = { Text(entry.term) },
-                        supportingContent = entry.definition?.let {
-                            { Text(it, maxLines = 2, overflow = TextOverflow.Ellipsis) }
-                        },
-                        leadingContent = { Icon(Icons.Default.MenuBook, contentDescription = null) },
-                        trailingContent = {
-                            IconButton(onClick = { entryPendingDelete = entry }) {
-                                Icon(Icons.Default.Delete, contentDescription = "Delete ${entry.term}")
-                            }
-                        },
-                        onClick = { onEntryClick(entry.id) },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    HorizontalDivider()
+                    Box(Modifier.animateItem()) {
+                        ListItem(
+                            content = { Text(entry.term) },
+                            supportingContent = entry.definition?.let {
+                                { Text(it, maxLines = 2, overflow = TextOverflow.Ellipsis) }
+                            },
+                            leadingContent = { Icon(Icons.Default.MenuBook, contentDescription = null) },
+                            trailingContent = {
+                                IconButton(onClick = { entryPendingDelete = entry }) {
+                                    Icon(Icons.Default.Delete, contentDescription = "Delete ${entry.term}")
+                                }
+                            },
+                            onClick = { onEntryClick(entry.id) },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        HorizontalDivider()
+                    }
                 }
             }
         }

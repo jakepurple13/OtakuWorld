@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.presentation.settings.lists.addtolist
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -120,47 +121,49 @@ fun ListChoiceScreen(
             modifier = Modifier.weight(1f, fill = false)
         ) {
             item {
-                var showAdd by remember { mutableStateOf(false) }
-                if (showAdd) {
-                    var name by remember { mutableStateOf("") }
-                    val focusRequester = remember { FocusRequester() }
-                    val create = {
-                        scope.launch {
-                            val uuid = Uuid.random().toString()
-                            listRepository.createList(CustomListItem(uuid = uuid, name = name.trim()))
-                            picked.add(uuid)
-                            showAdd = false
+                Box(Modifier.animateItem()) {
+                    var showAdd by remember { mutableStateOf(false) }
+                    if (showAdd) {
+                        var name by remember { mutableStateOf("") }
+                        val focusRequester = remember { FocusRequester() }
+                        val create = {
+                            scope.launch {
+                                val uuid = Uuid.random().toString()
+                                listRepository.createList(CustomListItem(uuid = uuid, name = name.trim()))
+                                picked.add(uuid)
+                                showAdd = false
+                            }
                         }
-                    }
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.padding(horizontal = 8.dp)
-                    ) {
-                        OutlinedTextField(
-                            value = name,
-                            onValueChange = { name = it },
-                            label = { Text(stringResource(Res.string.list_name)) },
-                            singleLine = true,
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        ) {
+                            OutlinedTextField(
+                                value = name,
+                                onValueChange = { name = it },
+                                label = { Text(stringResource(Res.string.list_name)) },
+                                singleLine = true,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .focusRequester(focusRequester)
+                            )
+                            LaunchedEffect(Unit) { focusRequester.requestFocus() }
+                            Button(
+                                onClick = { create() },
+                                enabled = name.isNotBlank()
+                            ) { Text(stringResource(Res.string.create)) }
+                        }
+                    } else {
+                        OutlinedButton(
+                            onClick = { showAdd = true },
                             modifier = Modifier
-                                .weight(1f)
-                                .focusRequester(focusRequester)
-                        )
-                        LaunchedEffect(Unit) { focusRequester.requestFocus() }
-                        Button(
-                            onClick = { create() },
-                            enabled = name.isNotBlank()
-                        ) { Text(stringResource(Res.string.create)) }
-                    }
-                } else {
-                    OutlinedButton(
-                        onClick = { showAdd = true },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 8.dp)
-                    ) {
-                        Icon(Icons.Default.Add, null)
-                        Text(stringResource(Res.string.new_list))
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp)
+                        ) {
+                            Icon(Icons.Default.Add, null)
+                            Text(stringResource(Res.string.new_list))
+                        }
                     }
                 }
             }
@@ -184,6 +187,7 @@ fun ListChoiceScreen(
                     },
                     trailingContent = { Text("${list.list.size}") },
                     content = { Text(list.item.name) },
+                    modifier = Modifier.animateItem(),
                 )
             }
         }

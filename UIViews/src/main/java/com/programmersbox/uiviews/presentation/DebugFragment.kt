@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.text.format.DateFormat
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -126,133 +127,102 @@ fun DebugView() {
             }*/
 
             item {
-                var showDatePicker by remember { mutableStateOf(false) }
-                var showTimePicker by remember { mutableStateOf(false) }
+                Box(Modifier.animateItem()) {
+                    var showDatePicker by remember { mutableStateOf(false) }
+                    var showTimePicker by remember { mutableStateOf(false) }
 
-                val dateState = rememberDatePickerState(
-                    initialSelectedDateMillis = System.currentTimeMillis(),
-                    selectableDates = remember {
-                        object : SelectableDates {
-                            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                                return DateValidatorPointForward.now().isValid(utcTimeMillis)
+                    val dateState = rememberDatePickerState(
+                        initialSelectedDateMillis = System.currentTimeMillis(),
+                        selectableDates = remember {
+                            object : SelectableDates {
+                                override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                                    return DateValidatorPointForward.now().isValid(utcTimeMillis)
+                                }
                             }
                         }
+                    )
+                    val calendar = remember { Calendar.getInstance() }
+                    val is24HourFormat by rememberUpdatedState(DateFormat.is24HourFormat(context))
+                    val timeState = rememberTimePickerState(
+                        initialHour = calendar[Calendar.HOUR_OF_DAY],
+                        initialMinute = calendar[Calendar.MINUTE],
+                        is24Hour = is24HourFormat
+                    )
+
+                    if (showTimePicker) {
+                        TimePickerDialog(
+                            onDismissRequest = { showTimePicker = false },
+                            title = { Text(stringResource(id = R.string.selectTime)) },
+                            dismissButton = { TextButton(onClick = { showTimePicker = false }) { Text(stringResource(R.string.cancel)) } },
+                            confirmButton = {
+                                val dateTimeFormatter = LocalSystemDateTimeFormat.current
+                                TextButton(
+                                    onClick = {
+                                        showTimePicker = false
+                                        val c = Calendar.getInstance()
+                                        c.timeInMillis = dateState.selectedDateMillis ?: 0L
+                                        c[Calendar.DAY_OF_YEAR] += 1
+                                        c[Calendar.HOUR_OF_DAY] = timeState.hour
+                                        c[Calendar.MINUTE] = timeState.minute
+
+                                        println("Time: ${dateState.selectedDateMillis}")
+                                        dateState.selectedDateMillis?.toLocalDateTime()
+                                            ?.let { "Time: ${dateTimeFormatter.format(it)}" }
+                                            ?.let(::println)
+                                        println("Time: ${timeState.hour}")
+                                        println("Time: ${timeState.minute}")
+                                        c.timeInMillis.toLocalDateTime()
+                                            .let { "Time: ${dateTimeFormatter.format(it)}" }
+                                            .let(::println)
+                                        println("Time: ${c.timeInMillis - System.currentTimeMillis()}")
+                                    }
+                                ) { Text(stringResource(R.string.ok)) }
+                            }
+                        ) { TimePicker(state = timeState) }
                     }
-                )
-                val calendar = remember { Calendar.getInstance() }
-                val is24HourFormat by rememberUpdatedState(DateFormat.is24HourFormat(context))
-                val timeState = rememberTimePickerState(
-                    initialHour = calendar[Calendar.HOUR_OF_DAY],
-                    initialMinute = calendar[Calendar.MINUTE],
-                    is24Hour = is24HourFormat
-                )
 
-                if (showTimePicker) {
-                    TimePickerDialog(
-                        onDismissRequest = { showTimePicker = false },
-                        title = { Text(stringResource(id = R.string.selectTime)) },
-                        dismissButton = { TextButton(onClick = { showTimePicker = false }) { Text(stringResource(R.string.cancel)) } },
-                        confirmButton = {
-                            val dateTimeFormatter = LocalSystemDateTimeFormat.current
-                            TextButton(
-                                onClick = {
-                                    showTimePicker = false
-                                    val c = Calendar.getInstance()
-                                    c.timeInMillis = dateState.selectedDateMillis ?: 0L
-                                    c[Calendar.DAY_OF_YEAR] += 1
-                                    c[Calendar.HOUR_OF_DAY] = timeState.hour
-                                    c[Calendar.MINUTE] = timeState.minute
-
-                                    println("Time: ${dateState.selectedDateMillis}")
-                                    dateState.selectedDateMillis?.toLocalDateTime()
-                                        ?.let { "Time: ${dateTimeFormatter.format(it)}" }
-                                        ?.let(::println)
-                                    println("Time: ${timeState.hour}")
-                                    println("Time: ${timeState.minute}")
-                                    c.timeInMillis.toLocalDateTime()
-                                        .let { "Time: ${dateTimeFormatter.format(it)}" }
-                                        .let(::println)
-                                    println("Time: ${c.timeInMillis - System.currentTimeMillis()}")
-                                }
-                            ) { Text(stringResource(R.string.ok)) }
+                    if (showDatePicker) {
+                        DatePickerDialog(
+                            onDismissRequest = { showDatePicker = false },
+                            dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.cancel)) } },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        showDatePicker = false
+                                        showTimePicker = true
+                                    }
+                                ) { Text(stringResource(R.string.ok)) }
+                            }
+                        ) {
+                            DatePicker(
+                                state = dateState,
+                                title = { Text(stringResource(R.string.selectDate)) }
+                            )
                         }
-                    ) { TimePicker(state = timeState) }
-                }
-
-                if (showDatePicker) {
-                    DatePickerDialog(
-                        onDismissRequest = { showDatePicker = false },
-                        dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.cancel)) } },
-                        confirmButton = {
-                            TextButton(
-                                onClick = {
-                                    showDatePicker = false
-                                    showTimePicker = true
-                                }
-                            ) { Text(stringResource(R.string.ok)) }
-                        }
-                    ) {
-                        DatePicker(
-                            state = dateState,
-                            title = { Text(stringResource(R.string.selectDate)) }
-                        )
                     }
-                }
 
-                Button(
-                    onClick = { showDatePicker = true }
-                ) { Text("Date") }
+                    Button(
+                        onClick = { showDatePicker = true }
+                    ) { Text("Date") }
+                }
             }
 
             item {
                 Button(
-                    onClick = { error("Crash") }
+                    onClick = { error("Crash") },
+                    modifier = Modifier.animateItem(),
                 ) { Text("Crash") }
             }
 
             item {
                 Surface(
                     color = Color.Blue,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.animateItem().fillMaxWidth()
                 ) { Text("Here!") }
             }
 
             item {
-                PreferenceSetting(
-                    settingTitle = { Text("Title") },
-                    summaryValue = { Text("Summary") },
-                    settingIcon = { Icon(Icons.Default.Deck, null) }
-                )
-
-                PreferenceSetting(
-                    settingTitle = { Text("Title") },
-                    summaryValue = { Text("Summary") },
-                )
-
-                PreferenceSetting(
-                    settingTitle = { Text("Title") },
-                    summaryValue = { Text("Summary") },
-                    settingIcon = { Icon(Icons.Default.Deck, null) },
-                    modifier = Modifier.clickable(
-                        indication = ripple(),
-                        interactionSource = null
-                    ) { println("Hello") }
-                )
-
-                HorizontalDivider()
-            }
-
-            item {
-                var showMoreOptions by remember { mutableStateOf(false) }
-
-                SwitchSetting(
-                    settingTitle = { Text("Show More") },
-                    settingIcon = { Icon(Icons.Default.Deck, null) },
-                    value = showMoreOptions,
-                    updateValue = { showMoreOptions = it }
-                )
-
-                ShowWhen(showMoreOptions) {
+                Box(Modifier.animateItem()) {
                     PreferenceSetting(
                         settingTitle = { Text("Title") },
                         summaryValue = { Text("Summary") },
@@ -262,115 +232,161 @@ fun DebugView() {
                     PreferenceSetting(
                         settingTitle = { Text("Title") },
                         summaryValue = { Text("Summary") },
-                        settingIcon = { Icon(Icons.Default.Deck, null) }
                     )
 
                     PreferenceSetting(
                         settingTitle = { Text("Title") },
                         summaryValue = { Text("Summary") },
-                        settingIcon = { Icon(Icons.Default.Deck, null) }
+                        settingIcon = { Icon(Icons.Default.Deck, null) },
+                        modifier = Modifier.clickable(
+                            indication = ripple(),
+                            interactionSource = null
+                        ) { println("Hello") }
                     )
+
+                    HorizontalDivider()
                 }
-
-                HorizontalDivider()
             }
 
             item {
-                ShowMoreSetting(
-                    settingTitle = { Text("Show More") },
-                    summaryValue = { Text("More Options Here") },
-                    settingIcon = { Icon(Icons.Default.Deck, null) }
-                ) {
-                    PreferenceSetting(
-                        settingTitle = { Text("Title") },
-                        summaryValue = { Text("Summary") },
-                        settingIcon = { Icon(Icons.Default.Deck, null) }
+                Box(Modifier.animateItem()) {
+                    var showMoreOptions by remember { mutableStateOf(false) }
+
+                    SwitchSetting(
+                        settingTitle = { Text("Show More") },
+                        settingIcon = { Icon(Icons.Default.Deck, null) },
+                        value = showMoreOptions,
+                        updateValue = { showMoreOptions = it }
                     )
 
-                    PreferenceSetting(
-                        settingTitle = { Text("Title") },
-                        summaryValue = { Text("Summary") },
-                        settingIcon = { Icon(Icons.Default.Deck, null) }
-                    )
+                    ShowWhen(showMoreOptions) {
+                        PreferenceSetting(
+                            settingTitle = { Text("Title") },
+                            summaryValue = { Text("Summary") },
+                            settingIcon = { Icon(Icons.Default.Deck, null) }
+                        )
 
-                    PreferenceSetting(
-                        settingTitle = { Text("Title") },
-                        summaryValue = { Text("Summary") },
-                        settingIcon = { Icon(Icons.Default.Deck, null) }
-                    )
+                        PreferenceSetting(
+                            settingTitle = { Text("Title") },
+                            summaryValue = { Text("Summary") },
+                            settingIcon = { Icon(Icons.Default.Deck, null) }
+                        )
+
+                        PreferenceSetting(
+                            settingTitle = { Text("Title") },
+                            summaryValue = { Text("Summary") },
+                            settingIcon = { Icon(Icons.Default.Deck, null) }
+                        )
+                    }
+
+                    HorizontalDivider()
                 }
-
-                HorizontalDivider()
             }
 
             item {
-                var value by remember { mutableStateOf(false) }
+                Box(Modifier.animateItem()) {
+                    ShowMoreSetting(
+                        settingTitle = { Text("Show More") },
+                        summaryValue = { Text("More Options Here") },
+                        settingIcon = { Icon(Icons.Default.Deck, null) }
+                    ) {
+                        PreferenceSetting(
+                            settingTitle = { Text("Title") },
+                            summaryValue = { Text("Summary") },
+                            settingIcon = { Icon(Icons.Default.Deck, null) }
+                        )
 
-                SwitchSetting(
-                    settingTitle = { Text("Title") },
-                    summaryValue = { Text("Summary") },
-                    settingIcon = { Icon(Icons.Default.Deck, null) },
-                    value = value,
-                    updateValue = { value = it }
-                )
+                        PreferenceSetting(
+                            settingTitle = { Text("Title") },
+                            summaryValue = { Text("Summary") },
+                            settingIcon = { Icon(Icons.Default.Deck, null) }
+                        )
 
-                SwitchSetting(
-                    settingTitle = { Text("Title") },
-                    summaryValue = { Text("Summary") },
-                    value = value,
-                    updateValue = { value = it }
-                )
+                        PreferenceSetting(
+                            settingTitle = { Text("Title") },
+                            summaryValue = { Text("Summary") },
+                            settingIcon = { Icon(Icons.Default.Deck, null) }
+                        )
+                    }
 
-                SwitchSetting(
-                    settingTitle = { Text("Title") },
-                    summaryValue = { Text("Summary") },
-                    settingIcon = { Icon(Icons.Default.Deck, null) },
-                    value = value,
-                    updateValue = { value = it }
-                )
-
-                HorizontalDivider()
+                    HorizontalDivider()
+                }
             }
 
             item {
-                var value by remember { mutableStateOf(false) }
+                Box(Modifier.animateItem()) {
+                    var value by remember { mutableStateOf(false) }
 
-                CheckBoxSetting(
-                    settingTitle = { Text("Title") },
-                    summaryValue = { Text("Summary") },
-                    settingIcon = { Icon(Icons.Default.Deck, null) },
-                    value = value,
-                    updateValue = { value = it }
-                )
+                    SwitchSetting(
+                        settingTitle = { Text("Title") },
+                        summaryValue = { Text("Summary") },
+                        settingIcon = { Icon(Icons.Default.Deck, null) },
+                        value = value,
+                        updateValue = { value = it }
+                    )
 
-                CheckBoxSetting(
-                    settingTitle = { Text("Title") },
-                    summaryValue = { Text("Summary") },
-                    value = value,
-                    updateValue = { value = it }
-                )
+                    SwitchSetting(
+                        settingTitle = { Text("Title") },
+                        summaryValue = { Text("Summary") },
+                        value = value,
+                        updateValue = { value = it }
+                    )
+
+                    SwitchSetting(
+                        settingTitle = { Text("Title") },
+                        summaryValue = { Text("Summary") },
+                        settingIcon = { Icon(Icons.Default.Deck, null) },
+                        value = value,
+                        updateValue = { value = it }
+                    )
+
+                    HorizontalDivider()
+                }
+            }
+
+            item {
+                Box(Modifier.animateItem()) {
+                    var value by remember { mutableStateOf(false) }
+
+                    CheckBoxSetting(
+                        settingTitle = { Text("Title") },
+                        summaryValue = { Text("Summary") },
+                        settingIcon = { Icon(Icons.Default.Deck, null) },
+                        value = value,
+                        updateValue = { value = it }
+                    )
+
+                    CheckBoxSetting(
+                        settingTitle = { Text("Title") },
+                        summaryValue = { Text("Summary") },
+                        value = value,
+                        updateValue = { value = it }
+                    )
 
 
-                CheckBoxSetting(
-                    settingTitle = { Text("Title") },
-                    summaryValue = { Text("Summary") },
-                    settingIcon = { Icon(Icons.Default.Deck, null) },
-                    value = value,
-                    updateValue = { value = it }
-                )
+                    CheckBoxSetting(
+                        settingTitle = { Text("Title") },
+                        summaryValue = { Text("Summary") },
+                        settingIcon = { Icon(Icons.Default.Deck, null) },
+                        value = value,
+                        updateValue = { value = it }
+                    )
 
-                HorizontalDivider()
+                    HorizontalDivider()
+                }
             }
 
             itemsIndexed(moreSettings) { index, build ->
-                build()
-                if (index < moreSettings.size - 1) HorizontalDivider()
+                Box(Modifier.animateItem()) {
+                    build()
+                    if (index < moreSettings.size - 1) HorizontalDivider()
+                }
             }
 
             item {
                 var pauseComposition by remember { mutableStateOf(false) }
                 var count by remember { mutableIntStateOf(0) }
-                Column {
+                Column(modifier = Modifier.animateItem()) {
                     Row {
                         Text("Pause Composition")
                         Switch(

@@ -260,7 +260,7 @@ private fun ChatScreenContent(
                     items = visibleMessages,
                     contentType = { it.type }
                 ) { message ->
-                    SelectionContainer {
+                    SelectionContainer(modifier = Modifier.animateItem()) {
                         when (message) {
                             is ChatMessage.UserMessage -> UserMessageBubble(message.text)
                             is ChatMessage.AgentMessage -> AgentMessageBubble(
@@ -342,13 +342,14 @@ private fun ChatScreenContent(
                                     action = { onEvent(ChatUiEvents.UpdateInputText("I want something similar to ")) }
                                 )
                             ),
+                            modifier = Modifier.animateItem(),
                         )
                     }
                 }
 
                 // Add extra space at the bottom for better UX
                 item(contentType = "spacer") {
-                    Spacer(modifier = Modifier.height(AppDimension.spacingMedium))
+                    Spacer(modifier = Modifier.animateItem().height(AppDimension.spacingMedium))
                 }
             }
         }

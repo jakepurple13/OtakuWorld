@@ -232,48 +232,53 @@ private fun ReaderSettings(
             item {
                 ImageLoaderSetting(
                     imageLoaderType = imageLoaderType,
-                    onImageLoaderChange = onImageLoaderClick
+                    onImageLoaderChange = onImageLoaderClick,
+                    modifier = Modifier.animateItem(),
                 )
             }
 
-            item { HorizontalDivider() }
+            item { HorizontalDivider(modifier = Modifier.animateItem()) }
 
             item {
                 SpacingSetting(
                     readerPadding = readerPadding,
                     onPaddingChange = onPaddingChange,
-                    onPaddingChangeFinished = onPaddingChangeFinished
+                    onPaddingChangeFinished = onPaddingChangeFinished,
+                    modifier = Modifier.animateItem(),
                 )
             }
 
-            item { HorizontalDivider() }
+            item { HorizontalDivider(modifier = Modifier.animateItem()) }
 
             item {
                 SwitchSetting(
                     value = allowUserGesture,
                     updateValue = onAllowUserGestureChange,
                     settingTitle = { Text("Allow User Gestures for Chapter List in Reader") },
-                    settingIcon = { Icon(Icons.Default.Gesture, null, modifier = Modifier.fillMaxSize()) }
+                    settingIcon = { Icon(Icons.Default.Gesture, null, modifier = Modifier.fillMaxSize()) },
+                    modifier = Modifier.animateItem(),
                 )
             }
 
-            item { HorizontalDivider() }
+            item { HorizontalDivider(modifier = Modifier.animateItem()) }
 
             item {
                 ReaderTypeSetting(
                     readerType = readerType,
-                    onReaderTypeChange = onReaderTypeChange
+                    onReaderTypeChange = onReaderTypeChange,
+                    modifier = Modifier.animateItem(),
                 )
             }
 
-            item { HorizontalDivider() }
+            item { HorizontalDivider(modifier = Modifier.animateItem()) }
 
             item {
                 SwitchSetting(
                     value = useFloatingBar,
                     updateValue = onUseFloatingBarChange,
                     settingTitle = { Text("Use a Floating Bottom Bar in Reader") },
-                    settingIcon = { Icon(Icons.Default.BorderBottom, null, modifier = Modifier.fillMaxSize()) }
+                    settingIcon = { Icon(Icons.Default.BorderBottom, null, modifier = Modifier.fillMaxSize()) },
+                    modifier = Modifier.animateItem(),
                 )
             }
 
@@ -282,7 +287,8 @@ private fun ReaderSettings(
                     value = includeInsets,
                     updateValue = onIncludeInsetsChange,
                     settingTitle = { Text("Include insets in Reader") },
-                    settingIcon = { Icon(Icons.Default.BorderOuter, null, modifier = Modifier.fillMaxSize()) }
+                    settingIcon = { Icon(Icons.Default.BorderOuter, null, modifier = Modifier.fillMaxSize()) },
+                    modifier = Modifier.animateItem(),
                 )
             }
         }
@@ -293,6 +299,7 @@ private fun ReaderSettings(
 fun ReaderTypeSetting(
     readerType: ReaderType,
     onReaderTypeChange: (ReaderType) -> Unit = {},
+    modifier: Modifier = Modifier,
 ) {
     var showReaderTypeDropdown by remember { mutableStateOf(false) }
 
@@ -321,7 +328,7 @@ fun ReaderTypeSetting(
             }
             Text(readerType.name)
         },
-        modifier = Modifier.clickable { showReaderTypeDropdown = true }
+        modifier = modifier.clickable { showReaderTypeDropdown = true }
     )
 }
 
@@ -329,11 +336,13 @@ fun ReaderTypeSetting(
 fun ImageLoaderSetting(
     imageLoaderType: ImageLoaderType,
     onImageLoaderChange: () -> Unit = {},
+    modifier: Modifier = Modifier,
 ) {
     Surface(
         onClick = onImageLoaderChange,
         color = MaterialTheme.colorScheme.surfaceVariant,
         shape = MaterialTheme.shapes.medium,
+        modifier = modifier,
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -358,9 +367,11 @@ fun SpacingSetting(
     readerPadding: Float,
     onPaddingChange: (Float) -> Unit = {},
     onPaddingChangeFinished: () -> Unit = {},
+    modifier: Modifier = Modifier,
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier,
     ) {
         SliderSetting(
             sliderValue = readerPadding,

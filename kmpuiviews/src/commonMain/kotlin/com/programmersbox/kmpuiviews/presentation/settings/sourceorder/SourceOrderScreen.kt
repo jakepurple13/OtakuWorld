@@ -211,6 +211,7 @@ fun SourceOrderScreen(
                 ReorderableItem(
                     state = reorderableLazyListState,
                     key = item.source,
+                    modifier = Modifier.animateItem(),
                 ) {
                     val interactionSource = remember { MutableInteractionSource() }
 

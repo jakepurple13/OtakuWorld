@@ -104,7 +104,8 @@ fun ModelListScreen(
                                         models = modelManager.listModels()
                                     }
                                 }
-                            }
+                            },
+                            modifier = Modifier.animateItem(),
                         )
                     }
                 }
@@ -117,9 +118,10 @@ fun ModelListScreen(
 private fun ModelListItem(
     model: DownloadedModel,
     onDeleteClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(

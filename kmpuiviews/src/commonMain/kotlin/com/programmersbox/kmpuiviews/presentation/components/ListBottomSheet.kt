@@ -3,6 +3,7 @@ package com.programmersbox.kmpuiviews.presentation.components
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -53,29 +54,33 @@ fun <T> ListBottomScreen(
         modifier = Modifier.navigationBarsPadding()
     ) {
         stickyHeader {
-            TopAppBar(
-                windowInsets = if (includeInsetPadding) WindowInsets.statusBars else WindowInsets(0.dp),
-                title = { Text(title) },
-                navigationIcon = navigationIcon,
-                actions = {
-                    actions()
-                    if (list.isNotEmpty()) Text("(${list.size})")
-                }
-            )
-            HorizontalDivider()
+            Box(Modifier.animateItem()) {
+                TopAppBar(
+                    windowInsets = if (includeInsetPadding) WindowInsets.statusBars else WindowInsets(0.dp),
+                    title = { Text(title) },
+                    navigationIcon = navigationIcon,
+                    actions = {
+                        actions()
+                        if (list.isNotEmpty()) Text("(${list.size})")
+                    }
+                )
+                HorizontalDivider()
+            }
         }
         lazyListContent()
         itemsIndexed(list) { index, it ->
-            val c = itemContent(it)
-            ListItem(
-                modifier = Modifier.clickable { onClick(it) },
-                leadingContent = c.icon?.let { i -> { Icon(i, null) } },
-                headlineContent = { Text(c.primaryText) },
-                supportingContent = c.secondaryText?.let { i -> { Text(i) } },
-                overlineContent = c.overlineText?.let { i -> { Text(i) } },
-                trailingContent = c.trailingText?.let { i -> { Text(i) } }
-            )
-            if (index < list.size - 1) HorizontalDivider()
+            Box(Modifier.animateItem()) {
+                val c = itemContent(it)
+                ListItem(
+                    modifier = Modifier.clickable { onClick(it) },
+                    leadingContent = c.icon?.let { i -> { Icon(i, null) } },
+                    headlineContent = { Text(c.primaryText) },
+                    supportingContent = c.secondaryText?.let { i -> { Text(i) } },
+                    overlineContent = c.overlineText?.let { i -> { Text(i) } },
+                    trailingContent = c.trailingText?.let { i -> { Text(i) } }
+                )
+                if (index < list.size - 1) HorizontalDivider()
+            }
         }
     }
 }
