@@ -175,6 +175,10 @@ class Navigation3Actions : NavigationActions, Navigator {
         navBackStack.add(Screen.NotesScreen)
     }
 
+    override fun noteDetail(itemUrl: String) {
+        navBackStack.add(Screen.NotesScreen.Detail(itemUrl))
+    }
+
     override fun dictionary() {
         navBackStack.add(Screen.DictionaryScreen)
     }

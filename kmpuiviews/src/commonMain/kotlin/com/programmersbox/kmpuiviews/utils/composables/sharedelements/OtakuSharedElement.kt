@@ -22,7 +22,11 @@ fun OtakuImageElement(item: SharedItemKey) = OtakuSharedElement(item, OtakuShare
 
 fun OtakuTitleElement(item: SharedItemKey) = OtakuSharedElement(item, OtakuSharedElementType.Title)
 
+/** A whole card that grows into the next screen's container. */
+fun OtakuContainerElement(item: SharedItemKey) = OtakuSharedElement(item, OtakuSharedElementType.Container)
+
 enum class OtakuSharedElementType {
     Image,
-    Title
+    Title,
+    Container,
 }
