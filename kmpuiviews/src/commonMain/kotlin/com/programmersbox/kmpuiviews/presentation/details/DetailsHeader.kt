@@ -54,8 +54,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
@@ -246,6 +248,7 @@ internal fun DetailsHeader(
                             .fillMaxWidth(),
                     )
 
+                    val haptic = LocalHapticFeedback.current
                     Crossfade(targetState = isFavorite, label = "") { target ->
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -255,7 +258,12 @@ internal fun DetailsHeader(
                                 .clickable(
                                     interactionSource = null,
                                     indication = ripple()
-                                ) { favoriteClick(isFavorite) }
+                                ) {
+                                    haptic.performHapticFeedback(
+                                        if (isFavorite) HapticFeedbackType.ToggleOff else HapticFeedbackType.ToggleOn
+                                    )
+                                    favoriteClick(isFavorite)
+                                }
                                 .padding(4.dp)
                                 .semantics(true) {}
                                 .fillMaxWidth()
