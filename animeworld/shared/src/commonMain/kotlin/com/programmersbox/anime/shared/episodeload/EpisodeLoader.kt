@@ -7,8 +7,11 @@ import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpStorage
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 
 enum class EpisodeAction { Play, Download }
@@ -48,8 +51,16 @@ class EpisodeLoader {
 
     private val decisions = Channel<EpisodeLoadDecision>(Channel.CONFLATED)
 
+    private var activeJob: Job? = null
+
+    /** [EpisodeLoadDecision.Cancel] ends the running load at any step; the rest feed the step waiting on the user. */
     fun decide(decision: EpisodeLoadDecision) {
-        decisions.trySend(decision)
+        if (decision == EpisodeLoadDecision.Cancel) {
+            // Once the state is released the stream is already handed off, so there is nothing left to cancel.
+            if (state != null) activeJob?.cancel()
+        } else {
+            decisions.trySend(decision)
+        }
     }
 
     private val busy = Mutex()
@@ -67,8 +78,13 @@ class EpisodeLoader {
     ) {
         if (!busy.tryLock()) return
         try {
-            run(action, model, infoModel, onResolved, onDownloadFailed)
+            coroutineScope {
+                val job = launch { run(action, model, infoModel, onResolved, onDownloadFailed) }
+                activeJob = job
+                job.join()
+            }
         } finally {
+            activeJob = null
             busy.unlock()
         }
     }

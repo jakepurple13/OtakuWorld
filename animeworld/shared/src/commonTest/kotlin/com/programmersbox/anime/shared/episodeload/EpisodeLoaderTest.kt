@@ -154,6 +154,52 @@ class EpisodeLoaderTest {
     }
 
     @Test
+    fun cancelDuringFetchStopsLoad() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val h = Harness(FakeSource(listOf(storage("720p")), gate = gate))
+        val job = startLoad(h, EpisodeAction.Play)
+        advanceUntilIdle()
+        assertIs<EpisodeLoadStep.FetchingSources>(h.step())
+        h.loader.decide(EpisodeLoadDecision.Cancel)
+        advanceUntilIdle()
+        assertTrue(job.isCompleted)
+        assertFalse(job.isCancelled)
+        assertNull(h.loader.state)
+        assertTrue(h.resolved.isEmpty())
+        gate.complete(Unit)
+        h.load(EpisodeAction.Play, h.chapter())
+        assertEquals(1, h.resolved.size)
+    }
+
+    @Test
+    fun cancelDuringResolveStopsLoad() = runTest {
+        val resolveGate = CompletableDeferred<Unit>()
+        val h = Harness(FakeSource(listOf(storage("720p"))))
+        val blocking = object : KmpApiService {
+            override val baseUrl = "http://test"
+            override fun getChapterInfoFlow(chapterModel: KmpChapterModel): Flow<List<KmpStorage>> =
+                flow { emit(listOf(storage("720p"))) }
+
+            override suspend fun resolve(storage: KmpStorage): KmpStorage {
+                resolveGate.await()
+                return storage
+            }
+        }
+        val chapter = KmpChapterModel("Ep 1", "u", "", "u", blocking)
+        val second = launch { h.loader.load(EpisodeAction.Play, chapter, h.info(), onResolved = { h.resolved += Resolved(EpisodeAction.Play, it) }) }
+        advanceUntilIdle()
+        assertIs<EpisodeLoadStep.Resolving>(h.step())
+        h.loader.decide(EpisodeLoadDecision.Cancel)
+        advanceUntilIdle()
+        assertTrue(second.isCompleted)
+        assertFalse(second.isCancelled)
+        assertNull(h.loader.state)
+        assertTrue(h.resolved.isEmpty())
+        h.load(EpisodeAction.Play, h.chapter())
+        assertEquals(1, h.resolved.size)
+    }
+
+    @Test
     fun tapWhileLoadingIsIgnored() = runTest {
         val h = Harness(FakeSource(listOf(storage("720p"), storage("1080p"))))
         val job = startLoad(h, EpisodeAction.Play, h.chapter("Ep 1", "u1"))

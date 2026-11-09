@@ -2,6 +2,7 @@ package com.programmersbox.anime.shared.episodeload
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -43,9 +44,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
@@ -65,6 +64,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.programmersbox.anime.shared.videochoice.VideoChoiceScreen
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
 
@@ -73,18 +74,28 @@ import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderC
 fun EpisodeLoadHost(loader: EpisodeLoader) {
     val state = loader.state
 
-    // Keep the last state so the overlay can fade out after the loader clears it.
-    var lastPlay by remember { mutableStateOf<EpisodeLoadState?>(null) }
-    if (state != null && state.action == EpisodeAction.Play) lastPlay = state
-
-    AnimatedVisibility(
-        visible = state?.action == EpisodeAction.Play,
-        enter = slideInVertically { it } + fadeIn(),
-        exit = fadeOut(),
-    ) {
-        lastPlay?.let { EpisodeLoadingOverlay(it, loader::decide) }
+    // A Dialog (own window) so the overlay draws above the whole app, not under HomeNav's content.
+    // It leaves composition as soon as the load ends, so there is no exit animation; only the slide-up/fade-in.
+    if (state != null && state.action == EpisodeAction.Play) {
+        Dialog(
+            onDismissRequest = { loader.decide(EpisodeLoadDecision.Cancel) },
+            properties = DialogProperties(
+                usePlatformDefaultWidth = false,
+                dismissOnClickOutside = false,
+            ),
+        ) {
+            val visible = remember { MutableTransitionState(false).apply { targetState = true } }
+            AnimatedVisibility(
+                visibleState = visible,
+                enter = slideInVertically { it } + fadeIn(),
+                exit = fadeOut(),
+            ) {
+                EpisodeLoadingOverlay(state, loader::decide)
+            }
+        }
     }
 
+    // Composed after the dialog so the sheet's window sits above the overlay when choosing a source.
     val step = state?.step
     if (state != null && step is EpisodeLoadStep.ChooseSource) {
         VideoChoiceScreen(
@@ -107,7 +118,7 @@ private class ChecklistMemory {
 
 private enum class ItemState { Done, Current, Pending }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun EpisodeLoadingOverlay(
     state: EpisodeLoadState,
@@ -121,8 +132,6 @@ internal fun EpisodeLoadingOverlay(
         is EpisodeLoadStep.Resolving -> step.label?.let { memory.label = it }
         else -> Unit
     }
-
-    BackHandler(enabled = true) { onDecision(EpisodeLoadDecision.Cancel) }
 
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { focusRequester.requestFocus() } }
