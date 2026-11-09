@@ -408,10 +408,10 @@ private fun Content(
                     }
                 }
                 if (viewModel.isSearching) {
-                    item { CircularProgressIndicator(modifier = Modifier.animateItem()) }
+                    item(key = "searching") { CircularProgressIndicator(modifier = Modifier.animateItem()) }
                 }
             } else if (viewModel.searchListPublisher.isEmpty()) {
-                item {
+                item(key = "empty") {
                     Column(
                         modifier = Modifier.animateItem().fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally,

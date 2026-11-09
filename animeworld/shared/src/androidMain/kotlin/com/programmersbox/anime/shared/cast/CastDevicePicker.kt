@@ -3,6 +3,8 @@ package com.programmersbox.anime.shared.cast
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.provider.Settings
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -40,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.mediarouter.media.MediaRouter
 import com.google.android.gms.cast.framework.CastContext
+import com.programmersbox.kmpuiviews.utils.composables.stateSwapTransition
 import kotlinx.coroutines.flow.drop
 import org.koin.compose.koinInject
 
@@ -114,51 +117,62 @@ fun CastDevicePickerSheet(onDismiss: () -> Unit, onConnected: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
-            if (state.connection == CastConnection.Connected) {
-                Text(
-                    "Connected to ${state.deviceName ?: "device"}",
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(top = 8.dp),
-                )
-                OutlinedButton(onClick = { controller.stop(); onDismiss() }) { Text("Stop casting") }
-            } else {
-                val connectingName = state.deviceName.takeIf { state.connection == CastConnection.Connecting }
-                routes.forEach { route ->
-                    DeviceRow(
-                        route = route,
-                        selected = route.isSelected || route.name == connectingName,
-                        onClick = { router.selectRoute(route) },
-                    )
-                }
-                if (routes.isEmpty()) {
-                    Text(
-                        "No TVs found on this Wi-Fi",
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(top = 8.dp),
-                    )
-                    OutlinedButton(
-                        onClick = {
-                            try {
-                                context.startActivity(
-                                    Intent(Settings.ACTION_WIFI_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            AnimatedContent(
+                targetState = state.connection == CastConnection.Connected,
+                transitionSpec = stateSwapTransition(),
+            ) { connected ->
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (connected) {
+                        Text(
+                            "Connected to ${state.deviceName ?: "device"}",
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(top = 8.dp),
+                        )
+                        OutlinedButton(onClick = { controller.stop(); onDismiss() }) { Text("Stop casting") }
+                    } else {
+                        val connectingName = state.deviceName.takeIf { state.connection == CastConnection.Connecting }
+                        routes.forEach { route ->
+                            DeviceRow(
+                                route = route,
+                                selected = route.isSelected || route.name == connectingName,
+                                onClick = { router.selectRoute(route) },
+                            )
+                        }
+                        AnimatedVisibility(routes.isEmpty()) {
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Text(
+                                    "No TVs found on this Wi-Fi",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    modifier = Modifier.padding(top = 8.dp),
                                 )
-                            } catch (_: ActivityNotFoundException) {
-                                // Some devices (TV boxes, locked-down builds) have no Wi-Fi settings screen.
+                                OutlinedButton(
+                                    onClick = {
+                                        try {
+                                            context.startActivity(
+                                                Intent(Settings.ACTION_WIFI_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                            )
+                                        } catch (_: ActivityNotFoundException) {
+                                            // Some devices (TV boxes, locked-down builds) have no Wi-Fi settings screen.
+                                        }
+                                    }
+                                ) { Text("Wi-Fi settings") }
                             }
                         }
-                    ) { Text("Wi-Fi settings") }
-                }
-                if (selector != null) Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.padding(vertical = 8.dp),
-                ) {
-                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                    Text(
-                        "Looking for more devices…",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                        AnimatedVisibility(selector != null) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                modifier = Modifier.padding(vertical = 8.dp),
+                            ) {
+                                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                                Text(
+                                    "Looking for more devices…",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
