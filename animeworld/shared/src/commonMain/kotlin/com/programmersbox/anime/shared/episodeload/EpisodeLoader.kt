@@ -113,11 +113,8 @@ class EpisodeLoader(
                 storage = current
 
                 show(EpisodeLoadStep.Resolving(label))
-                try {
-                    val resolved = resolveStream(model, current)
-                    release()
-                    onResolved(action, resolved, model, infoModel)
-                    return
+                val resolved = try {
+                    resolveStream(model, current)
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
@@ -132,7 +129,11 @@ class EpisodeLoader(
                         EpisodeLoadDecision.PickOther -> storage = null
                         else -> return
                     }
+                    continue
                 }
+                release()
+                onResolved(action, resolved, model, infoModel)
+                return
             }
         } finally {
             if (owned) state = null

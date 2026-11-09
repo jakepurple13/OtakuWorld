@@ -247,4 +247,29 @@ class EpisodeLoaderTest {
         assertEquals(listOf<Pair<KmpStorage?, Throwable?>>(null to null), h.failures)
         assertNull(h.loader.state)
     }
+
+    @Test
+    fun onResolvedThrowingLeavesStateClearedAndNotDownloadFailure() = runTest {
+        for (action in EpisodeAction.entries) {
+            var throwing = true
+            val failures = mutableListOf<KmpStorage?>()
+            val source = FakeSource(listOf(storage("720p")))
+            val loader = EpisodeLoader(
+                onResolved = { _, _, _, _ -> if (throwing) throw IllegalStateException("callback") },
+                onDownloadFailed = { s, _ -> failures += s },
+            )
+            val chapter = KmpChapterModel("Ep 1", "u", "", "u", source)
+            val info = KmpInfoModel("Show", "", "u", "http://img", emptyList(), emptyList(), emptyList(), source)
+            val result = runCatching { loader.load(action, chapter, info) }
+            assertEquals("callback", result.exceptionOrNull()?.message)
+            assertNull(loader.state)
+            assertTrue(failures.isEmpty())
+            throwing = false
+            var called = false
+            val next = EpisodeLoader({ _, _, _, _ -> called = true }, { _, _ -> })
+            next.load(action, chapter, info)
+            loader.load(action, chapter, info)
+            assertTrue(called)
+        }
+    }
 }
