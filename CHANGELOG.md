@@ -532,6 +532,14 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 
 #### New Features
 
+- **Episode loading screen**
+  ([#PR](https://github.com/jakepurple13/OtakuWorld/pull/PR)):
+  - Tapping an episode shows a full-screen loading screen (cover, progress checklist, Cancel)
+    while sources are found and the stream resolves, and holds it until the player is on screen
+  - Picking from several sources happens in a sheet
+  - Errors offer Retry / Try another source
+  - Downloads show a spinner on the episode row while the stream resolves
+  - The player shows a buffering percentage before the first frame
 - **Native Aniyomi extension support** (`:source_utilities:aniyomi`)
   ([#2611](https://github.com/jakepurple13/OtakuWorld/pull/2611)):
   - Aniyomi anime extension APKs load directly, without a bridge app, the same way MangaWorld
@@ -662,6 +670,10 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 
 #### New Features
 
+- **Episode loading screen**
+  ([#PR](https://github.com/jakepurple13/OtakuWorld/pull/PR)): the same full-screen loading
+  screen, source sheet, and Retry / Try another source as Android; the player shows a buffering
+  percentage before the first frame
 - **New: AnimeWorld Desktop app** (`:animeworld:desktop`)
   ([#2505](https://github.com/jakepurple13/OtakuWorld/pull/2505)):
   - Browse, details, favorites, and the other shared screens

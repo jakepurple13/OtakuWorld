@@ -414,7 +414,9 @@ private fun BufferingOverlay(exoPlayer: ExoPlayer, posterUrl: String?) {
 
     LaunchedEffect(exoPlayer, buffering) {
         while (buffering) {
-            percent = bufferPercent(exoPlayer.bufferedPosition, exoPlayer.currentPosition)
+            // The default LoadControl starts playback at 2.5 s buffered and rebuffers to 5 s.
+            val targetMs = if (firstFrame) 5_000L else 2_500L
+            percent = bufferPercent(exoPlayer.bufferedPosition, exoPlayer.currentPosition, targetMs)
             delay(250)
         }
     }

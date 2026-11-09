@@ -96,6 +96,7 @@ import com.programmersbox.kmpmodels.KmpSubtitle
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import com.programmersbox.anime.shared.GenericSharedAnime
@@ -150,7 +151,10 @@ fun DesktopPlayerScreen(
     val storageHolder = koinInject<StorageHolder>()
     // The poster covers the player until playback first advances; later rebuffers show only the ring.
     var seenPlayback by remember(player) { mutableStateOf(false) }
-    if (state.positionMs > 0) seenPlayback = true
+    LaunchedEffect(player) {
+        player.state.first { it.positionMs > 0 }
+        seenPlayback = true
+    }
 
     val subtitleSettings = koinInject<SubtitleSettingsRepository>()
     val subtitleStyle by subtitleSettings.style.collectAsState(initial = null)
@@ -366,7 +370,8 @@ fun DesktopPlayerScreen(
 
         PlayerBufferingOverlay(
             visible = state.buffering || !seenPlayback,
-            percent = bufferPercent(state.bufferedMs, state.positionMs),
+            // libVLC only caches NETWORK_CACHING_MS ahead, so that is a full buffer.
+            percent = bufferPercent(state.bufferedMs, state.positionMs, DesktopPlayer.NETWORK_CACHING_MS),
             posterUrl = storageHolder.posterUrl,
             showPoster = !seenPlayback,
         )

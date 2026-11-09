@@ -18,4 +18,7 @@ class BufferPercentTest {
 
     @Test
     fun bufferBehindPlayheadClampsToZero() = assertEquals(0, bufferPercent(500, 1_000))
+
+    @Test
+    fun usesGivenTarget() = assertEquals(50, bufferPercent(1_500, 1_000, targetMs = 1_000))
 }
