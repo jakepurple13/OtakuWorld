@@ -5,7 +5,6 @@ import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.Transition
 import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -193,11 +192,11 @@ object LimitedBottomSheetScaffoldDefaults {
     @Composable
     fun animations(
         colorAnimation: @Composable Transition.Segment<SheetValue>.() -> FiniteAnimationSpec<Color> =
-            { tween(500) },
+            { MaterialTheme.motionScheme.slowEffectsSpec() },
         cornerRadiusAnimation: @Composable Transition.Segment<SheetValue>.() -> FiniteAnimationSpec<Dp> =
-            { tween(500) },
+            { MaterialTheme.motionScheme.slowSpatialSpec() },
         dragHandleAlphaAnimation: @Composable Transition.Segment<SheetValue>.() -> FiniteAnimationSpec<Float> =
-            { tween(500) },
+            { MaterialTheme.motionScheme.slowEffectsSpec() },
     ) = remember(colorAnimation, cornerRadiusAnimation, dragHandleAlphaAnimation) {
         LimitedBottomSheetScaffoldAnimations(
             colorAnimation = colorAnimation,

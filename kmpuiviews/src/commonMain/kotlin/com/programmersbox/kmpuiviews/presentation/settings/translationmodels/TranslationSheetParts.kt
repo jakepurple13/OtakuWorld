@@ -361,7 +361,7 @@ internal fun StorageMeter(
                     LaunchedEffect(targetWeight) {
                         weight.animateTo(targetWeight, spring(stiffness = Spring.StiffnessLow))
                     }
-                    val alpha by animateFloatAsState(if (model.language.code in selected) 0.25f else 1f, label = "segAlpha")
+                    val alpha by animateFloatAsState(if (model.language.code in selected) 0.25f else 1f, MaterialTheme.motionScheme.fastEffectsSpec(), label = "segAlpha")
                     Box(
                         Modifier
                             .weight(weight.value.coerceAtLeast(0.001f))
@@ -379,7 +379,7 @@ internal fun StorageMeter(
         ) {
             extras.forEachIndexed { i, model ->
                 key(model.language.code) {
-                    val alpha by animateFloatAsState(if (model.language.code in selected) 0.45f else 1f, label = "legendAlpha")
+                    val alpha by animateFloatAsState(if (model.language.code in selected) 0.45f else 1f, MaterialTheme.motionScheme.fastEffectsSpec(), label = "legendAlpha")
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.graphicsLayer { this.alpha = alpha },
@@ -532,6 +532,7 @@ private fun DownloadedRowContent(
     val haptics = LocalHapticFeedback.current
     val background by animateColorAsState(
         if (selected) colors.primaryContainer.copy(alpha = 0.55f).compositeOver(colors.surfaceContainer) else colors.surfaceContainer,
+        MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "rowBg",
     )
     val name = model.language.englishName
@@ -565,6 +566,7 @@ private fun DownloadedRowContent(
             if (isSelecting) {
                 val circle by animateColorAsState(
                     if (selected) colors.primary else colors.surfaceContainerHighest,
+                    MaterialTheme.motionScheme.fastEffectsSpec(),
                     label = "checkCircle",
                 )
                 Box(
@@ -815,8 +817,8 @@ internal fun BulkDeleteBar(
 
     AnimatedVisibility(
         visible = visible,
-        enter = slideInVertically(spring(stiffness = Spring.StiffnessMediumLow)) { it } + fadeIn(),
-        exit = slideOutVertically { it } + fadeOut(),
+        enter = slideInVertically(MaterialTheme.motionScheme.defaultSpatialSpec()) { it } + fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()),
+        exit = slideOutVertically(MaterialTheme.motionScheme.fastSpatialSpec()) { it } + fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()),
         modifier = modifier,
     ) {
         AnimatedContent(

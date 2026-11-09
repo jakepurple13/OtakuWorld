@@ -3,7 +3,6 @@ package com.programmersbox.anime.shared.videoplayer
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -313,8 +312,8 @@ private fun BoxScope.TheaterChrome(visible: Boolean, bars: BarParts) {
     val scrim = MaterialTheme.colorScheme.surface.copy(alpha = if (bars.blur.enabled) .35f else .75f)
     AnimatedVisibility(
         visible = visible,
-        enter = fadeIn(tween(220)),
-        exit = fadeOut(tween(220)),
+        enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()),
+        exit = fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()),
         modifier = Modifier.align(Alignment.TopCenter),
     ) {
         Row(
@@ -345,8 +344,8 @@ private fun BoxScope.TheaterChrome(visible: Boolean, bars: BarParts) {
     }
     AnimatedVisibility(
         visible = visible,
-        enter = fadeIn(tween(220)),
-        exit = fadeOut(tween(220)),
+        enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()),
+        exit = fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()),
         modifier = Modifier.align(Alignment.BottomCenter),
     ) {
         Column(

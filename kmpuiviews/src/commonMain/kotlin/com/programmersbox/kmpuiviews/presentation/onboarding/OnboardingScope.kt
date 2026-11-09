@@ -122,10 +122,14 @@ fun OnboardingIndicator(
                     pagerState.currentPage == iteration -> MaterialTheme.colorScheme.primary
                     pagerState.currentPage > iteration -> MaterialTheme.colorScheme.primaryContainer
                     else -> MaterialTheme.colorScheme.surfaceVariant
-                }
+                },
+                MaterialTheme.motionScheme.fastEffectsSpec()
             )
             // The current page stretches into a pill so 8+ pages still fit.
-            val width by animateDpAsState(if (pagerState.currentPage == iteration) 20.dp else 8.dp)
+            val width by animateDpAsState(
+                if (pagerState.currentPage == iteration) 20.dp else 8.dp,
+                MaterialTheme.motionScheme.fastSpatialSpec(),
+            )
 
             Box(
                 modifier = Modifier
