@@ -1,7 +1,5 @@
 package com.programmersbox.anime.shared.videoplayer
 
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.getValue
@@ -39,7 +37,6 @@ import androidx.compose.material.icons.filled.FullscreenExit
 import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -89,6 +86,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.WindowPlacement
+import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.anime.shared.subtitles.SubtitleQuickSheet
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRepository
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsScreen
@@ -144,6 +142,11 @@ fun DesktopPlayerScreen(
     HideNavBarWhileOnScreen()
     val state by player.state.collectAsState()
     state.error?.let { return PlayerErrorPanel(it, modifier) }
+
+    val storageHolder = koinInject<StorageHolder>()
+    // The poster covers the player until playback first advances; later rebuffers show only the ring.
+    var seenPlayback by remember(player) { mutableStateOf(false) }
+    if (state.positionMs > 0) seenPlayback = true
 
     val subtitleSettings = koinInject<SubtitleSettingsRepository>()
     val subtitleStyle by subtitleSettings.style.collectAsState(initial = null)
@@ -357,16 +360,12 @@ fun DesktopPlayerScreen(
             )
         }
 
-        AnimatedVisibility(
-            visible = state.buffering,
-            enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()) +
-                    scaleIn(MaterialTheme.motionScheme.defaultSpatialSpec(), initialScale = 0.6f),
-            exit = fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()) +
-                    scaleOut(MaterialTheme.motionScheme.fastSpatialSpec(), targetScale = 0.6f),
-            modifier = Modifier.align(Alignment.Center),
-        ) {
-            CircularProgressIndicator(color = Color.White)
-        }
+        PlayerBufferingOverlay(
+            visible = state.buffering || !seenPlayback,
+            percent = bufferPercent(state.bufferedMs, state.positionMs),
+            posterUrl = storageHolder.posterUrl,
+            showPoster = !seenPlayback,
+        )
 
         PlayerFeedbackOverlay(feedback)
 

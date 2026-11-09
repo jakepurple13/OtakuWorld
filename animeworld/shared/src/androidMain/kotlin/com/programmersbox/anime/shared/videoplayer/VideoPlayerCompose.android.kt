@@ -292,6 +292,7 @@ private fun VideoPlayerContent(videoScreen: VideoScreen) {
                     modifier = Modifier.playerBlurSource(blur, playerStyle)
                 )
             }
+            viewModel.exoPlayer?.let { BufferingOverlay(it, storageHolder.posterUrl) }
             var draggingProgress: DraggingProgress? by remember { mutableStateOf(null) }
             MediaControlGestures(
                 modifier = Modifier.fillMaxSize(),
@@ -371,6 +372,42 @@ private fun VideoPlayerContent(videoScreen: VideoScreen) {
     }
 }
 
+/** Poster + percent while the player buffers; the poster stays until the first frame renders. */
+@Composable
+private fun BufferingOverlay(exoPlayer: ExoPlayer, posterUrl: String?) {
+    var buffering by remember(exoPlayer) { mutableStateOf(exoPlayer.playbackState == Player.STATE_BUFFERING) }
+    var firstFrame by remember(exoPlayer) { mutableStateOf(false) }
+    var percent by remember(exoPlayer) { mutableStateOf(0) }
+
+    DisposableEffect(exoPlayer) {
+        val listener = object : Player.Listener {
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                buffering = playbackState == Player.STATE_BUFFERING
+            }
+
+            override fun onRenderedFirstFrame() {
+                firstFrame = true
+            }
+        }
+        exoPlayer.addListener(listener)
+        onDispose { exoPlayer.removeListener(listener) }
+    }
+
+    LaunchedEffect(exoPlayer, buffering) {
+        while (buffering) {
+            percent = bufferPercent(exoPlayer.bufferedPosition, exoPlayer.currentPosition)
+            delay(250)
+        }
+    }
+
+    PlayerBufferingOverlay(
+        visible = buffering || !firstFrame,
+        percent = percent,
+        posterUrl = posterUrl,
+        showPoster = !firstFrame,
+    )
+}
+
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @Composable
 fun VideoPlayer(
@@ -443,7 +480,7 @@ fun VideoPlayer(
             playerView.apply {
                 hideController()
                 useController = false
-                setShowBuffering(PlayerView.SHOW_BUFFERING_ALWAYS)
+                setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
 
                 // FIT keeps the whole frame visible. ZOOM filled the screen by cropping, which kicked in
                 // once the video size was known and looked like the player zooming in after a moment.
