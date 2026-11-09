@@ -398,14 +398,14 @@ class DesktopPlayer(
         }
     }
 
-    private companion object {
-        const val FRAME_BUFFERS = 3
+    internal companion object {
+        private const val FRAME_BUFFERS = 3
 
         /** libVLC's default `--network-caching`. */
         const val NETWORK_CACHING_MS = 1_000L
 
         /** Releases still running; the JVM waits for them on exit so libVLC is not torn down mid-release. */
-        val pendingReleases: MutableSet<Thread> = ConcurrentHashMap.newKeySet<Thread>().also { pending ->
+        private val pendingReleases: MutableSet<Thread> = ConcurrentHashMap.newKeySet<Thread>().also { pending ->
             Runtime.getRuntime().addShutdownHook(
                 thread(start = false, name = "DesktopPlayer-shutdown") {
                     pending.toList().forEach { it.join(3_000) }

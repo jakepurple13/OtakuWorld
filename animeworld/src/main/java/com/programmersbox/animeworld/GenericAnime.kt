@@ -66,8 +66,7 @@ import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRepository
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRoute
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsScreen
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsViewModel
-import com.programmersbox.anime.shared.videochoice.VideoChoiceScreen
-import com.programmersbox.anime.shared.videochoice.VideoSourceModel
+import com.programmersbox.anime.shared.episodeload.EpisodeLoadHost
 import com.programmersbox.anime.shared.videoplayer.VideoPlayerUi
 import com.programmersbox.anime.shared.videoplayer.defaultSubtitleIndex
 import com.programmersbox.anime.shared.videoplayer.playerHeaders
@@ -109,7 +108,6 @@ import com.programmersbox.sharedcomponents.notifier.ProgressHandle
 import com.programmersbox.sharedtools.BackupProcessor
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.bindsGenericInfo
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -232,6 +230,7 @@ class GenericAnime(
                     )
                 )
             }
+            episodeLoader.finishHandoff()
         } else {
             storageHolder.storageModel = storage
             storageHolder.showTitle = infoModel.title
@@ -327,56 +326,35 @@ class GenericAnime(
         infoModel: KmpInfoModel,
         navController: NavigationActions,
     ) {
-        scope.launch {
-            downloadOnClick(
-                model = model,
-                infoModel = infoModel,
-                onNone = {
-                    notifier.error(context.getString(R.string.source_no_download, model.source.serviceName))
-                },
-                download = { downloadResolved(model, infoModel, it) },
-            )
-        }
+        scope.launch(Dispatchers.IO) { loadForDownload(model, infoModel) }
     }
 
-    /** Lets the source resolve a lazily-described stream first, then hands it to the episode downloader. */
-    suspend fun downloadResolved(model: KmpChapterModel, infoModel: KmpInfoModel, storage: KmpStorage) {
+    override fun onNoDownloadSources(model: KmpChapterModel) {
+        notifier.error(context.getString(R.string.source_no_download, model.source.serviceName))
+    }
+
+    override fun canStartDownload(): Boolean {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (!Environment.isExternalStorageManager()) {
                 storageAccessDialog = StorageAccessPrompt.AllFiles
-                return
+                return false
             }
         } else if (ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             storageAccessDialog = StorageAccessPrompt.Storage
-            return
+            return false
         }
-        val resolved = try {
-            withContext(Dispatchers.IO) { model.source.resolve(storage) }.also { r ->
-                if (r !== storage) {
-                    if (r.headers.isEmpty()) r.headers.putAll(storage.headers)
-                    if (r.extras.isEmpty()) r.extras.putAll(storage.extras)
-                }
-            }
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            e.printStackTrace()
-            onResolveFailed(storage, e)
-            return
-        }
-        val link = resolved.link
-        if (link.isNullOrBlank()) {
-            onResolveFailed(storage, IllegalStateException("No link"))
-            return
-        }
+        return true
+    }
+
+    override suspend fun enqueueResolved(storage: KmpStorage, model: KmpChapterModel, infoModel: KmpInfoModel) {
         enqueueEpisodeDownload(
             context,
             EpisodeDownloadRequest(
-                url = link,
-                headers = playerHeaders(resolved.headers, resolved.headers["referer"] ?: resolved.source),
-                mimeType = resolved.mimeType,
-                qualityHint = resolved.quality,
-                subtitles = resolved.subtitles,
+                url = storage.link.orEmpty(),
+                headers = playerHeaders(storage.headers, storage.headers["referer"] ?: storage.source),
+                mimeType = storage.mimeType,
+                qualityHint = storage.quality,
+                subtitles = storage.subtitles,
                 title = "${infoModel.title} - ${model.name}",
                 folder = context.folderLocation,
             )
@@ -586,20 +564,7 @@ class GenericAnime(
                 }
             )
         }
-        VideoSourceModel.showVideoSources?.let {
-            val navController = LocalNavActions.current
-            VideoChoiceScreen(
-                items = it.c,
-                infoModel = it.infoModel,
-                model = it.model,
-                genericInfo = this,
-                navController = navController,
-                onPlay = { s ->
-                    if (it.isStreaming) playResolved(navController, s, it.model, it.infoModel, it.seedColor)
-                    else downloadResolved(it.model, it.infoModel, s)
-                }
-            )
-        }
+        EpisodeLoadHost(episodeLoader)
     }
 
     override fun deepLinkDetails(context: Context, itemModel: KmpItemModel?): PendingIntent? {

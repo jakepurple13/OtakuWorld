@@ -4,7 +4,9 @@ import androidx.compose.ui.window.TrayState
 import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.anime.shared.VideoScreen
 import com.programmersbox.anime.shared.downloads.EpisodeDownloadQueue
-import com.programmersbox.anime.shared.videochoice.VideoSourceModel
+import com.programmersbox.anime.shared.episodeload.EpisodeAction
+import com.programmersbox.anime.shared.episodeload.EpisodeLoadDecision
+import com.programmersbox.anime.shared.episodeload.EpisodeLoadStep
 import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
@@ -12,12 +14,12 @@ import com.programmersbox.kmpmodels.KmpStorage
 import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.AppConfig
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.lang.reflect.Proxy
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -63,7 +65,17 @@ class GenericAnimeDesktopTest {
 
     @AfterTest
     fun reset() {
-        VideoSourceModel.showVideoSources = null
+        info.episodeLoader.decide(EpisodeLoadDecision.Cancel)
+    }
+
+    /** Waits until the loader shows a step that is waiting on the user. */
+    private suspend fun awaitWaiting(): com.programmersbox.anime.shared.episodeload.EpisodeLoadState {
+        repeat(200) {
+            val st = info.episodeLoader.state
+            if (st != null && (st.step is EpisodeLoadStep.ChooseSource || st.step is EpisodeLoadStep.Failed)) return st
+            kotlinx.coroutines.delay(10)
+        }
+        error("loader never waited, state=${info.episodeLoader.state}")
     }
 
     private fun storage(quality: String) = KmpStorage(link = "http://v/$quality", quality = quality, source = "src")
@@ -85,7 +97,10 @@ class GenericAnimeDesktopTest {
         assertEquals("http://v/720p?resolved", holder.storageModel?.link)
         assertEquals("Show", holder.showTitle)
         assertEquals("http://img", holder.posterUrl)
-        assertNull(VideoSourceModel.showVideoSources)
+        // chapterOnClick returns once navigated; the overlay is held until the player finishes the hand-off.
+        assertEquals(EpisodeLoadStep.OpeningPlayer, info.episodeLoader.state?.step)
+        info.episodeLoader.finishHandoff()
+        assertNull(info.episodeLoader.state)
     }
 
     @Test
@@ -93,12 +108,15 @@ class GenericAnimeDesktopTest {
         val source = FakeSource(listOf(storage("720p"), storage("1080p")))
         val (chapter, show) = fixtures(source)
 
-        info.chapterOnClick(chapter, listOf(chapter), show, nav(navigated))
+        val job = launch { info.chapterOnClick(chapter, listOf(chapter), show, nav(navigated)) }
+        val st = awaitWaiting()
 
-        val shown = assertNotNull(VideoSourceModel.showVideoSources)
-        assertTrue(shown.isStreaming)
-        assertEquals(2, shown.c.size)
+        val step = st.step as EpisodeLoadStep.ChooseSource
+        assertEquals(2, step.sources.size)
+        assertEquals(EpisodeAction.Play, st.action)
         assertTrue(navigated.isEmpty())
+        info.episodeLoader.decide(EpisodeLoadDecision.Cancel)
+        job.join()
     }
 
     @Test
@@ -106,22 +124,40 @@ class GenericAnimeDesktopTest {
         val source = FakeSource(listOf(storage("720p")), resolveError = IllegalStateException("boom"))
         val (chapter, show) = fixtures(source)
 
-        info.chapterOnClick(chapter, listOf(chapter), show, nav(navigated))
+        val job = launch { info.chapterOnClick(chapter, listOf(chapter), show, nav(navigated)) }
+        val st = awaitWaiting()
 
+        assertTrue(st.step is EpisodeLoadStep.Failed)
         assertTrue(navigated.isEmpty())
         assertNull(holder.storageModel)
-        assertTrue(info.messages.single().contains("boom"), info.messages.toString())
+        assertTrue(info.messages.isEmpty(), info.messages.toString())
+        info.episodeLoader.decide(EpisodeLoadDecision.Cancel)
+        job.join()
     }
 
     @Test
-    fun downloadWithMultipleVideosOpensChoiceWithIsStreamingFalse() = runBlocking {
+    fun downloadWithMultipleVideosOpensChoice() = runBlocking {
         val source = FakeSource(listOf(storage("720p"), storage("1080p")))
+        val (chapter, show) = fixtures(source)
+
+        val job = launch { info.startDownload(chapter, show) }
+        val st = awaitWaiting()
+
+        assertEquals(EpisodeAction.Download, st.action)
+        assertTrue(st.step is EpisodeLoadStep.ChooseSource)
+        assertTrue(info.enqueued.isEmpty())
+        info.episodeLoader.decide(EpisodeLoadDecision.Cancel)
+        job.join()
+    }
+
+    @Test
+    fun downloadResolveFailureReported() = runBlocking {
+        val source = FakeSource(listOf(storage("720p")), resolveError = IllegalStateException("boom"))
         val (chapter, show) = fixtures(source)
 
         info.startDownload(chapter, show)
 
-        val shown = assertNotNull(VideoSourceModel.showVideoSources)
-        assertEquals(false, shown.isStreaming)
+        assertTrue(info.messages.single().contains("boom"), info.messages.toString())
         assertTrue(info.enqueued.isEmpty())
     }
 

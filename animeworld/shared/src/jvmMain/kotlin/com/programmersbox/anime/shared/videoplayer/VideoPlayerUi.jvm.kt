@@ -9,16 +9,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import com.programmersbox.anime.shared.GenericSharedAnime
 import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.anime.shared.VideoScreen
 import com.programmersbox.anime.shared.downloads.OfflineSubtitles
 import com.programmersbox.kmpmodels.KmpSubtitle
+import com.programmersbox.kmpuiviews.KmpGenericInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.koin.compose.koinInject
@@ -36,6 +39,11 @@ private fun VideoPlayerContent(videoScreen: VideoScreen) {
     // The first load scans libVLC's plugins, so keep it off the UI thread.
     val factory by produceState<Result<MediaPlayerFactory>?>(null) {
         value = withContext(Dispatchers.IO) { VlcRuntime.factory() }
+    }
+    // DesktopPlayerScreen ends the loading overlay's hand-off; without libVLC it never shows, so end it here.
+    val genericInfo = koinInject<KmpGenericInfo>()
+    LaunchedEffect(factory) {
+        if (factory?.isFailure == true) (genericInfo as? GenericSharedAnime)?.episodeLoader?.finishHandoff()
     }
 
     // Black behind both states so the swap from the startup spinner to the player never flashes

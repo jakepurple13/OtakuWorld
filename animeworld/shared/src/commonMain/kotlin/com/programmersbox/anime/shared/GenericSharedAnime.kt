@@ -14,16 +14,17 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.dp
-import com.programmersbox.anime.shared.videochoice.VideoSourceModel
+import com.programmersbox.anime.shared.episodeload.EpisodeAction
+import com.programmersbox.anime.shared.episodeload.EpisodeLoader
+import com.programmersbox.anime.shared.episodeload.downloadRowStates
 import com.programmersbox.datastore.ColorBlindnessType
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.DbModel
@@ -32,6 +33,7 @@ import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpStorage
 import com.programmersbox.kmpuiviews.BuildType
+import com.programmersbox.kmpuiviews.ChapterDownloadUiState
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.painterLogo
@@ -43,8 +45,7 @@ import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.Flow
 import org.koin.compose.koinInject
 
 abstract class GenericSharedAnime(
@@ -61,8 +62,7 @@ abstract class GenericSharedAnime(
             }
         }
 
-    var isLoadingChapter by mutableStateOf(false)
-        private set
+    val episodeLoader = EpisodeLoader()
 
     override suspend fun chapterOnClick(
         model: KmpChapterModel,
@@ -71,83 +71,46 @@ abstract class GenericSharedAnime(
         navController: NavigationActions,
         seedColor: Int?,
     ) {
-        if (isLoadingChapter) return
-        isLoadingChapter = true
-        try {
-            val storages = model.getChapterInfo().firstOrNull().orEmpty()
-
-            when {
-                storages.size == 1 -> playResolved(navController, storages.first(), model, infoModel, seedColor)
-                storages.isNotEmpty() -> VideoSourceModel.showVideoSources = VideoSourceModel(
-                    c = storages,
-                    infoModel = infoModel,
-                    isStreaming = true,
-                    model = model,
-                    seedColor = seedColor,
-                )
-                else -> Unit
-            }
-        } finally {
-            isLoadingChapter = false
-        }
+        episodeLoader.load(
+            action = EpisodeAction.Play,
+            model = model,
+            infoModel = infoModel,
+            onResolved = { playOrCast(navController, it, model, infoModel, seedColor) },
+        )
     }
 
-    /**
-     * Download counterpart of [chapterOnClick]: same loading guard, one storage downloads directly,
-     * several go to the picker, none or an error calls [onNone].
-     */
-    suspend fun downloadOnClick(
-        model: KmpChapterModel,
-        infoModel: KmpInfoModel,
-        onNone: suspend () -> Unit,
-        download: suspend (KmpStorage) -> Unit,
-    ) {
-        if (isLoadingChapter) return
-        isLoadingChapter = true
-        try {
-            val storages = try {
-                model.getChapterInfo().firstOrNull().orEmpty()
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                e.printStackTrace()
-                emptyList()
-            }
+    override fun observeChapterDownloadStates(
+        chapters: List<KmpChapterModel>,
+        mangaTitle: String,
+    ): Flow<Map<String, ChapterDownloadUiState>> = snapshotFlow { downloadRowStates(episodeLoader.state) }
 
-            when {
-                storages.size == 1 -> download(storages.first())
-                storages.isNotEmpty() -> VideoSourceModel.showVideoSources = VideoSourceModel(
-                    c = storages,
-                    infoModel = infoModel,
-                    isStreaming = false,
-                    model = model,
-                )
-                else -> onNone()
-            }
-        } finally {
-            isLoadingChapter = false
-        }
+    /** Download counterpart of [chapterOnClick]; call from a coroutine (it suspends until the load finishes). */
+    protected suspend fun loadForDownload(model: KmpChapterModel, infoModel: KmpInfoModel) {
+        if (!canStartDownload()) return
+        episodeLoader.load(
+            action = EpisodeAction.Download,
+            model = model,
+            infoModel = infoModel,
+            onResolved = { enqueueResolved(it, model, infoModel) },
+            onDownloadFailed = { storage, error ->
+                if (storage == null) {
+                    onNoDownloadSources(model)
+                } else {
+                    error?.printStackTrace()
+                    onResolveFailed(storage, error ?: IllegalStateException("No link"))
+                }
+            },
+        )
     }
 
-    /** Lets the source resolve a lazily-described stream first; on failure nothing plays. */
-    suspend fun playResolved(
-        navController: NavigationActions,
-        storage: KmpStorage,
-        model: KmpChapterModel,
-        infoModel: KmpInfoModel,
-        seedColor: Int? = null,
-    ) {
-        val resolved = try {
-            model.source.resolve(storage)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            e.printStackTrace()
-            onResolveFailed(storage, e)
-            return
-        }
-        playOrCast(navController, resolved, model, infoModel, seedColor)
-    }
+    /** Platform hand-off after a successful download resolve. */
+    protected abstract suspend fun enqueueResolved(storage: KmpStorage, model: KmpChapterModel, infoModel: KmpInfoModel)
+
+    /** Download with zero sources. */
+    protected abstract fun onNoDownloadSources(model: KmpChapterModel)
+
+    /** Checked before a download load starts; return false to abort (e.g. missing permission). */
+    protected open fun canStartDownload(): Boolean = true
 
     /** Called when resolving a stream fails, so the platform can tell the user. */
     open fun onResolveFailed(storage: KmpStorage, error: Throwable) {}

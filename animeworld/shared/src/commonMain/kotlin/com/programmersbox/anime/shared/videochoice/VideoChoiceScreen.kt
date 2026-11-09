@@ -8,26 +8,19 @@ import androidx.compose.material.icons.filled._1k
 import androidx.compose.material.icons.filled._4k
 import androidx.compose.material.icons.filled._4mp
 import androidx.compose.material.icons.filled._7mp
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import com.programmersbox.kmpmodels.KmpChapterModel
-import com.programmersbox.kmpmodels.KmpInfoModel
+import com.programmersbox.anime.shared.episodeload.EpisodeAction
 import com.programmersbox.kmpmodels.KmpStorage
-import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomScreen
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomSheetItemModel
-import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
-import kotlinx.coroutines.launch
 
 enum class Qualities(var value: Int) {
     Unknown(0),
@@ -56,46 +49,29 @@ fun getQualityFromName(qualityName: String): Qualities {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VideoChoiceScreen(
-    items: List<KmpStorage>,
-    infoModel: KmpInfoModel,
-    model: KmpChapterModel,
-    genericInfo: KmpGenericInfo,
-    navController: NavigationActions,
-    onPlay: suspend (KmpStorage) -> Unit,
+    sources: List<KmpStorage>,
+    episodeName: String,
+    action: EpisodeAction,
+    onPick: (KmpStorage) -> Unit,
+    onDismiss: () -> Unit,
 ) {
-    val scope = rememberCoroutineScope()
-    val groups = remember(items) { items.groupedByServer() }
+    val groups = remember(sources) { sources.groupedByServer() }
     val ordered = remember(groups) { groups.flatMap { it.second } }
     val serverStarts = remember(groups) { groups.serverLabels() }
 
-    var playing by remember { mutableStateOf(false) }
-
-    val onAction: (KmpStorage) -> Unit = {
-        // Keep the sheet (and this scope) alive until resolve/play (or resolve/enqueue) finishes.
-        if (!playing) {
-            playing = true
-            scope.launch {
-                try {
-                    onPlay(it)
-                } finally {
-                    VideoSourceModel.showVideoSources = null
-                }
-            }
-        }
-    }
-
     ModalBottomSheet(
-        onDismissRequest = { VideoSourceModel.showVideoSources = null },
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(true),
         containerColor = MaterialTheme.colorScheme.surface,
     ) {
         ListBottomScreen(
             includeInsetPadding = false,
-            title = "Choose quality for ${model.name}",
+            title = "${if (action == EpisodeAction.Play) "Play" else "Download"} $episodeName",
             list = ordered,
-            onClick = { onAction(it) },
-            lazyListContent = {
-                if (playing) item { LinearProgressIndicator(modifier = Modifier.fillMaxWidth()) }
-            }
+            onClick = onPick,
+            navigationIcon = {
+                IconButton(onClick = onDismiss) { Icon(Icons.Default.Close, null) }
+            },
         ) {
             ListBottomSheetItemModel(
                 primaryText = it.quality.orEmpty(),

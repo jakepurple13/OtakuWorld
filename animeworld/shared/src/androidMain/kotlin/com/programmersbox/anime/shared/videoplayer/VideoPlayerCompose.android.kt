@@ -8,6 +8,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.pm.ActivityInfo
+import android.content.res.Configuration
 import android.media.AudioManager
 import android.provider.Settings
 import android.view.LayoutInflater
@@ -51,6 +52,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -121,6 +124,8 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import com.programmersbox.anime.shared.GenericSharedAnime
+import com.programmersbox.anime.shared.episodeload.shouldFinishHandoff
 import org.koin.compose.koinInject
 import java.security.SecureRandom
 import java.util.Locale
@@ -156,6 +161,20 @@ private fun VideoPlayerContent(videoScreen: VideoScreen) {
     val viewModel: VideoViewModel = viewModel { VideoViewModel(videoScreen, context, storageHolder, subtitleSettings) }
     val activity = LocalActivity.current
     val navController = LocalNavActions.current
+
+    // The loading overlay stays up until the player has drawn a frame where it will stay: in landscape, or wherever
+    // the landscape request is ignored (multi-window, large screens). See shouldFinishHandoff.
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val smallestWidthDp = configuration.smallestScreenWidthDp
+    LaunchedEffect(isLandscape, smallestWidthDp) {
+        if (shouldFinishHandoff(isLandscape, activity?.isInMultiWindowMode == true, smallestWidthDp)) {
+            // Each frame callback runs only after the previous frame was drawn.
+            withFrameNanos { }
+            withFrameNanos { }
+            (genericInfo as? GenericSharedAnime)?.episodeLoader?.finishHandoff()
+        }
+    }
 
     val audioManager = remember { context.audioManager }
     val originalAudioLevel = rememberSaveable { audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) }
@@ -292,6 +311,7 @@ private fun VideoPlayerContent(videoScreen: VideoScreen) {
                     modifier = Modifier.playerBlurSource(blur, playerStyle)
                 )
             }
+            viewModel.exoPlayer?.let { BufferingOverlay(it, storageHolder.posterUrl) }
             var draggingProgress: DraggingProgress? by remember { mutableStateOf(null) }
             MediaControlGestures(
                 modifier = Modifier.fillMaxSize(),
@@ -371,6 +391,44 @@ private fun VideoPlayerContent(videoScreen: VideoScreen) {
     }
 }
 
+/** Poster + percent while the player buffers; the poster stays until the first frame renders. */
+@Composable
+private fun BufferingOverlay(exoPlayer: ExoPlayer, posterUrl: String?) {
+    var buffering by remember(exoPlayer) { mutableStateOf(exoPlayer.playbackState == Player.STATE_BUFFERING) }
+    var firstFrame by remember(exoPlayer) { mutableStateOf(false) }
+    var percent by remember(exoPlayer) { mutableStateOf(0) }
+
+    DisposableEffect(exoPlayer) {
+        val listener = object : Player.Listener {
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                buffering = playbackState == Player.STATE_BUFFERING
+            }
+
+            override fun onRenderedFirstFrame() {
+                firstFrame = true
+            }
+        }
+        exoPlayer.addListener(listener)
+        onDispose { exoPlayer.removeListener(listener) }
+    }
+
+    LaunchedEffect(exoPlayer, buffering) {
+        while (buffering) {
+            // The default LoadControl starts playback at 2.5 s buffered and rebuffers to 5 s.
+            val targetMs = if (firstFrame) 5_000L else 2_500L
+            percent = bufferPercent(exoPlayer.bufferedPosition, exoPlayer.currentPosition, targetMs)
+            delay(250)
+        }
+    }
+
+    PlayerBufferingOverlay(
+        visible = buffering || !firstFrame,
+        percent = percent,
+        posterUrl = posterUrl,
+        showPoster = !firstFrame,
+    )
+}
+
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @Composable
 fun VideoPlayer(
@@ -443,7 +501,7 @@ fun VideoPlayer(
             playerView.apply {
                 hideController()
                 useController = false
-                setShowBuffering(PlayerView.SHOW_BUFFERING_ALWAYS)
+                setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
 
                 // FIT keeps the whole frame visible. ZOOM filled the screen by cropping, which kicked in
                 // once the video size was known and looked like the player zooming in after a moment.
