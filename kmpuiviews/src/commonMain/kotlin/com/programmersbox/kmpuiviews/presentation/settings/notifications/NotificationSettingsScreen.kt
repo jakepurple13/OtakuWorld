@@ -337,6 +337,7 @@ fun NotificationSettings(
                 SwitchSetting(
                     settingTitle = { Text("Notify on Boot") },
                     settingIcon = { Icon(Icons.Default.PowerSettingsNew, null) },
+                    summaryValue = { Text("Restore saved notifications after a reboot or app update") },
                     value = viewModel.notifyOnBoot.rememberPreference().value,
                     updateValue = { scope.launch { viewModel.notifyOnBoot.set(it) } }
                 )
