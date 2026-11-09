@@ -30,7 +30,8 @@ sealed interface EpisodeLoadStep {
     data object OpeningPlayer : EpisodeLoadStep
 }
 
-private const val HANDOFF_TIMEOUT_MS = 4_000L
+// A slow phone (debug build) took 6-8.5 s from here until the activity was recreated in landscape for the player.
+private const val HANDOFF_TIMEOUT_MS = 10_000L
 
 data class EpisodeLoadState(
     val action: EpisodeAction,

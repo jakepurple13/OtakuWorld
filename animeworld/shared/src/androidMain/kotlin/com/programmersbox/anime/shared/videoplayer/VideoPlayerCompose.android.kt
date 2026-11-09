@@ -8,6 +8,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.pm.ActivityInfo
+import android.content.res.Configuration
 import android.media.AudioManager
 import android.provider.Settings
 import android.view.LayoutInflater
@@ -51,6 +52,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -152,12 +155,24 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
 private fun VideoPlayerContent(videoScreen: VideoScreen) {
     val context = LocalContext.current
     val genericInfo = koinInject<GenericInfo>()
-    LaunchedEffect(Unit) { (genericInfo as? GenericSharedAnime)?.episodeLoader?.finishHandoff() }
     val storageHolder = koinInject<StorageHolder>()
     val subtitleSettings = koinInject<SubtitleSettingsRepository>()
     val viewModel: VideoViewModel = viewModel { VideoViewModel(videoScreen, context, storageHolder, subtitleSettings) }
     val activity = LocalActivity.current
     val navController = LocalNavActions.current
+
+    // Forcing landscape recreates the activity, and until the new one draws the old (details) window shows rotated.
+    // So the loading overlay stays up until the player has drawn a frame in landscape (any orientation in multi-window,
+    // where the request is ignored).
+    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+    LaunchedEffect(isLandscape) {
+        if (isLandscape || activity?.isInMultiWindowMode == true) {
+            // Each frame callback runs only after the previous frame was drawn.
+            withFrameNanos { }
+            withFrameNanos { }
+            (genericInfo as? GenericSharedAnime)?.episodeLoader?.finishHandoff()
+        }
+    }
 
     val audioManager = remember { context.audioManager }
     val originalAudioLevel = rememberSaveable { audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) }

@@ -1,11 +1,13 @@
 package com.programmersbox.anime.shared.episodeload
 
+import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.runComposeUiTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalTestApi::class)
 class EpisodeLoadHostTest {
@@ -28,6 +30,17 @@ class EpisodeLoadHostTest {
         onNodeWithText("Fetching sources").assertExists()
         onNodeWithText("Resolving stream").assertExists()
         onNodeWithText("Cancel").assertExists()
+    }
+
+    @Test
+    fun enteringWithoutIndicatorStillShowsChecklistAndCancel() = runComposeUiTest {
+        val enter = MutableTransitionState(false).apply { targetState = true }
+        setContent {
+            EpisodeLoadingOverlay(state(EpisodeLoadStep.FetchingSources), showIndicator = false, contentEnter = enter) {}
+        }
+        onNodeWithText("Fetching sources").assertExists()
+        onNodeWithText("Cancel").assertExists()
+        assertTrue(enter.isIdle && enter.currentState)
     }
 
     @Test

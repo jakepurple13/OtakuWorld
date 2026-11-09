@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -43,6 +44,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -68,6 +71,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.programmersbox.anime.shared.videochoice.VideoChoiceScreen
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
+import kotlinx.coroutines.flow.first
 
 /** Renders [loader]'s state: a full-screen overlay for Play, and the source sheet for both actions. */
 @Composable
@@ -75,7 +79,7 @@ fun EpisodeLoadHost(loader: EpisodeLoader) {
     val state = loader.state
 
     // A Dialog (own window) so the overlay draws above the whole app, not under HomeNav's content.
-    // It leaves composition as soon as the load ends, so there is no exit animation; only the slide-up/fade-in.
+    // It leaves composition as soon as the load ends, so there is no exit animation.
     if (state != null && state.action == EpisodeAction.Play) {
         Dialog(
             onDismissRequest = { loader.decide(EpisodeLoadDecision.Cancel) },
@@ -84,14 +88,21 @@ fun EpisodeLoadHost(loader: EpisodeLoader) {
                 dismissOnClickOutside = false,
             ),
         ) {
-            val visible = remember { MutableTransitionState(false).apply { targetState = true } }
-            AnimatedVisibility(
-                visibleState = visible,
-                enter = slideInVertically { it } + fadeIn(),
-                exit = fadeOut(),
-            ) {
-                EpisodeLoadingOverlay(state, loader::decide)
+            // The overlay is opaque, so the window's own dim and enter animation would only show as a separate state.
+            PlainOverlayWindow()
+            // The player's rotation recreates the activity mid hand-off; the new overlay must cover it at once, not animate again.
+            val contentEnter = remember {
+                MutableTransitionState(state.step == EpisodeLoadStep.OpeningPlayer).apply { targetState = true }
             }
+            // Building LoadingIndicator's morphs blocks the main thread for ~0.5 s on a slow phone, so it waits until
+            // the content has slid in instead of holding back the overlay's first frame.
+            var showIndicator by remember { mutableStateOf(false) }
+            LaunchedEffect(Unit) {
+                snapshotFlow { contentEnter.isIdle }.first { it }
+                withFrameNanos { }
+                showIndicator = true
+            }
+            EpisodeLoadingOverlay(state, showIndicator, contentEnter, loader::decide)
         }
     }
 
@@ -122,6 +133,8 @@ private enum class ItemState { Done, Current, Pending }
 @Composable
 internal fun EpisodeLoadingOverlay(
     state: EpisodeLoadState,
+    showIndicator: Boolean = true,
+    contentEnter: MutableTransitionState<Boolean> = remember { MutableTransitionState(true) },
     onDecision: (EpisodeLoadDecision) -> Unit,
 ) {
     if (state.action != EpisodeAction.Play) return
@@ -165,66 +178,78 @@ internal fun EpisodeLoadingOverlay(
             )
         }
 
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 32.dp)
+        // Everything is on screen from the first frame and the content only slides up a little: on a slow phone the
+        // first frames come ~250 ms apart, so a full-height slide or a fade-in kept the overlay invisible for ~0.5 s.
+        AnimatedVisibility(
+            visibleState = contentEnter,
+            enter = slideInVertically { it / 8 },
+            modifier = Modifier.fillMaxSize()
         ) {
-            Box(
-                Modifier
-                    .widthIn(max = 120.dp)
-                    .fillMaxWidth(0.4f)
-                    .aspectRatio(2f / 3f)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color.White.copy(alpha = 0.08f))
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 32.dp)
             ) {
-                state.posterUrl?.let {
-                    ImageLoaderChoice(
-                        imageUrl = it,
-                        name = state.episodeName,
-                        headers = state.posterHeaders,
-                        placeHolder = { ColorPainter(Color.Transparent) },
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-            }
-            Text(
-                state.episodeName,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 20.dp)
-            )
-            Text(
-                state.showTitle,
-                style = MaterialTheme.typography.bodyMedium,
-                color = Muted,
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 4.dp)
-            )
-
-            AnimatedContent(
-                targetState = state.step as? EpisodeLoadStep.Failed,
-                transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(200)) },
-                contentAlignment = Alignment.TopCenter,
-                label = "loadingOrFailed",
-                modifier = Modifier.padding(top = 28.dp)
-            ) { failed ->
-                if (failed == null) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        LoadingIndicator(modifier = Modifier.size(48.dp))
-                        Checklist(state.step, memory, Modifier.padding(top = 24.dp))
+                Box(
+                    Modifier
+                        .widthIn(max = 120.dp)
+                        .fillMaxWidth(0.4f)
+                        .aspectRatio(2f / 3f)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color.White.copy(alpha = 0.08f))
+                ) {
+                    state.posterUrl?.let {
+                        ImageLoaderChoice(
+                            imageUrl = it,
+                            name = state.episodeName,
+                            headers = state.posterHeaders,
+                            placeHolder = { ColorPainter(Color.Transparent) },
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
                     }
-                } else {
-                    FailedContent(failed, onDecision)
+                }
+                Text(
+                    state.episodeName,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 20.dp)
+                )
+                Text(
+                    state.showTitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Muted,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+
+                AnimatedContent(
+                    targetState = state.step as? EpisodeLoadStep.Failed,
+                    transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(200)) },
+                    contentAlignment = Alignment.TopCenter,
+                    label = "loadingOrFailed",
+                    modifier = Modifier.padding(top = 28.dp)
+                ) { failed ->
+                    if (failed == null) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            if (showIndicator) {
+                                LoadingIndicator(modifier = Modifier.size(48.dp))
+                            } else {
+                                Spacer(Modifier.size(48.dp))
+                            }
+                            Checklist(state.step, memory, Modifier.padding(top = 24.dp))
+                        }
+                    } else {
+                        FailedContent(failed, onDecision)
+                    }
                 }
             }
         }
