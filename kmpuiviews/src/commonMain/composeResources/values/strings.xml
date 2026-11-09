@@ -539,7 +539,7 @@
     <string name="banner_link_copied">Link copied</string>
     <string name="banner_marked_read">Marked as read</string>
     <string name="us_title">Update sources</string>
-    <string name="us_description">Skipped sources keep their favorites. The update checker just leaves them alone.</string>
+    <string name="us_description">Skipped sources keep their favorites. The update checker just leaves them alone, in every language.</string>
     <string name="us_summary">%1$d of %2$d sources checked</string>
     <string name="us_search">Search sources</string>
     <string name="us_checking">Checking · %1$d</string>
@@ -549,6 +549,10 @@
     <plurals name="us_favorites">
         <item quantity="one">%1$d favorite</item>
         <item quantity="other">%1$d favorites</item>
+    </plurals>
+    <plurals name="us_languages">
+        <item quantity="one">%1$d language</item>
+        <item quantity="other">%1$d languages</item>
     </plurals>
     <string name="us_failed_last_check">Failed last check</string>
     <string name="us_none_checked">Nothing will be checked.</string>

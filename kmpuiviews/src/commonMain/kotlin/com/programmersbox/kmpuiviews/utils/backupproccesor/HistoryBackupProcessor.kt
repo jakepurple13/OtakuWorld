@@ -18,8 +18,8 @@ class HistoryBackupProcessor(
         get() = "history.json"
 
     override val key: String get() = fileName
-    override val displayName: String get() = "History"
-    override val description: String? get() = "Viewing/reading history"
+    override val displayName: String get() = "Search History"
+    override val description: String? get() = "Past search queries"
     override val icon get() = Icons.Default.History
 
     override suspend fun backup(sink: BufferedSink): ProcessorResult {

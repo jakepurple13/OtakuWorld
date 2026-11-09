@@ -47,10 +47,15 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 #### New Features
 
 - Update sources: choose which sources the update checker skips, under Settings > Sources &
-  Extensions or from the filter button on Update check errors. The app's installed sources are
-  split into Checking and Skipped, with search and Skip all / Check all. Skipped sources keep their
+  Extensions or from the filter button on Update check errors. The app's installed extensions are
+  split into Checking and Skipped, with search and Skip all / Check all. One switch covers every
+  language of an extension, like the source chooser. Skipped sources keep their
   favorites ([#2677](https://github.com/jakepurple13/OtakuWorld/pull/2677),
-  [#2679](https://github.com/jakepurple13/OtakuWorld/pull/2679))
+  [#2679](https://github.com/jakepurple13/OtakuWorld/pull/2679),
+  [#2681](https://github.com/jakepurple13/OtakuWorld/pull/2681))
+- Backup and restore now include Recently Viewed and Skipped Update Sources. The "History" entry
+  is renamed "Search History", since it holds search queries
+  ([#2683](https://github.com/jakepurple13/OtakuWorld/pull/2683))
 - In-app banners: messages that used to appear as snackbars and toasts now show as a floating
   banner stack above the screen. The QR code sheet keeps its own messages. Banners can carry Undo
   or Retry actions, swipe away to dismiss, and fan out when you tap the stack while two or more
@@ -293,6 +298,9 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   one at a time and show pending-confirmation, permission-required, and cancelled states. Sources
   reload right after a successful install
   ([#2524](https://github.com/jakepurple13/OtakuWorld/pull/2524))
+- Notify on Boot now also restores saved update notifications after the app is updated, since
+  Android clears an app's notifications when it updates
+  ([#2680](https://github.com/jakepurple13/OtakuWorld/pull/2680))
 
 #### Bug Fixes
 

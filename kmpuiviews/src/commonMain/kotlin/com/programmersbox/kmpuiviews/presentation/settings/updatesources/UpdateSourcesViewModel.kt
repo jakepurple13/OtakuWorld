@@ -14,47 +14,62 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 
-/** One source installed in this app, as shown on the update sources screen. [source] is the service name. */
+/**
+ * One extension installed in this app, as shown on the update sources screen. Covers every language the extension
+ * installs; [languages] is how many sources it has. [favorites] and [failedLastCheck] add up across them.
+ */
 data class UpdateSourceRow(
-    val source: String,
+    val packageName: String,
     val name: String,
+    val languages: Int,
     val favorites: Int,
     val skipped: Boolean,
     val failedLastCheck: Boolean,
 )
 
 /**
- * Emits (checked, total) for the sources installed in this app. Skipped entries for sources that aren't
- * installed (e.g. another app's, or an uninstalled extension) don't count.
+ * Emits (checked, total) extensions installed in this app. Skipped entries for extensions that aren't installed
+ * (e.g. another app's, or an uninstalled extension) don't count.
  */
 fun ItemDao.updateSourcesCheckedCount(sourceRepository: SourceRepository): Flow<Pair<Int, Int>> =
     combine(getSkippedUpdateSources(), sourceRepository.sources) { skipped, sources ->
-        val installed = sources.serviceNames()
+        val installed = sources.mapTo(HashSet()) { it.packageName }
         installed.count { it !in skipped } to installed.size
     }
 
-private fun List<KmpSourceInformation>.serviceNames(): Set<String> = mapTo(LinkedHashSet()) { it.apiService.serviceName }
-
-/** Builds one row per installed source, with its favorite count (0 if none), sorted by name. */
+/** Builds one row per installed extension (grouped by package name), sorted by name. */
 fun buildUpdateSourceRows(
-    installed: Set<String>,
+    installed: List<KmpSourceInformation>,
     counts: List<SourceCount>,
     skipped: Set<String>,
     failedSources: Set<String>,
-    displayName: (String) -> String,
+    displayName: (List<KmpSourceInformation>) -> String,
 ): List<UpdateSourceRow> {
     val favoritesBySource = counts.associate { it.source to it.count }
     return installed
-        .map {
+        .groupBy { it.packageName }
+        .map { (packageName, sources) ->
+            val serviceNames = sources.map { it.apiService.serviceName }
             UpdateSourceRow(
-                source = it,
-                name = displayName(it),
-                favorites = favoritesBySource[it] ?: 0,
-                skipped = it in skipped,
-                failedLastCheck = it in failedSources,
+                packageName = packageName,
+                name = displayName(sources),
+                languages = sources.size,
+                favorites = serviceNames.sumOf { favoritesBySource[it] ?: 0 },
+                skipped = packageName in skipped,
+                failedLastCheck = serviceNames.any { it in failedSources },
             )
         }
         .sortedBy { it.name.lowercase() }
+}
+
+/** The extension's name: the source chooser's group name for several languages, else the source's display name. */
+private fun SourceRepository.extensionName(sources: List<KmpSourceInformation>): String {
+    val first = sources.first()
+    return if (sources.size > 1) {
+        first.name.removeSuffix(" (${first.apiService.language})")
+    } else {
+        displayNameFor(first.apiService.serviceName)
+    }
 }
 
 class UpdateSourcesViewModel(
@@ -68,23 +83,24 @@ class UpdateSourcesViewModel(
         itemDao.getFavoriteCountsBySource(),
         itemDao.getSkippedUpdateSources(),
         reportStore.report,
-        // Rows are the sources installed in this app; re-emits as sources finish loading.
+        // Rows are the extensions installed in this app; re-emits as sources finish loading.
         sourceRepository.sources,
     ) { counts, skipped, report, sources ->
         buildUpdateSourceRows(
-            installed = sources.serviceNames(),
+            installed = sources,
             counts = counts,
             skipped = skipped.toSet(),
             failedSources = report?.sourceFailures.orEmpty().mapTo(HashSet()) { it.source },
-            displayName = sourceRepository::displayNameFor,
+            displayName = sourceRepository::extensionName,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
-    suspend fun setSkipped(sources: List<String>, skipped: Boolean) {
+    /** Skips or checks the extensions with these package names, in every language. */
+    suspend fun setSkipped(packageNames: List<String>, skipped: Boolean) {
         if (skipped) {
-            itemDao.insertSkippedUpdateSources(sources.map(::SkippedUpdateSource))
+            itemDao.insertSkippedUpdateSources(packageNames.map(::SkippedUpdateSource))
         } else {
-            itemDao.deleteSkippedUpdateSources(sources)
+            itemDao.deleteSkippedUpdateSources(packageNames)
         }
     }
 }

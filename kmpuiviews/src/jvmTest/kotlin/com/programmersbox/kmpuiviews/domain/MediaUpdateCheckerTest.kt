@@ -4,7 +4,9 @@ import ca.gosyer.appdirs.AppDirs
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.NotificationItem
+import com.programmersbox.favoritesdatabase.SkippedUpdateSource
 import com.programmersbox.kmpextensionloader.SourceLoader
+import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.domain.updatecheck.FailureKind
 import com.programmersbox.kmpuiviews.domain.updatecheck.ItemFailure
@@ -220,6 +222,31 @@ class MediaUpdateCheckerTest {
         assertEquals(1, working.updates)
         assertNull(working.failure)
         assertTrue(snapshots.first().loadingRecents)
+    }
+
+    @Test
+    fun `skipped extension leaves out favorites from every one of its languages`() = runTest {
+        val en = FakeApiService(serviceName = "dex-en")
+        val ja = FakeApiService(serviceName = "dex-ja")
+        val other = FakeApiService(serviceName = "asura")
+        sourceRepository.addSources(
+            listOf(
+                KmpSourceInformation(apiService = en, name = "MangaDex (en)", icon = null, packageName = "mangadex"),
+                KmpSourceInformation(apiService = ja, name = "MangaDex (ja)", icon = null, packageName = "mangadex"),
+                KmpSourceInformation(apiService = other, name = "Asura", icon = null, packageName = "asura"),
+            )
+        )
+        favorite("a", source = "dex-en")
+        favorite("b", source = "dex-ja")
+        favorite("c", source = "asura")
+        database.itemDao().insertSkippedUpdateSources(listOf(SkippedUpdateSource("mangadex")))
+
+        val report = checker().run().report!!
+
+        assertEquals(1, report.favoriteCount)
+        assertEquals(0, en.recentCalls.get())
+        assertEquals(0, ja.recentCalls.get())
+        assertEquals(1, other.recentCalls.get())
     }
 
     @Test

@@ -58,22 +58,26 @@ interface ItemDao {
 
     /**
      * Favorites the update checker should look at: every favorite when [checkAll], otherwise only those with
-     * updates turned on. Favorites from a [SkippedUpdateSource] are always left out.
+     * updates turned on. Favorites whose source is in [skippedSources] (service names) are always left out.
      */
     @Query(
         """
         SELECT * FROM FavoriteItem
         WHERE (:checkAll OR shouldCheckForUpdate = 1)
-          AND sources NOT IN (SELECT source FROM SkippedUpdateSource)
+          AND sources NOT IN (:skippedSources)
         """
     )
-    suspend fun getFavoritesToCheckSync(checkAll: Boolean): List<DbModel>
+    suspend fun getFavoritesToCheckSync(checkAll: Boolean, skippedSources: List<String>): List<DbModel>
 
     @Query("SELECT sources AS source, COUNT(url) AS count FROM FavoriteItem WHERE is_deleted = 0 GROUP BY sources")
     fun getFavoriteCountsBySource(): Flow<List<SourceCount>>
 
+    /** Package names of the skipped extensions. */
     @Query("SELECT source FROM SkippedUpdateSource")
     fun getSkippedUpdateSources(): Flow<List<String>>
+
+    @Query("SELECT * FROM SkippedUpdateSource")
+    suspend fun getAllSkippedUpdateSourcesSync(): List<SkippedUpdateSource>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSkippedUpdateSources(sources: List<SkippedUpdateSource>)

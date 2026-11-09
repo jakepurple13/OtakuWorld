@@ -38,11 +38,11 @@ class ItemDatabaseMigration8To9Test {
             .build()
         val dao = database.itemDao()
 
-        assertEquals(listOf("u1"), dao.getFavoritesToCheckSync(checkAll = false).map { it.url })
+        assertEquals(listOf("u1"), dao.getFavoritesToCheckSync(checkAll = false, emptyList()).map { it.url })
 
-        dao.insertSkippedUpdateSources(listOf(SkippedUpdateSource("Source")))
-        assertEquals(listOf("Source"), dao.getSkippedUpdateSources().first())
-        assertEquals(emptyList(), dao.getFavoritesToCheckSync(checkAll = false))
+        dao.insertSkippedUpdateSources(listOf(SkippedUpdateSource("pkg")))
+        assertEquals(listOf("pkg"), dao.getSkippedUpdateSources().first())
+        assertEquals(emptyList(), dao.getFavoritesToCheckSync(checkAll = false, listOf("Source")))
 
         database.close()
     }
