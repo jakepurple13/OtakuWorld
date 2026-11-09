@@ -6,6 +6,7 @@ import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpStorage
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
@@ -52,7 +53,7 @@ class EpisodeLoaderTest {
 
     private class Resolved(val action: EpisodeAction, val storage: KmpStorage)
 
-    private class Harness(val source: FakeSource) {
+    private class Harness(val source: FakeSource, handoffScope: CoroutineScope) {
         val resolved = mutableListOf<Resolved>()
         val stateAtResolve = mutableListOf<EpisodeLoadState?>()
         val failures = mutableListOf<Pair<KmpStorage?, Throwable?>>()
@@ -62,7 +63,7 @@ class EpisodeLoaderTest {
         init {
             // snapshotFlow can miss steps that change within one dispatch, so also capture at resolve time.
             source.onResolve = { loader.state?.step?.let(steps::add) }
-            loader = EpisodeLoader()
+            loader = EpisodeLoader(handoffScope)
         }
 
         suspend fun load(action: EpisodeAction, chapter: KmpChapterModel = chapter(), info: KmpInfoModel = info()) =
@@ -80,6 +81,9 @@ class EpisodeLoaderTest {
         fun step() = loader.state?.step
     }
 
+    /** The hand-off runs on the test scheduler, so its timeout uses virtual time. */
+    private fun TestScope.harness(source: FakeSource) = Harness(source, backgroundScope)
+
     private fun storage(quality: String) = KmpStorage(link = "http://v/$quality", quality = quality, source = "src")
 
     private fun TestScope.record(h: Harness) {
@@ -93,7 +97,7 @@ class EpisodeLoaderTest {
 
     @Test
     fun singleSourcePlaysWithoutSheet() = runTest {
-        val h = Harness(FakeSource(listOf(storage("720p"))))
+        val h = harness(FakeSource(listOf(storage("720p"))))
         record(h)
         h.load(EpisodeAction.Play, h.chapter())
         advanceUntilIdle()
@@ -101,12 +105,12 @@ class EpisodeLoaderTest {
         assertEquals(EpisodeAction.Play, h.resolved[0].action)
         assertEquals("http://v/720p?resolved", h.resolved[0].storage.link)
         assertTrue(h.steps.none { it is EpisodeLoadStep.ChooseSource })
-        assertNull(h.loader.state)
+        assertEquals(EpisodeLoadStep.OpeningPlayer, h.step())
     }
 
     @Test
     fun playEntersOpeningPlayerBeforeOnResolved() = runTest {
-        val h = Harness(FakeSource(listOf(storage("720p"))))
+        val h = harness(FakeSource(listOf(storage("720p"))))
         val job = startLoad(h, EpisodeAction.Play)
         runCurrent()
         assertEquals(listOf<EpisodeLoadStep?>(EpisodeLoadStep.OpeningPlayer), h.stateAtResolve.map { it?.step })
@@ -117,21 +121,49 @@ class EpisodeLoaderTest {
 
     @Test
     fun playHoldsStateUntilHandoff() = runTest {
-        val h = Harness(FakeSource(listOf(storage("720p"))))
+        val h = harness(FakeSource(listOf(storage("720p"))))
         val job = startLoad(h, EpisodeAction.Play)
         runCurrent()
         assertEquals(1, h.resolved.size)
         assertEquals(EpisodeLoadStep.OpeningPlayer, h.step())
-        assertTrue(job.isActive)
-        h.loader.finishHandoff()
-        advanceUntilIdle()
-        assertNull(h.loader.state)
+        // load() returns to the caller right after onResolved; the hand-off is held by the loader.
         assertTrue(job.isCompleted)
+        h.load(EpisodeAction.Play, h.chapter("Ep 2", "u2"))
+        assertEquals(1, h.resolved.size)
+        h.loader.finishHandoff()
+        assertNull(h.loader.state)
+        runCurrent()
+        h.load(EpisodeAction.Download, h.chapter())
+        assertEquals(2, h.resolved.size)
+    }
+
+    @Test
+    fun callerCancelledDuringHandoffKeepsStateUntilFinish() = runTest {
+        val h = harness(FakeSource(listOf(storage("720p"))))
+        // Stands in for the details screen's scope, which goes away when the activity rotates for the player.
+        val caller = Job()
+        var afterLoad = false
+        launch(caller) {
+            h.load(EpisodeAction.Play)
+            afterLoad = true
+        }
+        runCurrent()
+        assertTrue(afterLoad)
+        assertEquals(EpisodeLoadStep.OpeningPlayer, h.step())
+        caller.cancel()
+        advanceTimeBy(5_000)
+        runCurrent()
+        assertEquals(EpisodeLoadStep.OpeningPlayer, h.step())
+        h.loader.finishHandoff()
+        assertNull(h.loader.state)
+        runCurrent()
+        h.load(EpisodeAction.Download, h.chapter())
+        assertEquals(2, h.resolved.size)
     }
 
     @Test
     fun handoffTimesOut() = runTest {
-        val h = Harness(FakeSource(listOf(storage("720p"))))
+        val h = harness(FakeSource(listOf(storage("720p"))))
         val job = startLoad(h, EpisodeAction.Play)
         runCurrent()
         assertEquals(EpisodeLoadStep.OpeningPlayer, h.step())
@@ -146,7 +178,7 @@ class EpisodeLoaderTest {
 
     @Test
     fun cancelDuringHandoffClearsWithoutCancellingResolved() = runTest {
-        val h = Harness(FakeSource(listOf(storage("720p"))))
+        val h = harness(FakeSource(listOf(storage("720p"))))
         var cancelled = false
         var completed = false
         val gate = CompletableDeferred<Unit>()
@@ -176,7 +208,7 @@ class EpisodeLoaderTest {
 
     @Test
     fun downloadDoesNotHandoff() = runTest {
-        val h = Harness(FakeSource(listOf(storage("720p"))))
+        val h = harness(FakeSource(listOf(storage("720p"))))
         h.load(EpisodeAction.Download, h.chapter())
         assertEquals(listOf<EpisodeLoadState?>(null), h.stateAtResolve)
         assertNull(h.loader.state)
@@ -185,7 +217,7 @@ class EpisodeLoaderTest {
     @Test
     fun multipleSourcesWaitForPick() = runTest {
         val sources = listOf(storage("720p"), storage("1080p"))
-        val h = Harness(FakeSource(sources))
+        val h = harness(FakeSource(sources))
         record(h)
         val job = startLoad(h, EpisodeAction.Play)
         advanceUntilIdle()
@@ -200,7 +232,7 @@ class EpisodeLoaderTest {
 
     @Test
     fun dismissingSheetEndsLoad() = runTest {
-        val h = Harness(FakeSource(listOf(storage("720p"), storage("1080p"))))
+        val h = harness(FakeSource(listOf(storage("720p"), storage("1080p"))))
         val job = startLoad(h, EpisodeAction.Play)
         advanceUntilIdle()
         assertIs<EpisodeLoadStep.ChooseSource>(h.step())
@@ -214,7 +246,7 @@ class EpisodeLoaderTest {
     @Test
     fun cancelClearsStateAndAllowsNextLoad() = runTest {
         val gate = CompletableDeferred<Unit>()
-        val h = Harness(FakeSource(listOf(storage("720p")), gate = gate))
+        val h = harness(FakeSource(listOf(storage("720p")), gate = gate))
         val job = startLoad(h, EpisodeAction.Play)
         advanceUntilIdle()
         assertIs<EpisodeLoadStep.FetchingSources>(h.step())
@@ -229,7 +261,7 @@ class EpisodeLoaderTest {
     @Test
     fun cancelDuringFetchStopsLoad() = runTest {
         val gate = CompletableDeferred<Unit>()
-        val h = Harness(FakeSource(listOf(storage("720p")), gate = gate))
+        val h = harness(FakeSource(listOf(storage("720p")), gate = gate))
         val job = startLoad(h, EpisodeAction.Play)
         advanceUntilIdle()
         assertIs<EpisodeLoadStep.FetchingSources>(h.step())
@@ -247,7 +279,7 @@ class EpisodeLoaderTest {
     @Test
     fun cancelDuringResolveStopsLoad() = runTest {
         val resolveGate = CompletableDeferred<Unit>()
-        val h = Harness(FakeSource(listOf(storage("720p"))))
+        val h = harness(FakeSource(listOf(storage("720p"))))
         val blocking = object : KmpApiService {
             override val baseUrl = "http://test"
             override fun getChapterInfoFlow(chapterModel: KmpChapterModel): Flow<List<KmpStorage>> =
@@ -274,7 +306,7 @@ class EpisodeLoaderTest {
 
     @Test
     fun tapWhileLoadingIsIgnored() = runTest {
-        val h = Harness(FakeSource(listOf(storage("720p"), storage("1080p"))))
+        val h = harness(FakeSource(listOf(storage("720p"), storage("1080p"))))
         val job = startLoad(h, EpisodeAction.Play, h.chapter("Ep 1", "u1"))
         advanceUntilIdle()
         h.load(EpisodeAction.Play, h.chapter("Ep 2", "u2"))
@@ -285,7 +317,7 @@ class EpisodeLoaderTest {
 
     @Test
     fun playResolveFailureShowsError() = runTest {
-        val h = Harness(FakeSource(listOf(storage("720p")), resolveError = IllegalStateException("boom")))
+        val h = harness(FakeSource(listOf(storage("720p")), resolveError = IllegalStateException("boom")))
         val job = startLoad(h, EpisodeAction.Play)
         advanceUntilIdle()
         assertEquals(EpisodeLoadStep.Failed("Couldn't load Ep 1", "boom", false), h.step())
@@ -294,13 +326,13 @@ class EpisodeLoaderTest {
         advanceUntilIdle()
         job.join()
         assertEquals(1, h.resolved.size)
-        assertNull(h.loader.state)
+        assertEquals(EpisodeLoadStep.OpeningPlayer, h.step())
     }
 
     @Test
     fun pickOtherReopensSheet() = runTest {
         val sources = listOf(storage("720p"), storage("1080p"))
-        val h = Harness(FakeSource(sources, resolveError = IllegalStateException("boom")))
+        val h = harness(FakeSource(sources, resolveError = IllegalStateException("boom")))
         val job = startLoad(h, EpisodeAction.Play)
         advanceUntilIdle()
         h.loader.decide(EpisodeLoadDecision.Pick(sources[0]))
@@ -314,7 +346,7 @@ class EpisodeLoaderTest {
 
     @Test
     fun singleSourceFailureCannotPickOther() = runTest {
-        val h = Harness(FakeSource(listOf(storage("720p")), resolveError = IllegalStateException("boom")))
+        val h = harness(FakeSource(listOf(storage("720p")), resolveError = IllegalStateException("boom")))
         val job = startLoad(h, EpisodeAction.Play)
         advanceUntilIdle()
         assertFalse(assertIs<EpisodeLoadStep.Failed>(h.step()).canPickOther)
@@ -323,7 +355,7 @@ class EpisodeLoaderTest {
 
     @Test
     fun playNoSourcesShowsError() = runTest {
-        val h = Harness(FakeSource(emptyList()))
+        val h = harness(FakeSource(emptyList()))
         val job = startLoad(h, EpisodeAction.Play)
         advanceUntilIdle()
         assertEquals(EpisodeLoadStep.Failed("No sources found for Ep 1", null, false), h.step())
@@ -334,8 +366,78 @@ class EpisodeLoaderTest {
     }
 
     @Test
+    fun playNoSourcesRetryRefetches() = runTest {
+        val h = harness(FakeSource(emptyList()))
+        val job = startLoad(h, EpisodeAction.Play)
+        advanceUntilIdle()
+        assertIs<EpisodeLoadStep.Failed>(h.step())
+        h.source.storages = listOf(storage("720p"))
+        h.loader.decide(EpisodeLoadDecision.Retry)
+        runCurrent()
+        assertTrue(job.isCompleted)
+        assertEquals("http://v/720p?resolved", h.resolved.single().storage.link)
+        assertEquals(EpisodeLoadStep.OpeningPlayer, h.step())
+    }
+
+    @Test
+    fun strayPickOtherDuringChooseSourceIsIgnored() = runTest {
+        val sources = listOf(storage("720p"), storage("1080p"))
+        val h = harness(FakeSource(sources, resolveError = IllegalStateException("boom")))
+        val job = startLoad(h, EpisodeAction.Play)
+        advanceUntilIdle()
+        h.loader.decide(EpisodeLoadDecision.Pick(sources[0]))
+        advanceUntilIdle()
+        assertIs<EpisodeLoadStep.Failed>(h.step())
+        h.loader.decide(EpisodeLoadDecision.PickOther)
+        advanceUntilIdle()
+        assertIs<EpisodeLoadStep.ChooseSource>(h.step())
+        // Second tap on the fading-out "Try another source".
+        h.loader.decide(EpisodeLoadDecision.PickOther)
+        advanceUntilIdle()
+        assertIs<EpisodeLoadStep.ChooseSource>(h.step())
+        assertTrue(job.isActive)
+        h.source.resolveError = null
+        h.loader.decide(EpisodeLoadDecision.Pick(sources[1]))
+        runCurrent()
+        assertEquals("http://v/1080p?resolved", h.resolved.single().storage.link)
+    }
+
+    @Test
+    fun stalePickIgnoredOnFailed() = runTest {
+        val sources = listOf(storage("720p"), storage("1080p"))
+        val h = harness(FakeSource(sources, resolveError = IllegalStateException("boom")))
+        val job = startLoad(h, EpisodeAction.Play)
+        advanceUntilIdle()
+        h.loader.decide(EpisodeLoadDecision.Pick(sources[0]))
+        advanceUntilIdle()
+        assertIs<EpisodeLoadStep.Failed>(h.step())
+        // Second tap on a sheet row lands after the failure shows.
+        h.loader.decide(EpisodeLoadDecision.Pick(sources[0]))
+        advanceUntilIdle()
+        assertIs<EpisodeLoadStep.Failed>(h.step())
+        assertTrue(job.isActive)
+        assertTrue(h.resolved.isEmpty())
+        h.source.resolveError = null
+        h.loader.decide(EpisodeLoadDecision.Retry)
+        runCurrent()
+        assertEquals("http://v/720p?resolved", h.resolved.single().storage.link)
+    }
+
+    @Test
+    fun staleDecisionDrainedAtLoadStart() = runTest {
+        val sources = listOf(storage("720p"), storage("1080p"))
+        val h = harness(FakeSource(sources))
+        h.loader.decide(EpisodeLoadDecision.Pick(sources[1]))
+        val job = startLoad(h, EpisodeAction.Play)
+        advanceUntilIdle()
+        assertIs<EpisodeLoadStep.ChooseSource>(h.step())
+        assertTrue(h.resolved.isEmpty())
+        job.cancel()
+    }
+
+    @Test
     fun blankLinkIsFailure() = runTest {
-        val h = Harness(FakeSource(listOf(storage("720p")), resolveLink = { "" }))
+        val h = harness(FakeSource(listOf(storage("720p")), resolveLink = { "" }))
         val job = startLoad(h, EpisodeAction.Play)
         advanceUntilIdle()
         assertIs<EpisodeLoadStep.Failed>(h.step())
@@ -352,7 +454,7 @@ class EpisodeLoaderTest {
     @Test
     fun downloadFailureUsesCallback() = runTest {
         val error = IllegalStateException("boom")
-        val h = Harness(FakeSource(listOf(storage("720p")), resolveError = error))
+        val h = harness(FakeSource(listOf(storage("720p")), resolveError = error))
         record(h)
         h.load(EpisodeAction.Download, h.chapter())
         advanceUntilIdle()
@@ -365,7 +467,7 @@ class EpisodeLoaderTest {
 
     @Test
     fun downloadNoSourcesUsesCallback() = runTest {
-        val h = Harness(FakeSource(emptyList()))
+        val h = harness(FakeSource(emptyList()))
         h.load(EpisodeAction.Download, h.chapter())
         assertEquals(listOf<Pair<KmpStorage?, Throwable?>>(null to null), h.failures)
         assertNull(h.loader.state)
@@ -377,7 +479,7 @@ class EpisodeLoaderTest {
             var throwing = true
             val failures = mutableListOf<KmpStorage?>()
             val source = FakeSource(listOf(storage("720p")))
-            val loader = EpisodeLoader()
+            val loader = EpisodeLoader(backgroundScope)
             val chapter = KmpChapterModel("Ep 1", "u", "", "u", source)
             val info = KmpInfoModel("Show", "", "u", "http://img", emptyList(), emptyList(), emptyList(), source)
             val result = runCatching {
@@ -390,13 +492,15 @@ class EpisodeLoaderTest {
             var called = false
             loader.load(action, chapter, info, onResolved = { called = true })
             assertTrue(called)
+            loader.finishHandoff()
+            advanceUntilIdle()
         }
     }
 
     @Test
     fun concurrentLoadsOnlyOneRuns() = runTest {
         val gate = CompletableDeferred<Unit>()
-        val h = Harness(FakeSource(listOf(storage("720p")), gate = gate))
+        val h = harness(FakeSource(listOf(storage("720p")), gate = gate))
         val first = startLoad(h, EpisodeAction.Play, h.chapter("Ep 1", "u1"))
         val second = startLoad(h, EpisodeAction.Play, h.chapter("Ep 2", "u2"))
         advanceUntilIdle()
@@ -406,6 +510,7 @@ class EpisodeLoaderTest {
         advanceUntilIdle()
         first.join()
         assertEquals(1, h.resolved.size)
+        h.loader.finishHandoff()
         assertNull(h.loader.state)
     }
 }

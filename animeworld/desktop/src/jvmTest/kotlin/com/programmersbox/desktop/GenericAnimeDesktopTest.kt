@@ -97,6 +97,9 @@ class GenericAnimeDesktopTest {
         assertEquals("http://v/720p?resolved", holder.storageModel?.link)
         assertEquals("Show", holder.showTitle)
         assertEquals("http://img", holder.posterUrl)
+        // chapterOnClick returns once navigated; the overlay is held until the player finishes the hand-off.
+        assertEquals(EpisodeLoadStep.OpeningPlayer, info.episodeLoader.state?.step)
+        info.episodeLoader.finishHandoff()
         assertNull(info.episodeLoader.state)
     }
 

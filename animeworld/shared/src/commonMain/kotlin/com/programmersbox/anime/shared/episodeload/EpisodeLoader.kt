@@ -8,13 +8,18 @@ import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpStorage
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.concurrent.Volatile
 
 enum class EpisodeAction { Play, Download }
 
@@ -53,15 +58,23 @@ sealed interface EpisodeLoadDecision {
 
 /**
  * Drives fetching an episode's sources and resolving a stream, exposing [state] for the UI.
- * [load] suspends for the whole flow (including waiting on the user), so the caller's coroutine is its lifetime.
+ * [load] suspends until the stream is resolved and handed over (including waiting on the user), so the caller's
+ * coroutine is its lifetime up to that point. A Play's [EpisodeLoadStep.OpeningPlayer] wait runs in
+ * [handoffScope] instead: the caller's scope (the details screen) can be cancelled while the player opens.
  */
-class EpisodeLoader {
+class EpisodeLoader(
+    private val handoffScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+) {
     var state: EpisodeLoadState? by mutableStateOf(null)
         private set
 
     private val decisions = Channel<EpisodeLoadDecision>(Channel.CONFLATED)
 
+    // decide/finishHandoff run on Main while load runs on IO.
+    @Volatile
     private var activeJob: Job? = null
+
+    @Volatile
     private var handoff: CompletableDeferred<Unit>? = null
 
     /** Clears an [EpisodeLoadStep.OpeningPlayer] state once the player is up; no-op in any other step. */
@@ -90,7 +103,8 @@ class EpisodeLoader {
     private val busy = Mutex()
 
     /**
-     * Only one load runs at a time; a call while another is active returns immediately.
+     * Only one load runs at a time; a call while another is active (including a Play's player hand-off) returns
+     * immediately. A Play returns right after [onResolved]; the overlay is held until [finishHandoff] or a timeout.
      * [onDownloadFailed]'s `storage == null` means no sources were found.
      */
     suspend fun load(
@@ -101,27 +115,51 @@ class EpisodeLoader {
         onDownloadFailed: suspend (KmpStorage?, Throwable?) -> Unit = { _, _ -> },
     ) {
         if (!busy.tryLock()) return
+        var handedOff = false
         try {
             coroutineScope {
-                val job = launch { run(action, model, infoModel, onResolved, onDownloadFailed) }
+                // Lazy so a Cancel that arrives as soon as the first step shows still finds the job.
+                val job = launch(start = CoroutineStart.LAZY) {
+                    handedOff = run(action, model, infoModel, onResolved, onDownloadFailed)
+                }
                 activeJob = job
+                job.start()
                 job.join()
             }
         } finally {
             activeJob = null
-            handoff = null
-            busy.unlock()
+            // After a hand-off, the hand-off job owns the state, the lock and [handoff].
+            if (!handedOff) {
+                handoff = null
+                busy.unlock()
+            }
         }
     }
 
+    /** Holds [EpisodeLoadStep.OpeningPlayer] until [finishHandoff] or the timeout, then frees the loader. */
+    private fun holdHandoff(wait: CompletableDeferred<Unit>) {
+        handoffScope.launch { withTimeoutOrNull(HANDOFF_TIMEOUT_MS) { wait.await() } }
+            // Runs even if the scope never starts the job, so the lock is always released.
+            .invokeOnCompletion {
+                if (state?.step == EpisodeLoadStep.OpeningPlayer) state = null
+                handoff = null
+                busy.unlock()
+            }
+    }
+
+    private fun drainDecisions() {
+        while (decisions.tryReceive().isSuccess) Unit
+    }
+
+    /** Returns true when a Play was handed to the player and [holdHandoff] now owns the rest. */
     private suspend fun run(
         action: EpisodeAction,
         model: KmpChapterModel,
         infoModel: KmpInfoModel,
         onResolved: suspend (KmpStorage) -> Unit,
         onDownloadFailed: suspend (KmpStorage?, Throwable?) -> Unit,
-    ) {
-        decisions.tryReceive()
+    ): Boolean {
+        drainDecisions()
 
         fun show(step: EpisodeLoadStep) {
             state = EpisodeLoadState(
@@ -142,33 +180,45 @@ class EpisodeLoader {
             owned = false
         }
 
-        try {
-            show(EpisodeLoadStep.FetchingSources)
-            val sources = try {
-                model.getChapterInfo().firstOrNull().orEmpty()
-            } catch (e: CancellationException) {
-                throw e
-            } catch (_: Exception) {
-                emptyList()
+        // Cancel never comes through the channel (it cancels the job), and a decision left over from a
+        // double tap on a fading-out button is ignored instead of ending the load.
+        suspend fun awaitDecision(accept: (EpisodeLoadDecision) -> Boolean): EpisodeLoadDecision {
+            while (true) {
+                val decision = decisions.receive()
+                if (accept(decision)) return decision
             }
+        }
 
-            if (sources.isEmpty()) {
+        try {
+            var sources: List<KmpStorage>
+            while (true) {
+                show(EpisodeLoadStep.FetchingSources)
+                sources = try {
+                    model.getChapterInfo().firstOrNull().orEmpty()
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (_: Exception) {
+                    emptyList()
+                }
+                if (sources.isNotEmpty()) break
+
                 if (action == EpisodeAction.Download) {
                     release()
                     onDownloadFailed(null, null)
-                } else {
-                    show(EpisodeLoadStep.Failed("No sources found for ${model.name}", null, false))
-                    decisions.receive()
+                    return false
                 }
-                return
+                drainDecisions()
+                show(EpisodeLoadStep.Failed("No sources found for ${model.name}", null, false))
+                awaitDecision { it == EpisodeLoadDecision.Retry }
             }
 
             var storage: KmpStorage? = sources.singleOrNull()
             var label: String? = null
             while (true) {
                 val current = storage ?: run {
+                    drainDecisions()
                     show(EpisodeLoadStep.ChooseSource(sources))
-                    val picked = (decisions.receive() as? EpisodeLoadDecision.Pick)?.storage ?: return
+                    val picked = (awaitDecision { it is EpisodeLoadDecision.Pick } as EpisodeLoadDecision.Pick).storage
                     label = listOfNotNull(picked.source, picked.quality)
                         .filter { it.isNotBlank() }
                         .joinToString(" ")
@@ -186,26 +236,29 @@ class EpisodeLoader {
                     if (action == EpisodeAction.Download) {
                         release()
                         onDownloadFailed(current, e)
-                        return
+                        return false
                     }
-                    show(EpisodeLoadStep.Failed("Couldn't load ${model.name}", e.message, sources.size > 1))
-                    when (decisions.receive()) {
-                        EpisodeLoadDecision.Retry -> Unit
-                        EpisodeLoadDecision.PickOther -> storage = null
-                        else -> return
+                    val canPickOther = sources.size > 1
+                    drainDecisions()
+                    show(EpisodeLoadStep.Failed("Couldn't load ${model.name}", e.message, canPickOther))
+                    val decision = awaitDecision {
+                        it == EpisodeLoadDecision.Retry || (canPickOther && it == EpisodeLoadDecision.PickOther)
                     }
+                    if (decision == EpisodeLoadDecision.PickOther) storage = null
                     continue
                 }
                 if (action == EpisodeAction.Download) {
                     release()
                     onResolved(resolved)
-                } else {
-                    val wait = CompletableDeferred<Unit>().also { handoff = it }
-                    show(EpisodeLoadStep.OpeningPlayer)
-                    onResolved(resolved)
-                    withTimeoutOrNull(HANDOFF_TIMEOUT_MS) { wait.await() }
+                    return false
                 }
-                return
+                val wait = CompletableDeferred<Unit>().also { handoff = it }
+                show(EpisodeLoadStep.OpeningPlayer)
+                onResolved(resolved)
+                // No suspension from here on: the hand-off job takes over the state and the lock.
+                owned = false
+                holdHandoff(wait)
+                return true
             }
         } finally {
             if (owned) state = null
