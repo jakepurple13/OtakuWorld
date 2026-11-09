@@ -1,6 +1,10 @@
 package com.programmersbox.kmpuiviews.utils.composables.modifiers
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -61,16 +65,18 @@ private class BounceClickNode(
                 awaitFirstDown(requireUnconsumed = false)
 
                 // Launch the press animation using the Node's built-in coroutineScope
+                // Press quickly so the dip is felt under the finger
                 coroutineScope.launch {
-                    scale.animateTo(scaleAmount)
+                    scale.animateTo(scaleAmount, tween(durationMillis = 110, easing = FastOutLinearInEasing))
                 }
 
                 // Wait for the finger to lift or the gesture to be cancelled
                 waitForUpOrCancellation()
 
                 // Launch the release animation
+                // Release with a little overshoot. A node can't read MaterialTheme.motionScheme, so the spring is fixed here
                 coroutineScope.launch {
-                    scale.animateTo(1f)
+                    scale.animateTo(1f, spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMedium))
                 }
             }
         }

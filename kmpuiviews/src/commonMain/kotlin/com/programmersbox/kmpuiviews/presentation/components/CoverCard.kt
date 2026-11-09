@@ -80,7 +80,7 @@ fun M3CoverCard(
                 ComposableUtils.IMAGE_WIDTH,
                 ComposableUtils.IMAGE_HEIGHT
             )
-            .bounceClick(.9f)
+            .bounceClick(.94f)
             .customSharedElement(sharedItemKey?.let(::OtakuImageElement))
             .clip(MaterialTheme.shapes.medium)
             .zoomOverlay(),
@@ -222,7 +222,7 @@ fun M3CoverCard(
                 ComposableUtils.IMAGE_WIDTH,
                 ComposableUtils.IMAGE_HEIGHT
             )
-            .bounceClick(.9f)
+            .bounceClick(.94f)
             .zoomOverlay()
     ) {
         Box(
