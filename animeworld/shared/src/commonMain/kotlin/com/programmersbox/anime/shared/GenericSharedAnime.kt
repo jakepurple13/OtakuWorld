@@ -58,27 +58,7 @@ abstract class GenericSharedAnime(
             }
         }
 
-    // The loader allows one load at a time, so a single pending slot is safe.
-    private var pendingNav: NavigationActions? = null
-    private var pendingSeedColor: Int? = null
-    private var pendingModel: KmpChapterModel? = null
-
-    val episodeLoader: EpisodeLoader = EpisodeLoader(
-        onResolved = { action, storage, model, infoModel ->
-            when (action) {
-                EpisodeAction.Play -> pendingNav?.let { playOrCast(it, storage, model, infoModel, pendingSeedColor) }
-                EpisodeAction.Download -> enqueueResolved(storage, model, infoModel)
-            }
-        },
-        onDownloadFailed = { storage, error ->
-            if (storage == null) {
-                pendingModel?.let(::onNoDownloadSources)
-            } else {
-                error?.printStackTrace()
-                onResolveFailed(storage, error ?: IllegalStateException("No link"))
-            }
-        },
-    )
+    val episodeLoader = EpisodeLoader()
 
     override suspend fun chapterOnClick(
         model: KmpChapterModel,
@@ -87,17 +67,31 @@ abstract class GenericSharedAnime(
         navController: NavigationActions,
         seedColor: Int?,
     ) {
-        if (episodeLoader.state != null) return
-        pendingNav = navController
-        pendingSeedColor = seedColor
-        episodeLoader.load(EpisodeAction.Play, model, infoModel)
+        episodeLoader.load(
+            action = EpisodeAction.Play,
+            model = model,
+            infoModel = infoModel,
+            onResolved = { playOrCast(navController, it, model, infoModel, seedColor) },
+        )
     }
 
     /** Download counterpart of [chapterOnClick]; call from a coroutine (it suspends until the load finishes). */
     protected suspend fun loadForDownload(model: KmpChapterModel, infoModel: KmpInfoModel) {
-        if (episodeLoader.state != null || !canStartDownload()) return
-        pendingModel = model
-        episodeLoader.load(EpisodeAction.Download, model, infoModel)
+        if (!canStartDownload()) return
+        episodeLoader.load(
+            action = EpisodeAction.Download,
+            model = model,
+            infoModel = infoModel,
+            onResolved = { enqueueResolved(it, model, infoModel) },
+            onDownloadFailed = { storage, error ->
+                if (storage == null) {
+                    onNoDownloadSources(model)
+                } else {
+                    error?.printStackTrace()
+                    onResolveFailed(storage, error ?: IllegalStateException("No link"))
+                }
+            },
+        )
     }
 
     /** Platform hand-off after a successful download resolve. */

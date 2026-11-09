@@ -9,6 +9,7 @@ import com.programmersbox.kmpmodels.KmpStorage
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.sync.Mutex
 
 enum class EpisodeAction { Play, Download }
 
@@ -41,11 +42,7 @@ sealed interface EpisodeLoadDecision {
  * Drives fetching an episode's sources and resolving a stream, exposing [state] for the UI.
  * [load] suspends for the whole flow (including waiting on the user), so the caller's coroutine is its lifetime.
  */
-class EpisodeLoader(
-    private val onResolved: suspend (EpisodeAction, KmpStorage, KmpChapterModel, KmpInfoModel) -> Unit,
-    /** `storage == null` means no sources were found. */
-    private val onDownloadFailed: suspend (KmpStorage?, Throwable?) -> Unit,
-) {
+class EpisodeLoader {
     var state: EpisodeLoadState? by mutableStateOf(null)
         private set
 
@@ -55,8 +52,34 @@ class EpisodeLoader(
         decisions.trySend(decision)
     }
 
-    suspend fun load(action: EpisodeAction, model: KmpChapterModel, infoModel: KmpInfoModel) {
-        if (state != null) return
+    private val busy = Mutex()
+
+    /**
+     * Only one load runs at a time; a call while another is active returns immediately.
+     * [onDownloadFailed]'s `storage == null` means no sources were found.
+     */
+    suspend fun load(
+        action: EpisodeAction,
+        model: KmpChapterModel,
+        infoModel: KmpInfoModel,
+        onResolved: suspend (KmpStorage) -> Unit,
+        onDownloadFailed: suspend (KmpStorage?, Throwable?) -> Unit = { _, _ -> },
+    ) {
+        if (!busy.tryLock()) return
+        try {
+            run(action, model, infoModel, onResolved, onDownloadFailed)
+        } finally {
+            busy.unlock()
+        }
+    }
+
+    private suspend fun run(
+        action: EpisodeAction,
+        model: KmpChapterModel,
+        infoModel: KmpInfoModel,
+        onResolved: suspend (KmpStorage) -> Unit,
+        onDownloadFailed: suspend (KmpStorage?, Throwable?) -> Unit,
+    ) {
         decisions.tryReceive()
 
         fun show(step: EpisodeLoadStep) {
@@ -132,7 +155,7 @@ class EpisodeLoader(
                     continue
                 }
                 release()
-                onResolved(action, resolved, model, infoModel)
+                onResolved(resolved)
                 return
             }
         } finally {

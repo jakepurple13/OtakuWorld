@@ -60,14 +60,18 @@ class EpisodeLoaderTest {
         init {
             // snapshotFlow can miss steps that change within one dispatch, so also capture at resolve time.
             source.onResolve = { loader.state?.step?.let(steps::add) }
-            loader = EpisodeLoader(
-                onResolved = { action, storage, _, _ ->
+            loader = EpisodeLoader()
+        }
+
+        suspend fun load(action: EpisodeAction, chapter: KmpChapterModel = chapter(), info: KmpInfoModel = info()) =
+            loader.load(
+                action, chapter, info,
+                onResolved = { storage ->
                     stateAtResolve += loader.state
                     resolved += Resolved(action, storage)
                 },
                 onDownloadFailed = { storage, e -> failures += storage to e },
             )
-        }
 
         fun chapter(name: String = "Ep 1", url: String = "u") = KmpChapterModel(name, url, "", url, source)
         fun info() = KmpInfoModel("Show", "", "u", "http://img", emptyList(), emptyList(), emptyList(), source)
@@ -83,13 +87,13 @@ class EpisodeLoaderTest {
     }
 
     private fun TestScope.startLoad(h: Harness, action: EpisodeAction, chapter: KmpChapterModel = h.chapter()): Job =
-        launch { h.loader.load(action, chapter, h.info()) }
+        launch { h.load(action, chapter) }
 
     @Test
     fun singleSourcePlaysWithoutSheet() = runTest {
         val h = Harness(FakeSource(listOf(storage("720p"))))
         record(h)
-        h.loader.load(EpisodeAction.Play, h.chapter(), h.info())
+        h.load(EpisodeAction.Play, h.chapter())
         advanceUntilIdle()
         assertEquals(1, h.resolved.size)
         assertEquals(EpisodeAction.Play, h.resolved[0].action)
@@ -101,7 +105,7 @@ class EpisodeLoaderTest {
     @Test
     fun stateClearedBeforePlay() = runTest {
         val h = Harness(FakeSource(listOf(storage("720p"))))
-        h.loader.load(EpisodeAction.Play, h.chapter(), h.info())
+        h.load(EpisodeAction.Play, h.chapter())
         assertEquals(listOf<EpisodeLoadState?>(null), h.stateAtResolve)
     }
 
@@ -145,7 +149,7 @@ class EpisodeLoaderTest {
         advanceUntilIdle()
         assertNull(h.loader.state)
         gate.complete(Unit)
-        h.loader.load(EpisodeAction.Play, h.chapter(), h.info())
+        h.load(EpisodeAction.Play, h.chapter())
         assertEquals(1, h.resolved.size)
     }
 
@@ -154,7 +158,7 @@ class EpisodeLoaderTest {
         val h = Harness(FakeSource(listOf(storage("720p"), storage("1080p"))))
         val job = startLoad(h, EpisodeAction.Play, h.chapter("Ep 1", "u1"))
         advanceUntilIdle()
-        h.loader.load(EpisodeAction.Play, h.chapter("Ep 2", "u2"), h.info())
+        h.load(EpisodeAction.Play, h.chapter("Ep 2", "u2"))
         assertEquals("u1", h.loader.state?.episodeUrl)
         assertIs<EpisodeLoadStep.ChooseSource>(h.step())
         job.cancel()
@@ -219,7 +223,7 @@ class EpisodeLoaderTest {
         job.cancel()
         advanceUntilIdle()
 
-        h.loader.load(EpisodeAction.Download, h.chapter(), h.info())
+        h.load(EpisodeAction.Download, h.chapter())
         val (failed, error) = h.failures.single()
         assertEquals("720p", failed?.quality)
         assertTrue(error != null)
@@ -231,7 +235,7 @@ class EpisodeLoaderTest {
         val error = IllegalStateException("boom")
         val h = Harness(FakeSource(listOf(storage("720p")), resolveError = error))
         record(h)
-        h.loader.load(EpisodeAction.Download, h.chapter(), h.info())
+        h.load(EpisodeAction.Download, h.chapter())
         advanceUntilIdle()
         val (failed, e) = h.failures.single()
         assertEquals("720p", failed?.quality)
@@ -243,7 +247,7 @@ class EpisodeLoaderTest {
     @Test
     fun downloadNoSourcesUsesCallback() = runTest {
         val h = Harness(FakeSource(emptyList()))
-        h.loader.load(EpisodeAction.Download, h.chapter(), h.info())
+        h.load(EpisodeAction.Download, h.chapter())
         assertEquals(listOf<Pair<KmpStorage?, Throwable?>>(null to null), h.failures)
         assertNull(h.loader.state)
     }
@@ -254,22 +258,35 @@ class EpisodeLoaderTest {
             var throwing = true
             val failures = mutableListOf<KmpStorage?>()
             val source = FakeSource(listOf(storage("720p")))
-            val loader = EpisodeLoader(
-                onResolved = { _, _, _, _ -> if (throwing) throw IllegalStateException("callback") },
-                onDownloadFailed = { s, _ -> failures += s },
-            )
+            val loader = EpisodeLoader()
             val chapter = KmpChapterModel("Ep 1", "u", "", "u", source)
             val info = KmpInfoModel("Show", "", "u", "http://img", emptyList(), emptyList(), emptyList(), source)
-            val result = runCatching { loader.load(action, chapter, info) }
+            val result = runCatching {
+                loader.load(action, chapter, info, onResolved = { if (throwing) throw IllegalStateException("callback") }, onDownloadFailed = { s, _ -> failures += s })
+            }
             assertEquals("callback", result.exceptionOrNull()?.message)
             assertNull(loader.state)
             assertTrue(failures.isEmpty())
             throwing = false
             var called = false
-            val next = EpisodeLoader({ _, _, _, _ -> called = true }, { _, _ -> })
-            next.load(action, chapter, info)
-            loader.load(action, chapter, info)
+            loader.load(action, chapter, info, onResolved = { called = true })
             assertTrue(called)
         }
+    }
+
+    @Test
+    fun concurrentLoadsOnlyOneRuns() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val h = Harness(FakeSource(listOf(storage("720p")), gate = gate))
+        val first = startLoad(h, EpisodeAction.Play, h.chapter("Ep 1", "u1"))
+        val second = startLoad(h, EpisodeAction.Play, h.chapter("Ep 2", "u2"))
+        advanceUntilIdle()
+        assertTrue(second.isCompleted)
+        assertEquals("u1", h.loader.state?.episodeUrl)
+        gate.complete(Unit)
+        advanceUntilIdle()
+        first.join()
+        assertEquals(1, h.resolved.size)
+        assertNull(h.loader.state)
     }
 }
