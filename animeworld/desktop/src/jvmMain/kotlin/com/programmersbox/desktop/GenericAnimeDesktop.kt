@@ -15,11 +15,9 @@ import com.programmersbox.anime.shared.GenericSharedAnime
 import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.anime.shared.VideoScreen
 import com.programmersbox.anime.shared.downloads.EpisodeDownloadQueue
-import com.programmersbox.anime.shared.episodeload.EpisodeLoadDecision
-import com.programmersbox.anime.shared.videochoice.VideoChoiceScreen
+import com.programmersbox.anime.shared.episodeload.EpisodeLoadHost
 import com.programmersbox.anime.shared.videoexport.VideoExportRoute
 import com.programmersbox.anime.shared.videoexport.VideoExportScreen
-import com.programmersbox.anime.shared.videochoice.VideoSourceModel
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRoute
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsScreen
 import com.programmersbox.anime.shared.videoplayer.DesktopPlayerOnboarding
@@ -37,7 +35,6 @@ import com.programmersbox.kmpuiviews.PlatformGenericInfo
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
-import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.domain.AppUpdate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -57,19 +54,7 @@ open class GenericAnimeDesktop(
 
     @Composable
     override fun DialogSetups() {
-        VideoSourceModel.showVideoSources?.let {
-            val navController = LocalNavActions.current
-            VideoChoiceScreen(
-                items = it.c,
-                infoModel = it.infoModel,
-                model = it.model,
-                genericInfo = this,
-                navController = navController,
-                onPlay = { s ->
-                    episodeLoader.decide(EpisodeLoadDecision.Pick(s))
-                }
-            )
-        }
+        EpisodeLoadHost(episodeLoader)
     }
 
     override fun onResolveFailed(storage: KmpStorage, error: Throwable) {

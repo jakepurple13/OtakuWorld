@@ -66,9 +66,7 @@ import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRepository
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRoute
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsScreen
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsViewModel
-import com.programmersbox.anime.shared.videochoice.VideoChoiceScreen
-import com.programmersbox.anime.shared.episodeload.EpisodeLoadDecision
-import com.programmersbox.anime.shared.videochoice.VideoSourceModel
+import com.programmersbox.anime.shared.episodeload.EpisodeLoadHost
 import com.programmersbox.anime.shared.videoplayer.VideoPlayerUi
 import com.programmersbox.anime.shared.videoplayer.defaultSubtitleIndex
 import com.programmersbox.anime.shared.videoplayer.playerHeaders
@@ -565,19 +563,7 @@ class GenericAnime(
                 }
             )
         }
-        VideoSourceModel.showVideoSources?.let {
-            val navController = LocalNavActions.current
-            VideoChoiceScreen(
-                items = it.c,
-                infoModel = it.infoModel,
-                model = it.model,
-                genericInfo = this,
-                navController = navController,
-                onPlay = { s ->
-                    episodeLoader.decide(EpisodeLoadDecision.Pick(s))
-                }
-            )
-        }
+        EpisodeLoadHost(episodeLoader)
     }
 
     override fun deepLinkDetails(context: Context, itemModel: KmpItemModel?): PendingIntent? {
