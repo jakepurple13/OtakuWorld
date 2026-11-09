@@ -39,7 +39,9 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,6 +60,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.search.SettingsScreen
 import com.programmersbox.kmpuiviews.presentation.settings.search.SettingsSearchViewModel
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
+import com.programmersbox.kmpuiviews.utils.composables.modifiers.staggerIn
 import com.programmersbox.kmpuiviews.versionCode
 import com.programmersbox.supabaseintegration.ui.SyncIconComposable
 import kotlinx.coroutines.launch
@@ -125,8 +128,11 @@ fun SettingScreen(
                     .verticalScroll(rememberScrollState())
                     .padding(p)
             ) {
+                // Cascade the groups in on the first open; not again when coming back from a sub-screen
+                val played = rememberSaveable { mutableStateOf(false) }
+
                 // Quick Actions
-                CategoryGroupListItem {
+                CategoryGroupListItem(Modifier.staggerIn(0, played)) {
                     segmentedListItem(
                         content = { Text("Scan QR Code") },
                         leadingContent = { Icon(Icons.Default.QrCodeScanner, null) },
@@ -151,12 +157,12 @@ fun SettingScreen(
                 }
 
                 // App-level viewSettings injection
-                CategoryGroupListItem {
+                CategoryGroupListItem(Modifier.staggerIn(1, played)) {
                     apply(composeSettingsDsl.viewSettings)
                 }
 
                 // Main setting categories
-                CategoryGroupListItem {
+                CategoryGroupListItem(Modifier.staggerIn(2, played)) {
                     segmentedListItem(
                         content = { Text("Library") },
                         leadingContent = { Icon(Icons.Default.Star, null) },

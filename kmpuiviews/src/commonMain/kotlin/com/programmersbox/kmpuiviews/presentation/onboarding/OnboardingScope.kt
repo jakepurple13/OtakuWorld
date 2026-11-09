@@ -34,6 +34,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.programmersbox.kmpuiviews.utils.composables.modifiers.pagerStagger
 
 interface OnboardingScope {
     fun item(content: @Composable () -> Unit)
@@ -100,7 +101,11 @@ fun Onboarding(
         overscrollEffect = overscrollEffect,
         pageSpacing = pageSpacing,
         verticalAlignment = verticalAlignment,
-        pageContent = { page -> stateHolder.SaveableStateProvider(page) { onboardingScope[page]() } }
+        pageContent = { page ->
+            Box(Modifier.pagerStagger(state, page, index = 0)) {
+                stateHolder.SaveableStateProvider(page) { onboardingScope[page]() }
+            }
+        }
     )
 }
 
