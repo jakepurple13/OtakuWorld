@@ -53,6 +53,9 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   favorites ([#2677](https://github.com/jakepurple13/OtakuWorld/pull/2677),
   [#2679](https://github.com/jakepurple13/OtakuWorld/pull/2679),
   [#2681](https://github.com/jakepurple13/OtakuWorld/pull/2681))
+- Backup and restore now include Recently Viewed and Skipped Update Sources. The "History" entry
+  is renamed "Search History", since it holds search queries
+  ([#2683](https://github.com/jakepurple13/OtakuWorld/pull/2683))
 - In-app banners: messages that used to appear as snackbars and toasts now show as a floating
   banner stack above the screen. The QR code sheet keeps its own messages. Banners can carry Undo
   or Retry actions, swipe away to dismiss, and fan out when you tap the stack while two or more
