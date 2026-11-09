@@ -125,6 +125,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import com.programmersbox.anime.shared.GenericSharedAnime
+import com.programmersbox.anime.shared.episodeload.shouldFinishHandoff
 import org.koin.compose.koinInject
 import java.security.SecureRandom
 import java.util.Locale
@@ -161,12 +162,13 @@ private fun VideoPlayerContent(videoScreen: VideoScreen) {
     val activity = LocalActivity.current
     val navController = LocalNavActions.current
 
-    // Forcing landscape recreates the activity, and until the new one draws the old (details) window shows rotated.
-    // So the loading overlay stays up until the player has drawn a frame in landscape (any orientation in multi-window,
-    // where the request is ignored).
-    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
-    LaunchedEffect(isLandscape) {
-        if (isLandscape || activity?.isInMultiWindowMode == true) {
+    // The loading overlay stays up until the player has drawn a frame where it will stay: in landscape, or wherever
+    // the landscape request is ignored (multi-window, large screens). See shouldFinishHandoff.
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val smallestWidthDp = configuration.smallestScreenWidthDp
+    LaunchedEffect(isLandscape, smallestWidthDp) {
+        if (shouldFinishHandoff(isLandscape, activity?.isInMultiWindowMode == true, smallestWidthDp)) {
             // Each frame callback runs only after the previous frame was drawn.
             withFrameNanos { }
             withFrameNanos { }
