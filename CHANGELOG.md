@@ -286,6 +286,9 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   one at a time and show pending-confirmation, permission-required, and cancelled states. Sources
   reload right after a successful install
   ([#2524](https://github.com/jakepurple13/OtakuWorld/pull/2524))
+- Notify on Boot now also restores saved update notifications after the app is updated, since
+  Android clears an app's notifications when it updates
+  ([#2680](https://github.com/jakepurple13/OtakuWorld/pull/2680))
 
 #### Bug Fixes
 
