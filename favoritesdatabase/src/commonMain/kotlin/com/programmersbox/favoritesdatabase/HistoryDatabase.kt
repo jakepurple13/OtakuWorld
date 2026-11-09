@@ -86,6 +86,9 @@ interface HistoryDao {
     @Query("SELECT * FROM RecentlyViewed ORDER BY timestamp ASC")
     fun getRecentlyViewed(): Flow<List<RecentModel>>
 
+    @Query("SELECT * FROM RecentlyViewed ORDER BY timestamp ASC")
+    suspend fun getAllRecentlyViewedSync(): List<RecentModel>
+
     @Query("SELECT * FROM RecentlyViewed ORDER BY timestamp DESC")
     fun getRecentlyViewedPaging(): PagingSource<Int, RecentModel>
 

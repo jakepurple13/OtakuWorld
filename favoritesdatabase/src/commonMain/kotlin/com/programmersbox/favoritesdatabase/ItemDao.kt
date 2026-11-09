@@ -76,6 +76,9 @@ interface ItemDao {
     @Query("SELECT source FROM SkippedUpdateSource")
     fun getSkippedUpdateSources(): Flow<List<String>>
 
+    @Query("SELECT * FROM SkippedUpdateSource")
+    suspend fun getAllSkippedUpdateSourcesSync(): List<SkippedUpdateSource>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSkippedUpdateSources(sources: List<SkippedUpdateSource>)
 

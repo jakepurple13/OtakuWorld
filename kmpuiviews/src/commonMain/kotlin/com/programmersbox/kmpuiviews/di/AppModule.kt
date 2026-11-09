@@ -37,7 +37,9 @@ import com.programmersbox.kmpuiviews.utils.backupproccesor.ListBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.NewSettingsBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.NotesBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.NotificationsBackupProcessor
+import com.programmersbox.kmpuiviews.utils.backupproccesor.RecentlyViewedBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.RecommendationsBackupProcessor
+import com.programmersbox.kmpuiviews.utils.backupproccesor.SkippedUpdateSourcesBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.SourceOrderBackupProcessor
 import com.programmersbox.sharedcomponents.notifier.DefaultInAppNotifier
 import com.programmersbox.sharedcomponents.notifier.InAppNotifier
@@ -148,6 +150,8 @@ private fun Module.backupProcessors() {
     backupProcessorWithUiInfo("recommendations", ::RecommendationsBackupProcessor)
     backupProcessorWithUiInfo("dictionary", ::DictionaryBackupProcessor)
     backupProcessorWithUiInfo("activity", ::ActivityBackupProcessor)
+    backupProcessorWithUiInfo("recentlyViewed", ::RecentlyViewedBackupProcessor)
+    backupProcessorWithUiInfo("skippedUpdateSources", ::SkippedUpdateSourcesBackupProcessor)
 }
 
 expect fun platformModule(): Module
