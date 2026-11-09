@@ -1,11 +1,15 @@
 package com.programmersbox.kmpuiviews.presentation.navigation
 
 import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
@@ -85,6 +89,8 @@ fun Nav3(
         )
     }
 
+    val motion = MaterialTheme.motionScheme
+
     NavDisplay(
         backStack = backStack,
         //onBack = { backStack.removeLastOrNull() },
@@ -101,20 +107,19 @@ fun Nav3(
             rememberViewModelStoreNavEntryDecorator()
         ),
         entryProvider = koinEntryProvider(),
+        // Material shared-axis X: a short offset plus a crossfade instead of a full-width push
         transitionSpec = {
-            // Slide in from right when navigating forward
-            slideInHorizontally(initialOffsetX = { it }) togetherWith
-                    slideOutHorizontally(targetOffsetX = { -it })
+            (slideInHorizontally(motion.defaultSpatialSpec()) { it / 3 } + fadeIn(motion.defaultEffectsSpec())) togetherWith
+                    (slideOutHorizontally(motion.defaultSpatialSpec()) { -it / 3 } + fadeOut(motion.fastEffectsSpec()))
         },
         popTransitionSpec = {
-            // Slide in from left when navigating back
-            slideInHorizontally(initialOffsetX = { -it }) togetherWith
-                    slideOutHorizontally(targetOffsetX = { it })
+            (slideInHorizontally(motion.defaultSpatialSpec()) { -it / 3 } + fadeIn(motion.defaultEffectsSpec())) togetherWith
+                    (slideOutHorizontally(motion.defaultSpatialSpec()) { it / 3 } + fadeOut(motion.fastEffectsSpec()))
         },
+        // While the back gesture is held the leaving page shrinks, so the gesture reads as a peek
         predictivePopTransitionSpec = {
-            // Slide in from left when navigating back
-            slideInHorizontally(initialOffsetX = { -it }) togetherWith
-                    slideOutHorizontally(targetOffsetX = { it })
+            (slideInHorizontally(motion.defaultSpatialSpec()) { -it / 4 } + fadeIn(motion.defaultEffectsSpec())) togetherWith
+                    (scaleOut(motion.defaultSpatialSpec(), targetScale = 0.9f) + fadeOut(motion.defaultEffectsSpec()))
         },
         modifier = Modifier.fillMaxSize()
     )
