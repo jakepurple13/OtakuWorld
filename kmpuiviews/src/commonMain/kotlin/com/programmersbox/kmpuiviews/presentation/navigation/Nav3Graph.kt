@@ -162,6 +162,8 @@ fun buildKmpGraph(): Module = module {
     // Full screen (not a detail pane) so the note card can grow into it
     navigation<Screen.NotesScreen.Detail> {
         val navActions = LocalNavActions.current
+        // The floating nav bar would cover the bottom of the editor
+        HideNavBarWhileOnScreen()
         NoteDetailScreen(
             onBackPress = { navActions.popBackStack() },
             vm = koinViewModel { parametersOf(it.itemUrl) },
