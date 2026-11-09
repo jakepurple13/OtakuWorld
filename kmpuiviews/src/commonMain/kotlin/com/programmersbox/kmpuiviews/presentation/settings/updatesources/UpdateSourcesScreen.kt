@@ -59,6 +59,7 @@ import otakuworld.kmpuiviews.generated.resources.us_checking
 import otakuworld.kmpuiviews.generated.resources.us_description
 import otakuworld.kmpuiviews.generated.resources.us_failed_last_check
 import otakuworld.kmpuiviews.generated.resources.us_favorites
+import otakuworld.kmpuiviews.generated.resources.us_languages
 import otakuworld.kmpuiviews.generated.resources.us_no_matches
 import otakuworld.kmpuiviews.generated.resources.us_no_sources
 import otakuworld.kmpuiviews.generated.resources.us_none_checked
@@ -166,12 +167,12 @@ fun UpdateSourcesScreen(
                 title = { stringResource(Res.string.us_checking, checking.size) },
                 bulkLabel = { stringResource(Res.string.us_skip_all) },
                 onBulk = {
-                    change(checking.map { it.source }, skipped = true)
+                    change(checking.map { it.packageName }, skipped = true)
                 },
                 emptyText = { stringResource(Res.string.us_none_checked) },
                 rows = checking,
                 onToggle = { row ->
-                    change(listOf(row.source), skipped = true)
+                    change(listOf(row.packageName), skipped = true)
                 },
             )
 
@@ -180,12 +181,12 @@ fun UpdateSourcesScreen(
                 title = { stringResource(Res.string.us_skipped, skipped.size) },
                 bulkLabel = { stringResource(Res.string.us_check_all) },
                 onBulk = {
-                    change(skipped.map { it.source }, skipped = false)
+                    change(skipped.map { it.packageName }, skipped = false)
                 },
                 emptyText = { stringResource(Res.string.us_none_skipped) },
                 rows = skipped,
                 onToggle = { row ->
-                    change(listOf(row.source), skipped = false)
+                    change(listOf(row.packageName), skipped = false)
                 },
             )
         }
@@ -240,8 +241,8 @@ private fun LazyListScope.group(
         return
     }
 
-    // Keyed by source, so a row slides between the groups when it is toggled.
-    itemsIndexed(rows, key = { _, row -> row.source }) { index, row ->
+    // Keyed by package name, so a row slides between the groups when it is toggled.
+    itemsIndexed(rows, key = { _, row -> row.packageName }) { index, row ->
         val top = if (index == 0) 20.dp else 4.dp
         val bottom = if (index == rows.lastIndex) 20.dp else 4.dp
         Surface(
@@ -260,7 +261,9 @@ private fun LazyListScope.group(
 @Composable
 private fun SourceRow(row: UpdateSourceRow, onToggle: () -> Unit) {
     val favorites = pluralStringResource(Res.plurals.us_favorites, row.favorites, row.favorites)
+    val languages = pluralStringResource(Res.plurals.us_languages, row.languages, row.languages)
     ListItem(
+        overlineContent = { Text(row.packageName, maxLines = 1, overflow = TextOverflow.Ellipsis) },
         leadingContent = {
             Surface(
                 color = MaterialTheme.colorScheme.secondaryContainer,
@@ -289,6 +292,10 @@ private fun SourceRow(row: UpdateSourceRow, onToggle: () -> Unit) {
         supportingContent = {
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(favorites)
+                if (row.languages > 1) {
+                    Text("·")
+                    Text(languages)
+                }
                 if (row.failedLastCheck) {
                     Text("·")
                     Text(stringResource(Res.string.us_failed_last_check), color = MaterialTheme.colorScheme.error)

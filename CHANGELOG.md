@@ -47,8 +47,9 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 #### New Features
 
 - Update sources: choose which sources the update checker skips, under Settings > Sources &
-  Extensions or from the filter button on Update check errors. The app's installed sources are
-  split into Checking and Skipped, with search and Skip all / Check all. Skipped sources keep their
+  Extensions or from the filter button on Update check errors. The app's installed extensions are
+  split into Checking and Skipped, with search and Skip all / Check all. One switch covers every
+  language of an extension, like the source chooser. Skipped sources keep their
   favorites ([#2677](https://github.com/jakepurple13/OtakuWorld/pull/2677),
   [#2679](https://github.com/jakepurple13/OtakuWorld/pull/2679))
 - In-app banners: messages that used to appear as snackbars and toasts now show as a floating

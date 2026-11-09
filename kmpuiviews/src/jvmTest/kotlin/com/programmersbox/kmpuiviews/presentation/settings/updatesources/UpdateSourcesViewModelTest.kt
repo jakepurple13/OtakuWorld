@@ -47,21 +47,22 @@ class UpdateSourcesViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun sourceRepository(vararg serviceNames: String) = SourceRepository().apply {
-        setSources(
-            serviceNames.map { name ->
-                KmpSourceInformation(
-                    apiService = object : KmpApiService {
-                        override val baseUrl = ""
-                        override val serviceName = name
-                    },
-                    name = name,
-                    icon = null,
-                    packageName = name,
-                )
-            }
+    /** A source; [packageName] defaults to its own service name, so it is a one-language extension. */
+    private fun source(serviceName: String, packageName: String = serviceName, language: String? = null, name: String = serviceName) =
+        KmpSourceInformation(
+            apiService = object : KmpApiService {
+                override val baseUrl = ""
+                override val serviceName = serviceName
+                override val language = language
+            },
+            name = name,
+            icon = null,
+            packageName = packageName,
         )
-    }
+
+    private fun sourceRepository(vararg serviceNames: String) = sourceRepository(serviceNames.map { source(it) })
+
+    private fun sourceRepository(sources: List<KmpSourceInformation>) = SourceRepository().apply { setSources(sources) }
 
     private fun viewModel(
         report: UpdateCheckReport? = null,
@@ -90,60 +91,91 @@ class UpdateSourcesViewModelTest {
         val names = mapOf("a" to "zeta", "b" to "Alpha", "c" to "beta")
 
         val rows = buildUpdateSourceRows(
-            installed = setOf("a", "b", "c"),
+            installed = listOf(source("a"), source("b"), source("c")),
             counts = listOf(SourceCount("a", 1), SourceCount("b", 2), SourceCount("c", 3)),
             skipped = emptySet(),
             failedSources = emptySet(),
-            displayName = { names.getValue(it) },
+            displayName = { names.getValue(it.first().packageName) },
         )
 
         assertEquals(listOf("Alpha", "beta", "zeta"), rows.map { it.name })
-        assertEquals(listOf("b", "c", "a"), rows.map { it.source })
+        assertEquals(listOf("b", "c", "a"), rows.map { it.packageName })
         assertEquals(listOf(2, 3, 1), rows.map { it.favorites })
     }
 
     @Test
-    fun `buildUpdateSourceRows marks skipped and failed from sets`() {
+    fun `buildUpdateSourceRows groups languages of one extension into one row`() {
         val rows = buildUpdateSourceRows(
-            installed = setOf("a", "b", "c"),
-            counts = listOf(SourceCount("a", 1), SourceCount("b", 2), SourceCount("c", 3)),
-            skipped = setOf("a", "c", "unknown"),
-            failedSources = setOf("b", "c"),
-            displayName = { it.uppercase() },
+            installed = listOf(
+                source("dex-en", packageName = "mangadex", language = "en"),
+                source("dex-ja", packageName = "mangadex", language = "ja"),
+                source("dex-es", packageName = "mangadex", language = "es"),
+                source("asura"),
+            ),
+            counts = listOf(SourceCount("dex-en", 4), SourceCount("dex-ja", 2), SourceCount("asura", 1)),
+            skipped = setOf("mangadex"),
+            failedSources = setOf("dex-ja"),
+            displayName = { it.first().packageName },
         )
 
         assertEquals(
             listOf(
-                UpdateSourceRow("a", "A", 1, skipped = true, failedLastCheck = false),
-                UpdateSourceRow("b", "B", 2, skipped = false, failedLastCheck = true),
-                UpdateSourceRow("c", "C", 3, skipped = true, failedLastCheck = true),
+                UpdateSourceRow("asura", "asura", languages = 1, favorites = 1, skipped = false, failedLastCheck = false),
+                UpdateSourceRow("mangadex", "mangadex", languages = 3, favorites = 6, skipped = true, failedLastCheck = true),
             ),
             rows,
         )
     }
 
     @Test
+    fun `buildUpdateSourceRows skipped is by package name, not service name`() {
+        val rows = buildUpdateSourceRows(
+            installed = listOf(source("dex-en", packageName = "mangadex")),
+            counts = emptyList(),
+            skipped = setOf("dex-en"),
+            failedSources = emptySet(),
+            displayName = { it.first().packageName },
+        )
+
+        assertEquals(listOf(false), rows.map { it.skipped })
+    }
+
+    @Test
     fun `buildUpdateSourceRows no installed sources gives empty rows`() {
         assertEquals(
             emptyList(),
-            buildUpdateSourceRows(emptySet(), listOf(SourceCount("a", 1)), setOf("a"), setOf("a"), displayName = { it }),
+            buildUpdateSourceRows(emptyList(), listOf(SourceCount("a", 1)), setOf("a"), setOf("a"), displayName = { "" }),
         )
     }
 
     @Test
     fun `buildUpdateSourceRows lists installed sources only, with 0 favorites when none`() {
         val rows = buildUpdateSourceRows(
-            installed = setOf("manga", "nofavorites"),
+            installed = listOf(source("manga"), source("nofavorites")),
             counts = listOf(SourceCount("manga", 1), SourceCount("anime", 2)),
             skipped = emptySet(),
             failedSources = emptySet(),
-            displayName = { it },
+            displayName = { it.first().packageName },
         )
 
-        assertEquals(listOf("manga" to 1, "nofavorites" to 0), rows.map { it.source to it.favorites })
+        assertEquals(listOf("manga" to 1, "nofavorites" to 0), rows.map { it.packageName to it.favorites })
     }
 
     // updateSourcesCheckedCount
+
+    @Test
+    fun `updateSourcesCheckedCount counts each extension once`() = runTest {
+        dao.insertSkippedUpdateSources(listOf(SkippedUpdateSource("mangadex")))
+        val repository = sourceRepository(
+            listOf(
+                source("dex-en", packageName = "mangadex", language = "en"),
+                source("dex-ja", packageName = "mangadex", language = "ja"),
+                source("asura"),
+            )
+        )
+
+        assertEquals(1 to 2, dao.updateSourcesCheckedCount(repository).first())
+    }
 
     @Test
     fun `updateSourcesCheckedCount counts installed sources only`() = runTest {
@@ -218,10 +250,10 @@ class UpdateSourcesViewModelTest {
         // "otherapp" and "deletedonly" aren't installed, "nofavorites" is installed with no favorites.
         assertEquals(
             listOf(
-                UpdateSourceRow("asura", "asura", 1, skipped = false, failedLastCheck = false),
-                UpdateSourceRow("comick", "comick", 1, skipped = true, failedLastCheck = false),
-                UpdateSourceRow("mangapark", "mangapark", 2, skipped = false, failedLastCheck = true),
-                UpdateSourceRow("nofavorites", "nofavorites", 0, skipped = false, failedLastCheck = false),
+                UpdateSourceRow("asura", "asura", 1, 1, skipped = false, failedLastCheck = false),
+                UpdateSourceRow("comick", "comick", 1, 1, skipped = true, failedLastCheck = false),
+                UpdateSourceRow("mangapark", "mangapark", 1, 2, skipped = false, failedLastCheck = true),
+                UpdateSourceRow("nofavorites", "nofavorites", 1, 0, skipped = false, failedLastCheck = false),
             ),
             rows,
         )
@@ -239,6 +271,22 @@ class UpdateSourcesViewModelTest {
         vm.setSkipped(listOf("comick"), skipped = true)
 
         val updated = vm.rows.first { rows -> rows?.any { it.skipped } == true }!!
-        assertEquals(listOf("asura" to false, "comick" to true), updated.map { it.source to it.skipped })
+        assertEquals(listOf("asura" to false, "comick" to true), updated.map { it.packageName to it.skipped })
+    }
+
+    @Test
+    fun `rows name a multi-language extension like the source chooser`() = runTest {
+        val vm = viewModel(
+            sourceRepository = sourceRepository(
+                listOf(
+                    source("dex-en", packageName = "mangadex", language = "en", name = "MangaDex (en)"),
+                    source("dex-ja", packageName = "mangadex", language = "ja", name = "MangaDex (ja)"),
+                )
+            )
+        )
+
+        val rows = vm.rows.first { it != null }!!
+
+        assertEquals(listOf("MangaDex" to 2), rows.map { it.name to it.languages })
     }
 }
