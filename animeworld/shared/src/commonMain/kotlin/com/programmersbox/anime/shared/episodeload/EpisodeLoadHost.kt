@@ -155,6 +155,7 @@ internal fun EpisodeLoadingOverlay(
             ImageLoaderChoice(
                 imageUrl = it,
                 name = state.episodeName,
+                headers = state.posterHeaders,
                 placeHolder = { ColorPainter(Color.Black) },
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -183,6 +184,7 @@ internal fun EpisodeLoadingOverlay(
                     ImageLoaderChoice(
                         imageUrl = it,
                         name = state.episodeName,
+                        headers = state.posterHeaders,
                         placeHolder = { ColorPainter(Color.Transparent) },
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
@@ -227,7 +229,7 @@ internal fun EpisodeLoadingOverlay(
             }
         }
 
-        if (state.step !is EpisodeLoadStep.Failed) {
+        if (state.step !is EpisodeLoadStep.Failed && state.step !is EpisodeLoadStep.OpeningPlayer) {
             TextButton(
                 onClick = { onDecision(EpisodeLoadDecision.Cancel) },
                 modifier = Modifier
@@ -249,6 +251,7 @@ private fun Checklist(step: EpisodeLoadStep, memory: ChecklistMemory, modifier: 
     val current = when (step) {
         is EpisodeLoadStep.FetchingSources -> 0
         is EpisodeLoadStep.ChooseSource -> 1
+        is EpisodeLoadStep.OpeningPlayer -> items.size
         else -> items.lastIndex
     }
     Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = modifier) {

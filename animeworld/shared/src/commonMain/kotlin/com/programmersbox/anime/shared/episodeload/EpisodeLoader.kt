@@ -7,12 +7,14 @@ import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpStorage
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.withTimeoutOrNull
 
 enum class EpisodeAction { Play, Download }
 
@@ -23,7 +25,12 @@ sealed interface EpisodeLoadStep {
     /** `label == null` means a single source: show "Resolving stream". */
     data class Resolving(val label: String?) : EpisodeLoadStep
     data class Failed(val message: String, val detail: String?, val canPickOther: Boolean) : EpisodeLoadStep
+
+    /** The stream is resolved and being handed to the player; the overlay stays up until [EpisodeLoader.finishHandoff]. */
+    data object OpeningPlayer : EpisodeLoadStep
 }
+
+private const val HANDOFF_TIMEOUT_MS = 4_000L
 
 data class EpisodeLoadState(
     val action: EpisodeAction,
@@ -32,6 +39,8 @@ data class EpisodeLoadState(
     val showTitle: String,
     val posterUrl: String?,
     val step: EpisodeLoadStep,
+    /** Image request headers for [posterUrl]; the details screen sends the same ones. */
+    val posterHeaders: Map<String, String> = emptyMap(),
 )
 
 sealed interface EpisodeLoadDecision {
@@ -52,10 +61,24 @@ class EpisodeLoader {
     private val decisions = Channel<EpisodeLoadDecision>(Channel.CONFLATED)
 
     private var activeJob: Job? = null
+    private var handoff: CompletableDeferred<Unit>? = null
+
+    /** Clears an [EpisodeLoadStep.OpeningPlayer] state once the player is up; no-op in any other step. */
+    fun finishHandoff() {
+        if (state?.step == EpisodeLoadStep.OpeningPlayer) {
+            state = null
+            handoff?.complete(Unit)
+        }
+    }
 
     /** [EpisodeLoadDecision.Cancel] ends the running load at any step; the rest feed the step waiting on the user. */
     fun decide(decision: EpisodeLoadDecision) {
         if (decision == EpisodeLoadDecision.Cancel) {
+            // Cancelling during the hand-off must not cancel the navigation/cast running in onResolved.
+            if (state?.step == EpisodeLoadStep.OpeningPlayer) {
+                finishHandoff()
+                return
+            }
             // Once the state is released the stream is already handed off, so there is nothing left to cancel.
             if (state != null) activeJob?.cancel()
         } else {
@@ -85,6 +108,7 @@ class EpisodeLoader {
             }
         } finally {
             activeJob = null
+            handoff = null
             busy.unlock()
         }
     }
@@ -106,6 +130,7 @@ class EpisodeLoader {
                 showTitle = infoModel.title,
                 posterUrl = infoModel.imageUrl.takeIf { it.isNotBlank() },
                 step = step,
+                posterHeaders = infoModel.extras.mapValues { it.value.toString() },
             )
         }
 
@@ -170,8 +195,15 @@ class EpisodeLoader {
                     }
                     continue
                 }
-                release()
-                onResolved(resolved)
+                if (action == EpisodeAction.Download) {
+                    release()
+                    onResolved(resolved)
+                } else {
+                    val wait = CompletableDeferred<Unit>().also { handoff = it }
+                    show(EpisodeLoadStep.OpeningPlayer)
+                    onResolved(resolved)
+                    withTimeoutOrNull(HANDOFF_TIMEOUT_MS) { wait.await() }
+                }
                 return
             }
         } finally {

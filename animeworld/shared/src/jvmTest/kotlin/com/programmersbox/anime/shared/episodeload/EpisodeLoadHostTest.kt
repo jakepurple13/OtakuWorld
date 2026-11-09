@@ -64,4 +64,11 @@ class EpisodeLoadHostTest {
         }
         onNodeWithText("Fetching sources").assertDoesNotExist()
     }
+
+    @Test
+    fun openingPlayerHidesCancel() = runComposeUiTest {
+        setContent { EpisodeLoadingOverlay(state(EpisodeLoadStep.OpeningPlayer)) {} }
+        onNodeWithText("Cancel").assertDoesNotExist()
+        onNodeWithText("Resolving stream").assertExists()
+    }
 }

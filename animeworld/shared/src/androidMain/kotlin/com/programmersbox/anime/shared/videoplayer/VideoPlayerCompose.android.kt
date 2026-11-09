@@ -121,6 +121,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import com.programmersbox.anime.shared.GenericSharedAnime
 import org.koin.compose.koinInject
 import java.security.SecureRandom
 import java.util.Locale
@@ -151,6 +152,7 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
 private fun VideoPlayerContent(videoScreen: VideoScreen) {
     val context = LocalContext.current
     val genericInfo = koinInject<GenericInfo>()
+    LaunchedEffect(Unit) { (genericInfo as? GenericSharedAnime)?.episodeLoader?.finishHandoff() }
     val storageHolder = koinInject<StorageHolder>()
     val subtitleSettings = koinInject<SubtitleSettingsRepository>()
     val viewModel: VideoViewModel = viewModel { VideoViewModel(videoScreen, context, storageHolder, subtitleSettings) }

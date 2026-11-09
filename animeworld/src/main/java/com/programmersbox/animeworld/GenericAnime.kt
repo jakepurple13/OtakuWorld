@@ -230,6 +230,7 @@ class GenericAnime(
                     )
                 )
             }
+            episodeLoader.finishHandoff()
         } else {
             storageHolder.storageModel = storage
             storageHolder.showTitle = infoModel.title

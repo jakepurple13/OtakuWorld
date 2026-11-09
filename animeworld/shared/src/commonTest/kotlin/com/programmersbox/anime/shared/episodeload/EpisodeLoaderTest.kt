@@ -13,7 +13,9 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -103,10 +105,78 @@ class EpisodeLoaderTest {
     }
 
     @Test
-    fun stateClearedBeforePlay() = runTest {
+    fun playEntersOpeningPlayerBeforeOnResolved() = runTest {
         val h = Harness(FakeSource(listOf(storage("720p"))))
+        val job = startLoad(h, EpisodeAction.Play)
+        runCurrent()
+        assertEquals(listOf<EpisodeLoadStep?>(EpisodeLoadStep.OpeningPlayer), h.stateAtResolve.map { it?.step })
+        h.loader.finishHandoff()
+        advanceUntilIdle()
+        job.join()
+    }
+
+    @Test
+    fun playHoldsStateUntilHandoff() = runTest {
+        val h = Harness(FakeSource(listOf(storage("720p"))))
+        val job = startLoad(h, EpisodeAction.Play)
+        runCurrent()
+        assertEquals(1, h.resolved.size)
+        assertEquals(EpisodeLoadStep.OpeningPlayer, h.step())
+        assertTrue(job.isActive)
+        h.loader.finishHandoff()
+        advanceUntilIdle()
+        assertNull(h.loader.state)
+        assertTrue(job.isCompleted)
+    }
+
+    @Test
+    fun handoffTimesOut() = runTest {
+        val h = Harness(FakeSource(listOf(storage("720p"))))
+        val job = startLoad(h, EpisodeAction.Play)
+        runCurrent()
+        assertEquals(EpisodeLoadStep.OpeningPlayer, h.step())
+        advanceTimeBy(4_001)
+        runCurrent()
+        assertNull(h.loader.state)
+        assertTrue(job.isCompleted)
+    }
+
+    @Test
+    fun cancelDuringHandoffClearsWithoutCancellingResolved() = runTest {
+        val h = Harness(FakeSource(listOf(storage("720p"))))
+        var cancelled = false
+        var completed = false
+        val gate = CompletableDeferred<Unit>()
+        val job = launch {
+            h.loader.load(EpisodeAction.Play, h.chapter(), h.info(), onResolved = {
+                try {
+                    gate.await()
+                    completed = true
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    cancelled = true
+                    throw e
+                }
+            })
+        }
+        runCurrent()
+        assertEquals(EpisodeLoadStep.OpeningPlayer, h.step())
+        h.loader.decide(EpisodeLoadDecision.Cancel)
+        assertNull(h.loader.state)
+        gate.complete(Unit)
+        advanceUntilIdle()
+        assertTrue(completed)
+        assertFalse(cancelled)
+        assertTrue(job.isCompleted)
         h.load(EpisodeAction.Play, h.chapter())
+        assertEquals(1, h.resolved.size)
+    }
+
+    @Test
+    fun downloadDoesNotHandoff() = runTest {
+        val h = Harness(FakeSource(listOf(storage("720p"))))
+        h.load(EpisodeAction.Download, h.chapter())
         assertEquals(listOf<EpisodeLoadState?>(null), h.stateAtResolve)
+        assertNull(h.loader.state)
     }
 
     @Test

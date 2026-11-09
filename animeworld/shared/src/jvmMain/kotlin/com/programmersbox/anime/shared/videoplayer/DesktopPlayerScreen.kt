@@ -98,6 +98,8 @@ import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
+import com.programmersbox.anime.shared.GenericSharedAnime
+import com.programmersbox.kmpuiviews.KmpGenericInfo
 import org.koin.compose.koinInject
 import java.awt.Point
 import java.awt.Toolkit
@@ -140,6 +142,8 @@ fun DesktopPlayerScreen(
     streamHeaders: Map<String, String> = emptyMap(),
 ) {
     HideNavBarWhileOnScreen()
+    val genericInfo = koinInject<KmpGenericInfo>()
+    LaunchedEffect(Unit) { (genericInfo as? GenericSharedAnime)?.episodeLoader?.finishHandoff() }
     val state by player.state.collectAsState()
     state.error?.let { return PlayerErrorPanel(it, modifier) }
 
