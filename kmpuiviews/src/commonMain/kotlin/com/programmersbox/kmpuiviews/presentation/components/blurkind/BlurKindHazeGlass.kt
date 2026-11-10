@@ -16,6 +16,7 @@ import com.programmersbox.datastore.NewSettingsHandling
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.glass.GlassDefaults
 import dev.chrisbanes.haze.glass.GlassStyle
+import dev.chrisbanes.haze.glass.OpticalSizeValue
 import dev.chrisbanes.haze.glass.material3.material3
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.serialization.Serializable
@@ -69,13 +70,15 @@ fun rememberBlurKindHazeGlassState(
         BlurKindHazeGlassState(
             hazeState = hazeState,
             hazeStyle = m3.then {
-                optics(
-                    refractionStrength = handle.refractionStrength,
-                    refractionHeightFraction = handle.refractionHeightFraction,
-                    refractionDisplacement = handle.refractionDisplacement.dp,
-                    depth = handle.depth,
-                    blurRadius = handle.blurRadius.dp
-                )
+                optics {
+                    copy(
+                        refractionStrength = handle.refractionStrength,
+                        refractionHeightFraction = handle.refractionHeightFraction,
+                        refractionDisplacement = handle.refractionDisplacement.dp,
+                        depth = OpticalSizeValue.Fixed(handle.depth),
+                        blurRadius = OpticalSizeValue.Fixed(handle.blurRadius.dp)
+                    )
+                }
                 specularIntensity(handle.specularIntensity.coerceIn(0f..1f))
                 ambientResponse(handle.ambientResponse.coerceIn(0f..1f))
                 edgeSoftness(handle.edgeSoftness.dp)
