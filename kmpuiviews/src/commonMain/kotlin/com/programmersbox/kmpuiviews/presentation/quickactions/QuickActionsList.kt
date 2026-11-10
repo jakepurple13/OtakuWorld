@@ -1,20 +1,26 @@
 package com.programmersbox.kmpuiviews.presentation.quickactions
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -45,9 +51,19 @@ import otakuworld.kmpuiviews.generated.resources.qa_background_tasks_sub
 import otakuworld.kmpuiviews.generated.resources.qa_check_updates
 import otakuworld.kmpuiviews.generated.resources.qa_checking
 import otakuworld.kmpuiviews.generated.resources.qa_checking_indeterminate
+import otakuworld.kmpuiviews.generated.resources.qa_global_search
+import otakuworld.kmpuiviews.generated.resources.qa_global_search_sub
+import otakuworld.kmpuiviews.generated.resources.qa_group_go_to
+import otakuworld.kmpuiviews.generated.resources.qa_group_tools
 import otakuworld.kmpuiviews.generated.resources.qa_last_checked
+import otakuworld.kmpuiviews.generated.resources.qa_lists
+import otakuworld.kmpuiviews.generated.resources.qa_lists_count
+import otakuworld.kmpuiviews.generated.resources.qa_lists_sub
 import otakuworld.kmpuiviews.generated.resources.qa_never_checked
 import otakuworld.kmpuiviews.generated.resources.qa_run
+import otakuworld.kmpuiviews.generated.resources.qa_saved_count
+import otakuworld.kmpuiviews.generated.resources.qa_saved_notifications
+import otakuworld.kmpuiviews.generated.resources.qa_saved_notifications_sub
 import otakuworld.kmpuiviews.generated.resources.qa_scan_qr
 import otakuworld.kmpuiviews.generated.resources.qa_scan_qr_sub
 import otakuworld.kmpuiviews.generated.resources.qa_scheduled
@@ -58,6 +74,7 @@ import kotlin.time.Clock
 
 private val FirstShape = RoundedCornerShape(18.dp, 18.dp, 6.dp, 6.dp)
 private val MiddleShape = RoundedCornerShape(6.dp)
+private val SingleShape = RoundedCornerShape(18.dp)
 private val LastShape = RoundedCornerShape(6.dp, 6.dp, 18.dp, 18.dp)
 
 @Composable
@@ -67,6 +84,10 @@ fun QuickActionsList(
     modifier: Modifier = Modifier,
     /** Attached to the first row so keyboard-opened cards can focus it. */
     firstRowFocusRequester: FocusRequester? = null,
+    actions: List<QuickAction> = QuickAction.entries,
+    showGroupLabels: Boolean = true,
+    /** Row drawn with a primary inside border, for keyboard/desktop selection. */
+    selected: QuickAction? = null,
 ) {
     Column(modifier = modifier) {
         Row(
@@ -86,51 +107,116 @@ fun QuickActionsList(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-            QuickActionRow(
-                shape = FirstShape,
-                icon = Icons.Default.Refresh,
-                iconContainer = MaterialTheme.colorScheme.primaryContainer,
-                iconContent = MaterialTheme.colorScheme.onPrimaryContainer,
-                title = stringResource(Res.string.qa_check_updates),
-                supporting = checkSupportingText(state),
-                onClick = { onAction(QuickAction.CheckForUpdates) },
-                trailing = { RunChip() },
-                modifier = firstRowFocusRequester?.let { Modifier.focusRequester(it) } ?: Modifier,
-            )
-            QuickActionRow(
-                shape = MiddleShape,
-                icon = Icons.Default.QrCodeScanner,
-                iconContainer = MaterialTheme.colorScheme.tertiaryContainer,
-                iconContent = MaterialTheme.colorScheme.onTertiaryContainer,
-                title = stringResource(Res.string.qa_scan_qr),
-                supporting = stringResource(Res.string.qa_scan_qr_sub),
-                onClick = { onAction(QuickAction.ScanQrCode) },
-                trailing = { Chevron() },
-            )
-            QuickActionRow(
-                shape = MiddleShape,
-                icon = Icons.Default.Schedule,
-                iconContainer = MaterialTheme.colorScheme.secondaryContainer,
-                iconContent = MaterialTheme.colorScheme.onSecondaryContainer,
-                title = stringResource(Res.string.qa_background_tasks),
-                supporting = state.scheduledCount
-                    ?.let { stringResource(Res.string.qa_scheduled, it) }
-                    ?: stringResource(Res.string.qa_background_tasks_sub),
-                onClick = { onAction(QuickAction.BackgroundTasks) },
-                trailing = { Chevron() },
-            )
-            QuickActionRow(
-                shape = LastShape,
-                icon = Icons.Default.ErrorOutline,
-                iconContainer = MaterialTheme.colorScheme.errorContainer,
-                iconContent = MaterialTheme.colorScheme.onErrorContainer,
-                title = stringResource(Res.string.qa_update_errors),
-                supporting = stringResource(Res.string.qa_update_errors_sub),
-                onClick = { onAction(QuickAction.UpdateErrors) },
-                trailing = { Chevron() },
-            )
+        val groups = QuickActionGroup.entries.map { group -> group to actions.filter { it.group == group } }
+            .filter { it.second.isNotEmpty() }
+        groups.forEachIndexed { groupIndex, (group, items) ->
+            if (showGroupLabels) {
+                Text(
+                    text = stringResource(
+                        when (group) {
+                            QuickActionGroup.Tools -> Res.string.qa_group_tools
+                            QuickActionGroup.GoTo -> Res.string.qa_group_go_to
+                        }
+                    ).uppercase(),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = if (groupIndex == 0) 0.dp else 10.dp,
+                        bottom = 4.dp,
+                    )
+                )
+            } else if (groupIndex > 0) {
+                Spacer(Modifier.height(10.dp))
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                items.forEachIndexed { index, action ->
+                    val spec = action.rowSpec(state)
+                    val rowModifier = if (groupIndex == 0 && index == 0 && firstRowFocusRequester != null) {
+                        Modifier.focusRequester(firstRowFocusRequester)
+                    } else {
+                        Modifier
+                    }
+                    QuickActionRow(
+                        shape = when {
+                            items.size == 1 -> SingleShape
+                            index == 0 -> FirstShape
+                            index == items.lastIndex -> LastShape
+                            else -> MiddleShape
+                        },
+                        icon = spec.icon,
+                        iconContainer = spec.container,
+                        iconContent = spec.content,
+                        title = spec.title,
+                        supporting = spec.supporting,
+                        onClick = { onAction(action) },
+                        trailing = { if (spec.run) RunChip() else Chevron() },
+                        selected = action == selected,
+                        modifier = rowModifier,
+                    )
+                }
+            }
         }
+    }
+}
+
+internal data class RowSpec(
+    val icon: ImageVector,
+    val container: Color,
+    val content: Color,
+    val title: String,
+    val supporting: String,
+    val run: Boolean,
+)
+
+@Composable
+internal fun QuickAction.rowSpec(state: QuickActionsUiState): RowSpec {
+    val colors = MaterialTheme.colorScheme
+    return when (this) {
+        QuickAction.CheckForUpdates -> RowSpec(
+            Icons.Default.Refresh, colors.primaryContainer, colors.onPrimaryContainer,
+            stringResource(Res.string.qa_check_updates), checkSupportingText(state), run = true,
+        )
+
+        QuickAction.ScanQrCode -> RowSpec(
+            Icons.Default.QrCodeScanner, colors.tertiaryContainer, colors.onTertiaryContainer,
+            stringResource(Res.string.qa_scan_qr), stringResource(Res.string.qa_scan_qr_sub), run = false,
+        )
+
+        QuickAction.GlobalSearch -> RowSpec(
+            Icons.Default.Search, colors.primaryFixed, colors.onPrimaryFixed,
+            stringResource(Res.string.qa_global_search), stringResource(Res.string.qa_global_search_sub), run = false,
+        )
+
+        QuickAction.Lists -> RowSpec(
+            Icons.AutoMirrored.Filled.List, colors.tertiaryFixed, colors.onTertiaryFixed,
+            stringResource(Res.string.qa_lists),
+            state.listCount?.let { stringResource(Res.string.qa_lists_count, it) }
+                ?: stringResource(Res.string.qa_lists_sub),
+            run = false,
+        )
+
+        QuickAction.SavedNotifications -> RowSpec(
+            Icons.Default.Notifications, colors.secondaryFixed, colors.onSecondaryFixed,
+            stringResource(Res.string.qa_saved_notifications),
+            state.savedNotificationCount?.let { stringResource(Res.string.qa_saved_count, it) }
+                ?: stringResource(Res.string.qa_saved_notifications_sub),
+            run = false,
+        )
+
+        QuickAction.BackgroundTasks -> RowSpec(
+            Icons.Default.Schedule, colors.secondaryContainer, colors.onSecondaryContainer,
+            stringResource(Res.string.qa_background_tasks),
+            state.scheduledCount?.let { stringResource(Res.string.qa_scheduled, it) }
+                ?: stringResource(Res.string.qa_background_tasks_sub),
+            run = false,
+        )
+
+        QuickAction.UpdateErrors -> RowSpec(
+            Icons.Default.ErrorOutline, colors.errorContainer, colors.onErrorContainer,
+            stringResource(Res.string.qa_update_errors), stringResource(Res.string.qa_update_errors_sub), run = false,
+        )
     }
 }
 
@@ -177,12 +263,14 @@ private fun QuickActionRow(
     onClick: () -> Unit,
     trailing: @Composable () -> Unit,
     modifier: Modifier = Modifier,
+    selected: Boolean = false,
 ) {
     Surface(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
         shape = shape,
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        border = if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
     ) {
         ListItem(
             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
