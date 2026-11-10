@@ -8,6 +8,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,11 +27,14 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.programmersbox.kmpuiviews.presentation.quickactions.QuickActionsController
@@ -74,7 +78,6 @@ internal fun ShortcutsDialogHost(controller: QuickActionsController) {
         ShortcutsDialog(
             appName = koinInject<AppConfig>().appName,
             sections = builtIn + appSections,
-            isMac = isMacOs,
             onDismiss = controller::closeShortcuts,
         )
     }
@@ -84,13 +87,18 @@ internal fun ShortcutsDialogHost(controller: QuickActionsController) {
 fun ShortcutsDialog(
     appName: String,
     sections: List<ShortcutSection>,
-    isMac: Boolean,
     onDismiss: () -> Unit,
 ) {
+    // Takes focus so keys stop reaching the screen behind (e.g. Space in the player);
+    // Esc is still handled by the window.
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(Unit) { focusRequester.requestFocus() }
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .fillMaxSize()
+            .focusRequester(focusRequester)
+            .focusable()
             .background(Color.Black.copy(alpha = 0.4f))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
