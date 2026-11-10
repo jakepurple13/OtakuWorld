@@ -3,6 +3,22 @@ package com.programmersbox.kmpuiviews
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Keyboard
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.PlainTooltip
+import androidx.compose.material3.TooltipAnchorPosition
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberTooltipState
+import com.programmersbox.kmpuiviews.presentation.shortcuts.AppShortcut
+import com.programmersbox.kmpuiviews.presentation.shortcuts.ShortcutsDialogHost
+import com.programmersbox.kmpuiviews.presentation.shortcuts.matches
+import org.jetbrains.compose.resources.stringResource
+import otakuworld.kmpuiviews.generated.resources.Res as KmpRes
+import otakuworld.kmpuiviews.generated.resources.qa_shortcuts_button
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -379,6 +395,21 @@ fun InternalBaseDesktopUi(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ShortcutsTitleBarButton(onClick: () -> Unit) {
+    val description = stringResource(KmpRes.string.qa_shortcuts_button)
+    TooltipBox(
+        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Below),
+        tooltip = { PlainTooltip { Text(description) } },
+        state = rememberTooltipState(),
+    ) {
+        IconButton(onClick = onClick) {
+            Icon(Icons.Default.Keyboard, contentDescription = description)
+        }
+    }
+}
+
 @Composable
 fun BaseWindow(
     title: String,
@@ -404,6 +435,7 @@ private fun OtakuDecoratedWindow(
     content: @Composable () -> Unit,
 ) {
     val quickActionsController = if (showQuickActions) koinInject<QuickActionsController>() else null
+    val navigationActions = if (showQuickActions) koinInject<NavigationActions>() else null
 
     // The window chrome reads its styles outside the window's content, where the app theme isn't
     // composed yet (and isSystemInDarkTheme() isn't resolvable). The content publishes its color
@@ -424,6 +456,24 @@ private fun OtakuDecoratedWindow(
                     quickActionsController == null -> false
                     !isMacOs && isQuickActionsShortcut(event, isMac = false) -> {
                         quickActionsController.toggle(OpenOrigin.Keyboard)
+                        true
+                    }
+
+                    !isMacOs && AppShortcut.GlobalSearch.matches(event, isMac = false) -> {
+                        quickActionsController.closeAll()
+                        navigationActions?.globalSearch()
+                        true
+                    }
+
+                    !isMacOs && AppShortcut.ShortcutsList.matches(event, isMac = false) -> {
+                        quickActionsController.openShortcuts()
+                        true
+                    }
+
+                    event.type == KeyEventType.KeyDown &&
+                            event.key == Key.Escape &&
+                            quickActionsController.shortcutsOpen.value -> {
+                        quickActionsController.closeShortcuts()
                         true
                     }
 
@@ -449,8 +499,14 @@ private fun OtakuDecoratedWindow(
 
                     // Title bar must be a direct child of the window's layout (it is placed by layoutId).
                     MaterialTitleBar(style = rememberMaterialTitleBarStyle(colorScheme)) {
-                        if (showQuickActions && !isMacOs) {
-                            Box(modifier = Modifier.align(Alignment.Start)) { QuickActionsTitleBarMenu() }
+                        if (showQuickActions && quickActionsController != null) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.align(Alignment.Start),
+                            ) {
+                                if (!isMacOs) QuickActionsTitleBarMenu()
+                                ShortcutsTitleBarButton(onClick = quickActionsController::openShortcuts)
+                            }
                         }
                         Text(
                             text = title,
@@ -463,7 +519,12 @@ private fun OtakuDecoratedWindow(
                         CompositionLocalProvider(
                             LocalNavHostPadding provides PaddingValues()
                         ) {
-                            content()
+                            Box(modifier = Modifier.fillMaxSize()) {
+                                content()
+                                if (showQuickActions && quickActionsController != null) {
+                                    ShortcutsDialogHost(quickActionsController)
+                                }
+                            }
                         }
                     }
                 }

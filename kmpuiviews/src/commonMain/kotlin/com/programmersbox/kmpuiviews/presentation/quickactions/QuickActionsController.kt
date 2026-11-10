@@ -11,7 +11,11 @@ class QuickActionsController {
     private val _open = MutableStateFlow<OpenOrigin?>(null)
     val open: StateFlow<OpenOrigin?> = _open.asStateFlow()
 
+    private val _shortcutsOpen = MutableStateFlow(false)
+    val shortcutsOpen: StateFlow<Boolean> = _shortcutsOpen.asStateFlow()
+
     fun open(origin: OpenOrigin) {
+        _shortcutsOpen.value = false
         _open.value = origin
     }
 
@@ -20,6 +24,21 @@ class QuickActionsController {
     }
 
     fun toggle(origin: OpenOrigin) {
-        _open.value = if (_open.value == null) origin else null
+        if (_open.value == null) open(origin) else close()
+    }
+
+    fun openShortcuts() {
+        close()
+        _shortcutsOpen.value = true
+    }
+
+    fun closeShortcuts() {
+        _shortcutsOpen.value = false
+    }
+
+    /** Closes both the card and the shortcuts list, e.g. before navigating away. */
+    fun closeAll() {
+        close()
+        closeShortcuts()
     }
 }

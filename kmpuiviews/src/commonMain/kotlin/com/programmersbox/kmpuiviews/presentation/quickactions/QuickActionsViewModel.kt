@@ -28,6 +28,10 @@ data class QuickActionsUiState(
     val scheduledCount: Int?,
     /** True from Run until the result is dismissed; scheduled checks alone leave it false. */
     val userRequested: Boolean = false,
+    /** Null when there are no custom lists; the UI hides the count. */
+    val listCount: Int? = null,
+    /** Null when there are no saved notifications; the UI hides the count. */
+    val savedNotificationCount: Int? = null,
 )
 
 class QuickActionsViewModel(
@@ -36,6 +40,7 @@ class QuickActionsViewModel(
     private val reportStore: UpdateCheckReportStore,
     private val backgroundWorkHandler: BackgroundWorkHandler,
     private val navigationActions: NavigationActions,
+    counts: QuickActionCounts,
 ) : ViewModel() {
     // Set by run(); null until a check is requested. sawRunning flips once work is actually active,
     // so stale finished work and reports from earlier runs never show as this run's result.
@@ -70,18 +75,26 @@ class QuickActionsViewModel(
         Triple(saw, requested, ever)
     }
 
+    private val countFlags = combine(
+        counts.lists.onStart { emit(0) },
+        counts.savedNotifications.onStart { emit(0) },
+    ) { lists, saved -> lists to saved }
+
     val uiState: StateFlow<QuickActionsUiState> = combine(
         work,
         reportStore.report.onStart { emit(null) },
         backgroundWorkHandler.workerInfoFlow().onStart { emit(emptyList()) },
         runFlags,
-    ) { work, report, workers, (saw, requested, ever) ->
+        countFlags,
+    ) { work, report, workers, (saw, requested, ever), (lists, saved) ->
         QuickActionsUiState(
             checkState = manualCheckState(work, report, saw, requested, ever),
             lastCheckedAt = report?.finishedAt,
             // Android keeps finished work in the list; only count work that is still scheduled.
             scheduledCount = workers.count { it.status in activeStates }.takeIf { it > 0 },
             userRequested = requested != null,
+            listCount = lists.takeIf { it > 0 },
+            savedNotificationCount = saved.takeIf { it > 0 },
         )
     }.stateIn(
         viewModelScope,
@@ -90,7 +103,7 @@ class QuickActionsViewModel(
     )
 
     fun run(action: QuickAction) {
-        controller.close()
+        controller.closeAll()
         when (action) {
             QuickAction.CheckForUpdates -> {
                 if (!isRunning.value) {
@@ -102,13 +115,16 @@ class QuickActionsViewModel(
             }
 
             QuickAction.ScanQrCode -> navigationActions.scanQrCode()
+            QuickAction.GlobalSearch -> navigationActions.globalSearch()
+            QuickAction.Lists -> navigationActions.customList()
+            QuickAction.SavedNotifications -> navigationActions.notifications()
             QuickAction.BackgroundTasks -> navigationActions.workerInfo()
             QuickAction.UpdateErrors -> navigationActions.navigate(Screen.UpdateCheckErrors)
         }
     }
 
     fun openErrors() {
-        controller.close()
+        controller.closeAll()
         navigationActions.navigate(Screen.UpdateCheckErrors)
     }
 

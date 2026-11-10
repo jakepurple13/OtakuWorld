@@ -68,6 +68,9 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isAltPressed
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.isMetaPressed
 import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
@@ -263,6 +266,8 @@ fun DesktopPlayerScreen(
     /** Handles a key press; false lets it through (e.g. to a focused text field). */
     fun onKey(event: KeyEvent): Boolean {
         if (event.type != KeyEventType.KeyDown) return false
+        // App shortcuts such as Cmd+K or Shift+Cmd+F aren't player keys.
+        if (event.hasAppModifier()) return false
         // The subtitle settings dialog and sheet get their own keys; Esc closes the sheet.
         if (subtitleSettingsOpen) return false
         if (subtitleSheetOpen) {
@@ -470,6 +475,9 @@ fun DesktopPlayerScreen(
         }
     }
 }
+
+/** Cmd, Ctrl or Alt held: the press belongs to an app shortcut, not a plain player key. Shift alone doesn't count. */
+internal fun KeyEvent.hasAppModifier(): Boolean = isMetaPressed || isCtrlPressed || isAltPressed
 
 private fun digitOf(key: Key): Int? = when (key) {
     Key.Zero, Key.NumPad0 -> 0

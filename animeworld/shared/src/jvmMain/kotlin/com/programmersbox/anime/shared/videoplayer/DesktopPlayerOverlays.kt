@@ -1,5 +1,7 @@
 package com.programmersbox.anime.shared.videoplayer
 
+import com.programmersbox.kmpuiviews.presentation.shortcuts.ShortcutEntry
+import com.programmersbox.kmpuiviews.presentation.shortcuts.ShortcutSection
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.animation.AnimatedVisibility
@@ -189,22 +191,24 @@ private fun PlayerHud(pulse: HudPulse?, modifier: Modifier) {
     }
 }
 
-private val Shortcuts = listOf(
-    "Space / K" to "Play / pause",
-    "← / →" to "Back / forward 10 s",
-    "J / L" to "Back / forward 30 s",
-    "S" to "Skip +1:30",
-    "↑ / ↓ / wheel" to "Volume",
-    "M" to "Mute",
-    "F / double-click" to "Fullscreen",
-    "C" to "Captions on / off",
-    "Shift + C" to "Subtitle sheet",
-    "[ / ]" to "Speed",
-    "0–9" to "Jump to 0–90%",
-    "H / click" to "Show / hide bars",
-    "?" to "This sheet",
-    "Esc" to "Close / exit fullscreen",
+internal val PlayerShortcuts = listOf(
+    ShortcutEntry(listOf("Space", "K"), "Play / pause"),
+    ShortcutEntry(listOf("←", "→"), "Back / forward 10 s"),
+    ShortcutEntry(listOf("J", "L"), "Back / forward 30 s"),
+    ShortcutEntry(listOf("S"), "Skip +1:30"),
+    ShortcutEntry(listOf("↑", "↓", "wheel"), "Volume"),
+    ShortcutEntry(listOf("M"), "Mute"),
+    ShortcutEntry(listOf("F", "double-click"), "Fullscreen"),
+    ShortcutEntry(listOf("C"), "Captions on / off"),
+    ShortcutEntry(listOf("Shift", "C"), "Subtitle sheet", separator = " + "),
+    ShortcutEntry(listOf("[", "]"), "Speed"),
+    ShortcutEntry(listOf("0–9"), "Jump to 0–90%"),
+    ShortcutEntry(listOf("H", "click"), "Show / hide bars"),
+    ShortcutEntry(listOf("?"), "This sheet", listLabel = "Player shortcuts sheet"),
+    ShortcutEntry(listOf("Esc"), "Close / exit fullscreen"),
 )
+
+fun playerShortcutSection() = ShortcutSection("Video player", PlayerShortcuts)
 
 /** The `?` sheet listing every shortcut; clicking outside the card closes it. */
 @OptIn(ExperimentalLayoutApi::class)
@@ -234,16 +238,16 @@ internal fun ShortcutSheet(visible: Boolean, onDismiss: () -> Unit) {
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        Shortcuts.forEach { (keys, action) ->
+                        PlayerShortcuts.forEach { entry ->
                             Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                 Text(
-                                    keys,
+                                    entry.keysText,
                                     style = MaterialTheme.typography.labelLarge,
                                     color = MaterialTheme.colorScheme.primary,
                                     textAlign = TextAlign.End,
                                     modifier = Modifier.width(120.dp)
                                 )
-                                Text(action, style = MaterialTheme.typography.bodyMedium)
+                                Text(entry.label, style = MaterialTheme.typography.bodyMedium)
                             }
                         }
                     }
