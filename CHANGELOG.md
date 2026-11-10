@@ -76,6 +76,7 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   card has a filter field you can type into and move through with the arrow keys, Shift+Cmd/Ctrl+F
   opens Global search, and Cmd/Ctrl+/ (or the keyboard button in the title bar) opens a list of
   keyboard shortcuts. AnimeWorld's list also includes the video player keys
+  ([#2688](https://github.com/jakepurple13/OtakuWorld/pull/2688))
 - AnimeWorld player styles: Classic (full-width bars), Floating (rounded pills and a control dock),
   and Theater (bars that fade in from the edges). Pick one in Play Settings or onboarding, with a
   live preview of the player while you choose. Classic is the default. The bars use your blur kind
