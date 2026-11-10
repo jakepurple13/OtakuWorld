@@ -33,7 +33,7 @@ kotlin {
                 implementation("de.femtopedia.dex2jar:dex-translator:2.4.38")
                 implementation("org.ow2.asm:asm:9.11.1")
                 // Android ships org.json in the framework; extensions call it directly.
-                implementation("org.json:json:20251224")
+                implementation("org.json:json:20260719")
                 implementation(desktopLibs.kotlin.multiplatform.appdirs)
             }
         }
