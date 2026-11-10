@@ -13,13 +13,6 @@ fun thresholdCrossed(previous: Float, current: Float, threshold: Float): Boolean
     previous < threshold && current >= threshold
 
 /**
- * The pull distance that counts toward the refresh haptic. A refresh started from code animates the
- * indicator to the threshold too, so only the user's own pull counts.
- */
-fun pullHapticFraction(isRefreshing: Boolean, distanceFraction: Float): Float =
-    if (isRefreshing) 0f else distanceFraction
-
-/**
  * Ticks once each time a gesture's [fraction] reaches [threshold], such as pull-to-refresh or
  * slide-to-confirm passing the point where letting go commits the action.
  */
