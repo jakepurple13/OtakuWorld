@@ -3,6 +3,15 @@ package com.programmersbox.kmpuiviews.presentation.quickactions
 /** True on desktop, where the card gets a filter field and keyboard selection. */
 internal expect val quickActionsDesktopExtras: Boolean
 
+/** Shortcut label shown on [action]'s row (desktop only), or null. */
+internal expect fun quickActionShortcutLabel(action: QuickAction): String?
+
+/** Label of the key that runs the selected row: Enter glyph/name on desktop, empty elsewhere. */
+internal expect val runKeyLabel: String
+
+/** Label of the keyboard-shortcuts-list shortcut (desktop only), empty elsewhere. */
+internal expect val shortcutsListKeyLabel: String
+
 /** [texts] holds each action's "title supporting" text. Blank query returns every action. */
 fun filterQuickActions(query: String, texts: Map<QuickAction, String>): List<QuickAction> {
     val q = query.trim()

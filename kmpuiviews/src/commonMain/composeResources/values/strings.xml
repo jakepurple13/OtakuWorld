@@ -506,6 +506,9 @@
     <string name="qa_menu_actions">Actions</string>
     <string name="qa_menu_open">Quick actions…</string>
     <string name="qa_menu_open_shortcut">Quick actions…  %1$s</string>
+    <string name="qa_menu_shortcuts">Keyboard shortcuts…</string>
+    <string name="qa_shortcuts">Shortcuts</string>
+    <string name="qa_shortcuts_button">Keyboard shortcuts</string>
     <string name="qa_group_tools">Tools</string>
     <string name="qa_group_go_to">Go to</string>
     <string name="qa_global_search">Global search</string>

@@ -1,7 +1,11 @@
 package com.programmersbox.kmpuiviews.presentation.quickactions
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.TextButton
 import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
@@ -17,6 +21,8 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import otakuworld.kmpuiviews.generated.resources.qa_filter_hint
+import otakuworld.kmpuiviews.generated.resources.qa_footer_hint
+import otakuworld.kmpuiviews.generated.resources.qa_shortcuts
 import otakuworld.kmpuiviews.generated.resources.qa_no_match
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
@@ -134,6 +140,7 @@ fun SharedTransitionScope.QuickActionsOverlay() {
         ) {
             QuickActionsCard(
                 state = uiState,
+                controller = controller,
                 onAction = vm::run,
                 modifier = Modifier.sharedBounds(
                     sharedContentState = rememberSharedContentState(QuickActionsSharedKey),
@@ -160,7 +167,7 @@ fun SharedTransitionScope.QuickActionsOverlay() {
             // (desktop focuses the filter field instead)
             val firstRow = remember { FocusRequester() }
             if (!quickActionsDesktopExtras) LaunchedEffect(Unit) { firstRow.requestFocus() }
-            QuickActionsCard(state = uiState, onAction = vm::run, firstRowFocusRequester = firstRow)
+            QuickActionsCard(state = uiState, controller = controller, onAction = vm::run, firstRowFocusRequester = firstRow)
         }
 
         QuickActionsBanners(
@@ -174,6 +181,7 @@ fun SharedTransitionScope.QuickActionsOverlay() {
 @Composable
 private fun AnimatedVisibilityScope.QuickActionsCard(
     state: QuickActionsUiState,
+    controller: QuickActionsController,
     onAction: (QuickAction) -> Unit,
     modifier: Modifier = Modifier,
     firstRowFocusRequester: FocusRequester? = null,
@@ -262,6 +270,23 @@ private fun AnimatedVisibilityScope.QuickActionsCard(
                         showGroupLabels = query.isBlank(),
                         selected = filtered[index],
                     )
+                }
+                Spacer(Modifier.height(4.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                ) {
+                    Text(
+                        text = stringResource(Res.string.qa_footer_hint, runKeyLabel),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    TextButton(onClick = controller::openShortcuts) {
+                        Text(stringResource(Res.string.qa_shortcuts))
+                        Spacer(Modifier.width(8.dp))
+                        KeyCap(shortcutsListKeyLabel)
+                    }
                 }
             }
         } else {

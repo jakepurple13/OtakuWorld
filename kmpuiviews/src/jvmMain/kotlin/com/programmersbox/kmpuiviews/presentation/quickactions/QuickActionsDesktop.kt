@@ -10,18 +10,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent
-import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.KeyShortcut
-import androidx.compose.ui.input.key.isAltPressed
-import androidx.compose.ui.input.key.isCtrlPressed
-import androidx.compose.ui.input.key.isMetaPressed
-import androidx.compose.ui.input.key.isShiftPressed
-import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.type
 import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.MenuBar
+import com.programmersbox.kmpuiviews.presentation.shortcuts.AppShortcut
+import com.programmersbox.kmpuiviews.presentation.shortcuts.label
+import com.programmersbox.kmpuiviews.presentation.shortcuts.matches
+import com.programmersbox.kmpuiviews.presentation.shortcuts.menuShortcut
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
@@ -37,17 +33,13 @@ import otakuworld.kmpuiviews.generated.resources.qa_saved_notifications
 import otakuworld.kmpuiviews.generated.resources.qa_menu_actions
 import otakuworld.kmpuiviews.generated.resources.qa_menu_open
 import otakuworld.kmpuiviews.generated.resources.qa_menu_open_shortcut
+import otakuworld.kmpuiviews.generated.resources.qa_menu_shortcuts
 
 internal val isMacOs: Boolean = System.getProperty("os.name").orEmpty().startsWith("Mac", ignoreCase = true)
 
 /** Cmd+K on macOS, Ctrl+K elsewhere, with no other modifiers. */
 fun isQuickActionsShortcut(event: KeyEvent, isMac: Boolean): Boolean =
-    event.type == KeyEventType.KeyDown &&
-            event.key == Key.K &&
-            !event.isShiftPressed &&
-            !event.isAltPressed &&
-            if (isMac) event.isMetaPressed && !event.isCtrlPressed
-            else event.isCtrlPressed && !event.isMetaPressed
+    AppShortcut.QuickActions.matches(event, isMac)
 
 private fun QuickAction.label(): StringResource = when (this) {
     QuickAction.CheckForUpdates -> Res.string.qa_check_updates
@@ -67,17 +59,28 @@ fun FrameWindowScope.QuickActionsMenuBar() {
     val viewModel = koinViewModel<QuickActionsViewModel>()
     val menuTitle = stringResource(Res.string.qa_menu_actions)
     val openLabel = stringResource(Res.string.qa_menu_open)
+    val shortcutsLabel = stringResource(Res.string.qa_menu_shortcuts)
     val labels = QuickAction.entries.map { it to stringResource(it.label()) }
     MenuBar {
         Menu(menuTitle) {
-            labels.forEach { (action, label) ->
-                Item(label, onClick = { viewModel.run(action) })
+            labels.forEachIndexed { index, (action, label) ->
+                if (index > 0 && QuickAction.entries[index - 1].group != action.group) Separator()
+                Item(
+                    label,
+                    shortcut = if (action == QuickAction.GlobalSearch) AppShortcut.GlobalSearch.menuShortcut() else null,
+                    onClick = { viewModel.run(action) },
+                )
             }
             Separator()
             Item(
                 openLabel,
-                shortcut = KeyShortcut(Key.K, meta = true),
+                shortcut = AppShortcut.QuickActions.menuShortcut(),
                 onClick = { controller.toggle(OpenOrigin.Keyboard) },
+            )
+            Item(
+                shortcutsLabel,
+                shortcut = AppShortcut.ShortcutsList.menuShortcut(),
+                onClick = { controller.openShortcuts() },
             )
         }
     }
@@ -92,9 +95,13 @@ fun QuickActionsTitleBarMenu() {
     var expanded by remember { mutableStateOf(false) }
     TextButton(onClick = { expanded = true }) { Text(stringResource(Res.string.qa_menu_actions)) }
     DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-        QuickAction.entries.forEach { action ->
+        QuickAction.entries.forEachIndexed { index, action ->
+            if (index > 0 && QuickAction.entries[index - 1].group != action.group) HorizontalDivider()
             DropdownMenuItem(
-                text = { Text(stringResource(action.label())) },
+                text = {
+                    val label = stringResource(action.label())
+                    Text(if (action == QuickAction.GlobalSearch) "$label  ${AppShortcut.GlobalSearch.label(false)}" else label)
+                },
                 onClick = {
                     expanded = false
                     viewModel.run(action)
@@ -103,10 +110,17 @@ fun QuickActionsTitleBarMenu() {
         }
         HorizontalDivider()
         DropdownMenuItem(
-            text = { Text(stringResource(Res.string.qa_menu_open_shortcut, "Ctrl+K")) },
+            text = { Text(stringResource(Res.string.qa_menu_open_shortcut, AppShortcut.QuickActions.label(false))) },
             onClick = {
                 expanded = false
                 controller.open(OpenOrigin.Keyboard)
+            },
+        )
+        DropdownMenuItem(
+            text = { Text(stringResource(Res.string.qa_menu_shortcuts)) },
+            onClick = {
+                expanded = false
+                controller.openShortcuts()
             },
         )
     }

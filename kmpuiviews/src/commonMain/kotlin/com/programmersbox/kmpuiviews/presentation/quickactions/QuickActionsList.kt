@@ -151,7 +151,16 @@ fun QuickActionsList(
                         title = spec.title,
                         supporting = spec.supporting,
                         onClick = { onAction(action) },
-                        trailing = { if (spec.run) RunChip() else Chevron() },
+                        trailing = {
+                            if (spec.run) RunChip()
+                            else {
+                                val keycap = if (quickActionsDesktopExtras) quickActionShortcutLabel(action) else null
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    if (keycap != null) KeyCap(keycap)
+                                    Chevron()
+                                }
+                            }
+                        },
                         selected = action == selected,
                         modifier = rowModifier,
                     )
@@ -308,6 +317,22 @@ private fun RunChip() {
             text = stringResource(Res.string.qa_run),
             style = MaterialTheme.typography.labelLarge,
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+        )
+    }
+}
+
+@Composable
+internal fun KeyCap(text: String, modifier: Modifier = Modifier) {
+    Surface(
+        shape = RoundedCornerShape(6.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = modifier,
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelSmall,
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
         )
     }
 }

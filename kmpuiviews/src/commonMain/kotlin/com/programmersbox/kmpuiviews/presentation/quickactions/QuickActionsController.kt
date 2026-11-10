@@ -11,6 +11,9 @@ class QuickActionsController {
     private val _open = MutableStateFlow<OpenOrigin?>(null)
     val open: StateFlow<OpenOrigin?> = _open.asStateFlow()
 
+    private val _shortcutsOpen = MutableStateFlow(false)
+    val shortcutsOpen: StateFlow<Boolean> = _shortcutsOpen.asStateFlow()
+
     fun open(origin: OpenOrigin) {
         _open.value = origin
     }
@@ -21,5 +24,14 @@ class QuickActionsController {
 
     fun toggle(origin: OpenOrigin) {
         _open.value = if (_open.value == null) origin else null
+    }
+
+    fun openShortcuts() {
+        close()
+        _shortcutsOpen.value = true
+    }
+
+    fun closeShortcuts() {
+        _shortcutsOpen.value = false
     }
 }
