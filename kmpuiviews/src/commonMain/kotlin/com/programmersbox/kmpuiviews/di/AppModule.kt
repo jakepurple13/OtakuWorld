@@ -9,6 +9,8 @@ import com.programmersbox.kmpmodels.NativeCatalogs
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.OtakuWorldCatalog
 import com.programmersbox.kmpuiviews.domain.AppUpdateCheck
+import com.programmersbox.kmpuiviews.presentation.quickactions.DaoQuickActionCounts
+import com.programmersbox.kmpuiviews.presentation.quickactions.QuickActionCounts
 import com.programmersbox.kmpuiviews.presentation.quickactions.QuickActionsController
 import com.programmersbox.kmpuiviews.domain.MediaUpdateChecker
 import com.programmersbox.kmpuiviews.domain.updatecheck.DataStoreUpdateCheckReportStore
@@ -63,6 +65,7 @@ val appModule = module {
     singleOf(::AppUpdateCheck)
     single<InAppNotifier> { DefaultInAppNotifier() }
     singleOf(::QuickActionsController)
+    singleOf(::DaoQuickActionCounts) bind QuickActionCounts::class
     single { JsExtensionSourceBridge(get(), get()) }
     single { NativeCatalogs(getAll()) }
     single {

@@ -9,6 +9,24 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class QuickActionsStateTest {
+    @Test
+    fun groupsAndOrder() {
+        assertEquals(
+            listOf(QuickAction.CheckForUpdates, QuickAction.ScanQrCode),
+            QuickAction.entries.filter { it.group == QuickActionGroup.Tools }
+        )
+        assertEquals(
+            listOf(
+                QuickAction.GlobalSearch,
+                QuickAction.Lists,
+                QuickAction.SavedNotifications,
+                QuickAction.BackgroundTasks,
+                QuickAction.UpdateErrors
+            ),
+            QuickAction.entries.filter { it.group == QuickActionGroup.GoTo }
+        )
+    }
+
     private fun work(state: String, p: Int? = null, m: Int? = null) =
         WorkInfoKmp(state, "", p, m, LocalDateTime(2026, 1, 1, 0, 0))
 

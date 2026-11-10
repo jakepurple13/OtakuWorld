@@ -506,6 +506,16 @@
     <string name="qa_menu_actions">Actions</string>
     <string name="qa_menu_open">Quick actions…</string>
     <string name="qa_menu_open_shortcut">Quick actions…  %1$s</string>
+    <string name="qa_group_tools">Tools</string>
+    <string name="qa_group_go_to">Go to</string>
+    <string name="qa_global_search">Global search</string>
+    <string name="qa_global_search_sub">Search every installed source</string>
+    <string name="qa_lists">Lists</string>
+    <string name="qa_lists_count">%1$d lists</string>
+    <string name="qa_lists_sub">Your custom lists</string>
+    <string name="qa_saved_notifications">Saved notifications</string>
+    <string name="qa_saved_count">%1$d saved</string>
+    <string name="qa_saved_notifications_sub">Saved update notifications</string>
     <string name="qa_check_updates">Check for updates</string>
     <string name="qa_scan_qr">Scan QR code</string>
     <string name="qa_scan_qr_sub">Import a title or list</string>

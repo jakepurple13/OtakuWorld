@@ -59,6 +59,13 @@ private class FakeReports : UpdateCheckReportStore {
     }
 }
 
+private class FakeCounts : QuickActionCounts {
+    val listsFlow = MutableStateFlow(0)
+    val saved = MutableStateFlow(0)
+    override val lists: Flow<Int> = listsFlow
+    override val savedNotifications: Flow<Int> = saved
+}
+
 private class FakeHandler : BackgroundWorkHandler {
     val workers = MutableStateFlow<List<WorkerInfoModel>>(emptyList())
     override fun workerInfoFlow(): Flow<List<WorkerInfoModel>> = workers
@@ -99,13 +106,19 @@ private class RecordingNav : NavigationActions {
     override fun incognito() = Unit
     override fun extensionList() = Unit
     override fun settings() = Unit
-    override fun globalSearch(searchText: String?) = Unit
+    override fun globalSearch(searchText: String?) {
+        calls += "globalSearch"
+    }
     override fun sourceSearch(serviceName: String, query: String) = Unit
-    override fun customList() = Unit
+    override fun customList() {
+        calls += "customList"
+    }
     override fun customList(customList: CustomList) = Unit
     override fun history() = Unit
     override fun favorites() = Unit
-    override fun notifications() = Unit
+    override fun notifications() {
+        calls += "notifications"
+    }
     override fun debug() = Unit
     override fun downloadInstall() = Unit
     override fun order() = Unit
@@ -194,6 +207,7 @@ class QuickActionsViewModelTest {
     private lateinit var fakeReports: FakeReports
     private lateinit var fakeHandler: FakeHandler
     private lateinit var nav: RecordingNav
+    private lateinit var counts: FakeCounts
 
     @BeforeTest
     fun setUp() {
@@ -202,6 +216,7 @@ class QuickActionsViewModelTest {
         fakeReports = FakeReports()
         fakeHandler = FakeHandler()
         nav = RecordingNav()
+        counts = FakeCounts()
     }
 
     @AfterTest
@@ -210,7 +225,7 @@ class QuickActionsViewModelTest {
     }
 
     private fun vm(work: FakeWork = FakeWork().also { fakeWork = it }) =
-        QuickActionsViewModel(controller, work, fakeReports, fakeHandler, nav)
+        QuickActionsViewModel(controller, work, fakeReports, fakeHandler, nav, counts)
 
     @Test
     fun runCheckStartsOnceAndCloses() = runTest {
@@ -273,6 +288,45 @@ class QuickActionsViewModelTest {
     fun updateErrorsNavigates() = runTest {
         vm().run(QuickAction.UpdateErrors)
         assertEquals(listOf("navigate:${Screen.UpdateCheckErrors}"), nav.calls)
+    }
+
+    @Test fun globalSearchNavigates() = runTest {
+        vm().run(QuickAction.GlobalSearch)
+        assertEquals(listOf("globalSearch"), nav.calls)
+    }
+
+    @Test fun listsNavigates() = runTest {
+        vm().run(QuickAction.Lists)
+        assertEquals(listOf("customList"), nav.calls)
+    }
+
+    @Test fun savedNotificationsNavigates() = runTest {
+        vm().run(QuickAction.SavedNotifications)
+        assertEquals(listOf("notifications"), nav.calls)
+    }
+
+    @Test
+    fun countsFlowIntoState() = runTest {
+        counts.listsFlow.value = 4
+        counts.saved.value = 12
+        val vm = vm()
+        vm.uiState.test {
+            runCurrent()
+            val state = expectMostRecentItem()
+            assertEquals(4, state.listCount)
+            assertEquals(12, state.savedNotificationCount)
+        }
+    }
+
+    @Test
+    fun zeroCountsAreNull() = runTest {
+        val vm = vm()
+        vm.uiState.test {
+            runCurrent()
+            val state = expectMostRecentItem()
+            assertNull(state.listCount)
+            assertNull(state.savedNotificationCount)
+        }
     }
 
     @Test
