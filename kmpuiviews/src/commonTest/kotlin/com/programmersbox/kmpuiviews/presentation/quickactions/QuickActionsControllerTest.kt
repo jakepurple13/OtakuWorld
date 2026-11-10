@@ -16,6 +16,18 @@ class QuickActionsControllerTest {
     }
 
     @Test
+    fun openingCardClosesShortcuts() {
+        val controller = QuickActionsController()
+        controller.openShortcuts()
+        controller.open(OpenOrigin.Bolt)
+        assertFalse(controller.shortcutsOpen.value)
+        controller.openShortcuts()
+        controller.toggle(OpenOrigin.Keyboard)
+        assertFalse(controller.shortcutsOpen.value)
+        assertTrue(controller.open.value != null)
+    }
+
+    @Test
     fun closeShortcuts() {
         val controller = QuickActionsController()
         controller.openShortcuts()

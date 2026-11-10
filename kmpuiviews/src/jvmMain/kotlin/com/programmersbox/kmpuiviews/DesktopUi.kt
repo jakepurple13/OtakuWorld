@@ -14,6 +14,7 @@ import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
 import com.programmersbox.kmpuiviews.presentation.shortcuts.AppShortcut
+import com.programmersbox.kmpuiviews.presentation.shortcuts.ShortcutsDialogHost
 import com.programmersbox.kmpuiviews.presentation.shortcuts.matches
 import org.jetbrains.compose.resources.stringResource
 import otakuworld.kmpuiviews.generated.resources.Res as KmpRes
@@ -518,7 +519,12 @@ private fun OtakuDecoratedWindow(
                         CompositionLocalProvider(
                             LocalNavHostPadding provides PaddingValues()
                         ) {
-                            content()
+                            Box(modifier = Modifier.fillMaxSize()) {
+                                content()
+                                if (showQuickActions && quickActionsController != null) {
+                                    ShortcutsDialogHost(quickActionsController)
+                                }
+                            }
                         }
                     }
                 }

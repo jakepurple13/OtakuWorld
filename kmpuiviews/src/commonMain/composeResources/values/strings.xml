@@ -509,6 +509,17 @@
     <string name="qa_menu_shortcuts">Keyboard shortcuts…</string>
     <string name="qa_shortcuts">Shortcuts</string>
     <string name="qa_shortcuts_button">Keyboard shortcuts</string>
+    <string name="shortcuts_title">Keyboard shortcuts</string>
+    <string name="shortcuts_subtitle">Shortcuts for %1$s</string>
+    <string name="shortcuts_anywhere">Anywhere</string>
+    <string name="shortcuts_in_quick_actions">In Quick actions</string>
+    <string name="shortcuts_quick_actions">Quick actions</string>
+    <string name="shortcuts_global_search">Global search</string>
+    <string name="shortcuts_list">Keyboard shortcuts</string>
+    <string name="shortcuts_move">Move selection</string>
+    <string name="shortcuts_run">Run selected action</string>
+    <string name="shortcuts_close_action">Close</string>
+    <string name="shortcuts_close">Close</string>
     <string name="qa_group_tools">Tools</string>
     <string name="qa_group_go_to">Go to</string>
     <string name="qa_global_search">Global search</string>
