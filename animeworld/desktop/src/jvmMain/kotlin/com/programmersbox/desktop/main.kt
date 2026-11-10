@@ -40,6 +40,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import okhttp3.OkHttpClient
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.qualifier.named
+import com.programmersbox.anime.shared.videoplayer.playerShortcutSection
+import com.programmersbox.kmpuiviews.presentation.shortcuts.ShortcutSection
 import org.koin.dsl.bind
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.navigation3.navigation
@@ -65,6 +68,7 @@ fun main(args: Array<String>) {
         genericInfo = { singleOf(::GenericAnimeDesktop) },
         moduleBlock = {
             singleOf(::AnimeDesktopSettings)
+            single<ShortcutSection>(named("videoPlayerShortcuts")) { playerShortcutSection() }
             singleOf(::StorageHolder)
             single<SubtitleSettingsRepository> {
                 JvmSubtitleSettingsRepository(File(get<AppDirs>().getUserDataDir(), "subtitle_style.json"))
