@@ -103,7 +103,7 @@ class QuickActionsViewModel(
     )
 
     fun run(action: QuickAction) {
-        controller.close()
+        controller.closeAll()
         when (action) {
             QuickAction.CheckForUpdates -> {
                 if (!isRunning.value) {
@@ -124,7 +124,7 @@ class QuickActionsViewModel(
     }
 
     fun openErrors() {
-        controller.close()
+        controller.closeAll()
         navigationActions.navigate(Screen.UpdateCheckErrors)
     }
 

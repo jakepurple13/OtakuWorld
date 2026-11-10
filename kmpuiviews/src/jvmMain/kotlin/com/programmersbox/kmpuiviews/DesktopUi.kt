@@ -460,7 +460,7 @@ private fun OtakuDecoratedWindow(
                     }
 
                     !isMacOs && AppShortcut.GlobalSearch.matches(event, isMac = false) -> {
-                        quickActionsController.close()
+                        quickActionsController.closeAll()
                         navigationActions?.globalSearch()
                         true
                     }

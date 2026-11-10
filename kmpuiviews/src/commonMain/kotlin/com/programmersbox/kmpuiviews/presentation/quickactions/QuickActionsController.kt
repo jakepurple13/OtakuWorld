@@ -35,4 +35,10 @@ class QuickActionsController {
     fun closeShortcuts() {
         _shortcutsOpen.value = false
     }
+
+    /** Closes both the card and the shortcuts list, e.g. before navigating away. */
+    fun closeAll() {
+        close()
+        closeShortcuts()
+    }
 }

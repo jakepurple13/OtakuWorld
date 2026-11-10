@@ -339,6 +339,23 @@ class QuickActionsViewModelTest {
     }
 
     @Test
+    fun runClosesShortcutsList() = runTest {
+        val vm = vm()
+        controller.openShortcuts()
+        vm.run(QuickAction.GlobalSearch)
+        assertFalse(controller.shortcutsOpen.value)
+        assertNull(controller.open.value)
+    }
+
+    @Test
+    fun openErrorsClosesShortcutsList() = runTest {
+        val vm = vm()
+        controller.openShortcuts()
+        vm.openErrors()
+        assertFalse(controller.shortcutsOpen.value)
+    }
+
+    @Test
     fun finishedShowsResultAfterRun() = runTest {
         val vm = vm()
         vm.uiState.test {
