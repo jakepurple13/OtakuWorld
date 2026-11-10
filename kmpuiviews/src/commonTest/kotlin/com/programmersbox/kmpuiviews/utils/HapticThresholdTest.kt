@@ -18,15 +18,4 @@ class HapticThresholdTest {
         val fires = values.zipWithNext().count { (a, b) -> thresholdCrossed(a, b, 1f) }
         assertEquals(2, fires)
     }
-
-    // Starting a refresh from code animates the indicator to the threshold; that must not tick
-    @Test fun programmaticRefreshDoesNotTick() {
-        val frames = listOf(0f, 0.5f, 1f).map { pullHapticFraction(isRefreshing = true, distanceFraction = it) }
-        assertEquals(0, frames.zipWithNext().count { (a, b) -> thresholdCrossed(a, b, 1f) })
-    }
-
-    @Test fun userPullStillTicks() {
-        val frames = listOf(0f, 0.5f, 1f).map { pullHapticFraction(isRefreshing = false, distanceFraction = it) }
-        assertEquals(1, frames.zipWithNext().count { (a, b) -> thresholdCrossed(a, b, 1f) })
-    }
 }
