@@ -1,5 +1,23 @@
 package com.programmersbox.kmpuiviews.presentation.quickactions
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import otakuworld.kmpuiviews.generated.resources.qa_filter_hint
+import otakuworld.kmpuiviews.generated.resources.qa_no_match
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.EnterTransition
@@ -139,8 +157,9 @@ fun SharedTransitionScope.QuickActionsOverlay() {
                 .then(cardWidth),
         ) {
             // Opened from the keyboard: focus the first row so the card is usable without a pointer
+            // (desktop focuses the filter field instead)
             val firstRow = remember { FocusRequester() }
-            LaunchedEffect(Unit) { firstRow.requestFocus() }
+            if (!quickActionsDesktopExtras) LaunchedEffect(Unit) { firstRow.requestFocus() }
             QuickActionsCard(state = uiState, onAction = vm::run, firstRowFocusRequester = firstRow)
         }
 
@@ -165,20 +184,94 @@ private fun AnimatedVisibilityScope.QuickActionsCard(
         modifier = modifier,
     ) {
         // Rows appear once the card is mostly open, and leave before it shrinks away
-        QuickActionsList(
-            state = state,
-            onAction = onAction,
-            firstRowFocusRequester = firstRowFocusRequester,
-            modifier = Modifier
-                .animateEnterExit(
-                    // Delay so the rows appear once the card has mostly grown
-                    enter = fadeIn(tween(delayMillis = 150)),
-                    exit = fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()),
+        val contentModifier = Modifier
+            .animateEnterExit(
+                // Delay so the rows appear once the card has mostly grown
+                enter = fadeIn(tween(delayMillis = 150)),
+                exit = fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()),
+            )
+            // Keeps the last row reachable at large font scales in landscape
+            .verticalScroll(rememberScrollState())
+            .padding(8.dp)
+        if (quickActionsDesktopExtras) {
+            // Reset on every open: the card is only composed while open
+            var query by remember { mutableStateOf("") }
+            var selectedIndex by remember { mutableIntStateOf(0) }
+            val texts = QuickAction.entries.associateWith { action ->
+                val spec = action.rowSpec(state)
+                spec.title + " " + spec.supporting
+            }
+            val filtered = filterQuickActions(query, texts)
+            val index = moveSelection(selectedIndex, 0, filtered.size)
+            val fieldFocus = remember { FocusRequester() }
+            LaunchedEffect(Unit) { fieldFocus.requestFocus() }
+            Column(contentModifier) {
+                TextField(
+                    value = query,
+                    onValueChange = {
+                        query = it
+                        selectedIndex = 0
+                    },
+                    singleLine = true,
+                    placeholder = { Text(stringResource(Res.string.qa_filter_hint)) },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    shape = RoundedCornerShape(50),
+                    colors = TextFieldDefaults.colors(
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent,
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(fieldFocus)
+                        .onPreviewKeyEvent { event ->
+                            if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                            when (event.key) {
+                                Key.DirectionDown -> {
+                                    selectedIndex = moveSelection(index, 1, filtered.size)
+                                    true
+                                }
+
+                                Key.DirectionUp -> {
+                                    selectedIndex = moveSelection(index, -1, filtered.size)
+                                    true
+                                }
+
+                                Key.Enter, Key.NumPadEnter -> {
+                                    filtered.getOrNull(index)?.let(onAction)
+                                    true
+                                }
+
+                                else -> false
+                            }
+                        },
                 )
-                // Keeps the last row reachable at large font scales in landscape
-                .verticalScroll(rememberScrollState())
-                .padding(8.dp),
-        )
+                Spacer(Modifier.height(8.dp))
+                if (filtered.isEmpty()) {
+                    Text(
+                        text = stringResource(Res.string.qa_no_match, query.trim()),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(16.dp),
+                    )
+                } else {
+                    QuickActionsList(
+                        state = state,
+                        onAction = onAction,
+                        actions = filtered,
+                        showGroupLabels = query.isBlank(),
+                        selected = filtered[index],
+                    )
+                }
+            }
+        } else {
+            QuickActionsList(
+                state = state,
+                onAction = onAction,
+                firstRowFocusRequester = firstRowFocusRequester,
+                modifier = contentModifier,
+            )
+        }
     }
 }
 
