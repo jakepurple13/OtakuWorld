@@ -37,7 +37,6 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
@@ -198,9 +197,10 @@ private fun AnimatedVisibilityScope.QuickActionsCard(
                 enter = fadeIn(tween(delayMillis = 150)),
                 exit = fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()),
             )
-            // Keeps the last row reachable at large font scales in landscape
-            .verticalScroll(rememberScrollState())
             .padding(8.dp)
+        // Only the rows scroll, so the header (and filter) stay put; keeps the last row reachable
+        // at large font scales in landscape
+        val rowsScrollState = rememberScrollState()
         if (quickActionsDesktopExtras) {
             // Reset on every open: the card is only composed while open
             var query by remember { mutableStateOf("") }
@@ -269,6 +269,8 @@ private fun AnimatedVisibilityScope.QuickActionsCard(
                         actions = filtered,
                         showGroupLabels = query.isBlank(),
                         selected = filtered[index],
+                        rowsScrollState = rowsScrollState,
+                        modifier = Modifier.weight(1f, fill = false),
                     )
                 }
                 Spacer(Modifier.height(4.dp))
@@ -294,6 +296,7 @@ private fun AnimatedVisibilityScope.QuickActionsCard(
                 state = state,
                 onAction = onAction,
                 firstRowFocusRequester = firstRowFocusRequester,
+                rowsScrollState = rowsScrollState,
                 modifier = contentModifier,
             )
         }

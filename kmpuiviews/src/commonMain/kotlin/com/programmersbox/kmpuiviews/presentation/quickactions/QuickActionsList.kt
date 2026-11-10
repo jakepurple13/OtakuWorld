@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.presentation.quickactions
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,7 +12,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.List
@@ -28,8 +33,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -88,6 +96,11 @@ fun QuickActionsList(
     showGroupLabels: Boolean = true,
     /** Row drawn with a primary inside border, for keyboard/desktop selection. */
     selected: QuickAction? = null,
+    /**
+     * When set, only the rows scroll (the header stays put) and take at most the height left
+     * after the header. Needs a bounded height, so leave it null inside an unbounded parent.
+     */
+    rowsScrollState: ScrollState? = null,
 ) {
     Column(modifier = modifier) {
         Row(
@@ -109,61 +122,82 @@ fun QuickActionsList(
         }
         val groups = QuickActionGroup.entries.map { group -> group to actions.filter { it.group == group } }
             .filter { it.second.isNotEmpty() }
-        groups.forEachIndexed { groupIndex, (group, items) ->
-            if (showGroupLabels) {
-                Text(
-                    text = stringResource(
-                        when (group) {
-                            QuickActionGroup.Tools -> Res.string.qa_group_tools
-                            QuickActionGroup.GoTo -> Res.string.qa_group_go_to
-                        }
-                    ).uppercase(),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(
-                        start = 16.dp,
-                        end = 16.dp,
-                        top = if (groupIndex == 0) 0.dp else 10.dp,
-                        bottom = 4.dp,
-                    )
-                )
-            } else if (groupIndex > 0) {
-                Spacer(Modifier.height(10.dp))
-            }
-            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                items.forEachIndexed { index, action ->
-                    val spec = action.rowSpec(state)
-                    val rowModifier = if (groupIndex == 0 && index == 0 && firstRowFocusRequester != null) {
-                        Modifier.focusRequester(firstRowFocusRequester)
-                    } else {
-                        Modifier
-                    }
-                    QuickActionRow(
-                        shape = when {
-                            items.size == 1 -> SingleShape
-                            index == 0 -> FirstShape
-                            index == items.lastIndex -> LastShape
-                            else -> MiddleShape
-                        },
-                        icon = spec.icon,
-                        iconContainer = spec.container,
-                        iconContent = spec.content,
-                        title = spec.title,
-                        supporting = spec.supporting,
-                        onClick = { onAction(action) },
-                        trailing = {
-                            if (spec.run) RunChip()
-                            else {
-                                val keycap = if (quickActionsDesktopExtras) quickActionShortcutLabel(action) else null
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    if (keycap != null) KeyCap(keycap)
-                                    Chevron()
-                                }
+        val rowsModifier = if (rowsScrollState != null) {
+            Modifier
+                .weight(1f, fill = false)
+                .verticalScroll(rowsScrollState)
+        } else {
+            Modifier
+        }
+        Column(rowsModifier) {
+            groups.forEachIndexed { groupIndex, (group, items) ->
+                if (showGroupLabels) {
+                    Text(
+                        text = stringResource(
+                            when (group) {
+                                QuickActionGroup.Tools -> Res.string.qa_group_tools
+                                QuickActionGroup.GoTo -> Res.string.qa_group_go_to
                             }
-                        },
-                        selected = action == selected,
-                        modifier = rowModifier,
+                        ).uppercase(),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(
+                            start = 16.dp,
+                            end = 16.dp,
+                            top = if (groupIndex == 0) 0.dp else 10.dp,
+                            bottom = 4.dp,
+                        )
                     )
+                } else if (groupIndex > 0) {
+                    Spacer(Modifier.height(10.dp))
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    items.forEachIndexed { index, action ->
+                        key(action) {
+                            val spec = action.rowSpec(state)
+                            val bringIntoView = remember { BringIntoViewRequester() }
+                            // Arrow keys move the selection; keep the selected row inside the scrolled rows
+                            if (action == selected) LaunchedEffect(selected) { bringIntoView.bringIntoView() }
+                            val rowModifier = Modifier
+                                .bringIntoViewRequester(bringIntoView)
+                                .then(
+                                    if (groupIndex == 0 && index == 0 && firstRowFocusRequester != null) {
+                                        Modifier.focusRequester(firstRowFocusRequester)
+                                    } else {
+                                        Modifier
+                                    }
+                                )
+                            QuickActionRow(
+                                shape = when {
+                                    items.size == 1 -> SingleShape
+                                    index == 0 -> FirstShape
+                                    index == items.lastIndex -> LastShape
+                                    else -> MiddleShape
+                                },
+                                icon = spec.icon,
+                                iconContainer = spec.container,
+                                iconContent = spec.content,
+                                title = spec.title,
+                                supporting = spec.supporting,
+                                onClick = { onAction(action) },
+                                trailing = {
+                                    if (spec.run) RunChip()
+                                    else {
+                                        val keycap = if (quickActionsDesktopExtras) quickActionShortcutLabel(action) else null
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            if (keycap != null) {
+                                                KeyCap(keycap)
+                                                Spacer(Modifier.width(4.dp))
+                                            }
+                                            Chevron()
+                                        }
+                                    }
+                                },
+                                selected = action == selected,
+                                modifier = rowModifier,
+                            )
+                        }
+                    }
                 }
             }
         }
