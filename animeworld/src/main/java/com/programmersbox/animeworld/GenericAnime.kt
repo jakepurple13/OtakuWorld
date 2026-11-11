@@ -3,6 +3,7 @@ package com.programmersbox.animeworld
 import android.Manifest
 import android.app.PendingIntent
 import android.content.Context
+import android.net.Uri
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -588,6 +589,15 @@ class GenericAnime(
             context = context,
             uri = deepLinkUpdateCheckErrorsUri(),
             activity = MainActivity::class.java
+        )
+    }
+
+    override fun deepLink(context: Context, uri: Uri, cancelNotificationId: Int?): PendingIntent? {
+        return deepLinkSetup(
+            context = context,
+            uri = uri,
+            activity = MainActivity::class.java,
+            cancelNotificationId = cancelNotificationId,
         )
     }
 }

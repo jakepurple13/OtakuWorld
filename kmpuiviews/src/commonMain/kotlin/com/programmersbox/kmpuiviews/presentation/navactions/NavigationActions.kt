@@ -52,6 +52,9 @@ interface NavigationActions {
     fun remove(route: NavKey)
     fun popBackStack(route: Any, inclusive: Boolean)
     fun <T : Any> navigate(nav: T)
+
+    /** True when [key] is the entry on top of the back stack. */
+    fun isOnTop(key: NavKey): Boolean = false
     fun <T : Any> clearBackStack(nav: T)
 
     fun <T : Any> homeScreenNavigate(nav: T)

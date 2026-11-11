@@ -13,6 +13,12 @@ import com.programmersbox.kmpuiviews.presentation.quickactions.DaoQuickActionCou
 import com.programmersbox.kmpuiviews.presentation.quickactions.QuickActionCounts
 import com.programmersbox.kmpuiviews.presentation.quickactions.QuickActionsController
 import com.programmersbox.kmpuiviews.domain.MediaUpdateChecker
+import com.programmersbox.kmpuiviews.domain.dailyoverview.DailyFactsBuilder
+import com.programmersbox.kmpuiviews.domain.dailyoverview.DailyOverviewSettings
+import com.programmersbox.kmpuiviews.domain.dailyoverview.EngineResolver
+import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngine
+import com.programmersbox.kmpuiviews.domain.dailyoverview.TemplateEngine
+import com.programmersbox.kmpuiviews.domain.dailyoverview.platformAutomaticOrder
 import com.programmersbox.kmpuiviews.domain.updatecheck.DataStoreUpdateCheckReportStore
 import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckReportStore
 import com.programmersbox.kmpuiviews.presentation.navigation.buildKmpGraph
@@ -65,7 +71,8 @@ val appModule = module {
     singleOf(::AppUpdateCheck)
     single<InAppNotifier> { DefaultInAppNotifier() }
     singleOf(::QuickActionsController)
-    singleOf(::DaoQuickActionCounts) bind QuickActionCounts::class
+    // Explicit so clock and zone keep their defaults; singleOf would ask Koin for them
+    single { DaoQuickActionCounts(itemDao = get(), listDao = get(), heatMapDao = get()) } bind QuickActionCounts::class
     single { JsExtensionSourceBridge(get(), get()) }
     single { NativeCatalogs(getAll()) }
     single {
@@ -82,10 +89,23 @@ val appModule = module {
 
     singleOf(::EncryptedDataStoreHandling)
     singleOf(::DataStoreHandling)
+    singleOf(::DailyOverviewSettings)
+    singleOf(::TemplateEngine) bind SummaryEngine::class
+    single { EngineResolver(getAll<SummaryEngine>(), platformAutomaticOrder) }
     singleOf(::MediaUpdateChecker)
     singleOf(::DataStoreUpdateCheckReportStore) bind UpdateCheckReportStore::class
     singleOf(::SharedCoverBitmaps)
     factoryOf(::Backup)
+    // Explicit so clock and zone keep their defaults; factoryOf would ask Koin for them
+    factory {
+        DailyFactsBuilder(
+            itemDao = get(),
+            heatMapDao = get(),
+            historyDao = get(),
+            reportStore = get(),
+            genericInfo = get(),
+        )
+    }
     backupProcessors()
     includes(platformModule())
 

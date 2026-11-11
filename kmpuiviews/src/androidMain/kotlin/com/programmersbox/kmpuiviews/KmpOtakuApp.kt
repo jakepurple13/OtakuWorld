@@ -23,6 +23,8 @@ import com.programmersbox.favoritesdatabase.CustomListItem
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.kmpextensionloader.SourceLoader
 import com.programmersbox.kmpuiviews.di.kmpModule
+import com.programmersbox.kmpuiviews.domain.dailyoverview.DailyOverviewScheduler
+import com.programmersbox.kmpuiviews.domain.dailyoverview.DailyOverviewSettings
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
 import com.programmersbox.kmpuiviews.repository.ListRepository
 import com.programmersbox.kmpuiviews.utils.AndroidLogger
@@ -35,6 +37,7 @@ import com.programmersbox.kmpuiviews.widget.notification.NotificationWidget
 import com.programmersbox.supabaseintegration.repository.ActivityRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -91,6 +94,14 @@ abstract class KmpOtakuApp : Application(), Configuration.Provider {
             val backgroundWorkHandler = get<BackgroundWorkHandler>()
             backgroundWorkHandler.setupPeriodicCheckers()
         }
+
+        val dailyOverviewSettings = get<DailyOverviewSettings>()
+        val dailyOverviewScheduler = get<DailyOverviewScheduler>()
+        dailyOverviewSettings.prefs
+            .distinctUntilChanged()
+            .onEach { prefs -> runCatching { dailyOverviewScheduler.sync(prefs) } }
+            .flowOn(Dispatchers.IO)
+            .launchIn(GlobalScope)
 
         shortcutSetup()
 

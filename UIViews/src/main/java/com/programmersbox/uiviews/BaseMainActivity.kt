@@ -8,6 +8,7 @@ import androidx.activity.compose.ReportDrawn
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -21,6 +22,7 @@ import com.programmersbox.jsextensionloader.JSExtensionLoader
 import com.programmersbox.jsextensionloader.JsExtensionRepository
 import com.programmersbox.kmpmodels.ExampleService
 import com.programmersbox.kmpmodels.SourceRepository
+import com.programmersbox.kmpuiviews.EXTRA_CANCEL_NOTIFICATION_ID
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.repository.JsExtensionSourceBridge
 import com.programmersbox.kmpuiviews.repository.SetupRepository
@@ -96,6 +98,7 @@ abstract class BaseMainActivity : FragmentActivity() {
             }
         }
 
+        cancelNotificationFrom(intent)
         intent.data?.let { handleDeepLink(it) }
 
         setContent {
@@ -115,7 +118,19 @@ abstract class BaseMainActivity : FragmentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        cancelNotificationFrom(intent)
         intent.data?.let { handleDeepLink(it) }
+    }
+
+    // Notification actions don't auto-cancel, so their deep links carry the id to cancel.
+    // A relaunch from Recents replays the original intent, which could cancel a newer notification
+    // with the same id, so skip it and drop the extra once handled.
+    private fun cancelNotificationFrom(intent: Intent) {
+        if (!intent.hasExtra(EXTRA_CANCEL_NOTIFICATION_ID)) return
+        if (intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY == 0) {
+            NotificationManagerCompat.from(this).cancel(intent.getIntExtra(EXTRA_CANCEL_NOTIFICATION_ID, 0))
+        }
+        intent.removeExtra(EXTRA_CANCEL_NOTIFICATION_ID)
     }
 
     private fun handleDeepLink(uri: Uri) {

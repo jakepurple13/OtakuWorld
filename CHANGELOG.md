@@ -77,6 +77,17 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   opens Global search, and Cmd/Ctrl+/ (or the keyboard button in the title bar) opens a list of
   keyboard shortcuts. AnimeWorld's list also includes the video player keys
   ([#2688](https://github.com/jakepurple13/OtakuWorld/pull/2688))
+- Daily overview: a recap of yesterday, opened from a new Daily overview row in quick actions. It
+  shows a short summary, counts of chapters or episodes, titles, and updates, a by-hour graph, what
+  you read, and what updated overnight. Every number comes from your own data; the AI model only
+  writes the summary text. The summary engine is Automatic by default: on Android it tries Gemini
+  Nano, then the AI Helper's downloaded Gemma model, and on Desktop it uses the AI Helper's Ollama
+  model while Ollama is running. The AI Helper's cloud provider is used only if you pick it. When
+  no model is available, the summary is a plain sentence built from the counts. A settings page
+  turns the feature on or off, picks the engine, and (Android) sets up a morning notification at a
+  time you choose, with Open overview and Continue actions and an option to skip quiet days. Reads
+  now record their time, so the graph and list fill in from the day after you update
+  ([#2692](https://github.com/jakepurple13/OtakuWorld/pull/2692))
 - AnimeWorld player styles: Classic (full-width bars), Floating (rounded pills and a control dock),
   and Theater (bars that fade in from the edges). Pick one in Play Settings or onboarding, with a
   live preview of the player while you choose. Classic is the default. The bars use your blur kind

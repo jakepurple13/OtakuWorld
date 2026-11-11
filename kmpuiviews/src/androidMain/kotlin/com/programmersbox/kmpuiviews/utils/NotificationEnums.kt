@@ -8,13 +8,15 @@ import androidx.core.app.NotificationManagerCompat
 enum class NotificationChannels(
     val id: String,
     val importance: Int = NotificationManagerCompat.IMPORTANCE_DEFAULT,
+    val channelName: String = id,
 ) {
     Otaku("otakuChannel", NotificationManagerCompat.IMPORTANCE_HIGH),
     UpdateCheck("updateCheckChannel", NotificationManagerCompat.IMPORTANCE_MIN),
     AppUpdate("appUpdate", NotificationManagerCompat.IMPORTANCE_HIGH),
     SourceUpdate("sourceUpdate", NotificationManagerCompat.IMPORTANCE_DEFAULT),
     Download("download_channel", NotificationManagerCompat.IMPORTANCE_DEFAULT),
-    Backup("backup_channel", NotificationManagerCompat.IMPORTANCE_LOW);
+    Backup("backup_channel", NotificationManagerCompat.IMPORTANCE_LOW),
+    DailyOverview("dailyOverviewChannel", NotificationManagerCompat.IMPORTANCE_LOW, "Daily overview");
 
     companion object {
         fun setupNotificationChannels(context: Context) {
@@ -22,7 +24,7 @@ enum class NotificationChannels(
             entries.forEach {
                 notificationManager.createNotificationChannel(
                     NotificationChannelCompat.Builder(it.id, it.importance)
-                        .setName(it.id)
+                        .setName(it.channelName)
                         .build()
                 )
             }

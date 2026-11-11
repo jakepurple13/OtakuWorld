@@ -555,6 +555,16 @@
     <string name="qa_ago_days">%1$dd ago</string>
     <string name="qa_waiting_to_start">Waiting to start…</string>
     <string name="qa_check_failed">Check failed</string>
+    <string name="qa_daily_overview">Daily overview</string>
+    <string name="qa_daily_overview_sub">Your recap of yesterday</string>
+    <plurals name="qa_yesterday_chapters">
+        <item quantity="one">Yesterday: %1$d chapter</item>
+        <item quantity="other">Yesterday: %1$d chapters</item>
+    </plurals>
+    <plurals name="qa_yesterday_episodes">
+        <item quantity="one">Yesterday: %1$d episode</item>
+        <item quantity="other">Yesterday: %1$d episodes</item>
+    </plurals>
     <string name="banner_dismiss">Dismiss</string>
     <string name="banner_clear_all">Clear all</string>
     <string name="banner_source_missing">Source not installed</string>
@@ -586,4 +596,141 @@
     <string name="us_none_skipped">Every source is checked.</string>
     <string name="us_no_sources">Install a source to choose it here.</string>
     <string name="us_no_matches">No sources match “%1$s”</string>
+    <plurals name="do_template_read_chapters">
+        <item quantity="one">You read %1$d chapter</item>
+        <item quantity="other">You read %1$d chapters</item>
+    </plurals>
+    <plurals name="do_template_read_episodes">
+        <item quantity="one">You read %1$d episode</item>
+        <item quantity="other">You read %1$d episodes</item>
+    </plurals>
+    <plurals name="do_template_titles">
+        <item quantity="one"> across %1$d title</item>
+        <item quantity="other"> across %1$d titles</item>
+    </plurals>
+    <plurals name="do_template_new_chapters">
+        <item quantity="one">%1$d new chapter arrived.</item>
+        <item quantity="other">%1$d new chapters arrived.</item>
+    </plurals>
+    <plurals name="do_template_new_episodes">
+        <item quantity="one">%1$d new episode arrived.</item>
+        <item quantity="other">%1$d new episodes arrived.</item>
+    </plurals>
+    <plurals name="do_template_failed">
+        <item quantity="one">%1$d source failed its update check.</item>
+        <item quantity="other">%1$d sources failed their update checks.</item>
+    </plurals>
+    <string name="do_label_template">Yesterday at a glance</string>
+    <string name="do_template_quiet">Nothing new yesterday.</string>
+    <string name="do_label_on_device">%1$s · on device</string>
+    <string name="do_label_via_koog">%1$s · via Koog</string>
+    <string name="do_label_ollama">Ollama · %1$s</string>
+    <string name="do_setup_download_model">Download a model in AI Helper</string>
+    <string name="do_setup_choose_provider">Choose a provider in AI Helper</string>
+    <string name="do_setup_finish_provider">Finish setting up AI Helper</string>
+    <string name="do_setup_choose_ollama">Choose Ollama in AI Helper</string>
+    <string name="do_setup_ollama_not_running">Ollama isn't running</string>
+    <string name="do_setup_pick_ollama_model">Pick an Ollama model in AI Helper</string>
+    <string name="do_label_nano">Gemini Nano</string>
+    <string name="do_setup_nano_downloading">Downloading Gemini Nano</string>
+    <string name="do_yesterday">Yesterday</string>
+    <string name="do_settings">Daily overview settings</string>
+    <string name="do_summary">Summary</string>
+    <string name="do_regenerate">Regenerate</string>
+    <string name="do_privacy_on_device">On device · nothing sent</string>
+    <string name="do_privacy_sent">Sent to %1$s</string>
+    <string name="do_set_up_ai">Set up AI summary</string>
+    <plurals name="do_stat_read_chapters">
+        <item quantity="one">chapter read</item>
+        <item quantity="other">chapters read</item>
+    </plurals>
+    <plurals name="do_stat_read_episodes">
+        <item quantity="one">episode read</item>
+        <item quantity="other">episodes read</item>
+    </plurals>
+    <plurals name="do_stat_titles">
+        <item quantity="one">title</item>
+        <item quantity="other">titles</item>
+    </plurals>
+    <plurals name="do_stat_updates">
+        <item quantity="one">new update</item>
+        <item quantity="other">new updates</item>
+    </plurals>
+    <string name="do_by_hour">By hour</string>
+    <string name="do_most_at">most at %1$s</string>
+    <string-array name="do_hour_axis">
+        <item>12a</item>
+        <item>6a</item>
+        <item>12p</item>
+        <item>6p</item>
+        <item>11p</item>
+    </string-array>
+    <string name="do_you_read">You read</string>
+    <string name="do_history">History</string>
+    <string name="do_read_range">%1$s to %2$s</string>
+    <string name="do_caught_up">%1$s · caught up</string>
+    <string name="do_updated_overnight">Updated overnight</string>
+    <string name="do_all_updates">All %1$d</string>
+    <string name="do_update_check_failed">Update check failed</string>
+    <string name="do_empty_day">Nothing happened yesterday</string>
+    <string name="do_settings_title">Daily overview</string>
+    <string name="do_use_daily_overview">Use daily overview</string>
+    <string name="do_use_daily_overview_summary">Adds it to quick actions</string>
+    <string name="do_group_notification">Morning notification</string>
+    <string name="do_send_morning">Send a morning summary</string>
+    <string name="do_send_morning_summary">Yesterday's numbers and summary</string>
+    <string name="do_time">Time</string>
+    <string name="do_time_summary">When the summary arrives each morning</string>
+    <string name="do_notification_time">Notification time</string>
+    <string name="do_skip_quiet">Skip quiet days</string>
+    <string name="do_skip_quiet_summary">No notification if nothing was read and nothing updated</string>
+    <string name="do_group_summary">Summary</string>
+    <string name="do_summary_engine">Summary engine</string>
+    <string name="do_settings_foot">Numbers always come from your history on this device. The engine only writes the sentences.</string>
+    <string name="do_engine_automatic">Automatic</string>
+    <string name="do_engine_gemma">Gemma on this phone</string>
+    <string name="do_engine_provider">Your AI helper</string>
+    <string name="do_engine_ollama">Ollama</string>
+    <string name="do_engine_numbers">Numbers only</string>
+    <string name="do_engine_resolved">%1$s · %2$s</string>
+    <string name="do_engine_not_ready">%1$s (not ready)</string>
+    <string name="do_engine_automatic_desc">Uses the first ready engine, except your AI helper. Right now: %1$s.</string>
+    <string name="do_engine_nano_desc">Built into some phones. Private, nothing to download.</string>
+    <string name="do_engine_gemma_desc">Runs through Koog with LiteRT, using the model from AI Helper.</string>
+    <string name="do_engine_provider_desc">Uses the provider set up in Otaku AI Helper.</string>
+    <string name="do_engine_ollama_desc">Runs on this computer through Ollama, using the model from AI Helper.</string>
+    <string name="do_engine_numbers_desc">No AI. A plain sentence built from your stats.</string>
+    <string name="do_tag_available">Available</string>
+    <string name="do_tag_not_available">Not available on this phone</string>
+    <string name="do_tag_on_device">On device</string>
+    <string name="do_tag_online">Online</string>
+    <string name="do_tag_ready">Ready</string>
+    <string name="do_no_model">No model downloaded</string>
+    <string name="do_set_up_gemma">Set up Gemma in AI Helper</string>
+    <string name="do_no_provider">No provider set up in AI Helper</string>
+    <string name="do_set_up_ai_helper">Set up AI Helper</string>
+    <string name="do_change_ai_helper">Change in AI Helper</string>
+    <string name="do_provider_warning">Sends yesterday's titles, chapter numbers and update counts to %1$s. No reading content is sent.</string>
+    <string name="do_preview">Preview</string>
+    <string name="do_test">Test</string>
+    <string name="do_test_hint">Tap Test to hear how the selected engine writes.</string>
+    <string name="do_engine_automatic_desc_plain">Uses the first ready engine, except your AI helper.</string>
+    <string name="do_setup_error">Couldn't check this engine</string>
+    <string name="do_notif_title">Yesterday: %1$s, %2$s</string>
+    <plurals name="do_notif_chapters">
+        <item quantity="one">%1$d chapter</item>
+        <item quantity="other">%1$d chapters</item>
+    </plurals>
+    <plurals name="do_notif_episodes">
+        <item quantity="one">%1$d episode</item>
+        <item quantity="other">%1$d episodes</item>
+    </plurals>
+    <plurals name="do_notif_updates">
+        <item quantity="one">%1$d update</item>
+        <item quantity="other">%1$d updates</item>
+    </plurals>
+    <string name="do_notif_open">Open overview</string>
+    <string name="do_notif_continue">Continue %1$s</string>
+    <string name="do_notifications_off">Notifications are off for this app</string>
+    <string name="do_notifications_allow">Allow</string>
 </resources>

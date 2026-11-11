@@ -35,10 +35,18 @@ class DeepLinks(
         )
     }
 
+    val dailyOverview by lazy {
+        DeepLinkRoute(
+            serializer = Screen.DailyOverview.serializer(),
+            schemeAndHost = genericInfo.deepLinkUri
+        )
+    }
+
     val deepLinkMatching = listOf(
         details.toMatcher(),
         notification.toMatcher(),
         settings.toMatcher(),
         updateCheckErrors.toMatcher(),
+        dailyOverview.toMatcher(),
     )
 }

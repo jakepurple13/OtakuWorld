@@ -14,6 +14,10 @@ import com.programmersbox.kmpuiviews.DateTimeFormatHandler
 import com.programmersbox.kmpuiviews.IconLoader
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.MangaDesktopSettings
+import com.programmersbox.kmpuiviews.dailyoverview.OllamaEngine as OllamaSummaryEngine
+import com.programmersbox.kmpuiviews.domain.dailyoverview.DailyOverviewScheduler
+import com.programmersbox.kmpuiviews.domain.dailyoverview.NoOpDailyOverviewScheduler
+import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngine
 import com.programmersbox.kmpuiviews.SystemAlerter
 import com.programmersbox.kmpuiviews.translation.DesktopTranslationHandler
 import com.programmersbox.kmpuiviews.translation.DesktopTranslationSettings
@@ -45,6 +49,7 @@ import org.koin.core.qualifier.named
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.bind
 import org.koin.dsl.module
 import java.io.File
 
@@ -57,6 +62,7 @@ actual fun platformModule(): Module = module {
     singleOf(::ClipboardUpdateCheckReportSharer) { bind<UpdateCheckReportSharer>() }
     factoryOf(::ImageModifier)
     singleOf(::SystemAlerter)
+    single<DailyOverviewScheduler> { NoOpDailyOverviewScheduler }
     singleOf(::DownloadAndInstaller)
     singleOf(::BackupResultsHolder)
     singleOf(::BackgroundWorkHandlerImpl) { bind<BackgroundWorkHandler>() }
@@ -77,6 +83,7 @@ actual fun platformModule(): Module = module {
         )
     }
     factory<TranslationModelHandler> { TranslationModelHandlerImpl() }
+    single { OllamaSummaryEngine(get(), HttpClient()) } bind SummaryEngine::class
     singleOf(::TrayState)
     singleOf(::AboutLibraryBuilder)
 

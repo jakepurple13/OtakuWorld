@@ -347,10 +347,23 @@ class DetailsViewModel(
             ) return@launch
 
             if (b) {
-                favoritesRepository.addWatched(chapter)
+                // Marking from Details is not reading, so it gets no read time.
+                favoritesRepository.addWatched(chapter, stampReadTime = false)
             } else {
                 favoritesRepository.removeWatched(chapter)
             }
+        }
+    }
+
+    // Tapping a chapter to read or play it counts as activity, so it gets a read time (unlike markAs).
+    // addWatched respects incognito; REPLACE on the chapter url keeps this safe next to reader inserts.
+    fun recordOpened(c: KmpChapterModel) {
+        val item = info ?: return
+        viewModelScope.launch(Dispatchers.IO) {
+            favoritesRepository.addWatched(
+                ChapterWatched(url = c.url, name = c.name, favoriteUrl = item.url),
+                stampReadTime = true
+            )
         }
     }
 

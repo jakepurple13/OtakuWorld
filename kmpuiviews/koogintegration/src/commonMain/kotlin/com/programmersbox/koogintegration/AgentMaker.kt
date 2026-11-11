@@ -19,6 +19,7 @@ import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.AnthropicLLMProvider
 import ai.koog.prompt.llm.DeepSeekLLMProvider
 import ai.koog.prompt.llm.GoogleLLMProvider
+import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.MistralAILLMProvider
@@ -67,7 +68,14 @@ class AgentMaker(
             DeepSeekLLMProvider.display -> DeepSeekModels.models.find { it.id == modelName }
             OpenRouterLLMProvider.display -> OpenRouterModels.models.find { it.id == modelName }
             MistralAILLMProvider.display -> MistralAIModels.models.find { it.id == modelName }
+            // Local Ollama models are whatever the user pulled, not Koog's static list.
             OllamaLLMProvider.display -> OllamaModels.models.find { it.id == modelName }
+                ?: LLModel(
+                    provider = OllamaLLMProvider,
+                    id = modelName,
+                    capabilities = listOf(LLMCapability.Temperature, LLMCapability.Schema.JSON.Basic, LLMCapability.Tools),
+                    contextLength = 8_192,
+                )
             NoLLMProvider.display -> return null
             else -> platformAgents.isPlatformModel(modelCompany, modelName) ?: return null
         } ?: return null
@@ -76,6 +84,13 @@ class AgentMaker(
             llmClient = client,
             model = model
         )
+    }
+
+    /** The AI Helper's chosen company and model, or null when either is not set. Never throws. */
+    suspend fun selection(): KoogSelection? {
+        val company = koogDataStore.getModelCompany().takeUnless { it.isEmpty() } ?: return null
+        val model = koogDataStore.getModelName().takeUnless { it.isEmpty() } ?: return null
+        return KoogSelection(company, model)
     }
 
     suspend fun needsOnboarding(): Boolean {
@@ -123,6 +138,8 @@ expect fun getModelLinkToDownload(name: String): String?
 expect fun canDownloadModel(name: String): Boolean
 
 object NoLLMProvider : LLMProvider("none", "None")
+
+data class KoogSelection(val company: String, val model: String)
 
 data class AgentInfo(
     val llmClient: LLMClient,

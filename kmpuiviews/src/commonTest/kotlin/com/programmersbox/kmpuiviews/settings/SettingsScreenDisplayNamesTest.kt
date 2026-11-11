@@ -33,5 +33,6 @@ class SettingsScreenDisplayNamesTest {
         assertEquals("Theme", SettingsScreenDisplayNames.displayNameFor(Screen.ThemeSettings))
         assertEquals("Notifications", SettingsScreenDisplayNames.displayNameFor(Screen.NotificationsSettings))
         assertEquals("Backup & Restore", SettingsScreenDisplayNames.displayNameFor(Screen.MoreSettings))
+        assertEquals("Daily overview", SettingsScreenDisplayNames.displayNameFor(Screen.DailyOverview.Settings))
     }
 }

@@ -293,6 +293,14 @@ class DefaultSettingsItems : SearchRegistryItem {
                 targetScreen = Screen.NotificationsSettings,
                 highlightKey = "notify_boot",
             ),
+            // ── Behavior > Daily overview ────────────────────────────
+            SettingSearchItem(
+                displayName = "Daily overview",
+                keywords = listOf("daily", "overview", "yesterday", "summary", "morning", "quick actions"),
+                breadcrumb = listOf(Screen.Settings.Behavior, Screen.DailyOverview.Settings),
+                targetScreen = Screen.DailyOverview.Settings,
+                highlightKey = "daily_overview",
+            ),
             // ── Sources & Extensions ─────────────────────────────────
             SettingSearchItem(
                 displayName = "Update Sources",

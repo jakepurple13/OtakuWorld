@@ -75,4 +75,34 @@ class DataStoreHandling {
         key = intPreferencesKey("jsExtensionUpdateMode"),
         defaultValue = 1 // ExtensionUpdateMode.NOTIFY.ordinal
     )
+
+    val dailyOverviewEnabled = DataStoreHandler(
+        key = booleanPreferencesKey("dailyOverviewEnabled"),
+        defaultValue = true
+    )
+
+    val dailyOverviewNotify = DataStoreHandler(
+        key = booleanPreferencesKey("dailyOverviewNotify"),
+        defaultValue = false
+    )
+
+    val dailyOverviewTime = DataStoreHandler(
+        key = intPreferencesKey("dailyOverviewTime"),
+        defaultValue = 480 // minutes of day
+    )
+
+    val dailyOverviewSkipQuiet = DataStoreHandler(
+        key = booleanPreferencesKey("dailyOverviewSkipQuiet"),
+        defaultValue = true
+    )
+
+    val dailyOverviewEngine = DataStoreHandler(
+        key = stringPreferencesKey("dailyOverviewEngine"),
+        defaultValue = "Automatic"
+    )
+
+    val dailyOverviewCache = DataStoreHandler(
+        key = stringPreferencesKey("dailyOverviewCache"),
+        defaultValue = ""
+    )
 }
