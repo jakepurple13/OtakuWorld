@@ -2,6 +2,7 @@ package com.programmersbox.kmpuiviews.di
 
 import com.programmersbox.kmpuiviews.presentation.all.AllViewModel
 import com.programmersbox.kmpuiviews.presentation.bookmarks.BookmarkChaptersViewModel
+import com.programmersbox.kmpuiviews.presentation.dailyoverview.DailyOverviewViewModel
 import com.programmersbox.kmpuiviews.presentation.details.DetailsViewModel
 import com.programmersbox.kmpuiviews.presentation.dictionary.DictionaryDetailViewModel
 import com.programmersbox.kmpuiviews.presentation.dictionary.DictionaryFormViewModel
@@ -50,6 +51,7 @@ import org.koin.dsl.module
 val viewModels: Module = module {
     viewModelOf(::NotificationSettingsViewModel)
     viewModelOf(::NotificationScreenViewModel)
+    viewModelOf(::DailyOverviewViewModel)
     viewModelOf(::CatchUpViewModel)
     viewModelOf(::PrereleaseViewModel)
     viewModelOf(::ExtensionListViewModel)

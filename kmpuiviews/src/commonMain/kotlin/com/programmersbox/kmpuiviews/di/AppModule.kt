@@ -15,6 +15,10 @@ import com.programmersbox.kmpuiviews.presentation.quickactions.QuickActionsContr
 import com.programmersbox.kmpuiviews.domain.MediaUpdateChecker
 import com.programmersbox.kmpuiviews.domain.dailyoverview.DailyFactsBuilder
 import com.programmersbox.kmpuiviews.domain.dailyoverview.DailyOverviewSettings
+import com.programmersbox.kmpuiviews.domain.dailyoverview.EngineResolver
+import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngine
+import com.programmersbox.kmpuiviews.domain.dailyoverview.TemplateEngine
+import com.programmersbox.kmpuiviews.domain.dailyoverview.platformAutomaticOrder
 import com.programmersbox.kmpuiviews.domain.updatecheck.DataStoreUpdateCheckReportStore
 import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckReportStore
 import com.programmersbox.kmpuiviews.presentation.navigation.buildKmpGraph
@@ -85,6 +89,8 @@ val appModule = module {
     singleOf(::EncryptedDataStoreHandling)
     singleOf(::DataStoreHandling)
     singleOf(::DailyOverviewSettings)
+    singleOf(::TemplateEngine) bind SummaryEngine::class
+    single { EngineResolver(getAll<SummaryEngine>(), platformAutomaticOrder) }
     singleOf(::MediaUpdateChecker)
     singleOf(::DataStoreUpdateCheckReportStore) bind UpdateCheckReportStore::class
     singleOf(::SharedCoverBitmaps)

@@ -15,6 +15,9 @@ class EngineResolver(
         else -> ready(SummaryEngineId.valueOf(choice.name))
     } ?: template
 
+    /** The registered engine for [id], or Template when this platform does not have it. */
+    fun engine(id: SummaryEngineId): SummaryEngine = byId[id] ?: template
+
     suspend fun available(): Map<SummaryEngineId, EngineStatus> =
         byId.mapValues { it.value.status() }
 
