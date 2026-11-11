@@ -15,6 +15,7 @@ import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.dailyoverview.GemmaEngine
 import com.programmersbox.kmpuiviews.dailyoverview.NanoEngine
 import com.programmersbox.kmpuiviews.dailyoverview.ProviderEngine
+import com.programmersbox.kmpuiviews.domain.dailyoverview.DailyOverviewScheduler
 import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngine
 import com.programmersbox.kmpuiviews.presentation.settings.extensions.ExtensionShareHandler
 import com.programmersbox.kmpuiviews.presentation.updatecheck.AndroidUpdateCheckReportSharer
@@ -25,6 +26,7 @@ import com.programmersbox.kmpuiviews.utils.DeepLinks
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstaller
 import com.programmersbox.kmpuiviews.utils.ImageModifier
 import com.programmersbox.kmpuiviews.utils.PackageInstallEngine
+import com.programmersbox.kmpuiviews.workers.WorkManagerDailyOverviewScheduler
 import com.programmersbox.kmpuiviews.workers.UpdateNotification
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.bind
@@ -70,6 +72,7 @@ actual fun platformModule(): Module = module {
     singleOf(::NanoEngine) { bind<SummaryEngine>() }
     singleOf(::GemmaEngine) { bind<SummaryEngine>() }
     singleOf(::ProviderEngine) { bind<SummaryEngine>() }
+    single<DailyOverviewScheduler> { WorkManagerDailyOverviewScheduler(get()) }
     kmpWorkers()
     includes(jsExtensionLoaderModule)
 }

@@ -714,4 +714,21 @@
     <string name="do_test_hint">Tap Test to hear how the selected engine writes.</string>
     <string name="do_engine_automatic_desc_plain">Uses the first ready engine, except your AI helper.</string>
     <string name="do_setup_error">Couldn\'t check this engine</string>
+    <string name="do_notif_title">Yesterday: %1$s, %2$s</string>
+    <plurals name="do_notif_chapters">
+        <item quantity="one">%1$d chapter</item>
+        <item quantity="other">%1$d chapters</item>
+    </plurals>
+    <plurals name="do_notif_episodes">
+        <item quantity="one">%1$d episode</item>
+        <item quantity="other">%1$d episodes</item>
+    </plurals>
+    <plurals name="do_notif_updates">
+        <item quantity="one">%1$d update</item>
+        <item quantity="other">%1$d updates</item>
+    </plurals>
+    <string name="do_notif_open">Open overview</string>
+    <string name="do_notif_continue">Continue %1$s</string>
+    <string name="do_notifications_off">Notifications are off for this app</string>
+    <string name="do_notifications_allow">Allow</string>
 </resources>

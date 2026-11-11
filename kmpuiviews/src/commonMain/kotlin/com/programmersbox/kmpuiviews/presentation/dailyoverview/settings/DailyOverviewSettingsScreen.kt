@@ -20,8 +20,10 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.DoNotDisturbOn
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -60,6 +62,8 @@ import otakuworld.kmpuiviews.generated.resources.cancel
 import otakuworld.kmpuiviews.generated.resources.do_group_notification
 import otakuworld.kmpuiviews.generated.resources.do_group_summary
 import otakuworld.kmpuiviews.generated.resources.do_notification_time
+import otakuworld.kmpuiviews.generated.resources.do_notifications_allow
+import otakuworld.kmpuiviews.generated.resources.do_notifications_off
 import otakuworld.kmpuiviews.generated.resources.do_send_morning
 import otakuworld.kmpuiviews.generated.resources.do_send_morning_summary
 import otakuworld.kmpuiviews.generated.resources.do_settings_foot
@@ -104,6 +108,7 @@ fun DailyOverviewSettingsScreen(
             ) {
                 Column {
                     if (supportsMorningNotification) {
+                        val permission = rememberNotificationPermission()
                         GroupLabel(stringResource(Res.string.do_group_notification))
                         Group {
                             SwitchRow(
@@ -119,6 +124,27 @@ fun DailyOverviewSettingsScreen(
                                 exit = shrinkVertically() + fadeOut(),
                             ) {
                                 Column {
+                                    AnimatedVisibility(
+                                        visible = !permission.granted,
+                                        enter = expandVertically() + fadeIn(),
+                                        exit = shrinkVertically() + fadeOut(),
+                                    ) {
+                                        Column {
+                                            RowDivider()
+                                            ListItem(
+                                                leadingContent = {
+                                                    Icon(Icons.Default.NotificationsOff, null, tint = MaterialTheme.colorScheme.error)
+                                                },
+                                                headlineContent = { Text(stringResource(Res.string.do_notifications_off)) },
+                                                trailingContent = {
+                                                    FilledTonalButton(onClick = permission.request) {
+                                                        Text(stringResource(Res.string.do_notifications_allow))
+                                                    }
+                                                },
+                                                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                                            )
+                                        }
+                                    }
                                     RowDivider()
                                     ListItem(
                                         leadingContent = { Icon(Icons.Default.Schedule, null) },

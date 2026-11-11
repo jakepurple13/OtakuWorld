@@ -2,6 +2,7 @@ package com.programmersbox.uiviews.utils
 
 import android.app.PendingIntent
 import android.content.Context
+import android.net.Uri
 import android.content.res.Configuration
 import android.os.Build
 import androidx.appcompat.content.res.AppCompatResources
@@ -79,6 +80,7 @@ class MockInfo(private val context: Context) : GenericInfo {
     override fun deepLinkDetails(context: Context, itemModel: KmpItemModel?): PendingIntent? = null
     override fun deepLinkSettings(context: Context): PendingIntent? = null
     override fun deepLinkUpdateCheckErrors(context: Context): PendingIntent? = null
+    override fun deepLink(context: Context, uri: Uri): PendingIntent? = null
     override suspend fun chapterOnClick(
         model: KmpChapterModel,
         allChapters: List<KmpChapterModel>,

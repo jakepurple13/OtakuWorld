@@ -30,23 +30,28 @@ actual interface PlatformGenericInfo : KmpGenericInfo {
 
     fun deepLinkUpdateCheckErrors(context: Context): PendingIntent?
 
+    /** Opens [uri] in this app's main activity, which matches it against [DeepLinks]. */
+    fun deepLink(context: Context, uri: Uri): PendingIntent?
+
     @SuppressLint("RestrictedApi")
     fun deepLinkDetailsUri(itemModel: KmpItemModel?): Uri {
         return itemModel?.let {
-            deepLinks
-                .details
-                .createUri(
-                    Screen.DetailsScreen.Details(
-                        title = "title",
-                        description = "description",
-                        url = it.url,
-                        imageUrl = it.imageUrl,
-                        source = it.source.serviceName
-                    )
-                )
-                .toUri()
+            deepLinkDetailsUri(url = it.url, imageUrl = it.imageUrl, source = it.source.serviceName)
         } ?: "$deepLinkUri${Screen.DetailsScreen.route}".toUri()
     }
+
+    fun deepLinkDetailsUri(url: String, imageUrl: String, source: String): Uri = deepLinks
+        .details
+        .createUri(
+            Screen.DetailsScreen.Details(
+                title = "title",
+                description = "description",
+                url = url,
+                imageUrl = imageUrl,
+                source = source
+            )
+        )
+        .toUri()
 
     override fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit = {
         generalSettings {
@@ -70,6 +75,11 @@ actual interface PlatformGenericInfo : KmpGenericInfo {
     fun deepLinkUpdateCheckErrorsUri(): Uri = deepLinks
         .updateCheckErrors
         .createUri(Screen.UpdateCheckErrors)
+        .toUri()
+
+    fun deepLinkDailyOverviewUri(): Uri = deepLinks
+        .dailyOverview
+        .createUri(Screen.DailyOverview)
         .toUri()
 
     fun <T : FragmentActivity> deepLinkSetup(

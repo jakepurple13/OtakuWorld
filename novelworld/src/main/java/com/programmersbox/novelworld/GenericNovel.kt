@@ -2,6 +2,7 @@ package com.programmersbox.novelworld
 
 import android.app.PendingIntent
 import android.content.Context
+import android.net.Uri
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.SystemAlerter
@@ -71,6 +72,14 @@ class GenericNovel(
         return deepLinkSetup(
             context = context,
             uri = deepLinkUpdateCheckErrorsUri(),
+            activity = MainActivity::class.java
+        )
+    }
+
+    override fun deepLink(context: Context, uri: Uri): PendingIntent? {
+        return deepLinkSetup(
+            context = context,
+            uri = uri,
             activity = MainActivity::class.java
         )
     }

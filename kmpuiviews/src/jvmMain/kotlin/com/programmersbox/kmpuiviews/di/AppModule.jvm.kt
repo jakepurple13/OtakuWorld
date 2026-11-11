@@ -15,6 +15,8 @@ import com.programmersbox.kmpuiviews.IconLoader
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.MangaDesktopSettings
 import com.programmersbox.kmpuiviews.dailyoverview.OllamaEngine as OllamaSummaryEngine
+import com.programmersbox.kmpuiviews.domain.dailyoverview.DailyOverviewScheduler
+import com.programmersbox.kmpuiviews.domain.dailyoverview.NoOpDailyOverviewScheduler
 import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngine
 import com.programmersbox.kmpuiviews.SystemAlerter
 import com.programmersbox.kmpuiviews.translation.DesktopTranslationHandler
@@ -60,6 +62,7 @@ actual fun platformModule(): Module = module {
     singleOf(::ClipboardUpdateCheckReportSharer) { bind<UpdateCheckReportSharer>() }
     factoryOf(::ImageModifier)
     singleOf(::SystemAlerter)
+    single<DailyOverviewScheduler> { NoOpDailyOverviewScheduler }
     singleOf(::DownloadAndInstaller)
     singleOf(::BackupResultsHolder)
     singleOf(::BackgroundWorkHandlerImpl) { bind<BackgroundWorkHandler>() }
