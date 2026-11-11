@@ -57,6 +57,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.kmpuiviews.domain.dailyoverview.DailyFacts
 import com.programmersbox.kmpuiviews.domain.dailyoverview.TitleRead
@@ -73,7 +74,7 @@ import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalNavigationAnimatedScope
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalSharedElementScope
-import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
+import com.programmersbox.sharedcomponents.repository.ChangingSettingsRepository
 import kotlinx.coroutines.delay
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.format.DayOfWeekNames
@@ -81,6 +82,7 @@ import kotlinx.datetime.format.MonthNames
 import kotlinx.datetime.format.Padding
 import kotlinx.datetime.format.char
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.do_all_updates
@@ -121,12 +123,27 @@ private const val EnterStaggerMs = 55L
 private const val FirstLoadMs = 1500L
 private const val ProgressDelayMs = 800L
 
+/**
+ * Like HideNavBarWhileOnScreen, but from STARTED instead of RESUMED. NavDisplay holds an entry at
+ * STARTED until its transition settles, and the container transform draws in the shared-element
+ * overlay above the nav bar. Waiting for RESUMED let the nav reappear over the screen when the
+ * transform landed, then slide away. Hiding from STARTED slides it out as the transform begins.
+ */
+@Composable
+private fun HideNavBarFromTransitionStart() {
+    val changingSettingsRepository: ChangingSettingsRepository = koinInject()
+    LifecycleStartEffect(Unit) {
+        changingSettingsRepository.showNavBar.tryEmit(false)
+        onStopOrDispose { changingSettingsRepository.showNavBar.tryEmit(true) }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun DailyOverviewScreen(
     viewModel: DailyOverviewViewModel = koinViewModel(),
 ) {
-    HideNavBarWhileOnScreen()
+    HideNavBarFromTransitionStart()
     val navActions = LocalNavActions.current
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val facts = state.facts
