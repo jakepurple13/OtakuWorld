@@ -73,7 +73,13 @@ import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalNavigationAnimatedScope
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.CoverHandoff
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalSharedElementScope
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuImageElement
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuTitleElement
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.SharedItemKey
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.customSharedElement
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.rememberCoverHandoff
 import com.programmersbox.sharedcomponents.repository.ChangingSettingsRepository
 import kotlinx.coroutines.delay
 import kotlinx.datetime.LocalDate
@@ -451,25 +457,28 @@ private fun OverviewRow(
 }
 
 @Composable
-private fun Cover(imageUrl: String, name: String) {
+private fun Cover(imageUrl: String, name: String, sharedItemKey: SharedItemKey, coverHandoff: CoverHandoff) {
     ImageLoaderChoice(
         imageUrl = imageUrl,
         name = name,
         placeHolder = { painterLogo() },
         contentScale = ContentScale.Crop,
+        onImageSet = coverHandoff.onImageSet,
         modifier = Modifier
             .size(width = 40.dp, height = 54.dp)
+            .customSharedElement(OtakuImageElement(sharedItemKey))
             .clip(RoundedCornerShape(8.dp))
     )
 }
 
 @Composable
-private fun RowTitle(text: String) = Text(
+private fun RowTitle(text: String, sharedItemKey: SharedItemKey? = null) = Text(
     text,
     fontSize = 13.5.sp,
     fontWeight = FontWeight.SemiBold,
     maxLines = 1,
     overflow = TextOverflow.Ellipsis,
+    modifier = Modifier.customSharedElement(sharedItemKey?.let(::OtakuTitleElement)),
 )
 
 @Composable
@@ -514,10 +523,15 @@ private fun ReadRow(
         animationSpec = tween(900, easing = EnterEasing),
         label = "readProgress",
     )
+    val sharedItemKey = SharedItemKey(url = title.url, source = title.source)
+    val coverHandoff = rememberCoverHandoff(sharedItemKey)
     OverviewRow(
         modifier = modifier,
-        onClick = onClick,
-        cover = { Cover(title.imageUrl, title.title) },
+        onClick = {
+            coverHandoff.handOff()
+            onClick()
+        },
+        cover = { Cover(title.imageUrl, title.title, sharedItemKey, coverHandoff) },
         trailing = {
             Badge(
                 title.count.toString(),
@@ -526,7 +540,7 @@ private fun ReadRow(
             )
         },
     ) {
-        RowTitle(title.title)
+        RowTitle(title.title, sharedItemKey)
         val range = if (title.firstChapter == title.lastChapter) {
             title.lastChapter
         } else {
@@ -558,13 +572,18 @@ private fun UpdateRow(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val sharedItemKey = SharedItemKey(url = update.url, source = update.source)
+    val coverHandoff = rememberCoverHandoff(sharedItemKey)
     OverviewRow(
         modifier = modifier,
-        onClick = onClick,
-        cover = { Cover(update.imageUrl.orEmpty(), update.title) },
+        onClick = {
+            coverHandoff.handOff()
+            onClick()
+        },
+        cover = { Cover(update.imageUrl.orEmpty(), update.title, sharedItemKey, coverHandoff) },
         trailing = {},
     ) {
-        RowTitle(update.title)
+        RowTitle(update.title, sharedItemKey)
         val source = LocalSourcesRepository.current.displayNameFor(update.source)
         RowSubtitle(listOf(update.summary, source).filter { it.isNotBlank() }.joinToString(" · "))
     }
