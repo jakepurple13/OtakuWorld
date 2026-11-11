@@ -629,6 +629,7 @@
     <string name="do_setup_choose_provider">Choose a provider in AI Helper</string>
     <string name="do_setup_choose_ollama">Choose Ollama in AI Helper</string>
     <string name="do_setup_ollama_not_running">Ollama isn't running</string>
+    <string name="do_setup_pick_ollama_model">Pick an Ollama model in AI Helper</string>
     <string name="do_label_nano">Gemini Nano</string>
     <string name="do_setup_nano_downloading">Downloading Gemini Nano</string>
     <string name="do_yesterday">Yesterday</string>

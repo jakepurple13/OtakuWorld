@@ -33,6 +33,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class KoogEnginesTest {
@@ -54,9 +55,11 @@ class KoogEnginesTest {
 
     private val requested = mutableListOf<String>()
 
-    private fun tagsClient(handler: suspend () -> Boolean) = HttpClient(MockEngine { request ->
+    private fun tagsClient(models: List<String> = listOf("llama3.2:3b"), handler: suspend () -> Boolean) = HttpClient(MockEngine { request ->
         requested += request.url.toString()
-        if (handler()) respond("""{"models":[]}""") else respondError(HttpStatusCode.InternalServerError)
+        if (handler()) {
+            respond("""{"models":[${models.joinToString(",") { """{"name":"$it","model":"$it"}""" }}]}""")
+        } else respondError(HttpStatusCode.InternalServerError)
     })
 
     private val facts = DailyFacts(
@@ -71,7 +74,7 @@ class KoogEnginesTest {
 
     @Test
     fun `ollama ready when company is Ollama and tags responds`() = runTest {
-        val engine = OllamaEngine(agentMaker(OllamaLLMProvider.display), tagsClient { true })
+        val engine = OllamaEngine(agentMaker(LLMProvider.Ollama.display), tagsClient { true })
 
         assertEquals(EngineStatus.Ready, engine.status())
         assertEquals(listOf("http://localhost:11434/api/tags"), requested)
@@ -82,21 +85,21 @@ class KoogEnginesTest {
 
     @Test
     fun `ollama not running when tags fails`() = runTest {
-        val engine = OllamaEngine(agentMaker(OllamaLLMProvider.display), tagsClient { false })
+        val engine = OllamaEngine(agentMaker(LLMProvider.Ollama.display), tagsClient { false })
 
         assertEquals(EngineStatus.NeedsSetup("Ollama isn't running"), engine.status())
     }
 
     @Test
     fun `ollama not running when tags throws`() = runTest {
-        val engine = OllamaEngine(agentMaker(OllamaLLMProvider.display), tagsClient { error("connection refused") })
+        val engine = OllamaEngine(agentMaker(LLMProvider.Ollama.display), tagsClient { error("connection refused") })
 
         assertEquals(EngineStatus.NeedsSetup("Ollama isn't running"), engine.status())
     }
 
     @Test
     fun `ollama not running when tags takes longer than 2s`() = runTest {
-        val engine = OllamaEngine(agentMaker(OllamaLLMProvider.display), tagsClient { delay(3_000); true })
+        val engine = OllamaEngine(agentMaker(LLMProvider.Ollama.display), tagsClient { delay(3_000); true })
 
         assertEquals(EngineStatus.NeedsSetup("Ollama isn't running"), engine.status())
     }
@@ -109,6 +112,25 @@ class KoogEnginesTest {
         assertIs<EngineStatus.NeedsSetup>(status)
         assertEquals("Choose Ollama in AI Helper", status.reason)
         assertTrue(requested.isEmpty())
+    }
+
+    @Test
+    fun `ollama ready and client built for a model missing from Koog's static list`() = runTest {
+        val engine = OllamaEngine(agentMaker(LLMProvider.Ollama.display, "gemma4:26b"), tagsClient(listOf("gemma4:26b", "llama3.2:latest")) { true })
+
+        assertEquals(EngineStatus.Ready, engine.status())
+        val (_, model) = assertNotNull(engine.client())
+        assertEquals("gemma4:26b", model.id)
+        assertEquals(OllamaLLMProvider, model.provider)
+    }
+
+    @Test
+    fun `ollama needs setup when selected model is not installed`() = runTest {
+        val engine = OllamaEngine(agentMaker(LLMProvider.Ollama.display, "gemma4:26b"), tagsClient(listOf("llama3.2:latest")) { true })
+
+        val status = engine.status()
+        assertIs<EngineStatus.NeedsSetup>(status)
+        assertEquals("Pick an Ollama model in AI Helper", status.reason)
     }
 
     private class FakeClient(
