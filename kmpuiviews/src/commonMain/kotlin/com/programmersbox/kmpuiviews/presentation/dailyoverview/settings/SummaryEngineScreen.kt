@@ -60,6 +60,7 @@ import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.do_change_ai_helper
 import otakuworld.kmpuiviews.generated.resources.do_engine_automatic
 import otakuworld.kmpuiviews.generated.resources.do_engine_automatic_desc
+import otakuworld.kmpuiviews.generated.resources.do_engine_automatic_desc_plain
 import otakuworld.kmpuiviews.generated.resources.do_engine_gemma
 import otakuworld.kmpuiviews.generated.resources.do_engine_gemma_desc
 import otakuworld.kmpuiviews.generated.resources.do_engine_nano_desc
@@ -98,11 +99,7 @@ fun SummaryEngineScreen(
     val test by viewModel.test.collectAsStateWithLifecycle()
     val open: (NavKey) -> Unit = { navActions.navigate(it) }
 
-    // Coming back from the AI Helper re-reads the statuses; the first open already loaded them.
-    var opened by rememberSaveable { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        if (opened) viewModel.refresh() else opened = true
-    }
+    RefreshOnReturn(viewModel::refresh)
 
     SettingsScaffold(title = stringResource(Res.string.do_summary_engine)) {
         val state = ui ?: return@SettingsScaffold
@@ -118,7 +115,12 @@ fun SummaryEngineScreen(
                 selected = choice == SummaryEngineChoice.Automatic,
                 onSelect = { viewModel.choose(SummaryEngineChoice.Automatic) },
                 title = stringResource(Res.string.do_engine_automatic),
-                description = stringResource(Res.string.do_engine_automatic_desc, state.automaticLabel),
+                // "Right now" waits for the statuses, so it never reads "Right now: ."
+                description = if (state.automaticLabel.isEmpty()) {
+                    stringResource(Res.string.do_engine_automatic_desc_plain)
+                } else {
+                    stringResource(Res.string.do_engine_automatic_desc, state.automaticLabel)
+                },
             )
 
             state.engines.forEach { row ->
@@ -180,7 +182,7 @@ fun SummaryEngineScreen(
                             }
                         },
                         whenSelected = {
-                            ProviderBox(row.label)
+                            ProviderBox(row.shortName)
                             WarnBox(stringResource(Res.string.do_provider_warning, row.destination.orEmpty()))
                             aiHelperSettingsRoute?.let { route ->
                                 OutlinedButton(onClick = { open(route) }) {
@@ -232,6 +234,19 @@ fun SummaryEngineScreen(
                 )
             }
         }
+    }
+}
+
+/**
+ * Calls [onReturn] each time the entry comes back on screen (e.g. back from the AI Helper), but
+ * not on the first open, which the ViewModel already loaded. Nav3 drops covered entries from
+ * composition and keeps their saveable state, so the effect reruns on return.
+ */
+@Composable
+internal fun RefreshOnReturn(onReturn: () -> Unit) {
+    var opened by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        if (opened) onReturn() else opened = true
     }
 }
 

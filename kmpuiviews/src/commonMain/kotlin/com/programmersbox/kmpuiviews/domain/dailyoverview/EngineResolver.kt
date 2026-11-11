@@ -1,5 +1,10 @@
 package com.programmersbox.kmpuiviews.domain.dailyoverview
 
+import kotlinx.coroutines.CancellationException
+import org.jetbrains.compose.resources.getString
+import otakuworld.kmpuiviews.generated.resources.Res
+import otakuworld.kmpuiviews.generated.resources.do_setup_error
+
 /** Automatic order for this platform. Template is always the final fallback. */
 expect val platformAutomaticOrder: List<SummaryEngineId>
 
@@ -19,8 +24,17 @@ class EngineResolver(
     fun engine(id: SummaryEngineId): SummaryEngine = byId[id] ?: template
 
     suspend fun available(): Map<SummaryEngineId, EngineStatus> =
-        byId.mapValues { it.value.status() }
+        byId.mapValues { it.value.safeStatus() }
 
     private suspend fun ready(id: SummaryEngineId): SummaryEngine? =
-        byId[id]?.takeIf { it.status() == EngineStatus.Ready }
+        byId[id]?.takeIf { it.safeStatus() == EngineStatus.Ready }
+
+    /** A status check that throws (e.g. an unreadable model folder) counts as needing setup. */
+    private suspend fun SummaryEngine.safeStatus(): EngineStatus = try {
+        status()
+    } catch (e: CancellationException) {
+        throw e
+    } catch (_: Exception) {
+        EngineStatus.NeedsSetup(getString(Res.string.do_setup_error))
+    }
 }

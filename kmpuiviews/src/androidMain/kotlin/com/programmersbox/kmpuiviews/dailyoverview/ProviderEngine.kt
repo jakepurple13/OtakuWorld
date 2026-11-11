@@ -10,6 +10,7 @@ import com.programmersbox.koogintegration.AgentMaker
 import com.programmersbox.koogintegration.NoLLMProvider
 import org.jetbrains.compose.resources.getString
 import otakuworld.kmpuiviews.generated.resources.Res
+import otakuworld.kmpuiviews.generated.resources.do_engine_resolved
 import otakuworld.kmpuiviews.generated.resources.do_label_via_koog
 import otakuworld.kmpuiviews.generated.resources.do_setup_choose_provider
 
@@ -24,6 +25,10 @@ class ProviderEngine(
 
     override suspend fun label(): String =
         getString(Res.string.do_label_via_koog, agentMaker.selection()?.company.orEmpty())
+
+    /** "Google · gemini-2.5-flash". */
+    override suspend fun shortName(): String =
+        agentMaker.selection()?.let { getString(Res.string.do_engine_resolved, it.company, it.model) } ?: label()
 
     override suspend fun destination(): String? = agentMaker.selection()?.company
 

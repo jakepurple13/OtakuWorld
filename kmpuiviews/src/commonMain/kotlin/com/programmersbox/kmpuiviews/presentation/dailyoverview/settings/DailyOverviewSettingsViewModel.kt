@@ -8,7 +8,6 @@ import com.programmersbox.kmpuiviews.domain.dailyoverview.DailyOverviewPrefs
 import com.programmersbox.kmpuiviews.domain.dailyoverview.DailyOverviewSettings
 import com.programmersbox.kmpuiviews.domain.dailyoverview.EngineResolver
 import com.programmersbox.kmpuiviews.domain.dailyoverview.EngineStatus
-import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngine
 import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngineChoice
 import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngineId
 import com.programmersbox.kmpuiviews.domain.dailyoverview.TitleRead
@@ -49,6 +48,8 @@ data class EngineRow(
     val onDevice: Boolean,
     /** Who receives the facts when not [onDevice], e.g. "Google". */
     val destination: String? = null,
+    /** e.g. "Gemma 4 E2B" or "Google · gemini-2.5-flash". */
+    val shortName: String = label,
 )
 
 /**
@@ -112,10 +113,12 @@ class DailyOverviewSettingsViewModel(
             _test.value = SummaryState.Loading
             val facts = SampleFacts.create(genericInfo.updateUnit)
             val engine = resolver.resolve(settings.prefs.first().engine)
-            val label = engine.label()
-            val destination = engine.destination()
+            var label = ""
+            var destination: String? = null
             var text = ""
             try {
+                label = engine.label()
+                destination = engine.destination()
                 engine.summarize(facts)
                     .scan("") { acc, chunk -> acc + chunk }
                     .collect {
@@ -150,10 +153,19 @@ class DailyOverviewSettingsViewModel(
             .sortedBy { it.key.ordinal }
             .map { (id, status) ->
                 val engine = resolver.engine(id)
-                EngineRow(id, status, engine.label(), engine.onDevice, engine.destination())
+                val fallback = choiceName(SummaryEngineChoice.valueOf(id.name))
+                EngineRow(
+                    id = id,
+                    status = status,
+                    label = orNull { engine.label() } ?: fallback,
+                    onDevice = engine.onDevice,
+                    destination = orNull { engine.destination() },
+                    shortName = orNull { engine.shortName() } ?: fallback,
+                )
             }
         val automatic = resolver.resolve(SummaryEngineChoice.Automatic)
-        val automaticLabel = shortName(automatic)
+        val automaticLabel = rows.firstOrNull { it.id == automatic.id }?.shortName
+            ?: getString(Res.string.do_engine_numbers)
         val resolved = if (choice == SummaryEngineChoice.Automatic) automatic else resolver.resolve(choice)
         val name = if (choice == SummaryEngineChoice.Automatic) {
             getString(Res.string.do_engine_resolved, choiceName(choice), automaticLabel)
@@ -168,8 +180,14 @@ class DailyOverviewSettingsViewModel(
         )
     }
 
-    private suspend fun shortName(engine: SummaryEngine): String =
-        if (engine.id == SummaryEngineId.Template) getString(Res.string.do_engine_numbers) else engine.label()
+    /** A failing engine call must not take the page down; the caller shows a fallback. */
+    private suspend fun <T> orNull(block: suspend () -> T): T? = try {
+        block()
+    } catch (e: CancellationException) {
+        throw e
+    } catch (_: Exception) {
+        null
+    }
 
     private suspend fun choiceName(choice: SummaryEngineChoice): String = getString(
         when (choice) {

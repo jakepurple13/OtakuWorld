@@ -712,4 +712,6 @@
     <string name="do_preview">Preview</string>
     <string name="do_test">Test</string>
     <string name="do_test_hint">Tap Test to hear how the selected engine writes.</string>
+    <string name="do_engine_automatic_desc_plain">Uses the first ready engine, except your AI helper.</string>
+    <string name="do_setup_error">Couldn\'t check this engine</string>
 </resources>

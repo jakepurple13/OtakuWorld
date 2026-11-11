@@ -18,6 +18,9 @@ interface SummaryEngine {
     /** Shown on the card, e.g. "Gemma 4 E2B · on device". */
     suspend fun label(): String
 
+    /** Shown in settings rows, e.g. "Gemma 4 E2B" or "Google · gemini-2.5-flash". */
+    suspend fun shortName(): String = label()
+
     /** True when nothing leaves the device. */
     val onDevice: Boolean
 

@@ -28,20 +28,24 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DailyOverviewSettingsViewModelTest {
 
+    /** [label] mirrors the real engines' card label; [shortName] is what settings rows show. */
     private class FakeEngine(
         override val id: SummaryEngineId,
-        private val label: String,
-        private val status: EngineStatus = EngineStatus.Ready,
+        private val shortName: String,
+        @Volatile var status: EngineStatus = EngineStatus.Ready,
+        private val throws: Boolean = false,
     ) : SummaryEngine {
         @Volatile
         var received: DailyFacts? = null
-        override suspend fun label() = label
+        override suspend fun label() = "$shortName · on device"
+        override suspend fun shortName() = shortName
         override val onDevice = true
-        override suspend fun status() = status
+        override suspend fun status(): EngineStatus = if (throws) error("model dir missing") else status
         override fun summarize(facts: DailyFacts): Flow<String> {
             received = facts
             return flowOf("Sample ", "text")
@@ -112,6 +116,31 @@ class DailyOverviewSettingsViewModelTest {
         assertEquals("Sample text", done.text)
         assertEquals(SummaryEngineId.Gemma, done.engine)
         assertEquals(SampleFacts.create(FakeKmpGenericInfo().updateUnit), gemma.received)
+    }
+
+    @Test
+    fun `refresh updates resolvedLabel after an engine becomes ready`() = runTest {
+        val gemma = FakeEngine(SummaryEngineId.Gemma, "Gemma 4 E2B", EngineStatus.NeedsSetup("Download a model"))
+        val vm = viewModel(gemma)
+        await { vm.ui.value?.resolvedLabel == "Automatic · Numbers only (not ready)" }
+        gemma.status = EngineStatus.Ready
+        vm.refresh()
+        await { vm.ui.value?.resolvedLabel == "Automatic · Gemma 4 E2B" }
+    }
+
+    @Test
+    fun `an engine whose status throws reads as needing setup and does not break the page`() = runTest {
+        val vm = viewModel(FakeEngine(SummaryEngineId.Gemma, "Gemma 4 E2B", throws = true))
+        await { vm.ui.value?.engines?.isNotEmpty() == true }
+        val gemma = vm.ui.value!!.engines.first { it.id == SummaryEngineId.Gemma }
+        assertTrue(gemma.status is EngineStatus.NeedsSetup)
+        assertEquals("Automatic · Numbers only (not ready)", vm.ui.value?.resolvedLabel)
+
+        vm.choose(SummaryEngineChoice.Gemma)
+        await { vm.ui.value?.prefs?.engine == SummaryEngineChoice.Gemma }
+        vm.runTest()
+        await { vm.test.value is SummaryState.Done }
+        assertEquals(SummaryEngineId.Template, (vm.test.value as SummaryState.Done).engine)
     }
 
     @Test

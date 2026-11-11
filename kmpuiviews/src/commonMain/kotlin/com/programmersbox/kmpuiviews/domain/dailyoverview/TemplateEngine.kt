@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.flow
 import org.jetbrains.compose.resources.getPluralString
 import org.jetbrains.compose.resources.getString
 import otakuworld.kmpuiviews.generated.resources.Res
+import otakuworld.kmpuiviews.generated.resources.do_engine_numbers
 import otakuworld.kmpuiviews.generated.resources.do_label_template
 import otakuworld.kmpuiviews.generated.resources.do_template_failed
 import otakuworld.kmpuiviews.generated.resources.do_template_new_chapters
@@ -21,6 +22,8 @@ class TemplateEngine : SummaryEngine {
     override val onDevice = true
 
     override suspend fun label() = getString(Res.string.do_label_template)
+
+    override suspend fun shortName() = getString(Res.string.do_engine_numbers)
 
     override suspend fun status(): EngineStatus = EngineStatus.Ready
 

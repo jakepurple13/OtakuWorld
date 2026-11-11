@@ -84,6 +84,8 @@ fun DailyOverviewSettingsScreen(
     val ui by viewModel.ui.collectAsStateWithLifecycle()
     val is24Hour = koinInject<DateTimeFormatHandler>().is24Time()
     var showTimePicker by rememberSaveable { mutableStateOf(false) }
+    // Back from the engine page or the AI Helper, the resolved label may have changed.
+    RefreshOnReturn(viewModel::refresh)
 
     SettingsScaffold(title = stringResource(Res.string.do_settings_title)) {
         val state = ui ?: return@SettingsScaffold

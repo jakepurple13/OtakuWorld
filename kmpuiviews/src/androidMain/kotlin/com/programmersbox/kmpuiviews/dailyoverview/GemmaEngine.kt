@@ -26,6 +26,8 @@ class GemmaEngine(
     override suspend fun label(): String =
         getString(Res.string.do_label_on_device, model()?.displayName() ?: "Gemma")
 
+    override suspend fun shortName(): String = model()?.displayName() ?: "Gemma"
+
     override suspend fun status(): EngineStatus =
         if (model() != null) EngineStatus.Ready
         else EngineStatus.NeedsSetup(getString(Res.string.do_setup_download_model))
