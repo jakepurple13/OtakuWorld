@@ -1,8 +1,8 @@
 # Changelog
 
-## [Unreleased] - changes since v32.1.2
+## [33.0.0] - 2026-11-11
 
-_Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
+_Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...v33.0.0_
 
 ### Highlights
 
