@@ -1,6 +1,11 @@
 package com.programmersbox.manga.shared.reader
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -39,5 +44,22 @@ class ReaderMotionUiTest {
         onNodeWithText(" · 24 pages", substring = true).assertIsDisplayed()
         mainClock.advanceTimeBy(CHAPTER_BANNER_MILLIS + 1_000)
         onNodeWithText("Ch. 43").assertDoesNotExist()
+    }
+
+    @Test
+    fun burstOnlyOnUserAdd() = runComposeUiTest {
+        mainClock.autoAdvance = false
+        var bookmarked by mutableStateOf(false)
+        setContent { BookmarkToggle(bookmarked, onBookmarkClick = { bookmarked = it }) }
+        bookmarked = true // the bookmark flow catching up when the chapter opens
+        mainClock.advanceTimeByFrame()
+        onNodeWithTag("bookmarkBurst").assertDoesNotExist()
+        bookmarked = false
+        mainClock.advanceTimeBy(1_000)
+        onNodeWithContentDescription("Bookmark chapter").performClick()
+        mainClock.advanceTimeByFrame()
+        onNodeWithTag("bookmarkBurst").assertExists()
+        mainClock.advanceTimeBy(1_000)
+        onNodeWithTag("bookmarkBurst").assertDoesNotExist()
     }
 }

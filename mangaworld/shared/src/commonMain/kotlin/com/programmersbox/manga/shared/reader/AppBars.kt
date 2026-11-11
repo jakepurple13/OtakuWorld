@@ -1,5 +1,24 @@
 package com.programmersbox.manga.shared.reader
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Box
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.testTag
+import kotlinx.coroutines.launch
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.animateFloatAsState
@@ -95,17 +114,10 @@ fun ReaderTopBar(
         },
         actions = {
             if (allowBookmark) {
-                IconToggleButton(
-                    checked = isBookmarked,
-                    onCheckedChange = onBookmarkClick,
-                ) {
-                    Icon(
-                        imageVector = if (isBookmarked) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
-                        contentDescription = if (isBookmarked) "Remove bookmark" else "Bookmark chapter",
-                        tint = if (isBookmarked) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
+                BookmarkToggle(
+                    isBookmarked = isBookmarked,
+                    onBookmarkClick = onBookmarkClick,
+                )
             }
             IconButton(
                 onClick = onRefreshClick,
@@ -484,3 +496,89 @@ private fun FloatingNavigationBar(
         )
     }
 }
+/**
+ * Bookmark icon that fills top-down when set. Adding a bookmark by tap also pops the icon, bursts six
+ * dots around it and plays a haptic; a state change from elsewhere (the bookmark flow loading) only fills.
+ */
+@Composable
+internal fun BookmarkToggle(
+    isBookmarked: Boolean,
+    onBookmarkClick: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val haptics = LocalHapticFeedback.current
+    val scope = rememberCoroutineScope()
+    val pop = remember { Animatable(1f) }
+    val burst = remember { Animatable(0f) }
+    var bursting by remember { mutableStateOf(false) }
+    val fill by animateFloatAsState(
+        targetValue = if (isBookmarked) 1f else 0f,
+        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
+    )
+    val primary = MaterialTheme.colorScheme.primary
+    val bouncy = spring<Float>(dampingRatio = Spring.DampingRatioMediumBouncy)
+
+    Box(contentAlignment = Alignment.Center, modifier = modifier) {
+        if (bursting) {
+            Canvas(
+                Modifier
+                    .matchParentSize()
+                    .testTag("bookmarkBurst")
+            ) {
+                val t = burst.value
+                val distance = 14.dp.toPx() * t
+                BURST_DIRECTIONS.forEach { (x, y) ->
+                    drawCircle(
+                        color = primary,
+                        radius = 1.5.dp.toPx(),
+                        center = center + Offset(x * distance, y * distance),
+                        alpha = 1f - t,
+                    )
+                }
+            }
+        }
+        IconToggleButton(
+            checked = isBookmarked,
+            onCheckedChange = { checked ->
+                onBookmarkClick(checked)
+                if (checked) {
+                    haptics.performHapticFeedback(HapticFeedbackType.ToggleOn)
+                    bursting = true
+                    scope.launch {
+                        pop.animateTo(1.35f, bouncy)
+                        pop.animateTo(1f, bouncy)
+                    }
+                    scope.launch {
+                        burst.snapTo(0f)
+                        burst.animateTo(1f, tween(500))
+                        bursting = false
+                    }
+                }
+            },
+            modifier = Modifier.graphicsLayer {
+                scaleX = pop.value
+                scaleY = pop.value
+            }
+        ) {
+            Box {
+                Icon(
+                    imageVector = Icons.Outlined.BookmarkBorder,
+                    contentDescription = if (isBookmarked) "Remove bookmark" else "Bookmark chapter",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Icon(
+                    imageVector = Icons.Filled.Bookmark,
+                    contentDescription = null,
+                    tint = primary,
+                    modifier = Modifier.drawWithContent {
+                        clipRect(bottom = size.height * fill) { this@drawWithContent.drawContent() }
+                    }
+                )
+            }
+        }
+    }
+}
+
+private val BURST_DIRECTIONS = listOf(
+    -1f to -.6f, 1f to -.6f, -1f to .4f, 1f to .4f, 0f to -1f, 0f to 1f,
+)
