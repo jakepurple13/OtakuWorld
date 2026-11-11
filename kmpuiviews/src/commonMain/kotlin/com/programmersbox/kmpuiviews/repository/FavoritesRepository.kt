@@ -15,6 +15,7 @@ class FavoritesRepository(
     private val systemAlerter: SystemAlerter,
     private val authManager: AuthManager,
     private val sourceRepository: SourceRepository,
+    private val clock: Clock = Clock.System,
 ) {
     /**
      * [source] is an item url or a [com.programmersbox.kmpmodels.KmpApiService.serviceName].
@@ -52,11 +53,13 @@ class FavoritesRepository(
         }
     }
 
-    suspend fun addWatched(chapterWatched: ChapterWatched) {
+    suspend fun addWatched(chapterWatched: ChapterWatched, stampReadTime: Boolean = true) {
         if (isIncognito(chapterWatched.favoriteUrl)) return
         coroutineScope {
             launch {
-                dao.insertChapter(chapterWatched)
+                // Only reader reads are stamped; an unstamped row (createdAt 0) never counts as read that day.
+                val now = clock.now().toEpochMilliseconds()
+                dao.insertChapter(if (stampReadTime) chapterWatched.copy(createdAt = now, updatedAt = now) else chapterWatched)
                 systemAlerter.alertChapterChange()
             }
         }

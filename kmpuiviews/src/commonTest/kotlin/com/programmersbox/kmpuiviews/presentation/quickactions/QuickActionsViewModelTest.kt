@@ -62,8 +62,10 @@ private class FakeReports : UpdateCheckReportStore {
 private class FakeCounts : QuickActionCounts {
     val listsFlow = MutableStateFlow(0)
     val saved = MutableStateFlow(0)
+    val yesterday = MutableStateFlow(0)
     override val lists: Flow<Int> = listsFlow
     override val savedNotifications: Flow<Int> = saved
+    override val yesterdayReads: Flow<Int> = yesterday
 }
 
 private class FakeHandler : BackgroundWorkHandler {
@@ -85,6 +87,8 @@ private class FakeHandler : BackgroundWorkHandler {
 /** Records the calls these tests care about; everything else is a no-op. */
 private class RecordingNav : NavigationActions {
     val calls = mutableListOf<String>()
+    var top: NavKey? = null
+    override fun isOnTop(key: NavKey): Boolean = top == key
     override fun scanQrCode() {
         calls += "scanQrCode"
     }
@@ -208,6 +212,7 @@ class QuickActionsViewModelTest {
     private lateinit var fakeHandler: FakeHandler
     private lateinit var nav: RecordingNav
     private lateinit var counts: FakeCounts
+    private lateinit var dailyOverviewEnabled: MutableStateFlow<Boolean>
 
     @BeforeTest
     fun setUp() {
@@ -217,6 +222,7 @@ class QuickActionsViewModelTest {
         fakeHandler = FakeHandler()
         nav = RecordingNav()
         counts = FakeCounts()
+        dailyOverviewEnabled = MutableStateFlow(true)
     }
 
     @AfterTest
@@ -225,7 +231,7 @@ class QuickActionsViewModelTest {
     }
 
     private fun vm(work: FakeWork = FakeWork().also { fakeWork = it }) =
-        QuickActionsViewModel(controller, work, fakeReports, fakeHandler, nav, counts)
+        QuickActionsViewModel(controller, work, fakeReports, fakeHandler, nav, counts, dailyOverviewEnabled)
 
     @Test
     fun runCheckStartsOnceAndCloses() = runTest {
@@ -303,6 +309,53 @@ class QuickActionsViewModelTest {
     @Test fun savedNotificationsNavigates() = runTest {
         vm().run(QuickAction.SavedNotifications)
         assertEquals(listOf("notifications"), nav.calls)
+    }
+
+    @Test
+    fun runDailyOverviewNavigatesToDailyOverview() = runTest {
+        val vm = vm()
+        controller.open(OpenOrigin.Bolt)
+        vm.run(QuickAction.DailyOverview)
+        assertEquals(listOf("navigate:${Screen.DailyOverview}"), nav.calls)
+        assertNull(controller.open.value)
+    }
+
+    @Test
+    fun runDailyOverviewIsANoOpWhenAlreadyOnTop() = runTest {
+        val vm = vm()
+        nav.top = Screen.DailyOverview
+        controller.open(OpenOrigin.Bolt)
+        vm.run(QuickAction.DailyOverview)
+        assertEquals(emptyList(), nav.calls)
+        assertNull(controller.open.value)
+    }
+
+    @Test
+    fun dailyOverviewHiddenWhenDisabledAndReappearsWhenEnabled() = runTest {
+        val vm = vm()
+        runCurrent()
+        assertEquals(QuickAction.entries, vm.visibleActions.value)
+
+        dailyOverviewEnabled.value = false
+        runCurrent()
+        assertEquals(QuickAction.entries - QuickAction.DailyOverview, vm.visibleActions.value)
+
+        dailyOverviewEnabled.value = true
+        runCurrent()
+        assertEquals(QuickAction.entries, vm.visibleActions.value)
+    }
+
+    @Test
+    fun yesterdayReadsFlowIntoState() = runTest {
+        counts.yesterday.value = 23
+        val vm = vm()
+        vm.uiState.test {
+            runCurrent()
+            assertEquals(23, expectMostRecentItem().yesterdayReads)
+            counts.yesterday.value = 0
+            runCurrent()
+            assertNull(expectMostRecentItem().yesterdayReads)
+        }
     }
 
     @Test

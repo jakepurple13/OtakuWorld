@@ -23,6 +23,7 @@ object SettingsScreenDisplayNames {
         Screen.UpdateSourcesSettings -> "Update Sources"
         Screen.DebugScreen -> "Debug Menu"
         Screen.OtherSettings -> "Player"
+        Screen.DailyOverview.Settings -> "Daily overview"
         // New Screen.Settings.* keys — added in Task 5
         Screen.Settings -> "Settings"
         Screen.Settings.Library -> "Library"

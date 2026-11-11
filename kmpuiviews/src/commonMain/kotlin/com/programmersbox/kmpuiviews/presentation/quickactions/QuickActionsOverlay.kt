@@ -68,6 +68,10 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.programmersbox.kmpuiviews.KmpGenericInfo
+import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateUnit
+import com.programmersbox.kmpuiviews.presentation.dailyoverview.DailyOverviewSharedKey
+import com.programmersbox.kmpuiviews.presentation.dailyoverview.dailyOverviewBoundsTransform
 import com.programmersbox.kmpuiviews.utils.LocalWindowSizeClass
 import com.programmersbox.sharedcomponents.notifier.InAppNotifier
 import com.programmersbox.sharedcomponents.notifier.ProgressHandle
@@ -86,6 +90,7 @@ import otakuworld.kmpuiviews.generated.resources.qa_view
 import otakuworld.kmpuiviews.generated.resources.qa_waiting_to_start
 
 private val CardShape = RoundedCornerShape(26.dp)
+private val DailyOverviewRowShape = RoundedCornerShape(16.dp)
 
 /**
  * Root overlay for quick actions: scrim, the card (grown from the bolt, or centered when opened
@@ -99,6 +104,8 @@ fun SharedTransitionScope.QuickActionsOverlay() {
     val vm = koinViewModel<QuickActionsViewModel>()
     val open by controller.open.collectAsStateWithLifecycle()
     val uiState by vm.uiState.collectAsStateWithLifecycle()
+    val actions by vm.visibleActions.collectAsStateWithLifecycle()
+    val unit = koinInject<KmpGenericInfo>().updateUnit
     val compact = LocalWindowSizeClass.current.widthSizeClass == WindowWidthSizeClass.Compact
     val cardWidth = if (compact) Modifier.fillMaxWidth() else Modifier.widthIn(max = 480.dp).fillMaxWidth()
 
@@ -139,8 +146,11 @@ fun SharedTransitionScope.QuickActionsOverlay() {
         ) {
             QuickActionsCard(
                 state = uiState,
+                actions = actions,
+                unit = unit,
                 controller = controller,
                 onAction = vm::run,
+                sharedScope = this@QuickActionsOverlay,
                 modifier = Modifier.sharedBounds(
                     sharedContentState = rememberSharedContentState(QuickActionsSharedKey),
                     animatedVisibilityScope = this@AnimatedVisibility,
@@ -166,7 +176,15 @@ fun SharedTransitionScope.QuickActionsOverlay() {
             // (desktop focuses the filter field instead)
             val firstRow = remember { FocusRequester() }
             if (!quickActionsDesktopExtras) LaunchedEffect(Unit) { firstRow.requestFocus() }
-            QuickActionsCard(state = uiState, controller = controller, onAction = vm::run, firstRowFocusRequester = firstRow)
+            QuickActionsCard(
+                state = uiState,
+                actions = actions,
+                unit = unit,
+                controller = controller,
+                onAction = vm::run,
+                sharedScope = this@QuickActionsOverlay,
+                firstRowFocusRequester = firstRow,
+            )
         }
 
         QuickActionsBanners(
@@ -177,14 +195,30 @@ fun SharedTransitionScope.QuickActionsOverlay() {
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun AnimatedVisibilityScope.QuickActionsCard(
     state: QuickActionsUiState,
+    actions: List<QuickAction>,
+    unit: UpdateUnit,
     controller: QuickActionsController,
     onAction: (QuickAction) -> Unit,
+    sharedScope: SharedTransitionScope,
     modifier: Modifier = Modifier,
     firstRowFocusRequester: FocusRequester? = null,
 ) {
+    // The Daily overview row grows into the overview screen, which shares this key on its root
+    val dailyOverviewBounds = with(sharedScope) {
+        Modifier.sharedBounds(
+            sharedContentState = rememberSharedContentState(DailyOverviewSharedKey),
+            animatedVisibilityScope = this@QuickActionsCard,
+            boundsTransform = dailyOverviewBoundsTransform,
+            resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
+            // Its own clip: the card's clip would cut the row off while the card shrinks away
+            clipInOverlayDuringTransition = OverlayClip(DailyOverviewRowShape),
+        )
+    }
+    val rowModifier: (QuickAction) -> Modifier = { if (it == QuickAction.DailyOverview) dailyOverviewBounds else Modifier }
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainer,
         shape = CardShape,
@@ -205,11 +239,11 @@ private fun AnimatedVisibilityScope.QuickActionsCard(
             // Reset on every open: the card is only composed while open
             var query by remember { mutableStateOf("") }
             var selectedIndex by remember { mutableIntStateOf(0) }
-            val texts = QuickAction.entries.associateWith { action ->
-                val spec = action.rowSpec(state)
+            val texts = actions.associateWith { action ->
+                val spec = action.rowSpec(state, unit)
                 spec.title + " " + spec.supporting
             }
-            val filtered = filterQuickActions(query, texts)
+            val filtered = filterQuickActions(query, texts, actions)
             val index = moveSelection(selectedIndex, 0, filtered.size)
             val fieldFocus = remember { FocusRequester() }
             LaunchedEffect(Unit) { fieldFocus.requestFocus() }
@@ -270,6 +304,8 @@ private fun AnimatedVisibilityScope.QuickActionsCard(
                         showGroupLabels = query.isBlank(),
                         selected = filtered[index],
                         rowsScrollState = rowsScrollState,
+                        unit = unit,
+                        rowModifier = rowModifier,
                         modifier = Modifier.weight(1f, fill = false),
                     )
                 }
@@ -297,6 +333,9 @@ private fun AnimatedVisibilityScope.QuickActionsCard(
                 onAction = onAction,
                 firstRowFocusRequester = firstRowFocusRequester,
                 rowsScrollState = rowsScrollState,
+                actions = actions,
+                unit = unit,
+                rowModifier = rowModifier,
                 modifier = contentModifier,
             )
         }

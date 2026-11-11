@@ -230,6 +230,8 @@ class Navigation3Actions : NavigationActions, Navigator {
         }
     }
 
+    override fun isOnTop(key: NavKey): Boolean = navBackStack.backStack.lastOrNull() == key
+
     override fun onboardingToRecent() {
         navBackStack.removeTopLevel(Screen.OnboardingScreen)
         navBackStack.addTopLevel(Screen.RecentScreen)

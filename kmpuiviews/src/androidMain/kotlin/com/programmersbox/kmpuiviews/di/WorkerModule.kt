@@ -4,6 +4,7 @@ import com.programmersbox.kmpuiviews.workers.AppCheckWorker
 import com.programmersbox.kmpuiviews.workers.AppCleanupWorker
 import com.programmersbox.kmpuiviews.workers.BackupWorker
 import com.programmersbox.kmpuiviews.workers.CloudToLocalSyncWorker
+import com.programmersbox.kmpuiviews.workers.DailyOverviewWorker
 import com.programmersbox.kmpuiviews.workers.DownloadAndInstallWorker
 import com.programmersbox.kmpuiviews.workers.DownloadWorker
 import com.programmersbox.kmpuiviews.workers.InstallWorker
@@ -28,4 +29,5 @@ fun Module.kmpWorkers() {
     workerOf(::InstallWorker)
     workerOf(::BackupWorker)
     workerOf(::RestoreWorker)
+    workerOf(::DailyOverviewWorker)
 }

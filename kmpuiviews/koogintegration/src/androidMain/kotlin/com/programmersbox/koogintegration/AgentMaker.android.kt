@@ -26,6 +26,7 @@ actual fun getModelLinkToDownload(name: String): String? {
 
 actual class PlatformAgents(
     private val context: Context,
+    private val modelManager: ModelManager,
 ) {
     actual fun platformLLMProviders(): List<LLMProvider> = listOf(
         LiteRTLLMProvider
@@ -35,15 +36,22 @@ actual class PlatformAgents(
         modelCompany: String,
         apiKey: String?,
     ): LLMClient? = when (modelCompany) {
-        LiteRTLLMProvider.display -> LiteRTLLMClient(
-            config = LiteRTClientConfig(
-                modelsPath = File(context.filesDir, "models").absolutePath,
-                cacheDir = File(context.cacheDir, "models").absolutePath
-            )
-        )
-
+        LiteRTLLMProvider.display -> liteRtClient()
         else -> null
     }
+
+    /** LiteRT models whose file is in the AI Helper's models folder. A LiteRT model id is its file name. */
+    fun downloadedLiteRtModels(): List<LLModel> {
+        val files = modelManager.listModels().map { it.fileName }.toSet()
+        return LiteRTLLModels.models.filter { it.id in files }
+    }
+
+    fun liteRtClient(): LLMClient = LiteRTLLMClient(
+        config = LiteRTClientConfig(
+            modelsPath = File(context.filesDir, "models").absolutePath,
+            cacheDir = File(context.cacheDir, "models").absolutePath
+        )
+    )
 
     actual fun isPlatformModel(modelCompany: String, modelName: String): LLModel? = when (modelCompany) {
         LiteRTLLMProvider.display -> LiteRTLLModels.models.find { it.id == modelName }

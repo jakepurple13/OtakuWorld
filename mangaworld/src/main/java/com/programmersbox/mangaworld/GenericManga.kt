@@ -2,6 +2,7 @@ package com.programmersbox.mangaworld
 
 import android.app.PendingIntent
 import android.content.Context
+import android.net.Uri
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.kmpmodels.KmpChapterModel
@@ -122,6 +123,15 @@ class GenericManga(
             context = context,
             uri = deepLinkUpdateCheckErrorsUri(),
             activity = MainActivity::class.java
+        )
+    }
+
+    override fun deepLink(context: Context, uri: Uri, cancelNotificationId: Int?): PendingIntent? {
+        return deepLinkSetup(
+            context = context,
+            uri = uri,
+            activity = MainActivity::class.java,
+            cancelNotificationId = cancelNotificationId,
         )
     }
 }

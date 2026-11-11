@@ -16,6 +16,8 @@ import com.programmersbox.datastore.otakuDataStore
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ExceptionDao
 import com.programmersbox.favoritesdatabase.ExceptionItem
+import com.programmersbox.favoritesdatabase.HeatMapDatabase
+import com.programmersbox.favoritesdatabase.HistoryDatabase
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.NotesDatabase
 import com.programmersbox.kmpmodels.KmpChapterModel
@@ -46,10 +48,26 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import okio.Path.Companion.toPath
 import java.io.File
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 fun createTestItemDatabase(): ItemDatabase {
     val dbFile = File.createTempFile("kmpuiviews-test", ".db").also { it.deleteOnExit() }
     return Room.databaseBuilder<ItemDatabase>(name = dbFile.absolutePath)
+        .setDriver(BundledSQLiteDriver())
+        .build()
+}
+
+fun createTestHeatMapDatabase(): HeatMapDatabase {
+    val dbFile = File.createTempFile("kmpuiviews-heatmap-test", ".db").also { it.deleteOnExit() }
+    return Room.databaseBuilder<HeatMapDatabase>(name = dbFile.absolutePath)
+        .setDriver(BundledSQLiteDriver())
+        .build()
+}
+
+fun createTestHistoryDatabase(): HistoryDatabase {
+    val dbFile = File.createTempFile("kmpuiviews-history-test", ".db").also { it.deleteOnExit() }
+    return Room.databaseBuilder<HistoryDatabase>(name = dbFile.absolutePath)
         .setDriver(BundledSQLiteDriver())
         .build()
 }
@@ -237,4 +255,8 @@ class FakeExceptionDao : ExceptionDao {
     override suspend fun deleteAll() {
         insertedExceptions.clear()
     }
+}
+
+class FixedClock(var instant: Instant) : Clock {
+    override fun now(): Instant = instant
 }

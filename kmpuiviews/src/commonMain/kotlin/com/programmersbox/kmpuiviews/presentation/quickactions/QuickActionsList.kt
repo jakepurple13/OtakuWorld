@@ -20,6 +20,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.QrCodeScanner
@@ -43,12 +44,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateUnit
 import com.programmersbox.showcase.annotations.ShowcaseComponent
 import kotlinx.coroutines.delay
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.qa_ago_days
@@ -59,6 +63,8 @@ import otakuworld.kmpuiviews.generated.resources.qa_background_tasks_sub
 import otakuworld.kmpuiviews.generated.resources.qa_check_updates
 import otakuworld.kmpuiviews.generated.resources.qa_checking
 import otakuworld.kmpuiviews.generated.resources.qa_checking_indeterminate
+import otakuworld.kmpuiviews.generated.resources.qa_daily_overview
+import otakuworld.kmpuiviews.generated.resources.qa_daily_overview_sub
 import otakuworld.kmpuiviews.generated.resources.qa_global_search
 import otakuworld.kmpuiviews.generated.resources.qa_global_search_sub
 import otakuworld.kmpuiviews.generated.resources.qa_group_go_to
@@ -77,6 +83,8 @@ import otakuworld.kmpuiviews.generated.resources.qa_scan_qr_sub
 import otakuworld.kmpuiviews.generated.resources.qa_scheduled
 import otakuworld.kmpuiviews.generated.resources.qa_update_errors
 import otakuworld.kmpuiviews.generated.resources.qa_update_errors_sub
+import otakuworld.kmpuiviews.generated.resources.qa_yesterday_chapters
+import otakuworld.kmpuiviews.generated.resources.qa_yesterday_episodes
 import otakuworld.kmpuiviews.generated.resources.quick_actions
 import kotlin.time.Clock
 
@@ -101,6 +109,10 @@ fun QuickActionsList(
      * after the header. Needs a bounded height, so leave it null inside an unbounded parent.
      */
     rowsScrollState: ScrollState? = null,
+    /** Noun for counts of read items, from the app's update unit. */
+    unit: UpdateUnit = UpdateUnit.Chapters,
+    /** Extra modifier for one row, such as the Daily overview row's shared bounds. */
+    rowModifier: (QuickAction) -> Modifier = { Modifier },
 ) {
     Column(modifier = modifier) {
         Row(
@@ -115,7 +127,7 @@ fun QuickActionsList(
                 style = MaterialTheme.typography.titleMedium,
             )
             Text(
-                text = QuickAction.entries.size.toString(),
+                text = actions.size.toString(),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -154,11 +166,11 @@ fun QuickActionsList(
                 Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                     items.forEachIndexed { index, action ->
                         key(action) {
-                            val spec = action.rowSpec(state)
+                            val spec = action.rowSpec(state, unit)
                             val bringIntoView = remember { BringIntoViewRequester() }
                             // Arrow keys move the selection; keep the selected row inside the scrolled rows
                             if (action == selected) LaunchedEffect(selected) { bringIntoView.bringIntoView() }
-                            val rowModifier = Modifier
+                            val itemModifier = Modifier
                                 .bringIntoViewRequester(bringIntoView)
                                 .then(
                                     if (groupIndex == 0 && index == 0 && firstRowFocusRequester != null) {
@@ -167,6 +179,7 @@ fun QuickActionsList(
                                         Modifier
                                     }
                                 )
+                                .then(rowModifier(action))
                             QuickActionRow(
                                 shape = when {
                                     items.size == 1 -> SingleShape
@@ -176,6 +189,7 @@ fun QuickActionsList(
                                 },
                                 icon = spec.icon,
                                 iconContainer = spec.container,
+                                iconContainerBrush = spec.containerBrush,
                                 iconContent = spec.content,
                                 title = spec.title,
                                 supporting = spec.supporting,
@@ -194,7 +208,7 @@ fun QuickActionsList(
                                     }
                                 },
                                 selected = action == selected,
-                                modifier = rowModifier,
+                                modifier = itemModifier,
                             )
                         }
                     }
@@ -211,12 +225,31 @@ internal data class RowSpec(
     val title: String,
     val supporting: String,
     val run: Boolean,
+    /** Drawn instead of [container] when set. */
+    val containerBrush: Brush? = null,
 )
 
 @Composable
-internal fun QuickAction.rowSpec(state: QuickActionsUiState): RowSpec {
+internal fun QuickAction.rowSpec(state: QuickActionsUiState, unit: UpdateUnit = UpdateUnit.Chapters): RowSpec {
     val colors = MaterialTheme.colorScheme
     return when (this) {
+        QuickAction.DailyOverview -> RowSpec(
+            Icons.Default.AutoAwesome, colors.tertiaryContainer, colors.onTertiaryContainer,
+            stringResource(Res.string.qa_daily_overview),
+            state.yesterdayReads?.let {
+                pluralStringResource(
+                    when (unit) {
+                        UpdateUnit.Chapters -> Res.plurals.qa_yesterday_chapters
+                        UpdateUnit.Episodes -> Res.plurals.qa_yesterday_episodes
+                    },
+                    it,
+                    it,
+                )
+            } ?: stringResource(Res.string.qa_daily_overview_sub),
+            run = false,
+            containerBrush = Brush.linearGradient(listOf(colors.tertiaryContainer, colors.primaryContainer)),
+        )
+
         QuickAction.CheckForUpdates -> RowSpec(
             Icons.Default.Refresh, colors.primaryContainer, colors.onPrimaryContainer,
             stringResource(Res.string.qa_check_updates), checkSupportingText(state), run = true,
@@ -300,6 +333,7 @@ private fun QuickActionRow(
     shape: Shape,
     icon: ImageVector,
     iconContainer: Color,
+    iconContainerBrush: Brush?,
     iconContent: Color,
     title: String,
     supporting: String,
@@ -323,7 +357,10 @@ private fun QuickActionRow(
                     modifier = Modifier
                         .size(32.dp)
                         .clip(RoundedCornerShape(11.dp))
-                        .background(iconContainer)
+                        .then(
+                            if (iconContainerBrush != null) Modifier.background(iconContainerBrush)
+                            else Modifier.background(iconContainer)
+                        )
                 ) {
                     Icon(
                         icon,
