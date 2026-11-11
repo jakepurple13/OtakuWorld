@@ -12,6 +12,9 @@ import com.programmersbox.kmpuiviews.AboutLibraryBuilder
 import com.programmersbox.kmpuiviews.DateTimeFormatHandler
 import com.programmersbox.kmpuiviews.IconLoader
 import com.programmersbox.kmpuiviews.KmpGenericInfo
+import com.programmersbox.kmpuiviews.dailyoverview.GemmaEngine
+import com.programmersbox.kmpuiviews.dailyoverview.ProviderEngine
+import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngine
 import com.programmersbox.kmpuiviews.presentation.settings.extensions.ExtensionShareHandler
 import com.programmersbox.kmpuiviews.presentation.updatecheck.AndroidUpdateCheckReportSharer
 import com.programmersbox.kmpuiviews.presentation.updatecheck.UpdateCheckReportSharer
@@ -63,6 +66,8 @@ actual fun platformModule(): Module = module {
     singleOf(::AndroidUpdateCheckReportSharer) { bind<UpdateCheckReportSharer>() }
     factoryOf(::ImageModifier)
     singleOf(::EncryptedDataStoreFactory)
+    singleOf(::GemmaEngine) { bind<SummaryEngine>() }
+    singleOf(::ProviderEngine) { bind<SummaryEngine>() }
     kmpWorkers()
     includes(jsExtensionLoaderModule)
 }

@@ -267,6 +267,8 @@ kotlin {
             jvmMain.get().dependsOn(this)
             dependencies {
                 implementation(projects.kmpuiviews.koogintegration)
+                implementation(commonLibs.koog.agents)
+                implementation(commonLibs.koog.agents.additions)
             }
         }
 

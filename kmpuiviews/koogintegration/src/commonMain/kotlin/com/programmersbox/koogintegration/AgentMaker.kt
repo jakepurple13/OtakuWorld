@@ -78,6 +78,13 @@ class AgentMaker(
         )
     }
 
+    /** The AI Helper's chosen company and model, or null when either is not set. Never throws. */
+    suspend fun selection(): KoogSelection? {
+        val company = koogDataStore.getModelCompany().takeUnless { it.isEmpty() } ?: return null
+        val model = koogDataStore.getModelName().takeUnless { it.isEmpty() } ?: return null
+        return KoogSelection(company, model)
+    }
+
     suspend fun needsOnboarding(): Boolean {
         val apiKey = koogDataStore.getApiKey().takeUnless { it.isEmpty() }
         val modelCompany = koogDataStore.getModelCompany().takeUnless { it.isEmpty() }
@@ -123,6 +130,8 @@ expect fun getModelLinkToDownload(name: String): String?
 expect fun canDownloadModel(name: String): Boolean
 
 object NoLLMProvider : LLMProvider("none", "None")
+
+data class KoogSelection(val company: String, val model: String)
 
 data class AgentInfo(
     val llmClient: LLMClient,

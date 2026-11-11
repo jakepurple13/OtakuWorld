@@ -612,4 +612,11 @@
     </plurals>
     <string name="do_label_template">Yesterday at a glance</string>
     <string name="do_template_quiet">Nothing new yesterday.</string>
+    <string name="do_label_on_device">%1$s · on device</string>
+    <string name="do_label_via_koog">%1$s · via Koog</string>
+    <string name="do_label_ollama">Ollama · %1$s</string>
+    <string name="do_setup_download_model">Download a model in AI Helper</string>
+    <string name="do_setup_choose_provider">Choose a provider in AI Helper</string>
+    <string name="do_setup_choose_ollama">Choose Ollama in AI Helper</string>
+    <string name="do_setup_ollama_not_running">Ollama isn't running</string>
 </resources>
