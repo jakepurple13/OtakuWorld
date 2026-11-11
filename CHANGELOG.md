@@ -87,6 +87,7 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   turns the feature on or off, picks the engine, and (Android) sets up a morning notification at a
   time you choose, with Open overview and Continue actions and an option to skip quiet days. Reads
   now record their time, so the graph and list fill in from the day after you update
+  ([#2692](https://github.com/jakepurple13/OtakuWorld/pull/2692))
 - AnimeWorld player styles: Classic (full-width bars), Floating (rounded pills and a control dock),
   and Theater (bars that fade in from the edges). Pick one in Play Settings or onboarding, with a
   live preview of the player while you choose. Classic is the default. The bars use your blur kind
