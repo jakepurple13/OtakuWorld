@@ -101,7 +101,9 @@ actual interface PlatformGenericInfo : KmpGenericInfo {
 
         return TaskStackBuilder.create(context).run {
             addNextIntentWithParentStack(deepLinkIntent)
-            getPendingIntent(13, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+            // Intents that cancel a notification get their own request code, so FLAG_UPDATE_CURRENT
+            // never swaps extras with another notification's intent for the same uri.
+            getPendingIntent(cancelNotificationId ?: 13, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         }
     }
 }

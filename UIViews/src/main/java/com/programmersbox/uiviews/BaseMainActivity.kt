@@ -123,9 +123,14 @@ abstract class BaseMainActivity : FragmentActivity() {
     }
 
     // Notification actions don't auto-cancel, so their deep links carry the id to cancel.
+    // A relaunch from Recents replays the original intent, which could cancel a newer notification
+    // with the same id, so skip it and drop the extra once handled.
     private fun cancelNotificationFrom(intent: Intent) {
         if (!intent.hasExtra(EXTRA_CANCEL_NOTIFICATION_ID)) return
-        NotificationManagerCompat.from(this).cancel(intent.getIntExtra(EXTRA_CANCEL_NOTIFICATION_ID, 0))
+        if (intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY == 0) {
+            NotificationManagerCompat.from(this).cancel(intent.getIntExtra(EXTRA_CANCEL_NOTIFICATION_ID, 0))
+        }
+        intent.removeExtra(EXTRA_CANCEL_NOTIFICATION_ID)
     }
 
     private fun handleDeepLink(uri: Uri) {
