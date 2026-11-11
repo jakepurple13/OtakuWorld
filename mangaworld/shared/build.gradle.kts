@@ -61,6 +61,7 @@ kotlin {
             implementation(kotlin("test"))
             implementation(commonLibs.coroutinesTest)
             implementation(commonLibs.ktorMock)
+            implementation(commonLibs.cmp.ui.test)
         }
     }
 }
