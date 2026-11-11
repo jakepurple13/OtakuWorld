@@ -19,7 +19,7 @@ jobs:
   build-and-test:
     # macOS is REQUIRED if your project includes iOS targets.
     # If you only target Android/Desktop/Web, change this to ubuntu-latest to save money/time.
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
@@ -40,8 +40,9 @@ jobs:
           # Optional: Only download dependencies if gradle files change, speeds up builds
           cache-read-only: ${{ github.ref != 'refs/heads/develop' }}
 
+      # iOS simulator tests are skipped: no iOS devices/simulators are used for this project.
       - name: Run all tests
-        run: ./gradlew allTests
+        run: ./gradlew jvmTest testAndroidHostTest
 
         # ADDED STEP: Publish the test results to the PR/Build Summary (macOS compatible)
       - name: Publish Test Results
