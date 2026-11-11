@@ -63,6 +63,7 @@ class FavoriteViewModelTest {
             dao = database.itemDao(),
             systemAlerter = SystemAlerter(),
             authManager = FakeAuthManager(),
+            sourceRepository = SourceRepository(),
         ),
         searchRepository = FavoritesSearchRepository(database.itemDao(), notes.notesDao()),
     ).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }

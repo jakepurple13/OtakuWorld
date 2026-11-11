@@ -225,6 +225,7 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 
 #### Bug Fixes
 
+- Sources marked incognito no longer add to History or mark chapters and episodes as read
 - Rows restored with Undo in History and Notifications now reappear in view, instead of staying
   scrolled off the top ([#2676](https://github.com/jakepurple13/OtakuWorld/pull/2676))
 - Fixed removing items from a custom list

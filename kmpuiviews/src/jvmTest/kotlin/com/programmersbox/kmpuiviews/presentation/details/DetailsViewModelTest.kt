@@ -95,6 +95,7 @@ class DetailsViewModelTest {
             dao = itemDatabase.itemDao(),
             systemAlerter = SystemAlerter(),
             authManager = FakeAuthManager(),
+            sourceRepository = sourceRepository,
         ),
         translationHandler = FakeTranslationHandler(),
         exceptionDao = exceptionDatabase.exceptionDao(),
