@@ -170,7 +170,7 @@ fun QuickActionsList(
                             val bringIntoView = remember { BringIntoViewRequester() }
                             // Arrow keys move the selection; keep the selected row inside the scrolled rows
                             if (action == selected) LaunchedEffect(selected) { bringIntoView.bringIntoView() }
-                            val rowModifier = Modifier
+                            val itemModifier = Modifier
                                 .bringIntoViewRequester(bringIntoView)
                                 .then(
                                     if (groupIndex == 0 && index == 0 && firstRowFocusRequester != null) {
@@ -208,7 +208,7 @@ fun QuickActionsList(
                                     }
                                 },
                                 selected = action == selected,
-                                modifier = rowModifier,
+                                modifier = itemModifier,
                             )
                         }
                     }

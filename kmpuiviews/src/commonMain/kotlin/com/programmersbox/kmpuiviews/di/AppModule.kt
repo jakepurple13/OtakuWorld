@@ -71,7 +71,8 @@ val appModule = module {
     singleOf(::AppUpdateCheck)
     single<InAppNotifier> { DefaultInAppNotifier() }
     singleOf(::QuickActionsController)
-    singleOf(::DaoQuickActionCounts) bind QuickActionCounts::class
+    // Explicit so clock and zone keep their defaults; singleOf would ask Koin for them
+    single { DaoQuickActionCounts(itemDao = get(), listDao = get(), heatMapDao = get()) } bind QuickActionCounts::class
     single { JsExtensionSourceBridge(get(), get()) }
     single { NativeCatalogs(getAll()) }
     single {
