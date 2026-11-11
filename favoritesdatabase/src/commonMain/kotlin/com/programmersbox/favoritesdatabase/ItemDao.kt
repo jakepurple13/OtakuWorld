@@ -115,6 +115,9 @@ interface ItemDao {
     @Query("SELECT * FROM ChapterWatched where favoriteUrl = :url")
     suspend fun getAllChaptersSync(url: String): List<ChapterWatched>
 
+    @Query("SELECT * FROM ChapterWatched WHERE created_at >= :start AND created_at < :end AND is_deleted = 0")
+    suspend fun getChaptersWatchedBetween(start: Long, end: Long): List<ChapterWatched>
+
     @Query("SELECT COUNT(url) FROM ChapterWatched WHERE is_deleted = 0")
     fun getAllChaptersCount(): Flow<Int>
 
@@ -159,6 +162,9 @@ interface ItemDao {
 
     @Query("SELECT * FROM Notifications")
     suspend fun getAllNotifications(): List<NotificationItem>
+
+    @Query("SELECT * FROM Notifications WHERE created_at >= :start AND created_at < :end")
+    suspend fun getNotificationsCreatedBetween(start: Long, end: Long): List<NotificationItem>
 
     @Query("SELECT * FROM Notifications")
     fun getAllNotificationsFlowPaging(): PagingSource<Int, NotificationItem>

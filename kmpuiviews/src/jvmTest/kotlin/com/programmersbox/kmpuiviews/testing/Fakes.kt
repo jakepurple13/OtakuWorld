@@ -16,6 +16,8 @@ import com.programmersbox.datastore.otakuDataStore
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ExceptionDao
 import com.programmersbox.favoritesdatabase.ExceptionItem
+import com.programmersbox.favoritesdatabase.HeatMapDatabase
+import com.programmersbox.favoritesdatabase.HistoryDatabase
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.NotesDatabase
 import com.programmersbox.kmpmodels.KmpChapterModel
@@ -52,6 +54,20 @@ import kotlin.time.Instant
 fun createTestItemDatabase(): ItemDatabase {
     val dbFile = File.createTempFile("kmpuiviews-test", ".db").also { it.deleteOnExit() }
     return Room.databaseBuilder<ItemDatabase>(name = dbFile.absolutePath)
+        .setDriver(BundledSQLiteDriver())
+        .build()
+}
+
+fun createTestHeatMapDatabase(): HeatMapDatabase {
+    val dbFile = File.createTempFile("kmpuiviews-heatmap-test", ".db").also { it.deleteOnExit() }
+    return Room.databaseBuilder<HeatMapDatabase>(name = dbFile.absolutePath)
+        .setDriver(BundledSQLiteDriver())
+        .build()
+}
+
+fun createTestHistoryDatabase(): HistoryDatabase {
+    val dbFile = File.createTempFile("kmpuiviews-history-test", ".db").also { it.deleteOnExit() }
+    return Room.databaseBuilder<HistoryDatabase>(name = dbFile.absolutePath)
         .setDriver(BundledSQLiteDriver())
         .build()
 }

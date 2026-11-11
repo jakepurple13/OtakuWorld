@@ -13,6 +13,7 @@ import com.programmersbox.kmpuiviews.presentation.quickactions.DaoQuickActionCou
 import com.programmersbox.kmpuiviews.presentation.quickactions.QuickActionCounts
 import com.programmersbox.kmpuiviews.presentation.quickactions.QuickActionsController
 import com.programmersbox.kmpuiviews.domain.MediaUpdateChecker
+import com.programmersbox.kmpuiviews.domain.dailyoverview.DailyFactsBuilder
 import com.programmersbox.kmpuiviews.domain.dailyoverview.DailyOverviewSettings
 import com.programmersbox.kmpuiviews.domain.updatecheck.DataStoreUpdateCheckReportStore
 import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckReportStore
@@ -88,6 +89,7 @@ val appModule = module {
     singleOf(::DataStoreUpdateCheckReportStore) bind UpdateCheckReportStore::class
     singleOf(::SharedCoverBitmaps)
     factoryOf(::Backup)
+    factoryOf(::DailyFactsBuilder)
     backupProcessors()
     includes(platformModule())
 
