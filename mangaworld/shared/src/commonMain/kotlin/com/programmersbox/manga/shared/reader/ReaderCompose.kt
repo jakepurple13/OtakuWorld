@@ -2,7 +2,12 @@ package com.programmersbox.manga.shared.reader
 
 import com.programmersbox.kmpuiviews.theme.SeedColorTheme
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.BoundsTransform
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.core.updateTransition
+import androidx.compose.animation.togetherWith
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.animateIntAsState
@@ -535,9 +540,13 @@ private fun ReadViewContent(
                             onAspectRatio = viewModel::recordAspectRatio
                         )
                     }
-                    Crossfade(
-                        targetState = readerType,
-                        label = "",
+                    val readerTypeTransition = updateTransition(readerType, label = "readerType")
+                    val modeFadeIn = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+                    val modeFadeOut = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+                    val boundsSpec = MaterialTheme.motionScheme.defaultSpatialSpec<Rect>()
+                    SharedTransitionLayout {
+                    readerTypeTransition.AnimatedContent(
+                        transitionSpec = { fadeIn(modeFadeIn) togetherWith fadeOut(modeFadeOut) },
                         modifier = Modifier.graphicsLayer {
                             translationX = chapterSlide.value * size.width
                         } then if (imageLoaderType == ImageLoaderType.Panpf) {
@@ -549,8 +558,21 @@ private fun ReadViewContent(
                                 onTap = { viewModel.showInfo = !viewModel.showInfo }
                             )
                         }
-                    ) {
-                        when (it) {
+                    ) { type ->
+                        // List <-> Pager keeps the page you're on in place; other switches just fade
+                        val morph = morphsPages(readerTypeTransition.currentState, readerTypeTransition.targetState)
+                        val pageModifier: @Composable (String) -> Modifier = { key ->
+                            if (morph) {
+                                Modifier.sharedElement(
+                                    sharedContentState = rememberSharedContentState(key),
+                                    animatedVisibilityScope = this@AnimatedContent,
+                                    boundsTransform = BoundsTransform { _, _ -> boundsSpec },
+                                )
+                            } else {
+                                Modifier
+                            }
+                        }
+                        when (type) {
                             ReaderType.List -> {
                                 val sidePadding = if (isWidthAdjustable) {
                                     readerSidePadding(readerContainerWidth, readerWidthFraction)
@@ -574,6 +596,7 @@ private fun ReadViewContent(
                                         bottom = verticalPadding.calculateBottomPadding()
                                     ),
                                     imageLoaderType = imageLoaderType,
+                                    pageModifier = pageModifier,
                                 )
                             }
 
@@ -585,6 +608,7 @@ private fun ReadViewContent(
                                     colorFilter = colorFilter,
                                     itemSpacing = spacing,
                                     imageLoaderType = imageLoaderType,
+                                    pageModifier = pageModifier,
                                 )
                             }
 
@@ -606,6 +630,7 @@ private fun ReadViewContent(
                                 )
                             }
                         }
+                    }
                     }
 
                     if (isWidthAdjustable && readerType.supportsWidthAdjust) {
@@ -648,13 +673,14 @@ fun ListView(
     imageLoaderType: ImageLoaderType,
     colorFilter: ColorFilter? = null,
     modifier: Modifier = Modifier,
+    pageModifier: @Composable (key: String) -> Modifier = { Modifier },
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         state = listState,
         verticalArrangement = Arrangement.spacedBy(itemSpacing),
         contentPadding = paddingValues,
-    ) { reader(pageItems, readVm, imageLoaderType, colorFilter) }
+    ) { reader(pageItems, readVm, imageLoaderType, colorFilter, pageModifier) }
 }
 
 @Composable
@@ -666,6 +692,7 @@ fun PagerView(
     imageLoaderType: ImageLoaderType,
     colorFilter: ColorFilter? = null,
     modifier: Modifier = Modifier,
+    pageModifier: @Composable (key: String) -> Modifier = { Modifier },
 ) {
     val keys by remember(pageItems) { derivedStateOf { pageItems.lazyKeys() } }
     VerticalPager(
@@ -676,14 +703,16 @@ fun PagerView(
         key = { keys.getOrNull(it) ?: it }
     ) { page ->
         when (val item = pageItems.getOrNull(page)) {
-            is PageItem.Page -> ChapterPage(
-                chapterLink = { item.url },
-                isDownloaded = item.isDownloaded,
-                headers = vm.headers,
-                contentScale = ContentScale.Fit,
-                imageLoaderType = imageLoaderType,
-                colorFilter = colorFilter
-            )
+            is PageItem.Page -> Box(pageModifier(keys.getOrNull(page) ?: page.toString())) {
+                ChapterPage(
+                    chapterLink = { item.url },
+                    isDownloaded = item.isDownloaded,
+                    headers = vm.headers,
+                    contentScale = ContentScale.Fit,
+                    imageLoaderType = imageLoaderType,
+                    colorFilter = colorFilter
+                )
+            }
 
             is PageItem.ChapterTransition -> Box(modifier = Modifier.fillMaxSize()) {
                 ChapterTransitionItem(
@@ -786,6 +815,7 @@ private fun LazyListScope.reader(
     vm: ReadViewModel,
     imageLoaderType: ImageLoaderType,
     colorFilter: ColorFilter? = null,
+    pageModifier: @Composable (key: String) -> Modifier = { Modifier },
 ) {
     val keys = pageItems.lazyKeys()
     pageItems.forEachIndexed { index, item ->
@@ -794,16 +824,18 @@ private fun LazyListScope.reader(
                 key = keys[index],
                 contentType = "page"
             ) {
-                ChapterPage(
-                    chapterLink = { item.url },
-                    isDownloaded = item.isDownloaded,
-                    headers = vm.headers,
-                    contentScale = ContentScale.FillWidth,
-                    imageLoaderType = imageLoaderType,
-                    colorFilter = colorFilter,
-                    aspectRatio = vm.aspectRatioFor(item.url),
-                    onAspectRatio = { vm.recordAspectRatio(item.url, it) }
-                )
+                Box(pageModifier(keys[index])) {
+                    ChapterPage(
+                        chapterLink = { item.url },
+                        isDownloaded = item.isDownloaded,
+                        headers = vm.headers,
+                        contentScale = ContentScale.FillWidth,
+                        imageLoaderType = imageLoaderType,
+                        colorFilter = colorFilter,
+                        aspectRatio = vm.aspectRatioFor(item.url),
+                        onAspectRatio = { vm.recordAspectRatio(item.url, it) }
+                    )
+                }
             }
 
             is PageItem.ChapterTransition -> item(
@@ -827,7 +859,7 @@ private const val PREFETCH_AHEAD = 3
  * Lazy keys that survive items being trimmed from the front of [pageItems] (unlike list indices),
  * so visible pages keep their state and scroll anchor. Repeats get a suffix to stay unique.
  */
-private fun List<PageItem>.lazyKeys(): List<String> {
+internal fun List<PageItem>.lazyKeys(): List<String> {
     val seen = HashMap<String, Int>()
     return map { item ->
         val base = when (item) {

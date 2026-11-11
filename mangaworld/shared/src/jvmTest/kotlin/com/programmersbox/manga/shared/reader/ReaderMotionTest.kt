@@ -1,8 +1,11 @@
 package com.programmersbox.manga.shared.reader
 
+import com.programmersbox.datastore.mangasettings.ReaderType
 import io.kamel.core.DataSource
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class ReaderMotionTest {
 
@@ -30,5 +33,13 @@ class ReaderMotionTest {
     fun progressClamps() {
         assertEquals(1f, chapterProgress(30, 24))
         assertEquals(0f, chapterProgress(0, 0))
+    }
+
+    @Test
+    fun onlyListAndPagerMorph() {
+        assertTrue(morphsPages(ReaderType.List, ReaderType.Pager))
+        assertTrue(morphsPages(ReaderType.Pager, ReaderType.List))
+        assertFalse(morphsPages(ReaderType.List, ReaderType.FlipPager))
+        assertFalse(morphsPages(ReaderType.CurlPager, ReaderType.Pager))
     }
 }

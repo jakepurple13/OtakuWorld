@@ -1,5 +1,6 @@
 package com.programmersbox.manga.shared.reader
 
+import com.programmersbox.datastore.mangasettings.ReaderType
 import io.kamel.core.DataSource
 
 /** Scale a freshly loaded page starts at before settling to 1f. */
@@ -23,3 +24,7 @@ internal fun seriesProgress(listIndex: Int, chapterCount: Int): Float =
 /** Fraction of the current chapter read, in 0..1; [currentPage] is 0-based. */
 internal fun chapterProgress(currentPage: Int, pages: Int): Float =
     if (pages <= 0) 0f else ((currentPage + 1f) / pages).coerceIn(0f, 1f)
+
+/** Only List <-> Pager share page elements; switches involving Flip or Curl just fade. */
+internal fun morphsPages(from: ReaderType, to: ReaderType): Boolean =
+    (from == ReaderType.List && to == ReaderType.Pager) || (from == ReaderType.Pager && to == ReaderType.List)
