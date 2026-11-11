@@ -4,6 +4,24 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.fold
 
+/** The cached summary, only when it is for the same date as [facts]. Any other date is stale. */
+internal suspend fun DailyOverviewSettings.cachedFor(facts: DailyFacts): DailySummary? =
+    cached()?.takeIf { it.date == facts.date }
+
+/** Quiet days and Template resolutions skip the engine and use template text. */
+internal fun DailyFacts.needsEngine(engine: SummaryEngine): Boolean =
+    !isQuiet && engine.id != SummaryEngineId.Template
+
+/** A failed cache write must not discard a summary that already finished. */
+internal suspend fun DailyOverviewSettings.cacheOrIgnore(summary: DailySummary) {
+    try {
+        cache(summary)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (_: Exception) {
+    }
+}
+
 /**
  * Today's summary for [facts]: the cache when it is for the same date, otherwise a fresh run of the
  * chosen engine. Only a successful run of a real engine is cached. A quiet day, a Template result
@@ -17,15 +35,14 @@ suspend fun generateDailySummary(
     bypassCache: Boolean,
 ): DailySummary {
     if (!bypassCache) {
-        settings.cached()?.takeIf { it.date == facts.date }?.let { return it }
+        settings.cachedFor(facts)?.let { return it }
     }
     val templateSummary = suspend {
         DailySummary(facts.date, SummaryEngineId.Template, template.summarize(facts).first())
     }
-    if (facts.isQuiet) return templateSummary()
 
     val engine = resolver.resolve(settings.prefs.first().engine)
-    if (engine.id == SummaryEngineId.Template) return templateSummary()
+    if (!facts.needsEngine(engine)) return templateSummary()
 
     val text = try {
         engine.summarize(facts).fold("") { acc, chunk -> acc + chunk }
@@ -35,5 +52,5 @@ suspend fun generateDailySummary(
         return templateSummary()
     }
     if (text.isBlank()) return templateSummary()
-    return DailySummary(facts.date, engine.id, text).also { settings.cache(it) }
+    return DailySummary(facts.date, engine.id, text).also { settings.cacheOrIgnore(it) }
 }

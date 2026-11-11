@@ -198,6 +198,7 @@ class DailyOverviewViewModelTest {
         await { vm.done() != null }
         val done = vm.done()!!
         assertEquals(SummaryEngineId.Template, done.engine)
+        assertTrue(vm.uiState.value.facts != null)
         assertTrue(done.text.isNotBlank() && !done.text.startsWith("Hello"))
         assertNull(settings.cached())
     }

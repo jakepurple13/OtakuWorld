@@ -9,6 +9,9 @@ import com.programmersbox.kmpuiviews.domain.dailyoverview.DailySummary
 import com.programmersbox.kmpuiviews.domain.dailyoverview.EngineResolver
 import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngine
 import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngineChoice
+import com.programmersbox.kmpuiviews.domain.dailyoverview.cacheOrIgnore
+import com.programmersbox.kmpuiviews.domain.dailyoverview.cachedFor
+import com.programmersbox.kmpuiviews.domain.dailyoverview.needsEngine
 import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngineId
 import com.programmersbox.kmpuiviews.domain.dailyoverview.TemplateEngine
 import kotlinx.coroutines.CancellationException
@@ -74,20 +77,20 @@ class DailyOverviewViewModel(
 
             if (!bypassCache) {
                 // A cache for any other date is stale and never shown.
-                settings.cached()?.takeIf { it.date == facts.date }?.let { cached ->
+                settings.cachedFor(facts)?.let { cached ->
                     publishDone(cached.text, resolver.engine(cached.engine))
                     return@launch
                 }
             }
 
-            if (facts.isQuiet || engine.id == SummaryEngineId.Template) {
+            if (!facts.needsEngine(engine)) {
                 publishTemplate(facts)
                 return@launch
             }
 
             val label = engine.label()
+            var text = ""
             try {
-                var text = ""
                 engine.summarize(facts)
                     .scan("") { acc, chunk -> acc + chunk }
                     .collect { accumulated ->
@@ -96,16 +99,17 @@ class DailyOverviewViewModel(
                             it.copy(summary = SummaryState.Streaming(accumulated, label, engine.onDevice))
                         }
                     }
-                if (text.isBlank()) {
-                    publishTemplate(facts)
-                } else {
-                    settings.cache(DailySummary(facts.date, engine.id, text))
-                    publishDone(text, engine)
-                }
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {
                 publishTemplate(facts)
+                return@launch
+            }
+            if (text.isBlank()) {
+                publishTemplate(facts)
+            } else {
+                settings.cacheOrIgnore(DailySummary(facts.date, engine.id, text))
+                publishDone(text, engine)
             }
         }
     }
