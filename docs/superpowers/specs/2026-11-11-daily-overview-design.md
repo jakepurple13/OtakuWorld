@@ -179,7 +179,8 @@ Selectable cards with radio dots. The selected card expands its options with
   - **Automatic**, with the line "Right now: <resolved>".
   - **Gemini Nano**: an "Available" tag, or a disabled "Not available on this phone" tag.
   - **Gemma on this phone**: the AI Helper's model name and Ready tag, or "No model downloaded"
-    with an "Open AI Helper models" button (`KoogModels` route).
+    with a "Set up Gemma in AI Helper" button (`KoogSettings` route, where a LiteRT model is
+    picked and downloaded).
   - **Your AI helper**: shows the provider and model. A warning box says what is sent: titles,
     chapter numbers and update counts. Disabled when no provider is set, with a "Set up AI
     Helper" button.

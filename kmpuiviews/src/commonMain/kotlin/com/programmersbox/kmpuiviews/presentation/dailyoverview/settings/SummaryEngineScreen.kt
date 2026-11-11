@@ -73,10 +73,10 @@ import otakuworld.kmpuiviews.generated.resources.do_engine_provider_desc
 import otakuworld.kmpuiviews.generated.resources.do_label_nano
 import otakuworld.kmpuiviews.generated.resources.do_no_model
 import otakuworld.kmpuiviews.generated.resources.do_no_provider
-import otakuworld.kmpuiviews.generated.resources.do_open_models
 import otakuworld.kmpuiviews.generated.resources.do_preview
 import otakuworld.kmpuiviews.generated.resources.do_provider_warning
 import otakuworld.kmpuiviews.generated.resources.do_set_up_ai_helper
+import otakuworld.kmpuiviews.generated.resources.do_set_up_gemma
 import otakuworld.kmpuiviews.generated.resources.do_summary_engine
 import otakuworld.kmpuiviews.generated.resources.do_tag_available
 import otakuworld.kmpuiviews.generated.resources.do_tag_not_available
@@ -159,8 +159,10 @@ fun SummaryEngineScreen(
                             if (ready) {
                                 Detail(row.label)
                             } else {
-                                aiHelperModelsRoute?.let { route ->
-                                    Button(onClick = { open(route) }) { Text(stringResource(Res.string.do_open_models)) }
+                                // The models page only lists downloads; AI Helper settings is where a
+                                // LiteRT Gemma model is picked and downloaded.
+                                aiHelperSettingsRoute?.let { route ->
+                                    Button(onClick = { open(route) }) { Text(stringResource(Res.string.do_set_up_gemma)) }
                                 }
                             }
                         },

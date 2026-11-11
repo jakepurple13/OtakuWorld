@@ -705,7 +705,7 @@
     <string name="do_tag_online">Online</string>
     <string name="do_tag_ready">Ready</string>
     <string name="do_no_model">No model downloaded</string>
-    <string name="do_open_models">Open AI Helper models</string>
+    <string name="do_set_up_gemma">Set up Gemma in AI Helper</string>
     <string name="do_no_provider">No provider set up in AI Helper</string>
     <string name="do_set_up_ai_helper">Set up AI Helper</string>
     <string name="do_change_ai_helper">Change in AI Helper</string>
