@@ -22,7 +22,6 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Today
 import androidx.compose.material.icons.filled.UnfoldLess
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -69,7 +68,6 @@ import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import org.jetbrains.compose.resources.stringResource
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.cancel
-import otakuworld.kmpuiviews.generated.resources.do_settings_title
 import otakuworld.kmpuiviews.generated.resources.general_menu_title
 import otakuworld.kmpuiviews.generated.resources.history_save_summary
 import otakuworld.kmpuiviews.generated.resources.history_save_title
@@ -107,12 +105,6 @@ fun GeneralSettings(
                 onClick = { navActions.navigate(Screen.Settings.Blur) },
                 leadingContent = { Icon(Icons.Default.BlurOn, null) },
                 content = { Text("Blur Settings") },
-            )
-
-            segmentedListItem(
-                onClick = { navActions.navigate(Screen.DailyOverview.Settings) },
-                leadingContent = { Icon(Icons.Default.Today, null) },
-                content = { Text(stringResource(Res.string.do_settings_title)) },
             )
         }
 

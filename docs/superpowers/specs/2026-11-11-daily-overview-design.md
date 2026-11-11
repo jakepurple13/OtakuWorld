@@ -154,7 +154,7 @@ the shared list (existing rule).
 
 ### Daily overview settings
 
-Opened from the gear and from Settings › General.
+Opened from the gear and from Settings › Behavior (also found by the settings search).
 
 - A hero switch row, "Use daily overview". When off, every section below collapses with
   `AnimatedVisibility(expandVertically)`.
