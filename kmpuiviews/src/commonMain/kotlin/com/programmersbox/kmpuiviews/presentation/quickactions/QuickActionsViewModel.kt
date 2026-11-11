@@ -126,7 +126,10 @@ class QuickActionsViewModel(
                 }
             }
 
-            QuickAction.DailyOverview -> navigationActions.navigate(Screen.DailyOverview)
+            // Already showing it: don't stack a second copy.
+            QuickAction.DailyOverview -> if (!navigationActions.isOnTop(Screen.DailyOverview)) {
+                navigationActions.navigate(Screen.DailyOverview)
+            }
             QuickAction.ScanQrCode -> navigationActions.scanQrCode()
             QuickAction.GlobalSearch -> navigationActions.globalSearch()
             QuickAction.Lists -> navigationActions.customList()

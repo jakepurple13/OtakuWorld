@@ -87,6 +87,8 @@ private class FakeHandler : BackgroundWorkHandler {
 /** Records the calls these tests care about; everything else is a no-op. */
 private class RecordingNav : NavigationActions {
     val calls = mutableListOf<String>()
+    var top: NavKey? = null
+    override fun isOnTop(key: NavKey): Boolean = top == key
     override fun scanQrCode() {
         calls += "scanQrCode"
     }
@@ -315,6 +317,16 @@ class QuickActionsViewModelTest {
         controller.open(OpenOrigin.Bolt)
         vm.run(QuickAction.DailyOverview)
         assertEquals(listOf("navigate:${Screen.DailyOverview}"), nav.calls)
+        assertNull(controller.open.value)
+    }
+
+    @Test
+    fun runDailyOverviewIsANoOpWhenAlreadyOnTop() = runTest {
+        val vm = vm()
+        nav.top = Screen.DailyOverview
+        controller.open(OpenOrigin.Bolt)
+        vm.run(QuickAction.DailyOverview)
+        assertEquals(emptyList(), nav.calls)
         assertNull(controller.open.value)
     }
 
