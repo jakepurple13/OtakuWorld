@@ -670,6 +670,8 @@ fun PagerView(
                 ChapterTransitionItem(
                     fromChapterName = vm.chapterName(item.fromChapterListIndex),
                     toChapterName = vm.chapterName(item.toChapterListIndex),
+                    toChapterListIndex = item.toChapterListIndex,
+                    chapterCount = vm.chapterCount,
                     modifier = Modifier.align(Alignment.Center)
                 )
             }
@@ -792,6 +794,8 @@ private fun LazyListScope.reader(
                 ChapterTransitionItem(
                     fromChapterName = vm.chapterName(item.fromChapterListIndex),
                     toChapterName = vm.chapterName(item.toChapterListIndex),
+                    toChapterListIndex = item.toChapterListIndex,
+                    chapterCount = vm.chapterCount,
                 )
             }
         }

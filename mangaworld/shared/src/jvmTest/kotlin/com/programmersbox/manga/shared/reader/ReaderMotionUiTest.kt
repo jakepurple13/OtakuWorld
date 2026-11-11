@@ -20,4 +20,13 @@ class ReaderMotionUiTest {
         onNodeWithText("Tap to retry").performClick()
         assertEquals(1, retries)
     }
+
+    @Test
+    fun endCardShowsNextAndPosition() = runComposeUiTest {
+        setContent { ChapterTransitionItem("Ch. 42", "Ch. 43", toChapterListIndex = 26, chapterCount = 69) }
+        mainClock.advanceTimeBy(2_000)
+        onNodeWithText("Finished").assertIsDisplayed()
+        onNodeWithText("Ch. 43").assertIsDisplayed()
+        onNodeWithText("Chapter 43 of 69").assertIsDisplayed()
+    }
 }
