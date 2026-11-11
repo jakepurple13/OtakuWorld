@@ -268,7 +268,7 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   ([#2661](https://github.com/jakepurple13/OtakuWorld/pull/2661))
 - Cloud sync: unfavoriting while signed in now takes effect right away. Before, the item stayed
   marked as a favorite on its details page but was missing from the favorites list until the next
-  sync removed it
+  sync removed it ([#2689](https://github.com/jakepurple13/OtakuWorld/pull/2689))
 
 #### Removed
 
