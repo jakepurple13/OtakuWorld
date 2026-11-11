@@ -627,6 +627,7 @@
     <string name="do_label_ollama">Ollama · %1$s</string>
     <string name="do_setup_download_model">Download a model in AI Helper</string>
     <string name="do_setup_choose_provider">Choose a provider in AI Helper</string>
+    <string name="do_setup_finish_provider">Finish setting up AI Helper</string>
     <string name="do_setup_choose_ollama">Choose Ollama in AI Helper</string>
     <string name="do_setup_ollama_not_running">Ollama isn't running</string>
     <string name="do_setup_pick_ollama_model">Pick an Ollama model in AI Helper</string>

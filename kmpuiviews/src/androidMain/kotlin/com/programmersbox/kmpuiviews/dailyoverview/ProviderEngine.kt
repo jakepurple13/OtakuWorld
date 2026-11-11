@@ -8,11 +8,13 @@ import com.programmersbox.kmpuiviews.domain.dailyoverview.EngineStatus
 import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngineId
 import com.programmersbox.koogintegration.AgentMaker
 import com.programmersbox.koogintegration.NoLLMProvider
+import kotlinx.coroutines.CancellationException
 import org.jetbrains.compose.resources.getString
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.do_engine_resolved
 import otakuworld.kmpuiviews.generated.resources.do_label_via_koog
 import otakuworld.kmpuiviews.generated.resources.do_setup_choose_provider
+import otakuworld.kmpuiviews.generated.resources.do_setup_finish_provider
 
 /** The AI Helper's cloud provider. Explicit opt-in only: Automatic never resolves to it. */
 class ProviderEngine(
@@ -34,8 +36,21 @@ class ProviderEngine(
 
     override suspend fun status(): EngineStatus {
         val company = agentMaker.selection()?.company
-        return if (company != null && company !in notCloud) EngineStatus.Ready
-        else EngineStatus.NeedsSetup(getString(Res.string.do_setup_choose_provider))
+        if (company == null || company in notCloud) {
+            return EngineStatus.NeedsSetup(getString(Res.string.do_setup_choose_provider))
+        }
+        // Ready only when a client can be built: a missing API key throws, and a model outside
+        // Koog's list gives null. Either way summarize() would fail into template text.
+        val info = try {
+            agentMaker.getAgentInfo()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            null
+        }
+        info?.llmClient?.close()
+        return if (info != null) EngineStatus.Ready
+        else EngineStatus.NeedsSetup(getString(Res.string.do_setup_finish_provider))
     }
 
     override suspend fun client(): Pair<LLMClient, LLModel>? =
