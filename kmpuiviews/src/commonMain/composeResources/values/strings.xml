@@ -677,9 +677,9 @@
     <string name="do_use_daily_overview_summary">Adds it to quick actions</string>
     <string name="do_group_notification">Morning notification</string>
     <string name="do_send_morning">Send a morning summary</string>
-    <string name="do_send_morning_summary">Yesterday\'s numbers and summary</string>
+    <string name="do_send_morning_summary">Yesterday's numbers and summary</string>
     <string name="do_time">Time</string>
-    <string name="do_time_summary">Prepared a few minutes before, so it\'s ready</string>
+    <string name="do_time_summary">When the summary arrives each morning</string>
     <string name="do_notification_time">Notification time</string>
     <string name="do_skip_quiet">Skip quiet days</string>
     <string name="do_skip_quiet_summary">No notification if nothing was read and nothing updated</string>
@@ -709,12 +709,12 @@
     <string name="do_no_provider">No provider set up in AI Helper</string>
     <string name="do_set_up_ai_helper">Set up AI Helper</string>
     <string name="do_change_ai_helper">Change in AI Helper</string>
-    <string name="do_provider_warning">Sends yesterday\'s titles, chapter numbers and update counts to %1$s. No reading content is sent.</string>
+    <string name="do_provider_warning">Sends yesterday's titles, chapter numbers and update counts to %1$s. No reading content is sent.</string>
     <string name="do_preview">Preview</string>
     <string name="do_test">Test</string>
     <string name="do_test_hint">Tap Test to hear how the selected engine writes.</string>
     <string name="do_engine_automatic_desc_plain">Uses the first ready engine, except your AI helper.</string>
-    <string name="do_setup_error">Couldn\'t check this engine</string>
+    <string name="do_setup_error">Couldn't check this engine</string>
     <string name="do_notif_title">Yesterday: %1$s, %2$s</string>
     <plurals name="do_notif_chapters">
         <item quantity="one">%1$d chapter</item>
