@@ -17,6 +17,7 @@ class QuickActionsStateTest {
         )
         assertEquals(
             listOf(
+                QuickAction.DailyOverview,
                 QuickAction.GlobalSearch,
                 QuickAction.Lists,
                 QuickAction.SavedNotifications,

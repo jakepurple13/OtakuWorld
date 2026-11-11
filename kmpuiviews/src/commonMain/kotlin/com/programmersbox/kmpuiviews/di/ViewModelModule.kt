@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.di
 
+import com.programmersbox.kmpuiviews.domain.dailyoverview.DailyOverviewSettings
 import com.programmersbox.kmpuiviews.presentation.all.AllViewModel
 import com.programmersbox.kmpuiviews.presentation.bookmarks.BookmarkChaptersViewModel
 import com.programmersbox.kmpuiviews.presentation.dailyoverview.DailyOverviewViewModel
@@ -43,6 +44,7 @@ import com.programmersbox.kmpuiviews.presentation.urlopener.UrlOpenerViewModel
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
 import com.programmersbox.kmpuiviews.utils.Backup
 import io.github.vinceglb.filekit.PlatformFile
+import kotlinx.coroutines.flow.map
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
@@ -111,7 +113,17 @@ val viewModels: Module = module {
     viewModelOf(::AccountStatDetailsViewModel)
     viewModelOf(::UpdateCheckErrorsViewModel)
     viewModelOf(::UpdateSourcesViewModel)
-    viewModelOf(::QuickActionsViewModel)
+    viewModel {
+        QuickActionsViewModel(
+            controller = get(),
+            workRepository = get(),
+            reportStore = get(),
+            backgroundWorkHandler = get(),
+            navigationActions = get(),
+            counts = get(),
+            dailyOverviewEnabled = get<DailyOverviewSettings>().prefs.map { it.enabled },
+        )
+    }
 
     includes(platformViewModels())
 }

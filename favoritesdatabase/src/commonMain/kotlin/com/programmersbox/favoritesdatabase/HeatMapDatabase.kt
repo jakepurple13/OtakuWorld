@@ -93,6 +93,9 @@ interface HeatMapDao {
     @Query("SELECT * FROM HeatMapItem WHERE time = :date LIMIT 1")
     suspend fun getHeatMapByDate(date: LocalDate): HeatMapItem?
 
+    @Query("SELECT * FROM HeatMapItem WHERE time = :date LIMIT 1")
+    fun observeHeatMapByDate(date: LocalDate): Flow<HeatMapItem?>
+
     @Query("SELECT * FROM HeatMapItem WHERE is_dirty = 1")
     suspend fun getDirtyHeatMapItems(): List<HeatMapItem>
 

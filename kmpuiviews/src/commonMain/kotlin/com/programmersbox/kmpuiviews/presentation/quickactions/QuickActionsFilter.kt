@@ -12,11 +12,18 @@ internal expect val runKeyLabel: String
 /** Label of the keyboard-shortcuts-list shortcut (desktop only), empty elsewhere. */
 internal expect val shortcutsListKeyLabel: String
 
-/** [texts] holds each action's "title supporting" text. Blank query returns every action. */
-fun filterQuickActions(query: String, texts: Map<QuickAction, String>): List<QuickAction> {
+/**
+ * [texts] holds each action's "title supporting" text. Only [actions] are searched, in order.
+ * Blank query returns every one of them.
+ */
+fun filterQuickActions(
+    query: String,
+    texts: Map<QuickAction, String>,
+    actions: List<QuickAction> = QuickAction.entries,
+): List<QuickAction> {
     val q = query.trim()
-    if (q.isEmpty()) return QuickAction.entries
-    return QuickAction.entries.filter { texts[it].orEmpty().contains(q, ignoreCase = true) }
+    if (q.isEmpty()) return actions
+    return actions.filter { texts[it].orEmpty().contains(q, ignoreCase = true) }
 }
 
 fun moveSelection(current: Int, delta: Int, size: Int): Int =

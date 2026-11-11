@@ -13,6 +13,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.MenuBar
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.kmpuiviews.presentation.shortcuts.AppShortcut
 import com.programmersbox.kmpuiviews.presentation.shortcuts.label
 import com.programmersbox.kmpuiviews.presentation.shortcuts.matches
@@ -24,6 +25,7 @@ import org.koin.compose.viewmodel.koinViewModel
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.qa_background_tasks
 import otakuworld.kmpuiviews.generated.resources.qa_check_updates
+import otakuworld.kmpuiviews.generated.resources.qa_daily_overview
 import otakuworld.kmpuiviews.generated.resources.qa_scan_qr
 import otakuworld.kmpuiviews.generated.resources.qa_update_errors
 import otakuworld.kmpuiviews.generated.resources.qa_global_search
@@ -42,6 +44,7 @@ fun isQuickActionsShortcut(event: KeyEvent, isMac: Boolean): Boolean =
 
 private fun QuickAction.label(): StringResource = when (this) {
     QuickAction.CheckForUpdates -> Res.string.qa_check_updates
+    QuickAction.DailyOverview -> Res.string.qa_daily_overview
     QuickAction.ScanQrCode -> Res.string.qa_scan_qr
     QuickAction.GlobalSearch -> Res.string.qa_global_search
     QuickAction.Lists -> Res.string.qa_lists
@@ -59,11 +62,12 @@ fun FrameWindowScope.QuickActionsMenuBar() {
     val menuTitle = stringResource(Res.string.qa_menu_actions)
     val openLabel = stringResource(Res.string.qa_menu_open)
     val shortcutsLabel = stringResource(Res.string.qa_menu_shortcuts)
-    val labels = QuickAction.entries.map { it to stringResource(it.label()) }
+    val actions by viewModel.visibleActions.collectAsStateWithLifecycle()
+    val labels = actions.map { it to stringResource(it.label()) }
     MenuBar {
         Menu(menuTitle) {
             labels.forEachIndexed { index, (action, label) ->
-                if (index > 0 && QuickAction.entries[index - 1].group != action.group) Separator()
+                if (index > 0 && actions[index - 1].group != action.group) Separator()
                 Item(
                     label,
                     shortcut = if (action == QuickAction.GlobalSearch) AppShortcut.GlobalSearch.menuShortcut() else null,
@@ -91,11 +95,12 @@ fun QuickActionsTitleBarMenu() {
     // Not scoped to this menu: it resolves to the same ViewModelStoreOwner as QuickActionsOverlay,
     // so it shares the overlay's instance and a run started here shows the overlay's snackbar.
     val viewModel = koinViewModel<QuickActionsViewModel>()
+    val actions by viewModel.visibleActions.collectAsStateWithLifecycle()
     var expanded by remember { mutableStateOf(false) }
     TextButton(onClick = { expanded = true }) { Text(stringResource(Res.string.qa_menu_actions)) }
     DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-        QuickAction.entries.forEachIndexed { index, action ->
-            if (index > 0 && QuickAction.entries[index - 1].group != action.group) HorizontalDivider()
+        actions.forEachIndexed { index, action ->
+            if (index > 0 && actions[index - 1].group != action.group) HorizontalDivider()
             DropdownMenuItem(
                 text = {
                     val label = stringResource(action.label())

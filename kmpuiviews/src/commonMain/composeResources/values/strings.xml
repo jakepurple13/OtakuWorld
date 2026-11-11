@@ -555,6 +555,16 @@
     <string name="qa_ago_days">%1$dd ago</string>
     <string name="qa_waiting_to_start">Waiting to start…</string>
     <string name="qa_check_failed">Check failed</string>
+    <string name="qa_daily_overview">Daily overview</string>
+    <string name="qa_daily_overview_sub">Your recap of yesterday</string>
+    <plurals name="qa_yesterday_chapters">
+        <item quantity="one">Yesterday: %1$d chapter</item>
+        <item quantity="other">Yesterday: %1$d chapters</item>
+    </plurals>
+    <plurals name="qa_yesterday_episodes">
+        <item quantity="one">Yesterday: %1$d episode</item>
+        <item quantity="other">Yesterday: %1$d episodes</item>
+    </plurals>
     <string name="banner_dismiss">Dismiss</string>
     <string name="banner_clear_all">Clear all</string>
     <string name="banner_source_missing">Source not installed</string>

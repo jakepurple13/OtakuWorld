@@ -1,5 +1,8 @@
 package com.programmersbox.kmpuiviews.presentation.dailyoverview
 
+import androidx.compose.animation.BoundsTransform
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -67,6 +70,8 @@ import com.programmersbox.kmpuiviews.presentation.dailyoverview.components.peakH
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalNavigationAnimatedScope
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalSharedElementScope
 import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
 import kotlinx.coroutines.delay
 import kotlinx.datetime.LocalDate
@@ -98,6 +103,15 @@ private val OverviewDate = LocalDate.Format {
 
 private const val UpdatesShown = 3
 
+/** Shared between the quick actions row and this screen's root, so the row grows into the screen. */
+const val DailyOverviewSharedKey = "daily-overview"
+
+// Container transform timing from the approved mockup: 480ms, emphasized decelerate.
+@OptIn(ExperimentalSharedTransitionApi::class)
+internal val dailyOverviewBoundsTransform = BoundsTransform { _, _ ->
+    tween(durationMillis = 480, easing = CubicBezierEasing(0.2f, 0f, 0f, 1f))
+}
+
 // First-load entrance, matching the approved mockup: items rise 14dp and fade in from 180ms,
 // 55ms apart; read-progress bars grow at 800ms.
 private val EnterEasing = CubicBezierEasing(0.2f, 0f, 0f, 1f)
@@ -106,7 +120,7 @@ private const val EnterStaggerMs = 55L
 private const val FirstLoadMs = 1500L
 private const val ProgressDelayMs = 800L
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun DailyOverviewScreen(
     viewModel: DailyOverviewViewModel = koinViewModel(),
@@ -116,9 +130,24 @@ fun DailyOverviewScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val facts = state.facts
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val sharedScope = LocalSharedElementScope.current
+    val navScope = LocalNavigationAnimatedScope.current
+    // Grows out of the quick actions row; outside a nav entry it just appears
+    val sharedBounds = if (sharedScope != null && navScope != null) {
+        with(sharedScope) {
+            Modifier.sharedBounds(
+                sharedContentState = rememberSharedContentState(DailyOverviewSharedKey),
+                animatedVisibilityScope = navScope,
+                boundsTransform = dailyOverviewBoundsTransform,
+                resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
+            )
+        }
+    } else {
+        Modifier
+    }
 
     Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier = sharedBounds.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
                 title = {

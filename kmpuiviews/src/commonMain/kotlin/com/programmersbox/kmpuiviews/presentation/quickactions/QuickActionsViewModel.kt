@@ -32,6 +32,8 @@ data class QuickActionsUiState(
     val listCount: Int? = null,
     /** Null when there are no saved notifications; the UI hides the count. */
     val savedNotificationCount: Int? = null,
+    /** Heat map reads for yesterday; null when there were none, and the row shows its default text. */
+    val yesterdayReads: Int? = null,
 )
 
 class QuickActionsViewModel(
@@ -41,7 +43,15 @@ class QuickActionsViewModel(
     private val backgroundWorkHandler: BackgroundWorkHandler,
     private val navigationActions: NavigationActions,
     counts: QuickActionCounts,
+    /** [com.programmersbox.kmpuiviews.domain.dailyoverview.DailyOverviewPrefs.enabled]. */
+    dailyOverviewEnabled: Flow<Boolean>,
 ) : ViewModel() {
+    /** Every surface (card, ⌘K, Actions menu) lists these; the Daily overview row leaves when the feature is off. */
+    val visibleActions: StateFlow<List<QuickAction>> = dailyOverviewEnabled
+        .map { enabled -> if (enabled) QuickAction.entries else QuickAction.entries - QuickAction.DailyOverview }
+        // Eager so the list is settled before the card opens; starts hidden so a disabled row never flashes
+        .stateIn(viewModelScope, SharingStarted.Eagerly, QuickAction.entries - QuickAction.DailyOverview)
+
     // Set by run(); null until a check is requested. sawRunning flips once work is actually active,
     // so stale finished work and reports from earlier runs never show as this run's result.
     // everRunning flips once that work is RUNNING, not just queued.
@@ -78,7 +88,8 @@ class QuickActionsViewModel(
     private val countFlags = combine(
         counts.lists.onStart { emit(0) },
         counts.savedNotifications.onStart { emit(0) },
-    ) { lists, saved -> lists to saved }
+        counts.yesterdayReads.onStart { emit(0) },
+    ) { lists, saved, yesterday -> Triple(lists, saved, yesterday) }
 
     val uiState: StateFlow<QuickActionsUiState> = combine(
         work,
@@ -86,7 +97,7 @@ class QuickActionsViewModel(
         backgroundWorkHandler.workerInfoFlow().onStart { emit(emptyList()) },
         runFlags,
         countFlags,
-    ) { work, report, workers, (saw, requested, ever), (lists, saved) ->
+    ) { work, report, workers, (saw, requested, ever), (lists, saved, yesterday) ->
         QuickActionsUiState(
             checkState = manualCheckState(work, report, saw, requested, ever),
             lastCheckedAt = report?.finishedAt,
@@ -95,6 +106,7 @@ class QuickActionsViewModel(
             userRequested = requested != null,
             listCount = lists.takeIf { it > 0 },
             savedNotificationCount = saved.takeIf { it > 0 },
+            yesterdayReads = yesterday.takeIf { it > 0 },
         )
     }.stateIn(
         viewModelScope,
@@ -114,6 +126,7 @@ class QuickActionsViewModel(
                 }
             }
 
+            QuickAction.DailyOverview -> navigationActions.navigate(Screen.DailyOverview)
             QuickAction.ScanQrCode -> navigationActions.scanQrCode()
             QuickAction.GlobalSearch -> navigationActions.globalSearch()
             QuickAction.Lists -> navigationActions.customList()
