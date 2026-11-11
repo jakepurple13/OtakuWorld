@@ -261,6 +261,18 @@ class DetailsViewModelTest {
     }
 
     @Test
+    fun `markAs does not stamp a read time, so it never counts as reading that day`() = runTest {
+        val vm = viewModel()
+        awaitCondition { vm.currentState is DetailState.Success }
+
+        val chapter = (vm.currentState as DetailState.Success).info.chapters.first()
+
+        vm.markAs(chapter, true)
+        awaitCondition { vm.chapters.any { it.url == chapter.url } }
+        assertEquals(0L, vm.chapters.first { it.url == chapter.url }.createdAt)
+    }
+
+    @Test
     fun `selection toggle selectAll invert and clear`() = runTest {
         val vm = viewModel()
         awaitCondition { vm.currentState is DetailState.Success }

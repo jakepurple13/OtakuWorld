@@ -118,6 +118,12 @@ class FavoritesRepositoryTest {
         assertEquals(fixed.toEpochMilliseconds(), row.updatedAt)
     }
 
+    @Test fun `addWatched without stampReadTime leaves createdAt at 0`() = runTest {
+        val repo = repository(clock = FixedClock(Instant.fromEpochMilliseconds(1_762_800_000_000)))
+        repo.addWatched(ChapterWatched(url = "c1", name = "Ch 1", favoriteUrl = "f1"), stampReadTime = false)
+        assertEquals(0L, database.itemDao().getChapterByUrl("c1")!!.createdAt)
+    }
+
     @Test fun `re-reading a chapter moves createdAt to the latest read`() = runTest {
         val t1 = Instant.fromEpochMilliseconds(1_762_800_000_000)
         val t2 = Instant.fromEpochMilliseconds(1_762_900_000_000)

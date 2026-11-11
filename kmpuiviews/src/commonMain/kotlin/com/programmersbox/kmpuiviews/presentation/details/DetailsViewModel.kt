@@ -347,7 +347,8 @@ class DetailsViewModel(
             ) return@launch
 
             if (b) {
-                favoritesRepository.addWatched(chapter)
+                // Marking from Details is not reading, so it gets no read time.
+                favoritesRepository.addWatched(chapter, stampReadTime = false)
             } else {
                 favoritesRepository.removeWatched(chapter)
             }

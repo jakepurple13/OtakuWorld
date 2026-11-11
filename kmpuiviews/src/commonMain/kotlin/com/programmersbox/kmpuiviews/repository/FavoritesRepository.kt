@@ -48,12 +48,13 @@ class FavoritesRepository(
         }
     }
 
-    suspend fun addWatched(chapterWatched: ChapterWatched) {
+    suspend fun addWatched(chapterWatched: ChapterWatched, stampReadTime: Boolean = true) {
         if (isIncognito(chapterWatched.favoriteUrl)) return
         coroutineScope {
             launch {
+                // Only reader reads are stamped; an unstamped row (createdAt 0) never counts as read that day.
                 val now = clock.now().toEpochMilliseconds()
-                dao.insertChapter(chapterWatched.copy(createdAt = now, updatedAt = now))
+                dao.insertChapter(if (stampReadTime) chapterWatched.copy(createdAt = now, updatedAt = now) else chapterWatched)
                 systemAlerter.alertChapterChange()
             }
         }
