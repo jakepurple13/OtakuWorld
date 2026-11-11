@@ -72,7 +72,9 @@ Built in `commonMain` from existing tables for a `LocalDate` (yesterday in the s
 ### Required change: read timestamps
 
 `ChapterWatched.createdAt` defaults to `0`, and no insert sets it, so reads have no time today.
-`FavoritesRepository.addWatched` will set `createdAt` and `updatedAt` to now before insert.
+`FavoritesRepository.addWatched` will set `createdAt` and `updatedAt` to now before insert, for
+reader reads only. Marking chapters read from Details (`markAs` / `markChaptersAs`) passes
+`stampReadTime = false` and leaves `createdAt = 0`, so a bulk mark never counts as reading that day.
 Re-reading a chapter replaces the row (`OnConflictStrategy.REPLACE`), which moves its time to the
 latest read. That's fine for a "yesterday" view. No schema change and no migration.
 
@@ -112,7 +114,10 @@ interface SummaryEngine {
 An explicit pick that isn't Ready falls back to Template. The summary card then shows a
 "Set up AI summary" chip that opens the engine page.
 
-Prompt: a short system prompt plus `DailyFacts` serialized as JSON. It asks for 2–3 sentences in
+Prompt: a short system prompt plus a compact facts object serialized as JSON: date, unit,
+readCount, titles (title, first and last chapter, count, caught up), up to 10 update titles plus
+the total update count, and the failed source count. No URLs, image URLs, source ids or
+timestamps are sent. It asks for 2–3 sentences in
 second person, plain words, and no numbers that aren't in the facts. It uses the app noun
 ("chapters" or "episodes") from the app's `GenericInfo`.
 
