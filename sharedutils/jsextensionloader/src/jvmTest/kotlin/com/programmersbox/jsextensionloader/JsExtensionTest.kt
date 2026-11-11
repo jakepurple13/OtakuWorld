@@ -2,10 +2,11 @@ package com.programmersbox.jsextensionloader
 
 import app.cash.zipline.QuickJs
 import com.programmersbox.extensioninterfaces.ExtensionManifest
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -34,17 +35,29 @@ class JsExtensionTest {
 
     private var quickJs: QuickJs? = null
 
+    // QuickJs must be created and used on one thread (as JSExtensionLoader does): its stack-overflow
+    // check is relative to the creating thread's stack, so other threads fail it on Linux.
+    private val dispatcher = singleThreadQuickJsDispatcher("js-extension-test")
+
     @AfterTest
     fun tearDown() {
-        quickJs?.close()
+        runBlocking(dispatcher) { quickJs?.close() }
+        closeQuickJsDispatcher(dispatcher)
     }
 
-    private fun loadSampleExtension(hostBridge: HostBridge = StubHostBridge()): JsExtension {
+    private suspend fun loadExtension(
+        script: String,
+        fileName: String,
+        hostBridge: HostBridge = StubHostBridge(),
+    ): JsExtension = withContext(dispatcher) {
         val js = QuickJs.create()
         quickJs = js
-        js.evaluate(SampleExtensionFixture.SCRIPT_TEXT, "sample-extension.js")
-        return JsExtension(manifest, js, hostBridge, Dispatchers.Default)
+        js.evaluate(script, fileName)
+        JsExtension(manifest, js, hostBridge, dispatcher)
     }
+
+    private suspend fun loadSampleExtension(hostBridge: HostBridge = StubHostBridge()): JsExtension =
+        loadExtension(SampleExtensionFixture.SCRIPT_TEXT, "sample-extension.js", hostBridge)
 
     @Test
     fun getPopularReturnsParsedItems() = runTest {
@@ -87,9 +100,7 @@ class JsExtensionTest {
 
     @Test
     fun parsePhaseReceivesTheHostFetchedResponseBody() = runTest {
-        val js = QuickJs.create()
-        quickJs = js
-        js.evaluate(
+        val extension = loadExtension(
             """
             function getPopularRequest(page) { return { url: "https://example.com/x", headers: {} }; }
             function getPopularParse(page, responseBody) {
@@ -107,8 +118,8 @@ class JsExtensionTest {
             function getContentParse(url, responseBody) { return { urls: [], headers: {} }; }
             """.trimIndent(),
             "echo-extension.js",
+            StubHostBridge(response = "fetched-body"),
         )
-        val extension = JsExtension(manifest, js, StubHostBridge(response = "fetched-body"), Dispatchers.Default)
 
         val items = extension.getPopular(page = 1)
 
@@ -117,9 +128,8 @@ class JsExtensionTest {
 
     @Test
     fun parsePhaseHandlesRealisticHtmlBodyWithManyEscapedNewlinesWithoutOverflowing() = runTest {
-        val js = QuickJs.create()
-        quickJs = js
-        js.evaluate(
+        val htmlLikeBody = "<div class=\"item\">\n  <a href=\"/x\">text</a>\n</div>\n".repeat(20_000)
+        val extension = loadExtension(
             """
             function getPopularRequest(page) { return { url: "https://example.com/x", headers: {} }; }
             function getPopularParse(page, responseBody) { return []; }
@@ -137,9 +147,8 @@ class JsExtensionTest {
             function getContentParse(url, responseBody) { return { urls: [], headers: {} }; }
             """.trimIndent(),
             "echo-extension.js",
+            StubHostBridge(response = htmlLikeBody),
         )
-        val htmlLikeBody = "<div class=\"item\">\n  <a href=\"/x\">text</a>\n</div>\n".repeat(20_000)
-        val extension = JsExtension(manifest, js, StubHostBridge(response = htmlLikeBody), Dispatchers.Default)
 
         val items = extension.getLatest(page = 1)
 
@@ -148,34 +157,26 @@ class JsExtensionTest {
 
     @Test
     fun concurrentCallsDoNotCorruptTheSharedQuickJsInstance() = runTest {
-        val js = QuickJs.create()
-        quickJs = js
-        js.evaluate(SampleExtensionFixture.SCRIPT_TEXT, "sample-extension.js")
         val hostBridge = object : HostBridge {
             override suspend fun httpGet(url: String, headersJson: String): String {
                 Thread.sleep(5)
                 return "body-for-$url"
             }
         }
-        val dispatcher = singleThreadQuickJsDispatcher("concurrency-test")
-        val extension = JsExtension(manifest, js, hostBridge, dispatcher)
+        val extension = loadSampleExtension(hostBridge)
 
-        try {
-            repeat(20) { page ->
-                listOf(
-                    async { extension.getPopular(page) },
-                    async { extension.getLatest(page) },
-                    async { extension.getDetail("https://example.com/item/1") },
-                    async { extension.getContent("https://example.com/item/1") },
-                ).awaitAll()
-            }
-        } finally {
-            closeQuickJsDispatcher(dispatcher)
+        repeat(20) { page ->
+            listOf(
+                async { extension.getPopular(page) },
+                async { extension.getLatest(page) },
+                async { extension.getDetail("https://example.com/item/1") },
+                async { extension.getContent("https://example.com/item/1") },
+            ).awaitAll()
         }
     }
 
     @Test
-    fun validatorReportsNoMissingFunctionsForSampleExtension() {
+    fun validatorReportsNoMissingFunctionsForSampleExtension() = runBlocking(dispatcher) {
         val js = QuickJs.create()
         quickJs = js
         js.evaluate(SampleExtensionFixture.SCRIPT_TEXT, "sample-extension.js")
@@ -183,7 +184,7 @@ class JsExtensionTest {
     }
 
     @Test
-    fun validatorReportsMissingFunctions() {
+    fun validatorReportsMissingFunctions() = runBlocking(dispatcher) {
         val js = QuickJs.create()
         quickJs = js
         js.evaluate(SampleExtensionFixture.MISSING_FUNCTIONS_SCRIPT, "incomplete-extension.js")

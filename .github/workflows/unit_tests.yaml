@@ -42,7 +42,7 @@ jobs:
 
       # iOS simulator tests are skipped: no iOS devices/simulators are used for this project.
       - name: Run all tests
-        run: ./gradlew jvmTest testAndroidHostTest
+        run: ./gradlew jvmTest testAndroidHostTest --continue
 
         # ADDED STEP: Publish the test results to the PR/Build Summary (macOS compatible)
       - name: Publish Test Results
