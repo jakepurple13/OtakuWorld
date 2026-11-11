@@ -172,7 +172,9 @@ class DailyOverviewSettingsViewModel(
         } else {
             choiceName(choice)
         }
-        val notReady = resolved.id == SummaryEngineId.Template && choice != SummaryEngineChoice.Template
+        // Automatic landing on Numbers only is a working pick, not a failed one.
+        val notReady = resolved.id == SummaryEngineId.Template &&
+            choice != SummaryEngineChoice.Template && choice != SummaryEngineChoice.Automatic
         return EngineInfo(
             resolvedLabel = if (notReady) getString(Res.string.do_engine_not_ready, name) else name,
             automaticLabel = automaticLabel,

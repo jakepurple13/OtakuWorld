@@ -122,7 +122,7 @@ class DailyOverviewSettingsViewModelTest {
     fun `refresh updates resolvedLabel after an engine becomes ready`() = runTest {
         val gemma = FakeEngine(SummaryEngineId.Gemma, "Gemma 4 E2B", EngineStatus.NeedsSetup("Download a model"))
         val vm = viewModel(gemma)
-        await { vm.ui.value?.resolvedLabel == "Automatic · Numbers only (not ready)" }
+        await { vm.ui.value?.resolvedLabel == "Automatic · Numbers only" }
         gemma.status = EngineStatus.Ready
         vm.refresh()
         await { vm.ui.value?.resolvedLabel == "Automatic · Gemma 4 E2B" }
@@ -134,7 +134,7 @@ class DailyOverviewSettingsViewModelTest {
         await { vm.ui.value?.engines?.isNotEmpty() == true }
         val gemma = vm.ui.value!!.engines.first { it.id == SummaryEngineId.Gemma }
         assertTrue(gemma.status is EngineStatus.NeedsSetup)
-        assertEquals("Automatic · Numbers only (not ready)", vm.ui.value?.resolvedLabel)
+        assertEquals("Automatic · Numbers only", vm.ui.value?.resolvedLabel)
 
         vm.choose(SummaryEngineChoice.Gemma)
         await { vm.ui.value?.prefs?.engine == SummaryEngineChoice.Gemma }
