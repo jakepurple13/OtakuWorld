@@ -529,11 +529,21 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   ([b4fbd59b2](https://github.com/jakepurple13/OtakuWorld/commit/b4fbd59b2))
 - Reader pages animate size changes
   ([cf06671d7](https://github.com/jakepurple13/OtakuWorld/commit/cf06671d7))
+- Reader motion:
+  - Loading pages show a panel-shaped shimmer with a wavy progress ring, then settle in.
+  - Failed pages shake once, and the retry icon spins while the page reloads.
+  - The chapter-end card draws a check and shows how far through the series the next chapter is.
+  - Changing chapters drops a banner with the chapter name and page count, replacing the
+    "Marked as read" toast. In the pager modes the new chapter also slides in.
+  - Adding a bookmark pops the icon with a small burst.
+  - A thin progress line and a page label show while the bars are hidden.
+  - Switching between List and Pager keeps the current page in place while it morphs.
 
 #### Bug Fixes
 
 - Reader: the current chapter stays in sync while reading
   ([#2570](https://github.com/jakepurple13/OtakuWorld/pull/2570))
+- Reader: tapping retry on a failed page now reloads it. Before, it did nothing.
 
 ---
 
