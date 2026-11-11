@@ -35,10 +35,15 @@ class FavoriteViewModelTest {
     private lateinit var database: ItemDatabase
     private lateinit var notes: NotesDatabase
 
+    // Stands in for the UI thread: the ViewModel writes its state here (Main) and the test reads it
+    // here, as in the app. Reading derived state on another thread while it is written can leave a
+    // derivedStateOf (sections) cached with stale inputs.
+    private val uiDispatcher = Dispatchers.Default.limitedParallelism(1)
+
     // The ViewModel observes Room flows on Room's own dispatcher and snapshotFlow on the
     // global snapshot, so wait in real time and push snapshot apply notifications ourselves.
     private suspend fun awaitCondition(condition: () -> Boolean) {
-        withContext(Dispatchers.Default.limitedParallelism(1)) {
+        withContext(uiDispatcher) {
             withTimeout(10_000) {
                 while (true) {
                     Snapshot.sendApplyNotifications()
@@ -76,7 +81,7 @@ class FavoriteViewModelTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @BeforeTest
     fun setUp() {
-        Dispatchers.setMain(Dispatchers.Default)
+        Dispatchers.setMain(uiDispatcher)
         database = createTestItemDatabase()
         notes = createTestNotesDatabase()
     }

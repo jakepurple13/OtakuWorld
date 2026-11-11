@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.settings.lists
 
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.lifecycle.ViewModelStore
 import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
@@ -34,11 +35,16 @@ class OtakuCustomListViewModelTest {
 
     // The ViewModel observes ListDao's Room-generated Flow, which emits on Room's own
     // (real, non-test-controlled) dispatcher. A test-dispatcher virtual-clock advance
-    // doesn't drive that emission, so wait for it with real time instead.
+    // doesn't drive that emission, so wait for it with real time instead. customList also goes
+    // through snapshotFlow, which only sees background writes after apply notifications, so send them.
     private suspend fun awaitCondition(condition: suspend () -> Boolean) {
         withContext(Dispatchers.Default.limitedParallelism(1)) {
             withTimeout(5_000) {
-                while (!condition()) delay(10)
+                while (true) {
+                    Snapshot.sendApplyNotifications()
+                    if (condition()) break
+                    delay(10)
+                }
             }
         }
     }
