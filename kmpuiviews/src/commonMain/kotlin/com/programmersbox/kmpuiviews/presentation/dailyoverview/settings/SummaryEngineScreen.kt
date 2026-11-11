@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -55,6 +57,7 @@ import com.programmersbox.kmpuiviews.presentation.dailyoverview.components.Summa
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import org.jetbrains.compose.resources.stringResource
+import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import org.koin.compose.viewmodel.koinViewModel
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.do_change_ai_helper
@@ -235,6 +238,8 @@ fun SummaryEngineScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
             }
+            // Keeps the last card clear of the floating nav.
+            Spacer(Modifier.height(LocalNavHostPadding.current.calculateBottomPadding() + 16.dp))
         }
     }
 }

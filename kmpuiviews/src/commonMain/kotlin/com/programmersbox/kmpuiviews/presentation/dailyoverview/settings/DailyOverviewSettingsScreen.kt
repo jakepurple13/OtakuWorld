@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -55,6 +57,7 @@ import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import org.jetbrains.compose.resources.stringResource
+import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import otakuworld.kmpuiviews.generated.resources.Res
@@ -195,6 +198,8 @@ fun DailyOverviewSettingsScreen(
                     )
                 }
             }
+            // Keeps the last card clear of the floating nav.
+            Spacer(Modifier.height(LocalNavHostPadding.current.calculateBottomPadding() + 16.dp))
         }
 
         if (showTimePicker) {
