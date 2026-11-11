@@ -182,6 +182,7 @@ kotlin {
                 implementation(androidLibs.landscapistPlaceholder)
                 implementation(androidLibs.zoomable.peek.overlay)
                 implementation(androidLibs.barcode.scanning)
+                implementation(androidLibs.mlkit.genai.prompt)
                 implementation(androidLibs.biometric)
                 implementation(androidx.activity.activityKtx)
                 implementation(androidLibs.lazyColumnScrollbar)
