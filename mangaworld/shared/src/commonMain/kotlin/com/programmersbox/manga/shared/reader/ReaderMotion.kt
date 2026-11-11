@@ -19,3 +19,7 @@ internal fun chapterPosition(listIndex: Int, chapterCount: Int): Int = chapterCo
 internal fun seriesProgress(listIndex: Int, chapterCount: Int): Float =
     if (chapterCount <= 0) 0f
     else (chapterPosition(listIndex, chapterCount).toFloat() / chapterCount).coerceIn(0f, 1f)
+
+/** Fraction of the current chapter read, in 0..1; [currentPage] is 0-based. */
+internal fun chapterProgress(currentPage: Int, pages: Int): Float =
+    if (pages <= 0) 0f else ((currentPage + 1f) / pages).coerceIn(0f, 1f)

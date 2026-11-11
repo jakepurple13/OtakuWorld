@@ -618,6 +618,14 @@ private fun ReadViewContent(
                     }
                 }
 
+                ReadingProgressLine(
+                    progress = chapterProgress(currentPage, pagesInCurrentChapter),
+                    visible = !showItems,
+                    pageLabel = "p. ${currentPage + 1} / $pagesInCurrentChapter",
+                    scrolling = listState.isScrollInProgress || pagerState.isScrollInProgress,
+                    modifier = Modifier.align(Alignment.TopStart)
+                )
+
                 ChapterBanner(
                     state = chapterBanner,
                     pageCount = pagesInCurrentChapter.takeUnless { viewModel.isLoadingPages },

@@ -22,4 +22,13 @@ class ReaderMotionTest {
 
     @Test
     fun seriesProgressEmptyIsZero() = assertEquals(0f, seriesProgress(0, 0))
+
+    @Test
+    fun progressIsFraction() = assertEquals(0.5f, chapterProgress(currentPage = 11, pages = 24))
+
+    @Test
+    fun progressClamps() {
+        assertEquals(1f, chapterProgress(30, 24))
+        assertEquals(0f, chapterProgress(0, 0))
+    }
 }
