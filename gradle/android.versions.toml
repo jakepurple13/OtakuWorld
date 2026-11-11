@@ -170,7 +170,7 @@ glideRecyclerview = { module = "com.github.bumptech.glide:recyclerview-integrati
 duktape = "com.squareup.duktape:duktape-android:1.4.0"
 fileChooser = "com.github.hedzr:android-file-chooser:1.2.0"
 gson = "com.google.code.gson:gson:2.15.0"
-jsoup = "org.jsoup:jsoup:1.23.2"
+jsoup = "org.jsoup:jsoup:1.24.1"
 karnKhttp = "io.karn:khttp-android:0.1.2"
 kotson = "com.github.salomonbrys.kotson:kotson:2.5.0"
 palette = "androidx.palette:palette-ktx:1.1.0"
@@ -281,17 +281,17 @@ ziplineProfiler = { module = "app.cash.zipline:zipline-profiler", version.ref = 
 # CloudStream (:source_utilities:cloudstream). Versions follow recloudstream/cloudstream's catalog;
 # Upstream pins jackson and rhino strictly because newer releases need minSdk 26. Here only rhino is
 # strict; jackson is `require 2.13.1` and resolves to 2.21.x because koog needs it (our minSdk is 28).
-cloudstreamAnnotation = "androidx.annotation:annotation:1.10.0"
+cloudstreamAnnotation = "androidx.annotation:annotation:1.11.0"
 cloudstreamAtomicfu = "org.jetbrains.kotlinx:atomicfu:0.33.0"
 cloudstreamCryptographyCore = { module = "dev.whyoleg.cryptography:cryptography-core", version.ref = "cloudstreamCryptography" }
 cloudstreamCryptographyProvider = { module = "dev.whyoleg.cryptography:cryptography-provider-optimal", version.ref = "cloudstreamCryptography" }
 # Not strict: koog (kmpuiviews:koogintegration) needs jackson 2.21.x. Upstream pins 2.13.1 strictly only
 # for API <= 25 devices; our minSdk is 28.
-cloudstreamJackson = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version = { require = "2.13.1" } }
+cloudstreamJackson = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version = { require = "2.23.0" } }
 cloudstreamKotlinxIo = "org.jetbrains.kotlinx:kotlinx-io-core:0.9.1"
 cloudstreamKsoup = "com.fleeksoft.ksoup:ksoup:0.2.6"
 cloudstreamNiceHttp = "com.github.Blatzar:NiceHttp:0.4.18"
-cloudstreamRhino = { module = "org.mozilla:rhino", version = { strictly = "1.8.1" } }
+cloudstreamRhino = { module = "org.mozilla:rhino", version = { strictly = "1.9.2" } }
 
 [bundles]
 compose = [

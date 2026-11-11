@@ -134,9 +134,9 @@ koinNavigation3 = { module = "io.insert-koin:koin-compose-navigation3" }
 koin-test = { module = "io.insert-koin:koin-test" }
 
 # Kotlinx
-kotlinxSerialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version = "1.12.0" }
-kotlinxSerializationOkio = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json-okio", version = "1.12.0" }
-kotlinxSerializationProtobuf = { module = "org.jetbrains.kotlinx:kotlinx-serialization-protobuf", version = "1.12.0" }
+kotlinxSerialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version = "1.13.0" }
+kotlinxSerializationOkio = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json-okio", version = "1.13.0" }
+kotlinxSerializationProtobuf = { module = "org.jetbrains.kotlinx:kotlinx-serialization-protobuf", version = "1.13.0" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
 kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test", version.ref = "kotlinTest" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
