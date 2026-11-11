@@ -69,6 +69,7 @@ import com.programmersbox.kmpuiviews.presentation.dailyoverview.components.Summa
 import com.programmersbox.kmpuiviews.presentation.dailyoverview.components.peakHourLabel
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
+import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalNavigationAnimatedScope
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalSharedElementScope
@@ -547,7 +548,8 @@ private fun UpdateRow(
         trailing = {},
     ) {
         RowTitle(update.title)
-        RowSubtitle(listOf(update.summary, update.source).filter { it.isNotBlank() }.joinToString(" · "))
+        val source = LocalSourcesRepository.current.displayNameFor(update.source)
+        RowSubtitle(listOf(update.summary, source).filter { it.isNotBlank() }.joinToString(" · "))
     }
 }
 
@@ -578,7 +580,7 @@ private fun FailedSourceRow(
             Badge("!", MaterialTheme.colorScheme.errorContainer, MaterialTheme.colorScheme.error)
         },
     ) {
-        RowTitle(source)
+        RowTitle(LocalSourcesRepository.current.displayNameFor(source))
         RowSubtitle(stringResource(Res.string.do_update_check_failed))
     }
 }
