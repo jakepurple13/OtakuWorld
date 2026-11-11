@@ -1,6 +1,19 @@
 package com.programmersbox.manga.shared.reader
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -164,19 +177,88 @@ internal fun Kamel(
                 .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
         ) {
             LaunchedEffect(Unit) { resource.exception.printStackTrace() }
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .clickable { onRefresh() }
-                    .clip(MaterialTheme.shapes.medium)
-                    .padding(16.dp)
-            ) {
-                Text("Press to refresh")
-                Text(
-                    resource.exception.message ?: "Unknown error",
-                    color = MaterialTheme.colorScheme.error
-                )
+            PageLoadFailed(
+                message = resource.exception.message,
+                onRetry = onRefresh,
+            )
+        }
+    }
+}
+
+/**
+ * Failed page: shakes once when it first shows, and spins the retry icon from the tap until
+ * the resource leaves the failure state (which removes this composable).
+ */
+@Composable
+internal fun PageLoadFailed(
+    message: String?,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val shake = remember { Animatable(0f) }
+    LaunchedEffect(Unit) {
+        shake.animateTo(
+            targetValue = 0f,
+            animationSpec = keyframes {
+                durationMillis = 500
+                -6f at 150
+                6f at 250
+                -3f at 350
+                0f at 500
             }
+        )
+    }
+    var retrying by remember { mutableStateOf(false) }
+    val rotation = if (retrying) {
+        rememberInfiniteTransition()
+            .animateFloat(
+                initialValue = 0f,
+                targetValue = 360f,
+                animationSpec = infiniteRepeatable(tween(700, easing = LinearEasing))
+            )
+            .value
+    } else {
+        0f
+    }
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        modifier = modifier
+            .graphicsLayer { translationX = shake.value.dp.toPx() }
+            .clip(MaterialTheme.shapes.medium)
+            .clickable {
+                retrying = true
+                onRetry()
+            }
+            .padding(16.dp)
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.errorContainer)
+        ) {
+            Icon(
+                Icons.Default.Refresh,
+                contentDescription = "Retry",
+                tint = MaterialTheme.colorScheme.onErrorContainer,
+                modifier = Modifier.graphicsLayer { rotationZ = rotation }
+            )
+        }
+        Text("Page didn't load", style = MaterialTheme.typography.titleSmall)
+        Text(
+            "Tap to retry",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        if (message != null) {
+            Text(
+                message,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error
+            )
         }
     }
 }
