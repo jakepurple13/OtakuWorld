@@ -4,6 +4,7 @@ import com.programmersbox.kmpuiviews.domain.dailyoverview.DailyOverviewSettings
 import com.programmersbox.kmpuiviews.presentation.all.AllViewModel
 import com.programmersbox.kmpuiviews.presentation.bookmarks.BookmarkChaptersViewModel
 import com.programmersbox.kmpuiviews.presentation.dailyoverview.DailyOverviewViewModel
+import com.programmersbox.kmpuiviews.presentation.dailyoverview.settings.DailyOverviewSettingsViewModel
 import com.programmersbox.kmpuiviews.presentation.details.DetailsViewModel
 import com.programmersbox.kmpuiviews.presentation.dictionary.DictionaryDetailViewModel
 import com.programmersbox.kmpuiviews.presentation.dictionary.DictionaryFormViewModel
@@ -54,6 +55,7 @@ val viewModels: Module = module {
     viewModelOf(::NotificationSettingsViewModel)
     viewModelOf(::NotificationScreenViewModel)
     viewModelOf(::DailyOverviewViewModel)
+    viewModelOf(::DailyOverviewSettingsViewModel)
     viewModelOf(::CatchUpViewModel)
     viewModelOf(::PrereleaseViewModel)
     viewModelOf(::ExtensionListViewModel)

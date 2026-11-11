@@ -80,6 +80,7 @@ fun SummaryCard(
     onRegenerate: () -> Unit,
     onSetUp: () -> Unit,
     modifier: Modifier = Modifier,
+    actionLabel: String = stringResource(Res.string.do_regenerate),
 ) {
     val generating = summary is SummaryState.Loading || summary is SummaryState.Streaming
     Box(
@@ -170,7 +171,7 @@ fun SummaryCard(
                 AssistChip(
                     onClick = onRegenerate,
                     enabled = !generating,
-                    label = { Text(stringResource(Res.string.do_regenerate), fontSize = 11.sp) },
+                    label = { Text(actionLabel, fontSize = 11.sp) },
                 )
             }
         }

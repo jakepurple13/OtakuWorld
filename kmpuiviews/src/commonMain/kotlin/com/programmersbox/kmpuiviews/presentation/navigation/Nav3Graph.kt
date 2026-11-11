@@ -21,6 +21,8 @@ import com.programmersbox.kmpuiviews.presentation.about.AboutLibrariesScreen
 import com.programmersbox.kmpuiviews.presentation.all.AllScreen
 import com.programmersbox.kmpuiviews.presentation.bookmarks.BookmarkScreen
 import com.programmersbox.kmpuiviews.presentation.dailyoverview.DailyOverviewScreen
+import com.programmersbox.kmpuiviews.presentation.dailyoverview.settings.DailyOverviewSettingsScreen
+import com.programmersbox.kmpuiviews.presentation.dailyoverview.settings.SummaryEngineScreen
 import com.programmersbox.kmpuiviews.presentation.details.DetailsScreen
 import com.programmersbox.kmpuiviews.presentation.dictionary.DictionaryDetailScreen
 import com.programmersbox.kmpuiviews.presentation.dictionary.DictionaryFormScreen
@@ -223,6 +225,10 @@ fun buildKmpGraph(): Module = module {
     }
 
     detailEntry<Screen.DailyOverview> { DailyOverviewScreen() }
+
+    detailEntry<Screen.DailyOverview.Settings> { DailyOverviewSettingsScreen() }
+
+    detailEntry<Screen.DailyOverview.Engine> { SummaryEngineScreen() }
 
     detailEntry<Screen.WorkerInfoScreen> { WorkerInfoScreen() }
 
