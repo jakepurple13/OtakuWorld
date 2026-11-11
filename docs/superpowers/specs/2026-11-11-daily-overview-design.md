@@ -165,8 +165,8 @@ Opened from the gear and from Settings › Behavior (also found by the settings 
   - The time and skip rows collapse when the notification is off.
 - Summary group:
   - "Summary engine" row showing the current choice.
-  - With Automatic, the row also shows what it resolves to, e.g. "Automatic · Gemma 4 E2B", or
-    "(not ready)".
+  - With Automatic, the row also shows what it resolves to, e.g. "Automatic · Gemma 4 E2B" or
+    "Automatic · Numbers only". An explicit choice that isn't ready shows "(not ready)".
 - Foot note: "Numbers always come from your history on this device. The engine only writes the
   sentences."
 
@@ -193,9 +193,10 @@ Selectable cards with radio dots. The selected card expands its options with
 ### Morning notification (Android)
 
 - A new channel, "Daily overview", with low importance.
-- WorkManager: unique periodic work (24h) with an initial delay to the chosen time minus about
-  10 minutes. The worker builds the facts, generates a summary (or reads the cache), saves it,
-  and posts the notification at the chosen time. Changing the time or toggling the switch
+- WorkManager: unique periodic work (24h) with an initial delay to the chosen time. The worker
+  runs at the chosen time, builds the facts, generates a summary (or reads the cache), saves it,
+  then posts the notification. On app start, work whose next run has drifted more than a minute
+  off the chosen time is re-anchored. Changing the time or toggling the switch
   re-enqueues the work (`ExistingPeriodicWorkPolicy.UPDATE`). Turning the feature or the
   notification off cancels it.
 - With "Skip quiet days" on, a day with 0 reads and 0 updates posts nothing.
