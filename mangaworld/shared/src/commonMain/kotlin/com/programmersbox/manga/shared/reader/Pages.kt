@@ -57,6 +57,7 @@ internal fun ChapterTransitionItem(
     toChapterListIndex: Int,
     chapterCount: Int,
     modifier: Modifier = Modifier,
+    visible: Boolean = true,
 ) {
     // Saveable state survives the lazy item scrolling away, so the card plays only the first time it shows
     var played by rememberSaveable { mutableStateOf(false) }
@@ -65,9 +66,10 @@ internal fun ChapterTransitionItem(
     var showDivider by remember { mutableStateOf(alreadyPlayed) }
     var showNext by remember { mutableStateOf(alreadyPlayed) }
     val check = remember { Animatable(if (alreadyPlayed) 1f else 0f) }
-    LaunchedEffect(Unit) {
-        if (alreadyPlayed) return@LaunchedEffect
-        played = true
+    // Lists and pagers compose this card before it's on screen; wait until it's actually shown
+    LaunchedEffect(visible) { if (visible) played = true }
+    LaunchedEffect(played) {
+        if (!played || alreadyPlayed) return@LaunchedEffect
         launch { check.animateTo(1f, tween(500)) }
         delay(100)
         showFinished = true

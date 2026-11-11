@@ -1,5 +1,7 @@
 package com.programmersbox.manga.shared.reader
 
+import kotlinx.coroutines.flow.first
+import androidx.compose.ui.layout.onPlaced
 import com.programmersbox.kmpuiviews.theme.SeedColorTheme
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedContent
@@ -173,13 +175,14 @@ private fun ReadViewContent(
         }
     }
 
-    val pagesInCurrentChapter by remember {
+    val loadedPagesInCurrentChapter by remember {
         derivedStateOf {
             viewModel.pageItems.count {
                 it is PageItem.Page && it.chapterListIndex == viewModel.currentChapter
-            }.coerceAtLeast(1)
+            }
         }
     }
+    val pagesInCurrentChapter by remember { derivedStateOf { loadedPagesInCurrentChapter.coerceAtLeast(1) } }
 
     val paddingPage by mangaSettingsHandling.pagePadding
         .flow
@@ -195,15 +198,24 @@ private fun ReadViewContent(
     val chapterBanner = remember { ChapterBannerState() }
     val chapterSlide = remember { Animatable(0f) }
     val chapterSlideSpec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
+    // Direction of a slide waiting for the new chapter's pages, so it doesn't play over an empty reader
+    var pendingSlide by remember { mutableStateOf<Float?>(null) }
+    LaunchedEffect(pendingSlide) {
+        val direction = pendingSlide ?: return@LaunchedEffect
+        snapshotFlow {
+            viewModel.pageItems.any { it is PageItem.Page && it.chapterListIndex == viewModel.currentChapter }
+        }.first { it }
+        chapterSlide.snapTo(direction)
+        // Clear only after the slide: changing the key earlier would cancel this effect mid-slide
+        chapterSlide.animateTo(0f, chapterSlideSpec)
+        pendingSlide = null
+    }
 
     // Called only from Next/Previous buttons and the drawer, never from scrolling across a chapter boundary
     fun onChapterChange(chapterName: String, isNext: Boolean?) {
         chapterBanner.show(chapterName)
         if (isNext != null && readerType != ReaderType.List) {
-            scope.launch {
-                chapterSlide.snapTo(if (isNext) 1f else -1f)
-                chapterSlide.animateTo(0f, chapterSlideSpec)
-            }
+            pendingSlide = if (isNext) 1f else -1f
         }
     }
 
@@ -646,14 +658,14 @@ private fun ReadViewContent(
                 ReadingProgressLine(
                     progress = chapterProgress(currentPage, pagesInCurrentChapter),
                     visible = !showItems,
-                    pageLabel = "p. ${currentPage + 1} / $pagesInCurrentChapter",
+                    pageLabel = pageLabel(currentPage, pagesInCurrentChapter),
                     scrolling = listState.isScrollInProgress || pagerState.isScrollInProgress,
                     modifier = Modifier.align(Alignment.TopStart)
                 )
 
                 ChapterBanner(
                     state = chapterBanner,
-                    pageCount = pagesInCurrentChapter.takeUnless { viewModel.isLoadingPages },
+                    pageCount = loadedPagesInCurrentChapter.takeUnless { viewModel.isLoadingPages },
                     modifier = Modifier
                         .align(Alignment.TopCenter)
                         .padding(top = p.calculateTopPadding() + 8.dp)
@@ -720,6 +732,7 @@ fun PagerView(
                     toChapterName = vm.chapterName(item.toChapterListIndex),
                     toChapterListIndex = item.toChapterListIndex,
                     chapterCount = vm.chapterCount,
+                    visible = pagerState.settledPage == page,
                     modifier = Modifier.align(Alignment.Center)
                 )
             }
@@ -842,11 +855,15 @@ private fun LazyListScope.reader(
                 key = keys[index],
                 contentType = "transition"
             ) {
+                // Prefetched items are composed but not placed, so placement means it's on screen
+                var placed by remember { mutableStateOf(false) }
                 ChapterTransitionItem(
                     fromChapterName = vm.chapterName(item.fromChapterListIndex),
                     toChapterName = vm.chapterName(item.toChapterListIndex),
                     toChapterListIndex = item.toChapterListIndex,
                     chapterCount = vm.chapterCount,
+                    visible = placed,
+                    modifier = Modifier.onPlaced { placed = true },
                 )
             }
         }

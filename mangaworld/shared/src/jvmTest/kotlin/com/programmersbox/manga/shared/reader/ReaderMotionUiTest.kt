@@ -62,4 +62,18 @@ class ReaderMotionUiTest {
         mainClock.advanceTimeBy(1_000)
         onNodeWithTag("bookmarkBurst").assertDoesNotExist()
     }
+
+    @Test
+    fun endCardWaitsUntilVisible() = runComposeUiTest {
+        var visible by mutableStateOf(false)
+        setContent {
+            ChapterTransitionItem("Ch. 42", "Ch. 43", toChapterListIndex = 26, chapterCount = 69, visible = visible)
+        }
+        mainClock.advanceTimeBy(2_000)
+        onNodeWithText("Finished").assertDoesNotExist()
+        visible = true
+        mainClock.advanceTimeBy(2_000)
+        onNodeWithText("Finished").assertIsDisplayed()
+        onNodeWithText("Chapter 43 of 69").assertIsDisplayed()
+    }
 }

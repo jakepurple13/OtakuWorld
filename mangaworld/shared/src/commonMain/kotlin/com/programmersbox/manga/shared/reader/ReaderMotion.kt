@@ -28,3 +28,14 @@ internal fun chapterProgress(currentPage: Int, pages: Int): Float =
 /** Only List <-> Pager share page elements; switches involving Flip or Curl just fade. */
 internal fun morphsPages(from: ReaderType, to: ReaderType): Boolean =
     (from == ReaderType.List && to == ReaderType.Pager) || (from == ReaderType.Pager && to == ReaderType.List)
+
+/** Page chip text; the end-of-chapter card sits one past the last page, so the number is capped. */
+internal fun pageLabel(currentPage: Int, pages: Int): String =
+    "p. ${(currentPage + 1).coerceAtMost(pages)} / $pages"
+
+/** Banner suffix for a chapter's page count, or null while unknown or when nothing loaded. */
+internal fun bannerPageText(pageCount: Int?): String? = when {
+    pageCount == null || pageCount <= 0 -> null
+    pageCount == 1 -> " · 1 page"
+    else -> " · $pageCount pages"
+}

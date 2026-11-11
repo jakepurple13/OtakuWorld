@@ -82,11 +82,8 @@ internal fun ChapterBanner(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 Text(state.chapterName.orEmpty(), style = MaterialTheme.typography.labelLarge)
-                if (pageCount != null) {
-                    Text(
-                        " · $pageCount pages",
-                        style = MaterialTheme.typography.labelMedium,
-                    )
+                bannerPageText(pageCount)?.let {
+                    Text(it, style = MaterialTheme.typography.labelMedium)
                 }
             }
         }
