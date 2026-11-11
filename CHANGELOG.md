@@ -225,6 +225,8 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 
 #### Bug Fixes
 
+- Sources marked incognito no longer add to History or mark chapters and episodes as read
+  ([#2690](https://github.com/jakepurple13/OtakuWorld/pull/2690))
 - Rows restored with Undo in History and Notifications now reappear in view, instead of staying
   scrolled off the top ([#2676](https://github.com/jakepurple13/OtakuWorld/pull/2676))
 - Fixed removing items from a custom list
@@ -266,6 +268,9 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 - Scan QR code: the scan-from-image button is always available, including after a code is read
   and when camera permission is denied, and the sheet now slides up when opened
   ([#2661](https://github.com/jakepurple13/OtakuWorld/pull/2661))
+- Cloud sync: unfavoriting while signed in now takes effect right away. Before, the item stayed
+  marked as a favorite on its details page but was missing from the favorites list until the next
+  sync removed it ([#2689](https://github.com/jakepurple13/OtakuWorld/pull/2689))
 
 #### Removed
 

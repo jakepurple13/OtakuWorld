@@ -83,6 +83,25 @@ class ItemDaoTest {
         assertEquals(false, dao.containsItem("https://example.com/1").first())
     }
 
+    @Test fun `containsItem and getDbModel ignore soft-deleted rows`() = runTest {
+        dao.insertFavorite(favorite("https://example.com/1"))
+
+        dao.softDeleteFavorite("https://example.com/1", timestamp = 1_000L)
+
+        assertEquals(false, dao.containsItem("https://example.com/1").first())
+        assertNull(dao.getDbModel("https://example.com/1").first())
+    }
+
+    @Test fun `favoriting a soft-deleted row makes it visible again`() = runTest {
+        dao.insertFavorite(favorite("https://example.com/1"))
+        dao.softDeleteFavorite("https://example.com/1", timestamp = 1_000L)
+
+        dao.insertFavorite(favorite("https://example.com/1"))
+
+        assertEquals(true, dao.containsItem("https://example.com/1").first())
+        assertEquals(1, dao.getAllFavorites().first().size)
+    }
+
     @Test fun `insertChapter and getAllChapters round-trip`() = runTest {
         val chapter = ChapterWatched(
             url = "https://example.com/1/ch1",
