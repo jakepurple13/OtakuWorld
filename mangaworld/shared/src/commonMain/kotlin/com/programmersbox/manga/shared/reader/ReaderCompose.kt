@@ -3,6 +3,7 @@ package com.programmersbox.manga.shared.reader
 import com.programmersbox.kmpuiviews.theme.SeedColorTheme
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.fadeIn
@@ -51,6 +52,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
@@ -85,10 +87,6 @@ import kotlinx.coroutines.launch
 import net.engawapg.lib.zoomable.ExperimentalZoomableApi
 import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomableWithScroll
-import com.programmersbox.sharedcomponents.notifier.InAppNotifier
-import otakuworld.kmpuiviews.generated.resources.Res
-import otakuworld.kmpuiviews.generated.resources.banner_marked_read
-import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.math.absoluteValue
@@ -189,16 +187,19 @@ private fun ReadViewContent(
     // Kept locally so dragging the dividers doesn't write to the datastore every frame
     var readerWidthFraction by remember(savedWidthFraction) { mutableFloatStateOf(savedWidthFraction) }
 
-    val notifier = koinInject<InAppNotifier>()
-    val markedReadTitle = stringResource(Res.string.banner_marked_read)
+    val chapterBanner = remember { ChapterBannerState() }
+    val chapterSlide = remember { Animatable(0f) }
+    val chapterSlideSpec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
 
-    fun showToast(chapterName: String) {
-        notifier.info(
-            title = markedReadTitle,
-            subtitle = chapterName,
-            key = "reader-chapter",
-            durationMillis = 2_000,
-        )
+    // Called only from Next/Previous buttons and the drawer, never from scrolling across a chapter boundary
+    fun onChapterChange(chapterName: String, isNext: Boolean?) {
+        chapterBanner.show(chapterName)
+        if (isNext != null && readerType != ReaderType.List) {
+            scope.launch {
+                chapterSlide.snapTo(if (isNext) 1f else -1f)
+                chapterSlide.animateTo(0f, chapterSlideSpec)
+            }
+        }
     }
 
     val listShowItems by remember { derivedStateOf { listState.isScrolledToTheEnd() && readerType == ReaderType.List } }
@@ -360,7 +361,7 @@ private fun ReadViewContent(
             ) {
                 DrawerView(
                     readVm = viewModel,
-                    showToast = ::showToast
+                    showToast = { onChapterChange(it, isNext = null) }
                 )
             }
         },
@@ -442,8 +443,8 @@ private fun ReadViewContent(
                         //key(scrollAlpha) {
                         FloatingBottomBar(
                             onPageSelectClick = { showBottomSheet = true },
-                            onNextChapter = { viewModel.loadNextChapter(::showToast) },
-                            onPreviousChapter = { viewModel.loadPreviousChapter(::showToast) },
+                            onNextChapter = { viewModel.loadNextChapter { onChapterChange(it, isNext = true) } },
+                            onPreviousChapter = { viewModel.loadPreviousChapter { onChapterChange(it, isNext = false) } },
                             onChapterShow = { scope.launch { drawerState.open() } },
                             showBlur = blurKind.showBlur,
                             isAmoledMode = isAmoledMode,
@@ -477,7 +478,7 @@ private fun ReadViewContent(
                         FloatingFloatingActionButton(
                             onPageSelectClick = { showBottomSheet = true },
                             onSettingsClick = { settingsPopup = true },
-                            chapterChange = ::showToast,
+                            chapterChange = ::onChapterChange,
                             onChapterShow = { scope.launch { drawerState.open() } },
                             vm = viewModel,
                             showFloatBar = showFloatBar,
@@ -537,7 +538,9 @@ private fun ReadViewContent(
                     Crossfade(
                         targetState = readerType,
                         label = "",
-                        modifier = if (imageLoaderType == ImageLoaderType.Panpf) {
+                        modifier = Modifier.graphicsLayer {
+                            translationX = chapterSlide.value * size.width
+                        } then if (imageLoaderType == ImageLoaderType.Panpf) {
                             Modifier
                         } else {
                             Modifier.zoomableWithScroll(
@@ -614,6 +617,14 @@ private fun ReadViewContent(
                         )
                     }
                 }
+
+                ChapterBanner(
+                    state = chapterBanner,
+                    pageCount = pagesInCurrentChapter.takeUnless { viewModel.isLoadingPages },
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = p.calculateTopPadding() + 8.dp)
+                )
             }
         }
     }

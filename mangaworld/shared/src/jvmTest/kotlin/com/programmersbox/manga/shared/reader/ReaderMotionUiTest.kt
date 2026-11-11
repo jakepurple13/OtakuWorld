@@ -29,4 +29,15 @@ class ReaderMotionUiTest {
         onNodeWithText("Ch. 43").assertIsDisplayed()
         onNodeWithText("Chapter 43 of 69").assertIsDisplayed()
     }
+
+    @Test
+    fun bannerShowsThenHides() = runComposeUiTest {
+        val state = ChapterBannerState()
+        setContent { ChapterBanner(state, pageCount = 24) }
+        runOnIdle { state.show("Ch. 43") }
+        onNodeWithText("Ch. 43").assertIsDisplayed()
+        onNodeWithText(" · 24 pages", substring = true).assertIsDisplayed()
+        mainClock.advanceTimeBy(CHAPTER_BANNER_MILLIS + 1_000)
+        onNodeWithText("Ch. 43").assertDoesNotExist()
+    }
 }

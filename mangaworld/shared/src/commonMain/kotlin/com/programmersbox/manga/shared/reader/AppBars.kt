@@ -130,7 +130,7 @@ internal fun FloatingFloatingActionButton(
     vm: ReadViewModel,
     onPageSelectClick: () -> Unit,
     onSettingsClick: () -> Unit,
-    chapterChange: (String) -> Unit,
+    chapterChange: (name: String, isNext: Boolean) -> Unit,
     onChapterShow: () -> Unit,
     modifier: Modifier = Modifier,
     showFloatBar: Boolean = true,
@@ -162,7 +162,7 @@ internal fun FloatingFloatingActionButton(
             exit = shrinkHorizontally(shrinkTowards = Alignment.Start)
         ) {
             PreviousIconButton(
-                previousChapter = chapterChange,
+                previousChapter = { chapterChange(it, false) },
                 vm = vm,
             )
         }
@@ -175,7 +175,7 @@ internal fun FloatingFloatingActionButton(
             exit = shrinkHorizontally()
         ) {
             NextIconButton(
-                nextChapter = chapterChange,
+                nextChapter = { chapterChange(it, true) },
                 vm = vm,
             )
         }
@@ -200,7 +200,7 @@ internal fun BottomBar(
     vm: ReadViewModel,
     onPageSelectClick: () -> Unit,
     onSettingsClick: () -> Unit,
-    chapterChange: (String) -> Unit,
+    chapterChange: (name: String, isNext: Boolean) -> Unit,
     onChapterShow: () -> Unit,
     showBlur: Boolean,
     isAmoledMode: Boolean,
@@ -233,7 +233,7 @@ internal fun BottomBar(
                             else -> 4f
                         }
                     ),
-                previousChapter = chapterChange,
+                previousChapter = { chapterChange(it, false) },
                 vm = vm
             )
         }
@@ -266,7 +266,7 @@ internal fun BottomBar(
                             else -> 4f
                         }
                     ),
-                nextChapter = chapterChange,
+                nextChapter = { chapterChange(it, true) },
                 vm = vm
             )
         }
