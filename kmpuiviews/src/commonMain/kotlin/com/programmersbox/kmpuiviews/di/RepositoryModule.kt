@@ -18,7 +18,8 @@ val repositories = module {
     singleOf(::SourceRepository)
     singleOf(::CurrentSourceRepository)
     singleOf(::ChangingSettingsRepository)
-    singleOf(::FavoritesRepository)
+    // Explicit so the defaulted clock stays Clock.System; singleOf would ask Koin for a Clock
+    single { FavoritesRepository(dao = get(), systemAlerter = get(), authManager = get()) }
     singleOf(::FavoritesSearchRepository)
     singleOf(::PrereleaseRepository)
     singleOf(::SetupRepository)

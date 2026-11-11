@@ -95,7 +95,16 @@ val appModule = module {
     singleOf(::DataStoreUpdateCheckReportStore) bind UpdateCheckReportStore::class
     singleOf(::SharedCoverBitmaps)
     factoryOf(::Backup)
-    factoryOf(::DailyFactsBuilder)
+    // Explicit so clock and zone keep their defaults; factoryOf would ask Koin for them
+    factory {
+        DailyFactsBuilder(
+            itemDao = get(),
+            heatMapDao = get(),
+            historyDao = get(),
+            reportStore = get(),
+            genericInfo = get(),
+        )
+    }
     backupProcessors()
     includes(platformModule())
 
