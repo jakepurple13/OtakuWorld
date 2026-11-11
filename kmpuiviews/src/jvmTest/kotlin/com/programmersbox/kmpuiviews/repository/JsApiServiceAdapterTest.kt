@@ -4,8 +4,11 @@ import app.cash.zipline.QuickJs
 import com.programmersbox.extensioninterfaces.ExtensionManifest
 import com.programmersbox.jsextensionloader.HostBridge
 import com.programmersbox.jsextensionloader.JsExtension
-import kotlinx.coroutines.Dispatchers
+import com.programmersbox.jsextensionloader.closeQuickJsDispatcher
+import com.programmersbox.jsextensionloader.singleThreadQuickJsDispatcher
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -28,16 +31,21 @@ class JsApiServiceAdapterTest {
 
     private var quickJs: QuickJs? = null
 
+    // QuickJs must be created and used on one thread (as JSExtensionLoader does): its stack-overflow
+    // check is relative to the creating thread's stack, so other threads fail it on Linux.
+    private val dispatcher = singleThreadQuickJsDispatcher("js-adapter-test")
+
     @AfterTest
     fun tearDown() {
-        quickJs?.close()
+        runBlocking(dispatcher) { quickJs?.close() }
+        closeQuickJsDispatcher(dispatcher)
     }
 
-    private fun buildAdapter(): JsApiServiceAdapter {
+    private suspend fun buildAdapter(): JsApiServiceAdapter = withContext(dispatcher) {
         val js = QuickJs.create()
         quickJs = js
         js.evaluate(FIXTURE_SCRIPT, "adapter-fixture.js")
-        return JsApiServiceAdapter(JsExtension(manifest, js, StubHostBridge(), Dispatchers.Default))
+        JsApiServiceAdapter(JsExtension(manifest, js, StubHostBridge(), dispatcher))
     }
 
     @Test
@@ -96,13 +104,13 @@ class JsApiServiceAdapterTest {
     }
 
     @Test
-    fun baseUrlIsSyntheticAndDerivedFromManifestId() {
+    fun baseUrlIsSyntheticAndDerivedFromManifestId() = runTest {
         val adapter = buildAdapter()
         assertEquals("https://adapter-test.jsextension/", adapter.baseUrl)
     }
 
     @Test
-    fun serviceNameUsesManifestName() {
+    fun serviceNameUsesManifestName() = runTest {
         val adapter = buildAdapter()
         assertEquals("Adapter Test Extension", adapter.serviceName)
     }

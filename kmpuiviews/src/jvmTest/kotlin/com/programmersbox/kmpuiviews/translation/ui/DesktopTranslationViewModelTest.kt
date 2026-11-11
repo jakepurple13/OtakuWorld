@@ -220,9 +220,11 @@ class DesktopTranslationViewModelTest {
             timeSource += 84.milliseconds
             "Il a tiré son épée."
         }
+        // Store the choice before vm2 loads its settings: setEngine/setTarget save asynchronously, so vm2's
+        // first settings emission could still carry Ollama/en and revert the state after this wait.
+        settings.engine.set(EngineKind.Custom.name)
+        appSettings.translationTargetLanguage.set("fr")
         val vm2 = viewModel("ja", fast)
-        vm2.setEngine(EngineKind.Custom)
-        vm2.setTarget("fr")
         vm2.awaitState { it.target == "fr" && it.engine == EngineKind.Custom }
         vm2.runTest()
         val s2 = vm2.awaitState { !it.testRunning && it.testOutput == "Il a tiré son épée." }
