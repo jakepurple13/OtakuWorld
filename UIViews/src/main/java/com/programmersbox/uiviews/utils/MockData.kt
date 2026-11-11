@@ -80,7 +80,7 @@ class MockInfo(private val context: Context) : GenericInfo {
     override fun deepLinkDetails(context: Context, itemModel: KmpItemModel?): PendingIntent? = null
     override fun deepLinkSettings(context: Context): PendingIntent? = null
     override fun deepLinkUpdateCheckErrors(context: Context): PendingIntent? = null
-    override fun deepLink(context: Context, uri: Uri): PendingIntent? = null
+    override fun deepLink(context: Context, uri: Uri, cancelNotificationId: Int?): PendingIntent? = null
     override suspend fun chapterOnClick(
         model: KmpChapterModel,
         allChapters: List<KmpChapterModel>,

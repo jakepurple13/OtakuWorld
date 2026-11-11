@@ -14,6 +14,8 @@ data class TitleRead(
     val lastChapter: String,
     val count: Int,
     val caughtUp: Boolean,
+    /** Epoch millis of the latest chapter read that day. 0 in facts cached before this field. */
+    val lastReadAt: Long = 0L,
 )
 
 @Serializable
@@ -38,4 +40,7 @@ data class DailyFacts(
 ) {
     // titles too: the heat-map count can be 0 while watched-chapter rows exist.
     val isQuiet: Boolean get() = readCount == 0 && titles.isEmpty() && updates.isEmpty()
+
+    /** The title read most recently that day. */
+    val lastRead: TitleRead? get() = titles.maxByOrNull { it.lastReadAt }
 }

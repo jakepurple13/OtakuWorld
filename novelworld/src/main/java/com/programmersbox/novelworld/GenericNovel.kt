@@ -76,11 +76,12 @@ class GenericNovel(
         )
     }
 
-    override fun deepLink(context: Context, uri: Uri): PendingIntent? {
+    override fun deepLink(context: Context, uri: Uri, cancelNotificationId: Int?): PendingIntent? {
         return deepLinkSetup(
             context = context,
             uri = uri,
-            activity = MainActivity::class.java
+            activity = MainActivity::class.java,
+            cancelNotificationId = cancelNotificationId,
         )
     }
 }

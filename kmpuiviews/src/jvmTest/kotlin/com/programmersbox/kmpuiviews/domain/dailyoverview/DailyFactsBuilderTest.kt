@@ -116,6 +116,20 @@ class DailyFactsBuilderTest {
         assertEquals("Ch 1", t.firstChapter)
         assertEquals("Ch 3", t.lastChapter)
         assertEquals(3, t.count)
+        assertEquals(at(20, 0), t.lastReadAt)
+    }
+
+    @Test
+    fun `lastRead is the title read most recently`() = runTest {
+        watch("f1", "F1", "frieren", at(22, 0))
+        watch("f2", "F2", "frieren", at(23, 6))
+        watch("k1", "K1", "kaiju", at(18, 40))
+        watch("d1", "D1", "dandadan", at(9, 0))
+        watch("d2", "D2", "dandadan", at(10, 0))
+        watch("d3", "D3", "dandadan", at(11, 0))
+        val facts = builder().yesterday()
+        assertEquals("kaiju", facts.titles.last().url)
+        assertEquals("frieren", facts.lastRead?.url)
     }
 
     @Test

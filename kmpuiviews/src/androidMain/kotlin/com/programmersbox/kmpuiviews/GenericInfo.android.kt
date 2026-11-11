@@ -30,8 +30,11 @@ actual interface PlatformGenericInfo : KmpGenericInfo {
 
     fun deepLinkUpdateCheckErrors(context: Context): PendingIntent?
 
-    /** Opens [uri] in this app's main activity, which matches it against [DeepLinks]. */
-    fun deepLink(context: Context, uri: Uri): PendingIntent?
+    /**
+     * Opens [uri] in this app's main activity, which matches it against [DeepLinks]. The activity
+     * cancels [cancelNotificationId] when set, because notification actions don't auto-cancel.
+     */
+    fun deepLink(context: Context, uri: Uri, cancelNotificationId: Int? = null): PendingIntent?
 
     @SuppressLint("RestrictedApi")
     fun deepLinkDetailsUri(itemModel: KmpItemModel?): Uri {
@@ -86,6 +89,7 @@ actual interface PlatformGenericInfo : KmpGenericInfo {
         context: Context,
         uri: Uri,
         activity: Class<T>,
+        cancelNotificationId: Int? = null,
     ): PendingIntent? {
         val deepLinkIntent = Intent(
             Intent.ACTION_VIEW,
@@ -93,6 +97,7 @@ actual interface PlatformGenericInfo : KmpGenericInfo {
             context,
             activity
         )
+        cancelNotificationId?.let { deepLinkIntent.putExtra(EXTRA_CANCEL_NOTIFICATION_ID, it) }
 
         return TaskStackBuilder.create(context).run {
             addNextIntentWithParentStack(deepLinkIntent)
@@ -100,3 +105,6 @@ actual interface PlatformGenericInfo : KmpGenericInfo {
         }
     }
 }
+
+/** Int extra on a deep-link intent: the notification to cancel when the activity opens it. */
+const val EXTRA_CANCEL_NOTIFICATION_ID = "cancel_notification_id"

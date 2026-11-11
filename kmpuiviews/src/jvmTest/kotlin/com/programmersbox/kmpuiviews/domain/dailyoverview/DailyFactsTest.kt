@@ -3,6 +3,7 @@ package com.programmersbox.kmpuiviews.domain.dailyoverview
 import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateUnit
 import kotlinx.datetime.LocalDate
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -35,5 +36,13 @@ class DailyFactsTest {
     @Test
     fun updatesAloneIsNotQuiet() {
         assertFalse(facts(updates = listOf(UpdateItem("U", "u", null, "S", ""))).isQuiet)
+    }
+
+    @Test
+    fun lastReadIsTheTitleWithTheLatestReadNotTheLowestCount() {
+        val most = TitleRead("Most", "m", "", "S", "1", "13", 13, false, lastReadAt = 2_000)
+        val late = TitleRead("Late", "l", "", "S", "1", "7", 7, false, lastReadAt = 3_000)
+        val least = TitleRead("Least", "x", "", "S", "1", "2", 2, false, lastReadAt = 1_000)
+        assertEquals("Late", facts(titles = listOf(most, late, least)).lastRead?.title)
     }
 }

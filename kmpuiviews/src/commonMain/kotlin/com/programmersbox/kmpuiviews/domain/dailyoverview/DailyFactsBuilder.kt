@@ -72,6 +72,7 @@ class DailyFactsBuilder(
                 lastChapter = ordered.last().name,
                 count = group.size,
                 caughtUp = favorite != null && favorite.numChapters > 0 && total == favorite.numChapters,
+                lastReadAt = ordered.last().createdAt,
             )
         }.sortedByDescending { it.count }
 

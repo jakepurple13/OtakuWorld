@@ -30,8 +30,8 @@ import otakuworld.kmpuiviews.generated.resources.do_notif_continue
 import otakuworld.kmpuiviews.generated.resources.do_notif_open
 
 /**
- * Runs about ten minutes before the chosen time: builds yesterday's facts, generates the summary
- * (the engine caches it for the overview screen) and posts the morning notification right away.
+ * Runs at the chosen time: builds yesterday's facts, generates the summary (the engine caches it
+ * for the overview screen), then posts the morning notification.
  */
 class DailyOverviewWorker(
     context: Context,
@@ -62,7 +62,7 @@ class DailyOverviewWorker(
             if (!canPost()) return Result.success()
 
             val title = morningNotificationTitle(facts)
-            val lastTitle = facts.titles.lastOrNull()
+            val lastTitle = facts.lastRead
             val notification = NotificationDslBuilder.builder(
                 applicationContext,
                 NotificationChannels.DailyOverview.id,
@@ -76,11 +76,11 @@ class DailyOverviewWorker(
                 }
                 showWhen = true
                 autoCancel = true
-                pendingIntent { context -> info.deepLink(context, info.deepLinkDailyOverviewUri()) }
+                pendingIntent { context -> info.deepLink(context, info.deepLinkDailyOverviewUri(), NOTIFICATION_ID) }
                 addAction {
                     actionTitle = getString(Res.string.do_notif_open)
                     actionIcon = logo.notificationId
-                    pendingActionIntent { context -> info.deepLink(context, info.deepLinkDailyOverviewUri()) }
+                    pendingActionIntent { context -> info.deepLink(context, info.deepLinkDailyOverviewUri(), NOTIFICATION_ID) }
                 }
                 if (lastTitle != null) addAction {
                     actionTitle = getString(Res.string.do_notif_continue, lastTitle.title)
@@ -88,7 +88,8 @@ class DailyOverviewWorker(
                     pendingActionIntent { context ->
                         info.deepLink(
                             context,
-                            info.deepLinkDetailsUri(url = lastTitle.url, imageUrl = lastTitle.imageUrl, source = lastTitle.source)
+                            info.deepLinkDetailsUri(url = lastTitle.url, imageUrl = lastTitle.imageUrl, source = lastTitle.source),
+                            NOTIFICATION_ID,
                         )
                     }
                 }
