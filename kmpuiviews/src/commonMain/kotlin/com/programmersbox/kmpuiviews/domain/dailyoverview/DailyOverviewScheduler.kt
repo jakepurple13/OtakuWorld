@@ -6,6 +6,7 @@ import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.toInstant
+import kotlin.math.abs
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
@@ -21,21 +22,27 @@ object NoOpDailyOverviewScheduler : DailyOverviewScheduler {
 }
 
 /**
- * How long from [now] until the work should start: [leadMinutes] before the next [minuteOfDay].
- * Inside the lead window the work runs now. Times are wall-clock times in [zone], so a DST change
- * still lands on the chosen local time.
+ * How long from [now] until the next [minuteOfDay]. The work runs at that time: it generates the
+ * summary, then posts. Exactly at the time means tomorrow. Times are wall-clock times in [zone],
+ * so a DST change still lands on the chosen local time.
  */
 fun initialDelay(
     now: LocalDateTime,
     minuteOfDay: Int,
-    leadMinutes: Int = 10,
     zone: TimeZone = TimeZone.currentSystemDefault(),
 ): Duration {
     val nowInstant = now.toInstant(zone)
     val time = LocalTime(minuteOfDay / 60, minuteOfDay % 60)
     val postToday = LocalDateTime(now.date, time).toInstant(zone)
-    val lead = leadMinutes.minutes
     val post = if (nowInstant < postToday) postToday
     else LocalDateTime(now.date.plus(1, DateTimeUnit.DAY), time).toInstant(zone)
-    return (post - lead - nowInstant).coerceAtLeast(Duration.ZERO)
+    return post - nowInstant
 }
+
+/**
+ * Periodic work drifts: each 24h period starts when the last run finished, not at the chosen time.
+ * True while the scheduled [nextRunMillis] is still within a minute of [targetMillis], or when the
+ * run is overdue at [nowMillis] (the system delayed it), so rescheduling doesn't skip it.
+ */
+fun isOnSchedule(nextRunMillis: Long, targetMillis: Long, nowMillis: Long): Boolean =
+    nextRunMillis <= nowMillis || abs(nextRunMillis - targetMillis) <= 1.minutes.inWholeMilliseconds
