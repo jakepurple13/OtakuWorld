@@ -137,7 +137,8 @@ class NotificationSettingsViewModelTest {
     @Test fun `default media checker settings are loaded into canCheck and updateHourCheck`() = runTest {
         val vm = viewModel()
 
-        awaitCondition { vm.time.isNotEmpty() }
+        // canCheck/updateHourCheck come from the media checker settings flow, not the one that fills `time`.
+        awaitCondition { vm.canCheck && vm.updateHourCheck == 1L }
 
         assertTrue(vm.canCheck)
         assertEquals(1L, vm.updateHourCheck)

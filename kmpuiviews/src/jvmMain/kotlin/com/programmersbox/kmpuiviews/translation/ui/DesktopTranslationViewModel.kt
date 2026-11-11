@@ -14,6 +14,7 @@ import com.programmersbox.kmpuiviews.translation.ollama.OllamaModel
 import com.programmersbox.kmpuiviews.translation.ollama.OllamaStatus
 import com.programmersbox.sharedcomponents.notifier.InAppNotifier
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -290,7 +291,9 @@ class DesktopTranslationViewModel(
     fun runTest() {
         if (_state.value.testRunning) return
         _state.update { it.copy(testRunning = true, testOutput = null, testTiming = null, testError = null) }
-        testJob = viewModelScope.launch {
+        // LAZY so testJob is assigned before the body runs; otherwise a fast engine can reach the
+        // finally check below first and leave testRunning stuck at true.
+        val job = viewModelScope.launch(start = CoroutineStart.LAZY) {
             val s = _state.value
             try {
                 val source = withContext(Dispatchers.Default) { detector.detect(s.testInput) }
@@ -319,6 +322,8 @@ class DesktopTranslationViewModel(
                 if (testJob == coroutineContext[Job]) _state.update { it.copy(testRunning = false) }
             }
         }
+        testJob = job
+        job.start()
     }
 
     private fun fail(message: String) {
