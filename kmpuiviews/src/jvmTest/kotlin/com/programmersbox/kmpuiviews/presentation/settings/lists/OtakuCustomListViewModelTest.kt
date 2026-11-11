@@ -33,12 +33,16 @@ class OtakuCustomListViewModelTest {
     private lateinit var dbFile: File
     private lateinit var database: ListDatabase
 
+    // Stands in for the UI thread: the ViewModel writes its state here (Main) and the test reads it
+    // here, as in the app, so snapshot reads never race the ViewModel's writes on another thread.
+    private val uiDispatcher = Dispatchers.Default.limitedParallelism(1)
+
     // The ViewModel observes ListDao's Room-generated Flow, which emits on Room's own
     // (real, non-test-controlled) dispatcher. A test-dispatcher virtual-clock advance
     // doesn't drive that emission, so wait for it with real time instead. customList also goes
     // through snapshotFlow, which only sees background writes after apply notifications, so send them.
     private suspend fun awaitCondition(condition: suspend () -> Boolean) {
-        withContext(Dispatchers.Default.limitedParallelism(1)) {
+        withContext(uiDispatcher) {
             withTimeout(5_000) {
                 while (true) {
                     Snapshot.sendApplyNotifications()
@@ -77,7 +81,7 @@ class OtakuCustomListViewModelTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @BeforeTest
     fun setUp() {
-        Dispatchers.setMain(Dispatchers.Default)
+        Dispatchers.setMain(uiDispatcher)
         dbFile = File.createTempFile("otaku-custom-list-viewmodel-test", ".db").also { it.deleteOnExit() }
         database = Room.databaseBuilder<ListDatabase>(name = dbFile.absolutePath)
             .setDriver(BundledSQLiteDriver())
