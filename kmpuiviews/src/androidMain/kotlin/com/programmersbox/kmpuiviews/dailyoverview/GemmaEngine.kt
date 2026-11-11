@@ -7,6 +7,8 @@ import com.programmersbox.kmpuiviews.domain.dailyoverview.EngineStatus
 import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngineId
 import com.programmersbox.koogintegration.AgentMaker
 import com.programmersbox.koogintegration.PlatformAgents
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.getString
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.do_label_on_device
@@ -37,7 +39,8 @@ class GemmaEngine(
 
     /** The AI Helper's LiteRT model when LiteRT is selected and downloaded, else the first download. */
     private suspend fun model(): LLModel? {
-        val downloaded = platformAgents.downloadedLiteRtModels()
+        // Lists the model folder on disk.
+        val downloaded = withContext(Dispatchers.IO) { platformAgents.downloadedLiteRtModels() }
         val selection = agentMaker.selection()
         val selected = selection
             ?.takeIf { it.company == LiteRTLLMProvider.display }

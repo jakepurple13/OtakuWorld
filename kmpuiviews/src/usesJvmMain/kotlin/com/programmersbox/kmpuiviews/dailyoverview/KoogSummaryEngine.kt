@@ -7,8 +7,11 @@ import ai.koog.prompt.streaming.StreamFrame
 import com.programmersbox.kmpuiviews.domain.dailyoverview.DailyFacts
 import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngine
 import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryPrompt
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 
 /** A [SummaryEngine] backed by a Koog [LLMClient]. Each run opens a client and closes it when done. */
 abstract class KoogSummaryEngine : SummaryEngine {
@@ -42,5 +45,6 @@ abstract class KoogSummaryEngine : SummaryEngine {
                 }
             }
         }
-    }
+        // Building and closing clients blocks (LiteRT's close() is runBlocking), so keep it off Main.
+    }.flowOn(Dispatchers.IO)
 }
