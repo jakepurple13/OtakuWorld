@@ -241,6 +241,15 @@ sealed class Screen(val route: String) : NavKey {
     }
 
     @Serializable
+    data object DailyOverview : Screen("daily_overview") {
+        @Serializable
+        data object Settings : Screen("daily_overview_settings")
+
+        @Serializable
+        data object Engine : Screen("daily_overview_engine")
+    }
+
+    @Serializable
     data object DictionaryScreen : Screen("dictionary") {
         @Serializable
         data class Detail(val id: Long) : Screen("dictionary_detail")

@@ -20,6 +20,7 @@ import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.about.AboutLibrariesScreen
 import com.programmersbox.kmpuiviews.presentation.all.AllScreen
 import com.programmersbox.kmpuiviews.presentation.bookmarks.BookmarkScreen
+import com.programmersbox.kmpuiviews.presentation.dailyoverview.DailyOverviewScreen
 import com.programmersbox.kmpuiviews.presentation.details.DetailsScreen
 import com.programmersbox.kmpuiviews.presentation.dictionary.DictionaryDetailScreen
 import com.programmersbox.kmpuiviews.presentation.dictionary.DictionaryFormScreen
@@ -220,6 +221,8 @@ fun buildKmpGraph(): Module = module {
             vm = koinViewModel { parametersOf(it) },
         )
     }
+
+    detailEntry<Screen.DailyOverview> { DailyOverviewScreen() }
 
     detailEntry<Screen.WorkerInfoScreen> { WorkerInfoScreen() }
 

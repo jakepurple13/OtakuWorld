@@ -621,4 +621,44 @@
     <string name="do_setup_ollama_not_running">Ollama isn't running</string>
     <string name="do_label_nano">Gemini Nano</string>
     <string name="do_setup_nano_downloading">Downloading Gemini Nano</string>
+    <string name="do_yesterday">Yesterday</string>
+    <string name="do_settings">Daily overview settings</string>
+    <string name="do_summary">Summary</string>
+    <string name="do_regenerate">Regenerate</string>
+    <string name="do_privacy_on_device">On device · nothing sent</string>
+    <string name="do_privacy_sent">Sent to %1$s</string>
+    <string name="do_set_up_ai">Set up AI summary</string>
+    <plurals name="do_stat_read_chapters">
+        <item quantity="one">chapter read</item>
+        <item quantity="other">chapters read</item>
+    </plurals>
+    <plurals name="do_stat_read_episodes">
+        <item quantity="one">episode read</item>
+        <item quantity="other">episodes read</item>
+    </plurals>
+    <plurals name="do_stat_titles">
+        <item quantity="one">title</item>
+        <item quantity="other">titles</item>
+    </plurals>
+    <plurals name="do_stat_updates">
+        <item quantity="one">new update</item>
+        <item quantity="other">new updates</item>
+    </plurals>
+    <string name="do_by_hour">By hour</string>
+    <string name="do_most_at">most at %1$s</string>
+    <string-array name="do_hour_axis">
+        <item>12a</item>
+        <item>6a</item>
+        <item>12p</item>
+        <item>6p</item>
+        <item>11p</item>
+    </string-array>
+    <string name="do_you_read">You read</string>
+    <string name="do_history">History</string>
+    <string name="do_read_range">%1$s to %2$s</string>
+    <string name="do_caught_up">%1$s · caught up</string>
+    <string name="do_updated_overnight">Updated overnight</string>
+    <string name="do_all_updates">All %1$d</string>
+    <string name="do_update_check_failed">Update check failed</string>
+    <string name="do_empty_day">Nothing happened yesterday</string>
 </resources>
