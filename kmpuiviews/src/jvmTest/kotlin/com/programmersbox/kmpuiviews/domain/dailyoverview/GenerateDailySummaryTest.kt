@@ -16,9 +16,13 @@ class GenerateDailySummaryTest {
         private val fail: Boolean = false,
     ) : SummaryEngine {
         var calls = 0
+        var statusCalls = 0
         override suspend fun label() = id.name
         override val onDevice = true
-        override suspend fun status(): EngineStatus = EngineStatus.Ready
+        override suspend fun status(): EngineStatus {
+            statusCalls++
+            return EngineStatus.Ready
+        }
         override fun summarize(facts: DailyFacts): Flow<String> = flow {
             calls++
             emit("Hello ")
@@ -79,6 +83,15 @@ class GenerateDailySummaryTest {
         assertEquals(SummaryEngineId.Template, result.engine)
         assertEquals(0, engine.calls)
         assertNull(settings.cached())
+    }
+
+    @Test
+    fun `quiet day and cache hit never resolve the engine`() = runTest {
+        val engine = FakeEngine()
+        run(engine, facts(reads = 0))
+        settings.cache(DailySummary(day, SummaryEngineId.Gemma, "Cached"))
+        run(engine)
+        assertEquals(0, engine.statusCalls)
     }
 
     @Test

@@ -54,13 +54,17 @@ class DailyOverviewViewModelTest {
         private val failAfterFirst: Boolean = false,
         private val gate: CompletableDeferred<Unit>? = null,
         private val sendsTo: String? = null,
+        private val statusGate: CompletableDeferred<Unit>? = null,
     ) : SummaryEngine {
         @Volatile
         var calls = 0
         override suspend fun label() = "Fake ${id.name}"
         override val onDevice = sendsTo == null
         override suspend fun destination() = sendsTo
-        override suspend fun status(): EngineStatus = EngineStatus.Ready
+        override suspend fun status(): EngineStatus {
+            statusGate?.await()
+            return EngineStatus.Ready
+        }
         override fun summarize(facts: DailyFacts): Flow<String> = flow {
             calls++
             gate?.await()
@@ -143,6 +147,32 @@ class DailyOverviewViewModelTest {
         gate.complete(Unit)
         await { vm.done() != null }
         assertEquals("Hello world", vm.done()?.text)
+    }
+
+    @Test
+    fun `facts are published while a slow engine status is still suspended`() = runTest {
+        readSomething()
+        val statusGate = CompletableDeferred<Unit>()
+        val vm = viewModel(FakeEngine(statusGate = statusGate))
+        await { vm.uiState.value.facts != null }
+        assertEquals(SummaryState.Loading, vm.uiState.value.summary)
+        statusGate.complete(Unit)
+        await { vm.done() != null }
+        assertEquals("Hello world", vm.done()?.text)
+    }
+
+    @Test
+    fun `summary stays Loading until the first non-empty chunk`() = runTest {
+        readSomething()
+        val gate = CompletableDeferred<Unit>()
+        val vm = viewModel(FakeEngine(chunks = listOf("", "Hi"), gate = gate))
+        await { vm.uiState.value.facts != null }
+        // Give the engine time to start; nothing has been emitted yet.
+        withContext(Dispatchers.Default) { delay(200) }
+        assertEquals(SummaryState.Loading, vm.uiState.value.summary)
+        gate.complete(Unit)
+        await { vm.done() != null }
+        assertEquals("Hi", vm.done()?.text)
     }
 
     @Test

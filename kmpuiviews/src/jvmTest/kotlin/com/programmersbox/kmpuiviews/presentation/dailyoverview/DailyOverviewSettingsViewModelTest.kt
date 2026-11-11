@@ -13,12 +13,13 @@ import com.programmersbox.kmpuiviews.presentation.dailyoverview.settings.DailyOv
 import com.programmersbox.kmpuiviews.presentation.dailyoverview.settings.SampleFacts
 import com.programmersbox.kmpuiviews.testing.FakeKmpGenericInfo
 import com.programmersbox.kmpuiviews.testing.createTestDataStoreHandling
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -39,6 +40,7 @@ class DailyOverviewSettingsViewModelTest {
         private val shortName: String,
         @Volatile var status: EngineStatus = EngineStatus.Ready,
         private val throws: Boolean = false,
+        private val gate: CompletableDeferred<Unit>? = null,
     ) : SummaryEngine {
         @Volatile
         var received: DailyFacts? = null
@@ -48,7 +50,11 @@ class DailyOverviewSettingsViewModelTest {
         override suspend fun status(): EngineStatus = if (throws) error("model dir missing") else status
         override fun summarize(facts: DailyFacts): Flow<String> {
             received = facts
-            return flowOf("Sample ", "text")
+            return flow {
+                gate?.await()
+                emit("Sample ")
+                emit("text")
+            }
         }
     }
 
@@ -116,6 +122,22 @@ class DailyOverviewSettingsViewModelTest {
         assertEquals("Sample text", done.text)
         assertEquals(SummaryEngineId.Gemma, done.engine)
         assertEquals(SampleFacts.create(FakeKmpGenericInfo().updateUnit), gemma.received)
+    }
+
+    @Test
+    fun `test card stays Loading until the first non-empty chunk`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val gemma = FakeEngine(SummaryEngineId.Gemma, "Gemma 4 E2B", gate = gate)
+        val vm = viewModel(gemma)
+        vm.choose(SummaryEngineChoice.Gemma)
+        await { vm.ui.value?.prefs?.engine == SummaryEngineChoice.Gemma }
+        vm.runTest()
+        await { gemma.received != null }
+        withContext(Dispatchers.Default) { delay(200) }
+        assertEquals(SummaryState.Loading, vm.test.value)
+        gate.complete(Unit)
+        await { vm.test.value is SummaryState.Done }
+        assertEquals("Sample text", (vm.test.value as SummaryState.Done).text)
     }
 
     @Test

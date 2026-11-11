@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.scan
@@ -121,6 +122,8 @@ class DailyOverviewSettingsViewModel(
                 destination = engine.destination()
                 engine.summarize(facts)
                     .scan("") { acc, chunk -> acc + chunk }
+                    // The shimmer stays until there is text to show.
+                    .filter { it.isNotBlank() }
                     .collect {
                         text = it
                         _test.value = SummaryState.Streaming(it, label, engine.onDevice, destination)

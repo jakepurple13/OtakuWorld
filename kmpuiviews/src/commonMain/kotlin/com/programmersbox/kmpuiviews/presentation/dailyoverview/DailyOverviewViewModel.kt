@@ -19,6 +19,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.update
@@ -72,15 +73,9 @@ class DailyOverviewViewModel(
         job?.cancel()
         job = viewModelScope.launch {
             _uiState.update { it.copy(summary = SummaryState.Loading) }
+            // Stats show right away; the engine is only resolved when the summary needs it.
             val facts = factsBuilder.yesterday()
-            val choice = settings.prefs.first().engine
-            val engine = resolver.resolve(choice)
-            _uiState.update {
-                it.copy(
-                    facts = facts,
-                    needsSetup = engine.id == SummaryEngineId.Template && choice != SummaryEngineChoice.Template,
-                )
-            }
+            _uiState.update { it.copy(facts = facts) }
 
             if (!bypassCache) {
                 // A cache for any other date is stale and never shown.
@@ -90,6 +85,14 @@ class DailyOverviewViewModel(
                 }
             }
 
+            if (facts.isQuiet) {
+                publishTemplate(facts)
+                // Still offer the setup chip, checked after the template text is up.
+                resolveAndFlagSetup()
+                return@launch
+            }
+
+            val engine = resolveAndFlagSetup()
             if (!facts.needsEngine(engine)) {
                 publishTemplate(facts)
                 return@launch
@@ -101,6 +104,8 @@ class DailyOverviewViewModel(
             try {
                 engine.summarize(facts)
                     .scan("") { acc, chunk -> acc + chunk }
+                    // The shimmer stays until there is text to show.
+                    .filter { it.isNotBlank() }
                     .collect { accumulated ->
                         text = accumulated
                         _uiState.update {
@@ -120,6 +125,16 @@ class DailyOverviewViewModel(
                 publishDone(text, engine)
             }
         }
+    }
+
+    /** The chosen engine, flagging setup when a non-Template choice fell back to Template. */
+    private suspend fun resolveAndFlagSetup(): SummaryEngine {
+        val choice = settings.prefs.first().engine
+        val engine = resolver.resolve(choice)
+        _uiState.update {
+            it.copy(needsSetup = engine.id == SummaryEngineId.Template && choice != SummaryEngineChoice.Template)
+        }
+        return engine
     }
 
     private suspend fun publishTemplate(facts: DailyFacts) =
