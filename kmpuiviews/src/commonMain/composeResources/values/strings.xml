@@ -586,4 +586,29 @@
     <string name="us_none_skipped">Every source is checked.</string>
     <string name="us_no_sources">Install a source to choose it here.</string>
     <string name="us_no_matches">No sources match “%1$s”</string>
+    <plurals name="do_template_read_chapters">
+        <item quantity="one">You read %1$d chapter</item>
+        <item quantity="other">You read %1$d chapters</item>
+    </plurals>
+    <plurals name="do_template_read_episodes">
+        <item quantity="one">You read %1$d episode</item>
+        <item quantity="other">You read %1$d episodes</item>
+    </plurals>
+    <plurals name="do_template_titles">
+        <item quantity="one"> across %1$d title</item>
+        <item quantity="other"> across %1$d titles</item>
+    </plurals>
+    <plurals name="do_template_new_chapters">
+        <item quantity="one">%1$d new chapter arrived.</item>
+        <item quantity="other">%1$d new chapters arrived.</item>
+    </plurals>
+    <plurals name="do_template_new_episodes">
+        <item quantity="one">%1$d new episode arrived.</item>
+        <item quantity="other">%1$d new episodes arrived.</item>
+    </plurals>
+    <plurals name="do_template_failed">
+        <item quantity="one">%1$d source failed its update check.</item>
+        <item quantity="other">%1$d sources failed their update checks.</item>
+    </plurals>
+    <string name="do_template_quiet">Nothing new yesterday.</string>
 </resources>
