@@ -31,9 +31,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -260,25 +261,21 @@ private fun ZoomableImage(
                 interactionSource = null
             )*/
     ) {
-        val scope = rememberCoroutineScope()
-        var showTheThing by remember { mutableStateOf(true) }
+        // Bumping the key recreates the loader, which requests the page again
+        var retry by remember { mutableIntStateOf(0) }
 
-        imageLoaderType.Composed(
-            painter = painter,
-            colorFilter = colorFilter,
-            onRefresh = {
-                scope.launch {
-                    showTheThing = false
-                    delay(1000)
-                    showTheThing = true
-                }
-            },
-            contentScale = contentScale,
-            headers = headers,
-            aspectRatio = aspectRatio,
-            onAspectRatio = onAspectRatio,
-            modifier = Modifier.align(Alignment.Center)
-        )
+        key(retry) {
+            imageLoaderType.Composed(
+                painter = painter,
+                colorFilter = colorFilter,
+                onRefresh = { retry++ },
+                contentScale = contentScale,
+                headers = headers,
+                aspectRatio = aspectRatio,
+                onAspectRatio = onAspectRatio,
+                modifier = Modifier.align(Alignment.Center)
+            )
+        }
     }
 }
 

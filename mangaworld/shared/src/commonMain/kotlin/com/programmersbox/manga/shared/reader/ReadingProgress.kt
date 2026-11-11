@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 
@@ -78,7 +79,7 @@ internal fun ReadingProgressLine(
                 Text(
                     pageLabel,
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.inverseOnSurface,
+                    color = Color.White,
                     modifier = Modifier
                         .background(MaterialTheme.colorScheme.scrim.copy(alpha = .55f), CircleShape)
                         .padding(horizontal = 8.dp, vertical = 2.dp)
