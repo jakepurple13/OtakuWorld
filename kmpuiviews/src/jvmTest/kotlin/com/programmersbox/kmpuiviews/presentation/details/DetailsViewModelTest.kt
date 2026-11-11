@@ -37,6 +37,8 @@ import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import java.io.File
+import kotlin.time.Clock
+import kotlin.time.Instant
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -86,6 +88,7 @@ class DetailsViewModelTest {
     private fun viewModel(
         details: Screen.DetailsScreen.Details? = details(),
         sharedCoverBitmaps: SharedCoverBitmaps = SharedCoverBitmaps(),
+        clock: Clock = Clock.System,
     ) = DetailsViewModel(
         details = details,
         genericInfo = FakeKmpGenericInfo(),
@@ -95,6 +98,7 @@ class DetailsViewModelTest {
             dao = itemDatabase.itemDao(),
             systemAlerter = SystemAlerter(),
             authManager = FakeAuthManager(),
+            clock = clock,
         ),
         translationHandler = FakeTranslationHandler(),
         exceptionDao = exceptionDatabase.exceptionDao(),
@@ -270,6 +274,21 @@ class DetailsViewModelTest {
         vm.markAs(chapter, true)
         awaitCondition { vm.chapters.any { it.url == chapter.url } }
         assertEquals(0L, vm.chapters.first { it.url == chapter.url }.createdAt)
+    }
+
+    @Test
+    fun `recordOpened stamps createdAt with the clock so opening counts as activity`() = runTest {
+        val fixed = Instant.fromEpochMilliseconds(1_700_000_000_000L)
+        val vm = viewModel(clock = object : Clock {
+            override fun now() = fixed
+        })
+        awaitCondition { vm.currentState is DetailState.Success }
+
+        val chapter = (vm.currentState as DetailState.Success).info.chapters.first()
+
+        vm.recordOpened(chapter)
+        awaitCondition { vm.chapters.any { it.url == chapter.url } }
+        assertEquals(1_700_000_000_000L, vm.chapters.first { it.url == chapter.url }.createdAt)
     }
 
     @Test

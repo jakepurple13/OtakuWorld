@@ -336,6 +336,7 @@ private fun DetailsScreenInternal(
                                 scope.launch(Dispatchers.IO) {
                                     genericInfo.chapterOnClick(model, target.info.chapters, infoModel, navActions, paletteSeed?.toArgb())
                                     insertRecent()
+                                    details.recordOpened(model)
                                     heatMapDao.upsertHeatMap()
                                 }
                             },
