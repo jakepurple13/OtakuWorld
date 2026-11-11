@@ -1,8 +1,16 @@
 package com.programmersbox.manga.shared.reader
 
+import kotlinx.coroutines.flow.first
+import androidx.compose.ui.layout.onPlaced
 import com.programmersbox.kmpuiviews.theme.SeedColorTheme
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.BoundsTransform
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.core.updateTransition
+import androidx.compose.animation.togetherWith
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.fadeIn
@@ -51,6 +59,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
@@ -85,10 +94,6 @@ import kotlinx.coroutines.launch
 import net.engawapg.lib.zoomable.ExperimentalZoomableApi
 import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomableWithScroll
-import com.programmersbox.sharedcomponents.notifier.InAppNotifier
-import otakuworld.kmpuiviews.generated.resources.Res
-import otakuworld.kmpuiviews.generated.resources.banner_marked_read
-import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.math.absoluteValue
@@ -170,13 +175,14 @@ private fun ReadViewContent(
         }
     }
 
-    val pagesInCurrentChapter by remember {
+    val loadedPagesInCurrentChapter by remember {
         derivedStateOf {
             viewModel.pageItems.count {
                 it is PageItem.Page && it.chapterListIndex == viewModel.currentChapter
-            }.coerceAtLeast(1)
+            }
         }
     }
+    val pagesInCurrentChapter by remember { derivedStateOf { loadedPagesInCurrentChapter.coerceAtLeast(1) } }
 
     val paddingPage by mangaSettingsHandling.pagePadding
         .flow
@@ -189,16 +195,28 @@ private fun ReadViewContent(
     // Kept locally so dragging the dividers doesn't write to the datastore every frame
     var readerWidthFraction by remember(savedWidthFraction) { mutableFloatStateOf(savedWidthFraction) }
 
-    val notifier = koinInject<InAppNotifier>()
-    val markedReadTitle = stringResource(Res.string.banner_marked_read)
+    val chapterBanner = remember { ChapterBannerState() }
+    val chapterSlide = remember { Animatable(0f) }
+    val chapterSlideSpec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
+    // Direction of a slide waiting for the new chapter's pages, so it doesn't play over an empty reader
+    var pendingSlide by remember { mutableStateOf<Float?>(null) }
+    LaunchedEffect(pendingSlide) {
+        val direction = pendingSlide ?: return@LaunchedEffect
+        snapshotFlow {
+            viewModel.pageItems.any { it is PageItem.Page && it.chapterListIndex == viewModel.currentChapter }
+        }.first { it }
+        chapterSlide.snapTo(direction)
+        // Clear only after the slide: changing the key earlier would cancel this effect mid-slide
+        chapterSlide.animateTo(0f, chapterSlideSpec)
+        pendingSlide = null
+    }
 
-    fun showToast(chapterName: String) {
-        notifier.info(
-            title = markedReadTitle,
-            subtitle = chapterName,
-            key = "reader-chapter",
-            durationMillis = 2_000,
-        )
+    // Called only from Next/Previous buttons and the drawer, never from scrolling across a chapter boundary
+    fun onChapterChange(chapterName: String, isNext: Boolean?) {
+        chapterBanner.show(chapterName)
+        if (isNext != null && readerType != ReaderType.List) {
+            pendingSlide = if (isNext) 1f else -1f
+        }
     }
 
     val listShowItems by remember { derivedStateOf { listState.isScrolledToTheEnd() && readerType == ReaderType.List } }
@@ -360,7 +378,7 @@ private fun ReadViewContent(
             ) {
                 DrawerView(
                     readVm = viewModel,
-                    showToast = ::showToast
+                    showToast = { onChapterChange(it, isNext = null) }
                 )
             }
         },
@@ -442,8 +460,8 @@ private fun ReadViewContent(
                         //key(scrollAlpha) {
                         FloatingBottomBar(
                             onPageSelectClick = { showBottomSheet = true },
-                            onNextChapter = { viewModel.loadNextChapter(::showToast) },
-                            onPreviousChapter = { viewModel.loadPreviousChapter(::showToast) },
+                            onNextChapter = { viewModel.loadNextChapter { onChapterChange(it, isNext = true) } },
+                            onPreviousChapter = { viewModel.loadPreviousChapter { onChapterChange(it, isNext = false) } },
                             onChapterShow = { scope.launch { drawerState.open() } },
                             showBlur = blurKind.showBlur,
                             isAmoledMode = isAmoledMode,
@@ -477,7 +495,7 @@ private fun ReadViewContent(
                         FloatingFloatingActionButton(
                             onPageSelectClick = { showBottomSheet = true },
                             onSettingsClick = { settingsPopup = true },
-                            chapterChange = ::showToast,
+                            chapterChange = ::onChapterChange,
                             onChapterShow = { scope.launch { drawerState.open() } },
                             vm = viewModel,
                             showFloatBar = showFloatBar,
@@ -534,10 +552,16 @@ private fun ReadViewContent(
                             onAspectRatio = viewModel::recordAspectRatio
                         )
                     }
-                    Crossfade(
-                        targetState = readerType,
-                        label = "",
-                        modifier = if (imageLoaderType == ImageLoaderType.Panpf) {
+                    val readerTypeTransition = updateTransition(readerType, label = "readerType")
+                    val modeFadeIn = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+                    val modeFadeOut = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+                    val boundsSpec = MaterialTheme.motionScheme.defaultSpatialSpec<Rect>()
+                    SharedTransitionLayout {
+                    readerTypeTransition.AnimatedContent(
+                        transitionSpec = { fadeIn(modeFadeIn) togetherWith fadeOut(modeFadeOut) },
+                        modifier = Modifier.graphicsLayer {
+                            translationX = chapterSlide.value * size.width
+                        } then if (imageLoaderType == ImageLoaderType.Panpf) {
                             Modifier
                         } else {
                             Modifier.zoomableWithScroll(
@@ -546,8 +570,21 @@ private fun ReadViewContent(
                                 onTap = { viewModel.showInfo = !viewModel.showInfo }
                             )
                         }
-                    ) {
-                        when (it) {
+                    ) { type ->
+                        // List <-> Pager keeps the page you're on in place; other switches just fade
+                        val morph = morphsPages(readerTypeTransition.currentState, readerTypeTransition.targetState)
+                        val pageModifier: @Composable (String) -> Modifier = { key ->
+                            if (morph) {
+                                Modifier.sharedElement(
+                                    sharedContentState = rememberSharedContentState(key),
+                                    animatedVisibilityScope = this@AnimatedContent,
+                                    boundsTransform = BoundsTransform { _, _ -> boundsSpec },
+                                )
+                            } else {
+                                Modifier
+                            }
+                        }
+                        when (type) {
                             ReaderType.List -> {
                                 val sidePadding = if (isWidthAdjustable) {
                                     readerSidePadding(readerContainerWidth, readerWidthFraction)
@@ -571,6 +608,7 @@ private fun ReadViewContent(
                                         bottom = verticalPadding.calculateBottomPadding()
                                     ),
                                     imageLoaderType = imageLoaderType,
+                                    pageModifier = pageModifier,
                                 )
                             }
 
@@ -582,6 +620,7 @@ private fun ReadViewContent(
                                     colorFilter = colorFilter,
                                     itemSpacing = spacing,
                                     imageLoaderType = imageLoaderType,
+                                    pageModifier = pageModifier,
                                 )
                             }
 
@@ -604,6 +643,7 @@ private fun ReadViewContent(
                             }
                         }
                     }
+                    }
 
                     if (isWidthAdjustable && readerType.supportsWidthAdjust) {
                         ReaderWidthDividers(
@@ -614,6 +654,22 @@ private fun ReadViewContent(
                         )
                     }
                 }
+
+                ReadingProgressLine(
+                    progress = chapterProgress(currentPage, pagesInCurrentChapter),
+                    visible = !showItems,
+                    pageLabel = pageLabel(currentPage, pagesInCurrentChapter),
+                    scrolling = listState.isScrollInProgress || pagerState.isScrollInProgress,
+                    modifier = Modifier.align(Alignment.TopStart)
+                )
+
+                ChapterBanner(
+                    state = chapterBanner,
+                    pageCount = loadedPagesInCurrentChapter.takeUnless { viewModel.isLoadingPages },
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = p.calculateTopPadding() + 8.dp)
+                )
             }
         }
     }
@@ -629,13 +685,14 @@ fun ListView(
     imageLoaderType: ImageLoaderType,
     colorFilter: ColorFilter? = null,
     modifier: Modifier = Modifier,
+    pageModifier: @Composable (key: String) -> Modifier = { Modifier },
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         state = listState,
         verticalArrangement = Arrangement.spacedBy(itemSpacing),
         contentPadding = paddingValues,
-    ) { reader(pageItems, readVm, imageLoaderType, colorFilter) }
+    ) { reader(pageItems, readVm, imageLoaderType, colorFilter, pageModifier) }
 }
 
 @Composable
@@ -647,6 +704,7 @@ fun PagerView(
     imageLoaderType: ImageLoaderType,
     colorFilter: ColorFilter? = null,
     modifier: Modifier = Modifier,
+    pageModifier: @Composable (key: String) -> Modifier = { Modifier },
 ) {
     val keys by remember(pageItems) { derivedStateOf { pageItems.lazyKeys() } }
     VerticalPager(
@@ -657,19 +715,24 @@ fun PagerView(
         key = { keys.getOrNull(it) ?: it }
     ) { page ->
         when (val item = pageItems.getOrNull(page)) {
-            is PageItem.Page -> ChapterPage(
-                chapterLink = { item.url },
-                isDownloaded = item.isDownloaded,
-                headers = vm.headers,
-                contentScale = ContentScale.Fit,
-                imageLoaderType = imageLoaderType,
-                colorFilter = colorFilter
-            )
+            is PageItem.Page -> Box(pageModifier(keys.getOrNull(page) ?: page.toString())) {
+                ChapterPage(
+                    chapterLink = { item.url },
+                    isDownloaded = item.isDownloaded,
+                    headers = vm.headers,
+                    contentScale = ContentScale.Fit,
+                    imageLoaderType = imageLoaderType,
+                    colorFilter = colorFilter
+                )
+            }
 
             is PageItem.ChapterTransition -> Box(modifier = Modifier.fillMaxSize()) {
                 ChapterTransitionItem(
                     fromChapterName = vm.chapterName(item.fromChapterListIndex),
                     toChapterName = vm.chapterName(item.toChapterListIndex),
+                    toChapterListIndex = item.toChapterListIndex,
+                    chapterCount = vm.chapterCount,
+                    visible = pagerState.settledPage == page,
                     modifier = Modifier.align(Alignment.Center)
                 )
             }
@@ -765,6 +828,7 @@ private fun LazyListScope.reader(
     vm: ReadViewModel,
     imageLoaderType: ImageLoaderType,
     colorFilter: ColorFilter? = null,
+    pageModifier: @Composable (key: String) -> Modifier = { Modifier },
 ) {
     val keys = pageItems.lazyKeys()
     pageItems.forEachIndexed { index, item ->
@@ -773,25 +837,33 @@ private fun LazyListScope.reader(
                 key = keys[index],
                 contentType = "page"
             ) {
-                ChapterPage(
-                    chapterLink = { item.url },
-                    isDownloaded = item.isDownloaded,
-                    headers = vm.headers,
-                    contentScale = ContentScale.FillWidth,
-                    imageLoaderType = imageLoaderType,
-                    colorFilter = colorFilter,
-                    aspectRatio = vm.aspectRatioFor(item.url),
-                    onAspectRatio = { vm.recordAspectRatio(item.url, it) }
-                )
+                Box(pageModifier(keys[index])) {
+                    ChapterPage(
+                        chapterLink = { item.url },
+                        isDownloaded = item.isDownloaded,
+                        headers = vm.headers,
+                        contentScale = ContentScale.FillWidth,
+                        imageLoaderType = imageLoaderType,
+                        colorFilter = colorFilter,
+                        aspectRatio = vm.aspectRatioFor(item.url),
+                        onAspectRatio = { vm.recordAspectRatio(item.url, it) }
+                    )
+                }
             }
 
             is PageItem.ChapterTransition -> item(
                 key = keys[index],
                 contentType = "transition"
             ) {
+                // Prefetched items are composed but not placed, so placement means it's on screen
+                var placed by remember { mutableStateOf(false) }
                 ChapterTransitionItem(
                     fromChapterName = vm.chapterName(item.fromChapterListIndex),
                     toChapterName = vm.chapterName(item.toChapterListIndex),
+                    toChapterListIndex = item.toChapterListIndex,
+                    chapterCount = vm.chapterCount,
+                    visible = placed,
+                    modifier = Modifier.onPlaced { placed = true },
                 )
             }
         }
@@ -804,7 +876,7 @@ private const val PREFETCH_AHEAD = 3
  * Lazy keys that survive items being trimmed from the front of [pageItems] (unlike list indices),
  * so visible pages keep their state and scroll anchor. Repeats get a suffix to stay unique.
  */
-private fun List<PageItem>.lazyKeys(): List<String> {
+internal fun List<PageItem>.lazyKeys(): List<String> {
     val seen = HashMap<String, Int>()
     return map { item ->
         val base = when (item) {

@@ -236,6 +236,8 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 
 #### Bug Fixes
 
+- Sources marked incognito no longer add to History or mark chapters and episodes as read
+  ([#2690](https://github.com/jakepurple13/OtakuWorld/pull/2690))
 - Rows restored with Undo in History and Notifications now reappear in view, instead of staying
   scrolled off the top ([#2676](https://github.com/jakepurple13/OtakuWorld/pull/2676))
 - Fixed removing items from a custom list
@@ -277,6 +279,9 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
 - Scan QR code: the scan-from-image button is always available, including after a code is read
   and when camera permission is denied, and the sheet now slides up when opened
   ([#2661](https://github.com/jakepurple13/OtakuWorld/pull/2661))
+- Cloud sync: unfavoriting while signed in now takes effect right away. Before, the item stayed
+  marked as a favorite on its details page but was missing from the favorites list until the next
+  sync removed it ([#2689](https://github.com/jakepurple13/OtakuWorld/pull/2689))
 
 #### Removed
 
@@ -535,11 +540,21 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...develop_
   ([b4fbd59b2](https://github.com/jakepurple13/OtakuWorld/commit/b4fbd59b2))
 - Reader pages animate size changes
   ([cf06671d7](https://github.com/jakepurple13/OtakuWorld/commit/cf06671d7))
+- Reader motion ([#2691](https://github.com/jakepurple13/OtakuWorld/pull/2691)):
+  - Loading pages show a panel-shaped shimmer with a wavy progress ring, then settle in.
+  - Failed pages shake once, and the retry icon spins while the page reloads.
+  - The chapter-end card draws a check and shows how far through the series the next chapter is.
+  - Changing chapters drops a banner with the chapter name and page count, replacing the
+    "Marked as read" toast. In the pager modes the new chapter also slides in.
+  - Adding a bookmark pops the icon with a small burst.
+  - A thin progress line and a page label show while the bars are hidden.
+  - Switching between List and Pager keeps the current page in place while it morphs.
 
 #### Bug Fixes
 
 - Reader: the current chapter stays in sync while reading
   ([#2570](https://github.com/jakepurple13/OtakuWorld/pull/2570))
+- Reader: tapping retry on a failed page now reloads it. Before, it did nothing. ([#2691](https://github.com/jakepurple13/OtakuWorld/pull/2691))
 
 ---
 

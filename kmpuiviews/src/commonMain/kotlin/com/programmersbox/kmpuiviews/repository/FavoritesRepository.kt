@@ -3,6 +3,7 @@ package com.programmersbox.kmpuiviews.repository
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
+import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.SystemAlerter
 import com.programmersbox.supabaseintegration.auth.AuthManager
 import kotlinx.coroutines.coroutineScope
@@ -13,13 +14,17 @@ class FavoritesRepository(
     private val dao: ItemDao,
     private val systemAlerter: SystemAlerter,
     private val authManager: AuthManager,
+    private val sourceRepository: SourceRepository,
     private val clock: Clock = Clock.System,
 ) {
+    /**
+     * [source] is an item url or a [com.programmersbox.kmpmodels.KmpApiService.serviceName].
+     * Source rows are keyed by package name, so a service name is resolved to its package first.
+     */
     suspend fun isIncognito(source: String): Boolean {
-        //TODO: Maybe also allow specific items?
-        // Not many changes would be needed. Just some up changes
-        val incognito = dao.getIncognitoSourceSync(source)
-        return incognito != null && incognito.isIncognito
+        if (dao.getIncognitoSourceSync(source)?.isIncognito == true) return true
+        val packageName = sourceRepository.toSourceByApiServiceName(source)?.packageName ?: return false
+        return dao.getIncognitoSourceSync(packageName)?.isIncognito == true
     }
 
     suspend fun addFavorite(db: DbModel) {

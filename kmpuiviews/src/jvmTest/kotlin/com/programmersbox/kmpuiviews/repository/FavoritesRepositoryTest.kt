@@ -2,7 +2,10 @@ package com.programmersbox.kmpuiviews.repository
 
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.favoritesdatabase.IncognitoSource
 import com.programmersbox.favoritesdatabase.ItemDatabase
+import com.programmersbox.kmpmodels.ExampleService
+import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.SystemAlerter
 import com.programmersbox.kmpuiviews.testing.FakeAuthManager
 import com.programmersbox.kmpuiviews.testing.FixedClock
@@ -22,11 +25,13 @@ class FavoritesRepositoryTest {
 
     private fun repository(
         loggedIn: Boolean = false,
+        sourceRepository: SourceRepository = SourceRepository(),
         clock: Clock = Clock.System,
     ) = FavoritesRepository(
         dao = database.itemDao(),
         systemAlerter = SystemAlerter(),
         authManager = FakeAuthManager(loggedIn = loggedIn),
+        sourceRepository = sourceRepository,
         clock = clock,
     )
 
@@ -92,6 +97,35 @@ class FavoritesRepositoryTest {
 
     @Test fun `isIncognito is false for a source with no incognito entry`() = runTest {
         assertEquals(false, repository().isIncognito("ExampleService"))
+    }
+
+    // The Incognito settings screen keys source rows by package name, while callers pass the service name
+    @Test fun `isIncognito is true for a service whose package is incognito`() = runTest {
+        val info = ExampleService.getSourceInformation()
+        val sourceRepository = SourceRepository().apply { setSources(listOf(info)) }
+        database.itemDao().insertIncognitoSource(
+            IncognitoSource(source = info.packageName, name = info.apiService.serviceName, isIncognito = true)
+        )
+
+        assertEquals(true, repository(sourceRepository = sourceRepository).isIncognito(info.apiService.serviceName))
+    }
+
+    @Test fun `isIncognito is false for a service whose package is toggled off`() = runTest {
+        val info = ExampleService.getSourceInformation()
+        val sourceRepository = SourceRepository().apply { setSources(listOf(info)) }
+        database.itemDao().insertIncognitoSource(
+            IncognitoSource(source = info.packageName, name = info.apiService.serviceName, isIncognito = false)
+        )
+
+        assertEquals(false, repository(sourceRepository = sourceRepository).isIncognito(info.apiService.serviceName))
+    }
+
+    @Test fun `isIncognito is true for an incognito item url`() = runTest {
+        database.itemDao().insertIncognitoSource(
+            IncognitoSource(source = "https://example.com/1", name = "Title", isIncognito = true)
+        )
+
+        assertEquals(true, repository().isIncognito("https://example.com/1"))
     }
 
     @Test fun `addWatched persists a chapter`() = runTest {

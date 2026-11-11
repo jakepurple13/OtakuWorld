@@ -1,20 +1,36 @@
 package com.programmersbox.manga.shared.reader
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Image
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,8 +46,12 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.programmersbox.datastore.mangasettings.ImageLoaderType
+import com.programmersbox.kmpuiviews.presentation.components.placeholder.PlaceholderHighlight
+import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
+import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import io.kamel.core.DataSource
 import io.kamel.core.Resource
@@ -68,8 +88,6 @@ internal fun ImageLoaderType.Composed(
         )
     }
 }
-
-private const val FADE_IN_MILLIS = 150
 
 /**
  * When [aspectRatio] is set (list reader), the page reserves that height while loading so the list
@@ -108,7 +126,7 @@ internal fun Kamel(
             modifier = modifier.then(placeholderSize)
         ) {
             val progress by animateFloatAsState(targetValue = resource.progress, label = "")
-            CircularProgressIndicator(progress = { progress })
+            PageLoadSkeleton(progress = { progress }, modifier = Modifier.matchParentSize())
         }
 
         is Resource.Success -> {
@@ -119,8 +137,15 @@ internal fun Kamel(
             LaunchedEffect(imageRatio) { imageRatio?.let(onAspectRatio) }
 
             // Memory-cache hits (scrolling back, prefetched pages) show instantly; only fresh loads fade in
-            val alpha = remember(painter) { Animatable(if (resource.source == DataSource.Memory) 1f else 0f) }
-            LaunchedEffect(alpha) { alpha.animateTo(1f, tween(FADE_IN_MILLIS)) }
+            val start = remember(painter) { pageRevealStart(resource.source) }
+            val alpha = remember(painter) { Animatable(start.alpha) }
+            val scale = remember(painter) { Animatable(start.scale) }
+            val alphaSpec = MaterialTheme.motionScheme.slowEffectsSpec<Float>()
+            val scaleSpec = MaterialTheme.motionScheme.slowSpatialSpec<Float>()
+            LaunchedEffect(alpha, scale) {
+                launch { alpha.animateTo(1f, alphaSpec) }
+                launch { scale.animateTo(1f, scaleSpec) }
+            }
 
             Image(
                 painter = image,
@@ -138,7 +163,11 @@ internal fun Kamel(
                         }
                     )
                     .clipToBounds()
-                    .graphicsLayer { this.alpha = alpha.value }
+                    .graphicsLayer {
+                        this.alpha = alpha.value
+                        scaleX = scale.value
+                        scaleY = scale.value
+                    }
             )
         }
 
@@ -149,19 +178,89 @@ internal fun Kamel(
                 .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
         ) {
             LaunchedEffect(Unit) { resource.exception.printStackTrace() }
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .clickable { onRefresh() }
-                    .clip(MaterialTheme.shapes.medium)
-                    .padding(16.dp)
-            ) {
-                Text("Press to refresh")
-                Text(
-                    resource.exception.message ?: "Unknown error",
-                    color = MaterialTheme.colorScheme.error
-                )
+            PageLoadFailed(
+                message = resource.exception.message,
+                onRetry = onRefresh,
+            )
+        }
+    }
+}
+
+/**
+ * Failed page: shakes once when it first shows, and spins the retry icon from the tap until
+ * the resource leaves the failure state (which removes this composable).
+ */
+@Composable
+internal fun PageLoadFailed(
+    message: String?,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val shake = remember { Animatable(0f) }
+    LaunchedEffect(Unit) {
+        shake.animateTo(
+            targetValue = 0f,
+            animationSpec = keyframes {
+                durationMillis = 500
+                -6f at 150
+                6f at 250
+                -3f at 350
+                0f at 500
             }
+        )
+    }
+    var retrying by remember { mutableStateOf(false) }
+    val rotation = if (retrying) {
+        rememberInfiniteTransition()
+            .animateFloat(
+                initialValue = 0f,
+                targetValue = 360f,
+                animationSpec = infiniteRepeatable(tween(700, easing = LinearEasing))
+            )
+            .value
+    } else {
+        0f
+    }
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        modifier = modifier
+            .graphicsLayer { translationX = shake.value.dp.toPx() }
+            .clip(MaterialTheme.shapes.medium)
+            .clickable {
+                retrying = true
+                onRetry()
+            }
+            .padding(16.dp)
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.errorContainer)
+        ) {
+            Icon(
+                Icons.Default.Refresh,
+                contentDescription = "Retry",
+                tint = MaterialTheme.colorScheme.onErrorContainer,
+                modifier = Modifier.graphicsLayer { rotationZ = rotation }
+            )
+        }
+        Text("Page didn't load", style = MaterialTheme.typography.titleSmall)
+        Text(
+            "Tap to retry",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        if (message != null) {
+            Text(
+                message,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                textAlign = TextAlign.Center,
+            )
         }
     }
 }
@@ -288,4 +387,36 @@ internal fun Telephoto(
             .fillMaxSize()
             .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
     )*/
+}
+/** Panel-shaped shimmer that holds a manga page's layout while it loads, with the wavy progress ring on top. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun PageLoadSkeleton(
+    progress: () -> Float,
+    modifier: Modifier = Modifier,
+) {
+    val panel = Modifier.m3placeholder(
+        visible = true,
+        shape = MaterialTheme.shapes.extraSmall,
+        highlight = PlaceholderHighlight.shimmer(),
+    )
+    Box(contentAlignment = Alignment.Center, modifier = modifier) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(6.dp)
+        ) {
+            Box(panel.fillMaxWidth().weight(1f))
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.fillMaxWidth().weight(1.2f)
+            ) {
+                Box(panel.fillMaxHeight().weight(1.3f))
+                Box(panel.fillMaxHeight().weight(1f))
+            }
+            Box(panel.fillMaxWidth().weight(.9f))
+        }
+        CircularWavyProgressIndicator(progress = progress)
+    }
 }
