@@ -13,6 +13,7 @@ class FavoritesRepository(
     private val dao: ItemDao,
     private val systemAlerter: SystemAlerter,
     private val authManager: AuthManager,
+    private val clock: Clock = Clock.System,
 ) {
     suspend fun isIncognito(source: String): Boolean {
         //TODO: Maybe also allow specific items?
@@ -51,7 +52,8 @@ class FavoritesRepository(
         if (isIncognito(chapterWatched.favoriteUrl)) return
         coroutineScope {
             launch {
-                dao.insertChapter(chapterWatched)
+                val now = clock.now().toEpochMilliseconds()
+                dao.insertChapter(chapterWatched.copy(createdAt = now, updatedAt = now))
                 systemAlerter.alertChapterChange()
             }
         }

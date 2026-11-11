@@ -5,6 +5,7 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.kmpuiviews.SystemAlerter
 import com.programmersbox.kmpuiviews.testing.FakeAuthManager
+import com.programmersbox.kmpuiviews.testing.FixedClock
 import com.programmersbox.kmpuiviews.testing.createTestItemDatabase
 import kotlinx.coroutines.test.runTest
 import kotlin.test.AfterTest
@@ -12,15 +13,21 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 class FavoritesRepositoryTest {
 
     private lateinit var database: ItemDatabase
 
-    private fun repository(loggedIn: Boolean = false) = FavoritesRepository(
+    private fun repository(
+        loggedIn: Boolean = false,
+        clock: Clock = Clock.System,
+    ) = FavoritesRepository(
         dao = database.itemDao(),
         systemAlerter = SystemAlerter(),
         authManager = FakeAuthManager(loggedIn = loggedIn),
+        clock = clock,
     )
 
     private fun favorite(url: String) = DbModel(
@@ -100,5 +107,26 @@ class FavoritesRepositoryTest {
         )
 
         assertEquals(1, database.itemDao().getAllChaptersSync().size)
+    }
+
+    @Test fun `addWatched stamps createdAt and updatedAt with now`() = runTest {
+        val fixed = Instant.fromEpochMilliseconds(1_762_800_000_000)
+        val repo = repository(clock = FixedClock(fixed))
+        repo.addWatched(ChapterWatched(url = "c1", name = "Ch 1", favoriteUrl = "f1"))
+        val row = database.itemDao().getChapterByUrl("c1")!!
+        assertEquals(fixed.toEpochMilliseconds(), row.createdAt)
+        assertEquals(fixed.toEpochMilliseconds(), row.updatedAt)
+    }
+
+    @Test fun `re-reading a chapter moves createdAt to the latest read`() = runTest {
+        val t1 = Instant.fromEpochMilliseconds(1_762_800_000_000)
+        val t2 = Instant.fromEpochMilliseconds(1_762_900_000_000)
+        val clock = FixedClock(t1)
+        val repo = repository(clock = clock)
+        val chapter = ChapterWatched(url = "c1", name = "Ch 1", favoriteUrl = "f1")
+        repo.addWatched(chapter)
+        clock.instant = t2
+        repo.addWatched(chapter)
+        assertEquals(t2.toEpochMilliseconds(), database.itemDao().getChapterByUrl("c1")!!.createdAt)
     }
 }

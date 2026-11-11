@@ -46,6 +46,8 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import okio.Path.Companion.toPath
 import java.io.File
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 fun createTestItemDatabase(): ItemDatabase {
     val dbFile = File.createTempFile("kmpuiviews-test", ".db").also { it.deleteOnExit() }
@@ -237,4 +239,8 @@ class FakeExceptionDao : ExceptionDao {
     override suspend fun deleteAll() {
         insertedExceptions.clear()
     }
+}
+
+class FixedClock(var instant: Instant) : Clock {
+    override fun now(): Instant = instant
 }
