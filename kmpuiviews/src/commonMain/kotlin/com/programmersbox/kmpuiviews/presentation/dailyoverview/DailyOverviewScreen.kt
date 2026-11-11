@@ -235,6 +235,7 @@ private fun LazyListScope.overview(
                 titleCount = facts.titles.size,
                 updateCount = facts.updates.size,
                 unit = facts.unit,
+                animateIn = animateIn,
                 modifier = Modifier
                     .animateItem()
                     .padding(top = 12.dp)
@@ -248,6 +249,7 @@ private fun LazyListScope.overview(
             item(key = "hours") {
                 HourGraph(
                     readsByHour = facts.readsByHour,
+                    animateIn = animateIn,
                     modifier = Modifier
                         .animateItem()
                         .padding(top = 8.dp)
@@ -278,7 +280,7 @@ private fun LazyListScope.overview(
                 ReadRow(
                     title = title,
                     fraction = title.count.toFloat() / most,
-                    growDelayMs = if (animateIn) ProgressDelayMs else 0L,
+                    animateIn = animateIn,
                     onClick = { onOpen(title.title, title.url, title.imageUrl, title.source) },
                     modifier = Modifier
                         .animateItem()
@@ -319,7 +321,7 @@ private fun LazyListScope.overview(
         }
         facts.failedSources.forEach { source ->
             val i = next()
-            item(key = "failed:$i:$source") {
+            item(key = "failed:$source") {
                 FailedSourceRow(
                     source = source,
                     modifier = Modifier
@@ -448,14 +450,17 @@ private fun Badge(text: String, container: Color, content: Color) = Text(
 private fun ReadRow(
     title: TitleRead,
     fraction: Float,
-    growDelayMs: Long,
+    animateIn: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var grown by remember { mutableStateOf(false) }
+    // Grows in on first load only; scrolling back into view shows it full.
+    var grown by remember { mutableStateOf(!animateIn) }
     LaunchedEffect(Unit) {
-        delay(growDelayMs)
-        grown = true
+        if (!grown) {
+            delay(ProgressDelayMs)
+            grown = true
+        }
     }
     val progress by animateFloatAsState(
         targetValue = if (grown) fraction else 0f,

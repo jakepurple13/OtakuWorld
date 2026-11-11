@@ -27,12 +27,19 @@ import kotlinx.coroutines.launch
 sealed interface SummaryState {
     /** Shimmer. */
     data object Loading : SummaryState
-    data class Streaming(val text: String, val label: String, val onDevice: Boolean) : SummaryState
+    /** [destination] names who receives the facts when not [onDevice], e.g. "Google". */
+    data class Streaming(
+        val text: String,
+        val label: String,
+        val onDevice: Boolean,
+        val destination: String? = null,
+    ) : SummaryState
     data class Done(
         val text: String,
         val label: String,
         val onDevice: Boolean,
         val engine: SummaryEngineId,
+        val destination: String? = null,
     ) : SummaryState
 }
 
@@ -89,6 +96,7 @@ class DailyOverviewViewModel(
             }
 
             val label = engine.label()
+            val destination = engine.destination()
             var text = ""
             try {
                 engine.summarize(facts)
@@ -96,7 +104,7 @@ class DailyOverviewViewModel(
                     .collect { accumulated ->
                         text = accumulated
                         _uiState.update {
-                            it.copy(summary = SummaryState.Streaming(accumulated, label, engine.onDevice))
+                            it.copy(summary = SummaryState.Streaming(accumulated, label, engine.onDevice, destination))
                         }
                     }
             } catch (e: CancellationException) {
@@ -119,8 +127,9 @@ class DailyOverviewViewModel(
 
     private suspend fun publishDone(text: String, engine: SummaryEngine) {
         val label = engine.label()
+        val destination = engine.destination()
         _uiState.update {
-            it.copy(summary = SummaryState.Done(text, label, engine.onDevice, engine.id))
+            it.copy(summary = SummaryState.Done(text, label, engine.onDevice, engine.id, destination))
         }
     }
 }

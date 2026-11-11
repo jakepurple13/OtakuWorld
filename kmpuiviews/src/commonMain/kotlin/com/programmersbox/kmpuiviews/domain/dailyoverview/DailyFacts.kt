@@ -36,5 +36,6 @@ data class DailyFacts(
     val updates: List<UpdateItem>,
     val failedSources: List<String>,
 ) {
-    val isQuiet: Boolean get() = readCount == 0 && updates.isEmpty()
+    // titles too: the heat-map count can be 0 while watched-chapter rows exist.
+    val isQuiet: Boolean get() = readCount == 0 && titles.isEmpty() && updates.isEmpty()
 }

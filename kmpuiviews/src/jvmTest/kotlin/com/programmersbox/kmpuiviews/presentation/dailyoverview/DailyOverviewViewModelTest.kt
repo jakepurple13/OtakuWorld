@@ -53,11 +53,13 @@ class DailyOverviewViewModelTest {
         private val chunks: List<String> = listOf("Hello ", "world"),
         private val failAfterFirst: Boolean = false,
         private val gate: CompletableDeferred<Unit>? = null,
+        private val sendsTo: String? = null,
     ) : SummaryEngine {
         @Volatile
         var calls = 0
         override suspend fun label() = "Fake ${id.name}"
-        override val onDevice = true
+        override val onDevice = sendsTo == null
+        override suspend fun destination() = sendsTo
         override suspend fun status(): EngineStatus = EngineStatus.Ready
         override fun summarize(facts: DailyFacts): Flow<String> = flow {
             calls++
@@ -141,6 +143,27 @@ class DailyOverviewViewModelTest {
         gate.complete(Unit)
         await { vm.done() != null }
         assertEquals("Hello world", vm.done()?.text)
+    }
+
+    @Test
+    fun `cloud engine carries its destination to Done`() = runTest {
+        readSomething()
+        val gate = CompletableDeferred<Unit>()
+        val vm = viewModel(FakeEngine(chunks = listOf("Hi"), gate = gate, sendsTo = "Google"))
+        await { vm.uiState.value.facts != null }
+        gate.complete(Unit)
+        await { vm.done() != null }
+        val done = vm.done()!!
+        assertEquals("Google", done.destination)
+        assertEquals(false, done.onDevice)
+    }
+
+    @Test
+    fun `on-device engine has no destination`() = runTest {
+        readSomething()
+        val vm = viewModel(FakeEngine())
+        await { vm.done() != null }
+        assertNull(vm.done()?.destination)
     }
 
     @Test

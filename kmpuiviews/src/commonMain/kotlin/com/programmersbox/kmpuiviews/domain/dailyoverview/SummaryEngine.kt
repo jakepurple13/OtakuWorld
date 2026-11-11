@@ -21,6 +21,9 @@ interface SummaryEngine {
     /** True when nothing leaves the device. */
     val onDevice: Boolean
 
+    /** Who receives the facts when [onDevice] is false, e.g. "Google". Null when nothing is sent. */
+    suspend fun destination(): String? = null
+
     suspend fun status(): EngineStatus
 
     fun summarize(facts: DailyFacts): Flow<String>

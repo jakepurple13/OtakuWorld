@@ -25,6 +25,8 @@ class ProviderEngine(
     override suspend fun label(): String =
         getString(Res.string.do_label_via_koog, agentMaker.selection()?.company.orEmpty())
 
+    override suspend fun destination(): String? = agentMaker.selection()?.company
+
     override suspend fun status(): EngineStatus {
         val company = agentMaker.selection()?.company
         return if (company != null && company !in notCloud) EngineStatus.Ready

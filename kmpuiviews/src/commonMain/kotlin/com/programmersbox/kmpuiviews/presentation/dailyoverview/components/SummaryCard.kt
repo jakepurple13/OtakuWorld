@@ -41,7 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -160,8 +160,8 @@ fun SummaryCard(
                 Text(
                     text = when (summary) {
                         SummaryState.Loading -> ""
-                        is SummaryState.Streaming -> privacyLine(summary.onDevice, summary.label)
-                        is SummaryState.Done -> privacyLine(summary.onDevice, summary.label)
+                        is SummaryState.Streaming -> privacyLine(summary.onDevice, summary.destination ?: summary.label)
+                        is SummaryState.Done -> privacyLine(summary.onDevice, summary.destination ?: summary.label)
                     },
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -178,9 +178,9 @@ fun SummaryCard(
 }
 
 @Composable
-private fun privacyLine(onDevice: Boolean, label: String): String =
+private fun privacyLine(onDevice: Boolean, destination: String): String =
     if (onDevice) stringResource(Res.string.do_privacy_on_device)
-    else stringResource(Res.string.do_privacy_sent, label)
+    else stringResource(Res.string.do_privacy_sent, destination)
 
 private class Chunk(val text: String, val alpha: Animatable<Float, *>)
 
@@ -287,20 +287,23 @@ private fun GeneratingBorder() {
 /** Four-point star filled with the AI gradient; spins while generating. */
 @Composable
 private fun Spark(spinning: Boolean) {
-    val rotation = if (spinning) {
+    // Read in the draw layer so spinning doesn't recompose.
+    val rotation: () -> Float = if (spinning) {
         val transition = rememberInfiniteTransition(label = "spark")
-        val angle by transition.animateFloat(
+        val angle = transition.animateFloat(
             initialValue = 0f,
             targetValue = 360f,
             animationSpec = infiniteRepeatable(tween(1600, easing = LinearEasing), RepeatMode.Restart),
             label = "sparkAngle",
-        )
-        angle
-    } else 0f
+        );
+        { angle.value }
+    } else {
+        { 0f }
+    }
     Canvas(
         Modifier
             .size(14.dp)
-            .rotate(rotation)
+            .graphicsLayer { rotationZ = rotation() }
     ) {
         val w = size.width
         val h = size.height
@@ -349,6 +352,7 @@ fun SummaryCardSample() {
                 label = "Google · via Koog",
                 onDevice = false,
                 engine = SummaryEngineId.Provider,
+                destination = "Google",
             ),
             needsSetup = false,
             onRegenerate = {},

@@ -48,18 +48,24 @@ private val BarEasing = CubicBezierEasing(0.2f, 0.9f, 0.3f, 1.1f)
 private const val BarStartDelayMs = 520L
 private const val BarStaggerMs = 25L
 
-/** 24 bars, one per hour, that grow in with a 25ms stagger. The peak hour is tinted tertiary. */
+/**
+ * 24 bars, one per hour. With [animateIn] they grow in with a 25ms stagger; otherwise they start
+ * full. The peak hour is tinted tertiary.
+ */
 @Composable
 fun HourGraph(
     readsByHour: List<Int>,
+    animateIn: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val max = readsByHour.maxOrNull()?.takeIf { it > 0 } ?: return
     val peak = readsByHour.lastIndexOf(max)
-    val bars = remember(readsByHour.size) { List(readsByHour.size) { Animatable(0f) } }
+    val bars = remember(readsByHour.size) {
+        List(readsByHour.size) { Animatable(if (animateIn) 0f else 1f) }
+    }
     LaunchedEffect(bars) {
         bars.forEachIndexed { index, bar ->
-            launch {
+            if (bar.value < 1f) launch {
                 delay(BarStartDelayMs + index * BarStaggerMs)
                 bar.animateTo(1f, tween(600, easing = BarEasing))
             }

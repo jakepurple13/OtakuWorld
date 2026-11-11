@@ -45,13 +45,14 @@ import otakuworld.kmpuiviews.generated.resources.do_stat_read_episodes
 import otakuworld.kmpuiviews.generated.resources.do_stat_titles
 import otakuworld.kmpuiviews.generated.resources.do_stat_updates
 
-/** Read count, titles and new updates. Digits roll up from 0 on first show. */
+/** Read count, titles and new updates. With [animateIn], digits roll up from 0. */
 @Composable
 fun StatTiles(
     readCount: Int,
     titleCount: Int,
     updateCount: Int,
     unit: UpdateUnit,
+    animateIn: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -68,18 +69,21 @@ fun StatTiles(
                 readCount
             ),
             container = MaterialTheme.colorScheme.primaryContainer,
+            animateIn = animateIn,
             modifier = Modifier.weight(1f)
         )
         StatTile(
             value = titleCount,
             label = pluralStringResource(Res.plurals.do_stat_titles, titleCount),
             container = MaterialTheme.colorScheme.tertiaryContainer,
+            animateIn = animateIn,
             modifier = Modifier.weight(1f)
         )
         StatTile(
             value = updateCount,
             label = pluralStringResource(Res.plurals.do_stat_updates, updateCount),
             container = MaterialTheme.colorScheme.surfaceContainer,
+            animateIn = animateIn,
             modifier = Modifier.weight(1f)
         )
     }
@@ -90,6 +94,7 @@ private fun StatTile(
     value: Int,
     label: String,
     container: Color,
+    animateIn: Boolean,
     modifier: Modifier = Modifier,
 ) {
     CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.contentColorFor(container)) {
@@ -99,7 +104,7 @@ private fun StatTile(
                 .background(container)
                 .padding(horizontal = 12.dp, vertical = 10.dp)
         ) {
-            RollingNumber(value)
+            RollingNumber(value, animateIn)
             Text(
                 label,
                 fontSize = 11.sp,
@@ -120,18 +125,20 @@ private const val RollDelayMs = 420L
 private const val RollStaggerMs = 90L
 
 @Composable
-private fun RollingNumber(value: Int) {
+private fun RollingNumber(value: Int, animateIn: Boolean) {
     Row(
         modifier = Modifier
             .height(30.dp)
             .clipToBounds()
     ) {
         value.toString().forEachIndexed { index, digit ->
-            // Starts at 0 and rolls to the real digit, one column at a time.
-            var shown by remember { mutableStateOf('0') }
+            // On first load starts at 0 and rolls to the real digit, one column at a time.
+            var shown by remember { mutableStateOf(if (animateIn) '0' else digit) }
             LaunchedEffect(digit) {
-                delay(RollDelayMs + index * RollStaggerMs)
-                shown = digit
+                if (shown != digit) {
+                    delay(RollDelayMs + index * RollStaggerMs)
+                    shown = digit
+                }
             }
             AnimatedContent(
                 targetState = shown,
