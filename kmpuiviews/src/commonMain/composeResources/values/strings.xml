@@ -610,5 +610,6 @@
         <item quantity="one">%1$d source failed its update check.</item>
         <item quantity="other">%1$d sources failed their update checks.</item>
     </plurals>
+    <string name="do_label_template">Yesterday at a glance</string>
     <string name="do_template_quiet">Nothing new yesterday.</string>
 </resources>

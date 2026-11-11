@@ -40,6 +40,11 @@ class TemplateEngineTest {
     }
 
     @Test
+    fun `label is Yesterday at a glance`() = runTest {
+        assertEquals("Yesterday at a glance", engine.label())
+    }
+
+    @Test
     fun `full day`() = runTest {
         assertEquals(
             "You read 23 chapters across 4 titles. 11 new chapters arrived. 1 source failed its update check.",
