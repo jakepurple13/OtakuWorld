@@ -13,6 +13,7 @@ import com.programmersbox.kmpuiviews.presentation.quickactions.DaoQuickActionCou
 import com.programmersbox.kmpuiviews.presentation.quickactions.QuickActionCounts
 import com.programmersbox.kmpuiviews.presentation.quickactions.QuickActionsController
 import com.programmersbox.kmpuiviews.domain.MediaUpdateChecker
+import com.programmersbox.kmpuiviews.domain.dailyoverview.DailyOverviewSettings
 import com.programmersbox.kmpuiviews.domain.updatecheck.DataStoreUpdateCheckReportStore
 import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckReportStore
 import com.programmersbox.kmpuiviews.presentation.navigation.buildKmpGraph
@@ -82,6 +83,7 @@ val appModule = module {
 
     singleOf(::EncryptedDataStoreHandling)
     singleOf(::DataStoreHandling)
+    singleOf(::DailyOverviewSettings)
     singleOf(::MediaUpdateChecker)
     singleOf(::DataStoreUpdateCheckReportStore) bind UpdateCheckReportStore::class
     singleOf(::SharedCoverBitmaps)
