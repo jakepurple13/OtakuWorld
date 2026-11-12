@@ -30,4 +30,7 @@ interface SummaryEngine {
     suspend fun status(): EngineStatus
 
     fun summarize(facts: DailyFacts): Flow<String>
+
+    /** Runs a free-form prompt and emits the reply as streamed deltas. */
+    fun generate(system: String, user: String): Flow<String>
 }

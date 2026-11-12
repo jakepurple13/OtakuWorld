@@ -21,11 +21,14 @@ abstract class KoogSummaryEngine : SummaryEngine {
     /** False for clients without `executeStreaming` (LiteRT); those emit the whole reply once. */
     protected open val streams: Boolean = true
 
-    final override fun summarize(facts: DailyFacts): Flow<String> = flow {
+    final override fun summarize(facts: DailyFacts): Flow<String> =
+        generate(SummaryPrompt.system(facts.unit), SummaryPrompt.user(facts))
+
+    final override fun generate(system: String, user: String): Flow<String> = flow {
         val (client, model) = client() ?: error("$id is not set up")
         val prompt = prompt("daily-overview") {
-            system(SummaryPrompt.system(facts.unit))
-            user(SummaryPrompt.user(facts))
+            system(system)
+            user(user)
         }
         client.use {
             if (!streams) {

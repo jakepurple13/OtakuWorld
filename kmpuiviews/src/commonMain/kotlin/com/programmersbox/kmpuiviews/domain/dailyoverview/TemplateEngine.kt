@@ -29,6 +29,9 @@ class TemplateEngine : SummaryEngine {
 
     override fun summarize(facts: DailyFacts): Flow<String> = flow { emit(facts.template()) }
 
+    override fun generate(system: String, user: String): Flow<String> =
+        throw UnsupportedOperationException("TemplateEngine cannot run free-form prompts")
+
     private suspend fun DailyFacts.template(): String {
         if (isQuiet) return getString(Res.string.do_template_quiet)
         val chapters = unit == UpdateUnit.Chapters

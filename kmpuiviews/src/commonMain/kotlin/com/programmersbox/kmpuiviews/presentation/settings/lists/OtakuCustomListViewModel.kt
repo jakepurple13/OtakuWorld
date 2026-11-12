@@ -14,6 +14,11 @@ import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.favoritesdatabase.resolvedCoverImageUrl
+import com.programmersbox.kmpuiviews.domain.aitext.AiFeature
+import com.programmersbox.kmpuiviews.domain.aitext.AiText
+import com.programmersbox.kmpuiviews.domain.aitext.AiTextPrompts
+import com.programmersbox.kmpuiviews.domain.aitext.AiTextRunner
+import com.programmersbox.kmpuiviews.domain.aitext.AiTextState
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.repository.ListRepository
 import com.programmersbox.kmpuiviews.utils.printLogs
@@ -21,7 +26,14 @@ import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.createDirectories
 import io.github.vinceglb.filekit.exists
 import io.github.vinceglb.filekit.writeString
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flatMapMerge
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -32,6 +44,7 @@ class OtakuCustomListViewModel(
     screen: Screen.CustomListScreen.CustomListItem,
     private val listDao: ListDao,
     private val listRepository: ListRepository,
+    private val aiText: AiText,
 ) : ViewModel() {
     var customItem: CustomList? by mutableStateOf(null)
 
@@ -153,6 +166,62 @@ class OtakuCustomListViewModel(
         }
     }
 
+    /** True when an on-device engine is ready and the list has enough titles to say something about. */
+    val suggestAvailable: StateFlow<Boolean> = snapshotFlow { customList?.list?.size ?: 0 }
+        .map { it >= MIN_SUGGEST_TITLES && aiText.engineFor(AiFeature.ListSuggest) != null }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    private val nameRunner = AiTextRunner(viewModelScope)
+    private val descriptionRunner = AiTextRunner(viewModelScope)
+    private var nameJob: Job? = null
+    private var descriptionJob: Job? = null
+
+    /** Done.text is the parsed names, newline-joined. */
+    val nameSuggestions: StateFlow<AiTextState> = nameRunner.state
+        .map { state ->
+            if (state is AiTextState.Done) {
+                state.copy(text = AiTextPrompts.parseNames(state.text).joinToString("\n"))
+            } else state
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, AiTextState.Idle)
+
+    val descriptionDraft: StateFlow<AiTextState> = descriptionRunner.state
+
+    fun suggestNames() {
+        nameJob?.cancel()
+        nameRunner.reset()
+        nameJob = suggest(nameRunner) { aiText.listNames(it) }
+    }
+
+    fun draftDescription() {
+        descriptionJob?.cancel()
+        descriptionRunner.reset()
+        descriptionJob = suggest(descriptionRunner) { aiText.listDescription(it) }
+    }
+
+    /** Drops any suggestions. Nothing here is saved; saving only goes through [updateDetails]. */
+    fun clearDrafts() {
+        nameJob?.cancel()
+        descriptionJob?.cancel()
+        nameJob = null
+        descriptionJob = null
+        nameRunner.reset()
+        descriptionRunner.reset()
+    }
+
+    private fun suggest(runner: AiTextRunner, block: (List<String>) -> Flow<String>): Job {
+        val titles = customList?.list
+            .orEmpty()
+            .take(AiTextPrompts.MAX_LIST_TITLES)
+            .map { "${it.title} (${it.source})" }
+        return viewModelScope.launch {
+            val engine = aiText.engineFor(AiFeature.ListSuggest) ?: return@launch
+            // Still on Main, so a clearDrafts either cancels this before the run or resets after it.
+            ensureActive()
+            runner.run(engine) { block(titles) }
+        }
+    }
+
     private fun visibleItems(): List<CustomListInfo> = when (val state = items) {
         is OtakuListState.ByTitle -> state.items
         is OtakuListState.BySource -> state.items.flatMap { it.value }
@@ -242,6 +311,8 @@ class OtakuCustomListViewModel(
             .onFailure { it.printStackTrace() }
     }
 }
+
+private const val MIN_SUGGEST_TITLES = 3
 
 enum class ListSort { RecentlyAdded, Title, Source }
 

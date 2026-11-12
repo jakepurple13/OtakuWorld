@@ -66,6 +66,7 @@ class DailyOverviewViewModelTest {
             statusGate?.await()
             return EngineStatus.Ready
         }
+        override fun generate(system: String, user: String): Flow<String> = error("unused")
         override fun summarize(facts: DailyFacts): Flow<String> = flow {
             calls++
             gate?.await()

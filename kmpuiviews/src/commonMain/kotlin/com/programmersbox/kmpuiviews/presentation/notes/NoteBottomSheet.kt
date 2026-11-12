@@ -11,7 +11,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -25,7 +24,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.unit.dp
 import com.programmersbox.favoritesdatabase.NoteItem
 
@@ -34,6 +32,7 @@ import com.programmersbox.favoritesdatabase.NoteItem
 fun NoteBottomSheet(
     note: NoteItem?,
     itemTitle: String,
+    ai: NoteAiAssistant,
     onDismiss: (content: String) -> Unit,
     onDelete: () -> Unit,
 ) {
@@ -79,6 +78,7 @@ fun NoteBottomSheet(
                         }
                     },
                     actions = {
+                        NoteAiMenuButton(ai, content)
                         if (note != null) {
                             IconButton(
                                 onClick = { showDeleteDialog = true }
@@ -88,16 +88,17 @@ fun NoteBottomSheet(
                 )
             },
         ) { padding ->
-            OutlinedTextField(
+            AiNoteField(
                 value = content,
                 onValueChange = { content = it },
-                placeholder = { Text("Write a note…") },
+                ai = ai,
+                placeholder = "Write a note…",
+                focusRequester = focusRequester,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
                     .padding(horizontal = 16.dp)
-                    .padding(bottom = 24.dp)
-                    .focusRequester(focusRequester),
+                    .padding(bottom = 24.dp),
             )
         }
     }

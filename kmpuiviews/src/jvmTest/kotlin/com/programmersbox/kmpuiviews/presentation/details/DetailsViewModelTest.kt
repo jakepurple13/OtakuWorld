@@ -2,6 +2,7 @@ package com.programmersbox.kmpuiviews.presentation.details
 
 import com.programmersbox.kmpuiviews.testing.clearAndJoin
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.ImageBitmapConfig
 import androidx.compose.ui.graphics.colorspace.ColorSpace
@@ -18,6 +19,12 @@ import com.programmersbox.kmpmodels.ExampleService
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.SystemAlerter
+import com.programmersbox.kmpuiviews.domain.TranslationHandler
+import com.programmersbox.kmpuiviews.domain.aitext.AiEngineInfo
+import com.programmersbox.kmpuiviews.domain.aitext.AiFeature
+import com.programmersbox.kmpuiviews.domain.aitext.AiText
+import com.programmersbox.kmpuiviews.domain.aitext.AiTextState
+import com.programmersbox.kmpuiviews.domain.aitext.RewriteStyle
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.repository.BookmarkRepository
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
@@ -31,6 +38,8 @@ import com.programmersbox.kmpuiviews.utils.composables.sharedelements.SharedItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -76,6 +85,14 @@ class DetailsViewModelTest {
         }
     }
 
+    // snapshotFlow only sees a write after the apply notification, which Compose sends every frame in the app
+    private suspend fun setDescription(vm: DetailsViewModel, text: String) {
+        // the load assigns the description right after Success, so let it land before overriding it
+        awaitCondition { vm.description.isNotEmpty() }
+        vm.description = text
+        Snapshot.sendApplyNotifications()
+    }
+
     private fun details(source: String = "ExampleService") = Screen.DetailsScreen.Details(
         title = "Example",
         description = "Example",
@@ -87,6 +104,9 @@ class DetailsViewModelTest {
     private fun viewModel(
         details: Screen.DetailsScreen.Details? = details(),
         sharedCoverBitmaps: SharedCoverBitmaps = SharedCoverBitmaps(),
+        aiText: AiText = FakeAiText(),
+        translationHandler: TranslationHandler = FakeTranslationHandler(),
+        tldrCache: TldrCache = TldrCache(),
     ) = DetailsViewModel(
         details = details,
         genericInfo = FakeKmpGenericInfo(),
@@ -98,7 +118,7 @@ class DetailsViewModelTest {
             authManager = FakeAuthManager(),
             sourceRepository = sourceRepository,
         ),
-        translationHandler = FakeTranslationHandler(),
+        translationHandler = translationHandler,
         exceptionDao = exceptionDatabase.exceptionDao(),
         imageModifier = ImageModifier(),
         bookmarkRepository = BookmarkRepository(
@@ -106,6 +126,8 @@ class DetailsViewModelTest {
             authManager = FakeAuthManager(),
         ),
         sharedCoverBitmaps = sharedCoverBitmaps,
+        aiText = aiText,
+        tldrCache = tldrCache,
     ).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -407,6 +429,128 @@ class DetailsViewModelTest {
     }
 
     @Test
+    fun `tldr chip hidden for short description`() = runTest {
+        val vm = viewModel()
+        awaitCondition { vm.currentState is DetailState.Success }
+        setDescription(vm, "a".repeat(401))
+        awaitCondition { vm.tldrAvailable.value }
+
+        setDescription(vm, "a".repeat(400))
+        awaitCondition { !vm.tldrAvailable.value }
+        assertFalse(vm.tldrAvailable.value)
+    }
+
+    @Test
+    fun `tldr chip hidden when no engine`() = runTest {
+        val ai = FakeAiText()
+        val vm = viewModel(aiText = ai)
+        awaitCondition { vm.currentState is DetailState.Success }
+        setDescription(vm, "a".repeat(500))
+        awaitCondition { vm.tldrAvailable.value }
+
+        ai.engine = null
+        setDescription(vm, "a".repeat(501))
+        awaitCondition { !vm.tldrAvailable.value }
+        assertFalse(vm.tldrAvailable.value)
+    }
+
+    @Test
+    fun `tldr chip hidden for blank description`() = runTest {
+        val vm = viewModel()
+        awaitCondition { vm.currentState is DetailState.Success }
+        setDescription(vm, "a".repeat(500))
+        awaitCondition { vm.tldrAvailable.value }
+
+        setDescription(vm, " ".repeat(500))
+        awaitCondition { !vm.tldrAvailable.value }
+        assertFalse(vm.tldrAvailable.value)
+    }
+
+    @Test
+    fun `showTldr streams bullets to Done`() = runTest {
+        val ai = FakeAiText(tldrOutput = listOf("- one\n", "- two"))
+        val vm = viewModel(aiText = ai)
+        awaitCondition { vm.currentState is DetailState.Success }
+        setDescription(vm, "a".repeat(500))
+
+        vm.showTldr()
+        awaitCondition { vm.tldr.value is AiTextState.Done }
+
+        val done = vm.tldr.value as AiTextState.Done
+        assertEquals("- one\n- two", done.text)
+        assertEquals(FakeAiText.ENGINE, done.engine)
+        assertFalse(vm.tldrTranslated.value)
+        assertFalse(vm.tldrTranslating.value)
+    }
+
+    @Test
+    fun `showTldr uses cache on second call`() = runTest {
+        val ai = FakeAiText()
+        val vm = viewModel(aiText = ai)
+        awaitCondition { vm.currentState is DetailState.Success }
+        setDescription(vm, "a".repeat(500))
+
+        vm.showTldr()
+        awaitCondition { vm.tldr.value is AiTextState.Done }
+        vm.hideTldr()
+        vm.showTldr()
+        awaitCondition { vm.tldr.value is AiTextState.Done }
+
+        assertEquals(1, ai.tldrCalls.size)
+    }
+
+    @Test
+    fun `translated description marks footer`() = runTest {
+        val ai = FakeAiText()
+        val translator = object : TranslationHandler by FakeTranslationHandler() {
+            override suspend fun translate(textToTranslate: String): String = "TRANSLATED"
+        }
+        val vm = viewModel(aiText = ai, translationHandler = translator)
+        awaitCondition { vm.currentState is DetailState.Success }
+        setDescription(vm, "a".repeat(500))
+
+        vm.showTldr()
+        awaitCondition { vm.tldr.value is AiTextState.Done }
+
+        assertEquals(listOf("TRANSLATED"), ai.tldrCalls)
+        assertTrue(vm.tldrTranslated.value)
+    }
+
+    @Test
+    fun `translation failure summarizes the original`() = runTest {
+        val ai = FakeAiText()
+        val translator = object : TranslationHandler by FakeTranslationHandler() {
+            override suspend fun translate(textToTranslate: String): String = error("no model")
+        }
+        val vm = viewModel(aiText = ai, translationHandler = translator)
+        awaitCondition { vm.currentState is DetailState.Success }
+        setDescription(vm, "a".repeat(500))
+
+        vm.showTldr()
+        awaitCondition { vm.tldr.value is AiTextState.Done }
+
+        assertEquals(listOf("a".repeat(500)), ai.tldrCalls)
+        assertFalse(vm.tldrTranslated.value)
+        assertFalse(vm.tldrTranslating.value)
+    }
+
+    @Test
+    fun `hideTldr returns to Idle and does not cancel cache`() = runTest {
+        val cache = TldrCache()
+        val vm = viewModel(tldrCache = cache)
+        awaitCondition { vm.currentState is DetailState.Success }
+        setDescription(vm, "a".repeat(500))
+
+        vm.showTldr()
+        awaitCondition { vm.tldr.value is AiTextState.Done }
+        vm.hideTldr()
+
+        awaitCondition { vm.tldr.value == AiTextState.Idle }
+        assertEquals(AiTextState.Idle, vm.tldr.value)
+        assertNotNull(cache["https://example.com/"])
+    }
+
+    @Test
     fun `null details produces null itemModel and Loading never resolves`() = runTest {
         val vm = viewModel(details = null)
 
@@ -433,4 +577,27 @@ private class FakeImageBitmap(
         bufferOffset: Int,
         stride: Int,
     ) = Unit
+}
+
+private class FakeAiText(
+    var engine: AiEngineInfo? = ENGINE,
+    private val tldrOutput: List<String> = listOf("- a\n- b\n- c"),
+) : AiText {
+    val tldrCalls = mutableListOf<String>()
+
+    override suspend fun engineFor(feature: AiFeature, inputLength: Int): AiEngineInfo? = engine
+    override fun tldr(description: String): Flow<String> {
+        tldrCalls += description
+        return kotlinx.coroutines.flow.flow { tldrOutput.forEach { emit(it) } }
+    }
+
+    override fun recap(previousChapterText: String): Flow<String> = flowOf()
+    override fun proofread(text: String): Flow<String> = flowOf()
+    override fun rewrite(text: String, style: RewriteStyle): Flow<String> = flowOf()
+    override fun listNames(titles: List<String>): Flow<String> = flowOf()
+    override fun listDescription(titles: List<String>): Flow<String> = flowOf()
+
+    companion object {
+        val ENGINE = AiEngineInfo(label = "Fake", onDevice = true, destination = null)
+    }
 }

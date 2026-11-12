@@ -200,6 +200,19 @@ class KoogEnginesTest {
     }
 
     @Test
+    fun `generate sends system and user text and streams deltas`() = runTest {
+        val fake = FakeClient(listOf(StreamFrame.TextDelta("a"), StreamFrame.TextDelta("b")))
+
+        assertEquals(listOf("a", "b"), TestEngine(fake).generate("S", "U").toList())
+
+        val messages = fake.prompts.single().messages
+        assertIs<Message.System>(messages[0])
+        assertEquals("S", messages[0].textContent())
+        assertIs<Message.User>(messages[1])
+        assertEquals("U", messages[1].textContent())
+    }
+
+    @Test
     fun `koog engine uses complete text when no deltas arrive`() = runTest {
         val fake = FakeClient(listOf(StreamFrame.TextComplete("Whole reply."), StreamFrame.End()))
 

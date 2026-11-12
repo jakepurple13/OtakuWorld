@@ -6,6 +6,7 @@ import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.programmersbox.favoritesdatabase.NoteItem
 import com.programmersbox.favoritesdatabase.NotesDatabase
+import com.programmersbox.kmpuiviews.testing.NoopAiText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -44,6 +45,7 @@ class DetailsNotesViewModelTest {
             itemUrl = itemUrl,
             itemTitle = itemTitle,
             notesDao = database.notesDao(),
+            aiText = NoopAiText(),
         ).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
 
     @OptIn(ExperimentalCoroutinesApi::class)

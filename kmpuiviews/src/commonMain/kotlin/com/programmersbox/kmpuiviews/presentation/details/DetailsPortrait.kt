@@ -110,6 +110,7 @@ fun DetailsView(
     notificationRepository: NotificationRepository = koinInject(),
     notesVm: DetailsNotesViewModel,
     downloadStates: Map<String, ChapterDownloadUiState>,
+    tldr: TldrUi,
 ) {
     val readUrls = remember(chapters) { chapters.mapTo(HashSet()) { it.url } }
     val dao = LocalItemDao.current
@@ -157,6 +158,7 @@ fun DetailsView(
         NoteBottomSheet(
             note = currentNote,
             itemTitle = info.title,
+            ai = notesVm.ai,
             onDismiss = { content ->
                 notesVm.saveNote(content = content)
                 showNoteSheet = false
@@ -349,6 +351,17 @@ fun DetailsView(
                             )
                         }
                     }
+                }
+            }
+
+            if (tldr.visible) {
+                item(key = "tldr") {
+                    TldrSection(
+                        ui = tldr,
+                        modifier = Modifier
+                            .animateItem()
+                            .padding(horizontal = 16.dp, vertical = 4.dp)
+                    )
                 }
             }
 

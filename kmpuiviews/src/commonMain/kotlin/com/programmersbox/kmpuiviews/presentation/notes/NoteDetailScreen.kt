@@ -10,7 +10,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -103,6 +102,7 @@ fun NoteDetailScreen(
                         }
                     },
                     actions = {
+                        NoteAiMenuButton(vm.ai, text.orEmpty())
                         IconButton(
                             onClick = { showDeleteDialog = true },
                             enabled = note != null,
@@ -111,11 +111,12 @@ fun NoteDetailScreen(
                 )
             },
         ) { padding ->
-            OutlinedTextField(
+            AiNoteField(
                 value = text.orEmpty(),
                 onValueChange = { text = it },
+                ai = vm.ai,
                 enabled = text != null,
-                placeholder = { Text("Write a note…") },
+                placeholder = "Write a note…",
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)

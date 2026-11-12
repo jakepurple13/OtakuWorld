@@ -12,6 +12,7 @@ import com.programmersbox.kmpuiviews.AboutLibraryBuilder
 import com.programmersbox.kmpuiviews.DateTimeFormatHandler
 import com.programmersbox.kmpuiviews.IconLoader
 import com.programmersbox.kmpuiviews.KmpGenericInfo
+import com.programmersbox.kmpuiviews.aitext.MlKitNanoTools
 import com.programmersbox.kmpuiviews.dailyoverview.GemmaEngine
 import com.programmersbox.kmpuiviews.dailyoverview.NanoEngine
 import com.programmersbox.kmpuiviews.dailyoverview.ProviderEngine
@@ -29,8 +30,10 @@ import com.programmersbox.kmpuiviews.utils.ImageModifier
 import com.programmersbox.kmpuiviews.utils.PackageInstallEngine
 import com.programmersbox.kmpuiviews.workers.WorkManagerDailyOverviewScheduler
 import com.programmersbox.kmpuiviews.workers.UpdateNotification
+import com.programmersbox.kmpuiviews.domain.aitext.NanoTools
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
@@ -85,6 +88,7 @@ actual fun platformModule(): Module = module {
     singleOf(::AndroidUpdateCheckReportSharer) { bind<UpdateCheckReportSharer>() }
     factoryOf(::ImageModifier)
     singleOf(::EncryptedDataStoreFactory)
+    single<NanoTools> { MlKitNanoTools(androidContext(), get()) }
     singleOf(::NanoEngine) { bind<SummaryEngine>() }
     singleOf(::GemmaEngine) { bind<SummaryEngine>() }
     singleOf(::ProviderEngine) { bind<SummaryEngine>() }
