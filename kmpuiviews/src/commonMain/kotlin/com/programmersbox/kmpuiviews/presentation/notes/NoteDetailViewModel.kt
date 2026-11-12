@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.NoteItem
 import com.programmersbox.favoritesdatabase.NotesDao
 import com.programmersbox.kmpuiviews.domain.aitext.AiText
+import com.programmersbox.supabaseintegration.auth.AuthManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.NonCancellable
@@ -19,6 +20,7 @@ class NoteDetailViewModel(
     val itemUrl: String,
     private val notesDao: NotesDao,
     aiText: AiText,
+    private val authManager: AuthManager,
 ) : ViewModel() {
 
     val ai = NoteAiAssistant(aiText, viewModelScope)
@@ -39,12 +41,15 @@ class NoteDetailViewModel(
         val current = note.value ?: return
         viewModelScope.launch(Dispatchers.IO + NonCancellable) {
             if (content.isBlank()) {
-                notesDao.deleteNote(itemUrl)
+                notesDao.removeNote(itemUrl, softDelete = authManager.isLoggedIn())
             } else if (content != current.content) {
+                val now = Clock.System.now().toEpochMilliseconds()
                 notesDao.upsertNote(
                     current.copy(
                         content = content,
-                        timestamp = Clock.System.now().toEpochMilliseconds()
+                        timestamp = now,
+                        updatedAt = now,
+                        isDirty = true,
                     )
                 )
             }
@@ -53,7 +58,7 @@ class NoteDetailViewModel(
 
     fun delete() {
         viewModelScope.launch(Dispatchers.IO + NonCancellable) {
-            notesDao.deleteNote(itemUrl)
+            notesDao.removeNote(itemUrl, softDelete = authManager.isLoggedIn())
         }
     }
 }

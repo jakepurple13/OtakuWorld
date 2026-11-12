@@ -63,6 +63,9 @@ internal class VideoThumbnailer(appDirs: AppDirs) {
 
     private val durationPrefs = Preferences.userNodeForPackage(VideoThumbnailer::class.java).node("durations")
 
+    /** Keys libVLC gave no frame for (audio-only, too slow to decode), so they aren't grabbed again on every scan. */
+    private val noThumbnailPrefs = Preferences.userNodeForPackage(VideoThumbnailer::class.java).node("no-thumbnail")
+
     /** One libVLC grab at a time; each one spins up a decoder. */
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO.limitedParallelism(1))
 
@@ -98,7 +101,7 @@ internal class VideoThumbnailer(appDirs: AppDirs) {
         val key = thumbnailKey(file)
         val cached = thumbnailFile(key)
         if (cached.isFile && cachedDuration(key) != null) return CompletableDeferred(cached)
-        if (cachedDuration(key) == FAILED) return CompletableDeferred(null)
+        if (cachedDuration(key) == FAILED || noThumbnailPrefs.getBoolean(key, false)) return CompletableDeferred(null)
         return requests.computeIfAbsent(key) {
             val result = CompletableDeferred<File?>()
             _pending.update { it + 1 }
@@ -147,7 +150,10 @@ internal class VideoThumbnailer(appDirs: AppDirs) {
         val image = sink.image
         durationPrefs.putLong(key, if (image == null && duration <= 0) FAILED else duration.coerceAtLeast(0))
         _durations.update { it + (key to duration.coerceAtLeast(0)) }
-        if (image == null) return null
+        if (image == null) {
+            noThumbnailPrefs.putBoolean(key, true)
+            return null
+        }
         cacheDir.mkdirs()
         val out = thumbnailFile(key)
         ImageIO.write(image, "jpg", out)

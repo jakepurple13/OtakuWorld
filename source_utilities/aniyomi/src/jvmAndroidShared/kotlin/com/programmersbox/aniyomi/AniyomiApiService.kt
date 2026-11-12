@@ -62,9 +62,6 @@ open class AniyomiApiService(val source: AnimeCatalogueSource, val lib: Double) 
 
     override suspend fun chapterInfo(chapterModel: KmpChapterModel): List<KmpStorage> = withContext(Dispatchers.IO) {
         val episode = AniyomiSourceMapper.toSEpisode(chapterModel, this@AniyomiApiService)
-        // Only the latest episode's picks can be resolved; drop the previous ones.
-        lazyHosters.clear()
-        pendingVideos.clear()
         hostersFor(episode).flatMap { hoster ->
             val server = hoster.hosterName.takeUnless { it == Hoster.NO_HOSTER_LIST }
             if (hoster.lazy) {
@@ -134,7 +131,7 @@ open class AniyomiApiService(val source: AnimeCatalogueSource, val lib: Double) 
         (source as? AnimeHttpSource)?.run { this@sorted.sortVideos() } ?: this
 
     private fun placeholder(hoster: Hoster, server: String?): KmpStorage {
-        val key = hoster.hosterUrl.ifEmpty { hoster.hosterName }
+        val key = nextKey()
         lazyHosters[key] = hoster
         return KmpStorage(quality = hoster.hosterName, server = server).apply { extras[HOSTER] = key }
     }
@@ -142,11 +139,23 @@ open class AniyomiApiService(val source: AnimeCatalogueSource, val lib: Double) 
     private fun toStorage(video: Video, server: String?): KmpStorage =
         AniyomiSourceMapper.toStorage(video, source, server).apply {
             if (needsResolve(video) || video.usesHttpServer()) {
-                val key = nextVideoKey.incrementAndGet().toString()
+                val key = nextKey()
                 pendingVideos[key] = video
                 extras[VIDEO] = key
             }
         }
+
+    /**
+     * A key unique across both maps, so concurrent [chapterInfo] calls (playback, downloads, prefetch) never
+     * drop or overwrite each other's entries. Only the newest [MAX_PENDING] entries are kept.
+     */
+    private fun nextKey(): String {
+        val key = nextVideoKey.incrementAndGet()
+        val evicted = (key - MAX_PENDING).toString()
+        lazyHosters.remove(evicted)
+        pendingVideos.remove(evicted)
+        return key.toString()
+    }
 
     private fun needsResolve(video: Video) = !video.initialized || video.videoUrl.isEmpty() || hasNullUrl(video)
 
@@ -168,6 +177,7 @@ open class AniyomiApiService(val source: AnimeCatalogueSource, val lib: Double) 
     companion object {
         const val HOSTER = "aniyomiHoster"
         const val VIDEO = "aniyomiVideo"
+        private const val MAX_PENDING = 1000
         private val HOSTER_METHODS = setOf("getHosterList", "hosterListRequest", "hosterListParse")
     }
 }

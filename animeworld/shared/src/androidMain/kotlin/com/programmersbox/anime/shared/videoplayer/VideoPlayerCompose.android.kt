@@ -13,6 +13,7 @@ import android.media.AudioManager
 import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.FrameLayout
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
@@ -85,6 +86,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
@@ -158,7 +160,8 @@ private fun VideoPlayerContent(videoScreen: VideoScreen) {
     val genericInfo = koinInject<GenericInfo>()
     val storageHolder = koinInject<StorageHolder>()
     val subtitleSettings = koinInject<SubtitleSettingsRepository>()
-    val viewModel: VideoViewModel = viewModel { VideoViewModel(videoScreen, context, storageHolder, subtitleSettings) }
+    // Application context: the ViewModel outlives the Activity across the forced rotation.
+    val viewModel: VideoViewModel = viewModel { VideoViewModel(videoScreen, context.applicationContext, storageHolder, subtitleSettings) }
     val activity = LocalActivity.current
     val navController = LocalNavActions.current
 
@@ -178,7 +181,6 @@ private fun VideoPlayerContent(videoScreen: VideoScreen) {
 
     val audioManager = remember { context.audioManager }
     val originalAudioLevel = rememberSaveable { audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) }
-    val originalScreenBrightness = rememberSaveable { getScreenBrightness(context) }
 
     HideSystemBarsWhileOnScreen()
     HideNavBarWhileOnScreen()
@@ -198,9 +200,11 @@ private fun VideoPlayerContent(videoScreen: VideoScreen) {
 
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
         if (activity?.isChangingConfigurations != true) {
+            // Home or screen off: nothing is on screen to control playback, so don't keep playing.
+            viewModel.exoPlayer?.pause()
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
             audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, originalAudioLevel, 0)
-            activity?.let { setWindowBrightness(it, originalScreenBrightness.toFloat()) }
+            activity?.let(::resetWindowBrightness)
         }
     }
 
@@ -209,14 +213,14 @@ private fun VideoPlayerContent(videoScreen: VideoScreen) {
             if (activity?.isChangingConfigurations != true) {
                 activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
                 audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, originalAudioLevel, 0)
-                activity?.let { setWindowBrightness(it, originalScreenBrightness.toFloat()) }
+                activity?.let(::resetWindowBrightness)
             }
         }
     }
 
-    viewModel.exoPlayer?.let { ExoPlayerAttributes(exoPlayer = it, viewModel = viewModel) }
-
     val overlayVisibility = viewModel.visibility == VideoPlayerVisibility.Visible || !viewModel.isPlaying || viewModel.subtitleSheetOpen
+
+    viewModel.exoPlayer?.let { ExoPlayerAttributes(exoPlayer = it, viewModel = viewModel, pollPosition = overlayVisibility) }
 
     // Null until DataStore emits; the player waits for it since the PlayerView's surface type is fixed when it's created.
     val useBlur by remember { videoPlayerBlur.asFlow() }.collectAsStateWithLifecycle(null)
@@ -271,7 +275,8 @@ private fun VideoPlayerContent(videoScreen: VideoScreen) {
         Box {
             val useTextureView = useBlur
             val ignoreSsl = ignoreSslEnabled
-            if (useTextureView != null && ignoreSsl != null) {
+            // The subtitle style picks the default track the media source is built with.
+            if (useTextureView != null && ignoreSsl != null && viewModel.initialSubtitleStyle != null) {
                 VideoPlayer(
                     source = remember {
                         if (viewModel.downloadOrStream) {
@@ -325,52 +330,55 @@ private fun VideoPlayerContent(videoScreen: VideoScreen) {
                 viewModel = viewModel
             )
         }
-        PlayerChrome(
-            style = playerStyle,
-            visible = overlayVisibility,
-            state = PlayerChromeState(
-                title = viewModel.showName.orEmpty(),
-                positionMs = viewModel.videoInfo.currentPosition,
-                durationMs = viewModel.videoInfo.duration,
-                bufferedMs = viewModel.videoInfo.buffered,
-                isPlaying = viewModel.isPlaying,
-                speed = viewModel.speed,
-            ),
-            actions = PlayerChromeActions(
-                onPlayPause = viewModel::playPause,
-                onRewind = viewModel::rewind,
-                onFastForward = viewModel::fastForward,
-                onSkip = viewModel::skipAhead,
-                onSeek = { viewModel.exoPlayer?.seekTo(it) },
-                onSpeed = viewModel::cycleSpeed,
-            ),
-            blur = blur,
-            topActions = {
-                CastButton(
-                    onClick = {
-                        // Already connected: send this episode straight to the TV (also the retry path after a failure).
-                        if (castController.state.value.connection == CastConnection.Connected) startCast() else castPickerOpen = true
+        WithVideoInfo(viewModel) { videoInfo ->
+            PlayerChrome(
+                style = playerStyle,
+                visible = overlayVisibility,
+                state = PlayerChromeState(
+                    title = viewModel.showName.orEmpty(),
+                    positionMs = videoInfo.currentPosition,
+                    durationMs = videoInfo.duration,
+                    bufferedMs = videoInfo.buffered,
+                    isPlaying = viewModel.isPlaying,
+                    speed = viewModel.speed,
+                ),
+                actions = PlayerChromeActions(
+                    onPlayPause = viewModel::playPause,
+                    onRewind = viewModel::rewind,
+                    onFastForward = viewModel::fastForward,
+                    onSkip = viewModel::skipAhead,
+                    onSeek = { viewModel.exoPlayer?.seekTo(it) },
+                    onSpeed = viewModel::cycleSpeed,
+                ),
+                blur = blur,
+                topActions = {
+                    CastButton(
+                        onClick = {
+                            // Already connected: send this episode straight to the TV (also the retry path after a failure).
+                            if (castController.state.value.connection == CastConnection.Connected) startCast() else castPickerOpen = true
+                        }
+                    )
+                    if (viewModel.textTracks.isNotEmpty()) {
+                        IconButton(onClick = { viewModel.subtitleSheetOpen = true }) {
+                            Icon(
+                                if (viewModel.textTracks.any { it.selected }) Icons.Default.ClosedCaption else Icons.Default.ClosedCaptionOff,
+                                contentDescription = "Subtitles"
+                            )
+                        }
                     }
-                )
-                if (viewModel.textTracks.isNotEmpty()) {
-                    IconButton(onClick = { viewModel.subtitleSheetOpen = true }) {
-                        Icon(
-                            if (viewModel.textTracks.any { it.selected }) Icons.Default.ClosedCaption else Icons.Default.ClosedCaptionOff,
-                            contentDescription = "Subtitles"
-                        )
-                    }
-                }
-                BatteryIndicator(viewModel)
-            },
-        )
+                    BatteryIndicator(viewModel)
+                },
+            )
+        }
         AnimatedVisibility(
             viewModel.subtitleSheetOpen,
             enter = fadeIn() + slideInHorizontally { it },
             exit = fadeOut() + slideOutHorizontally { it }
         ) {
             BackHandler { viewModel.subtitleSheetOpen = false }
-            val subtitleStyle by viewModel.subtitleSettings.style
+            val subtitleStyle = viewModel.subtitleSettings.style
                 .collectAsStateWithLifecycle(viewModel.initialSubtitleStyle)
+                .value ?: return@AnimatedVisibility
             val sheetScope = rememberCoroutineScope()
             SubtitleQuickSheet(
                 tracks = viewModel.textTracks.map { SubtitleTrackItem(it.label, it.selected) },
@@ -439,15 +447,25 @@ fun VideoPlayer(
 ) {
     val navController = LocalNavActions.current
     val context = LocalContext.current
+    val activity = LocalActivity.current
     val notifier = koinInject<InAppNotifier>()
 
     val exoPlayer = remember {
-        ExoPlayer.Builder(context)
+        // Kept in the ViewModel across the forced rotation, so the stream is only prepared once.
+        viewModel.exoPlayer ?: ExoPlayer.Builder(context)
             .setHandleAudioBecomingNoisy(true)
+            .setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setUsage(C.USAGE_MEDIA)
+                    .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
+                    .build(),
+                /* handleAudioFocus = */ true
+            )
             .build()
             .apply {
                 setMediaSource(source)
                 prepare()
+                seekTo(context.loadPosition(viewModel))
                 playWhenReady = true
                 videoScalingMode = C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
                 repeatMode = Player.REPEAT_MODE_ONE
@@ -456,13 +474,29 @@ fun VideoPlayer(
                         .setPreferredTextLanguage(lang)
                         .build()
                 }
-                if (!viewModel.initialSubtitleStyle.autoEnable) {
+                if (viewModel.initialSubtitleStyle?.autoEnable == false) {
                     trackSelectionParameters = trackSelectionParameters.buildUpon()
                         .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true)
                         .build()
                 }
             }
             .also { viewModel.exoPlayer = it }
+    }
+
+    DisposableEffect(exoPlayer) {
+        val listener = object : Player.Listener {
+            override fun onPlayerError(error: PlaybackException) {
+                super.onPlayerError(error)
+                notifier.error("Playback failed", error.message)
+                navController.popBackStack()
+            }
+
+            override fun onTracksChanged(tracks: Tracks) {
+                viewModel.updateTextTracks(tracks)
+            }
+        }
+        exoPlayer.addListener(listener)
+        onDispose { exoPlayer.removeListener(listener) }
     }
 
     var styledSubtitleView by remember { mutableStateOf<SubtitleView?>(null) }
@@ -473,26 +507,8 @@ fun VideoPlayer(
 
     AndroidView(
         modifier = modifier,
+        onRelease = { it.player = null },
         factory = {
-            exoPlayer.setMediaSource(source)
-            exoPlayer.prepare()
-
-            exoPlayer.addListener(
-                object : Player.Listener {
-                    override fun onPlayerError(error: PlaybackException) {
-                        super.onPlayerError(error)
-                        notifier.error("Playback failed", error.message)
-                        navController.popBackStack()
-                    }
-
-                    override fun onTracksChanged(tracks: Tracks) {
-                        viewModel.updateTextTracks(tracks)
-                    }
-                }
-            )
-
-            val pos = context.getSharedPreferences("videos", Context.MODE_PRIVATE).getLong(viewModel.showPath, 0)
-            exoPlayer.seekTo(pos)
             val playerView = if (useTextureView) {
                 LayoutInflater.from(context).inflate(R.layout.video_player_view, null) as PlayerView
             } else {
@@ -529,10 +545,12 @@ fun VideoPlayer(
     )
     DisposableEffect(Unit) {
         onDispose {
-            exoPlayer.currentPosition.also {
-                viewModel.showPath.let { path -> context.getSharedPreferences("videos", Context.MODE_PRIVATE).edit().putLong(path, it).apply() }
+            context.savePosition(viewModel, exoPlayer.currentPosition)
+            // A rotation keeps the player in the ViewModel for the recreated screen; it releases it if never reused.
+            if (activity?.isChangingConfigurations != true) {
+                exoPlayer.release()
+                viewModel.exoPlayer = null
             }
-            exoPlayer.release()
         }
     }
 }
@@ -795,8 +813,9 @@ fun GestureBox(
                     wasPlaying = viewModel.exoPlayer?.isPlaying == true
                     onHorizontalDragStart(offset)
 
-                    currentPosition = viewModel.videoInfo.currentPosition
-                    duration = viewModel.videoInfo.duration
+                    // Read from the player: videoInfo isn't polled while the controls are hidden.
+                    currentPosition = viewModel.exoPlayer?.currentPosition ?: 0
+                    duration = viewModel.exoPlayer?.duration ?: 0
 
                     resetState()
                 },
@@ -852,6 +871,19 @@ private fun setWindowBrightness(activity: Activity, brightness: Float) {
         lp.screenBrightness = 0.1.toFloat()
     }
     activity.window.attributes = lp
+}
+
+/** Hands brightness back to the system, adaptive brightness included, instead of pinning the window to a level. */
+private fun resetWindowBrightness(activity: Activity) {
+    val lp = activity.window.attributes
+    lp.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+    activity.window.attributes = lp
+}
+
+/** Reads [VideoViewModel.videoInfo] in its own scope, so its 10 Hz updates recompose only [content]. */
+@Composable
+private fun WithVideoInfo(viewModel: VideoViewModel, content: @Composable (VideoInfo) -> Unit) {
+    content(viewModel.videoInfo)
 }
 
 private fun getScreenBrightness(context: Context): Int {

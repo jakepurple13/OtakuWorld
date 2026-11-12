@@ -5,9 +5,11 @@
 -keep class org.mozilla.javascript.** { *; }
 -keep class org.jsoup.** { *; }
 -keep class okhttp3.** { *; }
--keep class androidx.appcompat.** { *; }
--keep class androidx.fragment.** { *; }
--keep class com.google.android.material.** { *; }
+# Plugins subclass and call the public UI API (settings fragments, dialogs); only that surface needs
+# to survive, and allowoptimization lets R8 still optimize these shared UI libraries.
+-keep,allowoptimization class androidx.appcompat.** { public protected *; }
+-keep,allowoptimization class androidx.fragment.** { public protected *; }
+-keep,allowoptimization class com.google.android.material.** { public protected *; }
 -dontwarn org.mozilla.javascript.**
 -dontwarn com.fasterxml.jackson.**
 -keep class com.google.gson.** { *; }

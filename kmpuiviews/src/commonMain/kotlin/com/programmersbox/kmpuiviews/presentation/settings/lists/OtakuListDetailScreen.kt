@@ -582,7 +582,7 @@ fun OtakuCustomListScreen(
             when (val state = viewModel.items) {
                 is OtakuListState.BySource if state.items.isNotEmpty() -> {
                     state.items.forEach { (source, sourceItems) ->
-                        val showSource = state.sourceShower[source]?.value == true
+                        val showSource = viewModel.expandedSources[source] == true
 
                         //TODO: Try stickyHeader
                         item(
@@ -591,9 +591,7 @@ fun OtakuCustomListScreen(
                             Surface(
                                 shape = MaterialTheme.shapes.medium,
                                 tonalElevation = 4.dp,
-                                onClick = {
-                                    state.sourceShower[source]?.value = state.sourceShower[source]?.value?.not() == true
-                                },
+                                onClick = { viewModel.toggleSource(source) },
                                 color = MaterialTheme.colorScheme.surface,
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -621,7 +619,7 @@ fun OtakuCustomListScreen(
                             items(
                                 items = sourceItems,
                                 key = { it.title + it.source + it.uniqueId },
-                                contentType = { it }
+                                contentType = { "item" }
                             ) { item ->
                                 CustomItemVertical(
                                     items = listOf(item),
@@ -643,7 +641,7 @@ fun OtakuCustomListScreen(
                     items(
                         items = state.items,
                         key = { it.uniqueId },
-                        contentType = { it }
+                        contentType = { "item" }
                     ) { item ->
                         CustomItemVertical(
                             items = listOf(item),

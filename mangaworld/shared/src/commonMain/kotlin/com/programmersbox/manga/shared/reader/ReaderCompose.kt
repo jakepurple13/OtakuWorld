@@ -86,6 +86,7 @@ import com.programmersbox.manga.shared.reader.curl.PageCurl
 import com.programmersbox.manga.shared.reader.curl.PageCurlState
 import com.programmersbox.manga.shared.reader.curl.rememberPageCurlConfig
 import com.programmersbox.manga.shared.reader.curl.rememberPageCurlState
+import com.programmersbox.manga.shared.settings.orWorkingLoader
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
 import dev.chrisbanes.haze.HazeProgressive
@@ -164,14 +165,19 @@ private fun ReadViewContent(
         }
     }
 
+    // List and Pager index all of pageItems; FlipPager and CurlPager only the current chapter's pages
+    fun toLocalPage(globalIndex: Int) = (globalIndex - currentChapterPageOffset).coerceAtLeast(0)
+    fun pagerToGlobal(page: Int) = if (readerType == ReaderType.FlipPager) currentChapterPageOffset + page else page
+    fun globalToPager(globalIndex: Int) = if (readerType == ReaderType.FlipPager) toLocalPage(globalIndex) else globalIndex
+
     val currentPage by remember {
         derivedStateOf {
-            val globalIndex = when (readerType) {
-                ReaderType.List -> listState.firstVisibleItemIndex
-                ReaderType.FlipPager, ReaderType.Pager -> pagerState.currentPage
+            when (readerType) {
+                ReaderType.List -> toLocalPage(listState.firstVisibleItemIndex)
+                ReaderType.Pager -> toLocalPage(pagerState.currentPage)
+                ReaderType.FlipPager -> pagerState.currentPage
                 ReaderType.CurlPager -> curlState.current
             }
-            (globalIndex - currentChapterPageOffset).coerceAtLeast(0)
         }
     }
 
@@ -188,7 +194,8 @@ private fun ReadViewContent(
         .flow
         .collectAsStateWithLifecycle(initialValue = 4)
 
-    val imageLoaderType by mangaSettingsHandling.rememberImageLoaderType()
+    val savedImageLoaderType by mangaSettingsHandling.rememberImageLoaderType()
+    val imageLoaderType = savedImageLoaderType.orWorkingLoader()
 
     val isWidthAdjustable = isReaderWidthAdjustable
     val savedWidthFraction by mangaSettingsHandling.readerWidthFraction.flow.collectAsStateWithLifecycle(1f)
@@ -223,7 +230,7 @@ private fun ReadViewContent(
     val pagerShowItems by remember {
         derivedStateOf {
             readerType != ReaderType.List &&
-                    viewModel.pageItems.getOrNull(pagerState.currentPage) is PageItem.ChapterTransition
+                    viewModel.pageItems.getOrNull(pagerToGlobal(pagerState.currentPage)) is PageItem.ChapterTransition
         }
     }
 
@@ -237,34 +244,40 @@ private fun ReadViewContent(
 
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }.collect { page ->
-            listState.scrollToItem(page)
-            runCatching { curlState.snapTo(page) }
+            // Only the reader on screen drives the others: the index mappings don't round-trip at boundaries
+            if (readerType != ReaderType.Pager && readerType != ReaderType.FlipPager) return@collect
+            val globalIndex = pagerToGlobal(page)
+            listState.scrollToItem(globalIndex)
+            runCatching { curlState.snapTo(toLocalPage(globalIndex)) }
+            // FlipPager pages aren't pageItems indices
+            if (readerType != ReaderType.Pager) return@collect
             val item = viewModel.pageItems.getOrNull(page)
             if (item is PageItem.ChapterTransition) {
-                when {
-                    item.fromChapterListIndex == 0 -> viewModel.chapterRead(item)
-                    item.toChapterListIndex < item.fromChapterListIndex ->
-                        viewModel.appendChapter(item.toChapterListIndex)
-
-                    item.toChapterListIndex > item.fromChapterListIndex ->
-                        viewModel.prependChapter(item.toChapterListIndex)
-                }
+                viewModel.onTransitionReached(item, scrolledBackward = pagerState.lastScrolledBackward)
             }
         }
     }
 
     LaunchedEffect(listState) {
         snapshotFlow { listState.firstVisibleItemIndex }.collect {
-            pagerState.scrollToPage(it)
-            runCatching { curlState.snapTo(it) }
+            if (readerType != ReaderType.List) return@collect
+            pagerState.scrollToPage(globalToPager(it))
+            runCatching { curlState.snapTo(toLocalPage(it)) }
         }
     }
 
     LaunchedEffect(curlState) {
         snapshotFlow { curlState.current }.collect {
-            pagerState.scrollToPage(it)
-            listState.scrollToItem(it)
+            if (readerType != ReaderType.CurlPager) return@collect
+            val globalIndex = currentChapterPageOffset + it
+            pagerState.scrollToPage(globalToPager(globalIndex))
+            listState.scrollToItem(globalIndex)
         }
+    }
+
+    // The pager's index means something else in FlipPager, so re-place it from the list on a switch
+    LaunchedEffect(readerType) {
+        pagerState.scrollToPage(globalToPager(listState.firstVisibleItemIndex))
     }
 
     LaunchedEffect(listState) {
@@ -273,14 +286,7 @@ private fun ReadViewContent(
                 visibleItems.forEach { itemInfo ->
                     val item = viewModel.pageItems.getOrNull(itemInfo.index) ?: return@forEach
                     if (item is PageItem.ChapterTransition) {
-                        when {
-                            item.fromChapterListIndex == 0 -> viewModel.chapterRead(item)
-                            item.toChapterListIndex < item.fromChapterListIndex ->
-                                viewModel.appendChapter(item.toChapterListIndex)
-
-                            item.toChapterListIndex > item.fromChapterListIndex ->
-                                viewModel.prependChapter(item.toChapterListIndex)
-                        }
+                        viewModel.onTransitionReached(item, scrolledBackward = listState.lastScrolledBackward)
                     }
                 }
             }
@@ -308,9 +314,10 @@ private fun ReadViewContent(
     fun jumpToPage(localIndex: Int) {
         val globalIndex = currentChapterPageOffset + localIndex
         when (readerType) {
-            ReaderType.List, ReaderType.FlipPager -> scope.launch { listState.animateScrollToItem(globalIndex) }
+            ReaderType.List -> scope.launch { listState.animateScrollToItem(globalIndex) }
             ReaderType.Pager -> scope.launch { pagerState.animateScrollToPage(globalIndex) }
-            ReaderType.CurlPager -> scope.launch { curlState.snapTo(globalIndex) }
+            ReaderType.FlipPager -> scope.launch { pagerState.animateScrollToPage(localIndex) }
+            ReaderType.CurlPager -> scope.launch { curlState.snapTo(localIndex) }
         }
     }
 

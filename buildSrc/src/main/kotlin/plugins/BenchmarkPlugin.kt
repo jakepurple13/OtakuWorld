@@ -20,7 +20,7 @@ class BenchmarkPlugin : Plugin<Project> {
             apply("com.android.test")
             apply("androidx.baselineprofile")
         }
-        target.tasks.withType<KotlinCompile> {
+        target.tasks.withType<KotlinCompile>().configureEach {
             compilerOptions {
                 jvmTarget.set(JvmTarget.JVM_1_8)
             }

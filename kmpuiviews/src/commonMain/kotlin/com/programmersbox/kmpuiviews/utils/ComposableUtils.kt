@@ -7,11 +7,11 @@ import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
@@ -19,8 +19,10 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleStartEffect
 import com.programmersbox.datastore.GridChoice
 import com.programmersbox.datastore.ThemeColor
+import com.programmersbox.favoritesdatabase.ActivityDao
 import com.programmersbox.supabaseintegration.repository.ActivityRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -134,14 +136,39 @@ fun LazyListState.isScrollingUp(): Boolean {
     }.value
 }
 
+private const val TIME_SPENT_FLUSH_SECONDS = 30
+
 @Composable
 fun RecordTimeSpentDoing() {
     val activityRepository = koinInject<ActivityRepository>()
+    val activityDao = koinInject<ActivityDao>()
+    val scope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit) {
-        while (true) {
-            delay(1000)
-            activityRepository.incrementSeconds()
+    // Counts only while started and keeps the seconds in memory, writing them every
+    // TIME_SPENT_FLUSH_SECONDS and on stop, so Room isn't written (and every observer
+    // invalidated) once a second.
+    LifecycleStartEffect(Unit) {
+        var pending = 0L
+        fun flush(markDirty: Boolean = false) {
+            val seconds = pending
+            pending = 0
+            if (seconds > 0) GlobalScope.launch(Dispatchers.IO) {
+                activityDao.incrementSeconds(seconds)
+                // Mark dirty after the final write so sync picks up these seconds
+                if (markDirty) activityRepository.onActivityStop()
+            }
+        }
+
+        val job = scope.launch {
+            while (true) {
+                delay(1000)
+                pending++
+                if (pending >= TIME_SPENT_FLUSH_SECONDS) flush()
+            }
+        }
+        onStopOrDispose {
+            job.cancel()
+            flush(markDirty = true)
         }
     }
 

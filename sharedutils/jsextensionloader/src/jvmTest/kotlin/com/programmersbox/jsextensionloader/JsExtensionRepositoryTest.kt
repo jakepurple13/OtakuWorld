@@ -2,6 +2,7 @@ package com.programmersbox.jsextensionloader
 
 import app.cash.zipline.QuickJs
 import com.programmersbox.extensioninterfaces.ExtensionManifest
+import kotlinx.coroutines.runBlocking
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -14,10 +15,13 @@ class JsExtensionRepositoryTest {
     }
 
     private val quickJsInstances = mutableListOf<QuickJs>()
+    private val extensions = mutableListOf<JsExtension>()
 
+    // close() frees the context on the extension's own thread, so wait for it instead of closing here.
     @AfterTest
-    fun tearDown() {
-        quickJsInstances.forEach { it.close() }
+    fun tearDown() = runBlocking {
+        extensions.forEach { it.close(); it.awaitClosed() }
+        extensions.clear()
         quickJsInstances.clear()
     }
 
@@ -29,7 +33,7 @@ class JsExtensionRepositoryTest {
             id = id, name = id, version = "1.0.0", author = null,
             description = null, iconUrl = null, updateUrl = null,
         )
-        return JsExtension(manifest, quickJs, StubHostBridge(), singleThreadQuickJsDispatcher(id))
+        return JsExtension(manifest, quickJs, StubHostBridge(), singleThreadQuickJsDispatcher(id)).also { extensions += it }
     }
 
     @Test
@@ -55,6 +59,7 @@ class JsExtensionRepositoryTest {
         val firstQuickJs = quickJsInstances.first()
 
         repository.register(extensionWithId("one"))
+        runBlocking { extensions.first().awaitClosed() }
 
         assertTrue(
             runCatching { firstQuickJs.evaluate("1", "closed-check.js") }.isFailure,

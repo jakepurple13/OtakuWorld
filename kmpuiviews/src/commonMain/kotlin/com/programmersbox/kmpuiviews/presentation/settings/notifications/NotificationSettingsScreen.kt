@@ -95,6 +95,12 @@ fun NotificationSettings(
         .mediaCheckerSettings
         .rememberPreference()
 
+    // Read here, not inside the CategoryGroup builder, so a new list rebuilds the group.
+    val manualWorkInfo = viewModel
+        .manualCheck
+        .collectAsStateWithLifecycle(emptyList())
+        .value
+
     SettingsScaffold(
         title = stringResource(Res.string.notification_settings),
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -206,21 +212,15 @@ fun NotificationSettings(
                         }
                     }
                 )
+            }
 
-                val manualWorkInfo by viewModel
-                    .manualCheck
-                    .collectAsStateWithLifecycle(emptyList())
-
-                if (manualWorkInfo.isNotEmpty()) {
-                    manualWorkInfo.forEach { workInfo ->
-                        item {
-                            WorkInfoItem(
-                                workInfo = workInfo,
-                                title = "Manual Check:",
-                                dateFormat = viewModel.dateTimeFormatter
-                            )
-                        }
-                    }
+            manualWorkInfo.forEach { workInfo ->
+                item {
+                    WorkInfoItem(
+                        workInfo = workInfo,
+                        title = "Manual Check:",
+                        dateFormat = viewModel.dateTimeFormatter
+                    )
                 }
             }
         }
@@ -321,8 +321,7 @@ fun NotificationSettings(
                                 ) {
                                     scope.launch {
                                         viewModel.pruneWork()
-                                        viewModel.updateShouldCheck(!viewModel.canCheck)
-                                        viewModel.updateShouldCheck(!viewModel.canCheck)
+                                        viewModel.restartUpdateChecks()
                                         notifier.success(getString(Res.string.cleared))
                                     }
                                 }

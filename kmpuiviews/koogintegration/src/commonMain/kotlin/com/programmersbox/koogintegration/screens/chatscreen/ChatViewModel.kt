@@ -4,6 +4,7 @@ import ai.koog.agents.chatMemory.feature.ChatHistoryProvider
 import ai.koog.agents.chatMemory.feature.InMemoryChatHistoryProvider
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.AIAgentBase
+import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.MermaidDiagramGenerator
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.tools.ToolDescriptor
@@ -31,6 +32,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import com.programmersbox.sharedcomponents.notifier.InAppNotifier
 import java.util.UUID
@@ -55,6 +58,18 @@ class ChatViewModel(
     private var chatHistoryProvider: ChatHistoryProvider = InMemoryChatHistoryProvider()
     private var sessionId: String = UUID.randomUUID().toString()
     private var agent: AIAgent<String, AgentResponse>? = null
+
+    // Serializes agent creation so two callers can't each build (and leak) an agent.
+    private val agentMutex = Mutex()
+
+    private suspend fun getOrCreateAgent(): AIAgent<String, AgentResponse> = agentMutex.withLock {
+        agent ?: createAgent().also { agent = it }
+    }
+
+    /** Each agent builds its own LLM client; closing the executor closes it. */
+    private fun closeAgent(agent: AIAgent<*, *>?) {
+        runCatching { (agent as? GraphAIAgent<*, *>)?.promptExecutor?.close() }
+    }
 
     fun onEvent(event: ChatUiEvents) {
         viewModelScope.launch {
@@ -129,7 +144,7 @@ class ChatViewModel(
     private suspend fun runAgent(userInput: String) {
         withContext(Dispatchers.Default) {
             try {
-                val currentAgent = agent ?: createAgent().also { agent = it }
+                val currentAgent = getOrCreateAgent()
                 val result = currentAgent.run(userInput, sessionId)
 
                 val response = when (result) {
@@ -293,7 +308,7 @@ class ChatViewModel(
 
     private fun showMermaidGraph() {
         viewModelScope.launch(Dispatchers.IO) {
-            agent ?: createAgent().also { agent = it }
+            getOrCreateAgent()
             uiState.update {
                 it.copy(
                     chatMessages = it.chatMessages + ChatMessage.MermaidGraphMessage(
@@ -347,15 +362,24 @@ class ChatViewModel(
         }
     }
 
-    private fun restartChat() {
+    private suspend fun restartChat() {
         chatHistoryProvider = InMemoryChatHistoryProvider()
         sessionId = UUID.randomUUID().toString()
-        agent = null
+        agentMutex.withLock {
+            closeAgent(agent)
+            agent = null
+        }
         uiState.update {
             ChatUiState(
                 title = agentProvider.title,
                 chatMessages = listOf(ChatMessage.SystemMessage(agentProvider.description))
             )
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        closeAgent(agent)
+        agent = null
     }
 }

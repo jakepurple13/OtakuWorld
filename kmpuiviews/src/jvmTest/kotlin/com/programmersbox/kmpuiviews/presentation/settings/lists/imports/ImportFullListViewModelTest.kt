@@ -158,4 +158,21 @@ class ImportFullListViewModelTest {
         assertTrue(persisted[0].list.any { it.url == "https://example.com/1" })
         assertTrue(persisted[0].list.any { it.url == "https://example.com/2" })
     }
+
+    @Test fun `importList still imports when a list with the exported uuid already exists`() = runTest {
+        database.listDao().createList(CustomListItem(uuid = "uuid-1", name = "Existing"))
+        val list = listOf(
+            customList("uuid-1", "Imported", listOf(customListInfo("uuid-1", "https://example.com/1"))),
+        )
+        val file = writeJsonFile(Json.encodeToString(list))
+
+        val vm = viewModel(file.absolutePath)
+        awaitCondition { vm.importStatus !is ImportFullListStatus.Loading }
+
+        assertTrue(vm.importList().isSuccess)
+
+        val persisted = database.listDao().getAllLists().first()
+        assertEquals(setOf("Existing", "Imported"), persisted.map { it.item.name }.toSet())
+        assertEquals(1, persisted.first { it.item.name == "Imported" }.list.size)
+    }
 }

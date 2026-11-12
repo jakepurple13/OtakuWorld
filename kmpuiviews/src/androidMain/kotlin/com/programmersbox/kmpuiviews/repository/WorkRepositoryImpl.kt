@@ -62,15 +62,18 @@ class WorkRepositoryImpl(
     }
 
     override fun checkManually() {
+        // Both workers share a foreground notification id and the report store, so never run them together.
+        if (isPeriodicCheckRunning()) return
         enqueueOneTimeUpdate(workDataOf(UpdateFlowWorker.CHECK_ALL to true))
     }
+
+    private fun isPeriodicCheckRunning(): Boolean = workManager.getWorkInfosForUniqueWork("updateFlowChecks").get()
+        .any { it.state == WorkInfo.State.RUNNING }
 
     override fun retryFailedUpdates(): Boolean {
         val oneTimeBusy = workManager.getWorkInfosForUniqueWork("oneTimeUpdate").get()
             .any { it.state == WorkInfo.State.RUNNING || it.state == WorkInfo.State.ENQUEUED || it.state == WorkInfo.State.BLOCKED }
-        val periodicRunning = workManager.getWorkInfosForUniqueWork("updateFlowChecks").get()
-            .any { it.state == WorkInfo.State.RUNNING }
-        if (oneTimeBusy || periodicRunning) return false
+        if (oneTimeBusy || isPeriodicCheckRunning()) return false
         // Shares the manual check's unique name, so a retry can't overlap a manual check.
         enqueueOneTimeUpdate(
             workDataOf(

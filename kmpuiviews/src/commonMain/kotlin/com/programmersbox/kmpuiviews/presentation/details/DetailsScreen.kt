@@ -226,6 +226,8 @@ private fun DetailsScreenInternal(
         ?.let(paletteSwatchType.swatch)
         ?.color
         ?.takeIf { usePalette }
+    // Read by the remembered chapter click action, which outlives this composition's value
+    val currentPaletteSeed by rememberUpdatedState(paletteSeed)
     val seedColor = paletteSeed ?: MaterialTheme.colorScheme.primary
     val isDark = when (themeSetting) {
         SystemThemeMode.FollowSystem -> isSystemInDarkTheme()
@@ -334,89 +336,92 @@ private fun DetailsScreenInternal(
                         windowSize = windowSize,
                         shareChapter = shareChapter,
                         showDownload = showDownload,
-                        detailsActions = DetailsActions(
-                            onClick = { model ->
-                                scope.launch(Dispatchers.IO) {
-                                    genericInfo.chapterOnClick(model, target.info.chapters, infoModel, navActions, paletteSeed?.toArgb())
-                                    insertRecent()
-                                    heatMapDao.upsertHeatMap()
-                                }
-                            },
-                            onDownload = { model ->
-                                genericInfo.downloadChapter(model, target.info.chapters, infoModel, navActions)
-                                scope.launch(Dispatchers.IO) { insertRecent() }
-                            },
-                            onDeleteDownload = { model ->
-                                genericInfo.deleteDownloadedChapter(model, infoModel)
-                            },
-                            shareChapter = {
-                                scope.launch {
-                                    qrCodeRepository.shareUrl(
-                                        url = it.url,
-                                        title = it.name
-                                    )
-                                }
-                            },
-                            markAsRead = { model, read -> details.markAs(model, read) },
-                            favoriteAction = { details.favoriteAction(target.action) },
-                            notifyChange = { details.toggleNotify() },
-                            globalSearch = { navActions.globalSearch(infoModel.title) },
-                            addToList = { item ->
-                                listDao.addToList(
-                                    item.item.uuid,
-                                    infoModel.title,
-                                    infoModel.description,
-                                    infoModel.url,
-                                    infoModel.imageUrl,
-                                    infoModel.source.serviceName
-                                )
-                            },
-                            addToSaved = {
-                                scope.launch(Dispatchers.IO) {
-                                    dao.insertNotification(
-                                        NotificationItem(
-                                            id = infoModel.hashCode(),
-                                            url = infoModel.url,
-                                            summaryText = getString(
-                                                Res.string.hadAnUpdate,
-                                                infoModel.title,
-                                                infoModel.chapters.firstOrNull()?.name.orEmpty()
-                                            ),
-                                            notiTitle = infoModel.title,
-                                            imageUrl = infoModel.imageUrl,
-                                            source = infoModel.source.serviceName,
-                                            contentTitle = infoModel.title
+                        // Remembered so every ChapterItem gets the same instance and can skip recomposition
+                        detailsActions = remember(target) {
+                            DetailsActions(
+                                onClick = { model ->
+                                    scope.launch(Dispatchers.IO) {
+                                        genericInfo.chapterOnClick(model, target.info.chapters, infoModel, navActions, currentPaletteSeed?.toArgb())
+                                        insertRecent()
+                                        heatMapDao.upsertHeatMap()
+                                    }
+                                },
+                                onDownload = { model ->
+                                    genericInfo.downloadChapter(model, target.info.chapters, infoModel, navActions)
+                                    scope.launch(Dispatchers.IO) { insertRecent() }
+                                },
+                                onDeleteDownload = { model ->
+                                    genericInfo.deleteDownloadedChapter(model, infoModel)
+                                },
+                                shareChapter = {
+                                    scope.launch {
+                                        qrCodeRepository.shareUrl(
+                                            url = it.url,
+                                            title = it.name
                                         )
+                                    }
+                                },
+                                markAsRead = { model, read -> details.markAs(model, read) },
+                                favoriteAction = { details.favoriteAction(target.action) },
+                                notifyChange = { details.toggleNotify() },
+                                globalSearch = { navActions.globalSearch(infoModel.title) },
+                                addToList = { item ->
+                                    listDao.addToList(
+                                        item.item.uuid,
+                                        infoModel.title,
+                                        infoModel.description,
+                                        infoModel.url,
+                                        infoModel.imageUrl,
+                                        infoModel.source.serviceName
                                     )
-                                }
-                            },
-                            removeFromSaved = {
-                                scope.launch(Dispatchers.IO) {
-                                    dao.getNotificationItemFlow(infoModel.url)
-                                        .firstOrNull()
-                                        ?.let {
-                                            dao.deleteNotification(it)
-                                            notificationRepository.cancelNotification(it)
-                                        }
-                                }
-                            },
-                            rereadClick = details::reread,
-                            bookmarkChapter = { details.toggleBookmark(it) },
-                            bookmarkedChapterUrls = details.bookmarkedChapterUrls,
-                            selection = ChapterSelectionActions(
-                                selectedUrls = details.selectedChapterUrls,
-                                onToggle = details::toggleSelection,
-                                onSelectAll = details::selectAllChapters,
-                                onInvert = details::invertSelection,
-                                onClear = details::clearSelection,
-                                onMarkAs = details::markChaptersAs,
-                                onRestoreRead = details::restoreReadState,
-                                onSetBookmarked = details::setBookmarked,
-                                onRestoreBookmarks = details::restoreBookmarkState,
-                                onBatchDownload = { genericInfo.batchDownloadChapters(it, infoModel) },
-                                supportsBatchDownload = genericInfo.supportsBatchDownload,
+                                },
+                                addToSaved = {
+                                    scope.launch(Dispatchers.IO) {
+                                        dao.insertNotification(
+                                            NotificationItem(
+                                                id = infoModel.hashCode(),
+                                                url = infoModel.url,
+                                                summaryText = getString(
+                                                    Res.string.hadAnUpdate,
+                                                    infoModel.title,
+                                                    infoModel.chapters.firstOrNull()?.name.orEmpty()
+                                                ),
+                                                notiTitle = infoModel.title,
+                                                imageUrl = infoModel.imageUrl,
+                                                source = infoModel.source.serviceName,
+                                                contentTitle = infoModel.title
+                                            )
+                                        )
+                                    }
+                                },
+                                removeFromSaved = {
+                                    scope.launch(Dispatchers.IO) {
+                                        dao.getNotificationItemFlow(infoModel.url)
+                                            .firstOrNull()
+                                            ?.let {
+                                                dao.deleteNotification(it)
+                                                notificationRepository.cancelNotification(it)
+                                            }
+                                    }
+                                },
+                                rereadClick = details::reread,
+                                bookmarkChapter = { details.toggleBookmark(it) },
+                                bookmarkedChapterUrls = details.bookmarkedChapterUrls,
+                                selection = ChapterSelectionActions(
+                                    selectedUrls = details.selectedChapterUrls,
+                                    onToggle = details::toggleSelection,
+                                    onSelectAll = details::selectAllChapters,
+                                    onInvert = details::invertSelection,
+                                    onClear = details::clearSelection,
+                                    onMarkAs = details::markChaptersAs,
+                                    onRestoreRead = details::restoreReadState,
+                                    onSetBookmarked = details::setBookmarked,
+                                    onRestoreBookmarks = details::restoreBookmarkState,
+                                    onBatchDownload = { genericInfo.batchDownloadChapters(it, infoModel) },
+                                    supportsBatchDownload = genericInfo.supportsBatchDownload,
+                                )
                             )
-                        )
+                        }
                     )
                 }
             }
@@ -460,8 +465,7 @@ private fun DetailContent(
     detailsActions: DetailsActions,
     notesVm: DetailsNotesViewModel = koinViewModel { parametersOf(state.info.url, state.info.title) },
 ) {
-    val isSaved by dao
-        .doesNotificationExistFlow(state.info.url)
+    val isSaved by remember(state.info.url) { dao.doesNotificationExistFlow(state.info.url) }
         .collectAsStateWithLifecycle(false)
 
     val tldrAvailable by details.tldrAvailable.collectAsStateWithLifecycle()

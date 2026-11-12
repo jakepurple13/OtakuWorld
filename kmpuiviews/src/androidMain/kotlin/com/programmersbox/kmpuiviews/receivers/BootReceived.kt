@@ -8,6 +8,7 @@ import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.PlatformGenericInfo
 import com.programmersbox.kmpuiviews.logFirebaseMessage
+import com.programmersbox.kmpuiviews.recordFirebaseException
 import com.programmersbox.kmpuiviews.utils.NotificationLogo
 import com.programmersbox.kmpuiviews.workers.SavedNotifications
 import com.programmersbox.kmpuiviews.workers.UpdateNotification
@@ -59,6 +60,9 @@ fun BroadcastReceiver.goAsync(
     GlobalScope.launch(context) {
         try {
             block(pendingResult)
+        } catch (e: Exception) {
+            // An uncaught exception in GlobalScope would crash the process
+            recordFirebaseException(e)
         } finally {
             pendingResult.finish()
         }

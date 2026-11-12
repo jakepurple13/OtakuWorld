@@ -115,6 +115,22 @@ class BookmarkChaptersViewModelTest {
         assertTrue("Amazing Series" in vm.bookmarks.value)
     }
 
+    @Test fun `searchQuery with fts syntax characters does not crash`() = runTest {
+        val dao = database.bookmarkDao()
+        dao.insertBookmark(bookmark("https://example.com/series-a/ch1", chapterName = "Dragon Fight", parentUrl = "https://example.com/series-a", parentTitle = "Amazing Series"))
+        dao.insertBookmark(bookmark("https://example.com/series-b/ch1", chapterName = "Calm Morning", parentUrl = "https://example.com/series-b", parentTitle = "Other Story"))
+
+        val vm = viewModel()
+
+        val __sub = backgroundScope.launch { vm.bookmarks.collect {} }
+        awaitCondition { vm.bookmarks.value.size == 2 }
+
+        vm.searchQuery = "\"Dragon- ("
+        awaitCondition { vm.bookmarks.value.size == 1 }
+
+        assertTrue("Amazing Series" in vm.bookmarks.value)
+    }
+
     @Test fun `sortOrder TITLE_AZ sorts chapters within a group by name`() = runTest {
         val dao = database.bookmarkDao()
         dao.insertBookmark(bookmark("https://example.com/series/ch2", chapterName = "Zeta"))

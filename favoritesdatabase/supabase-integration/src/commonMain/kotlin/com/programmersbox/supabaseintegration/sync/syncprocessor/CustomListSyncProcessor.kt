@@ -37,8 +37,10 @@ class CustomListInfoSyncProcessor(
         local.toCustomListInfoRow(uid, app, timestamp)
 
     override suspend fun markLocalSynced(local: CustomListInfo, timestamp: Long) {
-        listDao.markCustomListInfoSynced(local.uniqueId, timestamp)
+        listDao.markCustomListInfoSynced(local.uniqueId, timestamp, pushedUpdatedAt = local.updatedAt)
     }
+
+    override suspend fun runInTransaction(block: suspend () -> Unit) = listDao.runInTransaction(block)
 
     override suspend fun deleteLocal(local: CustomListInfo) {
         listDao.removeItem(local)
@@ -97,8 +99,10 @@ class CustomListItemSyncProcessor(
         local.toCustomListItemRow(uid, app, timestamp)
 
     override suspend fun markLocalSynced(local: CustomListItem, timestamp: Long) {
-        listDao.markCustomListItemSynced(local.uuid, timestamp)
+        listDao.markCustomListItemSynced(local.uuid, timestamp, pushedUpdatedAt = local.updatedAt)
     }
+
+    override suspend fun runInTransaction(block: suspend () -> Unit) = listDao.runInTransaction(block)
 
     override suspend fun deleteLocal(local: CustomListItem) {
         listDao.removeList(local)

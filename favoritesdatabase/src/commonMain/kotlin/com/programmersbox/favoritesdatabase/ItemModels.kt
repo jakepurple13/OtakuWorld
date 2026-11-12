@@ -3,6 +3,7 @@ package com.programmersbox.favoritesdatabase
 import androidx.room3.ColumnInfo
 import androidx.room3.Entity
 import androidx.room3.Fts5
+import androidx.room3.Index
 import androidx.room3.PrimaryKey
 import kotlinx.serialization.Serializable
 import kotlin.time.Clock
@@ -63,7 +64,10 @@ data class FavoriteFtsHit(
 )
 
 @Serializable
-@Entity(tableName = "ChapterWatched")
+@Entity(
+    tableName = "ChapterWatched",
+    indices = [Index(value = ["favoriteUrl"]), Index(value = ["created_at"])],
+)
 data class ChapterWatched(
     @PrimaryKey
     @ColumnInfo(name = "url")
@@ -85,7 +89,10 @@ data class ChapterWatched(
 )
 
 @Serializable
-@Entity(tableName = "Notifications")
+@Entity(
+    tableName = "Notifications",
+    indices = [Index(value = ["id"]), Index(value = ["created_at"])],
+)
 data class NotificationItem(
     @ColumnInfo(name = "id")
     val id: Int,

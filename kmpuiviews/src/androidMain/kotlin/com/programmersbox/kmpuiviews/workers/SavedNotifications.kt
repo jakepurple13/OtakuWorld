@@ -1,9 +1,9 @@
 package com.programmersbox.kmpuiviews.workers
 
+import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import androidx.compose.ui.util.fastMap
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.kmpmodels.SourceRepository
@@ -17,13 +17,21 @@ import com.programmersbox.kmpuiviews.utils.NotificationLogo
 import com.programmersbox.kmpuiviews.utils.SemanticActions
 import com.programmersbox.kmpuiviews.utils.printLogs
 import io.ktor.client.HttpClient
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withTimeoutOrNull
 import org.jetbrains.compose.resources.getString
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.mark_read
 
 object SavedNotifications {
+
+    // One client for every restore; a new client per call was never closed.
+    private val client by lazy { HttpClient() }
+
+    // Keeps a boot restore well inside the broadcast deadline even when image hosts are slow.
+    private const val BITMAP_TIMEOUT_MS = 5_000L
 
     suspend fun viewNotificationFromDb(
         context: Context,
@@ -34,20 +42,57 @@ object SavedNotifications {
         itemDao: ItemDao,
         update: UpdateNotification,
     ) {
-        val client = HttpClient()
-        val icon = notificationLogo.notificationId
         itemDao.updateNotification(
             url = n.url,
             isShowing = true
         )
-        (n.id to NotificationDslBuilder.builder(
+        (n.id to buildNotification(context, n, notificationLogo, info, sourceRepository))
+            .let { update.onEnd(listOf(it)) }
+    }
+
+    suspend fun viewNotificationsFromDb(
+        context: Context,
+        logo: NotificationLogo,
+        info: PlatformGenericInfo,
+        sourceRepository: SourceRepository,
+        dao: ItemDao,
+        update: UpdateNotification,
+    ) {
+        coroutineScope {
+            dao.getAllNotifications()
+                .filter { it.isShowing }
+                .map { n ->
+                    async {
+                        printLogs { n }
+                        dao.updateNotification(
+                            url = n.url,
+                            isShowing = true
+                        )
+                        n.id to buildNotification(context, n, logo, info, sourceRepository)
+                    }
+                }
+                .awaitAll()
+        }
+            .let { update.onEnd(it) }
+    }
+
+    private suspend fun buildNotification(
+        context: Context,
+        n: NotificationItem,
+        logo: NotificationLogo,
+        info: PlatformGenericInfo,
+        sourceRepository: SourceRepository,
+    ): Notification {
+        val bitmap = withTimeoutOrNull(BITMAP_TIMEOUT_MS) { client.getBitmapFromURL(n.imageUrl) }
+        val markRead = getString(Res.string.mark_read)
+        return NotificationDslBuilder.builder(
             context,
             NotificationChannels.Otaku.id,
-            icon
+            logo.notificationId
         ) {
             title = n.notiTitle
             subText = sourceRepository.displayNameFor(n.source)
-            client.getBitmapFromURL(n.imageUrl)?.let {
+            bitmap?.let {
                 largeIconBitmap = it
                 pictureStyle {
                     bigPicture = it
@@ -62,8 +107,8 @@ object SavedNotifications {
             showWhen = true
             groupId = NotificationGroups.Otaku.id
             addAction {
-                actionTitle = getString(Res.string.mark_read)
-                actionIcon = notificationLogo.notificationId
+                actionTitle = markRead
+                actionIcon = logo.notificationId
                 semanticAction = SemanticActions.MARK_AS_READ
                 pendingActionIntent {
                     val intent = Intent(context, DeleteNotificationReceiver::class.java)
@@ -79,111 +124,14 @@ object SavedNotifications {
                 intent1.putExtra("url", n.url)
                 PendingIntent.getBroadcast(context, n.id, intent1, PendingIntent.FLAG_IMMUTABLE)
             }
+            // Built from the stored row: sources may not be loaded yet (e.g. at boot), and a network lookup here
+            // would block the receiver.
             pendingIntent { context ->
-                runBlocking {
-                    val itemModel = sourceRepository.toSourceByApiServiceName(n.source)
-                        ?.apiService
-                        ?.getSourceByUrlFlow(n.url)
-                        ?.firstOrNull()
-
-                    /*val d = Screen.DetailsScreen.Details(
-                        title = itemModel?.title.orEmpty(),
-                        imageUrl = itemModel?.imageUrl.orEmpty(),
-                        source = itemModel?.source?.serviceName.orEmpty(),
-                        url = itemModel?.url.orEmpty(),
-                        description = itemModel?.description.orEmpty(),
-                    )
-
-                    val c = d.generateRouteWithArgs(
-                        mapOf<String, NavType<Any?>>(
-                            "title" to NavType.StringType,
-                            "imageUrl" to NavType.StringType,
-                            "source" to NavType.StringType,
-                            "url" to NavType.StringType,
-                            "description" to NavType.StringType
-                        )
-                    )
-
-                    NavDeepLinkBuilder(context)
-                        .addDestination(c)
-                        .createPendingIntent()*/
-
-                    info.deepLinkDetails(context, itemModel)
-                }
-            }
-        })
-            .let { update.onEnd(listOf(it)) }
-    }
-
-    suspend fun viewNotificationsFromDb(
-        context: Context,
-        logo: NotificationLogo,
-        info: PlatformGenericInfo,
-        sourceRepository: SourceRepository,
-        dao: ItemDao,
-        update: UpdateNotification,
-    ) {
-        val client = HttpClient()
-        val icon = logo.notificationId
-        dao.getAllNotifications()
-            .filter { it.isShowing }
-            .fastMap { n ->
-                printLogs { n }
-                dao.updateNotification(
-                    url = n.url,
-                    isShowing = true
-                )
-                n.id to NotificationDslBuilder.builder(
+                info.deepLink(
                     context,
-                    NotificationChannels.Otaku.id,
-                    icon
-                ) {
-                    title = n.notiTitle
-                    subText = sourceRepository.displayNameFor(n.source)
-                    client.getBitmapFromURL(n.imageUrl)?.let {
-                        largeIconBitmap = it
-                        pictureStyle {
-                            bigPicture = it
-                            largeIcon = it
-                            contentTitle = n.contentTitle
-                            summaryText = n.summaryText
-                        }
-                    } ?: bigTextStyle {
-                        contentTitle = n.contentTitle
-                        bigText = n.summaryText
-                    }
-                    showWhen = true
-                    groupId = NotificationGroups.Otaku.id
-                    addAction {
-                        actionTitle = getString(Res.string.mark_read)
-                        actionIcon = logo.notificationId
-                        semanticAction = SemanticActions.MARK_AS_READ
-                        pendingActionIntent {
-                            val intent = Intent(context, DeleteNotificationReceiver::class.java)
-                            intent.action = "NOTIFICATION_DELETED_ACTION"
-                            intent.putExtra("url", n.url)
-                            intent.putExtra("id", n.id)
-                            PendingIntent.getBroadcast(context, n.id, intent, PendingIntent.FLAG_IMMUTABLE)
-                        }
-                    }
-                    deleteIntent { context ->
-                        val intent1 = Intent(context, SwipeAwayReceiver::class.java)
-                        intent1.action = "NOTIFICATION_DELETED_ACTION"
-                        intent1.putExtra("url", n.url)
-                        PendingIntent.getBroadcast(context, n.id, intent1, PendingIntent.FLAG_IMMUTABLE)
-                    }
-                    pendingIntent { context ->
-                        runBlocking {
-                            val itemModel = sourceRepository.toSourceByApiServiceName(n.source)//UpdateWorker.sourceFromString(n.source)
-                                ?.apiService
-                                ?.getSourceByUrlFlow(n.url)
-                                ?.firstOrNull()
-
-                            info.deepLinkDetails(context, itemModel)
-                        }
-                    }
-                }
+                    info.deepLinkDetailsUri(url = n.url, imageUrl = n.imageUrl.orEmpty(), source = n.source)
+                )
             }
-            .let { update.onEnd(it) }
+        }
     }
 }

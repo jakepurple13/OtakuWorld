@@ -30,9 +30,12 @@ import io.github.vinceglb.filekit.list
 import io.github.vinceglb.filekit.name
 import io.github.vinceglb.filekit.toKotlinxIoPath
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -85,6 +88,8 @@ class ReadViewModel(
             flow {
                 PlatformFile(localPath)
                     .list()
+                    // Hidden files, like the download marker, aren't pages
+                    .filterNot { f -> f.name.startsWith(".") }
                     .sortedBy { f -> f.name.split(".").first().toIntOrNull() ?: 0 }
                     .fastMap { sanitizePath(it.toKotlinxIoPath().toString()) }
                     .let { emit(it) }
@@ -105,6 +110,7 @@ class ReadViewModel(
         flow {
             PlatformFile(filePath)
                 .list()
+                .filterNot { f -> f.name.startsWith(".") }
                 .sortedBy { f -> f.name.split(".").first().toIntOrNull() ?: 0 }
                 .fastMap { sanitizePath(it.toKotlinxIoPath().toString()) }
                 .let { emit(it) }
@@ -164,6 +170,10 @@ class ReadViewModel(
     val isLoadingPages: Boolean get() = loadingChapters.isNotEmpty()
 
     private val loadedChapterWindow = ArrayDeque<Int>()
+
+    // Every load feeding the current chapter window, so jumping to another chapter can stop them
+    private val windowJobs = mutableListOf<Job>()
+    private var windowGeneration = 0
 
     private var downloadedPaths: List<String> = emptyList()
     val isDownloadedPathsMode: Boolean get() = downloadedPaths.isNotEmpty()
@@ -233,7 +243,30 @@ class ReadViewModel(
         loadChapter(--currentChapter, chapter)
     }
 
+    /** Cancels every load into the old window so its pages can't land in the new one. */
+    private fun resetChapterWindow(chapterIndex: Int) {
+        windowJobs.forEach { it.cancel() }
+        windowJobs.clear()
+        windowGeneration++
+        loadingChapters = emptySet()
+        loadedChapterWindow.clear()
+        loadedChapterWindow.addLast(chapterIndex)
+    }
+
+    private fun Job.trackInWindow() {
+        windowJobs.removeAll { it.isCompleted }
+        windowJobs.add(this)
+    }
+
     private fun loadChapter(newChapter: Int, chapter: (String) -> Unit) {
+        if (isDownloadedPathsMode) {
+            if (newChapter !in downloadedPaths.indices) return
+            currentChapter = newChapter
+            addToFavorites = addToFavorites.copy(count = addToFavorites.count + 1)
+            chapterName(newChapter)?.let(chapter)
+            loadDownloadedChapterAtIndex(newChapter)
+            return
+        }
         currentChapter = newChapter
         addToFavorites = addToFavorites.copy(count = addToFavorites.count + 1)
         list.getOrNull(newChapter)?.let { item ->
@@ -245,8 +278,7 @@ class ReadViewModel(
                 withContext(Dispatchers.Main) { chapter(item.name) }
             }
 
-            loadedChapterWindow.clear()
-            loadedChapterWindow.addLast(newChapter)
+            resetChapterWindow(newChapter)
             chapterFlow(item)
                 .onStart {
                     loadingChapters = loadingChapters + newChapter
@@ -259,8 +291,9 @@ class ReadViewModel(
                     pageItems.add(PageItem.ChapterTransition(newChapter, newChapter - 1))
                     heatMapDao.upsertHeatMap()
                 }
-                .onCompletion { loadingChapters = loadingChapters - newChapter }
+                .onCompletion { if (it !is CancellationException) loadingChapters = loadingChapters - newChapter }
                 .launchIn(viewModelScope)
+                .trackInWindow()
         }
     }
 
@@ -286,8 +319,7 @@ class ReadViewModel(
     private fun loadInitialChapter() {
         val chapter = list.getOrNull(currentChapter) ?: return
         val chapterIndex = currentChapter
-        loadedChapterWindow.clear()
-        loadedChapterWindow.addLast(chapterIndex)
+        resetChapterWindow(chapterIndex)
         chapterFlow(chapter)
             .onStart {
                 loadingChapters = loadingChapters + chapterIndex
@@ -300,13 +332,13 @@ class ReadViewModel(
                 pageItems.add(PageItem.ChapterTransition(chapterIndex, chapterIndex - 1))
                 heatMapDao.upsertHeatMap()
             }
-            .onCompletion { loadingChapters = loadingChapters - chapterIndex }
+            .onCompletion { if (it !is CancellationException) loadingChapters = loadingChapters - chapterIndex }
             .launchIn(viewModelScope)
+            .trackInWindow()
     }
 
     private fun loadDirectFromPath(filePath: String) {
-        loadedChapterWindow.clear()
-        loadedChapterWindow.addLast(0)
+        resetChapterWindow(0)
         downloadedChapterFlow(filePath)
             .onStart {
                 loadingChapters = loadingChapters + 0
@@ -318,14 +350,14 @@ class ReadViewModel(
                 pageItems.add(PageItem.ChapterTransition(0, -1))
                 heatMapDao.upsertHeatMap()
             }
-            .onCompletion { loadingChapters = loadingChapters - 0 }
+            .onCompletion { if (it !is CancellationException) loadingChapters = loadingChapters - 0 }
             .launchIn(viewModelScope)
+            .trackInWindow()
     }
 
     private fun loadDownloadedChapterAtIndex(index: Int) {
         val filePath = downloadedPaths.getOrNull(index) ?: return
-        loadedChapterWindow.clear()
-        loadedChapterWindow.addLast(index)
+        resetChapterWindow(index)
         downloadedChapterFlow(filePath)
             .onStart {
                 loadingChapters = loadingChapters + index
@@ -337,8 +369,9 @@ class ReadViewModel(
                 pageItems.add(PageItem.ChapterTransition(index, index - 1))
                 heatMapDao.upsertHeatMap()
             }
-            .onCompletion { loadingChapters = loadingChapters - index }
+            .onCompletion { if (it !is CancellationException) loadingChapters = loadingChapters - index }
             .launchIn(viewModelScope)
+            .trackInWindow()
     }
 
     private fun appendDownloadedChapter(chapterListIndex: Int) {
@@ -349,14 +382,7 @@ class ReadViewModel(
 
         viewModelScope.launch {
             while (loadedChapterWindow.size > WINDOW_SIZE) {
-                val dropped = loadedChapterWindow.removeFirst()
-                val firstKeptIdx = pageItems.indexOfFirst { item ->
-                    when (item) {
-                        is PageItem.Page -> item.chapterListIndex != dropped
-                        is PageItem.ChapterTransition -> item.fromChapterListIndex != dropped
-                    }
-                }
-                if (firstKeptIdx > 0) pageItems.subList(0, firstKeptIdx).clear()
+                pageItems.evictChapter(loadedChapterWindow.removeFirst(), fromTop = true)
             }
 
             loadingChapters = loadingChapters + chapterListIndex
@@ -371,50 +397,12 @@ class ReadViewModel(
                     heatMapDao.upsertHeatMap()
                 }
                 .onCompletion {
+                    if (it is CancellationException) return@onCompletion
                     loadingChapters = loadingChapters - chapterListIndex
                     addToFavorites = addToFavorites.copy(count = addToFavorites.count + 1)
                 }
-                .launchIn(viewModelScope)
-        }
-    }
-
-    private suspend fun prependDownloadedChapter(chapterListIndex: Int): Int {
-        if (chapterListIndex < 0 || chapterListIndex >= downloadedPaths.size) return 0
-        if (chapterListIndex in loadedChapterWindow) return 0
-
-        if (loadedChapterWindow.size >= WINDOW_SIZE) {
-            val dropped = loadedChapterWindow.removeLast()
-            val removeFrom = pageItems.indexOfFirst {
-                it is PageItem.ChapterTransition && it.toChapterListIndex == dropped
-            }.takeIf { it >= 0 } ?: pageItems.indexOfFirst {
-                it is PageItem.Page && it.chapterListIndex == dropped
-            }
-            if (removeFrom >= 0) {
-                while (pageItems.size > removeFrom) pageItems.removeAt(removeFrom)
-            }
-        }
-
-        if (loadedChapterWindow.isEmpty()) return 0
-
-        val toChapterListIndex = loadedChapterWindow.first()
-        loadedChapterWindow.addFirst(chapterListIndex)
-        loadingChapters = loadingChapters + chapterListIndex
-
-        val newPages = mutableListOf<PageItem>()
-        downloadedChapterFlow(downloadedPaths[chapterListIndex])
-            .firstOrNull()
-            ?.let { urls ->
-                newPages.addAll(urls.mapIndexed { i, url -> PageItem.Page(url, chapterListIndex, i, true) })
-                heatMapDao.upsertHeatMap()
-            }
-
-        loadingChapters = loadingChapters - chapterListIndex
-
-        if (newPages.isEmpty()) return 0
-        val insertedItems: List<PageItem> = newPages + PageItem.ChapterTransition(chapterListIndex, toChapterListIndex)
-        pageItems.addAll(0, insertedItems)
-        addToFavorites = addToFavorites.copy(count = addToFavorites.count + 1)
-        return insertedItems.size
+                .collect()
+        }.trackInWindow()
     }
 
     fun chapterRead(item: PageItem.ChapterTransition) {
@@ -425,6 +413,22 @@ class ReadViewModel(
                     favoritesRepository.addWatched(ChapterWatched(item.url, item.name, mangaUrl))
                 }
             }
+        }
+    }
+
+    /**
+     * Called while [item] is on screen. A boundary whose newer side isn't loaded appends it; the top
+     * boundary reached while scrolling back prepends the older chapter.
+     */
+    suspend fun onTransitionReached(item: PageItem.ChapterTransition, scrolledBackward: Boolean) {
+        if (item.fromChapterListIndex == 0) {
+            chapterRead(item)
+            return
+        }
+        when (val load = item.loadFor(loadedChapterWindow, scrolledBackward)) {
+            is TransitionLoad.Append -> appendChapter(load.chapterListIndex)
+            is TransitionLoad.Prepend -> prependChapter(load.chapterListIndex)
+            null -> Unit
         }
     }
 
@@ -441,14 +445,7 @@ class ReadViewModel(
         viewModelScope.launch {
             // Evict oldest loaded chapter if window is exceeded
             while (loadedChapterWindow.size > WINDOW_SIZE) {
-                val dropped = loadedChapterWindow.removeFirst()
-                val firstKeptIdx = pageItems.indexOfFirst { item ->
-                    when (item) {
-                        is PageItem.Page -> item.chapterListIndex != dropped
-                        is PageItem.ChapterTransition -> item.fromChapterListIndex != dropped
-                    }
-                }
-                if (firstKeptIdx > 0) pageItems.subList(0, firstKeptIdx).clear()
+                pageItems.evictChapter(loadedChapterWindow.removeFirst(), fromTop = true)
             }
 
             loadingChapters = loadingChapters + chapterListIndex
@@ -471,52 +468,58 @@ class ReadViewModel(
                         heatMapDao.upsertHeatMap()
                     }
                     .onCompletion {
+                        if (it is CancellationException) return@onCompletion
                         loadingChapters = loadingChapters - chapterListIndex
                         addToFavorites = addToFavorites.copy(count = addToFavorites.count + 1)
                     }
-                    .launchIn(viewModelScope)
+                    .collect()
             }
-        }
+        }.trackInWindow()
     }
 
+    /**
+     * Loads the older chapter [chapterListIndex] above the loaded ones. Returns how many items were
+     * inserted at the top; lazy keys keep the visible page in place.
+     */
     suspend fun prependChapter(chapterListIndex: Int): Int {
-        if (isDownloadedPathsMode) return prependDownloadedChapter(chapterListIndex)
-        println("prependChapter: $chapterListIndex")
-        println("loadedChapterWindow: $loadedChapterWindow")
-        if (chapterListIndex < 0 || chapterListIndex > list.lastIndex) return 0
-        if (chapterListIndex in loadedChapterWindow) return 0
-
-        // Evict newest loaded chapter if window is full
-        if (loadedChapterWindow.size >= WINDOW_SIZE) {
-            val dropped = loadedChapterWindow.removeLast()
-            val removeFrom = pageItems.indexOfFirst {
-                it is PageItem.ChapterTransition && it.toChapterListIndex == dropped
-            }.takeIf { it >= 0 } ?: pageItems.indexOfFirst {
-                it is PageItem.Page && it.chapterListIndex == dropped
-            }
-            if (removeFrom >= 0) {
-                while (pageItems.size > removeFrom) pageItems.removeAt(removeFrom)
-            }
-        }
+        val downloaded = isDownloadedPathsMode
+        if (chapterListIndex < 0 || chapterListIndex >= chapterCount) return 0
+        if (chapterListIndex in loadedChapterWindow || loadedChapterWindow.isEmpty()) return 0
 
         val toChapterListIndex = loadedChapterWindow.first()
         loadedChapterWindow.addFirst(chapterListIndex)
+        val generation = windowGeneration
         loadingChapters = loadingChapters + chapterListIndex
 
-        val newPages = mutableListOf<PageItem>()
-        list.getOrNull(chapterListIndex)?.let { chapterItem ->
-            chapterFlow(chapterItem)
+        val urls = if (downloaded) {
+            downloadedChapterFlow(downloadedPaths[chapterListIndex]).firstOrNull()
+        } else {
+            chapterFlow(list[chapterListIndex])
                 .catch { exceptionDao.insertException(it) }
                 .firstOrNull()
-                ?.let { urls ->
-                    newPages.addAll(urls.mapIndexed { i, url -> PageItem.Page(url, chapterListIndex, i, false) })
-                    heatMapDao.upsertHeatMap()
-                }
-        }
+        }.orEmpty()
 
+        // A chapter jump replaced the window while this was loading
+        if (generation != windowGeneration) return 0
         loadingChapters = loadingChapters - chapterListIndex
 
-        val insertedItems: List<PageItem> = newPages + PageItem.ChapterTransition(chapterListIndex, toChapterListIndex)
+        if (urls.isEmpty()) {
+            loadedChapterWindow.remove(chapterListIndex)
+            return 0
+        }
+        heatMapDao.upsertHeatMap()
+
+        // Evict newest loaded chapter if window is exceeded
+        while (loadedChapterWindow.size > WINDOW_SIZE) {
+            pageItems.evictChapter(loadedChapterWindow.removeLast(), fromTop = false)
+        }
+
+        val boundary = PageItem.ChapterTransition(chapterListIndex, toChapterListIndex)
+        val insertedItems = buildList {
+            add(PageItem.ChapterTransition(chapterListIndex + 1, chapterListIndex))
+            addAll(urls.mapIndexed { i, url -> PageItem.Page(url, chapterListIndex, i, downloaded) })
+            if (pageItems.firstOrNull() != boundary) add(boundary)
+        }
         pageItems.addAll(0, insertedItems)
         addToFavorites = addToFavorites.copy(count = addToFavorites.count + 1)
         return insertedItems.size
@@ -530,23 +533,7 @@ class ReadViewModel(
 
     fun refresh() {
         headers.clear()
-        val chapterIndex = currentChapter
-        val chapter = list.getOrNull(chapterIndex) ?: return
-        loadedChapterWindow.clear()
-        loadedChapterWindow.addLast(chapterIndex)
-        chapterFlow(chapter)
-            .onStart {
-                loadingChapters = loadingChapters + chapterIndex
-                pageItems.clear()
-            }
-            .catch { exceptionDao.insertException(it) }
-            .onEach { urls ->
-                pageItems.addAll(urls.mapIndexed { i, url -> PageItem.Page(url, chapterIndex, i, false) })
-                pageItems.add(PageItem.ChapterTransition(chapterIndex, chapterIndex - 1))
-                heatMapDao.upsertHeatMap()
-            }
-            .onCompletion { loadingChapters = loadingChapters - chapterIndex }
-            .launchIn(viewModelScope)
+        loadInitialChapter()
     }
 
     fun toggleBookmark(toggle: Boolean) {

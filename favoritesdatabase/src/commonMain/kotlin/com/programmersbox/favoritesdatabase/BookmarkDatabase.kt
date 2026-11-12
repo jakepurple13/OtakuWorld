@@ -12,6 +12,7 @@ import androidx.room3.OnConflictStrategy
 import androidx.room3.PrimaryKey
 import androidx.room3.Query
 import androidx.room3.RoomDatabase
+import androidx.room3.Transaction
 import androidx.room3.Update
 import androidx.room3.migration.Migration
 import androidx.sqlite.SQLiteConnection
@@ -69,24 +70,24 @@ interface BookmarkDao {
     @Query("SELECT * FROM bookmarked_chapters WHERE is_deleted = 0 AND parentUrl = :parentUrl")
     fun getBookmarksForDetail(parentUrl: String): Flow<List<BookmarkedChapter>>
 
-    @Query("SELECT * FROM bookmarked_chapters WHERE chapterUrl = :chapterUrl")
+    @Query("SELECT * FROM bookmarked_chapters WHERE chapterUrl = :chapterUrl AND is_deleted = 0")
     fun getBookmark(chapterUrl: String): Flow<BookmarkedChapter?>
 
-    @Query("SELECT * FROM bookmarked_chapters WHERE chapterUrl IN (:urls)")
+    @Query("SELECT * FROM bookmarked_chapters WHERE chapterUrl IN (:urls) AND is_deleted = 0")
     fun getBookmarksForChapters(urls: List<String>): Flow<List<BookmarkedChapter>>
 
     @Query("""
         SELECT * FROM bookmarked_chapters WHERE rowid IN (
             SELECT rowid FROM bookmarked_chapters_fts
             WHERE bookmarked_chapters_fts MATCH :query
-        ) ORDER BY timestamp DESC
+        ) AND is_deleted = 0 ORDER BY timestamp DESC
     """)
     fun searchBookmarks(query: String): Flow<List<BookmarkedChapter>>
 
     @Query("SELECT * FROM bookmarked_chapters")
     suspend fun getAllBookmarksSync(): List<BookmarkedChapter>
 
-    @Query("SELECT COUNT(chapterUrl) FROM bookmarked_chapters")
+    @Query("SELECT COUNT(chapterUrl) FROM bookmarked_chapters WHERE is_deleted = 0")
     fun getAllBookmarksCount(): Flow<Int>
 
     @Query("SELECT * FROM bookmarked_chapters WHERE is_dirty = 1")
@@ -110,8 +111,13 @@ interface BookmarkDao {
     @Query("UPDATE bookmarked_chapters SET is_deleted = 1, is_dirty = 1, updated_at = :timestamp WHERE chapterUrl = :chapterUrl")
     suspend fun softDeleteBookmark(chapterUrl: String, timestamp: Long)
 
-    @Query("UPDATE bookmarked_chapters SET updated_at = :timestamp, is_dirty = 0 WHERE chapterUrl = :chapterUrl")
-    suspend fun markBookmarkSynced(chapterUrl: String, timestamp: Long)
+    // Only clears rows that weren't edited during the push (see ItemDao.markFavoriteSynced).
+    @Query("UPDATE bookmarked_chapters SET updated_at = :timestamp, is_dirty = 0 WHERE chapterUrl = :chapterUrl AND updated_at = :pushedUpdatedAt")
+    suspend fun markBookmarkSynced(chapterUrl: String, timestamp: Long, pushedUpdatedAt: Long)
+
+    /** Runs [block] in one write transaction, so sync writes a whole batch with one commit. */
+    @Transaction
+    suspend fun runInTransaction(block: suspend () -> Unit) = block()
 
     @Query("UPDATE bookmarked_chapters SET is_dirty = 1")
     suspend fun markAllBookmarksDirty()

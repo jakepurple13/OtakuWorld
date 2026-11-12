@@ -9,7 +9,6 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import java.io.File
-import java.net.URLClassLoader
 
 class ExtensionLoader<T, R>(
     private val extensionsDir: suspend () -> File,
@@ -18,6 +17,9 @@ class ExtensionLoader<T, R>(
     private val metadataClass: String,
     private val mapping: suspend (T, ApplicationInfo, PackageInfo) -> R,
 ) {
+    // Fully parent-first like a plain URLClassLoader: every class name starts with "".
+    private val loaders = JarLoaderCache<List<Any>>(this::class.java.classLoader, listOf(""))
+
     fun loadExtensions(mapped: suspend (T, ApplicationInfo, PackageInfo) -> R = mapping): List<R> =
         runBlocking {
             findExtensionJars()
@@ -33,33 +35,29 @@ class ExtensionLoader<T, R>(
                 .flatten()
         }
 
+    /** Also closes the class loaders of jars removed or replaced since the last call. */
     private suspend fun findExtensionJars(): List<File> {
         val extensionsDir = extensionsDir()
-        if (!extensionsDir.exists() || !extensionsDir.isDirectory) return emptyList()
-        return extensionsDir
-            .listFiles { f -> f.isFile && f.extension.equals("jar", ignoreCase = true) }
-            ?.toList()
-            ?: emptyList()
+        val jars = if (!extensionsDir.exists() || !extensionsDir.isDirectory) {
+            emptyList()
+        } else {
+            extensionsDir
+                .listFiles { f -> f.isFile && f.extension.equals("jar", ignoreCase = true) }
+                ?.toList()
+                ?: emptyList()
+        }
+        loaders.retain(jars.map(::cacheKey).toSet())
+        return jars
     }
+
+    /** Jar names are not content hashes here, so the modification time is part of the key. */
+    private fun cacheKey(jarFile: File): String = jarFile.absolutePath + "@" + jarFile.lastModified()
 
     private suspend fun loadExtension(jarFile: File, mapped: suspend (T, ApplicationInfo, PackageInfo) -> R): List<R> {
         return runCatching {
             val manifest = JarManifestParser.parse(jarFile)
 
-            println("$jarFile: $manifest")
-
-            println(manifest.features)
-            println(manifest.metaData)
-            println("Extension Feature: $extensionFeature")
-
             if (!manifest.features.contains(extensionFeature) && !manifest.metaData.contains(extensionFeature)) return emptyList()
-
-            val classLoader = URLClassLoader(
-                arrayOf(jarFile.toURI().toURL()),
-                this::class.java.classLoader,
-            )
-
-            println("Classloader: $classLoader")
 
             val packageInfo = PackageInfo().apply {
                 packageName = manifest.packageName
@@ -67,13 +65,9 @@ class ExtensionLoader<T, R>(
                 reqFeatures = manifest.features.map { FeatureInfo().apply { name = it } }.toTypedArray()
             }
 
-            println("PackageInfo: $packageInfo")
-
             val metaBundle = Bundle().apply {
                 manifest.metaData.forEach { (k, v) -> putString(k, v) }
             }
-
-            println("MetaBundle: $metaBundle")
 
             val appInfo = ApplicationInfo().apply {
                 packageName = manifest.packageName
@@ -81,10 +75,7 @@ class ExtensionLoader<T, R>(
                 metaData = metaBundle
             }
 
-            println("AppInfo: $appInfo")
-
             val classNames = metaBundle.getString(metadataClass)
-                .also { println("Metadata Class: $metadataClass") }
                 .orEmpty()
                 .split(";")
                 .map { cls ->
@@ -93,30 +84,31 @@ class ExtensionLoader<T, R>(
                 }
                 .filter { it.isNotBlank() }
 
-            println("ClassNames: $classNames")
+            // An unchanged jar keeps its class loader and instances across reloads.
+            val instances = loaders.getOrLoad(jarFile, cacheKey(jarFile)) { classLoader ->
+                classNames.mapNotNull { className ->
+                    runCatching {
+                        val loadedClass = classLoader.loadClass(className)
 
-            classNames.mapNotNull { className ->
-                runCatching {
-                    val loadedClass = classLoader.loadClass(className)
-
-                    // 1. Try to get the singleton INSTANCE if it's a Kotlin `object`
-                    val instance = try {
-                        loadedClass.getDeclaredField("INSTANCE").get(null)
-                    } catch (e: NoSuchFieldException) {
-                        // 2. If there is no INSTANCE field, it's a normal `class`. Instantiate it.
-                        loadedClass.getDeclaredConstructor().newInstance()
+                        // 1. Try to get the singleton INSTANCE if it's a Kotlin `object`
+                        try {
+                            loadedClass.getDeclaredField("INSTANCE").get(null)
+                        } catch (e: NoSuchFieldException) {
+                            // 2. If there is no INSTANCE field, it's a normal `class`. Instantiate it.
+                            loadedClass.getDeclaredConstructor().newInstance()
+                        }
                     }
-
-                    @Suppress("UNCHECKED_CAST")
-                    instance as? T
+                        .onFailure { e ->
+                            e.printStackTrace()
+                            val cause = e.cause?.let { " caused by: ${it.message}" } ?: ""
+                            println("ExtensionLoader: failed to load $className: ${e.message}$cause")
+                        }
+                        .getOrNull()
                 }
-                    .onFailure { e ->
-                        e.printStackTrace()
-                        val cause = e.cause?.let { " caused by: ${it.message}" } ?: ""
-                        println("ExtensionLoader: failed to load $className: ${e.message}$cause")
-                    }
-                    .getOrNull()
-            }.map { mapped(it, appInfo, packageInfo) }
+            }
+
+            @Suppress("UNCHECKED_CAST")
+            instances.mapNotNull { it as? T }.map { mapped(it, appInfo, packageInfo) }
         }
             .onFailure { println("ExtensionLoader: failed to load ${jarFile.name}: ${it.message}") }
             .getOrElse { emptyList() }

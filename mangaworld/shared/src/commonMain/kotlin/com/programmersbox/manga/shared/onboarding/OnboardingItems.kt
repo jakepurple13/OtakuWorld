@@ -43,6 +43,7 @@ import com.programmersbox.kmpuiviews.presentation.components.settings.Preference
 import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.categorySetting
 import com.programmersbox.manga.shared.settings.ImageLoaderSettings
+import com.programmersbox.manga.shared.settings.orWorkingLoader
 import com.programmersbox.manga.shared.settings.SpacingSetting
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import kotlinx.coroutines.flow.first
@@ -57,7 +58,8 @@ fun ReaderOnboarding(
     val scope = rememberCoroutineScope()
 
     var readerType by mangaSettingsHandling.rememberReaderType()
-    val imageLoaderType by mangaSettingsHandling.rememberImageLoaderType()
+    val savedImageLoaderType by mangaSettingsHandling.rememberImageLoaderType()
+    val imageLoaderType = savedImageLoaderType.orWorkingLoader()
     var includeInsets by mangaSettingsHandling.rememberIncludeInsetsForReader()
     var showImageLoaderSettings by remember { mutableStateOf(false) }
 

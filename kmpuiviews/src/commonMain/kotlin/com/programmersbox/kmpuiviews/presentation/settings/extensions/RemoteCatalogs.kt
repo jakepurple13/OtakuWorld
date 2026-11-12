@@ -26,6 +26,12 @@ class RemoteCatalogs {
         states[name] = fetchState(fetch)
     }
 
+    /** Fetches only when [name] has never been loaded; later refreshes go through [retry]. */
+    suspend fun loadIfAbsent(name: String, fetch: suspend () -> List<KmpRemoteSources>) {
+        if (name in states) return
+        load(name, fetch)
+    }
+
     suspend fun retry(name: String) {
         val fetch = fetchers[name] ?: return
         states[name] = RemoteLoadingState

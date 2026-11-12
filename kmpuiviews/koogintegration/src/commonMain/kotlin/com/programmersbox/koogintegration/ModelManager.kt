@@ -4,6 +4,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.plugins.onDownload
 import io.ktor.client.request.prepareGet
 import io.ktor.client.statement.bodyAsChannel
+import io.ktor.http.isSuccess
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.readAvailable
 import okio.FileSystem
@@ -63,23 +64,32 @@ class ModelManager(
             return targetFile.toString()
         }
 
-        // 2. Download the model if it doesn't exist
-        client.prepareGet(modelUrl) {
-            onDownload { bytesSentTotal, contentLength ->
-                onProgress(bytesSentTotal, contentLength)
-            }
-        }.execute { response ->
-            val channel: ByteReadChannel = response.bodyAsChannel()
+        // 2. Download the model if it doesn't exist. Write to a .part file and only move it into place
+        // once the whole body arrived, so a failed or cancelled download never looks like a model.
+        val partFile = cacheDir / "$fileName$PART_SUFFIX"
+        try {
+            client.prepareGet(modelUrl) {
+                onDownload { bytesSentTotal, contentLength ->
+                    onProgress(bytesSentTotal, contentLength)
+                }
+            }.execute { response ->
+                check(response.status.isSuccess()) { "Model download failed: HTTP ${response.status.value}" }
+                val channel: ByteReadChannel = response.bodyAsChannel()
 
-            fileSystem.sink(targetFile).buffer().use { sink ->
-                val buffer = ByteArray(8192) // 8KB buffer chunks
-                while (!channel.isClosedForRead) {
-                    val bytesRead = channel.readAvailable(buffer, 0, buffer.size)
-                    if (bytesRead > 0) {
-                        sink.write(buffer, 0, bytesRead)
+                fileSystem.sink(partFile).buffer().use { sink ->
+                    val buffer = ByteArray(8192) // 8KB buffer chunks
+                    while (!channel.isClosedForRead) {
+                        val bytesRead = channel.readAvailable(buffer, 0, buffer.size)
+                        if (bytesRead > 0) {
+                            sink.write(buffer, 0, bytesRead)
+                        }
                     }
                 }
             }
+            fileSystem.atomicMove(partFile, targetFile)
+        } catch (e: Throwable) {
+            fileSystem.delete(partFile, mustExist = false)
+            throw e
         }
 
         return targetFile.toString()
@@ -96,7 +106,7 @@ class ModelManager(
             val metadata = fileSystem.metadataOrNull(path)
 
             // Only return regular files (ignore subdirectories if any exist)
-            if (metadata != null && metadata.isRegularFile) {
+            if (metadata != null && metadata.isRegularFile && !path.name.endsWith(PART_SUFFIX)) {
                 DownloadedModel(
                     fileName = path.name,
                     path = path.toString(),
@@ -126,6 +136,10 @@ class ModelManager(
             e.printStackTrace()
             false
         }
+    }
+
+    private companion object {
+        const val PART_SUFFIX = ".part"
     }
 }
 

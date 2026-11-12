@@ -9,8 +9,16 @@ import com.programmersbox.kmpmodels.KmpStorage
 import eu.kanade.tachiyomi.source.CatalogueSource
 import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.source.online.ResolvableSource
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
+
+private const val IMAGE_URL_PARALLELISM = 4
 
 open class MihonApiService(val source: CatalogueSource) : KmpApiService {
     override val baseUrl: String = (source as? HttpSource)?.baseUrl.orEmpty()
@@ -44,10 +52,29 @@ open class MihonApiService(val source: CatalogueSource) : KmpApiService {
 
     override suspend fun chapterInfo(chapterModel: KmpChapterModel): List<KmpStorage> = withContext(Dispatchers.IO) {
         val pages = source.getPageList(MihonSourceMapper.toSChapter(chapterModel, this@MihonApiService))
-        pages.map { page ->
-            val imageUrl = page.imageUrl
-                ?: (source as? HttpSource)?.getImageUrl(page)?.also { page.imageUrl = it }
-                ?: page.url
+        // Pages without an image url need one request each; resolve a few at a time.
+        val limit = Semaphore(IMAGE_URL_PARALLELISM)
+        val resolved = coroutineScope {
+            pages.map { page ->
+                async {
+                    if (page.imageUrl != null) return@async Result.success(page.imageUrl)
+                    val http = source as? HttpSource ?: return@async Result.success(null)
+                    limit.withPermit {
+                        try {
+                            Result.success(http.getImageUrl(page).also { page.imageUrl = it })
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            Result.failure(e)
+                        }
+                    }
+                }
+            }.awaitAll()
+        }
+        // One failed page falls back to its page url; the chapter only fails when every lookup failed.
+        if (resolved.isNotEmpty() && resolved.all { it.isFailure }) throw resolved.first().exceptionOrNull()!!
+        pages.mapIndexed { index, page ->
+            val imageUrl = resolved[index].getOrNull() ?: page.url
             MihonSourceMapper.toStorage(page, imageUrl, source)
         }
     }

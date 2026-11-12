@@ -66,4 +66,14 @@ class RemoteCatalogsTest {
         job.join()
         assertEquals(listOf("b"), assertIs<RemoteViewState>(catalogs.states["c"]).sources.map { it.packageName })
     }
+
+    @Test
+    fun loadIfAbsentFetchesOnlyOnce() = runTest {
+        val catalogs = RemoteCatalogs()
+        var calls = 0
+        catalogs.loadIfAbsent("c") { calls++; listOf(remote("a")) }
+        catalogs.loadIfAbsent("c") { calls++; listOf(remote("b")) }
+        assertEquals(1, calls)
+        assertEquals(listOf("a"), assertIs<RemoteViewState>(catalogs.states["c"]).sources.map { it.packageName })
+    }
 }

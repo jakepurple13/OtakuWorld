@@ -20,6 +20,7 @@ import com.programmersbox.kmpuiviews.utils.DateTimeFormatItem
 import com.programmersbox.kmpuiviews.utils.dispatchIo
 import com.programmersbox.kmpuiviews.utils.toLocalDateTime
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -104,6 +105,15 @@ class NotificationSettingsViewModel(
                 .get()
                 .copy(shouldRun = value)
                 .let { mediaCheckerSettings.set(it) }
+        }
+    }
+
+    /** Turns periodic checks off then back on so the periodic work gets enqueued again. */
+    fun restartUpdateChecks() {
+        viewModelScope.launch {
+            mediaCheckerSettings.set(mediaCheckerSettings.get().copy(shouldRun = false))
+            mediaCheckerSettings.asFlow().first { !it.shouldRun }
+            mediaCheckerSettings.set(mediaCheckerSettings.get().copy(shouldRun = true))
         }
     }
 

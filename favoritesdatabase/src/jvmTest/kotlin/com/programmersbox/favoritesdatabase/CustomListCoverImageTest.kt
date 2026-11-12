@@ -76,7 +76,7 @@ class CustomListCoverImageTest {
         val dao = db.listDao()
 
         dao.createList(CustomListItem(uuid = "uuid", name = "name", isDirty = false))
-        dao.markCustomListItemSynced("uuid", timestamp = 100L)
+        dao.markCustomListItemSynced("uuid", timestamp = 100L, pushedUpdatedAt = 0L)
 
         dao.updateCoverImageUrl(uuid = "uuid", coverImageUrl = "cover.jpg", timestamp = 200L)
 

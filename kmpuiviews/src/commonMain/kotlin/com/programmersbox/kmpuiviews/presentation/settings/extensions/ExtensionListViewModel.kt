@@ -43,6 +43,7 @@ class ExtensionListViewModel(
     private val installedSources = mutableStateListOf<KmpSourceInformation>()
     private val downloads = mutableStateListOf<DownloadAndInstallState>()
     private val remoteCatalogs = RemoteCatalogs()
+    private var loadedCustomUrls: List<String>? = null
 
     /** Links sent to the downloader that haven't reported a terminal status; queued jobs carry no url. */
     private var requested by mutableStateOf(emptySet<String>())
@@ -137,8 +138,9 @@ class ExtensionListViewModel(
                 installedSources.clear()
                 installedSources.addAll(it)
             }
+            // Each catalog is fetched once, in parallel; source changes only add new catalogs.
             .onEach { sources ->
-                remoteCatalogs.load("${otakuWorldCatalog.name}World") { otakuWorldCatalog.getRemoteSources() }
+                launchLoad("${otakuWorldCatalog.name}World") { otakuWorldCatalog.getRemoteSources() }
                 sources
                     .asSequence()
                     .map { it.catalog }
@@ -146,17 +148,26 @@ class ExtensionListViewModel(
                     .filter { it.hasRemoteSources }
                     .distinct()
                     .toList()
-                    .forEach { c -> remoteCatalogs.load(c.name) { c.getRemoteSources() } }
+                    .forEach { c -> launchLoad(c.name) { c.getRemoteSources() } }
             }
             .combine(settingsHandling.customUrls) { sources, urls ->
+                // Custom catalogs depend on the urls, so a url change refetches them.
+                val urlsChanged = loadedCustomUrls != null && loadedCustomUrls != urls
+                loadedCustomUrls = urls
                 (sources.asSequence().map { it.catalog }.filterIsInstance<KmpExternalCustomApiServicesCatalog>() +
                     nativeCatalogs.catalogs.asSequence())
                     .filter { it.hasRemoteSources }
                     .distinct()
                     .toList()
-                    .forEach { c -> remoteCatalogs.load(c.name) { c.getRemoteSources(urls) } }
+                    .forEach { c -> launchLoad(c.name, reload = urlsChanged) { c.getRemoteSources(urls) } }
             }
             .launchIn(viewModelScope)
+    }
+
+    private fun launchLoad(name: String, reload: Boolean = false, fetch: suspend () -> List<KmpRemoteSources>) {
+        viewModelScope.launch {
+            if (reload) remoteCatalogs.load(name, fetch) else remoteCatalogs.loadIfAbsent(name, fetch)
+        }
     }
 
     fun trust(source: KmpSourceInformation) {
@@ -169,7 +180,7 @@ class ExtensionListViewModel(
     }
 
     fun refreshExtensions() {
-        viewModelScope.launch { sourceLoader.blockingLoad() }
+        viewModelScope.launch { logFailures { sourceLoader.blockingLoad() } }
     }
 
     var extensionSharing by mutableStateOf(false)

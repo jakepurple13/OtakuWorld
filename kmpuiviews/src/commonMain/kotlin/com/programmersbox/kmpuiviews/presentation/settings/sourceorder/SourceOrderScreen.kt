@@ -33,11 +33,11 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -74,11 +74,7 @@ fun SourceOrderScreen(
 
     var sourceSortOrder by remember { mutableStateOf(SourceSort.Custom) }
 
-    val modifiedOrder = remember(sourceOrder.isNotEmpty()) {
-        sourceOrder
-            .sortedBy { it.order }
-            .toMutableStateList()
-    }
+    val modifiedOrder = remember { mutableStateListOf<SourceOrder>() }
 
     LaunchedEffect(sourcesInOrder) {
         sourcesInOrder.forEachIndexed { index, sourceInformation ->
@@ -103,6 +99,15 @@ fun SourceOrderScreen(
             modifiedOrder[from.index] = tmp
         }
         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+    }
+
+    // Sources are inserted one by one, so keep merging new and removed ones in while not dragging.
+    LaunchedEffect(sourceOrder) {
+        if (reorderableLazyListState.isAnyItemDragging) return@LaunchedEffect
+        val latest = sourceOrder.map { it.source }.toSet()
+        modifiedOrder.removeAll { it.source !in latest }
+        val present = modifiedOrder.map { it.source }.toSet()
+        modifiedOrder.addAll(sourceOrder.sortedBy { it.order }.filter { it.source !in present })
     }
 
     LaunchedEffect(reorderableLazyListState.isAnyItemDragging) {

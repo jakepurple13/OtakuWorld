@@ -50,6 +50,8 @@ class DownloadChapterWorker(
 
         val destDir = File(externalDir, "MangaWorld/${mangaTitle.sanitize()}/${chapterName.sanitize()}")
             .also { it.mkdirs() }
+        // Stays behind if the download is cancelled or fails part way, so the chapter isn't counted
+        runCatching { File(destDir, INCOMPLETE_MARKER).createNewFile() }
 
         val request = DownloadRequest(
             chapterUrl = chapterUrl,
@@ -107,6 +109,7 @@ class DownloadChapterWorker(
                         File(destDir, "%03d.png".format(index)).writeBytes(bytes)
                     },
                 )
+                File(destDir, INCOMPLETE_MARKER).delete()
                 MediaScannerConnection.scanFile(
                     applicationContext,
                     destDir.listFiles()?.map { it.absolutePath }?.toTypedArray() ?: emptyArray(),

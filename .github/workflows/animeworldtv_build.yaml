@@ -33,6 +33,11 @@ jobs:
         with:
           add-job-summary-as-pr-comment: always
 
+      - name: Set version code
+        # Minutes since 2024-01-01 UTC: shared by every workflow and only grows, so a release
+        # always installs over an earlier nightly. Read by buildSrc/AppInfo.kt.
+        run: echo "OTAKU_VERSION_CODE=$(( ($(date -u +%s) - 1704067200) / 60 ))" >> $GITHUB_ENV
+
       - name: Build AnimeWorld artifacts
         id: buildAnimeApks
         run: ./gradlew animeworldtv:assembleRelease

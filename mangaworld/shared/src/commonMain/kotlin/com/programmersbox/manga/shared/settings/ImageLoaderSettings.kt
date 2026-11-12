@@ -39,6 +39,13 @@ import kotlinx.serialization.Serializable
 @Serializable
 data object ImageLoaderSettingsRoute : NavKey
 
+// The Glide, Panpf and Telephoto loaders are commented out, so picking one only shows blank pages
+internal val workingImageLoaders = listOf(ImageLoaderType.Kamel)
+
+/** A saved loader that no longer works falls back to Kamel. */
+internal fun ImageLoaderType.orWorkingLoader(): ImageLoaderType =
+    takeIf { it in workingImageLoaders } ?: ImageLoaderType.Kamel
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImageLoaderSettings(
@@ -46,7 +53,8 @@ fun ImageLoaderSettings(
     windowInsets: WindowInsets = TopAppBarDefaults.windowInsets,
     navigationButton: @Composable () -> Unit = { BackButton() },
 ) {
-    var imageLoaderType by mangaSettingsHandling.rememberImageLoaderType()
+    var savedImageLoaderType by mangaSettingsHandling.rememberImageLoaderType()
+    val imageLoaderType = savedImageLoaderType.orWorkingLoader()
 
     LaunchedEffect(imageLoaderType) {
         logFirebaseMessage("ImageLoader Selected: $imageLoaderType")
@@ -82,9 +90,9 @@ fun ImageLoaderSettings(
                 )
             }
 
-            ImageLoaderType.entries.dropLast(1).forEach {
+            workingImageLoaders.forEach {
                 ElevatedCard(
-                    onClick = { imageLoaderType = it }
+                    onClick = { savedImageLoaderType = it }
                 ) {
                     ListItem(
                         leadingContent = {

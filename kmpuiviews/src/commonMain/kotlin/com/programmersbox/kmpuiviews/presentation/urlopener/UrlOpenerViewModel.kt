@@ -27,17 +27,21 @@ class UrlOpenerViewModel(
         sourceRepository
             .sources
             .onEach { list ->
-                sourceList.putAll(
-                    list
-                        .filterNot { it.apiService.notWorking }
-                        .distinctBy { it.packageName }
-                        .groupBy { it.packageName }
-                )
-                currentChosenSource = sourceList
-                    .entries
-                    .randomOrNull()
-                    ?.value
-                    ?.firstOrNull()
+                val grouped = list
+                    .filterNot { it.apiService.notWorking }
+                    .distinctBy { it.packageName }
+                    .groupBy { it.packageName }
+                // Replace the contents so uninstalled sources go away
+                sourceList.clear()
+                sourceList.putAll(grouped)
+                // Keep the user's choice while it is still installed
+                currentChosenSource = currentChosenSource
+                    ?.let { grouped[it.packageName]?.firstOrNull() }
+                    ?: grouped
+                        .entries
+                        .randomOrNull()
+                        ?.value
+                        ?.firstOrNull()
             }
             .launchIn(viewModelScope)
     }

@@ -84,7 +84,7 @@ fun BackupWizardScreen(
                     ) { document -> document?.let { viewModel.confirm(it) } }
 
                     LazyColumn(modifier = Modifier.weight(1f)) {
-                        items(state.items, key = { it.uiInfo.key }) { item ->
+                        items(state.items.filter { it.selected }, key = { it.uiInfo.key }) { item ->
                             WizardItemRow(
                                 item = item.copy(expanded = true),
                                 onToggleSelected = {},
@@ -117,7 +117,7 @@ fun BackupWizardScreen(
                             .padding(16.dp)
                             .verticalScroll(rememberScrollState())
                     ) {
-                        Text("Backing up… (${state.results.size}/${state.items.size} done)")
+                        Text("Backing up… (${state.results.size}/${state.items.count { it.selected }} done)")
                         state.results.forEach { result ->
                             ListItem(
                                 headlineContent = { Text(if (result.success) "✓ ${result.key}" else "✗ ${result.key}: ${result.error}") },

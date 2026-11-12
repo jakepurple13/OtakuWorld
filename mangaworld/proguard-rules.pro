@@ -238,7 +238,8 @@
 -keep,allowoptimization class kotlinx.coroutines.** { public protected *; }
 -keep,allowoptimization class kotlinx.serialization.** { public protected *; }
 -keep,allowoptimization class kotlin.time.** { public protected *; }
--keep,allowoptimization class okhttp3.** { public protected *; }
+# okhttp3 is kept whole above (extensions subclass RequestBody/Interceptor etc. and call it by name),
+# so an allowoptimization rule here would have no effect.
 -keep,allowoptimization class okio.** { public protected *; }
 -keep,allowoptimization class org.jsoup.** { public protected *; }
 -keep,allowoptimization class rx.** { public protected *; }

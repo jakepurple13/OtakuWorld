@@ -104,17 +104,43 @@ class NotesDaoTest {
         assertEquals("https://example.com/1", results[0].itemUrl)
     }
 
-    @Test fun `softDeleteNote sets is_deleted but leaves the row queryable`() = runTest {
-        dao.upsertNote(note("https://example.com/1"))
+    @Test fun `softDeleteNote keeps the row for sync but hides it from reads`() = runTest {
+        dao.upsertNote(note("https://example.com/1", content = "Dragon"))
 
         dao.softDeleteNote("https://example.com/1", timestamp = 1_000L)
 
         val synced = dao.getAllNotesSync()
         assertEquals(1, synced.size)
         assertTrue(synced[0].isDeleted)
+        assertTrue(synced[0].isDirty)
 
-        val flowed = dao.getAllNotes().first()
-        assertEquals(1, flowed.size)
-        assertTrue(flowed[0].isDeleted)
+        assertTrue(dao.getAllNotes().first().isEmpty())
+        assertNull(dao.getNote("https://example.com/1").first())
+        assertEquals(0, dao.getAllNotesCount().first())
+        assertTrue(dao.searchNotes("Dragon").first().isEmpty())
+    }
+
+    @Test fun `removeNote soft-deletes when signed in and hard-deletes otherwise`() = runTest {
+        dao.upsertNote(note("https://example.com/1"))
+        dao.upsertNote(note("https://example.com/2"))
+
+        dao.removeNote("https://example.com/1", softDelete = true)
+        dao.removeNote("https://example.com/2", softDelete = false)
+
+        val rows = dao.getAllNotesSync()
+        assertEquals(listOf("https://example.com/1"), rows.map { it.itemUrl })
+        assertTrue(rows.single().isDeleted)
+    }
+
+    @Test fun `markNoteSynced keeps the row dirty when it was edited during the push`() = runTest {
+        dao.upsertNote(note("https://example.com/1").copy(updatedAt = 100L))
+        // Edited after the push read the row
+        dao.upsertNote(note("https://example.com/1", content = "New").copy(updatedAt = 200L))
+
+        dao.markNoteSynced("https://example.com/1", timestamp = 100L, pushedUpdatedAt = 100L)
+        assertTrue(dao.getNoteByUrl("https://example.com/1")!!.isDirty)
+
+        dao.markNoteSynced("https://example.com/1", timestamp = 200L, pushedUpdatedAt = 200L)
+        assertTrue(!dao.getNoteByUrl("https://example.com/1")!!.isDirty)
     }
 }

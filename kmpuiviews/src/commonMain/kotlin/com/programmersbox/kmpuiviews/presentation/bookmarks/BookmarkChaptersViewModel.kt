@@ -7,6 +7,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.BookmarkedChapter
+import com.programmersbox.favoritesdatabase.ftsMatch
 import com.programmersbox.kmpuiviews.repository.BookmarkRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -14,15 +15,13 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 enum class BookmarkSortOrder { DATE_DESC, DATE_ASC, TITLE_AZ, PARENT_AZ }
-
-fun String.toFtsQuery(): String =
-    trim().split("\\s+".toRegex()).filter { it.isNotBlank() }.joinToString(" ") { "$it*" }
 
 fun List<BookmarkedChapter>.sortedByOrder(order: BookmarkSortOrder): List<BookmarkedChapter> =
     when (order) {
@@ -50,8 +49,9 @@ class BookmarkChaptersViewModel(
     val bookmarks: StateFlow<Map<String, List<BookmarkedChapter>>> =
         combine(
             _searchQuery.flatMapLatest { q ->
-                if (q.isBlank()) bookmarkRepository.getAllBookmarks()
-                else bookmarkRepository.searchBookmarks(q.toFtsQuery())
+                ftsMatch(q)
+                    ?.let { bookmarkRepository.searchBookmarks(it).catch { emit(emptyList()) } }
+                    ?: bookmarkRepository.getAllBookmarks()
             },
             snapshotFlow { sortOrder },
         ) { list, sort -> list.sortedByOrder(sort).groupByManga() }

@@ -23,7 +23,7 @@ class AndroidApplicationPlugin : AndroidPluginBase<BaseAppModuleExtension>(BaseA
         compileSdk(AppInfo::setCustomCompileSdkVersion)
 
         lint {
-            checkReleaseBuilds = false
+            checkReleaseBuilds = true
         }
 
         composeOptions {

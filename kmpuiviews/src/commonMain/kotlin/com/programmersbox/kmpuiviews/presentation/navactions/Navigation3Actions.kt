@@ -40,8 +40,8 @@ class Navigation3Actions : NavigationActions, Navigator {
             Screen.DetailsScreen.Details(
                 title = title,
                 description = description,
-                url = url,
-                imageUrl = imageUrl,
+                url = UrlEncoderUtil.encode(url),
+                imageUrl = UrlEncoderUtil.encode(imageUrl),
                 source = source
             )
         )
@@ -220,8 +220,7 @@ class Navigation3Actions : NavigationActions, Navigator {
     }
 
     override fun popBackStack(route: Any, inclusive: Boolean) {
-        val index = navBackStack.backStack.indexOfLast { it == route }
-        navBackStack.backStack.removeRange(index, navBackStack.backStack.size)
+        if (route is NavKey) navBackStack.popTo(route, inclusive)
     }
 
     override fun <T : Any> navigate(nav: T) {
@@ -352,6 +351,34 @@ class TopLevelBackStack<T : NavKey>(
         topLevelStacks.remove(removedKey)
 
         // Safety fallback: If the map somehow becomes completely empty, restore the root
+        if (topLevelStacks.isEmpty()) {
+            topLevelStacks[startKey] = mutableStateListOf(startKey)
+        }
+
+        topLevelKey = topLevelStacks.keys.last()
+        updateBackStack()
+    }
+
+    /**
+     * Pops everything above the last [key], and [key] itself when [inclusive]. Top-level stacks
+     * opened after the one holding [key] are dropped. Does nothing when [key] is not on the stack,
+     * and never removes the root.
+     */
+    fun popTo(key: T, inclusive: Boolean) {
+        val entries = topLevelStacks.entries.toList()
+        val stackIndex = entries.indexOfLast { key in it.value }
+        if (stackIndex == -1) return
+        val (stackKey, stack) = entries[stackIndex]
+        var from = stack.lastIndexOf(key) + if (inclusive) 0 else 1
+        if (stackKey == startKey) from = from.coerceAtLeast(1)
+
+        entries.drop(stackIndex + 1).forEach { topLevelStacks.remove(it.key) }
+        if (from == 0) {
+            topLevelStacks.remove(stackKey)
+        } else if (from < stack.size) {
+            stack.removeRange(from, stack.size)
+        }
+
         if (topLevelStacks.isEmpty()) {
             topLevelStacks[startKey] = mutableStateListOf(startKey)
         }

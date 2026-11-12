@@ -26,12 +26,14 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import java.io.File
+import java.util.UUID
 
 actual class MangaDownloadManager(
     context: Context,
@@ -52,6 +54,8 @@ actual class MangaDownloadManager(
 
     // Signals filesystem mutations; replay=1 so new subscribers get the latest tick immediately
     private val _dirTick = MutableSharedFlow<Unit>(replay = 1)
+
+    private var finishedWorkIds = emptySet<UUID>()
 
     init {
         // Forward FileObserver events into _dirTick so observeDownloads re-evaluates filesystem
@@ -95,13 +99,15 @@ actual class MangaDownloadManager(
                             )
                         }
                 }
-                // When a worker reaches a terminal state, tick so the filesystem check re-runs
-                if (infos.any {
-                        it.state == WorkInfo.State.SUCCEEDED ||
-                                it.state == WorkInfo.State.FAILED ||
-                                it.state == WorkInfo.State.CANCELLED
-                    }
-                ) _dirTick.emit(Unit)
+                // When a worker reaches a terminal state, tick so the filesystem check re-runs.
+                // Finished work stays in this list, so only tick when a new one finishes.
+                val finished = infos
+                    .filter { it.state.isFinished }
+                    .mapTo(mutableSetOf()) { it.id }
+                if (finished != finishedWorkIds) {
+                    finishedWorkIds = finished
+                    _dirTick.emit(Unit)
+                }
             }
             .launchIn(scope)
     }
@@ -186,35 +192,38 @@ actual class MangaDownloadManager(
 
     actual fun getDownloadedChapterPath(chapter: KmpChapterModel, mangaTitle: String): String? {
         val dir = File(rootDir, "${mangaTitle.sanitize()}/${chapter.name.sanitize()}")
-        return if (dir.exists() && dir.listFiles()?.isNotEmpty() == true) dir.absolutePath else null
+        return if (isCompleteChapter(dir.list())) dir.absolutePath else null
     }
 
     actual fun observeDownloads(): Flow<List<ChapterDownloadProgress>> =
         _activeDownloads.combine(
-            _dirTick.onStart { emit(Unit) }
-        ) { downloads, _ ->
+            // Scan only on filesystem ticks, not on every progress update
+            _dirTick
+                .onStart { emit(Unit) }
+                .map { completedFromDisk() }
+        ) { downloads, completedFromDisk ->
             val activeUrls = downloads.mapTo(mutableSetOf()) { it.chapterUrl }
-            // One entry per chapter directory, not per image file
-            val completedFromDisk = rootDir
-                .listFiles()
-                ?.flatMap { titleDir ->
-                    titleDir
-                        .listFiles()
-                        ?.filter { it.isDirectory && it.listFiles()?.isNotEmpty() == true }
-                        ?.map { chapterDir ->
-                            ChapterDownloadProgress(
-                                chapterUrl = chapterDir.absolutePath,
-                                chapterName = chapterDir.name,
-                                mangaTitle = titleDir.name,
-                                state = DownloadState.Completed,
-                            )
-                        }.orEmpty()
-                }.orEmpty()
-
             downloads + completedFromDisk.filter { it.chapterUrl !in activeUrls }
         }
             .distinctUntilChanged()
             .flowOn(Dispatchers.IO)
+
+    // One entry per chapter directory, not per image file
+    private fun completedFromDisk(): List<ChapterDownloadProgress> = rootDir
+        .listFiles()
+        ?.flatMap { titleDir ->
+            titleDir
+                .listFiles()
+                ?.filter { it.isDirectory && isCompleteChapter(it.list()) }
+                ?.map { chapterDir ->
+                    ChapterDownloadProgress(
+                        chapterUrl = chapterDir.absolutePath,
+                        chapterName = chapterDir.name,
+                        mangaTitle = titleDir.name,
+                        state = DownloadState.Completed,
+                    )
+                }.orEmpty()
+        }.orEmpty()
 
     actual fun deleteChapter(chapter: KmpChapterModel, mangaTitle: String) {
         File(rootDir, "${mangaTitle.sanitize()}/${chapter.name.sanitize()}").deleteRecursively()

@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.notes
 
+import com.programmersbox.kmpuiviews.testing.FakeAuthManager
 import com.programmersbox.kmpuiviews.testing.clearAndJoin
 import androidx.lifecycle.ViewModelStore
 import androidx.room3.Room
@@ -55,6 +56,7 @@ class AllNotesViewModelTest {
 
     private fun viewModel() = AllNotesViewModel(
         notesDao = database.notesDao(),
+        authManager = FakeAuthManager(),
     ).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
 
     @OptIn(ExperimentalCoroutinesApi::class)

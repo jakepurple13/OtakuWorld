@@ -107,7 +107,8 @@ fun ReaderSettings(
 
     val showPageNumberInBar by mangaSettingsHandling.rememberShowPageNumberInBar()
 
-    val imageLoaderType by mangaSettingsHandling.rememberImageLoaderType()
+    val savedImageLoaderType by mangaSettingsHandling.rememberImageLoaderType()
+    val imageLoaderType = savedImageLoaderType.orWorkingLoader()
 
     var padding by remember {
         mutableFloatStateOf(

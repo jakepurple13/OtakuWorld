@@ -80,7 +80,7 @@ abstract class BackupProcessor {
      * @return A JSON-formatted string representing the serialized object.
      * @throws SerializationException If the object cannot be serialized.
      */
-    protected inline fun <reified T> T.toJson() = Json.encodeToString(this)
+    protected inline fun <reified T> T.toJson() = backupJson.encodeToString(this)
 
     /**
      * Extension function to deserialize a JSON string into an object of the specified type.
@@ -94,7 +94,14 @@ abstract class BackupProcessor {
      * @return The deserialized object of type [T].
      * @throws SerializationException If the JSON string cannot be deserialized into the specified type.
      */
-    protected inline fun <reified T> String.fromJson() = Json.decodeFromString<T>(this)
+    protected inline fun <reified T> String.fromJson() = backupJson.decodeFromString<T>(this)
+}
+
+/** Lenient so a backup written by a newer app version (extra or changed fields) still restores. */
+@PublishedApi
+internal val backupJson = Json {
+    ignoreUnknownKeys = true
+    coerceInputValues = true
 }
 
 inline fun <reified T : BackupProcessor> Module.backupProcessor(

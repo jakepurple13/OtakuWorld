@@ -42,7 +42,6 @@ actual class SourceLoader(
         extensionFeature = "$EXTENSION_FEATURE.$sourceType",
         metadataClass = METADATA_CLASS,
         mapping = suspend { t, appInfo, packageInfo ->
-            println("Mapping $t")
             val metaName = appInfo.metaData?.getString(METADATA_NAME) ?: "Unknown"
             val pkgName = packageInfo.packageName
             val pluginApp = Application(pkgName, dataDir, appInfo.sourceDir)
@@ -124,7 +123,6 @@ actual class SourceLoader(
                         else -> null
                     }
                 }
-                .also { println(it) }
         }
     )
 

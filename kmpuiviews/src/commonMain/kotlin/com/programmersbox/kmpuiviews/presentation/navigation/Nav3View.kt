@@ -48,9 +48,9 @@ fun Nav3(
 ) {
     val backStack = navigation3Actions.backStack
     LaunchedEffect(Unit) {
-        snapshotFlow { backStack }
-            .collect {
-                val screen = it.lastOrNull()
+        // Read the top entry, not the list itself: the list instance never changes, so it would emit once
+        snapshotFlow { backStack.lastOrNull() }
+            .collect { screen ->
                 logFirebaseMessage("Navigated to: ${screen.toString()}")
                 analyticsScreen(screen.toString())
             }

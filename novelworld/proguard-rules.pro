@@ -22,3 +22,78 @@
 
 # PackageInstaller broadcast receiver — instantiated by the OS via manifest registration
 -keep class com.programmersbox.kmpuiviews.receivers.PackageInstallReceiver { public <init>(); }
+
+# ============================================================
+# Extension / source-loading contract (kmpmodels)
+# Novel source APKs are loaded with a parent-first PathClassLoader
+# (kmpextensionloader), so they implement these and call them by name.
+# ============================================================
+-keep interface com.programmersbox.kmpmodels.** { *; }
+-keep class com.programmersbox.kmpmodels.** { *; }
+-keep class * implements com.programmersbox.kmpmodels.KmpApiService { *; }
+-dontwarn com.programmersbox.kmpmodels.**
+-keep class com.programmersbox.models.** { *; }
+-keep class com.programmersbox.kmpextensionloader.** { *; }
+-keep class com.programmersbox.source_utilities.** { *; }
+
+-keepclassmembers class androidx.core.content.ContextCompat {
+    public static java.util.concurrent.Executor getMainExecutor(android.content.Context);
+}
+
+# ============================================================
+# Libraries source plugins call into. The host copy shadows the plugin's
+# own copy (parent-first), so the members plugins use must survive R8.
+# ============================================================
+-keep class org.koin.** { *; }
+-keepnames class * {
+    @org.koin.core.annotation.* *;
+}
+-dontwarn org.koin.**
+
+-keep class !io.ktor.server.**,io.ktor.** { *; }
+-dontwarn io.ktor.**
+
+-keep class okhttp3.** { *; }
+-keep interface okhttp3.** { *; }
+-dontwarn okhttp3.**
+-dontwarn okio.**
+
+-keep,allowoptimization class !kotlin.reflect.jvm.internal.**,kotlin.** { public protected *; }
+-keep,allowoptimization class kotlinx.coroutines.** { public protected *; }
+-keep,allowoptimization class kotlinx.serialization.** { public protected *; }
+-keep,allowoptimization class okio.** { public protected *; }
+-keep,allowoptimization class org.jsoup.** { public protected *; }
+-keep,allowoptimization class com.google.gson.** { public protected *; }
+-keep,allowoptimization class com.programmersbox.gsonutils.** { public protected *; }
+-keep,allowoptimization class com.programmersbox.helpfulutils.** { public protected *; }
+
+# JS (zipline) extensions
+-keep class app.cash.zipline.** { *; }
+-dontwarn app.cash.zipline.**
+
+# ============================================================
+# kotlinx.serialization
+# ============================================================
+-keepattributes *Annotation*, InnerClasses
+-dontnote kotlinx.serialization.**
+
+# Firebase
+-keep class com.google.firebase.installations.** { *; }
+-keep interface com.google.firebase.installations.** { *; }
+
+-dontwarn com.google.protobuf.**
+-dontwarn com.mikepenz.aboutlibraries.**
+-dontwarn com.mikepenz.iconics.**
+
+# ============================================================
+# R8 missing classes (transitive deps not present on Android;
+# see novelworld/build/outputs/mapping/noFirebaseRelease/missing_rules.txt)
+# ============================================================
+-dontwarn io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogram
+-dontwarn io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder
+-dontwarn io.opentelemetry.api.incubator.metrics.ExtendedLongCounter
+-dontwarn io.opentelemetry.api.incubator.metrics.ExtendedLongCounterBuilder
+
+-assumenosideeffects class * {
+    @com.programmersbox.showcase.annotations.ShowcaseComponent <methods>;
+}

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.NoteItem
 import com.programmersbox.favoritesdatabase.NotesDao
 import com.programmersbox.favoritesdatabase.ftsMatch
+import com.programmersbox.supabaseintegration.auth.AuthManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -21,6 +22,7 @@ import kotlin.time.Clock
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 class AllNotesViewModel(
     private val notesDao: NotesDao,
+    private val authManager: AuthManager,
 ) : ViewModel() {
 
     private val searchQuery = MutableStateFlow("")
@@ -44,12 +46,15 @@ class AllNotesViewModel(
     fun saveNote(note: NoteItem, content: String) {
         viewModelScope.launch(Dispatchers.IO) {
             if (content.isBlank()) {
-                notesDao.deleteNote(note.itemUrl)
+                notesDao.removeNote(note.itemUrl, softDelete = authManager.isLoggedIn())
             } else {
+                val now = Clock.System.now().toEpochMilliseconds()
                 notesDao.upsertNote(
                     note.copy(
                         content = content,
-                        timestamp = Clock.System.now().toEpochMilliseconds()
+                        timestamp = now,
+                        updatedAt = now,
+                        isDirty = true,
                     )
                 )
             }
@@ -58,7 +63,7 @@ class AllNotesViewModel(
 
     fun deleteNote(itemUrl: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            notesDao.deleteNote(itemUrl)
+            notesDao.removeNote(itemUrl, softDelete = authManager.isLoggedIn())
         }
     }
 }

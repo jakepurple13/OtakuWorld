@@ -83,7 +83,14 @@ interface HeatMapDao {
         if (existingItem != null) {
             // Item exists, update the count
             val updatedCount = existingItem.count + 1
-            insertHeatMap(existingItem.copy(count = updatedCount)) // Use insert with REPLACE for update
+            // Use insert with REPLACE for update. Mark dirty with a new timestamp so the new count syncs.
+            insertHeatMap(
+                existingItem.copy(
+                    count = updatedCount,
+                    isDirty = true,
+                    updatedAt = Clock.System.now().toEpochMilliseconds(),
+                )
+            )
         } else {
             // Item does not exist, insert new
             insertHeatMap(HeatMapItem(time = date, count = 1))
@@ -111,8 +118,13 @@ interface HeatMapDao {
     @Query("UPDATE HeatMapItem SET is_deleted = 1, is_dirty = 1, updated_at = :timestamp WHERE time = :time")
     suspend fun softDeleteHeatMapItem(time: LocalDate, timestamp: Long)
 
-    @Query("UPDATE HeatMapItem SET updated_at = :timestamp, is_dirty = 0 WHERE time = :time")
-    suspend fun markHeatMapItemSynced(time: LocalDate, timestamp: Long)
+    // Only clears rows that weren't edited during the push (see ItemDao.markFavoriteSynced).
+    @Query("UPDATE HeatMapItem SET updated_at = :timestamp, is_dirty = 0 WHERE time = :time AND updated_at = :pushedUpdatedAt")
+    suspend fun markHeatMapItemSynced(time: LocalDate, timestamp: Long, pushedUpdatedAt: Long)
+
+    /** Runs [block] in one write transaction, so sync writes a whole batch with one commit. */
+    @Transaction
+    suspend fun runInTransaction(block: suspend () -> Unit) = block()
 
     @Query("UPDATE HeatMapItem SET is_dirty = 1")
     suspend fun markAllHeatMapItemsDirty()

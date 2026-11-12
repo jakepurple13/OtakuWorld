@@ -19,6 +19,7 @@ import org.koin.core.component.inject
 import java.io.File
 import java.io.IOException
 import java.net.InetAddress
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
@@ -60,11 +61,20 @@ class CloudflareInterceptor(private val context: Context) : Interceptor, KoinCom
         WebSettings.getDefaultUserAgent(context)
     }
 
-    @Synchronized
+    /** Per-host lock and count of solved challenges: only the WebView solve is serialized, not every request. */
+    private class HostGate {
+        @Volatile
+        var solves = 0
+    }
+
+    private val gates = ConcurrentHashMap<String, HostGate>()
+
     override fun intercept(chain: Interceptor.Chain): Response {
         initWebView
 
         val originalRequest = chain.request()
+        val gate = gates.getOrPut(originalRequest.url.host) { HostGate() }
+        val solvesBefore = gate.solves
         val response = chain.proceed(originalRequest)
 
         // Check if Cloudflare anti-bot is on
@@ -74,10 +84,16 @@ class CloudflareInterceptor(private val context: Context) : Interceptor, KoinCom
 
         try {
             response.close()
-            networkHelper.cookieManager.remove(originalRequest.url, COOKIE_NAMES, 0)
-            val oldCookie = networkHelper.cookieManager.get(originalRequest.url)
-                .firstOrNull { it.name == "cf_clearance" }
-            resolveWithWebView(originalRequest, oldCookie)
+            synchronized(gate) {
+                // Skip the solve when another request already solved it while this one was in flight or waiting.
+                if (gate.solves == solvesBefore) {
+                    networkHelper.cookieManager.remove(originalRequest.url, COOKIE_NAMES, 0)
+                    val oldCookie = networkHelper.cookieManager.get(originalRequest.url)
+                        .firstOrNull { it.name == "cf_clearance" }
+                    resolveWithWebView(originalRequest, oldCookie)
+                    gate.solves++
+                }
+            }
 
             return chain.proceed(originalRequest)
         } catch (e: Exception) {
@@ -97,7 +113,6 @@ class CloudflareInterceptor(private val context: Context) : Interceptor, KoinCom
 
         var challengeFound = false
         var cloudflareBypassed = false
-        var isWebViewOutdated = false
 
         val origRequestUrl = request.url.toString()
         val headers = request.headers.toMultimap().mapValues { it.value.getOrNull(0) ?: "" }
@@ -158,8 +173,11 @@ class CloudflareInterceptor(private val context: Context) : Interceptor, KoinCom
         latch.await(12, TimeUnit.SECONDS)
 
         handler.post {
-            if (!cloudflareBypassed) {
-                isWebViewOutdated = webView?.isOutdated() == true
+            // On the main thread: the WebView check and the toast both need it.
+            if (!cloudflareBypassed && webView?.isOutdated() == true) {
+                // Prompt user to update WebView if it seems too outdated
+                //context.toast(R.string.information_webview_outdated, Toast.LENGTH_LONG)
+                Toast.makeText(context, "Update WebView", Toast.LENGTH_SHORT).show()
             }
 
             webView?.stopLoading()
@@ -168,12 +186,6 @@ class CloudflareInterceptor(private val context: Context) : Interceptor, KoinCom
 
         // Throw exception if we failed to bypass Cloudflare
         if (!cloudflareBypassed) {
-            // Prompt user to update WebView if it seems too outdated
-            if (isWebViewOutdated) {
-                //context.toast(R.string.information_webview_outdated, Toast.LENGTH_LONG)
-                Toast.makeText(context, "Update WebView", Toast.LENGTH_SHORT).show()
-            }
-
             throw Exception("Failed to bypass Cloudflare")
         }
     }

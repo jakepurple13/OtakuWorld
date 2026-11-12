@@ -66,6 +66,7 @@ abstract class GenericSharedNovel(
         seedColor: Int?,
     ) {
         chapterHolder.chapterModel = model
+        chapterHolder.chapters = allChapters
         ReadViewModel.navigateToNovelReader(
             navController,
             infoModel.title,

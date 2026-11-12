@@ -100,6 +100,23 @@ class MihonRepoClientTest {
     }
 
     @Test
+    fun restoredKeySurvivesOfflineStart() = runTest {
+        val repo = MihonRepoClient(perHostClient(emptyMap(), failing = setOf("a.example")))
+        repo.restoreSigningKeys(mapOf("https://a.example" to "keyA", "https://gone.example" to "keyGone"))
+        repo.fetch(listOf("https://a.example"))
+        assertEquals(setOf("keyA"), repo.signingKeys)
+        assertEquals(mapOf("https://a.example" to "keyA"), repo.signingKeysByRepo)
+    }
+
+    @Test
+    fun restoreIsIgnoredOnceKeysAreKnown() = runTest {
+        val repo = MihonRepoClient(perHostClient(mapOf("a.example" to "keyA"), failing = emptySet()))
+        repo.fetch(listOf("https://a.example"))
+        repo.restoreSigningKeys(mapOf("https://a.example" to "stale"))
+        assertEquals(setOf("keyA"), repo.signingKeys)
+    }
+
+    @Test
     fun httpRepoIsIgnored() = runTest {
         val repo = MihonRepoClient(client())
         val result = repo.fetch(listOf("http://repo.example"))

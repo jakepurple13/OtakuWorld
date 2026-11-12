@@ -51,6 +51,39 @@ class ItemDaoTest {
         assertEquals("https://example.com/1", all[0].url)
     }
 
+    @Test fun `update checker reads skip soft-deleted favorites`() = runTest {
+        dao.insertFavorite(favorite("https://example.com/1"))
+        dao.insertFavorite(favorite("https://example.com/2"))
+        dao.softDeleteFavorite("https://example.com/1", timestamp = 1_000L)
+
+        assertEquals(listOf("https://example.com/2"), dao.getFavoritesToCheckSync(checkAll = true, emptyList()).map { it.url })
+        assertEquals(listOf("https://example.com/2"), dao.getAllNotifyingFavoritesSync().map { it.url })
+        assertEquals(listOf("https://example.com/2"), dao.getAllNotifyingFavorites().first().map { it.url })
+    }
+
+    @Test fun `markFavoriteSynced keeps the row dirty when it was edited during the push`() = runTest {
+        dao.insertFavorite(favorite("https://example.com/1").copy(updatedAt = 100L))
+        // Edited after the push read the row
+        dao.insertFavorite(favorite("https://example.com/1", numChapters = 5).copy(updatedAt = 200L))
+
+        dao.markFavoriteSynced("https://example.com/1", timestamp = 100L, pushedUpdatedAt = 100L)
+        val stillDirty = dao.getFavoriteByUrl("https://example.com/1")!!
+        assertTrue(stillDirty.isDirty)
+        assertEquals(200L, stillDirty.updatedAt)
+
+        dao.markFavoriteSynced("https://example.com/1", timestamp = 200L, pushedUpdatedAt = 200L)
+        assertTrue(!dao.getFavoriteByUrl("https://example.com/1")!!.isDirty)
+    }
+
+    @Test fun `runInTransaction commits every write in the block`() = runTest {
+        dao.runInTransaction {
+            dao.insertFavorite(favorite("https://example.com/1"))
+            dao.insertFavorite(favorite("https://example.com/2"))
+        }
+
+        assertEquals(2, dao.getAllFavoritesSync().size)
+    }
+
     @Test fun `getAllFavorites flow excludes soft-deleted rows`() = runTest {
         dao.insertFavorite(favorite("https://example.com/1"))
         dao.insertFavorite(favorite("https://example.com/2"))

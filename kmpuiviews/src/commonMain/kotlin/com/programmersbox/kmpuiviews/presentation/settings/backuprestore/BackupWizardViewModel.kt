@@ -5,11 +5,15 @@ import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.sharedcomponents.backup.BackupUiInfo
 import com.programmersbox.sharedcomponents.backup.ItemResult
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.dropWhile
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -32,6 +36,8 @@ class BackupWizardViewModel<F>(
         BackupWizardUiState(items = uiInfos.map { WizardItemState(uiInfo = it) })
     )
     val state: StateFlow<BackupWizardUiState> = _state.asStateFlow()
+
+    private var resultsJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -71,9 +77,9 @@ class BackupWizardViewModel<F>(
 
     fun goToReview() {
         _state.update { s ->
-            s.copy(step = BackupWizardStep.Review, items = s.items.filter { it.selected })
+            s.copy(step = BackupWizardStep.Review)
         }
-        _state.value.items.forEach { if (it.summary == null) loadSummaryIfNeeded(it.uiInfo.key) }
+        _state.value.items.forEach { if (it.selected && it.summary == null) loadSummaryIfNeeded(it.uiInfo.key) }
     }
 
     fun goToSelectItems() {
@@ -94,10 +100,14 @@ class BackupWizardViewModel<F>(
             ?.subItems
             ?.takeIf { it.isNotEmpty() }
             ?.let { all -> all.filter { it.selected }.map { it.id }.toSet().takeIf { it.size != all.size } }
-        _state.update { it.copy(step = BackupWizardStep.Executing) }
-        startBackup(file, keys, selectedListIds)
-        viewModelScope.launch {
-            resultsFlow.collect { results ->
+        _state.update { it.copy(step = BackupWizardStep.Executing, results = emptyList()) }
+        resultsJob?.cancel()
+        resultsJob = viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            // The results flow replays the last finished run until the new one shows up,
+            // so read it before starting and skip that stale value.
+            val stale = resultsFlow.firstOrNull()?.takeIf { it.isNotEmpty() }
+            startBackup(file, keys, selectedListIds)
+            resultsFlow.dropWhile { it == stale }.collect { results ->
                 _state.update { it.copy(results = results) }
                 if (results.map { r -> r.key }.toSet() == keys) {
                     _state.update { it.copy(step = BackupWizardStep.Complete) }

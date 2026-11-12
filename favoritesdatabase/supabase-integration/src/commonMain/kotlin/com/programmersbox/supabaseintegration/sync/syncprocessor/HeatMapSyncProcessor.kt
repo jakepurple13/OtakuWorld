@@ -42,8 +42,10 @@ class HeatMapSyncProcessor(
         local.toHeatMapItemRow(uid, app, timestamp)
 
     override suspend fun markLocalSynced(local: HeatMapItem, timestamp: Long) {
-        heatMapDao.markHeatMapItemSynced(local.time, timestamp)
+        heatMapDao.markHeatMapItemSynced(local.time, timestamp, pushedUpdatedAt = local.updatedAt)
     }
+
+    override suspend fun runInTransaction(block: suspend () -> Unit) = heatMapDao.runInTransaction(block)
 
     override suspend fun deleteLocal(local: HeatMapItem) {
         heatMapDao.deleteHeatMap(local)

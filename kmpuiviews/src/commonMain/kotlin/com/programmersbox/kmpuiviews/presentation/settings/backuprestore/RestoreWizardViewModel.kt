@@ -6,11 +6,15 @@ import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.sharedcomponents.backup.BackupDataSummary
 import com.programmersbox.sharedcomponents.backup.BackupUiInfo
 import com.programmersbox.sharedcomponents.backup.ItemResult
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.dropWhile
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -19,6 +23,7 @@ data class RestoreWizardUiState<F>(
     val file: F? = null,
     val items: List<WizardItemState> = emptyList(),
     val results: List<ItemResult> = emptyList(),
+    val error: String? = null,
 )
 
 private const val LISTS_KEY = "lists.json"
@@ -34,16 +39,20 @@ class RestoreWizardViewModel<F>(
     private val _state = MutableStateFlow(RestoreWizardUiState<F>())
     val state: StateFlow<RestoreWizardUiState<F>> = _state.asStateFlow()
 
+    private var resultsJob: Job? = null
+
     fun pickFile(file: F) {
         viewModelScope.launch {
-            val summaries = peekZip(file)
+            val summaries = runCatching { peekZip(file) }
+                .onFailure { e -> _state.update { it.copy(error = e.message ?: "Could not read backup file") } }
+                .getOrNull() ?: return@launch
             val items = uiInfos
                 .filter { summaries.containsKey(it.key) }
                 .map { WizardItemState(uiInfo = it, summary = summaries[it.key]) }
-            _state.update { it.copy(file = file, step = RestoreWizardStep.SelectItems, items = items) }
+            _state.update { it.copy(file = file, step = RestoreWizardStep.SelectItems, items = items, error = null) }
 
             if (items.any { it.uiInfo.key == LISTS_KEY }) {
-                val subItems = peekListContents(file).map {
+                val subItems = runCatching { peekListContents(file) }.getOrDefault(emptyList()).map {
                     ListSubItemState(
                         id = it.item.uuid,
                         name = it.item.name,
@@ -90,7 +99,7 @@ class RestoreWizardViewModel<F>(
 
     fun goToReview() {
         _state.update { s ->
-            s.copy(step = RestoreWizardStep.Review, items = s.items.filter { it.selected })
+            s.copy(step = RestoreWizardStep.Review)
         }
     }
 
@@ -117,10 +126,14 @@ class RestoreWizardViewModel<F>(
             ?.subItems
             ?.takeIf { it.isNotEmpty() }
             ?.let { all -> all.filter { it.selected }.map { it.id }.toSet().takeIf { it.size != all.size } }
-        _state.update { it.copy(step = RestoreWizardStep.Executing) }
-        startRestore(file, keys, selectedListIds)
-        viewModelScope.launch {
-            resultsFlow.collect { results ->
+        _state.update { it.copy(step = RestoreWizardStep.Executing, results = emptyList()) }
+        resultsJob?.cancel()
+        resultsJob = viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            // The results flow replays the last finished run until the new one shows up,
+            // so read it before starting and skip that stale value.
+            val stale = resultsFlow.firstOrNull()?.takeIf { it.isNotEmpty() }
+            startRestore(file, keys, selectedListIds)
+            resultsFlow.dropWhile { it == stale }.collect { results ->
                 _state.update { it.copy(results = results) }
                 if (results.map { r -> r.key }.toSet() == keys) {
                     _state.update { it.copy(step = RestoreWizardStep.Complete) }

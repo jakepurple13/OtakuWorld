@@ -407,11 +407,11 @@ class OtakuCustomListViewModelTest {
         vm.toggleSelection(vm.customList!!.list.filter { it.title == "Copied" })
 
         val result = vm.addSelectedTo(listOf(target))
-        awaitCondition { dao().getCustomListItem(target.item.uuid).list.size == 1 }
+        awaitCondition { dao().getCustomListItem(target.item.uuid)!!.list.size == 1 }
 
         assertEquals(1, result.getOrNull())
-        assertEquals(setOf("Copied", "Stayer"), dao().getCustomListItem(uuid).list.map { it.title }.toSet())
-        assertEquals(listOf("Copied"), dao().getCustomListItem(target.item.uuid).list.map { it.title })
+        assertEquals(setOf("Copied", "Stayer"), dao().getCustomListItem(uuid)!!.list.map { it.title }.toSet())
+        assertEquals(listOf("Copied"), dao().getCustomListItem(target.item.uuid)!!.list.map { it.title })
         assertFalse(vm.inSelectionMode)
     }
 
@@ -441,8 +441,8 @@ class OtakuCustomListViewModelTest {
         vm.toggleSelection(vm.customList!!.list)
 
         assertEquals(3, vm.addSelectedTo(listOf(first, second)).getOrNull())
-        assertEquals(setOf("One", "Two"), dao().getCustomListItem(first.item.uuid).list.map { it.title }.toSet())
-        assertEquals(setOf("One", "Two"), dao().getCustomListItem(second.item.uuid).list.map { it.title }.toSet())
+        assertEquals(setOf("One", "Two"), dao().getCustomListItem(first.item.uuid)!!.list.map { it.title }.toSet())
+        assertEquals(setOf("One", "Two"), dao().getCustomListItem(second.item.uuid)!!.list.map { it.title }.toSet())
     }
 
     @Test fun `updateDetails saves name and description`() = runTest {
@@ -452,9 +452,9 @@ class OtakuCustomListViewModelTest {
         awaitCondition { vm.customList != null }
 
         vm.updateDetails("Renamed", "A description")
-        awaitCondition { dao().getCustomListItem(uuid).item.name == "Renamed" }
+        awaitCondition { dao().getCustomListItem(uuid)!!.item.name == "Renamed" }
 
-        assertEquals("A description", dao().getCustomListItem(uuid).item.description)
+        assertEquals("A description", dao().getCustomListItem(uuid)!!.item.description)
     }
 
     @Test fun `deleteAll removes the whole list`() = runTest {

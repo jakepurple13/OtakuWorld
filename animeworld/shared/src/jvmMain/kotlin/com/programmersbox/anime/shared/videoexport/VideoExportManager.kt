@@ -98,14 +98,20 @@ class VideoExportManager(
     fun start(ffmpeg: File, source: File, options: ExportOptions, output: File, durationMs: Long?) {
         val key = source.absolutePath
         synchronized(jobs) {
-            if (jobs[key]?.isActive == true) return
+            val previous = jobs[key]
+            if (previous?.isActive == true) return
             publish(key, VideoExport(key, output, options, ExportState.Running(null, 0, durationMs, null, 0)))
-            jobs[key] = scope.launch { run(ffmpeg, source, options, output, durationMs) }
+            jobs[key] = scope.launch {
+                // A cancelled export of the same source may still be stopping ffmpeg and deleting its .part.
+                previous?.join()
+                run(ffmpeg, source, options, output, durationMs)
+            }
         }
     }
 
     fun cancel(source: String) {
-        synchronized(jobs) { jobs.remove(source)?.cancel() }
+        // Kept in [jobs] so a restart waits for this job to finish cleaning up.
+        synchronized(jobs) { jobs[source]?.cancel() }
         clear(source)
     }
 
@@ -128,29 +134,38 @@ class VideoExportManager(
                 sub.file.copyTo(File(temp, "burn.${sub.file.extension}"))
             }
             val args = ffmpegArgs(ffmpeg.path, source, subtitles, options, part, burn)
-            val exit = runInterruptible(Dispatchers.IO) {
-                val process = ProcessBuilder(args).start()
-                try {
-                    val stderr = Thread {
+            val process = ProcessBuilder(args).start()
+            val exit = try {
+                // Reading a process pipe can't be interrupted, so both pipes are read on their own threads and only
+                // the (interruptible) wait runs here; on cancellation the finally destroys ffmpeg, which ends them.
+                val stderr = Thread {
+                    runCatching {
                         process.errorStream.bufferedReader().forEachLine { line ->
                             synchronized(log) {
                                 log.addLast(line)
                                 if (log.size > 40) log.removeFirst()
                             }
                         }
-                    }.apply { isDaemon = true; start() }
-                    val parser = FfmpegProgressParser()
-                    process.inputStream.bufferedReader().forEachLine { line ->
-                        val p = parser.line(line) ?: return@forEachLine
-                        val fraction = durationMs?.takeIf { it > 0 }?.let { (p.positionMs.toFloat() / it).coerceIn(0f, 1f) }
-                        update(key) { ExportState.Running(fraction, p.positionMs, durationMs, p.speed, p.bytes) }
                     }
+                }.apply { isDaemon = true; start() }
+                val stdout = Thread {
+                    runCatching {
+                        val parser = FfmpegProgressParser()
+                        process.inputStream.bufferedReader().forEachLine { line ->
+                            val p = parser.line(line) ?: return@forEachLine
+                            val fraction = durationMs?.takeIf { it > 0 }?.let { (p.positionMs.toFloat() / it).coerceIn(0f, 1f) }
+                            update(key) { ExportState.Running(fraction, p.positionMs, durationMs, p.speed, p.bytes) }
+                        }
+                    }
+                }.apply { isDaemon = true; start() }
+                runInterruptible(Dispatchers.IO) {
                     val code = process.waitFor()
+                    stdout.join()
                     stderr.join(1_000)
                     code
-                } finally {
-                    process.destroy()
                 }
+            } finally {
+                process.destroy()
             }
             val logText = synchronized(log) { log.joinToString("\n") }
             if (exit != 0) throw ExportFailure(logText.lineSequence().lastOrNull { it.isNotBlank() } ?: "ffmpeg exited with $exit", logText)

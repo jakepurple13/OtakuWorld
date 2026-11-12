@@ -11,6 +11,7 @@ import androidx.room3.OnConflictStrategy
 import androidx.room3.PrimaryKey
 import androidx.room3.Query
 import androidx.room3.RoomDatabase
+import androidx.room3.Transaction
 import androidx.room3.Update
 import androidx.room3.migration.Migration
 import androidx.sqlite.SQLiteConnection
@@ -67,23 +68,32 @@ interface NotesDao {
     @Query("DELETE FROM notes WHERE itemUrl = :itemUrl")
     suspend fun deleteNote(itemUrl: String)
 
-    @Query("SELECT * FROM notes WHERE itemUrl = :itemUrl")
+    /**
+     * Deletes a note from the UI. While signed in ([softDelete]) the row is only marked deleted so the
+     * delete syncs; the push removes it afterwards.
+     */
+    suspend fun removeNote(itemUrl: String, softDelete: Boolean) {
+        if (softDelete) softDeleteNote(itemUrl, Clock.System.now().toEpochMilliseconds()) else deleteNote(itemUrl)
+    }
+
+    @Query("SELECT * FROM notes WHERE itemUrl = :itemUrl AND is_deleted = 0")
     fun getNote(itemUrl: String): Flow<NoteItem?>
 
-    @Query("SELECT * FROM notes ORDER BY timestamp DESC")
+    @Query("SELECT * FROM notes WHERE is_deleted = 0 ORDER BY timestamp DESC")
     fun getAllNotes(): Flow<List<NoteItem>>
 
+    // Includes soft-deleted rows; sync and backup need them.
     @Query("SELECT * FROM notes")
     suspend fun getAllNotesSync(): List<NoteItem>
 
-    @Query("SELECT COUNT(itemUrl) FROM notes")
+    @Query("SELECT COUNT(itemUrl) FROM notes WHERE is_deleted = 0")
     fun getAllNotesCount(): Flow<Int>
 
     @Query("""
         SELECT * FROM notes WHERE rowid IN (
             SELECT rowid FROM notes_fts
             WHERE notes_fts MATCH :query
-        ) ORDER BY timestamp DESC
+        ) AND is_deleted = 0 ORDER BY timestamp DESC
     """)
     fun searchNotes(query: String): Flow<List<NoteItem>>
 
@@ -115,8 +125,13 @@ interface NotesDao {
     @Query("UPDATE notes SET is_deleted = 1, is_dirty = 1, updated_at = :timestamp WHERE itemUrl = :itemUrl")
     suspend fun softDeleteNote(itemUrl: String, timestamp: Long)
 
-    @Query("UPDATE notes SET updated_at = :timestamp, is_dirty = 0 WHERE itemUrl = :itemUrl")
-    suspend fun markNoteSynced(itemUrl: String, timestamp: Long)
+    // Only clears rows that weren't edited during the push (see ItemDao.markFavoriteSynced).
+    @Query("UPDATE notes SET updated_at = :timestamp, is_dirty = 0 WHERE itemUrl = :itemUrl AND updated_at = :pushedUpdatedAt")
+    suspend fun markNoteSynced(itemUrl: String, timestamp: Long, pushedUpdatedAt: Long)
+
+    /** Runs [block] in one write transaction, so sync writes a whole batch with one commit. */
+    @Transaction
+    suspend fun runInTransaction(block: suspend () -> Unit) = block()
 
     @Query("UPDATE notes SET is_dirty = 1")
     suspend fun markAllNotesDirty()

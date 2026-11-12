@@ -203,7 +203,7 @@ fun OtakuListView(
             verticalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier.fillMaxSize()
         ) {
-            items(customLists) {
+            items(customLists, key = { it.item.uuid }) {
                 var optionsSheet by optionsSheet {
                     OutlinedCard(
                         modifier = Modifier.animateContentSize()
@@ -338,7 +338,7 @@ fun OtakuListView(
                     }
                 }
 
-                val time = remember { dateTimeFormatter.format(it.item.time.toLocalDateTime()) }
+                val time = remember(it.item.time) { dateTimeFormatter.format(it.item.time.toLocalDateTime()) }
 
                 ListItem(
                     overlineContent = { Text(stringResource(Res.string.custom_list_updated_at, time)) },

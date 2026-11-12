@@ -82,7 +82,9 @@ class FavoritesRepository(
     suspend fun toggleNotify(db: DbModel) {
         coroutineScope {
             launch {
-                dao.updateFavoriteItem(db.copy(isDirty = authManager.isLoggedIn()))
+                dao.updateFavoriteItem(
+                    db.copy(isDirty = authManager.isLoggedIn(), updatedAt = clock.now().toEpochMilliseconds())
+                )
                 systemAlerter.alertFavoritesChange()
             }
         }

@@ -2,7 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-feature android:name="android.hardware.camera" />
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature
         android:name="android.hardware.camera.autofocus"
@@ -27,7 +29,7 @@
         <receiver
             android:name=".receivers.DeleteNotificationReceiver"
             android:enabled="true"
-            android:exported="true" />
+            android:exported="false" />
 
         <receiver
             android:name=".receivers.DownloadNewChaptersReceiver"
@@ -37,7 +39,7 @@
         <receiver
             android:name=".receivers.SwipeAwayReceiver"
             android:enabled="true"
-            android:exported="true" />
+            android:exported="false" />
 
         <receiver
             android:name=".receivers.PackageInstallReceiver"

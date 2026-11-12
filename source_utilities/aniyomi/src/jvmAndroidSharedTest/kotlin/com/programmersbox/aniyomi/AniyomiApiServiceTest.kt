@@ -98,6 +98,19 @@ class AniyomiApiServiceTest {
     }
 
     @Test
+    fun pendingVideo_stillResolvesAfterAnotherChapterInfo() = runTest {
+        val source = FakeAnimeHttpSource(episodeVideos = listOf(video("auto", initialized = false)))
+        val service = aniyomiApiService(source, 14.0)
+
+        val first = service.chapterInfo(service.firstEpisode()).single()
+        // e.g. a download or prefetch of another episode while the first is being picked
+        val second = service.chapterInfo(service.firstEpisode()).single()
+
+        assertEquals("https://cdn.example.org/resolved.m3u8", service.resolve(first).link)
+        assertEquals("https://cdn.example.org/resolved.m3u8", service.resolve(second).link)
+    }
+
+    @Test
     fun uninitializedVideo_resolvesWithResolveVideo() = runTest {
         val source = FakeAnimeHttpSource(episodeVideos = listOf(video("auto", initialized = false)))
         val service = aniyomiApiService(source, 14.0)

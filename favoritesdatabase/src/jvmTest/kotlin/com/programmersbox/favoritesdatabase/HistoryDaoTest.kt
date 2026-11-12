@@ -102,4 +102,22 @@ class HistoryDaoTest {
 
         assertTrue(dao.getRecentlyViewed().first().isEmpty())
     }
+
+    @Test fun `removeOldData keeps only the newest limit rows`() = runTest {
+        (1..5).forEach { dao.insertRecentlyViewed(recent("https://example.com/$it", timestamp = it.toLong())) }
+
+        dao.removeOldData(2)
+
+        assertEquals(listOf("https://example.com/4", "https://example.com/5"), dao.getRecentlyViewed().first().map { it.url })
+    }
+
+    @Test fun `soft-deleted recents are hidden`() = runTest {
+        dao.insertRecentlyViewed(recent("https://example.com/1"))
+        dao.insertRecentlyViewed(recent("https://example.com/2"))
+
+        dao.softDeleteRecentlyViewed("https://example.com/1", timestamp = 1_000L)
+
+        assertEquals(listOf("https://example.com/2"), dao.getRecentlyViewed().first().map { it.url })
+        assertEquals(1, dao.getAllRecentHistoryCount().first())
+    }
 }

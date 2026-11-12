@@ -3,8 +3,10 @@ package com.programmersbox.manga.shared.downloads
 import com.programmersbox.kmpuiviews.ExtensionWatcher
 import com.programmersbox.kmpuiviews.MangaDesktopSettings
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.update
 import java.io.File
 
 actual class DownloadedMediaHandler(
@@ -20,8 +22,9 @@ actual class DownloadedMediaHandler(
                 mangaDesktopSettings
                     .downloadsDirectory
                     .asFlow()
-            ).observeExtensionsDir()
-        ) { path, _ -> path }
+            ).observeExtensionsDir(),
+            deletions,
+        ) { path, _, _ -> path }
             .mapNotNull { rootDir ->
                 File(rootDir)
                     .listFiles { it.isDirectory && !it.isHidden }
@@ -30,10 +33,11 @@ actual class DownloadedMediaHandler(
                         val title = file.name
                         file
                             .listFiles()
+                            ?.filter { isCompleteChapter(it.list()) }
                             ?.flatMap { c ->
                                 println(c)
                                 c
-                                    .listFiles()
+                                    .listFiles { f -> !f.name.startsWith(".") }
                                     ?.map {
                                         println(it)
                                         DownloadedChapters(
@@ -53,7 +57,12 @@ actual class DownloadedMediaHandler(
             }
 
 
+    // The directory watcher only sees the root folder, so deletes refresh the list themselves
+    private val deletions = MutableStateFlow(0)
+
     actual fun delete(downloadedChapters: DownloadedChapters) {
+        File(downloadedChapters.chapterFolder).deleteRecursively()
+        deletions.update { it + 1 }
     }
 
     actual fun clear() {

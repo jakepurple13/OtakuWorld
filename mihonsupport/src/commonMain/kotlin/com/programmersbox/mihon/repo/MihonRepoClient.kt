@@ -39,9 +39,30 @@ class MihonRepoClient(private val httpClient: HttpClient) {
     /** Repo base URL -> signing key fingerprint. Guarded by [mutex]. */
     private var keysByRepo: Map<String, String> = emptyMap()
 
+    /** Immutable copy of [keysByRepo], readable without suspending. */
+    @Volatile
+    private var keysByRepoSnapshot: Map<String, String> = emptyMap()
+
     /** Immutable copy of the fingerprints in [keysByRepo], readable without suspending. */
     @Volatile
     private var keySnapshot: Set<String> = emptySet()
+
+    /** Repo base URL -> signing key fingerprint, as of the most recent [fetch]. Persist it for [restoreSigningKeys]. */
+    val signingKeysByRepo: Map<String, String> get() = keysByRepoSnapshot
+
+    /**
+     * Seeds keys persisted by an earlier run, so a repo that cannot be reached on this start keeps its key in the
+     * next [fetch] instead of its extensions loading as untrusted. Ignored once keys are known; [fetch] still drops
+     * repos that are no longer configured.
+     */
+    suspend fun restoreSigningKeys(keys: Map<String, String>) {
+        mutex.withLock {
+            if (keysByRepo.isNotEmpty()) return
+            keysByRepo = keys
+            keysByRepoSnapshot = keys
+            keySnapshot = keys.values.toSet()
+        }
+    }
 
     /**
      * Signing key fingerprints for the repos in the most recent [fetch] call. A repo that failed
@@ -64,6 +85,7 @@ class MihonRepoClient(private val httpClient: HttpClient) {
                 if (key != null) updated[base] = key
             }
             keysByRepo = updated
+            keysByRepoSnapshot = updated.toMap()
             keySnapshot = updated.values.toSet()
         }
         return results.filterNotNull().flatMap { it.sources }

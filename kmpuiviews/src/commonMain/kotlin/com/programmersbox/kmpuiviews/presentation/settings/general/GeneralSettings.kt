@@ -41,6 +41,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -251,18 +252,21 @@ fun ShowDownloadSettings(handling: NewSettingsHandling) {
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun HistorySettings(dataStoreHandling: DataStoreHandling) {
-    var sliderValue by dataStoreHandling.historySave.asState()
+    var historySave by dataStoreHandling.historySave.asState()
+    // Only persist when the drag ends, not on every frame.
+    var sliderValue by remember(historySave) { mutableFloatStateOf(historySave.toFloat()) }
 
     ElevatedCard(
         shape = ListItemDefaults.segmentedShapes(2, 3).shape,
     ) {
         SliderSetting(
-            sliderValue = sliderValue.toFloat(),
+            sliderValue = sliderValue,
             settingTitle = { Text(stringResource(Res.string.history_save_title)) },
             settingSummary = { Text(stringResource(Res.string.history_save_summary)) },
             settingIcon = { Icon(Icons.Default.ChangeHistory, null) },
             range = -1f..100f,
-            updateValue = { sliderValue = it.toInt() }
+            updateValue = { sliderValue = it },
+            onValueChangedFinished = { historySave = sliderValue.toInt() }
         )
     }
 }

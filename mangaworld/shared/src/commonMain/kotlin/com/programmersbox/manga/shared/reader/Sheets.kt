@@ -73,6 +73,7 @@ import com.programmersbox.manga.shared.settings.ImageLoaderSettings
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
+import io.ktor.client.request.header
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.firstOrNull
@@ -313,7 +314,11 @@ internal fun SheetView(
                         }
                 ) {
                     KamelImage(
-                        resource = { asyncPainterResource(it) },
+                        resource = {
+                            asyncPainterResource(it) {
+                                requestBuilder { readVm.headers.forEach { (t, u) -> header(t, u) } }
+                            }
+                        },
                         onLoading = { CircularProgressIndicator(progress = { it }) },
                         contentDescription = null,
                         contentScale = ContentScale.Crop,

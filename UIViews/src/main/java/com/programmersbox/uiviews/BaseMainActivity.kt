@@ -99,7 +99,9 @@ abstract class BaseMainActivity : FragmentActivity() {
         }
 
         cancelNotificationFrom(intent)
-        intent.data?.let { handleDeepLink(it) }
+        // The navigation back stack is a singleton that survives recreation, so a rotation or theme
+        // change must not push the deep link again
+        if (savedInstanceState == null) intent.data?.let { handleDeepLink(it) }
 
         setContent {
             HomeNav(

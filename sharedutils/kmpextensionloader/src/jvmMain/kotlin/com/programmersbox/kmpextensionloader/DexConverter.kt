@@ -27,7 +27,7 @@ object DexConverter {
     /** Like [convert], but throws the conversion failure instead of returning null. */
     fun convertOrThrow(apkFile: File, cacheDir: File): File {
         val hash = sha256(apkFile)
-        val cachedJar = jarFor(apkFile, cacheDir)
+        val cachedJar = jarFor(hash, cacheDir)
         if (cachedJar.exists()) return cachedJar
 
         // Not "*.jar", so cache cleanup never mistakes an in-progress conversion for a stale jar.
@@ -112,7 +112,9 @@ object DexConverter {
     private val CACHED_JAR = Regex("^[0-9a-f]{64}-v[0-9]+\\.jar$")
 
     /** The cache location [convert] uses for [apkFile]'s jar (may not exist yet). */
-    fun jarFor(apkFile: File, cacheDir: File): File = File(cacheDir, "${sha256(apkFile)}-v$CONVERTER_VERSION.jar")
+    fun jarFor(apkFile: File, cacheDir: File): File = jarFor(sha256(apkFile), cacheDir)
+
+    private fun jarFor(hash: String, cacheDir: File): File = File(cacheDir, "$hash-v$CONVERTER_VERSION.jar")
 
     private fun sha256(file: File): String {
         val digest = MessageDigest.getInstance("SHA-256")

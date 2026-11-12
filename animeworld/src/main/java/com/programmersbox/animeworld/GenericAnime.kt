@@ -13,6 +13,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Environment
 import android.provider.Settings
+import android.util.Log
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxSize
@@ -76,6 +77,7 @@ import com.programmersbox.anime.shared.videoplayer.VideoPlayerUi
 import com.programmersbox.anime.shared.videoplayer.defaultSubtitleIndex
 import com.programmersbox.anime.shared.videoplayer.playerHeaders
 import com.programmersbox.anime.shared.videoplayer.streamMime
+import com.programmersbox.anime.shared.videoplayer.streamPositions
 import com.programmersbox.anime.shared.videoplayer.PlayerPreviewDefaults
 import com.programmersbox.anime.shared.videoplayer.PlayerStyleSheetSetting
 import com.programmersbox.anime.shared.videoplayer.videoPlayerBlur
@@ -113,9 +115,9 @@ import com.programmersbox.sharedcomponents.notifier.ProgressHandle
 import com.programmersbox.sharedtools.BackupProcessor
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.bindsGenericInfo
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -201,7 +203,10 @@ class GenericAnime(
     private val notifier: InAppNotifier,
 ) : GenericSharedAnime(appConfig = appConfig), GenericInfo {
 
-    private val scope = CoroutineScope(Job() + Dispatchers.Main)
+    // One failed cast or download must neither crash the app nor cancel the scope for later taps.
+    private val scope = CoroutineScope(
+        SupervisorJob() + Dispatchers.Main + CoroutineExceptionHandler { _, t -> Log.e("GenericAnime", "Background task failed", t) }
+    )
 
     override val deepLinkUri: String get() = "animeworld://"
 
@@ -235,7 +240,7 @@ class GenericAnime(
                         sourceHeaders = castSourceHeaders(storage.headers, storage.headers["referer"] ?: storage.source),
                         subtitles = storage.subtitles,
                         selectedSubtitle = defaultCastSubtitle(storage.subtitles),
-                        startPositionMs = context.getSharedPreferences("videos", Context.MODE_PRIVATE).getLong(storage.link, 0L),
+                        startPositionMs = context.streamPositions().getLong(model.url, 0L),
                     )
                 )
             }
@@ -250,7 +255,8 @@ class GenericAnime(
                     showName = model.name,
                     downloadOrStream = false,
                     referer = storage.headers["referer"] ?: storage.source.orEmpty(),
-                    seedColor = seedColor
+                    seedColor = seedColor,
+                    episodeUrl = model.url,
                 )
             )
         }

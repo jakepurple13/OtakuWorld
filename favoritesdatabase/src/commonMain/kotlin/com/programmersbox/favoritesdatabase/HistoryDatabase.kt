@@ -14,6 +14,7 @@ import androidx.room3.OnConflictStrategy
 import androidx.room3.PrimaryKey
 import androidx.room3.Query
 import androidx.room3.RoomDatabase
+import androidx.room3.Transaction
 import androidx.room3.Update
 import androidx.room3.migration.Migration
 import androidx.room3.paging.PagingSourceDaoReturnTypeConverter
@@ -80,16 +81,16 @@ interface HistoryDao {
     @Delete
     suspend fun deleteHistory(model: HistoryItem)
 
-    @Query("SELECT COUNT(url) FROM RecentlyViewed")
+    @Query("SELECT COUNT(url) FROM RecentlyViewed WHERE is_deleted = 0")
     fun getAllRecentHistoryCount(): Flow<Int>
 
-    @Query("SELECT * FROM RecentlyViewed ORDER BY timestamp ASC")
+    @Query("SELECT * FROM RecentlyViewed WHERE is_deleted = 0 ORDER BY timestamp ASC")
     fun getRecentlyViewed(): Flow<List<RecentModel>>
 
     @Query("SELECT * FROM RecentlyViewed ORDER BY timestamp ASC")
     suspend fun getAllRecentlyViewedSync(): List<RecentModel>
 
-    @Query("SELECT * FROM RecentlyViewed ORDER BY timestamp DESC")
+    @Query("SELECT * FROM RecentlyViewed WHERE is_deleted = 0 ORDER BY timestamp DESC")
     fun getRecentlyViewedPaging(): PagingSource<Int, RecentModel>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -98,7 +99,7 @@ interface HistoryDao {
     @Delete
     suspend fun deleteRecent(model: RecentModel)
 
-    @Query("DELETE FROM RecentlyViewed WHERE url IN (SELECT url FROM RecentlyViewed ORDER BY timestamp DESC LIMIT 1 OFFSET :limit)")
+    @Query("DELETE FROM RecentlyViewed WHERE url IN (SELECT url FROM RecentlyViewed ORDER BY timestamp DESC LIMIT -1 OFFSET :limit)")
     suspend fun removeOldData(limit: Int)
 
     @Query("DELETE FROM RecentlyViewed")
@@ -135,9 +136,9 @@ interface HistoryDao {
     @Query("UPDATE RecentlyViewed SET is_deleted = 1, is_dirty = 1, updated_at = :timestamp WHERE url = :url")
     suspend fun softDeleteRecentlyViewed(url: String, timestamp: Long)
 
-    // Mark synced
-    @Query("UPDATE History SET updated_at = :timestamp, is_dirty = 0 WHERE search_text = :key")
-    suspend fun markHistorySynced(key: String, timestamp: Long)
+    // Mark synced. Only clears rows that weren't edited during the push (see ItemDao.markFavoriteSynced).
+    @Query("UPDATE History SET updated_at = :timestamp, is_dirty = 0 WHERE search_text = :key AND updated_at = :pushedUpdatedAt")
+    suspend fun markHistorySynced(key: String, timestamp: Long, pushedUpdatedAt: Long)
 
     @Query("UPDATE History SET is_dirty = 1")
     suspend fun markAllHistoryDirty()
@@ -150,6 +151,10 @@ interface HistoryDao {
 
     @Query("DELETE FROM History WHERE is_deleted = 1")
     suspend fun deleteAllDeletedHistory()
+
+    /** Runs [block] in one write transaction, so sync writes a whole batch with one commit. */
+    @Transaction
+    suspend fun runInTransaction(block: suspend () -> Unit) = block()
 
 }
 

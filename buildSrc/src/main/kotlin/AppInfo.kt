@@ -6,8 +6,12 @@ object AppInfo {
     val versionBump = 5000
     val versionCode by lazy {
         val code = if (System.getenv("CI") != null) {
-            runCatching { System.getenv("GITHUB_RUN_NUMBER").toInt() + versionBump }
-                .getOrNull()
+            // OTAKU_VERSION_CODE is set by the Android build workflows to the minutes since
+            // 2024-01-01 UTC, so it is shared across workflows and only grows with build time.
+            // It starts far above any GITHUB_RUN_NUMBER + versionBump code that was ever published.
+            System.getenv("OTAKU_VERSION_CODE")?.toIntOrNull()
+                ?: runCatching { System.getenv("GITHUB_RUN_NUMBER").toInt() + versionBump }
+                    .getOrNull()
         } else {
             null
         } ?: 2

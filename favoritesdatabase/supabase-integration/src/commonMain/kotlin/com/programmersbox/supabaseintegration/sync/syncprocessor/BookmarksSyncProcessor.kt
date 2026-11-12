@@ -41,8 +41,10 @@ class BookmarksSyncProcessor(
         local.toBookmarkedChapterRow(uid, app, timestamp)
 
     override suspend fun markLocalSynced(local: BookmarkedChapter, timestamp: Long) {
-        bookmarkDao.markBookmarkSynced(local.chapterUrl, timestamp)
+        bookmarkDao.markBookmarkSynced(local.chapterUrl, timestamp, pushedUpdatedAt = local.updatedAt)
     }
+
+    override suspend fun runInTransaction(block: suspend () -> Unit) = bookmarkDao.runInTransaction(block)
 
     override suspend fun deleteLocal(local: BookmarkedChapter) {
         bookmarkDao.deleteBookmark(local)

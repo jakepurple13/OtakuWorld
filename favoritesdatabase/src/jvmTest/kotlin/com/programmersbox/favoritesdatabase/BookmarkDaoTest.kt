@@ -86,6 +86,16 @@ class BookmarkDaoTest {
         assertFalse(dao.hasBookmark(chapterUrl))
     }
 
+    @Test fun `soft-deleted bookmarks are hidden from search, lookups and counts`() = runTest {
+        dao.insertBookmark(bookmark("https://example.com/series/ch1", chapterName = "Dragon Fight"))
+        dao.softDeleteBookmark("https://example.com/series/ch1", timestamp = 1_000L)
+
+        assertTrue(dao.searchBookmarks("Dragon").first().isEmpty())
+        assertEquals(null, dao.getBookmark("https://example.com/series/ch1").first())
+        assertTrue(dao.getBookmarksForChapters(listOf("https://example.com/series/ch1")).first().isEmpty())
+        assertEquals(0, dao.getAllBookmarksCount().first())
+    }
+
     @Test fun `searchBookmarks matches by chapterName`() = runTest {
         dao.insertBookmark(bookmark("https://example.com/series/ch1", chapterName = "Dragon Fight"))
         dao.insertBookmark(bookmark("https://example.com/series/ch2", chapterName = "Calm Morning"))
