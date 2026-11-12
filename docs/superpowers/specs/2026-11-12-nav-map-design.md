@@ -23,14 +23,17 @@ runtime recording. One graph per app (MangaWorld, AnimeWorld, NovelWorld Android
 3. **Overrides** — hand-written line files (`navgraph/overrides/*.navgraph`) add pseudo entry
    points (`@NavBar`, `@QuickActions`, `@DeepLinks`), file→screen attributions, explicit edges,
    ignores, and allowed orphans. Unknown ids in an override fail generation.
-4. **Output** — `navgraph.json` is generated at build time into Android assets for `debug` build
-   types and the `noFirebase` flavor only. A JVM test over the real repo fails when a screen has
-   no inbound edge and is not listed as an allowed orphan, or when an override no longer resolves.
+4. **Output** — `navgraph.json` is generated at build time into Android assets for the `debug`
+   build type only (the noFirebase release APK is published, so it is excluded). MangaWorld desktop
+   generates its own graph for local Gradle runs (`run`, `hotRunJvm`, `jvmRun`) and passes the path
+   via `-Dotaku.navgraph`; packaged desktop builds get nothing. A JVM test over the real repo fails
+   when a screen has no inbound edge and is not listed as an allowed orphan, or when an override no
+   longer resolves.
 
 ## Screen
 
-Settings › Developer › **Navigation map** (row visible when `appConfig.isDebug` or
-`buildType == NoFirebase`). Key: `Screen.DebugScreen.NavMap`.
+Settings › About › Developer › **Navigation map** (row, and the Developer entry itself, visible when
+the build has a graph: `NavGraphSource.available`). Key: `Screen.DebugScreen.NavMap`.
 
 - Top bar: back, title, app name. Search field. Filter chips: Entry points, Show args,
   Overrides only, No way in. Stats line: screens · edges · overrides · no way in.
@@ -47,4 +50,4 @@ Settings › Developer › **Navigation map** (row visible when `appConfig.isDeb
 
 ## Out of scope
 
-Desktop apps (JVM loader returns null), iOS, runtime recording, semantic lanes.
+AnimeWorld/NovelWorld desktop, iOS, runtime recording, semantic lanes.
