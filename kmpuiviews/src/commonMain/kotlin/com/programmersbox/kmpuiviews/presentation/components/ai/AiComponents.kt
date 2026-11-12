@@ -82,13 +82,20 @@ fun Modifier.generatingBorder(active: Boolean, shape: Shape): Modifier = compose
     // Not drawn, and no infinite transition running, once the fade-out has finished.
     if (!active && alpha == 0f) return@composed Modifier
 
-    val transition = rememberInfiniteTransition(label = "border")
-    val phase by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(2400, easing = LinearEasing), RepeatMode.Restart),
-        label = "borderPhase",
-    )
+    // Reduced motion: the gradient stays put instead of flowing.
+    val reducedMotion = rememberReducedMotion()
+    val phase = if (reducedMotion) {
+        0f
+    } else {
+        val transition = rememberInfiniteTransition(label = "border")
+        val animated by transition.animateFloat(
+            initialValue = 0f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(tween(2400, easing = LinearEasing), RepeatMode.Restart),
+            label = "borderPhase",
+        )
+        animated
+    }
     Modifier.drawBehind {
         val stroke = 1.5.dp.toPx()
         val shift = phase * size.width
@@ -135,7 +142,7 @@ private fun RoundRect.inset(d: Float): RoundRect {
 @Composable
 fun Spark(spinning: Boolean, modifier: Modifier = Modifier) {
     // Read in the draw layer so spinning doesn't recompose.
-    val rotation: () -> Float = if (spinning) {
+    val rotation: () -> Float = if (spinning && !rememberReducedMotion()) {
         val transition = rememberInfiniteTransition(label = "spark")
         val angle = transition.animateFloat(
             initialValue = 0f,
@@ -171,13 +178,19 @@ fun Spark(spinning: Boolean, modifier: Modifier = Modifier) {
 
 @Composable
 fun AiShimmer(modifier: Modifier = Modifier) {
-    val transition = rememberInfiniteTransition(label = "shimmer")
-    val phase by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(1200, easing = LinearEasing), RepeatMode.Restart),
-        label = "shimmerPhase",
-    )
+    // Reduced motion: the highlight band stays at a fixed spot.
+    val phase = if (rememberReducedMotion()) {
+        0.5f
+    } else {
+        val transition = rememberInfiniteTransition(label = "shimmer")
+        val animated by transition.animateFloat(
+            initialValue = 0f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(tween(1200, easing = LinearEasing), RepeatMode.Restart),
+            label = "shimmerPhase",
+        )
+        animated
+    }
     val base = MaterialTheme.colorScheme.surfaceContainerHighest
     val highlight = lerp(base, AiColors[1], 0.25f)
     Column(
@@ -221,14 +234,19 @@ fun StreamedText(
     val chunks = remember { mutableStateListOf<Chunk>() }
     // Fades run in their own scope so a newer chunk doesn't cancel an older one mid-fade.
     val fadeScope = rememberCoroutineScope()
+    val reducedMotion = rememberReducedMotion()
     LaunchedEffect(text) {
         val shown = chunks.joinToString("") { it.text }
         if (text == shown) return@LaunchedEffect
         // Anything that isn't a continuation (regenerate, template fallback) starts over.
         if (!text.startsWith(shown)) chunks.clear()
-        val added = Chunk(text.removePrefix(chunks.joinToString("") { it.text }), Animatable(0f))
+        // Reduced motion: chunks appear fully opaque, no fade.
+        val added = Chunk(
+            text.removePrefix(chunks.joinToString("") { it.text }),
+            Animatable(if (reducedMotion) 1f else 0f)
+        )
         chunks += added
-        fadeScope.launch { added.alpha.animateTo(1f, tween(350)) }
+        if (!reducedMotion) fadeScope.launch { added.alpha.animateTo(1f, tween(350)) }
     }
 
     val color = MaterialTheme.colorScheme.onSurface
