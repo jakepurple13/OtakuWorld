@@ -59,3 +59,6 @@ dependencies {
     implementation(androidx.profileinstaller.profileinstaller)
     baselineProfile(projects.novelWorldbaselineprofile)
 }
+
+// Debug/noFirebase only: navigation graph asset for Settings › Developer › Navigation map.
+navGraph("novelworld")

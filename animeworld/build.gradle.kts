@@ -109,3 +109,6 @@ dependencies {
     implementation(androidx.profileinstaller.profileinstaller)
     baselineProfile(projects.animeWorldbaselineprofile)
 }
+
+// Debug/noFirebase only: navigation graph asset for Settings › Developer › Navigation map.
+navGraph("animeworld")

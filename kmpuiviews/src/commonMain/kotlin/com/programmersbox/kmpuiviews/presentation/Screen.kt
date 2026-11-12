@@ -149,7 +149,11 @@ sealed class Screen(val route: String) : NavKey {
     data object AboutScreen : Screen("about")
 
     @Serializable
-    data object DebugScreen : Screen("debug")
+    data object DebugScreen : Screen("debug") {
+        /** Debug/noFirebase-only map of every screen and navigation path. */
+        @Serializable
+        data object NavMap : Screen("nav_map")
+    }
 
     @Serializable
     data object CustomListScreen : Screen("custom_list") {

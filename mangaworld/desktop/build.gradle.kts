@@ -134,3 +134,6 @@ nucleus.application {
         }*/
     }
 }
+
+// Local `run` tasks only: navigation graph for Settings › Developer › Navigation map. Not packaged.
+desktopNavGraph("mangaworld-desktop")
