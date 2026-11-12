@@ -6,12 +6,16 @@ import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngine
 import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngineId
 import com.programmersbox.kmpuiviews.domain.dailyoverview.TemplateEngine
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class DefaultAiTextTest {
     private class FakeEngine(
@@ -21,12 +25,16 @@ class DefaultAiTextTest {
         private val deltas: List<String> = listOf("generated"),
     ) : SummaryEngine {
         var generateCalls = 0
+        var collectThread: String? = null
         override suspend fun label() = id.name
         override suspend fun status() = status
         override fun summarize(facts: DailyFacts): Flow<String> = flowOf()
         override fun generate(system: String, user: String): Flow<String> {
             generateCalls++
-            return flowOf(*deltas.toTypedArray())
+            return flow {
+                collectThread = Thread.currentThread().name
+                deltas.forEach { emit(it) }
+            }
         }
     }
 
@@ -112,5 +120,22 @@ class DefaultAiTextTest {
         val ai = aiText(nano, tools = FakeNanoTools(ready = false))
         assertEquals(listOf("generated"), ai.tldr("x").toList())
         assertEquals(1, nano.generateCalls)
+    }
+
+    @Test
+    fun `no engine ready makes the flow throw on collect`() = runTest {
+        val ai = aiText(FakeEngine(SummaryEngineId.Nano, EngineStatus.Unavailable))
+        val flow = ai.tldr("x")
+        assertFailsWith<IllegalStateException> { flow.toList() }
+    }
+
+    @Test
+    fun `generation runs off the collector thread`() = runTest {
+        val gemma = FakeEngine(SummaryEngineId.Gemma)
+        val ai = aiText(gemma)
+        val testThread = Thread.currentThread().name
+        ai.tldr("x").toList()
+        assertNotEquals(testThread, gemma.collectThread)
+        assertTrue(gemma.collectThread!!.startsWith("DefaultDispatcher"))
     }
 }

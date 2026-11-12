@@ -4,6 +4,7 @@ import com.programmersbox.kmpuiviews.domain.dailyoverview.EngineResolver
 import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngine
 import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngineChoice
 import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngineId
+import com.programmersbox.kmpuiviews.utils.dispatchIo
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
@@ -39,7 +40,7 @@ class DefaultAiText(
         return flow {
             val engine = resolve(AiFeature.ListSuggest, input.length) ?: throw noEngine()
             emitAll(engine.generate(AiTextPrompts.LIST_DESCRIPTION_SYSTEM, AiTextPrompts.user(AiFeature.ListSuggest, input)))
-        }
+        }.dispatchIo()
     }
 
     /** Null when nothing on-device is ready. Template means the resolver found nothing. */
@@ -58,7 +59,7 @@ class DefaultAiText(
         } else {
             emitAll(engine.generate(AiTextPrompts.system(feature, style), AiTextPrompts.user(feature, input)))
         }
-    }
+    }.dispatchIo()
 
     private fun noEngine() = IllegalStateException("No on-device AI engine is ready")
 }

@@ -30,7 +30,7 @@ class AiTextRunner(private val scope: CoroutineScope) {
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _state.value = AiTextState.Error(e.message ?: e::class.simpleName.orEmpty())
+                _state.value = AiTextState.Error(e.message ?: e::class.simpleName ?: "Unknown error")
             }
         }
     }
