@@ -12,7 +12,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
-import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroupListItem
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
@@ -38,8 +37,8 @@ fun DeveloperScreen() {
                     onClick = navActions::debug,
                 )
             }
-            // The graph asset only ships in debug and noFirebase builds.
-            if (appConfig.isDebug || appConfig.buildType == BuildType.NoFirebase) {
+            // The graph asset only ships in debug builds.
+            if (appConfig.isDebug) {
                 segmentedListItem(
                     content = { Text("Navigation map") },
                     leadingContent = { Icon(Icons.Default.AccountTree, null) },

@@ -16,8 +16,15 @@ dependencies {
 
 tasks.withType<Test> {
     useJUnitPlatform()
-    // RepoGraphTest scans the real repo relative to this module.
+    // RepoGraphTest scans the real repo relative to this module, so the repo's sources are test inputs;
+    // otherwise the build cache could replay a pass after a new orphan screen is added.
     workingDir = projectDir
+    inputs.files(
+        rootProject.fileTree(rootDir) {
+            include("**/*.kt", "navgraph/overrides/*.navgraph")
+            exclude("**/build/**", "**/.gradle/**", ".git/**", ".superpowers/**", ".claude/**")
+        }
+    ).withPathSensitivity(PathSensitivity.RELATIVE).withPropertyName("repoSources")
 }
 
 // CI runs `./gradlew jvmTest testAndroidHostTest` — alias so these tests are not skipped.

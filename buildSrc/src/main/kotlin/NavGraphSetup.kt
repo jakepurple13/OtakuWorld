@@ -33,8 +33,8 @@ abstract class GenerateNavGraphTask : JavaExec() {
 }
 
 /**
- * Generates this app's navigation graph and packages it as an asset for `debug` builds and the
- * `noFirebase` flavor only. [appName] must be a key of `AppSources.apps` in `:navgraph`.
+ * Generates this app's navigation graph and packages it as an asset for `debug` builds only.
+ * [appName] must be a key of `AppSources.apps` in `:navgraph`.
  */
 fun Project.navGraph(appName: String) {
     val tool = configurations.create("navGraphTool") {
@@ -71,7 +71,8 @@ fun Project.navGraph(appName: String) {
     }
 
     extensions.getByType(ApplicationAndroidComponentsExtension::class.java).onVariants { variant ->
-        if (variant.buildType == "debug" || variant.flavorName?.startsWith("noFirebase") == true) {
+        // Debug builds only: published noFirebase release APKs must not carry repo paths or the debug screen.
+        if (variant.buildType == "debug") {
             variant.sources.assets?.addGeneratedSourceDirectory(task, GenerateNavGraphTask::outputDir)
         }
     }
