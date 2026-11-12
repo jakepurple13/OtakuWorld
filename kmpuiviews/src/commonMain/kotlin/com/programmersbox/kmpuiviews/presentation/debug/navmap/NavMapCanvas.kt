@@ -24,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -123,7 +124,7 @@ fun NavMapCanvas(
     }
     val query = state.query.trim()
 
-    Box(modifier.onSizeChanged { viewport = it }) {
+    Box(modifier.clipToBounds().onSizeChanged { viewport = it }) {
         Canvas(
             Modifier
                 .fillMaxSize()
@@ -174,6 +175,9 @@ fun NavMapCanvas(
                     drawText(
                         measurer, label, Offset(x + 14.dp.toPx(), 12.dp.toPx()),
                         TextStyle(fontFamily = FontFamily.Monospace, fontSize = 10.sp, letterSpacing = 1.sp, color = colors.onSurfaceVariant),
+                        maxLines = 1,
+                        // Without a size the text wraps at the canvas edge instead of the column.
+                        size = Size(geometry.columnWidth - 20.dp.toPx(), 16.dp.toPx()),
                     )
                 }
 
@@ -209,7 +213,8 @@ fun NavMapCanvas(
                         else -> colors.outlineVariant
                     }
                     val corner = CornerRadius(7.dp.toPx())
-                    drawRoundRect(fill.copy(alpha = fill.alpha * alpha), r.topLeft, r.size, corner)
+                    // Fill stays opaque so edges never show through a dimmed node; dimming applies to text and outline.
+                    drawRoundRect(fill, r.topLeft, r.size, corner)
                     drawRoundRect(
                         stroke.copy(alpha = alpha), r.topLeft, r.size, corner,
                         style = Stroke(
