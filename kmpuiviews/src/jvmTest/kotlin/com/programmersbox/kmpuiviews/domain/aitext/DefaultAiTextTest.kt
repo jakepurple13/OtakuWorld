@@ -26,8 +26,12 @@ class DefaultAiTextTest {
     ) : SummaryEngine {
         var generateCalls = 0
         var collectThread: String? = null
+        var statusThread: String? = null
         override suspend fun label() = id.name
-        override suspend fun status() = status
+        override suspend fun status(): EngineStatus {
+            statusThread = Thread.currentThread().name
+            return status
+        }
         override fun summarize(facts: DailyFacts): Flow<String> = flowOf()
         override fun generate(system: String, user: String): Flow<String> {
             generateCalls++
@@ -137,5 +141,15 @@ class DefaultAiTextTest {
         ai.tldr("x").toList()
         assertNotEquals(testThread, gemma.collectThread)
         assertTrue(gemma.collectThread!!.startsWith("DefaultDispatcher"))
+    }
+
+    @Test
+    fun `engineFor status check runs off the caller thread`() = runTest {
+        val gemma = FakeEngine(SummaryEngineId.Gemma)
+        val ai = aiText(gemma)
+        val testThread = Thread.currentThread().name
+        ai.engineFor(AiFeature.Tldr)
+        assertNotEquals(testThread, gemma.statusThread)
+        assertTrue(gemma.statusThread!!.startsWith("DefaultDispatcher"))
     }
 }

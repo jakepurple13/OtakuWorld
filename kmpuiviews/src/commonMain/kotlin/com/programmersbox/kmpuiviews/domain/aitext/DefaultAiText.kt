@@ -5,9 +5,11 @@ import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngine
 import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngineChoice
 import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngineId
 import com.programmersbox.kmpuiviews.utils.dispatchIo
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.withContext
 
 class DefaultAiText(
     engines: List<SummaryEngine>,
@@ -18,8 +20,10 @@ class DefaultAiText(
     private val withoutNano = EngineResolver(engines, order - SummaryEngineId.Nano)
 
     override suspend fun engineFor(feature: AiFeature, inputLength: Int): AiEngineInfo? =
-        resolve(feature, inputLength)?.let { engine ->
-            AiEngineInfo(engine.label(), engine.onDevice, engine.destination())
+        withContext(Dispatchers.IO) {
+            resolve(feature, inputLength)?.let { engine ->
+                AiEngineInfo(engine.label(), engine.onDevice, engine.destination())
+            }
         }
 
     override fun recap(previousChapterText: String): Flow<String> =

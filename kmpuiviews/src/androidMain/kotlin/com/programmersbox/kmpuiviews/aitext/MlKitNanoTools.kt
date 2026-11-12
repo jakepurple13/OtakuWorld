@@ -20,6 +20,7 @@ import com.programmersbox.kmpuiviews.domain.aitext.AiFeature
 import com.programmersbox.kmpuiviews.domain.aitext.AiTextPrompts
 import com.programmersbox.kmpuiviews.domain.aitext.NanoTools
 import com.programmersbox.kmpuiviews.domain.aitext.RewriteStyle
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -28,6 +29,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
@@ -75,26 +77,38 @@ class MlKitNanoTools(private val context: Context) : NanoTools {
         }
     }
 
-    override suspend fun isReady(feature: AiFeature, inputLength: Int): Boolean {
-        if (inputLength > AiTextPrompts.NANO_TEXT_LIMIT) return false
+    override suspend fun isReady(feature: AiFeature, inputLength: Int): Boolean = withContext(Dispatchers.IO) {
+        if (inputLength > AiTextPrompts.NANO_TEXT_LIMIT) return@withContext false
         val check: Pair<ListenableFuture<Int>, (DownloadCallback) -> ListenableFuture<Void>> = when (feature) {
             AiFeature.Tldr -> summarizer.checkFeatureStatus() to summarizer::downloadFeature
             AiFeature.Proofread -> proofreader.checkFeatureStatus() to proofreader::downloadFeature
             // The status is per model, so any style stands in for "rewriting is ready".
             AiFeature.Rewrite -> rewriter(RewriteStyle.Rephrase).let { it.checkFeatureStatus() to it::downloadFeature }
-            AiFeature.Recap, AiFeature.ListSuggest -> return false
+            AiFeature.Recap, AiFeature.ListSuggest -> return@withContext false
         }
-        val status = runCatching { check.first.await() }.getOrDefault(FeatureStatus.UNAVAILABLE)
+        val status = try {
+            check.first.await()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            FeatureStatus.UNAVAILABLE
+        }
         if (status == FeatureStatus.DOWNLOADABLE) {
             val started = synchronized(downloadStarted) { downloadStarted.getOrPut(feature) { AtomicBoolean(false) } }
             if (started.compareAndSet(false, true)) {
                 scope.launch {
-                    runCatching { check.second(object : DownloadCallback {}).await() }
-                        .onFailure { started.set(false) }
+                    try {
+                        check.second(object : DownloadCallback {}).await()
+                    } catch (e: CancellationException) {
+                        started.set(false)
+                        throw e
+                    } catch (e: Exception) {
+                        started.set(false)
+                    }
                 }
             }
         }
-        return status == FeatureStatus.AVAILABLE
+        status == FeatureStatus.AVAILABLE
     }
 
     override fun run(feature: AiFeature, input: String, style: RewriteStyle?): Flow<String> = flow {
