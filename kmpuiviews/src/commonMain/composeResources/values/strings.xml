@@ -742,4 +742,6 @@
     <string name="ai_chapter_recap">Chapter recap</string>
     <string name="ai_chapter_recap_summary">Show a \"Previously\" bar above each chapter</string>
     <string name="reader_settings">Reader settings</string>
+    <string name="ai_write_description">Write a description</string>
+    <string name="ai_suggest_names">Suggest names</string>
 </resources>

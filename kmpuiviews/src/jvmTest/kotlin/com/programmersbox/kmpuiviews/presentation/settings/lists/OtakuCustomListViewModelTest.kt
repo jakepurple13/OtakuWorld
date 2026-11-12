@@ -9,6 +9,14 @@ import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.favoritesdatabase.ListDatabase
 import com.programmersbox.kmpuiviews.SystemAlerter
+import com.programmersbox.kmpuiviews.domain.aitext.AiEngineInfo
+import com.programmersbox.kmpuiviews.domain.aitext.AiFeature
+import com.programmersbox.kmpuiviews.domain.aitext.AiText
+import com.programmersbox.kmpuiviews.domain.aitext.AiTextState
+import com.programmersbox.kmpuiviews.domain.aitext.RewriteStyle
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.repository.ListRepository
 import com.programmersbox.kmpuiviews.testing.FakeAuthManager
@@ -73,10 +81,11 @@ class OtakuCustomListViewModelTest {
         return uuid
     }
 
-    private fun viewModel(uuid: String) = OtakuCustomListViewModel(
+    private fun viewModel(uuid: String, aiText: AiText = FakeAiText()) = OtakuCustomListViewModel(
         screen = Screen.CustomListScreen.CustomListItem(uuid),
         listDao = dao(),
         listRepository = listRepository(),
+        aiText = aiText,
     ).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -96,6 +105,95 @@ class OtakuCustomListViewModelTest {
         Dispatchers.resetMain()
         database.close()
         dbFile.delete()
+    }
+
+    @Test fun `suggest hidden with fewer than 3 titles`() = runTest {
+        val ai = FakeAiText()
+        val uuid = listWith("A" to "S", "B" to "S", "C" to "S")
+        val vm = viewModel(uuid, ai)
+        // Starts true, so dropping to false below is a real evaluation of the 2-title list.
+        awaitCondition { vm.customList?.list?.size == 3 && vm.suggestAvailable.value }
+        val callsAt3 = ai.engineCalls
+
+        dao().removeItem(vm.customList!!.list.first())
+        awaitCondition { !vm.suggestAvailable.value }
+
+        assertFalse(vm.suggestAvailable.value)
+        assertEquals(2, vm.customList?.list?.size)
+        assertEquals(callsAt3, ai.engineCalls)
+
+        dao().addToList(uuid, "D", "", "https://example.com/d", "", "S")
+        awaitCondition { vm.suggestAvailable.value }
+        assertTrue(vm.suggestAvailable.value)
+    }
+
+    @Test fun `suggest hidden when no engine`() = runTest {
+        val ai = FakeAiText(engine = null)
+        val uuid = listWith("A" to "S", "B" to "S", "C" to "S")
+        val vm = viewModel(uuid, ai)
+        awaitCondition { ai.engineCalls > 0 && vm.customList?.list?.size == 3 }
+
+        assertFalse(vm.suggestAvailable.value)
+    }
+
+    @Test fun `suggest shown with engine and 3 titles`() = runTest {
+        val uuid = listWith("A" to "S", "B" to "S", "C" to "S")
+        val vm = viewModel(uuid)
+
+        awaitCondition { vm.suggestAvailable.value }
+        assertTrue(vm.suggestAvailable.value)
+    }
+
+    @Test fun `suggestNames parses to 3 unique names`() = runTest {
+        val ai = FakeAiText(namesOutput = "1. A\n2. a\n3. B\n4. C")
+        val uuid = listWith("A" to "S", "B" to "S", "C" to "S")
+        val vm = viewModel(uuid, ai)
+        awaitCondition { vm.customList?.list?.size == 3 }
+
+        vm.suggestNames()
+        awaitCondition { vm.nameSuggestions.value is AiTextState.Done }
+
+        assertEquals("A\nB\nC", (vm.nameSuggestions.value as AiTextState.Done).text)
+    }
+
+    @Test fun `draftDescription streams to Done and does not save`() = runTest {
+        val ai = FakeAiText(descriptionOutput = "A nice list.")
+        val uuid = listWith("A" to "S", "B" to "S", "C" to "S")
+        val vm = viewModel(uuid, ai)
+        awaitCondition { vm.customList?.list?.size == 3 }
+
+        vm.draftDescription()
+        awaitCondition { vm.descriptionDraft.value is AiTextState.Done }
+
+        assertEquals("A nice list.", (vm.descriptionDraft.value as AiTextState.Done).text)
+        assertEquals("", dao().getAllListsSync()[0].item.description)
+        assertEquals("My List", dao().getAllListsSync()[0].item.name)
+    }
+
+    @Test fun `clearDrafts resets both states`() = runTest {
+        val uuid = listWith("A" to "S", "B" to "S", "C" to "S")
+        val vm = viewModel(uuid)
+        awaitCondition { vm.customList?.list?.size == 3 }
+        vm.draftDescription()
+        awaitCondition { vm.descriptionDraft.value is AiTextState.Done }
+
+        vm.clearDrafts()
+
+        assertEquals(AiTextState.Idle, vm.descriptionDraft.value)
+        assertEquals(AiTextState.Idle, vm.nameSuggestions.value)
+    }
+
+    @Test fun `only first 30 titles are sent`() = runTest {
+        val ai = FakeAiText()
+        val uuid = listWith(*Array(35) { "T$it" to "S" })
+        val vm = viewModel(uuid, ai)
+        awaitCondition { vm.customList?.list?.size == 35 }
+
+        vm.suggestNames()
+        awaitCondition { vm.nameSuggestions.value is AiTextState.Done }
+
+        assertEquals(30, ai.titleCalls.single().size)
+        assertEquals("T0 (S)", ai.titleCalls.single().first())
     }
 
     @Test fun `starts with empty items when list does not exist yet`() = runTest {
@@ -378,5 +476,38 @@ class OtakuCustomListViewModelTest {
         awaitCondition { dao().getAllListsSync().isEmpty() }
 
         assertTrue(dao().getAllListsSync().isEmpty())
+    }
+}
+
+private class FakeAiText(
+    var engine: AiEngineInfo? = ENGINE,
+    private val namesOutput: String = "A\nB\nC",
+    private val descriptionOutput: String = "A list.",
+) : AiText {
+    @Volatile var engineCalls = 0
+    val titleCalls = java.util.concurrent.CopyOnWriteArrayList<List<String>>()
+
+    override suspend fun engineFor(feature: AiFeature, inputLength: Int): AiEngineInfo? {
+        engineCalls++
+        return engine
+    }
+
+    override fun listNames(titles: List<String>): Flow<String> {
+        titleCalls += titles
+        return flow { emit(namesOutput) }
+    }
+
+    override fun listDescription(titles: List<String>): Flow<String> {
+        titleCalls += titles
+        return flow { emit(descriptionOutput) }
+    }
+
+    override fun recap(previousChapterText: String): Flow<String> = flowOf()
+    override fun tldr(description: String): Flow<String> = flowOf()
+    override fun proofread(text: String): Flow<String> = flowOf()
+    override fun rewrite(text: String, style: RewriteStyle): Flow<String> = flowOf()
+
+    companion object {
+        val ENGINE = AiEngineInfo(label = "Fake", onDevice = true, destination = null)
     }
 }

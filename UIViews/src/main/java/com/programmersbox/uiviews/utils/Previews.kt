@@ -126,12 +126,14 @@ private fun CustomListScreenPreview() {
     PreviewTheme {
         val listDao = koinInject<ListDao>()
         val listRepository = koinInject<ListRepository>()
+        val aiText = koinInject<com.programmersbox.kmpuiviews.domain.aitext.AiText>()
         val context = LocalContext.current
         val viewModel: OtakuCustomListViewModel = viewModel {
             OtakuCustomListViewModel(
                 screen = Screen.CustomListScreen.CustomListItem(""),
                 listDao = listDao,
-                listRepository = listRepository
+                listRepository = listRepository,
+                aiText = aiText,
             )
         }
         OtakuCustomListScreen(
