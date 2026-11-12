@@ -640,6 +640,11 @@
     <string name="do_privacy_on_device">On device · nothing sent</string>
     <string name="do_privacy_sent">Sent to %1$s</string>
     <string name="do_set_up_ai">Set up AI summary</string>
+    <string name="ai_tldr">TL;DR</string>
+    <string name="ai_translating">Translating</string>
+    <string name="ai_translated">Translated</string>
+    <string name="ai_retry">Retry</string>
+    <string name="ai_error">Something went wrong</string>
     <plurals name="do_stat_read_chapters">
         <item quantity="one">chapter read</item>
         <item quantity="other">chapters read</item>
