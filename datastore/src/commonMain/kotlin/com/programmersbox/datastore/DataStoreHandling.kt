@@ -96,6 +96,11 @@ class DataStoreHandling {
         defaultValue = true
     )
 
+    val novelChapterRecap = DataStoreHandler(
+        key = booleanPreferencesKey("novelChapterRecap"),
+        defaultValue = true
+    )
+
     val dailyOverviewEngine = DataStoreHandler(
         key = stringPreferencesKey("dailyOverviewEngine"),
         defaultValue = "Automatic"

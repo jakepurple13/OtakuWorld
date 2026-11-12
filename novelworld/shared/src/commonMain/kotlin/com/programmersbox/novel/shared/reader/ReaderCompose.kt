@@ -2,7 +2,19 @@ package com.programmersbox.novel.shared.reader
 
 import com.programmersbox.kmpuiviews.theme.SeedColorTheme
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.runtime.collectAsState
+import androidx.compose.material3.rememberModalBottomSheetState
+import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
+import otakuworld.kmpuiviews.generated.resources.ai_chapter_recap
+import otakuworld.kmpuiviews.generated.resources.ai_chapter_recap_summary
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -126,6 +138,26 @@ private fun NovelReadViewContent(
 
     var showFloatBar by remember { mutableStateOf(false) }
 
+    var showReaderSettings by remember { mutableStateOf(false) }
+    val recapAvailable by viewModel.recaps.available.collectAsState()
+    val recapEnabled by viewModel.recapEnabled.collectAsState(initial = true)
+
+    if (showReaderSettings) {
+        ModalBottomSheet(
+            onDismissRequest = { showReaderSettings = false },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        ) {
+            if (recapAvailable) {
+                SwitchSetting(
+                    value = recapEnabled,
+                    settingTitle = { Text(stringResource(Res.string.ai_chapter_recap)) },
+                    summaryValue = { Text(stringResource(Res.string.ai_chapter_recap_summary)) },
+                    updateValue = viewModel::setRecapEnabled,
+                )
+            }
+        }
+    }
+
     LaunchedEffect(showItems) {
         insetsController = showItems
         if (showItems) {
@@ -181,7 +213,7 @@ private fun NovelReadViewContent(
                             .currentChapterModel
                             ?.name
                             ?: "Ch ${viewModel.list.size - viewModel.currentChapter}",
-                        onSettingsClick = { },
+                        onSettingsClick = { showReaderSettings = true },
                         showBlur = showBlur,
                         windowInsets = TopAppBarDefaults.windowInsets,
                         modifier = Modifier.setBlurKind(
@@ -236,36 +268,50 @@ private fun NovelReadViewContent(
                     onRefresh = viewModel::refresh,
                     paddingValues = p
                 ) {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier
-                            .padding(horizontal = 4.dp)
-                            .verticalScroll(rememberScrollState())
-                            .fillMaxSize()
-                    ) {
-                        //FIXME: Fix this
-                        Text(
-                            viewModel.pageList,//AnnotatedString.fromHtml(viewModel.pageList),
+                    AnimatedContent(
+                        targetState = viewModel.currentChapter,
+                        transitionSpec = {
+                            // Next lowers the index (newest-first list), Previous raises it
+                            val dir = if (targetState < initialState) 1 else -1
+                            (slideInHorizontally(tween(380)) { dir * it / 8 } + fadeIn(tween(380))) togetherWith
+                                    (slideOutHorizontally(tween(220)) { -dir * it / 8 } + fadeOut(tween(220))) using
+                                    SizeTransform(clip = false)
+                        },
+                        label = "chapterPage",
+                    ) { chapter ->
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(4.dp)
-                                .clickable(
-                                    indication = null,
-                                    interactionSource = null,
-                                    onClick = { viewModel.showInfo = !viewModel.showInfo }
-                                ),
-                        )
+                                .padding(horizontal = 4.dp)
+                                .verticalScroll(rememberScrollState())
+                                .fillMaxSize()
+                        ) {
+                            ChapterRecapBar(viewModel)
 
-                        if (viewModel.currentChapter <= 0) {
+                            //FIXME: Fix this
                             Text(
-                                "Last Chapter Reached",
-                                style = MaterialTheme.typography.headlineSmall,
-                                textAlign = TextAlign.Center,
-                                color = MaterialTheme.colorScheme.onSurface,
+                                viewModel.pageList,//AnnotatedString.fromHtml(viewModel.pageList),
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .align(Alignment.CenterHorizontally)
+                                    .padding(4.dp)
+                                    .clickable(
+                                        indication = null,
+                                        interactionSource = null,
+                                        onClick = { viewModel.showInfo = !viewModel.showInfo }
+                                    ),
                             )
+
+                            if (chapter <= 0) {
+                                Text(
+                                    "Last Chapter Reached",
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    textAlign = TextAlign.Center,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .align(Alignment.CenterHorizontally)
+                                )
+                            }
                         }
                     }
                 }

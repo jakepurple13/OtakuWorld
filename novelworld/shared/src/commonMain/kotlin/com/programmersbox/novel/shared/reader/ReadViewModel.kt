@@ -14,6 +14,9 @@ import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpStorage
+import com.programmersbox.datastore.DataStoreHandling
+import com.programmersbox.kmpuiviews.domain.aitext.AiText
+import com.programmersbox.kmpuiviews.domain.aitext.ChapterRecaps
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.utils.dispatchIo
@@ -26,6 +29,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
@@ -44,7 +48,16 @@ class ReadViewModel(
     novelReader: NovelReader,
     private val chapterHolder: ChapterHolder,
     private val favoritesRepository: FavoritesRepository,
+    aiText: AiText,
+    private val dataStoreHandling: DataStoreHandling,
 ) : ViewModel() {
+
+    val recaps = ChapterRecaps(aiText, viewModelScope)
+    val recapEnabled: Flow<Boolean> = dataStoreHandling.novelChapterRecap.asFlow()
+
+    fun setRecapEnabled(enabled: Boolean) {
+        viewModelScope.launch { dataStoreHandling.novelChapterRecap.set(enabled) }
+    }
 
     val isDownloaded: Boolean = novelReader.downloaded
     val headers = mutableStateMapOf<String, String>()
@@ -121,6 +134,19 @@ class ReadViewModel(
 
     val currentChapterModel by derivedStateOf { list.getOrNull(currentChapter) }
 
+    /** The list is newest-first, so the chapter before the current one is the next index. */
+    val previousChapterModel by derivedStateOf { list.getOrNull(currentChapter + 1) }
+
+    fun requestRecap() {
+        val current = currentChapterModel ?: return
+        val previous = previousChapterModel ?: return
+        recaps.request(current.url) {
+            withContext(Dispatchers.IO) {
+                previous.getChapterInfo().first().firstNotNullOfOrNull(KmpStorage::link)
+            }
+        }
+    }
+
     var addToFavorites by mutableStateOf(FavoriteChecker(false, 0))
 
     data class FavoriteChecker(val hasShown: Boolean, val count: Int, val isFavorite: Boolean = false) {
@@ -147,6 +173,7 @@ class ReadViewModel(
         currentChapter = newChapter
         addToFavorites = addToFavorites.copy(count = addToFavorites.count + 1)
         list.getOrNull(newChapter)?.let { item ->
+            recaps.onChapterChanged(item.url)
             ChapterWatched(item.url, item.name, mangaUrl)
                 .let {
                     viewModelScope.launch {
