@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.dailyoverview
 
+import com.programmersbox.kmpuiviews.testing.clearAndJoin
 import androidx.lifecycle.ViewModelStore
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.HeatMapDatabase
@@ -99,7 +100,7 @@ class DailyOverviewViewModelTest {
 
     @AfterTest
     fun tearDown() {
-        viewModelStore.clear()
+        viewModelStore.clearAndJoin()
         Dispatchers.resetMain()
         items.close()
         heatMap.close()

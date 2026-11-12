@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.settings.incognito
 
+import com.programmersbox.kmpuiviews.testing.clearAndJoin
 import androidx.lifecycle.ViewModelStore
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.kmpmodels.ExampleService
@@ -57,8 +58,7 @@ class IncognitoViewModelTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @AfterTest
     fun tearDown() {
-        viewModelStore.clear()
-        Thread.sleep(50)
+        viewModelStore.clearAndJoin()
         Dispatchers.resetMain()
         database.close()
     }

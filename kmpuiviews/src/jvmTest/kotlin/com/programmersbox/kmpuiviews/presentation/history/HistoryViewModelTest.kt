@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.history
 
+import com.programmersbox.kmpuiviews.testing.clearAndJoin
 import androidx.lifecycle.ViewModelStore
 import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
@@ -8,6 +9,7 @@ import com.programmersbox.favoritesdatabase.RecentModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -78,8 +80,9 @@ class HistoryViewModelTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @AfterTest
     fun tearDown() {
-        viewModelStore.clear()
-        Thread.sleep(50)
+        viewModelStore.clearAndJoin()
+            .filterIsInstance<HistoryViewModel>()
+            .forEach { vm -> runBlocking { vm.clearedRemovals?.join() } }
         Dispatchers.resetMain()
         database.close()
         dbFile.delete()

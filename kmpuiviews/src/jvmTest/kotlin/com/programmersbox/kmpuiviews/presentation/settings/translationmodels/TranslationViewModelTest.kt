@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.settings.translationmodels
 
+import com.programmersbox.kmpuiviews.testing.clearAndJoin
 import androidx.lifecycle.ViewModelStore
 import com.programmersbox.kmpuiviews.domain.ModelState
 import com.programmersbox.kmpuiviews.domain.TranslationLanguages
@@ -73,8 +74,7 @@ class TranslationViewModelTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @AfterTest
     fun tearDown() {
-        viewModelStore.clear()
-        Thread.sleep(50)
+        viewModelStore.clearAndJoin()
         Dispatchers.resetMain()
     }
 

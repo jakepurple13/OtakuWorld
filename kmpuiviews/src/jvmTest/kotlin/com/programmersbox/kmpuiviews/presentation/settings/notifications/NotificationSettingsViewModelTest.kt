@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.settings.notifications
 
+import com.programmersbox.kmpuiviews.testing.clearAndJoin
 import androidx.lifecycle.ViewModelStore
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.MediaCheckerNetworkType
@@ -109,8 +110,7 @@ class NotificationSettingsViewModelTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @AfterTest
     fun tearDown() {
-        viewModelStore.clear()
-        Thread.sleep(50)
+        viewModelStore.clearAndJoin()
         Dispatchers.resetMain()
         database.close()
     }

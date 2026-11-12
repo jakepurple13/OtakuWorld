@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.updatecheck
 
+import com.programmersbox.kmpuiviews.testing.clearAndJoin
 import androidx.lifecycle.ViewModelStore
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.domain.updatecheck.FailureKind
@@ -101,7 +102,7 @@ class UpdateCheckErrorsViewModelTest {
 
     @AfterTest
     fun tearDown() {
-        viewModelStore.clear()
+        viewModelStore.clearAndJoin()
         Dispatchers.resetMain()
     }
 

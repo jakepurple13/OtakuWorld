@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.details
 
+import com.programmersbox.kmpuiviews.testing.clearAndJoin
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.ImageBitmapConfig
@@ -138,8 +139,7 @@ class DetailsViewModelTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @AfterTest
     fun tearDown() {
-        viewModelStore.clear()
-        Thread.sleep(50)
+        viewModelStore.clearAndJoin()
         Dispatchers.resetMain()
         runBlocking { Cached.cache.cleanUp() }
         itemDatabase.close()

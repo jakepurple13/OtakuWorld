@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.settings.lists
 
+import com.programmersbox.kmpuiviews.testing.clearAndJoin
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.lifecycle.ViewModelStore
 import androidx.room3.Room
@@ -91,8 +92,7 @@ class OtakuCustomListViewModelTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @AfterTest
     fun tearDown() {
-        viewModelStore.clear()
-        Thread.sleep(50)
+        viewModelStore.clearAndJoin()
         Dispatchers.resetMain()
         database.close()
         dbFile.delete()
@@ -372,8 +372,7 @@ class OtakuCustomListViewModelTest {
         // ViewModel's scope first to cancel that subscription, then invoke the same repository
         // call deleteAll() makes, so the deletion itself is still verified without racing the
         // now-defunct subscription's real-dispatcher collection.
-        viewModelStore.clear()
-        Thread.sleep(50)
+        viewModelStore.clearAndJoin()
 
         listRepository().removeList(customList)
         awaitCondition { dao().getAllListsSync().isEmpty() }
