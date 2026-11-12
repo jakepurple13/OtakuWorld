@@ -51,7 +51,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -288,9 +287,10 @@ private fun NovelReadViewContent(
                     ) { chapter ->
                         // The outgoing page keeps its own text; only the current chapter follows pageList
                         var pageText by remember { mutableStateOf(if (chapter == viewModel.currentChapter) viewModel.pageList else "") }
-                        if (chapter == viewModel.currentChapter) {
-                            SideEffect { pageText = viewModel.pageList }
-                        }
+                        // Read in composition so the current page recomposes when its text arrives;
+                        // the outgoing page is not current in the same pass, so it stays frozen
+                        val livePageText = viewModel.pageList
+                        if (chapter == viewModel.currentChapter) pageText = livePageText
                         Column(
                             verticalArrangement = Arrangement.spacedBy(4.dp),
                             modifier = Modifier
