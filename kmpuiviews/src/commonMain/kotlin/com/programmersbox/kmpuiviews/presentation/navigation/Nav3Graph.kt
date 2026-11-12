@@ -22,6 +22,7 @@ import com.programmersbox.kmpuiviews.presentation.all.AllScreen
 import com.programmersbox.kmpuiviews.presentation.bookmarks.BookmarkScreen
 import com.programmersbox.kmpuiviews.presentation.dailyoverview.DailyOverviewScreen
 import com.programmersbox.kmpuiviews.presentation.dailyoverview.settings.DailyOverviewSettingsScreen
+import com.programmersbox.kmpuiviews.presentation.debug.navmap.NavMapScreen
 import com.programmersbox.kmpuiviews.presentation.dailyoverview.settings.SummaryEngineScreen
 import com.programmersbox.kmpuiviews.presentation.details.DetailsScreen
 import com.programmersbox.kmpuiviews.presentation.dictionary.DictionaryDetailScreen
@@ -258,6 +259,8 @@ fun buildKmpGraph(): Module = module {
     }
 
     navigation<Screen.PrereleaseScreen> { PrereleaseScreen() }
+
+    navigation<Screen.DebugScreen.NavMap> { NavMapScreen() }
 
     detailEntry<Screen.OtherSettings> {
         val customPreferences = koinInject<ComposeSettingsDsl>()

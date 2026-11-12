@@ -48,6 +48,8 @@ file KoogConfiguration.kt -> Koog
 # ---- Not navigation ----
 # Dead entryGraph() kept for reference; registrations live in kmpuiviews' Nav3Graph.kt.
 ignore uiviews/presentation/navigation/Nav3Graph.kt
+# The Navigation map's own "Open" button can go anywhere.
+ignore navmap/NavMapScreen.kt
 
 # ---- Screens nothing navigates to (checked by hand) ----
 allow-orphan GeneralSettings          # replaced by Screen.Settings.* pages
