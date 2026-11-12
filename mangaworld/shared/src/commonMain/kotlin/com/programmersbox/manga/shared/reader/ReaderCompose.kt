@@ -301,6 +301,18 @@ private fun ReadViewContent(
     var showBottomSheet by remember { mutableStateOf(false) }
 
     val floatingBottomBar by mangaSettingsHandling.rememberUseFloatingReaderBottomBar()
+    val pageIndicatorStyle by mangaSettingsHandling.rememberPageIndicatorStyle()
+    val showPageNumberInBar by mangaSettingsHandling.rememberShowPageNumberInBar()
+
+    // localIndex is 0-based within the current chapter
+    fun jumpToPage(localIndex: Int) {
+        val globalIndex = currentChapterPageOffset + localIndex
+        when (readerType) {
+            ReaderType.List, ReaderType.FlipPager -> scope.launch { listState.animateScrollToItem(globalIndex) }
+            ReaderType.Pager -> scope.launch { pagerState.animateScrollToPage(globalIndex) }
+            ReaderType.CurlPager -> scope.launch { curlState.snapTo(globalIndex) }
+        }
+    }
 
     var showFloatBar by remember { mutableStateOf(false) }
 
@@ -358,14 +370,7 @@ private fun ReadViewContent(
                 onSheetHide = { showBottomSheet = false },
                 currentPage = currentPage,
                 pages = currentChapterPageUrls,
-                onPageChange = { localIndex ->
-                    val globalIndex = currentChapterPageOffset + localIndex
-                    when (readerType) {
-                        ReaderType.List, ReaderType.FlipPager -> scope.launch { listState.animateScrollToItem(globalIndex) }
-                        ReaderType.Pager -> scope.launch { pagerState.animateScrollToPage(globalIndex) }
-                        ReaderType.CurlPager -> scope.launch { curlState.snapTo(globalIndex) }
-                    }
-                },
+                onPageChange = ::jumpToPage,
             )
         }
     }
@@ -471,6 +476,7 @@ private fun ReadViewContent(
                             pages = animateIntAsState(pagesInCurrentChapter).value,
                             previousButtonEnabled = viewModel.currentChapter < viewModel.chapterCount - 1 && viewModel.chapterCount > 1,
                             nextButtonEnabled = viewModel.currentChapter > 0 && viewModel.chapterCount > 1,
+                            showPageNumber = showPageNumberInBar,
                             modifier = Modifier
                                 .windowInsetsPadding(if (includeInsets) NavigationBarDefaults.windowInsets else WindowInsets(0.dp))
                                 .padding(16.dp)
@@ -655,12 +661,16 @@ private fun ReadViewContent(
                     }
                 }
 
-                ReadingProgressLine(
-                    progress = chapterProgress(currentPage, pagesInCurrentChapter),
-                    visible = !showItems,
-                    pageLabel = pageLabel(currentPage, pagesInCurrentChapter),
+                PageIndicatorOverlay(
+                    style = pageIndicatorStyle,
+                    currentPage = currentPage,
+                    pages = pagesInCurrentChapter,
+                    showItems = showItems,
                     scrolling = listState.isScrollInProgress || pagerState.isScrollInProgress,
-                    modifier = Modifier.align(Alignment.TopStart)
+                    topPadding = (if (showItems) p.calculateTopPadding() else 0.dp).animate().value,
+                    bottomPadding = p.calculateBottomPadding().animate().value,
+                    onOpenPages = { showBottomSheet = true },
+                    onJumpToPage = ::jumpToPage,
                 )
 
                 ChapterBanner(
