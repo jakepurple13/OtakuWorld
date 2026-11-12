@@ -109,6 +109,11 @@ internal fun SettingsSheet(
                 },
                 settingTitle = { Text("Settings") }
             )
+
+            PageNumberSettings(mangaSettingsHandling = mangaSettingsHandling, previewScale = .2f)
+
+            HorizontalDivider()
+
             SliderSetting(
                 scope = scope,
                 settingIcon = Icons.Default.FormatLineSpacing,
