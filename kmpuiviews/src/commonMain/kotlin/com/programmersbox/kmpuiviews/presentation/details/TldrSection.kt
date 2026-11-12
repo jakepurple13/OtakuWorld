@@ -71,7 +71,7 @@ fun TldrSection(ui: TldrUi, modifier: Modifier = Modifier) {
                     IconButton(onClick = ui.onHide) { Icon(Icons.Default.Close, null) }
                 },
                 footerPrefix = if (ui.translated) stringResource(Res.string.ai_translated) else null,
-                body = { TldrBullets(it) },
+                body = { TldrBullets(it, streaming = ui.state is AiTextState.Streaming) },
             )
         } else if (ui.available) {
             AssistChip(
@@ -86,9 +86,11 @@ fun TldrSection(ui: TldrUi, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun TldrBullets(text: String) {
+private fun TldrBullets(text: String, streaming: Boolean) {
+    // While streaming the last line may be a partial marker like "1", so only complete lines show
+    val complete = if (streaming) text.substringBeforeLast('\n', missingDelimiterValue = "") else text
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        AiTextPrompts.parseBullets(text).forEach { bullet ->
+        AiTextPrompts.parseBullets(complete).forEach { bullet ->
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     text = "•",

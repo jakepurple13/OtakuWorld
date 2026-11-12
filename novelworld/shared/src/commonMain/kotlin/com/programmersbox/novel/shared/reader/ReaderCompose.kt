@@ -219,7 +219,8 @@ private fun NovelReadViewContent(
                             .currentChapterModel
                             ?.name
                             ?: "Ch ${viewModel.list.size - viewModel.currentChapter}",
-                        onSettingsClick = { showReaderSettings = true },
+                        // The sheet only holds the recap toggle, so with no engine the icon does nothing
+                        onSettingsClick = { if (recapAvailable) showReaderSettings = true },
                         showBlur = showBlur,
                         windowInsets = TopAppBarDefaults.windowInsets,
                         modifier = Modifier.setBlurKind(

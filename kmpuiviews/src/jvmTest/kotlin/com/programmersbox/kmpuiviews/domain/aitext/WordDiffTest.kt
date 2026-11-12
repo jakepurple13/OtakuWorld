@@ -2,6 +2,7 @@ package com.programmersbox.kmpuiviews.domain.aitext
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 
 class WordDiffTest {
     @Test
@@ -47,5 +48,30 @@ class WordDiffTest {
             assertEquals(new, spans.filter { it !is DiffSpan.Deleted }.joinToString("") { it.text }, "new: $old -> $new")
             assertEquals(old, spans.filter { it !is DiffSpan.Inserted }.joinToString("") { it.text }, "old: $old -> $new")
         }
+    }
+
+    @Test
+    fun `huge changed middle falls back to one deletion and one insertion`() {
+        val old = "intro " + (1..2_500).joinToString(" ") { "old$it" } + " outro"
+        val new = "intro " + (1..2_500).joinToString(" ") { "new$it" } + " outro"
+        val spans = WordDiff.diff(old, new)
+        assertEquals(4, spans.size)
+        assertEquals(DiffSpan.Same("intro"), spans[0])
+        assertIs<DiffSpan.Deleted>(spans[1])
+        assertIs<DiffSpan.Inserted>(spans[2])
+        assertEquals(DiffSpan.Same(" outro"), spans[3])
+        assertEquals(new, spans.filter { it !is DiffSpan.Deleted }.joinToString("") { it.text })
+        assertEquals(old, spans.filter { it !is DiffSpan.Inserted }.joinToString("") { it.text })
+    }
+
+    @Test
+    fun `long shared text around a small edit stays word level`() {
+        val head = (1..3_000).joinToString(" ") { "w$it" }
+        val tail = (1..3_000).joinToString(" ") { "t$it" }
+        val spans = WordDiff.diff("$head teh $tail", "$head the $tail")
+        assertEquals(
+            listOf(DiffSpan.Same(head), DiffSpan.Deleted(" teh"), DiffSpan.Inserted(" the"), DiffSpan.Same(" $tail")),
+            spans,
+        )
     }
 }
