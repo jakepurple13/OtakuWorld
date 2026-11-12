@@ -60,7 +60,7 @@ fun SlideToDeleteDialog(
                         }
                     }
                 } catch (e: Exception) {
-                    notifier.error(context.getString(R.string.something_went_wrong))
+                    notifier.error(context.getString(com.programmersbox.uiviews.R.string.something_went_wrong))
                 }
             }
         },

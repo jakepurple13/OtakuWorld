@@ -15,15 +15,17 @@ kotlin {
         minSdk = AppInfo.minimumSdk
     }
 
-    val xcfName = "sharedKit"
+    if (AppInfo.includeIos(project)) {
+        val xcfName = "sharedKit"
 
-    listOf(
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach { iosTarget ->
-        iosTarget.binaries.framework {
-            baseName = xcfName
-            isStatic = true
+        listOf(
+            iosArm64(),
+            iosSimulatorArm64()
+        ).forEach { iosTarget ->
+            iosTarget.binaries.framework {
+                baseName = xcfName
+                isStatic = true
+            }
         }
     }
 

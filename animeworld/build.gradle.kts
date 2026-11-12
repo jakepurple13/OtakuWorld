@@ -1,6 +1,5 @@
 plugins {
     `otaku-application`
-    kotlin("kapt")
     id("com.mikepenz.aboutlibraries.plugin")
     id("com.mikepenz.aboutlibraries.plugin.android")
     alias(libs.plugins.ksp)
@@ -78,9 +77,6 @@ dependencies {
 
     implementation(commonLibs.bundles.roomLibs)
     ksp(commonLibs.roomCompiler)
-
-    implementation(androidLibs.autoBindings)
-    kapt(androidLibs.autoBindingsCompiler)
 
     implementation(androidLibs.castFramework)
 
