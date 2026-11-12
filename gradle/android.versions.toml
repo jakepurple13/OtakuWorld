@@ -6,6 +6,9 @@ arcore = "1.0.0"
 autoBinding = "1.1-beta04"
 barcodeScanning = "17.3.0"
 mlkitGenaiPrompt = "1.0.0-beta5"
+mlkitGenaiSummarization = "1.0.0-beta1"
+mlkitGenaiProofreading = "1.0.0-beta1"
+mlkitGenaiRewriting = "1.0.0-beta1"
 benchmark-macro-junit4 = "1.5.0"
 biometricVersion = "1.4.0-beta01"
 cloudstreamCryptography = "0.6.0"
@@ -93,6 +96,9 @@ nanohttpd = "org.nanohttpd:nanohttpd:2.3.1"
 # Barcode
 barcode-scanning = { module = "com.google.mlkit:barcode-scanning", version.ref = "barcodeScanning" }
 mlkit-genai-prompt = { module = "com.google.mlkit:genai-prompt", version.ref = "mlkitGenaiPrompt" }
+mlkit-genai-summarization = { module = "com.google.mlkit:genai-summarization", version.ref = "mlkitGenaiSummarization" }
+mlkit-genai-proofreading = { module = "com.google.mlkit:genai-proofreading", version.ref = "mlkitGenaiProofreading" }
+mlkit-genai-rewriting = { module = "com.google.mlkit:genai-rewriting", version.ref = "mlkitGenaiRewriting" }
 
 # Biometric
 biometric = { module = "androidx.biometric:biometric", version.ref = "biometricVersion" }
