@@ -46,10 +46,12 @@ class NanoEngine : SummaryEngine {
         return status.toEngineStatus(getString(Res.string.do_setup_nano_downloading))
     }
 
-    override fun summarize(facts: DailyFacts): Flow<String> {
-        val prompt = SummaryPrompt.system(facts.unit) + "\n\n" + SummaryPrompt.user(facts)
+    override fun summarize(facts: DailyFacts): Flow<String> =
+        generate(SummaryPrompt.system(facts.unit), SummaryPrompt.user(facts))
+
+    override fun generate(system: String, user: String): Flow<String> {
         // Stream chunks are already deltas.
-        return model.generateContentStream(prompt).map { it.candidates.firstOrNull()?.text.orEmpty() }
+        return model.generateContentStream(system + "\n\n" + user).map { it.candidates.firstOrNull()?.text.orEmpty() }
     }
 
     private fun Int.toNanoStatus() = when (this) {

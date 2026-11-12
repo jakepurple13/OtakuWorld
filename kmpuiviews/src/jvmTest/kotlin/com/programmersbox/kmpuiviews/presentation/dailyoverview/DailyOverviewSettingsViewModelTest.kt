@@ -49,6 +49,7 @@ class DailyOverviewSettingsViewModelTest {
         override suspend fun shortName() = shortName
         override val onDevice = true
         override suspend fun status(): EngineStatus = if (throws) error("model dir missing") else status
+        override fun generate(system: String, user: String): Flow<String> = error("unused")
         override fun summarize(facts: DailyFacts): Flow<String> {
             received = facts
             return flow {

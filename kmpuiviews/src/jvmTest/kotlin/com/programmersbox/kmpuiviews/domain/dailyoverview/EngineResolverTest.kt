@@ -14,6 +14,7 @@ class EngineResolverTest {
         override suspend fun label() = id.name
         override val onDevice = true
         override suspend fun status() = status
+        override fun generate(system: String, user: String): Flow<String> = error("unused")
         override fun summarize(facts: DailyFacts): Flow<String> = flowOf(id.name)
     }
 
