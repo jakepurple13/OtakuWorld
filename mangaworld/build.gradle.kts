@@ -109,3 +109,6 @@ dependencies {
 
     //debugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
 }
+
+// Debug/noFirebase only: navigation graph asset for Settings › Developer › Navigation map.
+navGraph("mangaworld")
