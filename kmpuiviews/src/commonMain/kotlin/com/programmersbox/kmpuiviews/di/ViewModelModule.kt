@@ -5,6 +5,7 @@ import com.programmersbox.kmpuiviews.presentation.all.AllViewModel
 import com.programmersbox.kmpuiviews.presentation.bookmarks.BookmarkChaptersViewModel
 import com.programmersbox.kmpuiviews.presentation.dailyoverview.DailyOverviewViewModel
 import com.programmersbox.kmpuiviews.presentation.dailyoverview.settings.DailyOverviewSettingsViewModel
+import com.programmersbox.kmpuiviews.presentation.debug.navmap.NavMapViewModel
 import com.programmersbox.kmpuiviews.presentation.details.DetailsViewModel
 import com.programmersbox.kmpuiviews.presentation.dictionary.DictionaryDetailViewModel
 import com.programmersbox.kmpuiviews.presentation.dictionary.DictionaryFormViewModel
@@ -115,6 +116,7 @@ val viewModels: Module = module {
     viewModelOf(::AccountStatDetailsViewModel)
     viewModelOf(::UpdateCheckErrorsViewModel)
     viewModelOf(::UpdateSourcesViewModel)
+    viewModelOf(::NavMapViewModel)
     viewModel {
         QuickActionsViewModel(
             controller = get(),

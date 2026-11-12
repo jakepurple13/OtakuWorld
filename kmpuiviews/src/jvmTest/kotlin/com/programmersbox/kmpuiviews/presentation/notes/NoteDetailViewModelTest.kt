@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.notes
 
+import com.programmersbox.kmpuiviews.testing.clearAndJoin
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -69,8 +70,7 @@ class NoteDetailViewModelTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @AfterTest
     fun tearDown() {
-        viewModelStore.clear()
-        Thread.sleep(50)
+        viewModelStore.clearAndJoin()
         Dispatchers.resetMain()
         database.close()
         dbFile.delete()

@@ -29,6 +29,7 @@ import com.programmersbox.kmpuiviews.appVersion
 import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.domain.AppUpdateCheck
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroupListItem
+import com.programmersbox.kmpuiviews.presentation.debug.navmap.NavGraphSource
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
 import com.programmersbox.kmpuiviews.presentation.settings.moreinfo.MoreInfoViewModel
 import com.programmersbox.kmpuiviews.utils.AppConfig
@@ -64,6 +65,7 @@ fun AboutScreen(
     val uriHandler = LocalUriHandler.current
     val scope = rememberCoroutineScope()
     val appConfig: AppConfig = koinInject()
+    val navGraphSource: NavGraphSource = koinInject()
     val appUpdateCheck: AppUpdateCheck = koinInject()
     val appUpdate by appUpdateCheck.updateAppCheck.collectAsStateWithLifecycle(null)
     val appVersion = appVersion()
@@ -142,7 +144,8 @@ fun AboutScreen(
                 leadingContent = { Icon(Icons.Default.Engineering, null) },
                 onClick = navActions::diagnostics,
             )
-            if (BuildKonfig.IS_PRERELEASE || appConfig.isDebug) {
+            // Builds with a navigation graph (local desktop runs) need Developer to reach the Navigation map.
+            if (BuildKonfig.IS_PRERELEASE || appConfig.isDebug || navGraphSource.available) {
                 segmentedListItem(
                     content = { Text("Developer") },
                     leadingContent = { Icon(Icons.Default.BugReport, null) },

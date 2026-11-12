@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.settings.updatesources
 
+import com.programmersbox.kmpuiviews.testing.clearAndJoin
 import androidx.lifecycle.ViewModelStore
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
@@ -42,7 +43,7 @@ class UpdateSourcesViewModelTest {
 
     @AfterTest
     fun tearDown() {
-        viewModelStore.clear()
+        viewModelStore.clearAndJoin()
         database.close()
         Dispatchers.resetMain()
     }

@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.settings.lists.imports
 
+import com.programmersbox.kmpuiviews.testing.clearAndJoin
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModelStore
 import androidx.room3.Room
@@ -89,8 +90,7 @@ class ImportFullListViewModelTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @AfterTest
     fun tearDown() {
-        viewModelStore.clear()
-        Thread.sleep(50)
+        viewModelStore.clearAndJoin()
         Dispatchers.resetMain()
         database.close()
         dbFile.delete()

@@ -1,0 +1,48 @@
+# Navigation map overrides shared by every app. Format: see navgraph/src/main/kotlin/.../Overrides.kt
+# RepoGraphTest (./gradlew :navgraph:jvmTest) fails when a screen has no way in, so add an edge or an allow-orphan here.
+
+# ---- Entry points that are not screens ----
+entry @NavBar "Nav bar"
+entry @QuickActions "Quick actions"
+
+# Nav bar / rail items are built from lists, so the scan only sees `homeScreenNavigate(screen)`.
+file HomeNav.kt -> @NavBar
+file MiddleNavAction.kt -> @NavBar
+file MultipleActions.kt -> @NavBar
+edge @NavBar -> RecentScreen : HomeNav.kt nav items
+edge @NavBar -> AllScreen : HomeNav.kt nav items
+edge @NavBar -> NotificationScreen : HomeNav.kt nav items
+edge @NavBar -> CustomListScreen : HomeNav.kt nav items
+edge @NavBar -> GlobalSearchScreen : HomeNav.kt nav items
+edge @NavBar -> FavoriteScreen : HomeNav.kt nav items
+edge @NavBar -> ExtensionListScreen : HomeNav.kt nav items
+
+file QuickActionsViewModel.kt -> @QuickActions
+
+# ---- Shared helpers: which screens call them ----
+# Item taps go through openIfNotIncognito().
+file BiometricUtils.kt -> RecentScreen, AllScreen, FavoriteScreen, HistoryScreen, NotificationScreen, NotificationScreen.CatchUp, GlobalSearchScreen, SourceSearchScreen, CustomListScreen.CustomListItem
+file NoSourcesInstalled.kt -> RecentScreen
+file SourceNotInstalledModal.kt -> FavoriteScreen, HistoryScreen, NotificationScreen, NotificationScreen.CatchUp
+# Links that the custom UriHandler can't open fall back to the in-app web view (details descriptions, about pages).
+file CompositionLocals.kt -> DetailsScreen.Details
+file AccountContent.kt -> OnboardingScreen
+file BrowsePane.kt -> ExtensionListScreen
+file InstalledPane.kt -> ExtensionListScreen
+file ExtensionDetailSheet.kt -> ExtensionListScreen
+file DiscoverScreen.usesJvm.kt -> Settings.Discover
+
+# ---- Callback wiring the scan can't follow ----
+# KoogNavigation callbacks are used by the chat screen.
+file KoogConfiguration.kt -> Koog
+
+# ---- Not navigation ----
+# The Navigation map's own "Open" button can go anywhere.
+ignore navmap/NavMapScreen.kt
+
+# ---- Screens nothing navigates to (checked by hand) ----
+allow-orphan GeneralSettings          # replaced by Screen.Settings.* pages
+allow-orphan MoreInfoSettings         # replaced by Screen.Settings.About
+allow-orphan DownloadInstallScreen    # navActions.downloadInstall() has no callers
+allow-orphan ImportListScreen         # navActions.importList(uri) has no callers
+allow-orphan BackupRestoreRoute       # row commented out in SupabaseSettingsScreen; settings search only

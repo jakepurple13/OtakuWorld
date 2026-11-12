@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.favorite
 
+import com.programmersbox.kmpuiviews.testing.clearAndJoin
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.lifecycle.ViewModelStore
@@ -89,8 +90,7 @@ class FavoriteViewModelTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @AfterTest
     fun tearDown() {
-        viewModelStore.clear()
-        Thread.sleep(50)
+        viewModelStore.clearAndJoin()
         Dispatchers.resetMain()
         database.close()
         notes.close()

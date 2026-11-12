@@ -22,6 +22,7 @@ object SettingsScreenDisplayNames {
         Screen.IncognitoScreen -> "Incognito Sources"
         Screen.UpdateSourcesSettings -> "Update Sources"
         Screen.DebugScreen -> "Debug Menu"
+        Screen.DebugScreen.NavMap -> "Navigation map"
         Screen.OtherSettings -> "Player"
         Screen.DailyOverview.Settings -> "Daily overview"
         // New Screen.Settings.* keys — added in Task 5

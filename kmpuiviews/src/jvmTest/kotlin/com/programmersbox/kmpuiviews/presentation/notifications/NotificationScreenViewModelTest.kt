@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.notifications
 
+import com.programmersbox.kmpuiviews.testing.clearAndJoin
 import androidx.lifecycle.ViewModelStore
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.NotificationItem
@@ -8,6 +9,7 @@ import com.programmersbox.kmpuiviews.testing.createTestItemDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -78,8 +80,9 @@ class NotificationScreenViewModelTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @AfterTest
     fun tearDown() {
-        viewModelStore.clear()
-        Thread.sleep(50)
+        viewModelStore.clearAndJoin()
+            .filterIsInstance<NotificationScreenViewModel>()
+            .forEach { vm -> runBlocking { vm.clearedRemovals?.join() } }
         Dispatchers.resetMain()
         database.close()
     }
@@ -191,7 +194,7 @@ class NotificationScreenViewModelTest {
         awaitCondition { vm.items.size == 1 }
 
         vm.deleteWithUndo(vm.filteredItems)
-        viewModelStore.clear()
+        viewModelStore.clearAndJoin()
 
         awaitCondition { database.itemDao().getAllNotifications().isEmpty() }
     }

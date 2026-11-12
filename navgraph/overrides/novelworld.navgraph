@@ -1,0 +1,4 @@
+# NovelWorld-only navigation map overrides.
+
+# Chapters open through ReadViewModel.navigateToNovelReader(), which pushes the key itself.
+edge DetailsScreen.Details -> ReadViewModel.NovelReader : GenericSharedNovel.chapterOnClick
