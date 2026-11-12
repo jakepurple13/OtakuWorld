@@ -6,7 +6,7 @@ data class OverrideEdge(val from: String, val to: String, val note: String?)
  * Hand-written corrections to the scan. Line format (`#` starts a comment):
  * ```
  * entry @NavBar "Nav bar"                       # pseudo entry point
- * file HomeNav.kt -> @NavBar, RecentScreen      # calls in this file come from these screens
+ * file HomeNav.kt -> @NavBar, RecentScreen      # calls in this file come from these screens (file patterns match a path suffix)
  * edge Settings -> GeneralSettings : note       # explicit edge
  * ignore DebugFragment.kt                       # no call sites from this file
  * allow-orphan ColorHelper                      # ok to have no inbound edge

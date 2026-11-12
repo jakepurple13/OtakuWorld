@@ -1,0 +1,17 @@
+# AnimeWorld-only navigation map overrides.
+
+# GenericAnime hooks (playOrCast, startCast, DetailActions) run from the details screen.
+edge DetailsScreen.Details -> VideoScreen : GenericAnime.playOrCast
+edge DetailsScreen.Details -> CastRemoteRoute : GenericAnime.startCast
+edge DetailsScreen.Details -> VideoViewerRoute : GenericAnime.DetailActions
+# Settings DSL blocks render inside these screens.
+edge OtherSettings -> SubtitleSettingsRoute : GenericAnime playerSettings
+edge OnboardingScreen -> SubtitleSettingsRoute : GenericAnime onboardingSettings
+
+# Local video library rows open the player through item.videoScreen().
+edge VideoViewerRoute -> VideoScreen : ViewVideoScreen.kt item.videoScreen()
+
+# animeworld:// deep links handled in MainActivity.
+file animeworld/MainActivity.kt -> @DeepLinks
+edge @DeepLinks -> VideoViewerRoute : MainActivity VIEW_VIDEOS
+edge @DeepLinks -> CastRemoteRoute : MainActivity CAST_REMOTE

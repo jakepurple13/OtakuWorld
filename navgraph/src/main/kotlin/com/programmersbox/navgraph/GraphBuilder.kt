@@ -18,7 +18,8 @@ private fun resolve(text: String, ids: Collection<String>): Resolution {
 }
 
 private val funDecl = Regex("""\bfun\s+(?:<[^>]*>\s*)?(\w+)\s*\(""")
-private val actionsInterface = Regex("""\binterface\s+NavigationActions\b|:[^{]*\bNavigationActions\b""")
+// The NavigationActions interface and its implementations push keys themselves; their calls are not navigation edges.
+private val actionsInterface = Regex("""\binterface\s+NavigationActions\b|\bclass\s+\w+[^{(]*(\([^)]*\))?\s*:[^{]*\bNavigationActions\b""")
 
 fun buildGraph(app: String, sources: List<KotlinSource>, overrides: Overrides): NavGraphJson {
     val declarations = sources.flatMap(::findNavKeyDeclarations).associateBy { it.id }
@@ -66,8 +67,12 @@ fun buildGraph(app: String, sources: List<KotlinSource>, overrides: Overrides): 
     val edges = linkedMapOf<Pair<String, String>, Acc>()
     val unresolved = mutableListOf<UnresolvedJson>()
 
+    // Override file patterns match a path suffix: `Foo.kt` or `navigation/Foo.kt`.
+    fun matches(path: String, pattern: String) = path == pattern || path.endsWith("/$pattern")
+
     for (src in sources) {
-        if (src.fileName in overrides.ignored || actionsInterface.containsMatchIn(src.code)) continue
+        if (overrides.ignored.any { matches(src.path, it) } || actionsInterface.containsMatchIn(src.code)) continue
+        val owners = fileOwners.entries.filter { matches(src.path, it.key) }.flatMap { it.value }.takeIf { it.isNotEmpty() }
         val fileRegs = keyRegs.filter { it.first.file == src.path }
         for (site in findCallSites(src, methodMap)) {
             val targetText = when (val t = site.target) {
@@ -82,11 +87,12 @@ fun buildGraph(app: String, sources: List<KotlinSource>, overrides: Overrides): 
                     unresolved += UnresolvedJson(src.path, site.line, targetText, r.reason); continue
                 }
             }
-            val from: List<String> = fileOwners[src.fileName]
+            val from: List<String> = owners
                 ?: fileRegs.filter { site.offset in it.first.bodyStart..it.first.bodyEnd }
                     .minByOrNull { it.first.bodyEnd - it.first.bodyStart }?.let { listOf(it.second) }
                 ?: fileScreen[src.path]?.let(::listOf)
-                ?: dirScreen[dirOf(src.path)]?.let(::listOf)
+                // Module/graph files hold hooks for many screens; don't guess their source from the directory.
+                ?: dirScreen[dirOf(src.path)]?.takeIf { src.path !in registrationFiles }?.let(::listOf)
                 ?: run {
                     unresolved += UnresolvedJson(src.path, site.line, targetText, "no source screen"); continue
                 }

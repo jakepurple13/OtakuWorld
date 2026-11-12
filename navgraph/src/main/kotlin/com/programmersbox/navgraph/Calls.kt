@@ -38,10 +38,13 @@ fun findRegistrations(src: KotlinSource): List<Registration> {
 }
 
 private val navigationActionsClass = Regex("""\bclass\s+\w+[^{]*:[^{]*\bNavigationActions\b""")
-private val overrideFun = Regex("""\boverride\s+fun\s+(\w+)""")
-private val actionTarget = Regex("""\bScreen(?:\.\w+)+|\bnavigate\(\s*([\w.]+)""")
+private val overrideFun = Regex("""\boverride\s+fun\s+(?:<[^>]*>\s*)?(\w+)\s*\(\s*(\))?""")
+private val actionTarget = Regex("""\bScreen(?:\.\w+)+|\bnavigate\(\s*([A-Z][\w.]*)""")
 
-/** For the class implementing `NavigationActions`, maps each overridden method to the key it pushes. */
+/**
+ * For the class implementing `NavigationActions`, maps each overridden method to the key it pushes.
+ * Overloads that take arguments are also stored as `name/args` (e.g. `customList(list)` → the list item screen).
+ */
 fun buildActionMethodMap(src: KotlinSource): Map<String, String> {
     val code = src.code
     if (!navigationActionsClass.containsMatchIn(code)) return emptyMap()
@@ -51,40 +54,56 @@ fun buildActionMethodMap(src: KotlinSource): Map<String, String> {
         val end = funs.getOrNull(index + 1)?.range?.first ?: code.length
         val target = actionTarget.find(code.substring(m.range.last + 1, end)) ?: return@forEachIndexed
         val key = target.groupValues[1].ifEmpty { target.value }
-        map.putIfAbsent(m.groupValues[1], key)
+        val name = m.groupValues[1]
+        if (m.groupValues[2].isEmpty()) map.putIfAbsent("$name/args", key)
+        map.putIfAbsent(name, key)
     }
     return map
 }
 
 private val receiverCall = Regex("""\b(LocalNavActions\.current|\w*(?:[Nn]av|[Aa]ctions)\w*)\s*(\.|::)\s*(\w+)""")
-private val navigateMethods = setOf("navigate", "homeScreenNavigate", "clearBackStack")
+private val navigateMethods = setOf("navigate", "homeScreenNavigate", "clearBackStack", "navigateTo")
+
+// Screens that take a navigation callback call it bare: `onNavigate(SomeRoute)`.
+private val bareOnNavigate = Regex("""(?<![.\w])onNavigate(?=\s*\()""")
 private val keyArgument = Regex("""^([A-Z]\w*(?:\.[A-Z]\w*)*)\s*(\(.*)?$""", RegexOption.DOT_MATCHES_ALL)
 
 fun findCallSites(src: KotlinSource, methodMap: Map<String, String>): List<CallSite> {
     val code = src.code
-    return receiverCall.findAll(code).mapNotNull { m ->
+
+    /** Target of the call whose `(` is at [open], or null if there are no parentheses. */
+    fun navigateTarget(open: Int): CallTarget? {
+        if (open >= code.length || code[open] != '(') return null
+        val close = src.matchingParen(open)
+        if (close < 0) return null
+        val arg = firstArgument(code.substring(open + 1, close))
+        return keyArgument.matchEntire(arg)?.let { CallTarget.Key(it.groupValues[1]) }
+            ?: CallTarget.Dynamic(arg.replace(Regex("""\s+"""), " "))
+    }
+
+    val receiverSites = receiverCall.findAll(code).mapNotNull { m ->
         val method = m.groupValues[3]
         val isRef = m.groupValues[2] == "::"
         val after = code.skipSpaces(m.range.last + 1)
         val target: CallTarget = when {
-            method in navigateMethods -> {
-                if (isRef || after >= code.length || code[after] != '(') return@mapNotNull null
-                val close = src.matchingParen(after)
-                if (close < 0) return@mapNotNull null
-                val arg = firstArgument(code.substring(after + 1, close))
-                keyArgument.matchEntire(arg)?.let { CallTarget.Key(it.groupValues[1]) }
-                    ?: CallTarget.Dynamic(arg.replace(Regex("""\s+"""), " "))
+            method in navigateMethods -> if (isRef) null else navigateTarget(after)
+            method in methodMap -> when {
+                isRef -> CallTarget.Key(methodMap.getValue(method))
+                after < code.length && code[after] == '(' -> {
+                    val noArgs = code.getOrNull(code.skipSpaces(after + 1)) == ')'
+                    CallTarget.Key(if (noArgs) methodMap.getValue(method) else methodMap["$method/args"] ?: methodMap.getValue(method))
+                }
+                else -> null
             }
-
-            method in methodMap -> {
-                if (!isRef && (after >= code.length || code[after] != '(')) return@mapNotNull null
-                CallTarget.Key(methodMap.getValue(method))
-            }
-
-            else -> return@mapNotNull null
-        }
+            else -> null
+        } ?: return@mapNotNull null
         CallSite(src.path, m.range.first, src.lineOf(m.range.first), target)
-    }.toList()
+    }
+    val bareSites = bareOnNavigate.findAll(code).mapNotNull { m ->
+        val target = navigateTarget(code.skipSpaces(m.range.last + 1)) as? CallTarget.Key ?: return@mapNotNull null
+        CallSite(src.path, m.range.first, src.lineOf(m.range.first), target)
+    }
+    return (receiverSites + bareSites).sortedBy { it.offset }.toList()
 }
 
 private fun firstArgument(args: String): String {

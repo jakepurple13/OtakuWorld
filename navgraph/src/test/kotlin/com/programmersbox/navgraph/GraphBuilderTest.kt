@@ -44,7 +44,7 @@ class GraphBuilderTest {
             "p/recent/RecentView.kt",
             """
             package p.recent
-            fun RecentView() {
+            fun RecentView(navActions: NavigationActions = LocalNavActions.current) {
                 navActions.details(m)
                 navActions.navigate(Screen.RecentScreen)
                 navActions.navigate(Screen.Unregistered)
@@ -60,6 +60,14 @@ class GraphBuilderTest {
                 navActions.navigate(Detail)
                 navActions.navigate(route)
             }
+            """.trimIndent(),
+        ),
+        KotlinSource(
+            "p/recent/RecentModule.kt",
+            """
+            package p.recent
+            val m = module { navigation<Screen.ColorHelper> { ColorHelperScreen() } }
+            fun hook() { navActions.details(m) }
             """.trimIndent(),
         ),
         KotlinSource(
@@ -149,6 +157,11 @@ class GraphBuilderTest {
     }
 
     @Test
+    fun registrationFilesGetNoDirectoryFallback() {
+        assertTrue(graph.unresolved.any { it.file == "p/recent/RecentModule.kt" && it.reason == "no source screen" })
+    }
+
+    @Test
     fun fileOwnerOverride() {
         val g = buildGraph("test", sources, overrides + parseOverrides("file Sheet.kt -> ColorHelper"))
         assertEquals(listOf(SiteJson("p/shared/Sheet.kt", 2)), g.edges.find { it.from == "ColorHelper" && it.to == "DetailsScreen.Details" }?.sites)
@@ -158,6 +171,13 @@ class GraphBuilderTest {
     fun ignoredFileProducesNothing() {
         val g = buildGraph("test", sources, overrides + parseOverrides("ignore Sheet.kt"))
         assertTrue(g.unresolved.none { it.file == "p/shared/Sheet.kt" })
+    }
+
+    @Test
+    fun filePatternsMatchPathSuffix() {
+        val g = buildGraph("test", sources, overrides + parseOverrides("ignore recent/RecentUtils.kt\nignore other/RecentView.kt"))
+        assertTrue(g.unresolved.none { it.file == "p/recent/RecentUtils.kt" })
+        assertNotNull(g.edges.find { it.from == "RecentScreen" && it.to == "DetailsScreen.Details" })
     }
 
     @Test

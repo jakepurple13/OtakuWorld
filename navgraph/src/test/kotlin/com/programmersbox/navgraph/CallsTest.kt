@@ -41,12 +41,15 @@ class CallsTest {
                 }
                 override fun library() = navigate(Screen.Settings.Library)
                 override fun popBackStack() { navBackStack.removeLast() }
+                override fun <T : Any> navigate(nav: T) { navBackStack.add(nav) }
+                override fun <T : Any> clearBackStack(nav: T) { navigate(nav) }
             }
         """.trimIndent()
 
         assertEquals(
             mapOf(
                 "recent" to "Screen.RecentScreen",
+                "details/args" to "Screen.DetailsScreen.Details",
                 "details" to "Screen.DetailsScreen.Details",
                 "library" to "Screen.Settings.Library",
             ),
@@ -91,5 +94,37 @@ class CallsTest {
             sites.map { it.target },
         )
         assertEquals(listOf(2, 3, 4, 5, 6, 7, 10), sites.map { it.line })
+    }
+
+    @Test
+    fun overloadsWithArgumentsMapSeparately() {
+        val actions = """
+            class X : NavigationActions {
+                override fun customList() { navBackStack.add(Screen.CustomListScreen) }
+                override fun customList(customList: CustomList) { navBackStack.add(Screen.CustomListScreen.CustomListItem(customList.uuid)) }
+            }
+        """.trimIndent()
+        val map = buildActionMethodMap(KotlinSource("A.kt", actions))
+        assertEquals("Screen.CustomListScreen", map["customList"])
+        assertEquals("Screen.CustomListScreen.CustomListItem", map["customList/args"])
+
+        val calls = "fun F() {\n navActions.customList()\n navActions.customList(it)\n Button(onClick = navActions::customList)\n}"
+        assertEquals(
+            listOf("Screen.CustomListScreen", "Screen.CustomListScreen.CustomListItem", "Screen.CustomListScreen"),
+            findCallSites(KotlinSource("F.kt", calls), map).map { (it.target as CallTarget.Key).text },
+        )
+    }
+
+    @Test
+    fun onNavigateAndNavigateTo() {
+        val text = """
+            fun Bar(onNavigate: (NavKey) -> Unit) {
+                Button(onClick = { onNavigate(AuthRoute) })
+                navigationActions.navigateTo(KoogSettings)
+                val onNavigate = { x -> other(x) }
+            }
+        """.trimIndent()
+        val sites = findCallSites(KotlinSource("Bar.kt", text), emptyMap())
+        assertEquals(listOf(CallTarget.Key("AuthRoute"), CallTarget.Key("KoogSettings")), sites.map { it.target })
     }
 }

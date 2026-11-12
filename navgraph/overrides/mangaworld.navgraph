@@ -1,0 +1,10 @@
+# MangaWorld-only navigation map overrides.
+
+# Chapters open through ReadViewModel.navigateToMangaReader(), which pushes the key itself.
+edge DetailsScreen.Details -> ReadViewModel.MangaReader : GenericManga.chapterOnClick
+edge DownloadRoute -> ReadViewModel.MangaReader : DownloadScreen.kt navigateToMangaReader
+
+# composeCustomPreferences() rows render inside the Settings screen.
+file GenericSharedManga.kt -> Settings
+
+allow-orphan ImageLoaderSettingsRoute   # registered, no row links to it
