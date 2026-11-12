@@ -109,7 +109,7 @@ class MockInfo(private val context: Context) : GenericInfo {
                 .padding(vertical = 4.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) { items(10) { M3PlaceHolderCoverCard(placeHolder = painterResource(R.drawable.ic_site_settings)) } }
+        ) { items(10) { M3PlaceHolderCoverCard(placeHolder = painterResource(R.drawable.ic_launcher_foreground)) } }
     }
 
     @ExperimentalFoundationApi
@@ -141,7 +141,7 @@ class MockInfo(private val context: Context) : GenericInfo {
                     imageUrl = it.imageUrl,
                     name = it.title,
                     headers = it.extras,
-                    placeHolder = { painterResource(R.drawable.ic_site_settings) },
+                    placeHolder = { painterResource(R.drawable.ic_launcher_foreground) },
                     favoriteIcon = {
                         if (favorites.any { f -> f.url == it.url }) {
                             Icon(
@@ -192,7 +192,7 @@ fun PreviewTheme(
                 kmpInterop,
                 module {
                     single { FirebaseUIStyle(R.style.Theme_OtakuWorldBase) }
-                    single { AppLogo(AppCompatResources.getDrawable(context, R.drawable.ic_site_settings)!!, R.drawable.ic_site_settings) }
+                    single { AppLogo(AppCompatResources.getDrawable(context, R.drawable.ic_launcher_foreground)!!, R.drawable.ic_launcher_foreground) }
                 },
                 module {
                     single<GenericInfo> { MockInfo(get()) } binds arrayOf(

@@ -70,6 +70,8 @@ Firebase sync and the custom server sync are no longer used.
 
 ## [Latest Release](https://github.com/jakepurple13/OtakuWorld/releases/latest)
 
+Maintainers: see [docs/RELEASING.md](docs/RELEASING.md) for the release steps and checklist.
+
 # Screenshots
 <p align="center">
   <img src="/mangaworld/src/main/ic_launcher-playstore.png" width="32%"/>

@@ -1,0 +1,13 @@
+# Navigation map overrides for the Android apps (not desktop).
+
+# Deep links are registered in kmpuiviews/src/androidMain/.../utils/DeepLinks.kt and opened in BaseMainActivity.
+entry @DeepLinks "Deep links + notifications"
+file BaseMainActivity.kt -> @DeepLinks
+edge @DeepLinks -> DetailsScreen.Details : DeepLinks.kt
+edge @DeepLinks -> NotificationScreen : DeepLinks.kt
+edge @DeepLinks -> Settings : DeepLinks.kt
+edge @DeepLinks -> UpdateCheckErrors : DeepLinks.kt
+edge @DeepLinks -> DailyOverview : DeepLinks.kt
+
+# Dead entryGraph() kept for reference; registrations live in kmpuiviews' Nav3Graph.kt.
+ignore uiviews/presentation/navigation/Nav3Graph.kt

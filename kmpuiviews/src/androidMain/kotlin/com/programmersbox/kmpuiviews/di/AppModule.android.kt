@@ -18,6 +18,7 @@ import com.programmersbox.kmpuiviews.dailyoverview.NanoEngine
 import com.programmersbox.kmpuiviews.dailyoverview.ProviderEngine
 import com.programmersbox.kmpuiviews.domain.dailyoverview.DailyOverviewScheduler
 import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngine
+import com.programmersbox.kmpuiviews.presentation.debug.navmap.NavGraphSource
 import com.programmersbox.kmpuiviews.presentation.settings.extensions.ExtensionShareHandler
 import com.programmersbox.kmpuiviews.presentation.updatecheck.AndroidUpdateCheckReportSharer
 import com.programmersbox.kmpuiviews.presentation.updatecheck.UpdateCheckReportSharer
@@ -30,6 +31,8 @@ import com.programmersbox.kmpuiviews.utils.PackageInstallEngine
 import com.programmersbox.kmpuiviews.workers.WorkManagerDailyOverviewScheduler
 import com.programmersbox.kmpuiviews.workers.UpdateNotification
 import com.programmersbox.kmpuiviews.domain.aitext.NanoTools
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.bind
@@ -38,6 +41,19 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 
 actual fun platformModule(): Module = module {
+    // navgraph.json is only packaged in debug/noFirebase builds; elsewhere this reads null.
+    single<NavGraphSource> {
+        val context = get<Context>()
+        object : NavGraphSource {
+            override val available: Boolean by lazy {
+                runCatching { context.assets.list("")?.contains("navgraph.json") == true }.getOrDefault(false)
+            }
+
+            override suspend fun read(): String? = withContext(Dispatchers.IO) {
+                runCatching { context.assets.open("navgraph.json").bufferedReader().use { it.readText() } }.getOrNull()
+            }
+        }
+    }
     singleOf(::PackageInstallEngine)
     singleOf(::InstallStatusRepository)
     singleOf(::DownloadAndInstaller)

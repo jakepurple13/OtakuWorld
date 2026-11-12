@@ -12,11 +12,11 @@ class MultiplatformApplicationPlugin : Plugin<Project> {
         target.setupKotlinCompileOptions()
         target.extensions
             .findByType(KotlinMultiplatformExtension::class.java)
-            ?.apply { setup() }
+            ?.apply { setup(AppInfo.includeIos(target)) }
     }
 
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
-    private fun KotlinMultiplatformExtension.setup() {
+    private fun KotlinMultiplatformExtension.setup(includeIos: Boolean) {
         /*androidTarget {
             compilations.all {
                 this@androidTarget.compilerOptions {
@@ -28,7 +28,7 @@ class MultiplatformApplicationPlugin : Plugin<Project> {
 
         jvm()
 
-        if(AppInfo.includeIos) {
+        if(includeIos) {
             val xcfName = "sharedKit"
 
             listOf(

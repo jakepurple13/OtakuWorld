@@ -24,12 +24,13 @@ class MultiplatformLibraryPlugin : Plugin<Project> {
 
         target.extensions
             .findByType(KotlinMultiplatformExtension::class.java)
-            ?.apply { setup(dependency) }
+            ?.apply { setup(dependency, AppInfo.includeIos(target)) }
     }
 
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
     private fun KotlinMultiplatformExtension.setup(
         dependencyHandling: DependencyHandling,
+        includeIos: Boolean,
     ) {
         jvmToolchain(21)
 
@@ -45,7 +46,7 @@ class MultiplatformLibraryPlugin : Plugin<Project> {
                 }
             }
 
-        if(AppInfo.includeIos) {
+        if(includeIos) {
             val xcfName = "sharedKit"
 
             listOf(

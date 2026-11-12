@@ -2,6 +2,7 @@ package com.programmersbox.kmpuiviews.presentation.settings.about
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountTree
 import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.Bento
 import androidx.compose.material.icons.filled.Colorize
@@ -12,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.presentation.debug.navmap.NavGraphSource
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroupListItem
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
 import com.programmersbox.kmpuiviews.utils.AppConfig
@@ -23,6 +25,7 @@ import org.koin.compose.koinInject
 fun DeveloperScreen() {
     val navActions = LocalNavActions.current
     val appConfig: AppConfig = koinInject()
+    val navGraphSource: NavGraphSource = koinInject()
 
     SettingsScaffold(
         title = "Developer",
@@ -34,6 +37,14 @@ fun DeveloperScreen() {
                     content = { Text("Debug Menu") },
                     leadingContent = { Icon(Icons.Default.Android, null) },
                     onClick = navActions::debug,
+                )
+            }
+            // Only debug Android builds and local desktop runs ship a navigation graph.
+            if (navGraphSource.available) {
+                segmentedListItem(
+                    content = { Text("Navigation map") },
+                    leadingContent = { Icon(Icons.Default.AccountTree, null) },
+                    onClick = { navActions.navigate(Screen.DebugScreen.NavMap) },
                 )
             }
             segmentedListItem(

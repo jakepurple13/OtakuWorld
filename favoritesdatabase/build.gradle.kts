@@ -46,8 +46,10 @@ kotlin {
 dependencies {
     add("kspJvm", commonLibs.roomCompiler)
     add("kspAndroid", commonLibs.roomCompiler)
-    add("kspIosSimulatorArm64", commonLibs.roomCompiler)
-    add("kspIosArm64", commonLibs.roomCompiler)
+    if (AppInfo.includeIos(project)) {
+        add("kspIosSimulatorArm64", commonLibs.roomCompiler)
+        add("kspIosArm64", commonLibs.roomCompiler)
+    }
 }
 
 room3 {

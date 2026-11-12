@@ -39,6 +39,14 @@ extension loader system.
 ./gradlew clean
 ```
 
+**iOS targets are opt-in.** KMP modules only register `iosArm64`/`iosSimulatorArm64` when
+`-Potaku.includeIos=true` is passed (or set in `~/.gradle/gradle.properties`). Without it, `iosMain`
+source sets are not compiled. Gate any new iOS-only Gradle config (e.g. `kspIosArm64`) behind
+`AppInfo.includeIos(project)`.
+
+**Configuration cache is on** and **R classes are non-transitive**: reference a dependency's
+resources through its own R class (e.g. `com.programmersbox.uiviews.R.string.remove`).
+
 **Important:** Always use the `noFirebase` build variant for local development. This is set as the
 default (`isDefault = true`). The `full` flavor requires `google-services.json` secrets.
 
