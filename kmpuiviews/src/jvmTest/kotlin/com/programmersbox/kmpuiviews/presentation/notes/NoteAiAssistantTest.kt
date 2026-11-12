@@ -25,11 +25,16 @@ import kotlin.test.assertNull
 class NoteAiAssistantTest {
     private class Fake(
         var nanoOnly: Boolean = false,
+        var noEngine: Boolean = false,
         var proofreadOutput: () -> Flow<String> = { flowOf("Stopped at ch 45") },
         var rewriteOutput: () -> Flow<String> = { flowOf("Rewritten") },
     ) : AiText {
-        override suspend fun engineFor(feature: AiFeature, inputLength: Int): AiEngineInfo? =
-            if (nanoOnly && inputLength > AiTextPrompts.NANO_TEXT_LIMIT) null else ENGINE
+        var engineCalls = 0
+
+        override suspend fun engineFor(feature: AiFeature, inputLength: Int): AiEngineInfo? {
+            engineCalls++
+            return if (noEngine) null else if (nanoOnly && inputLength > AiTextPrompts.NANO_TEXT_LIMIT) null else ENGINE
+        }
 
         override fun proofread(text: String) = proofreadOutput()
         override fun rewrite(text: String, style: RewriteStyle) = rewriteOutput()
@@ -40,13 +45,21 @@ class NoteAiAssistantTest {
     }
 
     private fun TestScope.assistant(fake: Fake = Fake()) =
-        NoteAiAssistant(fake, TestScope(StandardTestDispatcher(testScheduler)))
+        NoteAiAssistant(
+            fake,
+            TestScope(StandardTestDispatcher(testScheduler)),
+            StandardTestDispatcher(testScheduler),
+        )
+
+    private suspend fun TestScope.opened(ai: NoteAiAssistant, text: String) {
+        ai.resolveEngines(text)
+        advanceUntilIdle()
+    }
 
     @Test
     fun `blank note disables tools`() = runTest {
         val ai = assistant()
-        ai.onTextChanged("   ")
-        advanceUntilIdle()
+        opened(ai, "   ")
         assertEquals(false, ai.toolsEnabled.value)
         assertNull(ai.disabledReason.value)
     }
@@ -54,16 +67,15 @@ class NoteAiAssistantTest {
     @Test
     fun `note with text enables tools`() = runTest {
         val ai = assistant()
-        ai.onTextChanged("hello")
-        advanceUntilIdle()
+        opened(ai, "hello")
         assertEquals(true, ai.toolsEnabled.value)
     }
 
     @Test
     fun `long note with only nano disables with reason`() = runTest {
         val ai = assistant(Fake(nanoOnly = true))
+        opened(ai, "hello")
         ai.onTextChanged("a".repeat(AiTextPrompts.NANO_TEXT_LIMIT + 1))
-        advanceUntilIdle()
         assertEquals(false, ai.toolsEnabled.value)
         assertEquals("Note is too long for on-device tools", ai.disabledReason.value)
     }
@@ -117,6 +129,59 @@ class NoteAiAssistantTest {
         assertEquals("Stoped", preview.original)
         assertNull(ai.accept())
         assertNotNull(ai.preview.value)
+    }
+
+    @Test
+    fun `long note with another engine ready stays enabled`() = runTest {
+        val ai = assistant(Fake(nanoOnly = false))
+        opened(ai, "hello")
+        ai.onTextChanged("a".repeat(AiTextPrompts.NANO_TEXT_LIMIT + 1))
+        assertEquals(true, ai.toolsEnabled.value)
+        assertNull(ai.disabledReason.value)
+    }
+
+    @Test
+    fun `no engine hides tools and shows no reason`() = runTest {
+        val ai = assistant(Fake(noEngine = true))
+        opened(ai, "hello")
+        ai.onTextChanged("a".repeat(AiTextPrompts.NANO_TEXT_LIMIT + 1))
+        assertEquals(false, ai.available.value)
+        assertEquals(false, ai.toolsEnabled.value)
+        assertNull(ai.disabledReason.value)
+    }
+
+    @Test
+    fun `engines are resolved once, not per text change`() = runTest {
+        val fake = Fake()
+        val ai = assistant(fake)
+        opened(ai, "hello")
+        val calls = fake.engineCalls
+        repeat(5) { ai.onTextChanged("hello world $it") }
+        advanceUntilIdle()
+        assertEquals(calls, fake.engineCalls)
+    }
+
+    @Test
+    fun `accept returns null while streaming`() = runTest {
+        val gate = kotlinx.coroutines.CompletableDeferred<Unit>()
+        val ai = assistant(Fake(rewriteOutput = { flow { emit("par"); gate.await(); emit("tial") } }))
+        ai.rewrite("some note", RewriteStyle.Shorten)
+        advanceUntilIdle()
+        assertIs<AiTextState.Streaming>(assertNotNull(ai.preview.value).state)
+        assertNull(ai.accept())
+        assertNotNull(ai.preview.value)
+        gate.complete(Unit)
+        advanceUntilIdle()
+        assertEquals("partial", ai.accept())
+    }
+
+    @Test
+    fun `blank result becomes Error`() = runTest {
+        val ai = assistant(Fake(rewriteOutput = { flowOf("  ") }))
+        ai.rewrite("some note", RewriteStyle.Shorten)
+        advanceUntilIdle()
+        assertIs<AiTextState.Error>(assertNotNull(ai.preview.value).state)
+        assertNull(ai.accept())
     }
 
     private companion object {

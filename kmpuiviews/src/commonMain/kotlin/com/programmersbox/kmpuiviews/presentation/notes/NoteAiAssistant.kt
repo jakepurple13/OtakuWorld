@@ -8,7 +8,9 @@ import com.programmersbox.kmpuiviews.domain.aitext.AiTextState
 import com.programmersbox.kmpuiviews.domain.aitext.DiffSpan
 import com.programmersbox.kmpuiviews.domain.aitext.RewriteStyle
 import com.programmersbox.kmpuiviews.domain.aitext.WordDiff
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
@@ -16,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -30,46 +33,64 @@ data class NotePreview(
 class NoteAiAssistant(
     private val aiText: AiText,
     private val scope: CoroutineScope,
+    diffDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) {
     private class Pending(val original: String, val label: String, val diffed: Boolean)
 
     private val runner = AiTextRunner(scope)
     private val pending = MutableStateFlow<Pending?>(null)
+    private val _available = MutableStateFlow(false)
     private val _toolsEnabled = MutableStateFlow(false)
     private val _disabledReason = MutableStateFlow<String?>(null)
 
+    // Resolved once per screen open by resolveEngines, not per edit
+    private var anyEngine = false
+    private var engineForLongText = false
+    private var lastText = ""
+
+    /** False until an engine is known to exist; the controls stay hidden while it is false. */
+    val available: StateFlow<Boolean> = _available
     val toolsEnabled: StateFlow<Boolean> = _toolsEnabled
     val disabledReason: StateFlow<String?> = _disabledReason
 
     val preview: StateFlow<NotePreview?> = combine(pending, runner.state) { pending, state ->
         pending?.let {
-            val shown = if (state is AiTextState.Idle) AiTextState.Loading else state
+            val shown = when {
+                state is AiTextState.Idle -> AiTextState.Loading
+                // A blank result would wipe the note if accepted
+                state is AiTextState.Done && state.text.isBlank() -> AiTextState.Error("Empty result")
+                else -> state
+            }
             val diff = if (it.diffed && shown is AiTextState.Done) WordDiff.diff(it.original, shown.text) else null
             NotePreview(it.original, shown, diff, it.label)
         }
-    }.stateIn(scope, SharingStarted.Eagerly, null)
+    }.flowOn(diffDispatcher).stateIn(scope, SharingStarted.Eagerly, null)
 
-    private var availabilityJob: Job? = null
+    private var resolveJob: Job? = null
     private var runJob: Job? = null
 
-    fun onTextChanged(text: String) {
-        availabilityJob?.cancel()
-        if (text.isBlank()) {
-            _toolsEnabled.value = false
-            _disabledReason.value = null
-            return
-        }
-        availabilityJob = scope.launch {
-            val available = aiText.engineFor(AiFeature.Proofread, text.length) != null ||
-                    aiText.engineFor(AiFeature.Rewrite, text.length) != null
-            _toolsEnabled.value = available
-            _disabledReason.value = if (!available && text.length > AiTextPrompts.NANO_TEXT_LIMIT) TOO_LONG else null
-        }
+    /** Checks which engines are ready. Call once when the note screen opens. */
+    suspend fun resolveEngines(text: String) {
+        lastText = text
+        anyEngine = aiText.engineFor(AiFeature.Proofread, 0) != null ||
+                aiText.engineFor(AiFeature.Rewrite, 0) != null
+        engineForLongText = anyEngine &&
+                (aiText.engineFor(AiFeature.Proofread, AiTextPrompts.NANO_TEXT_LIMIT + 1) != null ||
+                        aiText.engineFor(AiFeature.Rewrite, AiTextPrompts.NANO_TEXT_LIMIT + 1) != null)
+        _available.value = anyEngine
+        onTextChanged(lastText)
     }
 
-    fun fixGrammar(text: String) = start(text, AiFeature.Proofread, Pending(text, "Fix grammar", diffed = true)) {
-        aiText.proofread(text)
+    /** Cheap, per edit: only compares the length with what the resolved engines can take. */
+    fun onTextChanged(text: String) {
+        lastText = text
+        val tooLong = text.length > AiTextPrompts.NANO_TEXT_LIMIT && !engineForLongText
+        _toolsEnabled.value = anyEngine && text.isNotBlank() && !tooLong
+        _disabledReason.value = if (anyEngine && text.isNotBlank() && tooLong) TOO_LONG else null
     }
+
+    fun fixGrammar(text: String) =
+        start(text, AiFeature.Proofread, Pending(text, FIX_GRAMMAR_LABEL, diffed = true)) { aiText.proofread(text) }
 
     fun rewrite(text: String, style: RewriteStyle) =
         start(text, AiFeature.Rewrite, Pending(text, style.name, diffed = false)) { aiText.rewrite(text, style) }
@@ -109,6 +130,7 @@ class NoteAiAssistant(
     }
 
     companion object {
+        const val FIX_GRAMMAR_LABEL = "Fix grammar"
         const val TOO_LONG = "Note is too long for on-device tools"
     }
 }

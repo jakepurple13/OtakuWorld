@@ -7,6 +7,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -29,6 +30,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -85,9 +87,12 @@ fun NoteAiMenuButton(ai: NoteAiAssistant, text: String) {
     val enabled by ai.toolsEnabled.collectAsState()
     val reason by ai.disabledReason.collectAsState()
     val preview by ai.preview.collectAsState()
+    val available by ai.available.collectAsState()
     val generating = preview?.state.let { it is AiTextState.Loading || it is AiTextState.Streaming }
 
+    LaunchedEffect(Unit) { ai.resolveEngines(text) }
     LaunchedEffect(text) { ai.onTextChanged(text) }
+    if (!available) return
 
     Box {
         IconButton(onClick = { expanded = true }) { Spark(spinning = generating) }
@@ -144,12 +149,19 @@ fun AiNoteField(
     val preview by ai.preview.collectAsState()
     val state = preview?.state
     val generating = state is AiTextState.Loading || state is AiTextState.Streaming
-    val textAlpha by animateFloatAsState(if (generating) 0.35f else 1f, tween(300), label = "noteTextAlpha")
+    // A rewrite streams its new text into the field; everything else dims the original while it works
+    val streamed = (state as? AiTextState.Streaming)?.takeIf { preview?.label != NoteAiAssistant.FIX_GRAMMAR_LABEL }?.text
+    val textAlpha by animateFloatAsState(
+        if (generating && streamed == null) 0.35f else 1f, tween(300), label = "noteTextAlpha"
+    )
     val deletedAlpha = remember { Animatable(1f) }
     val insertedAlpha = remember { Animatable(1f) }
     var deletedGone by remember { mutableStateOf(false) }
     var accepting by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+
+    // Leaving the screen cancels generation and drops any preview
+    DisposableEffect(ai) { onDispose { ai.discard() } }
 
     LaunchedEffect(preview == null) {
         if (preview == null) {
@@ -173,7 +185,7 @@ fun AiNoteField(
                 )
             } else {
                 OutlinedTextField(
-                    value = value,
+                    value = streamed ?: value,
                     onValueChange = onValueChange,
                     readOnly = generating,
                     enabled = enabled,
@@ -191,7 +203,7 @@ fun AiNoteField(
         AnimatedVisibility(
             visible = preview != null && !generating,
             enter = slideInVertically { it / 3 } + fadeIn(tween(320)),
-            exit = fadeOut(tween(200)),
+            exit = slideOutVertically { it / 3 } + fadeOut(tween(200)),
         ) {
             Row(
                 Modifier
