@@ -1,5 +1,10 @@
 package com.programmersbox.desktop
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
+import com.programmersbox.kmpuiviews.utils.composables.transitions.ChapterOpenMotion
+import com.programmersbox.kmpuiviews.utils.composables.transitions.chapterOpenTransition
 import ca.gosyer.appdirs.AppDirs
 import com.programmersbox.anime.shared.AnimeDesktopSettings
 import com.programmersbox.anime.shared.StorageHolder
@@ -124,7 +129,9 @@ fun main(args: Array<String>) {
                 )
             } bind SubtitleGenerator::class
 
-            navigation<VideoScreen> { VideoPlayerUi(it) }
+            navigation<VideoScreen>(metadata = ChapterOpenMotion.depthMetadata()) {
+                Box(Modifier.fillMaxSize().chapterOpenTransition(null)) { VideoPlayerUi(it) }
+            }
             navigation<PlatformSettings> { JvmSettingsScreen() }
             navigation<VideoViewerRoute> { ViewVideoScreen() }
             navigation<FreeUpSpaceRoute> { FreeUpSpaceScreen() }

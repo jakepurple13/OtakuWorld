@@ -1,5 +1,8 @@
 package com.programmersbox.animeworld
 
+import androidx.compose.foundation.layout.Box
+import com.programmersbox.kmpuiviews.utils.composables.transitions.ChapterOpenMotion
+import com.programmersbox.kmpuiviews.utils.composables.transitions.chapterOpenTransition
 import android.Manifest
 import android.app.PendingIntent
 import android.content.Context
@@ -146,7 +149,9 @@ val appModule = module {
     factory { Zipper(get(), getAll<BackupProcessor>(), get()) }
     single { SystemAlerter(get(), get(), BuildConfig.APPLICATION_ID) }
 
-    navigation<VideoScreen> { VideoPlayerUi(it) }
+    navigation<VideoScreen>(metadata = ChapterOpenMotion.depthMetadata()) {
+        Box(Modifier.fillMaxSize().chapterOpenTransition(null)) { VideoPlayerUi(it) }
+    }
 
     navigation<CastRemoteRoute> { CastRemoteScreen() }
 
