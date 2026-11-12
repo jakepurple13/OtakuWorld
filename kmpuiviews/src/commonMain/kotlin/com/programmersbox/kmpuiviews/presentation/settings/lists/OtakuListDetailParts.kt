@@ -686,6 +686,8 @@ internal fun EditListSheet(
     }
     val descriptionGenerating = descriptionDraft is AiTextState.Loading || descriptionDraft is AiTextState.Streaming
     val namesGenerating = nameSuggestions is AiTextState.Loading || nameSuggestions is AiTextState.Streaming
+    // Generations run one at a time, so neither spark starts while the other is working
+    val anyGenerating = namesGenerating || descriptionGenerating
     val suggestedNames = (nameSuggestions as? AiTextState.Done)?.text?.lines()?.filter { it.isNotBlank() }.orEmpty()
 
     ModalBottomSheet(
@@ -730,7 +732,7 @@ internal fun EditListSheet(
                 singleLine = true,
                 trailingIcon = if (suggestAvailable) {
                     {
-                        IconButton(onClick = onSuggestNames, enabled = !namesGenerating) {
+                        IconButton(onClick = onSuggestNames, enabled = !anyGenerating) {
                             val suggestNamesLabel = stringResource(Res.string.ai_suggest_names)
                             Spark(
                                 spinning = namesGenerating,
@@ -789,7 +791,7 @@ internal fun EditListSheet(
                 minLines = 2,
                 trailingIcon = if (suggestAvailable) {
                     {
-                        IconButton(onClick = requestDraft, enabled = !descriptionGenerating) {
+                        IconButton(onClick = requestDraft, enabled = !anyGenerating) {
                             val writeLabel = stringResource(Res.string.ai_write_description)
                             Spark(
                                 spinning = descriptionGenerating,

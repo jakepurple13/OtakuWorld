@@ -16,6 +16,7 @@ import com.google.mlkit.genai.summarization.Summarization
 import com.google.mlkit.genai.summarization.SummarizationRequest
 import com.google.mlkit.genai.summarization.Summarizer
 import com.google.mlkit.genai.summarization.SummarizerOptions
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.kmpuiviews.domain.aitext.AiFeature
 import com.programmersbox.kmpuiviews.domain.aitext.AiTextPrompts
 import com.programmersbox.kmpuiviews.domain.aitext.NanoTools
@@ -40,19 +41,41 @@ import kotlin.coroutines.resumeWithException
  *
  * Recap and ListSuggest are never ready here: Summarization only offers 1-3 bullets, not the
  * 2-3 sentence prose Recap needs, so those go through the Prompt API.
+ *
+ * Tldr is only ready when the translation target language is one Summarization supports
+ * (English, Japanese, Korean): the Details screen translates the description to that target
+ * before summarizing. For any other target, Tldr goes through the Prompt API, then Koog.
  */
-class MlKitNanoTools(private val context: Context) : NanoTools {
+class MlKitNanoTools(
+    private val context: Context,
+    private val settings: NewSettingsHandling,
+) : NanoTools {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val downloadStarted = mutableMapOf<AiFeature, AtomicBoolean>()
 
-    private val summarizer: Summarizer by lazy {
-        Summarization.getClient(
-            SummarizerOptions.builder(context)
-                .setInputType(SummarizerOptions.InputType.ARTICLE)
-                .setOutputType(SummarizerOptions.OutputType.THREE_BULLETS)
-                .setLanguage(SummarizerOptions.Language.ENGLISH)
-                .build()
-        )
+    private val summarizers = mutableMapOf<Int, Summarizer>()
+
+    private fun summarizer(language: Int): Summarizer = synchronized(summarizers) {
+        summarizers.getOrPut(language) {
+            Summarization.getClient(
+                SummarizerOptions.builder(context)
+                    .setInputType(SummarizerOptions.InputType.ARTICLE)
+                    .setOutputType(SummarizerOptions.OutputType.THREE_BULLETS)
+                    .setLanguage(language)
+                    .build()
+            )
+        }
+    }
+
+    /** The summarizer for the translation target language, or null when Summarization doesn't support it. */
+    private suspend fun targetSummarizer(): Summarizer? {
+        val language = when (settings.translationTargetLanguage.get().substringBefore('-')) {
+            "en" -> SummarizerOptions.Language.ENGLISH
+            "ja" -> SummarizerOptions.Language.JAPANESE
+            "ko" -> SummarizerOptions.Language.KOREAN
+            else -> return null
+        }
+        return summarizer(language)
     }
 
     private val proofreader: Proofreader by lazy {
@@ -80,7 +103,9 @@ class MlKitNanoTools(private val context: Context) : NanoTools {
     override suspend fun isReady(feature: AiFeature, inputLength: Int): Boolean = withContext(Dispatchers.IO) {
         if (inputLength > AiTextPrompts.NANO_TEXT_LIMIT) return@withContext false
         val check: Pair<ListenableFuture<Int>, (DownloadCallback) -> ListenableFuture<Void>> = when (feature) {
-            AiFeature.Tldr -> summarizer.checkFeatureStatus() to summarizer::downloadFeature
+            AiFeature.Tldr -> targetSummarizer()
+                ?.let { it.checkFeatureStatus() to it::downloadFeature }
+                ?: return@withContext false
             AiFeature.Proofread -> proofreader.checkFeatureStatus() to proofreader::downloadFeature
             // The status is per model, so any style stands in for "rewriting is ready".
             AiFeature.Rewrite -> rewriter(RewriteStyle.Rephrase).let { it.checkFeatureStatus() to it::downloadFeature }
@@ -113,7 +138,7 @@ class MlKitNanoTools(private val context: Context) : NanoTools {
 
     override fun run(feature: AiFeature, input: String, style: RewriteStyle?): Flow<String> = flow {
         val text = when (feature) {
-            AiFeature.Tldr -> summarizer
+            AiFeature.Tldr -> (targetSummarizer() ?: error("Summarization doesn't support the target language"))
                 .runInference(SummarizationRequest.builder(input).build()).await()
                 .summary
 

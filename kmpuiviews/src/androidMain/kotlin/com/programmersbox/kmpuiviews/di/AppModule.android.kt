@@ -72,7 +72,7 @@ actual fun platformModule(): Module = module {
     singleOf(::AndroidUpdateCheckReportSharer) { bind<UpdateCheckReportSharer>() }
     factoryOf(::ImageModifier)
     singleOf(::EncryptedDataStoreFactory)
-    single<NanoTools> { MlKitNanoTools(androidContext()) }
+    single<NanoTools> { MlKitNanoTools(androidContext(), get()) }
     singleOf(::NanoEngine) { bind<SummaryEngine>() }
     singleOf(::GemmaEngine) { bind<SummaryEngine>() }
     singleOf(::ProviderEngine) { bind<SummaryEngine>() }

@@ -5,11 +5,15 @@ import com.programmersbox.kmpuiviews.domain.dailyoverview.EngineStatus
 import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngine
 import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngineId
 import com.programmersbox.kmpuiviews.domain.dailyoverview.TemplateEngine
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.test.runTest
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -151,5 +155,50 @@ class DefaultAiTextTest {
         ai.engineFor(AiFeature.Tldr)
         assertNotEquals(testThread, gemma.statusThread)
         assertTrue(gemma.statusThread!!.startsWith("DefaultDispatcher"))
+    }
+
+    /** Holds the first generation until the other one has arrived, then records the peak overlap. */
+    private class GatedEngine(private val otherArrived: CompletableDeferred<Unit>) : SummaryEngine {
+        override val id = SummaryEngineId.Gemma
+        override val onDevice = true
+        val active = AtomicInteger()
+        val maxActive = AtomicInteger()
+        val starts = AtomicInteger()
+        override suspend fun label() = id.name
+        override suspend fun status() = EngineStatus.Ready
+        override fun summarize(facts: DailyFacts): Flow<String> = flowOf()
+        override fun generate(system: String, user: String): Flow<String> = flow {
+            maxActive.accumulateAndGet(active.incrementAndGet(), ::maxOf)
+            if (starts.incrementAndGet() == 1) otherArrived.await() else otherArrived.complete(Unit)
+            emit(user)
+            active.decrementAndGet()
+        }
+    }
+
+    /** Signals when a second caller asks for the lock, i.e. it is waiting behind the first. */
+    private class LockWatcher(private val onSecondLock: () -> Unit, private val inner: Mutex = Mutex()) : Mutex by inner {
+        private val locks = AtomicInteger()
+        override suspend fun lock(owner: Any?) {
+            if (locks.incrementAndGet() == 2) onSecondLock()
+            inner.lock(owner)
+        }
+    }
+
+    @Test
+    fun `concurrent generations never overlap`() = runTest {
+        val otherArrived = CompletableDeferred<Unit>()
+        val engine = GatedEngine(otherArrived)
+        val ai = DefaultAiText(
+            listOf(TemplateEngine(), engine),
+            nanoTools = null,
+            order = order,
+            generationLock = LockWatcher({ otherArrived.complete(Unit) }),
+        )
+        val tldr = async { ai.tldr("a").toList() }
+        val names = async { ai.listNames(listOf("b")).toList() }
+        tldr.await()
+        names.await()
+        assertEquals(2, engine.starts.get())
+        assertEquals(1, engine.maxActive.get())
     }
 }

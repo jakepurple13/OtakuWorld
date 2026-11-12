@@ -24,6 +24,15 @@ object AiTextPrompts {
         return if (firstGap < 0) tail else tail.substring(firstGap).trimStart()
     }
 
+    /** The first [NANO_TEXT_LIMIT] characters of [description], ending at a word boundary. */
+    fun tldrHead(description: String): String {
+        if (description.length <= NANO_TEXT_LIMIT) return description
+        val head = description.substring(0, NANO_TEXT_LIMIT)
+        if (description[NANO_TEXT_LIMIT].isWhitespace() || head.last().isWhitespace()) return head.trimEnd()
+        val lastGap = head.indexOfLast { it.isWhitespace() }
+        return if (lastGap < 0) head else head.substring(0, lastGap).trimEnd()
+    }
+
     fun system(feature: AiFeature, style: RewriteStyle? = null): String = when (feature) {
         AiFeature.Recap ->
             "You recap the end of a story chapter for a reader who is about to start the next one. " +

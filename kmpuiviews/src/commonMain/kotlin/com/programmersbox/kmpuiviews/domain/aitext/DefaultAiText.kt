@@ -10,12 +10,19 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
+/**
+ * Bound as a Koin single, so [generationLock] is process-wide: only one generation runs at a
+ * time across all features (Gemma loads a multi-GB model per call).
+ */
 class DefaultAiText(
     engines: List<SummaryEngine>,
     private val nanoTools: NanoTools?,
     order: List<SummaryEngineId> = onDeviceAiOrder,
+    private val generationLock: Mutex = Mutex(),
 ) : AiText {
     private val resolver = EngineResolver(engines, order)
     private val withoutNano = EngineResolver(engines, order - SummaryEngineId.Nano)
@@ -30,7 +37,7 @@ class DefaultAiText(
     override fun recap(previousChapterText: String): Flow<String> =
         run(AiFeature.Recap, AiTextPrompts.recapTail(previousChapterText))
 
-    override fun tldr(description: String): Flow<String> = run(AiFeature.Tldr, description)
+    override fun tldr(description: String): Flow<String> = run(AiFeature.Tldr, AiTextPrompts.tldrHead(description))
 
     override fun proofread(text: String): Flow<String> = run(AiFeature.Proofread, text)
 
@@ -44,7 +51,9 @@ class DefaultAiText(
         val input = titles.take(AiTextPrompts.MAX_LIST_TITLES).joinToString("\n")
         return flow {
             val engine = resolve(AiFeature.ListSuggest, input.length) ?: throw noEngine()
-            emitAll(engine.generate(AiTextPrompts.LIST_DESCRIPTION_SYSTEM, AiTextPrompts.user(AiFeature.ListSuggest, input)))
+            generationLock.withLock {
+                emitAll(engine.generate(AiTextPrompts.LIST_DESCRIPTION_SYSTEM, AiTextPrompts.user(AiFeature.ListSuggest, input)))
+            }
         }.dispatchIo()
     }
 
@@ -59,10 +68,12 @@ class DefaultAiText(
     private fun run(feature: AiFeature, input: String, style: RewriteStyle? = null): Flow<String> = flow {
         val engine = resolve(feature, input.length) ?: throw noEngine()
         val tools = nanoTools
-        if (engine.id == SummaryEngineId.Nano && tools != null && tools.isReady(feature, input.length)) {
-            emitAll(tools.run(feature, input, style))
-        } else {
-            emitAll(engine.generate(AiTextPrompts.system(feature, style), AiTextPrompts.user(feature, input)))
+        generationLock.withLock {
+            if (engine.id == SummaryEngineId.Nano && tools != null && tools.isReady(feature, input.length)) {
+                emitAll(tools.run(feature, input, style))
+            } else {
+                emitAll(engine.generate(AiTextPrompts.system(feature, style), AiTextPrompts.user(feature, input)))
+            }
         }
     }.dispatchIo()
 

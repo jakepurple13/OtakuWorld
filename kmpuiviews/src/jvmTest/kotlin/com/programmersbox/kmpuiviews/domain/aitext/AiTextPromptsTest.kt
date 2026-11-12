@@ -16,6 +16,28 @@ class AiTextPromptsTest {
     }
 
     @Test
+    fun `tldrHead keeps first chars at word boundary`() {
+        val description = (1..2_000).joinToString(" ") { "word$it" }
+        val head = AiTextPrompts.tldrHead(description)
+        assertTrue(head.length <= AiTextPrompts.NANO_TEXT_LIMIT)
+        assertTrue(description.startsWith(head))
+        // Ends on a whole word: the next character in the description is the gap after it
+        assertEquals(' ', description[head.length])
+        assertTrue(head.length > AiTextPrompts.NANO_TEXT_LIMIT - 20)
+    }
+
+    @Test
+    fun `tldrHead leaves short descriptions alone`() {
+        assertEquals("short text", AiTextPrompts.tldrHead("short text"))
+    }
+
+    @Test
+    fun `tldrHead without whitespace hard-cuts`() {
+        val description = "x".repeat(AiTextPrompts.NANO_TEXT_LIMIT + 50)
+        assertEquals(AiTextPrompts.NANO_TEXT_LIMIT, AiTextPrompts.tldrHead(description).length)
+    }
+
+    @Test
     fun `parseBullets strips markers and caps at 3`() {
         assertEquals(listOf("a", "b", "c"), AiTextPrompts.parseBullets("- a\n• b\n3. c\n* d"))
     }
