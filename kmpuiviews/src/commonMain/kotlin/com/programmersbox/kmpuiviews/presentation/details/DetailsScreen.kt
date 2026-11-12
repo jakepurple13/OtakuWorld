@@ -133,6 +133,9 @@ import com.programmersbox.kmpuiviews.repository.NotificationRepository
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
 import com.programmersbox.kmpuiviews.utils.LocalItemDao
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
+import com.programmersbox.kmpuiviews.utils.composables.transitions.ChapterRevealOrigins
+import com.programmersbox.kmpuiviews.utils.composables.transitions.rememberRevealTapState
+import com.programmersbox.kmpuiviews.utils.composables.transitions.trackRevealTap
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.kmpuiviews.theme.SchemeInputs
 import com.programmersbox.kmpuiviews.theme.SeedSchemeCache
@@ -752,10 +755,18 @@ fun ChapterItem(
     val updatedIsRead by rememberUpdatedState(c.url in readUrls)
     val updatedAnimated = updateTransition(updatedIsRead)
 
+    val revealTap = rememberRevealTapState()
+
+    // The reader reveals itself from where the row was touched
+    fun openChapter() {
+        revealTap.lastFraction?.let { ChapterRevealOrigins.record(c.url, it) }
+        detailsActions.onClick(c)
+    }
+
     fun swipeBehavior(behavior: DetailsChapterSwipeBehavior) {
         when (behavior) {
             DetailsChapterSwipeBehavior.MarkAsRead -> detailsActions.markAsRead(c, !updatedIsRead)
-            DetailsChapterSwipeBehavior.Read -> detailsActions.onClick(c)
+            DetailsChapterSwipeBehavior.Read -> openChapter()
             DetailsChapterSwipeBehavior.Nothing -> {}
         }
     }
@@ -845,10 +856,12 @@ fun ChapterItem(
                 }
             }
         },
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier
+            .fillMaxWidth()
+            .trackRevealTap(revealTap)
     ) {
         ListItem(
-            onClick = { if (selectionMode) onToggleSelection() else detailsActions.onClick(c) },
+            onClick = { if (selectionMode) onToggleSelection() else openChapter() },
             onLongClick = {
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 onToggleSelection()

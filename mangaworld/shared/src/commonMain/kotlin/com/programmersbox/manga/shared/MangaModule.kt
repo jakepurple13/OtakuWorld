@@ -4,6 +4,12 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
+import com.programmersbox.kmpuiviews.utils.composables.transitions.ChapterOpenMotion
+import com.programmersbox.kmpuiviews.utils.composables.transitions.chapterOpenTransition
+import com.programmersbox.kmpuiviews.utils.composables.transitions.rememberChapterRevealOrigin
 import com.programmersbox.kmpuiviews.di.backupProcessorWithUiInfo
 import com.programmersbox.manga.shared.downloads.DownloadRoute
 import com.programmersbox.manga.shared.downloads.DownloadScreen
@@ -29,10 +35,13 @@ fun mangaSharedModule() = module {
     viewModelOf(::ReadViewModel)
     viewModelOf(::DownloadViewModel)
 
-    navigation<ReadViewModel.MangaReader> {
-        ReadView(
-            viewModel = koinViewModel { parametersOf(it) }
-        )
+    navigation<ReadViewModel.MangaReader>(metadata = ChapterOpenMotion.readerMetadata()) {
+        val origin = rememberChapterRevealOrigin(it.mangaUrl ?: it.filePath)
+        Box(Modifier.fillMaxSize().chapterOpenTransition(origin, it)) {
+            ReadView(
+                viewModel = koinViewModel { parametersOf(it) }
+            )
+        }
     }
 
     navigation<DownloadRoute> {

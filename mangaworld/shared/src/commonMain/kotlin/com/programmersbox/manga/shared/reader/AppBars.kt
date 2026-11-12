@@ -385,6 +385,7 @@ fun FloatingBottomBar(
     previousButtonEnabled: Boolean,
     nextButtonEnabled: Boolean,
     modifier: Modifier = Modifier,
+    showPageNumber: Boolean = true,
     shape: Shape = MaterialTheme.shapes.extraLarge,
     containerColor: Color = when {
         showBlur -> Color.Transparent
@@ -435,19 +436,21 @@ fun FloatingBottomBar(
             colors = navBarColors
         )
 
-        NavigationBarItem(
-            selected = false,
-            onClick = onPageSelectClick,
-            icon = {
-                PageIndicator(
-                    currentPage = currentPage + 1,
-                    pageCount = pages,
-                    modifier = Modifier
-                )
-            },
-            label = { Text("Pages") },
-            colors = navBarColors
-        )
+        if (showPageNumber) {
+            NavigationBarItem(
+                selected = false,
+                onClick = onPageSelectClick,
+                icon = {
+                    PageIndicator(
+                        currentPage = currentPage + 1,
+                        pageCount = pages,
+                        modifier = Modifier
+                    )
+                },
+                label = { Text("Pages") },
+                colors = navBarColors
+            )
+        }
 
         //TODO: Maybe? Gotta think about this more.
         // Might switch to the actual FloatingHorizontalToolBar

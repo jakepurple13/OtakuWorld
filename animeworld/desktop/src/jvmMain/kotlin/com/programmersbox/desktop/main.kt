@@ -1,5 +1,11 @@
 package com.programmersbox.desktop
 
+import com.programmersbox.kmpuiviews.utils.composables.transitions.rememberChapterRevealOrigin
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
+import com.programmersbox.kmpuiviews.utils.composables.transitions.ChapterOpenMotion
+import com.programmersbox.kmpuiviews.utils.composables.transitions.chapterOpenTransition
 import ca.gosyer.appdirs.AppDirs
 import com.programmersbox.anime.shared.AnimeDesktopSettings
 import com.programmersbox.anime.shared.StorageHolder
@@ -124,7 +130,11 @@ fun main(args: Array<String>) {
                 )
             } bind SubtitleGenerator::class
 
-            navigation<VideoScreen> { VideoPlayerUi(it) }
+            navigation<VideoScreen>(metadata = ChapterOpenMotion.readerMetadata()) {
+                // Library rows record a tap point; streams arrive from the loading overlay and get depth
+                val origin = rememberChapterRevealOrigin(it.showPath)
+                Box(Modifier.fillMaxSize().chapterOpenTransition(origin, it)) { VideoPlayerUi(it) }
+            }
             navigation<PlatformSettings> { JvmSettingsScreen() }
             navigation<VideoViewerRoute> { ViewVideoScreen() }
             navigation<FreeUpSpaceRoute> { FreeUpSpaceScreen() }

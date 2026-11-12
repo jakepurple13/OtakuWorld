@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.dailyoverview
 
+import com.programmersbox.kmpuiviews.testing.clearAndJoin
 import androidx.lifecycle.ViewModelStore
 import com.programmersbox.kmpuiviews.domain.dailyoverview.DailyFacts
 import com.programmersbox.kmpuiviews.domain.dailyoverview.DailyOverviewSettings
@@ -69,7 +70,7 @@ class DailyOverviewSettingsViewModelTest {
 
     @AfterTest
     fun tearDown() {
-        viewModelStore.clear()
+        viewModelStore.clearAndJoin()
         Dispatchers.resetMain()
     }
 

@@ -39,3 +39,32 @@ internal fun bannerPageText(pageCount: Int?): String? = when {
     pageCount == 1 -> " · 1 page"
     else -> " · $pageCount pages"
 }
+
+/** 1-based page number shown by the page indicators, capped so the end-of-chapter card reads as the last page. */
+internal fun displayPage(currentPage: Int, pages: Int): Int = (currentPage + 1).coerceIn(1, pages.coerceAtLeast(1))
+
+/** Past this many pages the edge rail gives each dot a range of pages. */
+internal const val MAX_RAIL_DOTS = 40
+
+internal fun railDotCount(pages: Int): Int = pages.coerceIn(1, MAX_RAIL_DOTS)
+
+/** Rail dot that holds [page] (0-based). */
+internal fun railDotFor(page: Int, pages: Int): Int {
+    val dots = railDotCount(pages)
+    val clamped = page.coerceIn(0, (pages - 1).coerceAtLeast(0))
+    return (clamped * dots / pages.coerceAtLeast(1)).coerceIn(0, dots - 1)
+}
+
+/** First page (0-based) in a rail dot's range. */
+internal fun railFirstPage(dot: Int, pages: Int): Int {
+    val dots = railDotCount(pages)
+    return (dot * pages + dots - 1) / dots
+}
+
+/** Past this many pages the segmented line would be too thin, so it falls back to the plain line. */
+internal const val MAX_SEGMENTS = 60
+
+internal fun usesSegments(pages: Int): Boolean = pages in 1..MAX_SEGMENTS
+
+/** The folio sits in the outer corner like a printed book: start on even pages, end on odd. */
+internal fun folioOnStart(page: Int): Boolean = page % 2 == 0

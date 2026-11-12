@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.settings.exceptions
 
+import com.programmersbox.kmpuiviews.testing.clearAndJoin
 import androidx.lifecycle.ViewModelStore
 import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
@@ -60,8 +61,7 @@ class ExceptionViewModelTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @AfterTest
     fun tearDown() {
-        viewModelStore.clear()
-        Thread.sleep(50)
+        viewModelStore.clearAndJoin()
         Dispatchers.resetMain()
         database.close()
         dbFile.delete()

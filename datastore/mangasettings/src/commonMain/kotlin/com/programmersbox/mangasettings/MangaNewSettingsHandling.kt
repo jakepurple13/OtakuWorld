@@ -6,6 +6,7 @@ import com.programmersbox.datastore.GenericSerializer
 import com.programmersbox.datastore.ProtoStoreHandler
 import com.programmersbox.datastore.mangasettings.ImageLoaderType
 import com.programmersbox.datastore.mangasettings.MangaSettings
+import com.programmersbox.datastore.mangasettings.PageIndicatorStyle
 import com.programmersbox.datastore.mangasettings.ReaderType
 import com.programmersbox.datastore.rememberPreference
 import kotlinx.coroutines.flow.Flow
@@ -78,6 +79,20 @@ class MangaNewSettingsHandling(
     fun rememberUseFloatingReaderBottomBar() = preferences.rememberPreference(
         key = { it.useFloatingReaderBottomBar },
         update = { copy(useFloatingReaderBottomBar = it) },
+        defaultValue = true
+    )
+
+    @Composable
+    fun rememberPageIndicatorStyle() = preferences.rememberPreference(
+        key = { it.pageIndicatorStyle },
+        update = { copy(pageIndicatorStyle = it) },
+        defaultValue = PageIndicatorStyle.Classic
+    )
+
+    @Composable
+    fun rememberShowPageNumberInBar() = preferences.rememberPreference(
+        key = { !it.hidePageNumberInBar },
+        update = { copy(hidePageNumberInBar = !it) },
         defaultValue = true
     )
 
