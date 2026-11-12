@@ -119,6 +119,7 @@ plugins {
 tasks.register("createModule") {
     group = "scaffolding"
     description = "Interactively creates a new Compose Multiplatform module."
+    notCompatibleWithConfigurationCache("Reads rootProject and stdin at execution time")
 
     doLast {
         fun readInput(prompt: String): String {
