@@ -17,3 +17,18 @@ fun ftsMatch(raw: String, column: String? = null): String? {
     val prefix = column?.let { "$it : " }.orEmpty()
     return tokens.joinToString(" ") { "$prefix\"$it\"*" }
 }
+
+private val fts4Operators = setOf("AND", "OR", "NOT", "NEAR")
+
+/**
+ * FTS4 version of [ftsMatch]. FTS4 ignores `*` after a quoted phrase, so each word becomes a
+ * bare prefix term. Uppercase operator words are lowercased so FTS4 reads them as text (its
+ * tokenizer folds case anyway).
+ *
+ * @return null when the input contains no searchable words.
+ */
+fun fts4Match(raw: String): String? {
+    val tokens = ftsToken.findAll(raw).map { it.value }.toList()
+    if (tokens.isEmpty()) return null
+    return tokens.joinToString(" ") { (if (it in fts4Operators) it.lowercase() else it) + "*" }
+}

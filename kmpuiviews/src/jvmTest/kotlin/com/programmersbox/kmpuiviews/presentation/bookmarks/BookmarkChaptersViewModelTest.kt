@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.presentation.bookmarks
 
 import com.programmersbox.kmpuiviews.testing.clearAndJoin
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.lifecycle.ViewModelStore
 import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
@@ -113,6 +114,15 @@ class BookmarkChaptersViewModelTest {
         awaitCondition { vm.bookmarks.value.size == 1 }
 
         assertTrue("Amazing Series" in vm.bookmarks.value)
+    }
+
+    @Test fun `searchQuery is snapshot state so the search field recomposes`() {
+        val vm = viewModel()
+        val reads = mutableListOf<Any>()
+
+        Snapshot.observe(readObserver = { reads += it }) { vm.searchQuery }
+
+        assertTrue(reads.isNotEmpty())
     }
 
     @Test fun `searchQuery with fts syntax characters does not crash`() = runTest {

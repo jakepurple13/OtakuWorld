@@ -7,7 +7,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.BookmarkedChapter
-import com.programmersbox.favoritesdatabase.ftsMatch
+import com.programmersbox.favoritesdatabase.fts4Match
 import com.programmersbox.kmpuiviews.repository.BookmarkRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -42,14 +42,19 @@ class BookmarkChaptersViewModel(
     private val _searchQuery = MutableStateFlow("")
     var sortOrder by mutableStateOf(BookmarkSortOrder.DATE_DESC)
 
+    // Compose state too, so the search field shows every keystroke, not only ones that change results
+    private var searchText by mutableStateOf("")
     var searchQuery: String
-        get() = _searchQuery.value
-        set(value) { _searchQuery.value = value }
+        get() = searchText
+        set(value) {
+            searchText = value
+            _searchQuery.value = value
+        }
 
     val bookmarks: StateFlow<Map<String, List<BookmarkedChapter>>> =
         combine(
             _searchQuery.flatMapLatest { q ->
-                ftsMatch(q)
+                fts4Match(q)
                     ?.let { bookmarkRepository.searchBookmarks(it).catch { emit(emptyList()) } }
                     ?: bookmarkRepository.getAllBookmarks()
             },

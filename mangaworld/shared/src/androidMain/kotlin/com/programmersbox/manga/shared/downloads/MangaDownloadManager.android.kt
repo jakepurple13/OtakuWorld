@@ -41,6 +41,9 @@ actual class MangaDownloadManager(
 ) {
 
     private val workManager = WorkManager.getInstance(context)
+
+    // Image lists can be larger than WorkManager's 10 KB input limit, so each request lives in a file
+    private val requestDir = File(context.noBackupFilesDir, DownloadChapterWorker.REQUEST_DIR)
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     private val rootDir: File
@@ -105,6 +108,7 @@ actual class MangaDownloadManager(
                     .filter { it.state.isFinished }
                     .mapTo(mutableSetOf()) { it.id }
                 if (finished != finishedWorkIds) {
+                    (finished - finishedWorkIds).forEach { requestFile(it).delete() }
                     finishedWorkIds = finished
                     _dirTick.emit(Unit)
                 }
@@ -137,12 +141,16 @@ actual class MangaDownloadManager(
                 .flatMap { it.headers.entries }
                 .associate { it.key to it.value }
 
+            val requestId = UUID.randomUUID()
+            val requestFile = requestFile(requestId)
+            requestDir.mkdirs()
+            requestFile.writeText(Json.encodeToString(DownloadRequestFile(urls, headers)))
+
             val inputData = workDataOf(
                 DownloadChapterWorker.KEY_MANGA_TITLE to mangaTitle,
                 DownloadChapterWorker.KEY_CHAPTER_NAME to chapter.name,
                 DownloadChapterWorker.KEY_CHAPTER_URL to chapter.url,
-                DownloadChapterWorker.KEY_IMAGE_URLS to Json.encodeToString<List<String>>(urls),
-                DownloadChapterWorker.KEY_HEADERS to Json.encodeToString<Map<String, String>>(headers),
+                DownloadChapterWorker.KEY_REQUEST_FILE to requestFile.absolutePath,
             )
 
             val mediaCheckerSettings = settingsHandling
@@ -150,6 +158,7 @@ actual class MangaDownloadManager(
                 .get()
 
             val workRequest = OneTimeWorkRequestBuilder<DownloadChapterWorker>()
+                .setId(requestId)
                 .setInputData(inputData)
                 .addTag(DownloadChapterWorker.DOWNLOAD_TAG)
                 .addTag(DownloadChapterWorker.chapterUrlTag(chapter.url))
@@ -177,6 +186,8 @@ actual class MangaDownloadManager(
                 .enqueue()
         }
     }
+
+    private fun requestFile(workId: UUID) = File(requestDir, "$workId.json")
 
     actual fun downloadChapters(chapters: List<KmpChapterModel>, mangaTitle: String) {
         chapters.forEach { downloadChapter(it, mangaTitle) }
