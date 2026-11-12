@@ -109,12 +109,22 @@ class OtakuCustomListViewModelTest {
 
     @Test fun `suggest hidden with fewer than 3 titles`() = runTest {
         val ai = FakeAiText()
-        val uuid = listWith("A" to "S", "B" to "S")
+        val uuid = listWith("A" to "S", "B" to "S", "C" to "S")
         val vm = viewModel(uuid, ai)
-        awaitCondition { vm.customList?.list?.size == 2 }
+        // Starts true, so dropping to false below is a real evaluation of the 2-title list.
+        awaitCondition { vm.suggestAvailable.value }
+        val callsAt3 = ai.engineCalls
+
+        dao().removeItem(vm.customList!!.list.first())
+        awaitCondition { !vm.suggestAvailable.value }
 
         assertFalse(vm.suggestAvailable.value)
-        assertEquals(0, ai.engineCalls)
+        assertEquals(2, vm.customList?.list?.size)
+        assertEquals(callsAt3, ai.engineCalls)
+
+        dao().addToList(uuid, "D", "", "https://example.com/d", "", "S")
+        awaitCondition { vm.suggestAvailable.value }
+        assertTrue(vm.suggestAvailable.value)
     }
 
     @Test fun `suggest hidden when no engine`() = runTest {

@@ -21,6 +21,7 @@ import com.programmersbox.kmpuiviews.presentation.components.ai.generatingBorder
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import kotlinx.coroutines.delay
+import otakuworld.kmpuiviews.generated.resources.ai_error
 import otakuworld.kmpuiviews.generated.resources.ai_suggest_names
 import otakuworld.kmpuiviews.generated.resources.ai_write_description
 import androidx.compose.foundation.background
@@ -640,6 +641,9 @@ internal fun EditListSheet(
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
+    // Stale drafts (e.g. kept by the ViewModel across a config change) must not reappear.
+    LaunchedEffect(Unit) { if (!autoDraftDescription) onClearDrafts() }
+
     // Generate once the sheet has finished opening, so the streaming text is seen from the start.
     var autoDrafted by remember { mutableStateOf(false) }
     LaunchedEffect(sheetState.currentValue) {
@@ -650,11 +654,23 @@ internal fun EditListSheet(
     }
 
     // While streaming the field follows the text; after Done it is a plain editable value.
+    // On failure the pre-draft text comes back, so no truncated text is left to save.
+    var predraftDescription by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(descriptionDraft) {
         when (descriptionDraft) {
+            AiTextState.Loading -> if (predraftDescription == null) predraftDescription = description
             is AiTextState.Streaming -> description = descriptionDraft.text
-            is AiTextState.Done -> description = descriptionDraft.text
-            else -> Unit
+            is AiTextState.Done -> {
+                description = descriptionDraft.text
+                predraftDescription = null
+            }
+
+            is AiTextState.Error -> {
+                predraftDescription?.let { description = it }
+                predraftDescription = null
+            }
+
+            AiTextState.Idle -> predraftDescription = null
         }
     }
     val descriptionGenerating = descriptionDraft is AiTextState.Loading || descriptionDraft is AiTextState.Streaming
@@ -712,6 +728,10 @@ internal fun EditListSheet(
                         }
                     }
                 } else null,
+                isError = nameSuggestions is AiTextState.Error,
+                supportingText = if (nameSuggestions is AiTextState.Error) {
+                    { Text(stringResource(Res.string.ai_error)) }
+                } else null,
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -737,14 +757,24 @@ internal fun EditListSheet(
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it },
+                readOnly = descriptionGenerating,
                 label = { Text("Description") },
                 placeholder = {
                     AnimatedVisibility(
                         visible = !descriptionGenerating,
                         enter = fadeIn(),
                         exit = fadeOut(),
-                    ) { Text(stringResource(Res.string.ai_write_description)) }
+                    ) {
+                        Text(
+                            if (suggestAvailable) stringResource(Res.string.ai_write_description)
+                            else "Add a description"
+                        )
+                    }
                 },
+                isError = descriptionDraft is AiTextState.Error,
+                supportingText = if (descriptionDraft is AiTextState.Error) {
+                    { Text(stringResource(Res.string.ai_error)) }
+                } else null,
                 minLines = 2,
                 trailingIcon = if (suggestAvailable) {
                     {
@@ -781,7 +811,7 @@ internal fun EditListSheet(
                     onSave(name.trim(), description.trim())
                     onClearDrafts()
                 },
-                enabled = name.isNotBlank() &&
+                enabled = name.isNotBlank() && !descriptionGenerating &&
                         (name.trim() != customList.item.name || description.trim() != customList.item.description),
                 modifier = Modifier.align(Alignment.End)
             ) { Text("Save") }
