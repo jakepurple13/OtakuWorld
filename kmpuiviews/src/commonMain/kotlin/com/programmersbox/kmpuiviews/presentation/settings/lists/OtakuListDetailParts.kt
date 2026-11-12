@@ -17,6 +17,7 @@ import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.runtime.key
 import com.programmersbox.kmpuiviews.domain.aitext.AiTextState
 import com.programmersbox.kmpuiviews.presentation.components.ai.Spark
+import com.programmersbox.kmpuiviews.presentation.components.ai.rememberReducedMotion
 import com.programmersbox.kmpuiviews.presentation.components.ai.generatingBorder
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -837,9 +838,10 @@ private fun NameSuggestionChip(
     index: Int,
     onClick: () -> Unit,
 ) {
-    var revealed by remember { mutableStateOf(false) }
+    val reducedMotion = rememberReducedMotion()
+    var revealed by remember { mutableStateOf(reducedMotion) }
     LaunchedEffect(Unit) {
-        delay(70L * index)
+        if (!reducedMotion) delay(70L * index)
         revealed = true
     }
     val container by animateColorAsState(
@@ -847,7 +849,7 @@ private fun NameSuggestionChip(
     )
     AnimatedVisibility(
         visible = revealed,
-        enter = scaleIn(spring(dampingRatio = 0.6f)) + fadeIn(),
+        enter = if (reducedMotion) fadeIn() else scaleIn(spring(dampingRatio = 0.6f)) + fadeIn(),
     ) {
         SuggestionChip(
             onClick = onClick,
