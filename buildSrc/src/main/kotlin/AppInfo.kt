@@ -1,7 +1,7 @@
 import com.android.build.api.dsl.CompileSdkSpec
 
 object AppInfo {
-    const val otakuVersionName = "33.0.0"
+    const val otakuVersionName = "33.1.0"
     val versionBump = 5000
     val versionCode by lazy {
         val code = if (System.getenv("CI") != null) {
