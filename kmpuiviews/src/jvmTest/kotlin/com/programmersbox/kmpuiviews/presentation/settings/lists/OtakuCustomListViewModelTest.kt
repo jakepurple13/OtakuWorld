@@ -112,7 +112,7 @@ class OtakuCustomListViewModelTest {
         val uuid = listWith("A" to "S", "B" to "S", "C" to "S")
         val vm = viewModel(uuid, ai)
         // Starts true, so dropping to false below is a real evaluation of the 2-title list.
-        awaitCondition { vm.suggestAvailable.value }
+        awaitCondition { vm.customList?.list?.size == 3 && vm.suggestAvailable.value }
         val callsAt3 = ai.engineCalls
 
         dao().removeItem(vm.customList!!.list.first())

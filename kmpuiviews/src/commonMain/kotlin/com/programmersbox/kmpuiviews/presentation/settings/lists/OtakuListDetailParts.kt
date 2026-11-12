@@ -642,23 +642,33 @@ internal fun EditListSheet(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     // Stale drafts (e.g. kept by the ViewModel across a config change) must not reappear.
-    LaunchedEffect(Unit) { if (!autoDraftDescription) onClearDrafts() }
+    LaunchedEffect(Unit) { onClearDrafts() }
+
+    // Only a draft requested from this sheet may touch the field; the snapshot is taken at request time
+    // so an error restores the text even if Loading was conflated away.
+    var draftRequested by remember { mutableStateOf(false) }
+    var predraftDescription by remember { mutableStateOf<String?>(null) }
+    val requestDraft = {
+        draftRequested = true
+        predraftDescription = description
+        onDraftDescription()
+    }
 
     // Generate once the sheet has finished opening, so the streaming text is seen from the start.
     var autoDrafted by remember { mutableStateOf(false) }
     LaunchedEffect(sheetState.currentValue) {
         if (autoDraftDescription && !autoDrafted && sheetState.currentValue == SheetValue.Expanded) {
             autoDrafted = true
-            onDraftDescription()
+            requestDraft()
         }
     }
 
     // While streaming the field follows the text; after Done it is a plain editable value.
     // On failure the pre-draft text comes back, so no truncated text is left to save.
-    var predraftDescription by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(descriptionDraft) {
+        if (!draftRequested) return@LaunchedEffect
         when (descriptionDraft) {
-            AiTextState.Loading -> if (predraftDescription == null) predraftDescription = description
+            AiTextState.Loading -> Unit
             is AiTextState.Streaming -> description = descriptionDraft.text
             is AiTextState.Done -> {
                 description = descriptionDraft.text
@@ -778,7 +788,7 @@ internal fun EditListSheet(
                 minLines = 2,
                 trailingIcon = if (suggestAvailable) {
                     {
-                        IconButton(onClick = onDraftDescription, enabled = !descriptionGenerating) {
+                        IconButton(onClick = requestDraft, enabled = !descriptionGenerating) {
                             val writeLabel = stringResource(Res.string.ai_write_description)
                             Spark(
                                 spinning = descriptionGenerating,
