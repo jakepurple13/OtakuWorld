@@ -1,5 +1,86 @@
 # Changelog
 
+## [33.1.0] - 2026-11-12
+
+_Compare: https://github.com/jakepurple13/OtakuWorld/compare/v33.0.0...v33.1.0_
+
+### Highlights
+
+- **Page number styles in the MangaWorld reader.** Pick from 8 page indicator styles
+  ([#2700](https://github.com/jakepurple13/OtakuWorld/pull/2700))
+- **Chapter open motion.** Opening a chapter or video reveals the reader or player from the row
+  you tapped, and AnimeWorld streams open with a cover dive
+  ([#2701](https://github.com/jakepurple13/OtakuWorld/pull/2701))
+- **Crash fix for MangaWorld covers.** Fixes the "recycled bitmap" crashes from 33.0.0
+  ([#2699](https://github.com/jakepurple13/OtakuWorld/pull/2699))
+
+---
+
+## Shared (all apps)
+
+### All Platforms
+
+#### New Features
+
+- Opening a chapter: the manga and novel readers reveal in a circle from the chapter row you
+  tapped, in Details and in manga Downloads. Back and predictive back close the reader onto the
+  same spot, and rotation keeps it. When there is no tap point (Daily overview, notifications,
+  multi-select "Read", desktop), Details sinks back and the reader fades in
+  ([#2701](https://github.com/jakepurple13/OtakuWorld/pull/2701))
+
+#### Bug Fixes
+
+- The reader and player no longer replay their open or close animation when another screen, such
+  as the dictionary, opens over them or closes ([#2701](https://github.com/jakepurple13/OtakuWorld/pull/2701))
+- Tapping a chapter in Details no longer marks it as read. Chapters are marked read when the
+  reader records them, as before 33.0.0. Daily overview no longer counts opening a chapter or
+  episode as activity ([#2698](https://github.com/jakepurple13/OtakuWorld/pull/2698))
+
+---
+
+## MangaWorld
+
+### Android
+
+#### Bug Fixes
+
+- Fixed crashes (`Canvas: trying to use a recycled bitmap`) on the Details banner, cover handoff,
+  and cover fade-in. Glide no longer clears images that are still on screen
+  ([#2699](https://github.com/jakepurple13/OtakuWorld/pull/2699))
+
+### All Platforms (shared manga code)
+
+#### New Features
+
+- Reader: new **Page number** setting with 8 styles: Classic (default), Rolling pill, Scrubber,
+  Edge rail, Story segments, Printed folio, Morphing pill, and Line only. Pick a style from live
+  preview cards in Reader Settings or the in-reader settings sheet. Backups include the setting
+  ([#2700](https://github.com/jakepurple13/OtakuWorld/pull/2700))
+- Reader: new **Page number in floating bar** switch (on by default) to show or hide the Pages
+  item in the floating bar ([#2700](https://github.com/jakepurple13/OtakuWorld/pull/2700))
+
+#### Improvements
+
+- Reader: the top progress line springs to each new page. Story segments splits it per page
+  ([#2700](https://github.com/jakepurple13/OtakuWorld/pull/2700))
+
+---
+
+## AnimeWorld
+
+### All Platforms (shared anime code)
+
+#### New Features
+
+- Streams: after the episode loads, the loading screen plays a "cover dive". The poster grows to
+  fill the screen, blurs and dims, then fades onto the player. Errors and cancels close the
+  loading screen without it ([#2701](https://github.com/jakepurple13/OtakuWorld/pull/2701))
+- Library videos: the player reveals from the video row you tapped. On phones the forced
+  landscape rotation hides the reveal; it shows on tablets and desktop
+  ([#2701](https://github.com/jakepurple13/OtakuWorld/pull/2701))
+
+---
+
 ## [33.0.0] - 2026-11-11
 
 _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v32.1.2...v33.0.0_
