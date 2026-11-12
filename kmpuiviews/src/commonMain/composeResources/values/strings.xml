@@ -744,4 +744,16 @@
     <string name="reader_settings">Reader settings</string>
     <string name="ai_write_description">Write a description</string>
     <string name="ai_suggest_names">Suggest names</string>
+    <string name="ai_fix_grammar">Fix grammar</string>
+    <string name="ai_rewrite">Rewrite</string>
+    <string name="ai_style_rephrase">Rephrase</string>
+    <string name="ai_style_shorten">Shorten</string>
+    <string name="ai_style_elaborate">Elaborate</string>
+    <string name="ai_style_friendly">Friendlier</string>
+    <string name="ai_style_professional">More formal</string>
+    <string name="ai_style_emojify">Add emoji</string>
+    <string name="ai_accept">Accept</string>
+    <string name="ai_discard">Discard</string>
+    <string name="ai_note_too_long">Note is too long for on-device tools</string>
+    <string name="ai_grammar_fixes">Grammar fixes</string>
 </resources>
