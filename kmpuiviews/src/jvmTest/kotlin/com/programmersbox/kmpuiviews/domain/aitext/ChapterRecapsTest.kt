@@ -117,4 +117,16 @@ class ChapterRecapsTest {
         assertIs<AiTextState.Error>(recaps.stateFor("ch13").value)
         assertEquals(0, ai.recapCalls)
     }
+
+    @Test
+    fun `no engine gives Error without loading the previous chapter`() = runTest {
+        val ai = FakeAiText(null) { flow { emit("x") } }
+        val recaps = recaps(ai)
+        var loads = 0
+        recaps.request("ch13") { loads++; "text" }
+        advanceUntilIdle()
+        assertIs<AiTextState.Error>(recaps.stateFor("ch13").value)
+        assertEquals(0, loads)
+        assertEquals(0, ai.recapCalls)
+    }
 }

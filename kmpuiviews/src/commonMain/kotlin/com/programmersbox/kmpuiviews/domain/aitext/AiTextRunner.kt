@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.domain.aitext
 
+import com.programmersbox.kmpuiviews.logFirebaseMessage
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -30,7 +31,7 @@ class AiTextRunner(private val scope: CoroutineScope) {
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _state.value = AiTextState.Error(e.message ?: e::class.simpleName ?: "Unknown error")
+                _state.value = AiTextState.Error(errorMessage(e))
             }
         }
     }
@@ -41,3 +42,10 @@ class AiTextRunner(private val scope: CoroutineScope) {
         _state.value = AiTextState.Idle
     }
 }
+
+/**
+ * Logs [e] and returns its text for [AiTextState.Error.message]. That message is for logs only;
+ * the UI always shows the localized `ai_error` string, never raw engine text.
+ */
+internal fun errorMessage(e: Exception): String =
+    (e.message ?: e::class.simpleName ?: "Unknown error").also { logFirebaseMessage("AI text failed: $it") }

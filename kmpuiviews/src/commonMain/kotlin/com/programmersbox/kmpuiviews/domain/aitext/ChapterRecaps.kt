@@ -40,6 +40,11 @@ class ChapterRecaps(
         state.value = AiTextState.Loading
         jobs[chapterUrl] = scope.launch {
             try {
+                // Check for an engine before fetching the previous chapter over the network
+                if (aiText.engineFor(AiFeature.Recap) == null) {
+                    state.value = AiTextState.Error("No on-device engine is ready")
+                    return@launch
+                }
                 val text = loadPreviousText()
                 if (text == null) {
                     state.value = AiTextState.Error("No previous chapter")
@@ -59,7 +64,7 @@ class ChapterRecaps(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                state.value = AiTextState.Error(e.message ?: e::class.simpleName ?: "Unknown error")
+                state.value = AiTextState.Error(errorMessage(e))
             } finally {
                 // Only drop our own entry; a newer request for this chapter may have replaced it
                 if (jobs[chapterUrl] === coroutineContext[Job]) jobs.remove(chapterUrl)

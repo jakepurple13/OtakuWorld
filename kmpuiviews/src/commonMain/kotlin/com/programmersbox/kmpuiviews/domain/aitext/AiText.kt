@@ -13,6 +13,7 @@ sealed interface AiTextState {
     data object Loading : AiTextState
     data class Streaming(val text: String, val engine: AiEngineInfo) : AiTextState
     data class Done(val text: String, val engine: AiEngineInfo) : AiTextState
+    /** [message] is for logs only; the UI shows the localized `ai_error` string. */
     data class Error(val message: String) : AiTextState
 }
 

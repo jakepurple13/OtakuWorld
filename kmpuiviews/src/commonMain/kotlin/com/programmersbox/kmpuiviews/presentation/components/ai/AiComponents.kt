@@ -331,7 +331,7 @@ fun AiCard(
                 is AiTextState.Done -> body(current.text)
                 is AiTextState.Error -> Column {
                     Text(
-                        text = current.message.ifBlank { stringResource(Res.string.ai_error) },
+                        text = stringResource(Res.string.ai_error),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.error,
                     )
