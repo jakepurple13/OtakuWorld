@@ -1,6 +1,19 @@
 package com.programmersbox.anime.shared.episodeload
 
 import androidx.compose.animation.AnimatedContent
+import kotlin.math.max
+import androidx.compose.ui.util.lerp
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.graphics.BlurEffect
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.runtime.SideEffect
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.tween
@@ -50,7 +63,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusTarget
@@ -78,11 +90,21 @@ import kotlinx.coroutines.flow.first
 fun EpisodeLoadHost(loader: EpisodeLoader) {
     val state = loader.state
 
+    // After a finished hand-off the overlay stays for the cover dive into the player. Decided in the same
+    // composition the state clears in, so the Dialog window is never torn down and rebuilt.
+    val tracker = remember { DiveTracker() }
+    var diving by remember { mutableStateOf<EpisodeLoadState?>(null) }
+    val newDive = coverDiveFrom(tracker.last, state)
+    tracker.last = state
+    if (newDive != null) SideEffect { diving = newDive }
+    if (state != null && diving != null) SideEffect { diving = null }
+    val shown = state ?: newDive ?: diving
+    val closing = state == null
+
     // A Dialog (own window) so the overlay draws above the whole app, not under HomeNav's content.
-    // It leaves composition as soon as the load ends, so there is no exit animation.
-    if (state != null && state.action == EpisodeAction.Play) {
+    if (shown != null && shown.action == EpisodeAction.Play) {
         Dialog(
-            onDismissRequest = { loader.decide(EpisodeLoadDecision.Cancel) },
+            onDismissRequest = { if (!closing) loader.decide(EpisodeLoadDecision.Cancel) },
             properties = DialogProperties(
                 usePlatformDefaultWidth = false,
                 dismissOnClickOutside = false,
@@ -92,7 +114,7 @@ fun EpisodeLoadHost(loader: EpisodeLoader) {
             PlainOverlayWindow()
             // The player's rotation recreates the activity mid hand-off; the new overlay must cover it at once, not animate again.
             val contentEnter = remember {
-                MutableTransitionState(state.step == EpisodeLoadStep.OpeningPlayer).apply { targetState = true }
+                MutableTransitionState(shown.step == EpisodeLoadStep.OpeningPlayer).apply { targetState = true }
             }
             // Building LoadingIndicator's morphs blocks the main thread for ~0.5 s on a slow phone, so it waits until
             // the content has slid in instead of holding back the overlay's first frame.
@@ -102,7 +124,14 @@ fun EpisodeLoadHost(loader: EpisodeLoader) {
                 withFrameNanos { }
                 showIndicator = true
             }
-            EpisodeLoadingOverlay(state, showIndicator, contentEnter, loader::decide)
+            EpisodeLoadingOverlay(
+                state = shown,
+                showIndicator = showIndicator,
+                contentEnter = contentEnter,
+                closing = closing,
+                onClosed = { diving = null },
+                onDecision = loader::decide,
+            )
         }
     }
 
@@ -121,6 +150,19 @@ fun EpisodeLoadHost(loader: EpisodeLoader) {
 
 private val Muted = Color.White.copy(alpha = 0.6f)
 
+internal const val COVER_DIVE_MS = 620
+private val Emphasized = CubicBezierEasing(0.2f, 0f, 0f, 1f)
+
+private class DiveTracker {
+    var last: EpisodeLoadState? = null
+}
+
+/** The state to play the cover dive for: only a Play that was handed to the player and has just cleared. */
+internal fun coverDiveFrom(previous: EpisodeLoadState?, current: EpisodeLoadState?): EpisodeLoadState? =
+    previous.takeIf {
+        current == null && it != null && it.action == EpisodeAction.Play && it.step == EpisodeLoadStep.OpeningPlayer
+    }
+
 /** Remembers, per episode, whether the user was ever asked to choose and what they picked. */
 private class ChecklistMemory {
     var sawChoose = false
@@ -135,9 +177,25 @@ internal fun EpisodeLoadingOverlay(
     state: EpisodeLoadState,
     showIndicator: Boolean = true,
     contentEnter: MutableTransitionState<Boolean> = remember { MutableTransitionState(true) },
+    closing: Boolean = false,
+    onClosed: () -> Unit = {},
     onDecision: (EpisodeLoadDecision) -> Unit,
 ) {
     if (state.action != EpisodeAction.Play) return
+
+    // Cover dive: the poster grows to cover the screen by 60%, blurring and dimming; the text fades in the
+    // first 40%; the whole overlay then fades onto the player.
+    val dive = remember { Animatable(0f) }
+    LaunchedEffect(closing) {
+        if (closing) {
+            dive.animateTo(1f, tween(COVER_DIVE_MS, easing = LinearEasing))
+            onClosed()
+        }
+    }
+    val grow = { Emphasized.transform((dive.value / 0.6f).coerceIn(0f, 1f)) }
+    val textAlpha = { 1f - (dive.value / 0.4f).coerceIn(0f, 1f) }
+    var rootCoords by remember { mutableStateOf<LayoutCoordinates?>(null) }
+    var posterBounds by remember { mutableStateOf(Rect.Zero) }
 
     val memory = remember(state.episodeUrl) { ChecklistMemory() }
     when (val step = state.step) {
@@ -151,6 +209,8 @@ internal fun EpisodeLoadingOverlay(
 
     Box(
         Modifier
+            .graphicsLayer { alpha = 1f - ((dive.value - 0.6f) / 0.4f).coerceIn(0f, 1f) }
+            .onGloballyPositioned { rootCoords = it }
             .fillMaxSize()
             .background(Color.Black)
             // Swallow touches so the screen underneath is not clickable.
@@ -197,8 +257,30 @@ internal fun EpisodeLoadingOverlay(
                         .widthIn(max = 120.dp)
                         .fillMaxWidth(0.4f)
                         .aspectRatio(2f / 3f)
-                        .clip(RoundedCornerShape(12.dp))
+                        .onGloballyPositioned { c -> rootCoords?.takeIf { it.isAttached }?.let { posterBounds = it.localBoundingBoxOf(c) } }
+                        .graphicsLayer {
+                            val g = grow()
+                            val root = rootCoords?.size
+                            val scale = if (root != null && posterBounds.width > 0f && posterBounds.height > 0f) {
+                                lerp(1f, max(root.width / posterBounds.width, root.height / posterBounds.height), g)
+                            } else 1f
+                            if (root != null) {
+                                translationX = (root.width / 2f - posterBounds.center.x) * g
+                                translationY = (root.height / 2f - posterBounds.center.y) * g
+                            }
+                            scaleX = scale
+                            scaleY = scale
+                            // Divide by the scale so the on-screen corners shrink to 0 and the blur stays 16.dp
+                            shape = RoundedCornerShape(12.dp.toPx() * (1f - g) / scale)
+                            clip = true
+                            val blur = 16.dp.toPx() * g / scale
+                            renderEffect = if (blur > 0.5f) BlurEffect(blur, blur, TileMode.Clamp) else null
+                        }
                         .background(Color.White.copy(alpha = 0.08f))
+                        .drawWithContent {
+                            drawContent()
+                            drawRect(Color.Black, alpha = 0.45f * grow())
+                        }
                 ) {
                     state.posterUrl?.let {
                         ImageLoaderChoice(
@@ -219,7 +301,9 @@ internal fun EpisodeLoadingOverlay(
                     textAlign = TextAlign.Center,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(top = 20.dp)
+                    modifier = Modifier
+                        .padding(top = 20.dp)
+                        .graphicsLayer { alpha = textAlpha() }
                 )
                 Text(
                     state.showTitle,
@@ -228,7 +312,9 @@ internal fun EpisodeLoadingOverlay(
                     textAlign = TextAlign.Center,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(top = 4.dp)
+                    modifier = Modifier
+                        .padding(top = 4.dp)
+                        .graphicsLayer { alpha = textAlpha() }
                 )
 
                 AnimatedContent(
@@ -236,7 +322,9 @@ internal fun EpisodeLoadingOverlay(
                     transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(200)) },
                     contentAlignment = Alignment.TopCenter,
                     label = "loadingOrFailed",
-                    modifier = Modifier.padding(top = 28.dp)
+                    modifier = Modifier
+                        .padding(top = 28.dp)
+                        .graphicsLayer { alpha = textAlpha() }
                 ) { failed ->
                     if (failed == null) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -254,7 +342,7 @@ internal fun EpisodeLoadingOverlay(
             }
         }
 
-        if (state.step !is EpisodeLoadStep.Failed && state.step !is EpisodeLoadStep.OpeningPlayer) {
+        if (!closing && state.step !is EpisodeLoadStep.Failed && state.step !is EpisodeLoadStep.OpeningPlayer) {
             TextButton(
                 onClick = { onDecision(EpisodeLoadDecision.Cancel) },
                 modifier = Modifier

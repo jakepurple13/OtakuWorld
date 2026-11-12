@@ -1,5 +1,8 @@
 package com.programmersbox.manga.shared.downloads
 
+import com.programmersbox.kmpuiviews.utils.composables.transitions.ChapterRevealOrigins
+import com.programmersbox.kmpuiviews.utils.composables.transitions.rememberRevealTapState
+import com.programmersbox.kmpuiviews.utils.composables.transitions.trackRevealTap
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
@@ -374,12 +377,17 @@ private fun ChapterItem(
                     },
                     content = {
                         val navController = LocalNavActions.current
+                        val revealTap = rememberRevealTapState()
                         ListItem(
                             content = { Text(c?.chapterName.orEmpty()) },
                             supportingContent = { Text("Pages Count ${chapter.size}") },
                             trailingContent = { Icon(Icons.Default.ChevronRight, null) },
                             onClick = {
                                 chapterHolder.downloadedChapterPaths = sortedChapterPaths(file.value)
+                                // The reader reveals itself from where the row was touched
+                                val folder = c?.chapterFolder
+                                val tap = revealTap.lastFraction
+                                if (folder != null && tap != null) ChapterRevealOrigins.record(folder, tap)
                                 ReadViewModel.navigateToMangaReader(
                                     navController,
                                     mangaTitle = c?.folderName,
@@ -391,7 +399,9 @@ private fun ChapterItem(
                                 containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(4.dp),
                             ),
                             elevation = ListItemDefaults.elevation(4.dp),
-                            modifier = Modifier.padding(4.dp)
+                            modifier = Modifier
+                                .padding(4.dp)
+                                .trackRevealTap(revealTap)
                         )
                     }
                 )

@@ -7,6 +7,8 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.runComposeUiTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 @OptIn(ExperimentalTestApi::class)
@@ -83,5 +85,40 @@ class EpisodeLoadHostTest {
         setContent { EpisodeLoadingOverlay(state(EpisodeLoadStep.OpeningPlayer)) {} }
         onNodeWithText("Cancel").assertDoesNotExist()
         onNodeWithText("Resolving stream").assertExists()
+    }
+
+    @Test
+    fun diveAfterHandoff() {
+        val opening = state(EpisodeLoadStep.OpeningPlayer)
+        assertEquals(opening, coverDiveFrom(opening, null))
+    }
+
+    @Test
+    fun noDiveAfterCancel() {
+        assertNull(coverDiveFrom(state(EpisodeLoadStep.Resolving(null)), null))
+        assertNull(coverDiveFrom(state(EpisodeLoadStep.Failed("Couldn't load Episode 1", null, true)), null))
+    }
+
+    @Test
+    fun noDiveForDownload() {
+        assertNull(coverDiveFrom(state(EpisodeLoadStep.OpeningPlayer, EpisodeAction.Download), null))
+    }
+
+    @Test
+    fun noDiveWhileStillShowing() {
+        assertNull(coverDiveFrom(state(EpisodeLoadStep.OpeningPlayer), state(EpisodeLoadStep.OpeningPlayer)))
+    }
+
+    @Test
+    fun closingCallsOnClosedAfterDive() = runComposeUiTest {
+        mainClock.autoAdvance = false
+        var closed = false
+        setContent {
+            EpisodeLoadingOverlay(state(EpisodeLoadStep.OpeningPlayer), closing = true, onClosed = { closed = true }) {}
+        }
+        mainClock.advanceTimeBy(300)
+        assertFalse(closed)
+        mainClock.advanceTimeBy(400)
+        assertTrue(closed)
     }
 }

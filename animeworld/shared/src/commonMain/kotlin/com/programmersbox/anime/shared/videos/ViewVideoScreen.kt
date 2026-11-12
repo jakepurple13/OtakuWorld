@@ -1,5 +1,8 @@
 package com.programmersbox.anime.shared.videos
 
+import com.programmersbox.kmpuiviews.utils.composables.transitions.ChapterRevealOrigins
+import com.programmersbox.kmpuiviews.utils.composables.transitions.rememberRevealTapState
+import com.programmersbox.kmpuiviews.utils.composables.transitions.trackRevealTap
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -486,6 +489,7 @@ private fun VideoContentView(
         }
     )
 
+    val revealTap = rememberRevealTapState()
     SwipeToDismissBox(
         state = dismissState,
         enableDismissFromStartToEnd = false,
@@ -519,6 +523,8 @@ private fun VideoContentView(
                     if (isCastActive()) {
                         onCastLoad(item)
                     } else {
+                        // The player reveals itself from where the row was touched
+                        revealTap.lastFraction?.let { ChapterRevealOrigins.record(item.path, it) }
                         navController.navigate(item.videoScreen())
                     }
                 },
@@ -533,7 +539,7 @@ private fun VideoContentView(
                 onDismissGeneration = { generator?.dismiss(item.path) },
             )
         },
-        modifier = modifier
+        modifier = modifier.trackRevealTap(revealTap)
     )
 }
 

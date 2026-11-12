@@ -1,5 +1,9 @@
 package com.programmersbox.animeworld
 
+import com.programmersbox.kmpuiviews.utils.composables.transitions.rememberChapterRevealOrigin
+import androidx.compose.foundation.layout.Box
+import com.programmersbox.kmpuiviews.utils.composables.transitions.ChapterOpenMotion
+import com.programmersbox.kmpuiviews.utils.composables.transitions.chapterOpenTransition
 import android.Manifest
 import android.app.PendingIntent
 import android.content.Context
@@ -146,7 +150,11 @@ val appModule = module {
     factory { Zipper(get(), getAll<BackupProcessor>(), get()) }
     single { SystemAlerter(get(), get(), BuildConfig.APPLICATION_ID) }
 
-    navigation<VideoScreen> { VideoPlayerUi(it) }
+    navigation<VideoScreen>(metadata = ChapterOpenMotion.readerMetadata()) {
+        // Library rows record a tap point; streams arrive from the loading overlay and get depth
+        val origin = rememberChapterRevealOrigin(it.showPath)
+        Box(Modifier.fillMaxSize().chapterOpenTransition(origin, it)) { VideoPlayerUi(it) }
+    }
 
     navigation<CastRemoteRoute> { CastRemoteScreen() }
 
