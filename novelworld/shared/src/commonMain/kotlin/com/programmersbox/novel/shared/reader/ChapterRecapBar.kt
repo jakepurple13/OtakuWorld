@@ -25,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -49,15 +50,16 @@ private const val RECAP_EXPAND_MS = 400
 @Composable
 internal fun ChapterRecapBar(
     viewModel: ReadViewModel,
+    chapter: Int,
     modifier: Modifier = Modifier,
 ) {
-    val enabled by viewModel.recapEnabled.collectAsState(initial = true)
+    val enabled by viewModel.recapEnabled.collectAsState()
     val available by viewModel.recaps.available.collectAsState()
-    val current = viewModel.currentChapterModel
-    val hasPrevious = viewModel.previousChapterModel != null
+    val current = viewModel.list.getOrNull(chapter)
+    val hasPrevious = viewModel.list.getOrNull(chapter + 1) != null
 
     AnimatedVisibility(
-        visible = enabled && available && hasPrevious && current != null,
+        visible = enabled == true && available && hasPrevious && current != null,
         enter = expandVertically(tween(RECAP_EXPAND_MS)) + fadeIn(),
         exit = shrinkVertically() + fadeOut(),
         modifier = modifier,
@@ -65,9 +67,9 @@ internal fun ChapterRecapBar(
         if (current != null) {
             ChapterRecapContent(
                 chapterUrl = current.url,
-                previousNumber = (viewModel.list.size - (viewModel.currentChapter + 1)).toString(),
-                state = viewModel.recaps.stateFor(current.url).collectAsState().value,
-                onRequest = viewModel::requestRecap,
+                previousNumber = (viewModel.list.size - (chapter + 1)).toString(),
+                state = remember(current.url) { viewModel.recaps.stateFor(current.url) }.collectAsState().value,
+                onRequest = { viewModel.requestRecap(chapter) },
             )
         }
     }

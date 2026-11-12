@@ -29,7 +29,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
@@ -53,7 +56,10 @@ class ReadViewModel(
 ) : ViewModel() {
 
     val recaps = ChapterRecaps(aiText, viewModelScope)
-    val recapEnabled: Flow<Boolean> = dataStoreHandling.novelChapterRecap.asFlow()
+    /** Null until the stored value loads, so the bar never animates from a guessed default. */
+    val recapEnabled: StateFlow<Boolean?> = dataStoreHandling.novelChapterRecap.asFlow()
+        .map<Boolean, Boolean?> { it }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     fun setRecapEnabled(enabled: Boolean) {
         viewModelScope.launch { dataStoreHandling.novelChapterRecap.set(enabled) }
@@ -137,9 +143,9 @@ class ReadViewModel(
     /** The list is newest-first, so the chapter before the current one is the next index. */
     val previousChapterModel by derivedStateOf { list.getOrNull(currentChapter + 1) }
 
-    fun requestRecap() {
-        val current = currentChapterModel ?: return
-        val previous = previousChapterModel ?: return
+    fun requestRecap(chapter: Int) {
+        val current = list.getOrNull(chapter) ?: return
+        val previous = list.getOrNull(chapter + 1) ?: return
         recaps.request(current.url) {
             withContext(Dispatchers.IO) {
                 previous.getChapterInfo().first().firstNotNullOfOrNull(KmpStorage::link)

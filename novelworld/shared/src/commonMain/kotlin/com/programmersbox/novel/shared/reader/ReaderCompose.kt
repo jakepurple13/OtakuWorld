@@ -14,6 +14,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.material3.rememberModalBottomSheetState
 import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
 import otakuworld.kmpuiviews.generated.resources.ai_chapter_recap
+import otakuworld.kmpuiviews.generated.resources.reader_settings
 import otakuworld.kmpuiviews.generated.resources.ai_chapter_recap_summary
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -50,6 +51,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -140,16 +142,21 @@ private fun NovelReadViewContent(
 
     var showReaderSettings by remember { mutableStateOf(false) }
     val recapAvailable by viewModel.recaps.available.collectAsState()
-    val recapEnabled by viewModel.recapEnabled.collectAsState(initial = true)
+    val recapEnabled by viewModel.recapEnabled.collectAsState()
 
     if (showReaderSettings) {
         ModalBottomSheet(
             onDismissRequest = { showReaderSettings = false },
             sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         ) {
+            Text(
+                stringResource(Res.string.reader_settings),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            )
             if (recapAvailable) {
                 SwitchSetting(
-                    value = recapEnabled,
+                    value = recapEnabled ?: true,
                     settingTitle = { Text(stringResource(Res.string.ai_chapter_recap)) },
                     summaryValue = { Text(stringResource(Res.string.ai_chapter_recap_summary)) },
                     updateValue = viewModel::setRecapEnabled,
@@ -279,6 +286,11 @@ private fun NovelReadViewContent(
                         },
                         label = "chapterPage",
                     ) { chapter ->
+                        // The outgoing page keeps its own text; only the current chapter follows pageList
+                        var pageText by remember { mutableStateOf(if (chapter == viewModel.currentChapter) viewModel.pageList else "") }
+                        if (chapter == viewModel.currentChapter) {
+                            SideEffect { pageText = viewModel.pageList }
+                        }
                         Column(
                             verticalArrangement = Arrangement.spacedBy(4.dp),
                             modifier = Modifier
@@ -286,11 +298,11 @@ private fun NovelReadViewContent(
                                 .verticalScroll(rememberScrollState())
                                 .fillMaxSize()
                         ) {
-                            ChapterRecapBar(viewModel)
+                            ChapterRecapBar(viewModel, chapter)
 
                             //FIXME: Fix this
                             Text(
-                                viewModel.pageList,//AnnotatedString.fromHtml(viewModel.pageList),
+                                pageText,//AnnotatedString.fromHtml(viewModel.pageList),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(4.dp)

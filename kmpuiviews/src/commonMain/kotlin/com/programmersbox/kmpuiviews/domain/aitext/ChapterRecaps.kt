@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlin.coroutines.coroutineContext
 
 /**
  * Per-chapter "Previously" recaps. Nothing generates until [request]; a finished recap is cached
@@ -59,6 +60,9 @@ class ChapterRecaps(
                 throw e
             } catch (e: Exception) {
                 state.value = AiTextState.Error(e.message ?: e::class.simpleName ?: "Unknown error")
+            } finally {
+                // Only drop our own entry; a newer request for this chapter may have replaced it
+                if (jobs[chapterUrl] === coroutineContext[Job]) jobs.remove(chapterUrl)
             }
         }
     }
