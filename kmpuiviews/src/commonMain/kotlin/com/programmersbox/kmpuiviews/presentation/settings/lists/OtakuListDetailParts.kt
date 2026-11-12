@@ -19,6 +19,8 @@ import com.programmersbox.kmpuiviews.domain.aitext.AiTextState
 import com.programmersbox.kmpuiviews.presentation.components.ai.Spark
 import com.programmersbox.kmpuiviews.presentation.components.ai.rememberReducedMotion
 import com.programmersbox.kmpuiviews.presentation.components.ai.generatingBorder
+import com.programmersbox.kmpuiviews.presentation.components.ai.generatingOutlineColors
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import kotlinx.coroutines.delay
@@ -771,7 +773,10 @@ internal fun EditListSheet(
                 value = description,
                 onValueChange = { description = it },
                 readOnly = descriptionGenerating,
-                label = { Text("Description") },
+                // The sheet's color behind the label stands in for the outline's cutout, so the
+                // flowing border doesn't run through the floating label
+                label = { Text("Description", Modifier.background(MaterialTheme.colorScheme.surface)) },
+                colors = generatingOutlineColors(descriptionGenerating),
                 placeholder = {
                     AnimatedVisibility(
                         visible = !descriptionGenerating,
@@ -802,7 +807,12 @@ internal fun EditListSheet(
                 } else null,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .generatingBorder(descriptionGenerating, OutlinedTextFieldDefaults.shape)
+                    .generatingBorder(
+                        descriptionGenerating,
+                        OutlinedTextFieldDefaults.shape,
+                        // The field sits below the top half of its floating label
+                        topInset = with(LocalDensity.current) { MaterialTheme.typography.bodySmall.lineHeight.toDp() / 2 },
+                    )
             )
 
             Row(

@@ -756,4 +756,5 @@
     <string name="ai_discard">Discard</string>
     <string name="ai_note_too_long">Note is too long for on-device tools</string>
     <string name="ai_grammar_fixes">Grammar fixes</string>
+    <string name="ai_writing_tools">AI writing tools</string>
 </resources>

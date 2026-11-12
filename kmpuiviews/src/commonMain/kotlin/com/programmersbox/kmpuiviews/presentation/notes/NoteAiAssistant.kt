@@ -12,6 +12,9 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -72,11 +75,17 @@ class NoteAiAssistant(
     /** Checks which engines are ready. Call once when the note screen opens. */
     suspend fun resolveEngines(text: String) {
         lastText = text
-        anyEngine = aiText.engineFor(AiFeature.Proofread, 0) != null ||
-                aiText.engineFor(AiFeature.Rewrite, 0) != null
-        engineForLongText = anyEngine &&
-                (aiText.engineFor(AiFeature.Proofread, AiTextPrompts.NANO_TEXT_LIMIT + 1) != null ||
-                        aiText.engineFor(AiFeature.Rewrite, AiTextPrompts.NANO_TEXT_LIMIT + 1) != null)
+        // Each check can query the on-device model's status, so run them side by side
+        val (proofread, rewrite, proofreadLong, rewriteLong) = coroutineScope {
+            listOf(
+                async { aiText.engineFor(AiFeature.Proofread, 0) != null },
+                async { aiText.engineFor(AiFeature.Rewrite, 0) != null },
+                async { aiText.engineFor(AiFeature.Proofread, AiTextPrompts.NANO_TEXT_LIMIT + 1) != null },
+                async { aiText.engineFor(AiFeature.Rewrite, AiTextPrompts.NANO_TEXT_LIMIT + 1) != null },
+            ).awaitAll()
+        }
+        anyEngine = proofread || rewrite
+        engineForLongText = anyEngine && (proofreadLong || rewriteLong)
         _available.value = anyEngine
         onTextChanged(lastText)
     }

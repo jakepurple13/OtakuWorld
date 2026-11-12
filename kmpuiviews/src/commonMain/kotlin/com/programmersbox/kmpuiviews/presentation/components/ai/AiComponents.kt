@@ -27,6 +27,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -50,6 +52,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
@@ -76,8 +79,13 @@ import otakuworld.kmpuiviews.generated.resources.do_privacy_sent
 private val AiColors = listOf(Color(0xFF1F8EF1), Color(0xFF9B72F2), Color(0xFFE1617A))
 private val AiCardShape = RoundedCornerShape(24.dp)
 
-/** The gradient border that flows around the card while text is generating. Fades in and out over 400 ms. */
-fun Modifier.generatingBorder(active: Boolean, shape: Shape): Modifier = composed {
+/**
+ * The gradient border that flows around the card while text is generating. Fades in and out over 400 ms.
+ *
+ * [topInset] skips space above the outline, such as the room an outlined text field leaves for its
+ * floating label.
+ */
+fun Modifier.generatingBorder(active: Boolean, shape: Shape, topInset: Dp = 0.dp): Modifier = composed {
     val alpha by animateFloatAsState(if (active) 1f else 0f, tween(400), label = "borderAlpha")
     // Not drawn, and no infinite transition running, once the fade-out has finished.
     if (!active && alpha == 0f) return@composed Modifier
@@ -105,26 +113,44 @@ fun Modifier.generatingBorder(active: Boolean, shape: Shape): Modifier = compose
             end = Offset(size.width - shift, size.width * 0.58f),
             tileMode = TileMode.Repeated,
         )
-        // The stroke's centre line runs on the shape inset by half the stroke, corner radii included
-        when (val outline = shape.createOutline(size, layoutDirection, this)) {
-            is Outline.Rounded -> drawPath(
-                Path().apply { addRoundRect(outline.roundRect.inset(stroke / 2)) },
-                brush = brush,
-                alpha = alpha,
-                style = Stroke(stroke),
-            )
+        val top = topInset.toPx()
+        translate(top = top) {
+            // The stroke's centre line runs on the shape inset by half the stroke, corner radii included
+            when (val outline = shape.createOutline(Size(size.width, size.height - top), layoutDirection, this)) {
+                is Outline.Rounded -> drawPath(
+                    Path().apply { addRoundRect(outline.roundRect.inset(stroke / 2)) },
+                    brush = brush,
+                    alpha = alpha,
+                    style = Stroke(stroke),
+                )
 
-            is Outline.Rectangle -> drawRect(
-                brush = brush,
-                topLeft = outline.rect.topLeft + Offset(stroke / 2, stroke / 2),
-                size = Size(outline.rect.width - stroke, outline.rect.height - stroke),
-                alpha = alpha,
-                style = Stroke(stroke),
-            )
+                is Outline.Rectangle -> drawRect(
+                    brush = brush,
+                    topLeft = outline.rect.topLeft + Offset(stroke / 2, stroke / 2),
+                    size = Size(outline.rect.width - stroke, outline.rect.height - stroke),
+                    alpha = alpha,
+                    style = Stroke(stroke),
+                )
 
-            is Outline.Generic -> drawPath(outline.path, brush = brush, alpha = alpha, style = Stroke(stroke))
+                is Outline.Generic -> drawPath(outline.path, brush = brush, alpha = alpha, style = Stroke(stroke))
+            }
         }
     }
+}
+
+/**
+ * Outlined text field colors whose outline fades out over 400 ms while [generating], so a
+ * [generatingBorder] on the same field is the only outline drawn. The outline fades back when done.
+ */
+@Composable
+fun generatingOutlineColors(generating: Boolean): TextFieldColors {
+    val outlineAlpha by animateFloatAsState(if (generating) 0f else 1f, tween(400), label = "outlineAlpha")
+    val colors = OutlinedTextFieldDefaults.colors()
+    return colors.copy(
+        focusedIndicatorColor = colors.focusedIndicatorColor.copy(alpha = colors.focusedIndicatorColor.alpha * outlineAlpha),
+        unfocusedIndicatorColor = colors.unfocusedIndicatorColor.copy(alpha = colors.unfocusedIndicatorColor.alpha * outlineAlpha),
+        disabledIndicatorColor = colors.disabledIndicatorColor.copy(alpha = colors.disabledIndicatorColor.alpha * outlineAlpha),
+    )
 }
 
 private fun RoundRect.inset(d: Float): RoundRect {
