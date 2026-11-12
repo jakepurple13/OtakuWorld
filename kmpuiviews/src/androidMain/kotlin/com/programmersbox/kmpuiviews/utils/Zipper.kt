@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.utils
 
 import android.content.Context
+import android.os.ParcelFileDescriptor
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.ExceptionDao
 import com.programmersbox.kmpuiviews.logFirebaseMessage
@@ -17,7 +18,6 @@ import okio.Buffer
 import okio.buffer
 import okio.sink
 import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
@@ -56,8 +56,9 @@ actual open class Zipper(
         onItemComplete: suspend (ItemResult) -> Unit,
     ): List<ItemResult> = withContext(Dispatchers.IO) {
         val results = mutableListOf<ItemResult>()
-        val pfd = context.contentResolver.openFileDescriptor(platformFile.toAndroidUri(""), "w")!!
-        ZipOutputStream(FileOutputStream(pfd.fileDescriptor)).use { zip ->
+        // "wt" truncates, so a smaller backup can't keep the old file's tail. AutoCloseOutputStream closes the pfd with the zip.
+        val pfd = context.contentResolver.openFileDescriptor(platformFile.toAndroidUri(""), "wt")!!
+        ZipOutputStream(ParcelFileDescriptor.AutoCloseOutputStream(pfd)).use { zip ->
             backupProcessors.filter { it.fileName in selectedKeys }.forEach { backup ->
                 logFirebaseMessage("Zipping ${backup.fileName}")
                 val duration = measureTime {

@@ -462,7 +462,10 @@ private fun DetailsLandscapeContent(
                             detailsActions = detailsActions
                         )
                     }
-                    items(listOfChapters) { c ->
+                    items(
+                        listOfChapters,
+                        key = { it.url + it.name }
+                    ) { c ->
                         ChapterItem(
                             c = c,
                             readUrls = readUrls,

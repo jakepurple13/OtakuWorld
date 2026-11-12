@@ -16,6 +16,8 @@ import com.programmersbox.kmpuiviews.utils.printLogs
 import io.github.vinceglb.filekit.readString
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 class ImportFullListViewModel(
     private val listRepository: ListRepository,
@@ -54,18 +56,20 @@ class ImportFullListViewModel(
         }
     }
 
-    suspend fun importList() {
-        runCatching {
-            importingList.let { list ->
-                list.forEach {
-                    listRepository.createList(it.item)
-                    it.list.forEach { item -> listRepository.addItem(item) }
-                }
-            }
+    /**
+     * Imports each list under a new uuid, like [ImportListViewModel], so an existing or
+     * soft-deleted list with the exported uuid can't make the insert silently do nothing.
+     */
+    @OptIn(ExperimentalUuidApi::class)
+    suspend fun importList(): Result<Unit> = runCatching {
+        importingList.forEach {
+            val newUUID = Uuid.random().toString()
+            listRepository.createList(it.item.copy(uuid = newUUID))
+            it.list.forEach { item -> listRepository.addItem(item.copy(uniqueId = Uuid.random().toString(), uuid = newUUID)) }
         }
-            .onSuccess { printLogs { "Read!" } }
-            .onFailure { it.printStackTrace() }
     }
+        .onSuccess { printLogs { "Read!" } }
+        .onFailure { it.printStackTrace() }
 }
 
 sealed class ImportFullListStatus {

@@ -11,4 +11,6 @@ data class VideoScreen(
     val referer: String,
     // Cover color handed over by Details to theme the player
     val seedColor: Int? = null,
+    // Episode page URL; streams save their resume position under it, since showPath is often a signed, expiring link
+    val episodeUrl: String? = null,
 ) : NavKey

@@ -166,7 +166,11 @@ class ModelMapper(private val application: Application) {
             url = itemModel.url,
             imageUrl = itemModel.imageUrl,
             source = mapApiService(itemModel.source)
-        )
+        ).also {
+            // Body properties aren't constructor params; sources keep state in them
+            it.extras.putAll(itemModel.extras)
+            it.otherExtras.putAll(itemModel.otherExtras)
+        }
     }
 
     fun mapItemModel(itemModel: KmpItemModel): ItemModel {
@@ -176,7 +180,11 @@ class ModelMapper(private val application: Application) {
             url = itemModel.url,
             imageUrl = itemModel.imageUrl,
             source = mapApiService(itemModel.source)
-        )
+        ).also {
+            // Body properties aren't constructor params; sources keep state in them
+            it.extras.putAll(itemModel.extras)
+            it.otherExtras.putAll(itemModel.otherExtras)
+        }
     }
 
     fun mapInfoModel(infoModel: InfoModel): KmpInfoModel {
@@ -189,7 +197,7 @@ class ModelMapper(private val application: Application) {
             genres = infoModel.genres,
             alternativeNames = infoModel.alternativeNames,
             source = mapApiService(infoModel.source)
-        )
+        ).also { it.extras.putAll(infoModel.extras) }
     }
 
     fun mapInfoModel(infoModel: KmpInfoModel): InfoModel {
@@ -202,7 +210,7 @@ class ModelMapper(private val application: Application) {
             genres = infoModel.genres,
             alternativeNames = infoModel.alternativeNames,
             source = mapApiService(infoModel.source)
-        )
+        ).also { it.extras.putAll(infoModel.extras) }
     }
 
     fun mapChapterModel(chapterModel: ChapterModel): KmpChapterModel {
@@ -212,7 +220,11 @@ class ModelMapper(private val application: Application) {
             uploaded = chapterModel.uploaded,
             sourceUrl = chapterModel.sourceUrl,
             source = mapApiService(chapterModel.source)
-        )
+        ).also {
+            it.uploadedTime = chapterModel.uploadedTime
+            it.extras.putAll(chapterModel.extras)
+            it.otherExtras.putAll(chapterModel.otherExtras)
+        }
     }
 
     fun mapChapterModel(chapterModel: KmpChapterModel): ChapterModel {
@@ -222,7 +234,11 @@ class ModelMapper(private val application: Application) {
             uploaded = chapterModel.uploaded,
             sourceUrl = chapterModel.sourceUrl,
             source = mapApiService(chapterModel.source)
-        )
+        ).also {
+            it.uploadedTime = chapterModel.uploadedTime
+            it.extras.putAll(chapterModel.extras)
+            it.otherExtras.putAll(chapterModel.otherExtras)
+        }
     }
 
     fun mapStorage(storage: KmpStorage): Storage {
@@ -232,7 +248,7 @@ class ModelMapper(private val application: Application) {
             link = storage.link,
             quality = storage.quality,
             filename = storage.filename
-        )
+        ).also { it.headers.putAll(storage.headers) }
     }
 
     fun mapStorage(storage: Storage): KmpStorage {
@@ -242,7 +258,7 @@ class ModelMapper(private val application: Application) {
             link = storage.link,
             quality = storage.quality,
             filename = storage.filename
-        )
+        ).also { it.headers.putAll(storage.headers) }
     }
 
     fun mapApiService(apiService: ApiService): KmpApiService {

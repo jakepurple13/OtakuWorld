@@ -16,7 +16,7 @@ class JarLoaderCache<T>(
 
     private val entries = mutableMapOf<String, Entry<T>>()
 
-    /** Closes the loaders of jars not in [liveJarPaths]. Call before their files are deleted. */
+    /** Closes the loaders of jars not in [liveJarPaths] (keys, when [getOrLoad] was given one). Call before their files are deleted. */
     @Synchronized
     fun retain(liveJarPaths: Set<String>) {
         (entries.keys - liveJarPaths).forEach { path ->
@@ -24,9 +24,12 @@ class JarLoaderCache<T>(
         }
     }
 
-    /** The cached value for [jar], or [build]s one with a new loader; the loader is closed if [build] throws. */
+    /**
+     * The cached value for [jar], or [build]s one with a new loader; the loader is closed if [build] throws.
+     * [key] defaults to the jar path; pass one that changes with the content when jar names are not content hashes.
+     */
     @Synchronized
-    fun getOrLoad(jar: File, build: (ClassLoader) -> T): T = entries.getOrPut(jar.absolutePath) {
+    fun getOrLoad(jar: File, key: String = jar.absolutePath, build: (ClassLoader) -> T): T = entries.getOrPut(key) {
         val classLoader = ChildFirstClassLoader(arrayOf(jar.toURI().toURL()), parentClassLoader, parentFirst)
         try {
             Entry(classLoader, build(classLoader))

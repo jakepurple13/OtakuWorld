@@ -41,8 +41,10 @@ class NotesSyncProcessor(
         local.toNoteItemRow(uid, app, timestamp)
 
     override suspend fun markLocalSynced(local: NoteItem, timestamp: Long) {
-        notesDao.markNoteSynced(local.itemUrl, timestamp)
+        notesDao.markNoteSynced(local.itemUrl, timestamp, pushedUpdatedAt = local.updatedAt)
     }
+
+    override suspend fun runInTransaction(block: suspend () -> Unit) = notesDao.runInTransaction(block)
 
     override suspend fun deleteLocal(local: NoteItem) {
         notesDao.deleteNote(local.itemUrl)

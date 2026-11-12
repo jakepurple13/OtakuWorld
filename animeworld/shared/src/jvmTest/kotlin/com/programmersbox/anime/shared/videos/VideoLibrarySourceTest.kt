@@ -2,9 +2,12 @@ package com.programmersbox.anime.shared.videos
 
 import com.programmersbox.anime.shared.downloads.sidecarIndexName
 import java.nio.file.Files
+import java.util.UUID
+import java.util.prefs.Preferences
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class VideoLibrarySourceTest {
     @Test
@@ -39,6 +42,27 @@ class VideoLibrarySourceTest {
             assertFalse(video.exists())
         } finally {
             dir.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun resumePositionWorksForLongPathsAndReadsOldShortKeys() {
+        val prefs = Preferences.userRoot().node("otakuworld-test-${UUID.randomUUID()}")
+        try {
+            val longPath = "/Users/someone/Downloads/AnimeWorld/" + "A Very Long Anime Title ".repeat(4) + "/Episode 12.mp4"
+            assertTrue(longPath.length > Preferences.MAX_KEY_LENGTH)
+            assertEquals(0L, prefs.getResumePosition(longPath))
+            prefs.putResumePosition(longPath, 42_000L)
+            assertEquals(42_000L, prefs.getResumePosition(longPath))
+
+            // A short path saved under the old path key is still found, and the hashed key wins once written.
+            val shortPath = "/tmp/Ep 1.mp4"
+            prefs.putLong(shortPath, 7_000L)
+            assertEquals(7_000L, prefs.getResumePosition(shortPath))
+            prefs.putResumePosition(shortPath, 9_000L)
+            assertEquals(9_000L, prefs.getResumePosition(shortPath))
+        } finally {
+            prefs.removeNode()
         }
     }
 }

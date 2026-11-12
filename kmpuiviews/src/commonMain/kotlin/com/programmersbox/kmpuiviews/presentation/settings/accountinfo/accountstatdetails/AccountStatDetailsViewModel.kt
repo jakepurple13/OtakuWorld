@@ -25,6 +25,9 @@ class AccountStatDetailsViewModel(
     val state: StateFlow<AccountStatDetailsState>
         field = MutableStateFlow(AccountStatDetailsState())
 
+    // One color per source, shared by the chart and the list and kept across updates.
+    private val sourceColors = mutableMapOf<String, Color>()
+
     init {
         itemDao
             .getAllFavorites()
@@ -34,9 +37,10 @@ class AccountStatDetailsViewModel(
                     .mapValues { it.value.size }
                     .map {
                         FavoriteInfo(
+                            source = it.key,
                             name = sourceRepository.displayNameFor(it.key),
                             count = it.value.toLong(),
-                            color = Random.nextRandomColor()
+                            color = sourceColors.getOrPut(it.key) { Random.nextRandomColor() }
                         )
                     }
             }
@@ -49,10 +53,11 @@ class AccountStatDetailsViewModel(
                         favoritesCount = total,
                         circleInfo = map.map { favorites ->
                             CircleInfo(
-                                color = Random.nextRandomColor(),
+                                color = favorites.color,
                                 value = favorites.count.toFloat() / total,
                                 label = favorites.name,
-                                key = favorites.count
+                                key = favorites.source,
+                                extraInfo = mapOf(COUNT_KEY to favorites.count),
                             )
                         }
                     )
@@ -81,7 +86,10 @@ data class AccountStatDetailsState(
     val circleInfo: List<CircleInfo> = emptyList(),
 )
 
+internal const val COUNT_KEY = "count"
+
 data class FavoriteInfo(
+    val source: String,
     val name: String,
     val count: Long,
     val color: Color,

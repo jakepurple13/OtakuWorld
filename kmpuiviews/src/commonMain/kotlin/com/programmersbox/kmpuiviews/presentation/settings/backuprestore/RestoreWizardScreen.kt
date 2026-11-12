@@ -12,6 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -58,6 +59,13 @@ fun RestoreWizardScreen(
                     Button(onClick = { pickLauncher.launch() }, modifier = Modifier.padding(16.dp)) {
                         Text("Choose Backup File")
                     }
+                    state.error?.let {
+                        Text(
+                            it,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                    }
                 }
 
                 RestoreWizardStep.SelectItems -> {
@@ -103,7 +111,7 @@ fun RestoreWizardScreen(
 
                 RestoreWizardStep.Review -> {
                     LazyColumn(modifier = Modifier.weight(1f)) {
-                        items(state.items, key = { it.uiInfo.key }) { item ->
+                        items(state.items.filter { it.selected }, key = { it.uiInfo.key }) { item ->
                             WizardItemRow(
                                 item = item.copy(expanded = true),
                                 onToggleSelected = {},
@@ -135,7 +143,7 @@ fun RestoreWizardScreen(
                             .padding(16.dp)
                             .verticalScroll(rememberScrollState())
                     ) {
-                        Text("Restoring… (${state.results.size}/${state.items.size} done)")
+                        Text("Restoring… (${state.results.size}/${state.items.count { it.selected }} done)")
                         state.results.forEach { result ->
                             ListItem(
                                 headlineContent = { Text(if (result.success) "✓ ${result.key}" else "✗ ${result.key}: ${result.error}") },

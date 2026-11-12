@@ -45,6 +45,11 @@ jobs:
           build-scan-terms-of-use-agree: "yes"
           add-job-summary-as-pr-comment: always
 
+      - name: Set version code
+        # Minutes since 2024-01-01 UTC: shared by every workflow and only grows, so a release
+        # always installs over an earlier nightly. Read by buildSrc/AppInfo.kt.
+        run: echo "OTAKU_VERSION_CODE=$(( ($(date -u +%s) - 1704067200) / 60 ))" >> $GITHUB_ENV
+
       - name: Build MangaWorld artifacts
         id: buildMangaApks
         run: ./gradlew mangaworld:${{ inputs.NO_FIREBASE_ONLY && 'assembleNoFirebaseRelease' || 'assembleRelease' }} -PreleaseAbis=arm64-v8a,armeabi-v7a

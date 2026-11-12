@@ -176,4 +176,36 @@ class RestoreWizardViewModelTest {
 
         assertEquals(null, called?.third)
     }
+
+    @Test
+    fun `pickFile with an unreadable file stays on PickFile and shows an error`() = runTest {
+        val vm = RestoreWizardViewModel<String>(
+            uiInfos = listOf(RestoreFakeUiInfo("a")),
+            peekZip = { error("corrupt zip") },
+            startRestore = { _, _, _ -> },
+        )
+
+        vm.pickFile("file.zip")
+        awaitCondition { vm.state.value.error != null }
+
+        assertEquals(RestoreWizardStep.PickFile, vm.state.value.step)
+        assertEquals("corrupt zip", vm.state.value.error)
+    }
+
+    @Test
+    fun `going back from Review keeps unselected items`() = runTest {
+        val vm = RestoreWizardViewModel<String>(
+            uiInfos = listOf(RestoreFakeUiInfo("a"), RestoreFakeUiInfo("b")),
+            peekZip = { mapOf("a" to BackupDataSummary(), "b" to BackupDataSummary()) },
+            startRestore = { _, _, _ -> },
+        )
+
+        vm.pickFile("file.zip")
+        awaitCondition { vm.state.value.step == RestoreWizardStep.SelectItems }
+        vm.toggleSelected("b")
+        vm.goToReview()
+        vm.goToSelectItems()
+
+        assertEquals(listOf("a", "b"), vm.state.value.items.map { it.uiInfo.key })
+    }
 }

@@ -8,6 +8,7 @@ import androidx.room3.Delete
 import androidx.room3.Insert
 import androidx.room3.OnConflictStrategy
 import androidx.room3.Query
+import androidx.room3.Transaction
 import androidx.room3.Update
 import androidx.room3.paging.PagingSourceDaoReturnTypeConverter
 import kotlinx.coroutines.flow.Flow
@@ -44,16 +45,17 @@ interface ItemDao {
     @Query("SELECT COUNT(url) FROM FavoriteItem  WHERE is_deleted = 0")
     fun getAllFavoritesCount(): Flow<Int>
 
+    // Includes soft-deleted rows; sync and backup need them.
     @Query("SELECT * FROM FavoriteItem")
     suspend fun getAllFavoritesSync(): List<DbModel>
 
     @Query("SELECT * FROM FavoriteItem WHERE url IN (:urls)")
     suspend fun getFavoritesByUrls(urls: List<String>): List<DbModel>
 
-    @Query("SELECT * FROM FavoriteItem where shouldCheckForUpdate = 1")
+    @Query("SELECT * FROM FavoriteItem where shouldCheckForUpdate = 1 AND is_deleted = 0")
     suspend fun getAllNotifyingFavoritesSync(): List<DbModel>
 
-    @Query("SELECT * FROM FavoriteItem where shouldCheckForUpdate = 1")
+    @Query("SELECT * FROM FavoriteItem where shouldCheckForUpdate = 1 AND is_deleted = 0")
     fun getAllNotifyingFavorites(): Flow<List<DbModel>>
 
     /**
@@ -65,6 +67,7 @@ interface ItemDao {
         SELECT * FROM FavoriteItem
         WHERE (:checkAll OR shouldCheckForUpdate = 1)
           AND sources NOT IN (:skippedSources)
+          AND is_deleted = 0
         """
     )
     suspend fun getFavoritesToCheckSync(checkAll: Boolean, skippedSources: List<String>): List<DbModel>
@@ -274,12 +277,17 @@ interface ItemDao {
     @Query("UPDATE ChapterWatched SET is_deleted = 1, is_dirty = 1, updated_at = :timestamp WHERE url = :url")
     suspend fun softDeleteChapter(url: String, timestamp: Long)
 
-    // Stamp updatedAt after a successful push
-    @Query("UPDATE FavoriteItem SET updated_at = :timestamp, is_dirty = 0 WHERE url = :url")
-    suspend fun markFavoriteSynced(url: String, timestamp: Long)
+    // Stamp updatedAt after a successful push. Leaves the row dirty if it was edited during the push:
+    // every edit bumps updated_at, so it no longer matches pushedUpdatedAt.
+    @Query("UPDATE FavoriteItem SET updated_at = :timestamp, is_dirty = 0 WHERE url = :url AND updated_at = :pushedUpdatedAt")
+    suspend fun markFavoriteSynced(url: String, timestamp: Long, pushedUpdatedAt: Long)
 
-    @Query("UPDATE ChapterWatched SET updated_at = :timestamp, is_dirty = 0 WHERE url = :url")
-    suspend fun markChapterSynced(url: String, timestamp: Long)
+    @Query("UPDATE ChapterWatched SET updated_at = :timestamp, is_dirty = 0 WHERE url = :url AND updated_at = :pushedUpdatedAt")
+    suspend fun markChapterSynced(url: String, timestamp: Long, pushedUpdatedAt: Long)
+
+    /** Runs [block] in one write transaction, so sync writes a whole batch with one commit. */
+    @Transaction
+    suspend fun runInTransaction(block: suspend () -> Unit) = block()
 
     // Re-push every row, e.g. to tag existing remote rows with this app
     @Query("UPDATE FavoriteItem SET is_dirty = 1")

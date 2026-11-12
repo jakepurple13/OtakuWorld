@@ -36,8 +36,11 @@ import com.programmersbox.kmpuiviews.utils.printLogs
 import com.programmersbox.kmpuiviews.widget.notification.NotificationWidget
 import com.programmersbox.supabaseintegration.repository.ActivityRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -54,7 +57,7 @@ import org.koin.dsl.module
 import java.util.UUID
 
 abstract class KmpOtakuApp : Application(), Configuration.Provider {
-    @OptIn(ExperimentalComposeUiApi::class, ExperimentalComposeRuntimeApi::class, ExperimentalFoundationApi::class)
+    @OptIn(ExperimentalComposeUiApi::class, ExperimentalComposeRuntimeApi::class, ExperimentalFoundationApi::class, ExperimentalCoroutinesApi::class)
     @CallSuper
     override fun onCreate() {
         super.onCreate()
@@ -119,15 +122,10 @@ abstract class KmpOtakuApp : Application(), Configuration.Provider {
         GlobalScope.launch(Dispatchers.IO) {
             platformDataStoreHandling.hasWidget
                 .asFlow()
-                .onEach {
-                    if (it) {
-                        NotificationWidget().updateAll(this@KmpOtakuApp)
-                        itemDao
-                            .getTotalCountFlow()
-                            .flowOn(Dispatchers.IO)
-                            .collect { NotificationWidget().updateAll(this@KmpOtakuApp) }
-                    }
-                }
+                .distinctUntilChanged()
+                // flatMapLatest so turning the widget off stops the count observer
+                .flatMapLatest { if (it) itemDao.getTotalCountFlow() else emptyFlow() }
+                .onEach { NotificationWidget().updateAll(this@KmpOtakuApp) }
                 .launchIn(this)
         }
     }

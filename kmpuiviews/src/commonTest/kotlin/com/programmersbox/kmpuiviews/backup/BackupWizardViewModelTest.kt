@@ -52,7 +52,7 @@ private object UnimplementedListDao : ListDao {
     override suspend fun removeItem(uuid: String) = unsupported()
     override suspend fun updateList(listItem: CustomListItem) = unsupported()
     override suspend fun removeList(item: CustomListItem) = unsupported()
-    override suspend fun updateBiometric(uuid: String, useBiometric: Boolean) = unsupported()
+    override suspend fun updateBiometric(uuid: String, useBiometric: Boolean, timestamp: Long) = unsupported()
     override suspend fun getDirtyCustomListItems() = unsupported()
     override fun observeDirtyCustomListItemCount() = throw NotImplementedError()
     override suspend fun getDirtyCustomListInfo() = unsupported()
@@ -65,8 +65,8 @@ private object UnimplementedListDao : ListDao {
 
     override suspend fun softDeleteCustomListItem(uuid: String, timestamp: Long) = unsupported()
     override suspend fun softDeleteCustomListInfo(uniqueId: String, timestamp: Long) = unsupported()
-    override suspend fun markCustomListItemSynced(uuid: String, timestamp: Long) = unsupported()
-    override suspend fun markCustomListInfoSynced(uniqueId: String, timestamp: Long) = unsupported()
+    override suspend fun markCustomListItemSynced(uuid: String, timestamp: Long, pushedUpdatedAt: Long) = unsupported()
+    override suspend fun markCustomListInfoSynced(uniqueId: String, timestamp: Long, pushedUpdatedAt: Long) = unsupported()
     override suspend fun markAllCustomListItemsDirty() = unsupported()
     override suspend fun markAllCustomListInfoDirty() = unsupported()
     override suspend fun getAllCustomListItemsSync() = unsupported()
@@ -138,7 +138,7 @@ class BackupWizardViewModelTest {
         vm.toggleSelected("b")
         vm.goToReview()
         assertEquals(BackupWizardStep.Review, vm.state.value.step)
-        assertEquals(listOf("a"), vm.state.value.items.map { it.uiInfo.key })
+        assertEquals(listOf("a"), vm.state.value.items.filter { it.selected }.map { it.uiInfo.key })
 
         vm.confirm("file.zip")
         assertEquals(Triple("file.zip", setOf("a"), null), startedWith)
@@ -220,5 +220,35 @@ class BackupWizardViewModelTest {
         vm.confirm("file.zip")
 
         assertEquals(null, startedWith?.third)
+    }
+
+    @Test
+    fun `going back from Review keeps unselected items`() = runTest {
+        val vm = BackupWizardViewModel<String>(listOf(FakeUiInfo("a"), FakeUiInfo("b")), startBackup = { _, _, _ -> })
+        vm.toggleSelected("b")
+        vm.goToReview()
+        vm.goToSelectItems()
+        assertEquals(listOf("a", "b"), vm.state.value.items.map { it.uiInfo.key })
+        assertEquals(false, vm.state.value.items.first { it.uiInfo.key == "b" }.selected)
+    }
+
+    @Test
+    fun `confirm ignores the previous run's results until the new run reports`() = runTest {
+        val previous = listOf(ItemResult("a", timeTaken = "1ms", success = true))
+        val results = MutableStateFlow(previous)
+        val vm = BackupWizardViewModel<String>(
+            listOf(FakeUiInfo("a")),
+            resultsFlow = results,
+            startBackup = { _, _, _ -> },
+        )
+        vm.goToReview()
+        vm.confirm("file.zip")
+        assertEquals(BackupWizardStep.Executing, vm.state.value.step)
+        assertTrue(vm.state.value.results.isEmpty())
+
+        results.value = emptyList()
+        results.value = listOf(ItemResult("a", timeTaken = "2ms", success = true))
+        awaitCondition { vm.state.value.step == BackupWizardStep.Complete }
+        assertEquals("2ms", vm.state.value.results.single().timeTaken)
     }
 }

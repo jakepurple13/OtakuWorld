@@ -14,6 +14,7 @@ import com.programmersbox.kmpmodels.KmpSourceInformation
 import dalvik.system.DelegateLastClassLoader
 import eu.kanade.tachiyomi.animesource.AnimeCatalogueSource
 import java.security.MessageDigest
+import java.util.concurrent.ConcurrentHashMap
 
 private const val EXTENSION_FEATURE = "tachiyomi.animeextension"
 private const val METADATA_SOURCE_CLASS = "tachiyomi.animeextension.class"
@@ -35,17 +36,26 @@ class AniyomiExtensionLoader(
         repoSigningKeys: Set<String>,
         trustedIds: Set<String>,
         onTrust: suspend (String) -> Unit,
-    ): List<KmpSourceInformation> = installedPackages()
-        .filter { it.isAniyomiExtension() }
-        .flatMap {
+    ): List<KmpSourceInformation> {
+        val packages = installedPackages().filter { it.isAniyomiExtension() }
+        loaded.keys.retainAll(packages.map { it.loadedKey() }.toSet())
+        return packages.flatMap {
             // One broken package must not abort loading the rest.
             try {
-                loadPackage(it, catalog, repoSigningKeys, trustedIds, onTrust)
+                loadPackage(fullPackageInfo(it.packageName), catalog, repoSigningKeys, trustedIds, onTrust)
             } catch (t: Throwable) {
                 t.printStackTrace()
                 emptyList()
             }
         }
+    }
+
+    /** Sources per installed package version, so a reload reuses them instead of building a new class loader. */
+    private data class LoadedKey(val packageName: String, val versionCode: Long, val lastUpdateTime: Long)
+
+    private val loaded = ConcurrentHashMap<LoadedKey, List<KmpSourceInformation>>()
+
+    private fun PackageInfo.loadedKey() = LoadedKey(packageName, longVersionCode, lastUpdateTime)
 
     fun isExtension(packageName: String): Boolean = runCatching {
         val pm = context.packageManager
@@ -58,12 +68,22 @@ class AniyomiExtensionLoader(
     }.getOrDefault(false)
 
     // minSdk is 28; PackageInfoFlags is API 33+.
+    // Features only: signing data and meta-data are fetched just for extensions, not for every app on the device.
     private fun installedPackages(): List<PackageInfo> {
         val pm = context.packageManager
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            pm.getInstalledPackages(PackageManager.PackageInfoFlags.of(PACKAGE_FLAGS.toLong()))
+            pm.getInstalledPackages(PackageManager.PackageInfoFlags.of(PackageManager.GET_CONFIGURATIONS.toLong()))
         } else {
-            pm.getInstalledPackages(PACKAGE_FLAGS)
+            pm.getInstalledPackages(PackageManager.GET_CONFIGURATIONS)
+        }
+    }
+
+    private fun fullPackageInfo(packageName: String): PackageInfo {
+        val pm = context.packageManager
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            pm.getPackageInfo(packageName, PackageManager.PackageInfoFlags.of(PACKAGE_FLAGS.toLong()))
+        } else {
+            pm.getPackageInfo(packageName, PACKAGE_FLAGS)
         }
     }
 
@@ -113,6 +133,8 @@ class AniyomiExtensionLoader(
         val classNames = metaData.getString(METADATA_SOURCE_CLASS)
         if (classNames.isNullOrBlank()) return notLoaded("Malformed")
 
+        // Trust was checked above, so an unchanged trusted package reuses its sources.
+        loaded[pkgInfo.loadedKey()]?.let { return it }
         // Building the service reads extension-supplied id/baseUrl/name, so it is guarded too.
         return try {
             val classLoader = DelegateLastClassLoader(appInfo.sourceDir, null, context.classLoader)
@@ -125,7 +147,7 @@ class AniyomiExtensionLoader(
                     packageName = pkg,
                     catalog = catalog,
                 )
-            }
+            }.also { loaded[pkgInfo.loadedKey()] = it }
         } catch (t: Throwable) {
             t.printStackTrace()
             notLoaded("Failed to load: ${t.message}")

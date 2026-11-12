@@ -10,9 +10,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.graphics.Canvas
+import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.decodeToImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.unit.IntSize
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kmpalette.generatePalette
@@ -238,12 +242,15 @@ class DetailsViewModel(
         }
             .dispatchIo()
             .onEach {
-                if (it.blurHashItem == null && it.bitmap != null && it.isFavorite && it.imageUrl != null) {
+                // Older versions stored the raw image bytes as a lossy string, which never decodes
+                val storedIsValid = it.blurHashItem != null && runCatching { Base64.decode(it.blurHashItem.blurHash) }.isSuccess
+                if (!storedIsValid && it.bitmap != null && it.isFavorite && it.imageUrl != null) {
                     runCatching {
+                        it.blurHashItem?.let { old -> blurHashDao.deleteHash(old) }
                         blurHashDao.insertHash(
                             BlurHashItem(
                                 it.imageUrl,
-                                it.bitmap.encodeToByteArray().decodeToString()//BlurHash.encode(it.bitmap, 4, 3)
+                                Base64.encode(it.bitmap.coverThumbnail().encodeToByteArray(quality = 80))//BlurHash.encode(it.bitmap, 4, 3)
                             )
                         )
                     }
@@ -490,6 +497,21 @@ class DetailsViewModel(
         translationHandler.clear()
         imageModifier.close()
     }
+}
+
+private const val COVER_THUMBNAIL_WIDTH = 32
+
+/** A small copy of the cover, stored as the placeholder shown before the full cover loads. */
+private fun ImageBitmap.coverThumbnail(): ImageBitmap {
+    val thumbWidth = minOf(width, COVER_THUMBNAIL_WIDTH).coerceAtLeast(1)
+    val thumbHeight = (height * thumbWidth / width.coerceAtLeast(1)).coerceAtLeast(1)
+    val thumbnail = ImageBitmap(thumbWidth, thumbHeight)
+    Canvas(thumbnail).drawImageRect(
+        image = this,
+        dstSize = IntSize(thumbWidth, thumbHeight),
+        paint = Paint().apply { filterQuality = FilterQuality.Low },
+    )
+    return thumbnail
 }
 
 sealed class DetailState {

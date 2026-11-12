@@ -19,7 +19,7 @@ internal val Project.androidLibs: VersionCatalog get() = extensions.getByType<Ve
 internal fun DependencyHandlerScope.implementation(dependency: Any) = add("implementation", dependency)
 
 internal fun Project.setupKotlinCompileOptions() {
-    tasks.withType<KotlinCompile> {
+    tasks.withType<KotlinCompile>().configureEach {
         compilerOptions {
             freeCompilerArgs.add("-Xwhen-guards")
             freeCompilerArgs.add("-Xcontext-parameters")

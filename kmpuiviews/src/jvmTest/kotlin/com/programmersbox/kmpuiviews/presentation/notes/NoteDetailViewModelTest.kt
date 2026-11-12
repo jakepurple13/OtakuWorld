@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.notes
 
+import com.programmersbox.kmpuiviews.testing.FakeAuthManager
 import com.programmersbox.kmpuiviews.testing.clearAndJoin
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -52,6 +53,7 @@ class NoteDetailViewModelTest {
         itemUrl = url,
         notesDao = database.notesDao(),
         aiText = NoopAiText(),
+        authManager = FakeAuthManager(),
     ).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
 
     private suspend fun seed(content: String = "a", supabaseId: String? = null) =

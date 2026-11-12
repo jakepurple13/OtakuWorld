@@ -142,4 +142,30 @@ class VideoExportManagerTest {
         assertTrue(root.listFiles()!!.none { it.name.startsWith("Episode 1 - MKV") }, root.list()!!.joinToString())
         assertIs<File>(source)
     }
+
+    @Test
+    fun cancelStopsAnFfmpegThatPrintsNothing() {
+        org.junit.Assume.assumeFalse("needs /bin/sh", System.getProperty("os.name").startsWith("Windows"))
+        // Stands in for ffmpeg: records its pid, then blocks without writing to stdout.
+        val pidFile = File(root, "ffmpeg.pid")
+        val fake = File(root, "fake-ffmpeg").apply {
+            writeText("#!/bin/sh\necho $$ > '${pidFile.path}'\nexec sleep 60\n")
+            setExecutable(true)
+        }
+        val source = File(root, "Episode 1.ts").apply { writeText("v") }
+        manager.start(fake, source, ExportOptions(ExportFormat.Mkv, SubtitleMode.None), File(root, "out.mkv"), null)
+        val deadline = System.currentTimeMillis() + 10_000
+        while (pidFile.readTextOrNull().isNullOrBlank()) {
+            if (System.currentTimeMillis() > deadline) fail("fake ffmpeg never started")
+            Thread.sleep(20)
+        }
+        val process = ProcessHandle.of(pidFile.readText().trim().toLong()).orElseThrow()
+
+        manager.cancel(source.absolutePath)
+
+        process.onExit().get(10, java.util.concurrent.TimeUnit.SECONDS)
+        assertTrue(!process.isAlive)
+    }
+
+    private fun File.readTextOrNull() = takeIf { it.isFile }?.readText()
 }

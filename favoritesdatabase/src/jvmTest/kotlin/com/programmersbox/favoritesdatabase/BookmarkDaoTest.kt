@@ -86,6 +86,16 @@ class BookmarkDaoTest {
         assertFalse(dao.hasBookmark(chapterUrl))
     }
 
+    @Test fun `soft-deleted bookmarks are hidden from search, lookups and counts`() = runTest {
+        dao.insertBookmark(bookmark("https://example.com/series/ch1", chapterName = "Dragon Fight"))
+        dao.softDeleteBookmark("https://example.com/series/ch1", timestamp = 1_000L)
+
+        assertTrue(dao.searchBookmarks("Dragon").first().isEmpty())
+        assertEquals(null, dao.getBookmark("https://example.com/series/ch1").first())
+        assertTrue(dao.getBookmarksForChapters(listOf("https://example.com/series/ch1")).first().isEmpty())
+        assertEquals(0, dao.getAllBookmarksCount().first())
+    }
+
     @Test fun `searchBookmarks matches by chapterName`() = runTest {
         dao.insertBookmark(bookmark("https://example.com/series/ch1", chapterName = "Dragon Fight"))
         dao.insertBookmark(bookmark("https://example.com/series/ch2", chapterName = "Calm Morning"))
@@ -104,5 +114,20 @@ class BookmarkDaoTest {
 
         assertEquals(1, results.size)
         assertEquals("https://example.com/series-a/ch1", results[0].chapterUrl)
+    }
+
+    @Test fun `searchBookmarks with fts4Match matches word prefixes`() = runTest {
+        dao.insertBookmark(bookmark("https://example.com/p/161", chapterName = "Ch. 161", parentTitle = "The Maxed-out Player"))
+
+        assertEquals(1, dao.searchBookmarks(fts4Match("T")!!).first().size)
+        assertEquals(1, dao.searchBookmarks(fts4Match("Max pla")!!).first().size)
+        assertTrue(dao.searchBookmarks(fts4Match("Max zzz")!!).first().isEmpty())
+    }
+
+    @Test fun `searchBookmarks with fts4Match treats operator words as plain text`() = runTest {
+        dao.insertBookmark(bookmark("https://example.com/n/1", parentTitle = "Near and Far"))
+
+        assertEquals(1, dao.searchBookmarks(fts4Match("NEAR AND")!!).first().size)
+        assertEquals(1, dao.searchBookmarks(fts4Match("\"Near\" -a AND (")!!).first().size)
     }
 }

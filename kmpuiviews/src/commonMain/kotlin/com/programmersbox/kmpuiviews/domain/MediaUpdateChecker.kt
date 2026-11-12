@@ -373,7 +373,8 @@ class MediaUpdateChecker(
                 val oldNumChapters = dbModel.numChapters
                 dbModel.numChapters = infoModel.chapters.size
                 try {
-                    dao.insertFavorite(dbModel) // This should be an update if the item exists
+                    // This should be an update if the item exists. Dirty with a new timestamp so the count syncs.
+                    dao.insertFavorite(dbModel.copy(isDirty = true, updatedAt = Clock.System.now().toEpochMilliseconds()))
                     logFirebaseMessage("Saved update for ${dbModel.title}. Chapters: $oldNumChapters -> ${dbModel.numChapters}")
                 } catch (e: CancellationException) {
                     throw e

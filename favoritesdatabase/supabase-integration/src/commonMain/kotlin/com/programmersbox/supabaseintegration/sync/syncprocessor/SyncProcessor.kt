@@ -25,8 +25,13 @@ abstract class SyncProcessor<LocalModel, RemoteModel : Any>(
     abstract fun isLocalDeleted(local: LocalModel): Boolean
     abstract fun getLocalUpdatedAt(local: LocalModel): Long
     abstract fun toRemoteRow(local: LocalModel, uid: String, app: String, timestamp: Long): RemoteModel
+    // Must clear is_dirty only while the row's updated_at still equals getLocalUpdatedAt(local),
+    // so an edit made during the push stays dirty and is pushed next time.
     abstract suspend fun markLocalSynced(local: LocalModel, timestamp: Long)
     abstract suspend fun deleteLocal(local: LocalModel)
+
+    // Runs local writes for one push chunk or pull page in a single database transaction.
+    open suspend fun runInTransaction(block: suspend () -> Unit) = block()
 
     // Flags every local row for re-push (used to tag pre-existing remote rows with this app)
     abstract suspend fun markAllDirty()
@@ -64,22 +69,22 @@ abstract class SyncProcessor<LocalModel, RemoteModel : Any>(
 
         dirty.chunked(500).forEach { chunk ->
             runCatching {
-                val rowsToUpsert = chunk.map { model ->
+                // Same timestamp for the remote row and the local stamp
+                val timestamps = chunk.map { model ->
                     val updatedAt = getLocalUpdatedAt(model)
-                    val timestamp = if (updatedAt == 0L) Clock.System.now().toEpochMilliseconds() else updatedAt
-                    toRemoteRow(model, uid, app, timestamp)
+                    if (updatedAt == 0L) Clock.System.now().toEpochMilliseconds() else updatedAt
                 }
+                val rowsToUpsert = chunk.mapIndexed { index, model -> toRemoteRow(model, uid, app, timestamps[index]) }
 
                 // Delegate to subclass to bypass the reified type error
                 performUpsert(client, rowsToUpsert)
 
-                chunk.forEach { model ->
-                    val updatedAt = getLocalUpdatedAt(model)
-                    val timestamp = if (updatedAt == 0L) Clock.System.now().toEpochMilliseconds() else updatedAt
-
-                    markLocalSynced(model, timestamp)
-                    if (isLocalDeleted(model)) {
-                        deleteLocal(model)
+                runInTransaction {
+                    chunk.forEachIndexed { index, model ->
+                        markLocalSynced(model, timestamps[index])
+                        if (isLocalDeleted(model)) {
+                            deleteLocal(model)
+                        }
                     }
                 }
             }.onFailure { errors.add(it) }
@@ -91,27 +96,33 @@ abstract class SyncProcessor<LocalModel, RemoteModel : Any>(
     open suspend fun pull(client: SupabaseClient, uid: String, app: String, since: Long) {
         if (!isBackupEnabled()) return
 
-        val allRecords = fetchAllRecords(client, uid, app, since)
-        if (allRecords.isEmpty()) return
+        // Each page is written in one transaction as it arrives
+        fetchAllRecords(client, uid, app, since) { page ->
+            println("Pulling ${page.size} items from $tableName")
+            runInTransaction {
+                page.forEach { row ->
+                    val local = getLocalEquivalent(row)
+                    val localUpdatedAt = local?.let { getLocalUpdatedAt(it) } ?: -1L
 
-        println("Pulling ${allRecords.size} items from $tableName")
-
-        allRecords.forEach { row ->
-            val local = getLocalEquivalent(row)
-            val localUpdatedAt = local?.let { getLocalUpdatedAt(it) } ?: -1L
-
-            if (local == null || getRemoteUpdatedAt(row) > localUpdatedAt) {
-                if (isRemoteDeleted(row)) {
-                    if (local != null) deleteLocal(local)
-                } else {
-                    upsertLocal(row)
+                    if (local == null || getRemoteUpdatedAt(row) > localUpdatedAt) {
+                        if (isRemoteDeleted(row)) {
+                            if (local != null) deleteLocal(local)
+                        } else {
+                            upsertLocal(row)
+                        }
+                    }
                 }
             }
         }
     }
 
-    private suspend inline fun fetchAllRecords(client: SupabaseClient, uid: String, app: String, since: Long): List<RemoteModel> {
-        val allRecords = mutableListOf<RemoteModel>()
+    private suspend inline fun fetchAllRecords(
+        client: SupabaseClient,
+        uid: String,
+        app: String,
+        since: Long,
+        onPage: (List<RemoteModel>) -> Unit,
+    ) {
         val pageSize = 1000L
         var offset = 0L
 
@@ -130,10 +141,9 @@ abstract class SyncProcessor<LocalModel, RemoteModel : Any>(
                 }
             )
 
-            allRecords.addAll(batch)
+            if (batch.isNotEmpty()) onPage(batch)
             if (batch.size < pageSize) break
             offset += pageSize
         }
-        return allRecords
     }
 }

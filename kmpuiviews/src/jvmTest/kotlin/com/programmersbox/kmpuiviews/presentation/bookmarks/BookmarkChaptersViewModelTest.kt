@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.presentation.bookmarks
 
 import com.programmersbox.kmpuiviews.testing.clearAndJoin
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.lifecycle.ViewModelStore
 import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
@@ -110,6 +111,31 @@ class BookmarkChaptersViewModelTest {
         awaitCondition { vm.bookmarks.value.size == 2 }
 
         vm.searchQuery = "Dragon"
+        awaitCondition { vm.bookmarks.value.size == 1 }
+
+        assertTrue("Amazing Series" in vm.bookmarks.value)
+    }
+
+    @Test fun `searchQuery is snapshot state so the search field recomposes`() {
+        val vm = viewModel()
+        val reads = mutableListOf<Any>()
+
+        Snapshot.observe(readObserver = { reads += it }) { vm.searchQuery }
+
+        assertTrue(reads.isNotEmpty())
+    }
+
+    @Test fun `searchQuery with fts syntax characters does not crash`() = runTest {
+        val dao = database.bookmarkDao()
+        dao.insertBookmark(bookmark("https://example.com/series-a/ch1", chapterName = "Dragon Fight", parentUrl = "https://example.com/series-a", parentTitle = "Amazing Series"))
+        dao.insertBookmark(bookmark("https://example.com/series-b/ch1", chapterName = "Calm Morning", parentUrl = "https://example.com/series-b", parentTitle = "Other Story"))
+
+        val vm = viewModel()
+
+        val __sub = backgroundScope.launch { vm.bookmarks.collect {} }
+        awaitCondition { vm.bookmarks.value.size == 2 }
+
+        vm.searchQuery = "\"Dragon- ("
         awaitCondition { vm.bookmarks.value.size == 1 }
 
         assertTrue("Amazing Series" in vm.bookmarks.value)

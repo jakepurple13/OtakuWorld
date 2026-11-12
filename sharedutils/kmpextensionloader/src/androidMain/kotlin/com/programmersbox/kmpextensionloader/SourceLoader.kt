@@ -21,7 +21,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import java.util.concurrent.atomic.AtomicLong
 
 
 private const val METADATA_NAME = "programmersbox.otaku.name"
@@ -97,6 +100,8 @@ actual class SourceLoader(
         val uninstallApplication: BroadcastReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent) {
                 if (intent.dataString == null) return
+                // An update sends REMOVED (replacing), ADDED and REPLACED; REPLACED alone covers it.
+                if (intent.action == Intent.ACTION_PACKAGE_REMOVED && intent.getBooleanExtra(Intent.EXTRA_REPLACING, false)) return
                 val packageString = intent.dataString.orEmpty().removePrefix("package:")
                 if (intent.action == Intent.ACTION_PACKAGE_REMOVED &&
                     sourceRepository.list.any { it.packageName == packageString }
@@ -148,16 +153,29 @@ actual class SourceLoader(
     }
 
     actual fun load() {
-        sourceRepository.setSources(
-            (extensionLoader.loadExtensions().flatten() + runBlocking { nativeSources() })
-                .sortedBy { it.apiService.serviceName }
-        )
+        runBlocking { blockingLoad() }
     }
 
+    // Serializes reloads so a slower, older one cannot publish its list after a newer one,
+    // and concurrent setSources calls cannot interleave.
+    private val reloadMutex = Mutex()
+    private val requestedLoads = AtomicLong()
+    private var completedLoads = 0L // Guarded by reloadMutex.
+
+    /**
+     * Callers that queue up while a reload runs (broadcasts, workers, app start) share the next one:
+     * a reload that starts after a request arrived satisfies it.
+     */
     actual suspend fun blockingLoad() {
-        sourceRepository.setSources(
-            (extensionLoader.loadExtensionsBlocking().flatten() + nativeSources())
-                .sortedBy { it.apiService.serviceName }
-        )
+        val request = requestedLoads.incrementAndGet()
+        reloadMutex.withLock {
+            if (completedLoads >= request) return
+            val covered = requestedLoads.get()
+            sourceRepository.setSources(
+                (extensionLoader.loadExtensionsBlocking().flatten() + nativeSources())
+                    .sortedBy { it.apiService.serviceName }
+            )
+            completedLoads = covered
+        }
     }
 }

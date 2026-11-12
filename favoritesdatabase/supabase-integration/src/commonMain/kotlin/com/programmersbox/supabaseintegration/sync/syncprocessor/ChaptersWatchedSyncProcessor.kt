@@ -39,8 +39,10 @@ class ChaptersWatchedSyncProcessor(
         local.toChapterRow(uid, app, timestamp)
 
     override suspend fun markLocalSynced(local: ChapterWatched, timestamp: Long) {
-        itemDao.markChapterSynced(local.url, timestamp)
+        itemDao.markChapterSynced(local.url, timestamp, pushedUpdatedAt = local.updatedAt)
     }
+
+    override suspend fun runInTransaction(block: suspend () -> Unit) = itemDao.runInTransaction(block)
 
     override suspend fun deleteLocal(local: ChapterWatched) {
         itemDao.deleteChapter(local)

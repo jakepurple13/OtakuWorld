@@ -76,7 +76,7 @@
 -keep class com.google.firebase.installations.** { *; }
 -keep interface com.google.firebase.installations.** { *; }
 
--keep class org.json.** { *; }
+# org.json is part of the Android framework (boot classpath wins over any bundled copy), so no keep is needed.
 -dontwarn org.json.**
 
 # ============================================================

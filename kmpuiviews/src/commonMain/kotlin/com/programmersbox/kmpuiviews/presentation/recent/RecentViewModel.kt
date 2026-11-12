@@ -32,11 +32,12 @@ import otakuworld.kmpuiviews.generated.resources.banner_couldnt_load
 import otakuworld.kmpuiviews.generated.resources.banner_retry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.flatMapMerge
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -45,6 +46,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.cancellation.CancellationException
 
 class RecentViewModel(
     dao: ItemDao,
@@ -69,6 +71,10 @@ class RecentViewModel(
 
     var count = 1
 
+    // True when the last page load failed, so reconnecting should retry it
+    private var lastLoadFailed = false
+
+    private var loadJob: Job? = null
 
     var currentSource by mutableStateOf<KmpApiService?>(null)
 
@@ -116,12 +122,12 @@ class RecentViewModel(
 
         snapshotFlow { currentSource }
             .filterNotNull()
-            .flatMapMerge { dao.getIncognitoSourceByName(it.serviceName) }
+            .flatMapLatest { dao.getIncognitoSourceByName(it.serviceName) }
             .onEach { isIncognitoSource = it?.isIncognito ?: false }
             .launchIn(viewModelScope)
 
         observeNetwork
-            .onEach { if (sourceList.isEmpty() && currentSource != null && it && count != 1) reset() }
+            .onEach { if (sourceList.isEmpty() && currentSource != null && it && lastLoadFailed) reset() }
             .launchIn(viewModelScope)
     }
 
@@ -132,16 +138,22 @@ class RecentViewModel(
     }
 
     fun loadMore() {
+        if (loadJob?.isActive == true) return
         count++
         sourceLoadCompose()
     }
 
     private fun sourceLoadCompose() {
-        currentSource
+        loadJob?.cancel()
+        loadJob = currentSource
             ?.getRecentFlow(count)
-            ?.onStart { isRefreshing = true }
+            ?.onStart {
+                lastLoadFailed = false
+                isRefreshing = true
+            }
             ?.dispatchIo()
             ?.catch {
+                lastLoadFailed = true
                 it.printStackTrace()
                 exceptionDao.insertException(it)
                 withContext(Dispatchers.Main) {
@@ -155,7 +167,8 @@ class RecentViewModel(
                 emit(emptyList())
                 recordFirebaseException(it)
             }
-            ?.onCompletion { isRefreshing = false }
+            // A cancelled load was replaced by a newer one, which owns the refreshing flag
+            ?.onCompletion { if (it !is CancellationException) isRefreshing = false }
             ?.onEach { sourceList.addAll(it) }
             ?.launchIn(viewModelScope)
     }

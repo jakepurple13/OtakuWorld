@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.update
 import java.awt.Desktop
 import java.io.File
+import java.security.MessageDigest
 import java.util.concurrent.ConcurrentHashMap
 import java.util.prefs.Preferences
 
@@ -103,6 +104,22 @@ internal val canMoveToTrash: Boolean by lazy {
         .getOrDefault(false)
 }
 
+/** The prefs key for [path]'s resume position: java.util.prefs rejects keys over 80 chars, which most paths are. */
+internal fun resumeKey(path: String): String = MessageDigest.getInstance("SHA-1")
+    .digest(path.toByteArray())
+    .joinToString("") { "%02x".format(it) }
+
+/** [path]'s resume position; falls back to the old path-keyed entry, which only short paths could have. */
+internal fun Preferences.getResumePosition(path: String): Long {
+    val hashed = getLong(resumeKey(path), Long.MIN_VALUE)
+    if (hashed != Long.MIN_VALUE) return hashed
+    return if (path.length <= Preferences.MAX_KEY_LENGTH) getLong(path, 0L) else 0L
+}
+
+internal fun Preferences.putResumePosition(path: String, positionMs: Long) {
+    putLong(resumeKey(path), positionMs)
+}
+
 /** Which library folder is being scanned, for the "Looking for videos…" card. */
 data class LibraryScanProgress(val folder: String, val done: Int, val total: Int)
 
@@ -165,7 +182,7 @@ actual class VideoLibrarySource(
         videoName = file.nameWithoutExtension,
         path = file.absolutePath,
         duration = duration.coerceAtLeast(0L),
-        lastPlayedPositionMs = resumePositions.getLong(file.absolutePath, 0L),
+        lastPlayedPositionMs = resumePositions.getResumePosition(file.absolutePath),
         sizeBytes = file.length(),
         dateAddedMs = file.lastModified(),
         isDownload = isDownload,
@@ -221,10 +238,10 @@ actual class VideoLibrarySource(
 
     actual fun observeVideos(): Flow<List<SharedVideoContent>> = videos
 
-    actual fun getResumePosition(path: String): Long = resumePositions.getLong(path, 0L)
+    actual fun getResumePosition(path: String): Long = resumePositions.getResumePosition(path)
 
     actual fun setResumePosition(path: String, positionMs: Long) {
-        resumePositions.putLong(path, positionMs)
+        resumePositions.putResumePosition(path, positionMs)
     }
 
     /** Downloads are deleted with their subtitles; other videos go to the Trash when the OS supports it. */

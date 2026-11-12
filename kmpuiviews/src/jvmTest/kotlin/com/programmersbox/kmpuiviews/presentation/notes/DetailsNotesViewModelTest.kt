@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.notes
 
+import com.programmersbox.kmpuiviews.testing.FakeAuthManager
 import com.programmersbox.kmpuiviews.testing.clearAndJoin
 import androidx.lifecycle.ViewModelStore
 import androidx.room3.Room
@@ -46,6 +47,7 @@ class DetailsNotesViewModelTest {
             itemTitle = itemTitle,
             notesDao = database.notesDao(),
             aiText = NoopAiText(),
+            authManager = FakeAuthManager(),
         ).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -121,6 +123,34 @@ class DetailsNotesViewModelTest {
 
         vm.saveNote("Second")
         awaitCondition { vm.note.value?.content == "Second" }
+    }
+
+    @Test fun `saveNote keeps sync fields of an existing note`() = runTest {
+        val dao = database.notesDao()
+        dao.upsertNote(
+            NoteItem(
+                itemUrl = "https://example.com/1",
+                itemTitle = "Title",
+                content = "First",
+                timestamp = 0L,
+                supabaseId = "remote-1",
+                createdAt = 42L,
+                isDirty = false,
+            )
+        )
+
+        val vm = viewModel()
+
+        val __sub = backgroundScope.launch { vm.note.collect {} }
+        awaitCondition { vm.note.value?.content == "First" }
+
+        vm.saveNote("Second")
+        awaitCondition { vm.note.value?.content == "Second" }
+
+        val saved = vm.note.value!!
+        assertEquals("remote-1", saved.supabaseId)
+        assertEquals(42L, saved.createdAt)
+        assertEquals(true, saved.isDirty)
     }
 
     @Test fun `saveNote with blank content deletes the note`() = runTest {

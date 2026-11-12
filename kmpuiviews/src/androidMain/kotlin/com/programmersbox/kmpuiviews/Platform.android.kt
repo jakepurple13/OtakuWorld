@@ -310,7 +310,7 @@ fun AskForNotificationPermissions() {
 
 @Composable
 actual fun SourceIcon(iconLoader: IconLoader, sourceInfo: KmpSourceInformation) {
-    (iconLoader.load(sourceInfo.packageName) as? Drawable)?.let {
+    remember(iconLoader, sourceInfo.packageName) { iconLoader.load(sourceInfo.packageName) as? Drawable }?.let {
         Image(
             rememberDrawablePainter(drawable = it),
             contentDescription = null,

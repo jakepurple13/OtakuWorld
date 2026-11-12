@@ -58,7 +58,8 @@ class CatchUpViewModel(
                 items.clear()
                 items.addAll(it)
                 resetFilterIfEmpty()
-                catchUp = CatchUp(filteredItems.map { it.url })
+                // Build the deck once; later emissions (deletes, new rows) must not reset progress
+                if (catchUp == null) catchUp = CatchUp(filteredItems.map { it.url })
             }
             .launchIn(viewModelScope)
 

@@ -20,7 +20,7 @@ import kotlin.time.ExperimentalTime
 
 @Database(
     entities = [ExceptionItem::class],
-    version = 2,
+    version = 3,
 )
 @ConstructedBy(ExceptionDatabaseConstructor::class)
 abstract class ExceptionDatabase : RoomDatabase() {
@@ -39,9 +39,29 @@ abstract class ExceptionDatabase : RoomDatabase() {
             }
         }
 
+        // The primary key moves from `time` to a generated `id`; SQLite can't change a primary key in place.
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override suspend fun migrate(connection: SQLiteConnection) {
+                connection.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `ExceptionTable_new` (`time` INTEGER NOT NULL, `message` TEXT NOT NULL, " +
+                        "`supabase_id` TEXT DEFAULT '', `created_at` INTEGER NOT NULL DEFAULT 0, `updated_at` INTEGER NOT NULL DEFAULT 0, " +
+                        "`is_deleted` INTEGER NOT NULL DEFAULT 0, `is_dirty` INTEGER NOT NULL DEFAULT 1, " +
+                        "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)"
+                )
+                connection.execSQL(
+                    "INSERT INTO `ExceptionTable_new` (`time`, `message`, `supabase_id`, `created_at`, `updated_at`, `is_deleted`, `is_dirty`) " +
+                        "SELECT `time`, `message`, `supabase_id`, `created_at`, `updated_at`, `is_deleted`, `is_dirty` FROM `ExceptionTable` ORDER BY `time`"
+                )
+                connection.execSQL("DROP TABLE `ExceptionTable`")
+                connection.execSQL("ALTER TABLE `ExceptionTable_new` RENAME TO `ExceptionTable`")
+            }
+        }
+
+        internal val MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3)
+
         fun getInstance(databaseBuilder: DatabaseBuilder): ExceptionDatabase = databaseBuilder
             .build<ExceptionDatabase>("exceptions.db")
-            .addMigrations(MIGRATION_1_2)
+            .addMigrations(*MIGRATIONS)
             .build()
     }
 
@@ -78,7 +98,6 @@ interface ExceptionDao {
 
 @Entity(tableName = "ExceptionTable")
 data class ExceptionItem(
-    @PrimaryKey
     @ColumnInfo(name = "time")
     val time: Long,
     @ColumnInfo(name = "message")
@@ -88,4 +107,8 @@ data class ExceptionItem(
     @ColumnInfo(name = "updated_at", defaultValue = "0") val updatedAt: Long = 0L,
     @ColumnInfo(name = "is_deleted", defaultValue = "0") val isDeleted: Boolean = false,
     @ColumnInfo(name = "is_dirty", defaultValue = "1") val isDirty: Boolean = true,
+    // Generated key, so exceptions logged in the same millisecond don't replace each other.
+    @PrimaryKey(autoGenerate = true)
+    @ColumnInfo(name = "id")
+    val id: Long = 0L,
 )

@@ -140,6 +140,8 @@ class JvmMihonExtensionLoaderTest {
 
             // The jar file stays on disk (the APK is still installed), so a null resource means the loader was closed.
             convertOk = false
+            // The store reuses an unchanged APK's inspection, so mark it changed to make it convert again.
+            apkDir.listFiles()!!.single().let { it.setLastModified(it.lastModified() + 2_000) }
             seamLoader.load(catalog, keys, emptySet()) {}
             assertNull(classLoader.getResource(generated))
         } finally {

@@ -155,6 +155,22 @@ class NotificationSettingsViewModelTest {
         assertFalse(settingsHandling.mediaCheckerSettings.get().shouldRun)
     }
 
+    @Test fun `restartUpdateChecks turns checks off then leaves them on`() = runTest {
+        val vm = viewModel()
+        awaitCondition { vm.canCheck }
+        val seen = java.util.concurrent.CopyOnWriteArrayList<Boolean>()
+        val watcher = launch(Dispatchers.Default) {
+            settingsHandling.mediaCheckerSettings.asFlow().collect { seen += it.shouldRun }
+        }
+        awaitCondition { seen.isNotEmpty() }
+
+        vm.restartUpdateChecks()
+        awaitCondition { false in seen && seen.last() }
+        watcher.cancel()
+
+        assertTrue(settingsHandling.mediaCheckerSettings.get().shouldRun)
+    }
+
     @Test fun `updateHourCheck persists and updates updateHourCheck`() = runTest {
         val vm = viewModel()
         awaitCondition { vm.time.isNotEmpty() }

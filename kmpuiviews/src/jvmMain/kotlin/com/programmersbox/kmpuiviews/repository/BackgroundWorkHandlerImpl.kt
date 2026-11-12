@@ -68,10 +68,15 @@ class BackgroundWorkHandlerImpl(
 
     override fun setupPeriodicCheckers() {
         val scheduler = DesktopTaskScheduler
+        // KEEP on launch so opening the app doesn't restart the interval; REPLACE afterwards so
+        // interval and network changes made in settings take effect.
+        var isFirstEmission = true
         settingsHandling
             .mediaCheckerSettings
             .asFlow()
             .onEach {
+                val policy = if (isFirstEmission) ExistingTaskPolicy.KEEP else ExistingTaskPolicy.REPLACE
+                isFirstEmission = false
                 if (it.shouldRun) {
                     scheduler.enqueue(
                         TaskRequest.periodic(
@@ -86,7 +91,7 @@ class BackgroundWorkHandlerImpl(
                                     else -> NetworkType.UNMETERED
                                 }
                             }
-                            existingTaskPolicy(ExistingTaskPolicy.KEEP)
+                            existingTaskPolicy(policy)
                         }
                     )
                 } else {
@@ -214,7 +219,8 @@ class SyncCheckWorker : DesktopTask, KoinComponent {
             logFirebaseMessage("Start")
 
             val items = mediaUpdateChecker.getFavoritesThatNeedUpdates(
-                checkAll = true,
+                // The periodic run has no input data and only checks favorites with notifications on
+                checkAll = data?.checkAll ?: false,
                 mode = if (data?.retryFailed == true) UpdateCheckMode.RetryFailed else UpdateCheckMode.Full,
                 putMetric = { name, value -> },
                 onProgress = { progress ->
@@ -247,9 +253,10 @@ class SyncCheckWorker : DesktopTask, KoinComponent {
 
             TaskResult.Success
         } catch (e: Exception) {
-            dataStoreHandling.updateCheckingEnd.set(System.currentTimeMillis())
             //update.sendFinishedNotification()
             TaskResult.Failure(e.message.orEmpty())
+        } finally {
+            dataStoreHandling.updateCheckingEnd.set(System.currentTimeMillis())
         }
     }
 
@@ -257,6 +264,7 @@ class SyncCheckWorker : DesktopTask, KoinComponent {
     data class SyncCheckData(
         val cancel: Boolean,
         val retryFailed: Boolean = false,
+        val checkAll: Boolean = true,
     )
 }
 

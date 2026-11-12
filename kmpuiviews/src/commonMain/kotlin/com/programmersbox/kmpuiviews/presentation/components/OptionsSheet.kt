@@ -547,16 +547,13 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.NewOptionsItems(
     val url = optionsSheetValues.url
 
     val biometric = rememberBiometricPrompting()
-    val isIncognito by dao
-        .getIncognitoSource(url)
+    val isIncognito by remember(url) { dao.getIncognitoSource(url) }
         .collectAsStateWithLifecycle(null)
 
-    val isSaved by dao
-        .doesNotificationExistFlow(url)
+    val isSaved by remember(url) { dao.doesNotificationExistFlow(url) }
         .collectAsStateWithLifecycle(false)
 
-    val dbModel by dao
-        .getDbModel(url)
+    val dbModel by remember(url) { dao.getDbModel(url) }
         .collectAsStateWithLifecycle(null)
 
     val shouldCheck by koinInject<NewSettingsHandling>()

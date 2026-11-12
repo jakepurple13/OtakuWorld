@@ -108,4 +108,44 @@ class ListDaoTest {
 
         assertTrue(dao.getAllLists().first().isEmpty())
     }
+
+    @Test fun `getCustomListItemFlow emits null once the list is gone`() = runTest {
+        dao.create("My List")
+        val list = dao.getAllLists().first()[0]
+
+        dao.removeList(list)
+
+        assertEquals(null, dao.getCustomListItemFlow(list.item.uuid).first())
+        assertEquals(null, dao.getCustomListItem(list.item.uuid))
+    }
+
+    @Test fun `addToList on a missing list returns false`() = runTest {
+        assertFalse(dao.addToList("missing", "T", "D", "https://example.com/1", "", "Src"))
+    }
+
+    @Test fun `removeList with items removes the items too`() = runTest {
+        dao.create("My List")
+        val uuid = dao.getAllLists().first()[0].item.uuid
+        dao.addToList(uuid, "T", "D", "https://example.com/1", "", "Src")
+
+        dao.removeList(dao.getCustomListItem(uuid)!!)
+
+        assertTrue(dao.getAllCustomListInfoSync().isEmpty())
+        assertTrue(dao.getAllCustomListItemsSync().isEmpty())
+    }
+
+    @Test fun `list edits mark the list dirty with a newer timestamp`() = runTest {
+        dao.createList(CustomListItem(uuid = "uuid", name = "name", updatedAt = 100L, isDirty = false))
+
+        dao.updateFullList(dao.getCustomListItemByUuid("uuid")!!.copy(name = "Renamed"))
+        val renamed = dao.getCustomListItemByUuid("uuid")!!
+        assertTrue(renamed.isDirty)
+        assertTrue(renamed.updatedAt > 100L)
+
+        dao.markCustomListItemSynced("uuid", timestamp = renamed.updatedAt, pushedUpdatedAt = renamed.updatedAt)
+        dao.updateBiometric("uuid", true, timestamp = renamed.updatedAt + 1)
+        val locked = dao.getCustomListItemByUuid("uuid")!!
+        assertTrue(locked.isDirty)
+        assertEquals(renamed.updatedAt + 1, locked.updatedAt)
+    }
 }

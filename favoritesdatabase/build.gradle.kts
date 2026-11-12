@@ -2,7 +2,7 @@ plugins {
     `otaku-multiplatform`
     alias(libs.plugins.ksp)
     id("kotlinx-serialization")
-    alias(libs.plugins.room)
+    alias(commonLibs.plugins.room)
 }
 
 otakuDependencies {
@@ -37,6 +37,12 @@ kotlin {
         androidMain.dependencies {
             implementation(projects.models)
             // FTS5 (favorites/notes search) is not compiled into the platform SQLite.
+            // api: DatabaseBuilder.build is inline, so callers reference the driver too.
+            api(commonLibs.androidx.room.sqlite)
+        }
+
+        iosMain.dependencies {
+            // Room on native needs a driver, and FTS5 needs the bundled one.
             // api: DatabaseBuilder.build is inline, so callers reference the driver too.
             api(commonLibs.androidx.room.sqlite)
         }

@@ -70,9 +70,16 @@ class ExceptionDaoTest {
         assertEquals(throwable.stackTraceToString(), all[0].message)
     }
 
+    @Test fun `exceptions logged in the same millisecond are all kept`() = runTest {
+        dao.insertException(exception(time = 1_000L, message = "first"))
+        dao.insertException(exception(time = 1_000L, message = "second"))
+
+        assertEquals(setOf("first", "second"), dao.getAllExceptions().first().map { it.message }.toSet())
+    }
+
     @Test fun `deleteException removes a row`() = runTest {
-        val item = exception(time = 1_000L)
-        dao.insertException(item)
+        dao.insertException(exception(time = 1_000L))
+        val item = dao.getAllExceptions().first().single()
 
         dao.deleteException(item)
 

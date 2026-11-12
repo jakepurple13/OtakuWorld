@@ -1,6 +1,7 @@
 package com.programmersbox.anime.shared.videoplayer
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.Composable
@@ -19,6 +20,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
+import androidx.media3.common.Player
 import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.common.Tracks
 import androidx.media3.common.util.Util
@@ -37,17 +39,14 @@ import com.programmersbox.anime.shared.cast.castSourceHeaders
 import com.programmersbox.anime.shared.cast.closestSubtitleIndex
 import com.programmersbox.anime.shared.downloads.OfflineSubtitles
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRepository
+import com.programmersbox.anime.shared.subtitles.SubtitleStyle
 import com.programmersbox.kmpmodels.KmpSubtitle
 import com.programmersbox.helpfulutils.battery
 import com.programmersbox.uiviews.utils.BatteryInformation2
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import java.security.cert.X509Certificate
 import java.util.Formatter
 import java.util.Locale
@@ -72,15 +71,20 @@ class VideoViewModel(
         storageHolder.storageModel?.subtitles.orEmpty()
     }
     val mimeType = storageHolder.storageModel?.let(::streamMime)
-    /** Style as of player start; later changes arrive through [subtitleSettings]. */
-    val initialSubtitleStyle = runBlocking { subtitleSettings.style.first() }
-    val defaultSubtitle = defaultSubtitleIndex(
-        subtitles,
-        Locale.getDefault().language,
-        Locale.getDefault().getDisplayLanguage(Locale.ENGLISH),
-        initialSubtitleStyle.preferredLanguages,
-        initialSubtitleStyle.skipSignsAndSongs,
-    )
+
+    /** Where the resume position is kept: the episode URL for streams, since the resolved link is often signed and expires. */
+    val resumeKey = if (downloadOrStream) showPath else videoScreen.episodeUrl ?: showPath
+
+    /**
+     * Style as of player start, null until DataStore loads it (the player waits for it); later changes arrive
+     * through [subtitleSettings].
+     */
+    var initialSubtitleStyle by mutableStateOf<SubtitleStyle?>(null)
+        private set
+
+    /** Set together with [initialSubtitleStyle]. */
+    var defaultSubtitle: Int? = null
+        private set
 
     /** Text tracks the player currently exposes; drives the CC sheet. */
     var textTracks by mutableStateOf<List<TextTrackOption>>(emptyList())
@@ -188,7 +192,18 @@ class VideoViewModel(
     val batteryInformation by lazy { BatteryInformation2(context) }
 
     init {
-        Log.d(TAG, "subtitles=${subtitles.map { it.lang + "|" + it.url }} default=$defaultSubtitle")
+        viewModelScope.launch {
+            val style = subtitleSettings.style.first()
+            defaultSubtitle = defaultSubtitleIndex(
+                subtitles,
+                Locale.getDefault().language,
+                Locale.getDefault().getDisplayLanguage(Locale.ENGLISH),
+                style.preferredLanguages,
+                style.skipSignsAndSongs,
+            )
+            initialSubtitleStyle = style
+            Log.d(TAG, "subtitles=${subtitles.map { it.lang + "|" + it.url }} default=$defaultSubtitle")
+        }
         viewModelScope.launch(Dispatchers.IO) {
             batteryInformation.composeSetupFlow(
                 Color.White
@@ -223,34 +238,34 @@ class VideoViewModel(
 
     override fun onCleared() {
         super.onCleared()
+        // Normally released when the player leaves composition; kept across a rotation, so released here otherwise.
+        exoPlayer?.release()
+        exoPlayer = null
         storageHolder.storageModel = null
         storageHolder.showTitle = null
         storageHolder.posterUrl = null
     }
 }
 
+/** [pollPosition]: whether the progress bar is showing; the position is only polled while it is. */
 @Composable
-fun ExoPlayerAttributes(exoPlayer: ExoPlayer, viewModel: VideoViewModel) {
-    LaunchedEffect(exoPlayer) {
-        flow {
-            while (true) {
-                emit(VideoInfo(exoPlayer.currentPosition, exoPlayer.duration, exoPlayer.bufferedPosition))
-                delay(100)
-            }
+fun ExoPlayerAttributes(exoPlayer: ExoPlayer, viewModel: VideoViewModel, pollPosition: Boolean) {
+    LaunchedEffect(exoPlayer, pollPosition) {
+        while (pollPosition) {
+            viewModel.videoInfo = VideoInfo(exoPlayer.currentPosition, exoPlayer.duration, exoPlayer.bufferedPosition)
+            delay(100)
         }
-            .onEach { viewModel.videoInfo = it }
-            .collect()
     }
 
-    LaunchedEffect(exoPlayer) {
-        flow {
-            while (true) {
-                emit(exoPlayer.isPlaying)
-                delay(100)
+    DisposableEffect(exoPlayer) {
+        viewModel.isPlaying = exoPlayer.isPlaying
+        val listener = object : Player.Listener {
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                viewModel.isPlaying = isPlaying
             }
         }
-            .onEach { viewModel.isPlaying = it }
-            .collect()
+        exoPlayer.addListener(listener)
+        onDispose { exoPlayer.removeListener(listener) }
     }
 
     /*val playing by flow {
@@ -286,6 +301,29 @@ enum class VideoPlayerVisibility {
 data class TextTrackOption(val group: Tracks.Group, val label: String, val selected: Boolean)
 
 private const val TAG = "AnimeWorldPlayer"
+
+/** Resume positions of streams, keyed by episode URL. Downloads keep theirs in the "videos" prefs, keyed by path. */
+fun Context.streamPositions(): SharedPreferences = getSharedPreferences("stream_positions", Context.MODE_PRIVATE)
+
+/** The saved position for [viewModel]'s video: "videos" holds downloads (by path), [streamPositions] holds streams. */
+internal fun Context.loadPosition(viewModel: VideoViewModel): Long {
+    val videos = getSharedPreferences("videos", Context.MODE_PRIVATE)
+    if (viewModel.downloadOrStream) return videos.getLong(viewModel.resumeKey, 0)
+    // Older versions saved stream positions in "videos" under the resolved link.
+    return streamPositions().getLong(viewModel.resumeKey, -1L).takeIf { it >= 0 } ?: videos.getLong(viewModel.showPath, 0)
+}
+
+internal fun Context.savePosition(viewModel: VideoViewModel, positionMs: Long) {
+    val videos = getSharedPreferences("videos", Context.MODE_PRIVATE)
+    if (viewModel.downloadOrStream) {
+        videos.edit().putLong(viewModel.resumeKey, positionMs).apply()
+    } else {
+        streamPositions().edit().putLong(viewModel.resumeKey, positionMs).apply()
+        // Drop the stream positions older versions left in "videos" under resolved, usually expired, links.
+        val stale = videos.all.keys.filter { it.startsWith("http://") || it.startsWith("https://") }
+        if (stale.isNotEmpty()) videos.edit().apply { stale.forEach(::remove) }.apply()
+    }
+}
 
 data class VideoInfo(val currentPosition: Long, val duration: Long, val buffered: Long)
 

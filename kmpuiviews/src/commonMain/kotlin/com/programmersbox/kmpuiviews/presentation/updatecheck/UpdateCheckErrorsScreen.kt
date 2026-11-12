@@ -107,6 +107,7 @@ import otakuworld.kmpuiviews.generated.resources.uc_stopped_early
 import otakuworld.kmpuiviews.generated.resources.us_title
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import net.thauvin.erik.urlencoder.UrlEncoderUtil
 
 private val TabularNumbers = TextStyle(fontFeatureSettings = "tnum")
 
@@ -246,8 +247,8 @@ fun UpdateCheckErrorsScreen(
                                     Screen.DetailsScreen.Details(
                                         title = item.title,
                                         description = "",
-                                        url = item.url,
-                                        imageUrl = item.imageUrl,
+                                        url = UrlEncoderUtil.encode(item.url),
+                                        imageUrl = UrlEncoderUtil.encode(item.imageUrl),
                                         source = item.source,
                                     )
                                 )

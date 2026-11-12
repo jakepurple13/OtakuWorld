@@ -188,7 +188,8 @@ fun ImportFullListScreen(
                             onClick = {
                                 scope.launch {
                                     vm.importList()
-                                    navController.popBackStack()
+                                        .onSuccess { navController.popBackStack() }
+                                        .onFailure { progressBanner.error(couldntImport, it.message) }
                                 }
                             },
                             modifier = Modifier.fillMaxWidth()

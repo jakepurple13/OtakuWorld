@@ -55,6 +55,7 @@ import org.koin.dsl.navigation3.navigation
 import java.io.File
 
 fun main(args: Array<String>) {
+    stopToolProcessesOnExit()
     desktopSetup(
         args = args,
         name = "AnimeWorld",
@@ -94,6 +95,7 @@ fun main(args: Array<String>) {
                     scope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
                     animeDesktopSettings = get(),
                     trayState = get(),
+                    partsDir = File(get<AppDirs>().getUserDataDir(), "download-parts"),
                 )
             } bind EpisodeDownloadQueue::class
             single {
@@ -143,6 +145,24 @@ fun main(args: Array<String>) {
             navigation<SubtitleSettingsRoute> { SubtitleSettingsScreen() }
 
             includes(aniyomiModule, cloudstreamModule)
+        }
+    )
+}
+
+/**
+ * Exports and subtitle generation run ffmpeg and whisper-cli as child processes, which the JVM leaves running when
+ * the app quits, so they are stopped on exit.
+ */
+private fun stopToolProcessesOnExit() {
+    Runtime.getRuntime().addShutdownHook(
+        Thread {
+            ProcessHandle.current().children()
+                .filter { child ->
+                    child.info().command()
+                        .map { File(it).name.lowercase().let { name -> "ffmpeg" in name || "whisper" in name } }
+                        .orElse(false)
+                }
+                .forEach { it.destroy() }
         }
     )
 }

@@ -90,7 +90,7 @@ fun AllScreen(
         .collectAsStateWithLifecycle(null)
 
     LaunchedEffect(isConnected) {
-        if (allVm.sourceList.isEmpty() && source != null && isConnected && allVm.count != 1) allVm.reset(source!!)
+        if (allVm.sourceList.isEmpty() && source != null && isConnected && allVm.lastLoadFailed) allVm.reset(source!!)
     }
 
     val info = koinInject<KmpGenericInfo>()

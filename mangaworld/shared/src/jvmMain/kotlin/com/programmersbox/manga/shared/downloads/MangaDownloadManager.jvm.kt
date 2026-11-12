@@ -7,6 +7,7 @@ import com.programmersbox.kmpuiviews.MangaDesktopSettings
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -52,7 +53,7 @@ actual class MangaDownloadManager(
                         ?.flatMap { file ->
                             val title = file.name
                             file
-                                .listFiles()
+                                .listFiles { chapterDir -> isCompleteChapter(chapterDir.list()) }
                                 ?.map {
                                     val path = it.absolutePath
                                     ChapterDownloadProgress(
@@ -77,18 +78,14 @@ actual class MangaDownloadManager(
         repeat(CONCURRENT_DOWNLOADS) {
             scope.launch {
                 for (request in queue) {
-                    val cancelled = mutex.withLock { cancelledUrls.remove(request.chapterUrl) }
-                    if (cancelled) {
-                        updateState(request.chapterUrl) { it.copy(state = DownloadState.Cancelled) }
-                        continue
-                    }
-
                     // Launch the actual download in a child coroutine.
                     // This allows us to cancel the specific download without killing the worker loop.
-                    val job = launch {
+                    val job = launch(start = CoroutineStart.LAZY) {
                         val destDir = File(
                             "$rootDir/${request.mangaTitle.sanitize()}/${request.chapterName.sanitize()}"
                         ).also { it.mkdirs() }
+                        // Stays behind if the download is cancelled or fails part way, so the chapter isn't counted
+                        runCatching { File(destDir, INCOMPLETE_MARKER).createNewFile() }
 
                         println(destDir.absolutePath)
 
@@ -105,6 +102,7 @@ actual class MangaDownloadManager(
                                     File(destDir, "%03d.png".format(index)).writeBytes(bytes)
                                 },
                             )
+                            File(destDir, INCOMPLETE_MARKER).delete()
                             updateState(request.chapterUrl) { it.copy(state = DownloadState.Completed) }
                         } catch (e: CancellationException) {
                             updateState(request.chapterUrl) { it.copy(state = DownloadState.Cancelled) }
@@ -116,10 +114,21 @@ actual class MangaDownloadManager(
                         }
                     }
 
-                    // Track the job, wait for it to finish, then clean it up
-                    activeJobs[request.chapterUrl] = job
+                    // Checking the cancel list and tracking the job under one lock means a cancel
+                    // either finds the running job or stops it here, never neither
+                    val cancelled = mutex.withLock {
+                        cancelledUrls.remove(request.chapterUrl).also { if (!it) activeJobs[request.chapterUrl] = job }
+                    }
+                    if (cancelled) {
+                        job.cancel()
+                        updateState(request.chapterUrl) { it.copy(state = DownloadState.Cancelled) }
+                        continue
+                    }
+
+                    // Wait for it to finish, then clean it up
+                    job.start()
                     job.join()
-                    activeJobs.remove(request.chapterUrl)
+                    activeJobs.remove(request.chapterUrl, job)
                 }
             }
         }
@@ -222,9 +231,12 @@ actual class MangaDownloadManager(
 
     actual fun cancelDownload(chapterUrl: String) {
         scope.launch {
-            mutex.withLock { cancelledUrls.add(chapterUrl) }
-            // Find the specific job by URL and cancel it
-            activeJobs[chapterUrl]?.cancel()
+            mutex.withLock {
+                // Only queued chapters go on the cancel list: a running one is cancelled directly,
+                // and leaving its url there would silently cancel the next download of it
+                val running = activeJobs[chapterUrl]
+                if (running != null) running.cancel() else cancelledUrls.add(chapterUrl)
+            }
         }
     }
 
@@ -234,7 +246,7 @@ actual class MangaDownloadManager(
             .map { it.chapterUrl }
 
         scope.launch {
-            mutex.withLock { cancelledUrls.addAll(pending) }
+            mutex.withLock { cancelledUrls.addAll(pending.filterNot { activeJobs.containsKey(it) }) }
         }
 
         // Cancel all currently running jobs and clear the map
@@ -252,14 +264,16 @@ actual class MangaDownloadManager(
 
     actual fun getDownloadedChapterPath(chapter: KmpChapterModel, mangaTitle: String): String? {
         val dir = File("$rootDir/${mangaTitle.sanitize()}/${chapter.name.sanitize()}")
-        return if (dir.exists() && dir.listFiles()?.isNotEmpty() == true) dir.absolutePath else null
+        return if (isCompleteChapter(dir.list())) dir.absolutePath else null
     }
 
     actual fun observeDownloads(): Flow<List<ChapterDownloadProgress>> = _downloads.asStateFlow()
 
     actual fun deleteChapter(chapter: KmpChapterModel, mangaTitle: String) {
-        File("$rootDir/${mangaTitle.sanitize()}/${chapter.name.sanitize()}").deleteRecursively()
-        _downloads.update { list -> list.filter { it.chapterUrl != chapter.url } }
+        val dir = File("$rootDir/${mangaTitle.sanitize()}/${chapter.name.sanitize()}")
+        dir.deleteRecursively()
+        // Chapters found on disk at startup are keyed by their folder path
+        _downloads.update { list -> list.filter { it.chapterUrl != chapter.url && it.chapterUrl != dir.absolutePath } }
     }
 
     private fun updateState(

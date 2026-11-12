@@ -80,7 +80,7 @@ fun AccountStatDetailsScreen(
 
             items(
                 items = state.favorites,
-                key = { it.name },
+                key = { it.source },
                 contentType = { _ -> "list" }
             ) {
                 OutlinedCard {
@@ -153,7 +153,7 @@ private fun CircleCard(
                 circleInfo.forEach {
                     CircleInformationContent(
                         circleInfo = it,
-                        duration = it.key.toString()
+                        duration = it.extraInfo[COUNT_KEY].toString()
                     )
                 }
             }

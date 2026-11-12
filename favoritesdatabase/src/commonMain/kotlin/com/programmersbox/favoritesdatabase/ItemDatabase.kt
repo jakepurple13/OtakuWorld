@@ -10,7 +10,7 @@ import androidx.sqlite.execSQL
 
 @Database(
     entities = [DbModel::class, DbModelFts::class, ChapterWatched::class, NotificationItem::class, SourceOrder::class, IncognitoSource::class, SkippedUpdateSource::class],
-    version = 10,
+    version = 11,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(
@@ -81,7 +81,17 @@ abstract class ItemDatabase : RoomDatabase() {
             }
         }
 
-        internal val MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
+        // Indices for the Details screen chapter lookup, daily overview date ranges and notification-by-id reads.
+        private val MIGRATION_10_11 = object : Migration(10, 11) {
+            override suspend fun migrate(connection: SQLiteConnection) {
+                connection.execSQL("CREATE INDEX IF NOT EXISTS `index_ChapterWatched_favoriteUrl` ON `ChapterWatched` (`favoriteUrl`)")
+                connection.execSQL("CREATE INDEX IF NOT EXISTS `index_ChapterWatched_created_at` ON `ChapterWatched` (`created_at`)")
+                connection.execSQL("CREATE INDEX IF NOT EXISTS `index_Notifications_id` ON `Notifications` (`id`)")
+                connection.execSQL("CREATE INDEX IF NOT EXISTS `index_Notifications_created_at` ON `Notifications` (`created_at`)")
+            }
+        }
+
+        internal val MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11)
 
         fun getInstance(databaseBuilder: DatabaseBuilder): ItemDatabase = databaseBuilder
             .build<ItemDatabase>("favoriteItems.db")

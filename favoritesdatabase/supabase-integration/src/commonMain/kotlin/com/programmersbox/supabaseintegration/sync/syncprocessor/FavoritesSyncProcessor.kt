@@ -28,10 +28,12 @@ class FavoritesSyncer(
         local.toFavoriteRow(uid, app, timestamp)
 
     override suspend fun markLocalSynced(local: DbModel, timestamp: Long) =
-        itemDao.markFavoriteSynced(local.url, timestamp)
+        itemDao.markFavoriteSynced(local.url, timestamp, pushedUpdatedAt = local.updatedAt)
 
     override suspend fun deleteLocal(local: DbModel) =
         itemDao.deleteFavorite(local)
+
+    override suspend fun runInTransaction(block: suspend () -> Unit) = itemDao.runInTransaction(block)
 
     override suspend fun markAllDirty() = itemDao.markAllFavoritesDirty()
 

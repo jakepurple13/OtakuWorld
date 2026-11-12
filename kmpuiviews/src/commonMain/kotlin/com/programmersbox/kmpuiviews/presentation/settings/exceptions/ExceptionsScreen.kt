@@ -101,7 +101,7 @@ fun ExceptionsScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.fillMaxSize()
         ) {
-            items(exceptions) {
+            items(exceptions, key = { it.time }) {
                 ExceptionItem(
                     exceptionItem = it,
                     dateTimeFormat = dateTimeFormat,
@@ -172,7 +172,7 @@ private fun ExceptionItem(
                 .align(Alignment.End)
                 .padding(16.dp)
         ) {
-            Text(remember { dateTimeFormat.format(exceptionItem.time.toLocalDateTime()) })
+            Text(remember(exceptionItem.time) { dateTimeFormat.format(exceptionItem.time.toLocalDateTime()) })
 
             ElevatedButton(
                 onClick = { showDialog = true }

@@ -280,8 +280,8 @@ fun Screen.DetailsScreen.Details.toItemModel(
         KmpItemModel(
             title = runCatching { UrlEncoderUtil.decode(title) }.getOrDefault(title),
             description = runCatching { UrlEncoderUtil.decode(description) }.getOrDefault(description),
-            url = UrlEncoderUtil.decode(url),
-            imageUrl = UrlEncoderUtil.decode(imageUrl),
+            url = runCatching { UrlEncoderUtil.decode(url) }.getOrDefault(url),
+            imageUrl = runCatching { UrlEncoderUtil.decode(imageUrl) }.getOrDefault(imageUrl),
             source = it
         )
     }

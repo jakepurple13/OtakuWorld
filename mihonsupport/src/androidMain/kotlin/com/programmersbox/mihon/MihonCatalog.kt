@@ -23,11 +23,15 @@ class MihonCatalog(
     @Volatile
     private var sources: List<KmpSourceInformation> = emptyList()
 
+    private val signingKeyStore = RepoSigningKeyStore(application, "mihon_repo_signing_keys")
+
     override suspend fun initialize() {
         MihonRuntime.init(application)
-        // Refresh repo signing keys; on failure keep whatever was fetched earlier this session.
+        // Refresh repo signing keys; a repo that fails keeps its last known key, also from earlier runs.
+        repoClient.restoreSigningKeys(signingKeyStore.load())
         runCatching { repoClient.fetch(settings.customUrls.first()) }
             .onFailure { if (it is CancellationException) throw it }
+        signingKeyStore.save(repoClient.signingKeysByRepo)
         sources = loader.load(
             catalog = this,
             repoSigningKeys = repoClient.signingKeys.map { it.lowercase() }.toSet(),

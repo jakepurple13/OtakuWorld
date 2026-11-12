@@ -60,6 +60,18 @@ class HeatMapDaoTest {
         assertNull(result)
     }
 
+    @Test fun `upsertHeatMap after a sync marks the row dirty with a newer timestamp`() = runTest {
+        val date = LocalDate(2026, 1, 1)
+        dao.insertHeatMap(HeatMapItem(time = date, count = 1, updatedAt = 100L, isDirty = false))
+
+        dao.upsertHeatMap(date)
+
+        val row = dao.getHeatMapByDate(date)!!
+        assertEquals(2, row.count)
+        assertEquals(true, row.isDirty)
+        assertEquals(true, row.updatedAt > 100L)
+    }
+
     @Test fun `upsertHeatMap on a fresh date creates count of 1`() = runTest {
         val date = LocalDate(2026, 1, 1)
 

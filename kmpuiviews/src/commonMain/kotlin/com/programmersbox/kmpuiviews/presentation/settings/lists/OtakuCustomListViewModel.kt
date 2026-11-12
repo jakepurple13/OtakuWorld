@@ -1,10 +1,10 @@
 package com.programmersbox.kmpuiviews.presentation.settings.lists
 
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -51,6 +51,9 @@ class OtakuCustomListViewModel(
     var customList by mutableStateOf<CustomList?>(null)
 
     val filtered = mutableStateListOf<String>()
+
+    /** Expanded By-source groups, kept here so they survive search, sort and list updates. */
+    val expandedSources = mutableStateMapOf<String, Boolean>()
 
     var sort by mutableStateOf(ListSort.RecentlyAdded)
     var viewMode by mutableStateOf(ListViewMode.Grid)
@@ -123,7 +126,6 @@ class OtakuCustomListViewModel(
         val kept = previous.filter { it in sources }
         filtered.clear()
         filtered.addAll(kept.ifEmpty { sources })
-        searchQuery = TextFieldState()
     }
 
     /**
@@ -144,6 +146,10 @@ class OtakuCustomListViewModel(
 
             else -> filtered.add(source)
         }
+    }
+
+    fun toggleSource(source: String) {
+        expandedSources[source] = expandedSources[source] != true
     }
 
     fun clearFilter() {
@@ -360,8 +366,6 @@ sealed class OtakuListState {
 
     data class BySource(
         val items: List<Map.Entry<String, List<CustomListInfo>>>,
-        val sourceShower: Map<String, MutableState<Boolean>> = items
-            .associate { it.key to mutableStateOf(false) },
     ) : OtakuListState() {
         constructor(
             customList: CustomList,

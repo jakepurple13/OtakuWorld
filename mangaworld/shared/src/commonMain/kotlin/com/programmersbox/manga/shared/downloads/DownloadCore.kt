@@ -60,3 +60,13 @@ internal suspend fun executeDownload(
 }
 
 internal fun String.sanitize(): String = replace(Regex("[/\\\\:*?\"<>|]"), "_")
+
+/** Written into a chapter folder before its pages download and removed once they all finished. */
+internal const val INCOMPLETE_MARKER = ".downloading"
+
+/**
+ * A chapter folder is downloaded once it holds pages and no [INCOMPLETE_MARKER]. Folders saved
+ * before the marker existed have none, so they still count.
+ */
+internal fun isCompleteChapter(fileNames: Array<String>?): Boolean =
+    fileNames != null && INCOMPLETE_MARKER !in fileNames && fileNames.any { !it.startsWith(".") }

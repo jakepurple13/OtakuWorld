@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.ContentResolver
 import android.content.Context
 import android.database.ContentObserver
+import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -71,7 +72,12 @@ actual class DownloadedMediaHandler(
                     arrayOf(downloadedChapters.id)
                 )
             } else {
-                File(downloadedChapters.chapterFolder).delete()
+                // Called once per page: delete the page, then the folder once only hidden files remain
+                File(downloadedChapters.data).delete()
+                val chapterFolder = File(downloadedChapters.chapterFolder)
+                if (chapterFolder.list().orEmpty().all { it.startsWith(".") }) chapterFolder.deleteRecursively()
+                // Drops the page's MediaStore row so the list refreshes
+                MediaScannerConnection.scanFile(context, arrayOf(downloadedChapters.data), null, null)
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -124,12 +130,19 @@ actual class DownloadedMediaHandler(
             arrayOf("$folderLocation%"),
             "LOWER (" + MediaStore.Files.FileColumns.DATE_ADDED + ") DESC"
         ) //DESC ASC
+        val incompleteFolders = mutableSetOf<String>()
         try {
             while (cursor?.moveToNext() == true) {
                 val id: Int = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns._ID))
                 val contentUri: Uri = Uri.withAppendedPath(contentLocation, id.toString())
                 val folder = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATA))
                     .split("/")
+                // Hidden files aren't pages; the marker means the chapter is still downloading
+                val name = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DISPLAY_NAME)).orEmpty()
+                if (name.startsWith(".")) {
+                    if (name == INCOMPLETE_MARKER) incompleteFolders += folder.dropLast(1).joinToString("/")
+                    continue
+                }
                 allVideo.add(
                     DownloadedChapters(
                         id = id.toString(),
@@ -148,6 +161,6 @@ actual class DownloadedMediaHandler(
         } finally {
             cursor?.close()
         }
-        return allVideo
+        return allVideo.filter { it.chapterFolder !in incompleteFolders }
     }
 }

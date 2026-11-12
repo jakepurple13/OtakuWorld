@@ -9,6 +9,7 @@ import androidx.core.content.PermissionChecker
 import androidx.core.net.toUri
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
+import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
@@ -25,6 +26,7 @@ import com.programmersbox.kmpuiviews.utils.InstallErrorReason
 import com.programmersbox.kmpuiviews.utils.NotificationChannels
 import com.programmersbox.kmpuiviews.utils.NotificationLogo
 import io.github.vinceglb.filekit.PlatformFile
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
@@ -46,12 +48,14 @@ class DownloadAndInstallWorker(
 
         //TODO: Need to fix so it doesn't start up again when the app starts up after an update
 
-        runCatching {
+        var lastStatus: DownloadAndInstallStatus? = null
+        val result = runCatching {
             downloadAndInstaller.downloadAndInstall(
                 url = url,
                 confirmationType = ConfirmationType.IMMEDIATE
             )
                 .onEach {
+                    lastStatus = it
                     notify(notificationLogo, url) {
                         when (it) {
                             is DownloadAndInstallStatus.Error -> {
@@ -101,7 +105,7 @@ class DownloadAndInstallWorker(
                     setProgress(
                         workDataOf(
                             "url" to url,
-                            "progress" to it.javaClass.name,
+                            "progress" to it.progressKey(),
                             "progressAmount" to when (it) {
                                 is DownloadAndInstallStatus.Downloading -> it.progress
                                 else -> 0
@@ -115,13 +119,20 @@ class DownloadAndInstallWorker(
                 }
                 .collect()
         }
-            .onSuccess { delay(5000) }
 
-        NotificationManagerCompat
-            .from(applicationContext)
-            .cancel(NOTIFICATION_ID + url.hashCode())
+        val notificationManager = NotificationManagerCompat.from(applicationContext)
+        result.exceptionOrNull()?.let {
+            if (it is CancellationException) {
+                notificationManager.cancel(NOTIFICATION_ID + url.hashCode())
+                throw it
+            }
+        }
 
-        return Result.success()
+        result.onSuccess { delay(5000) }
+
+        notificationManager.cancel(NOTIFICATION_ID + url.hashCode())
+
+        return if (result.isSuccess && lastStatus !is DownloadAndInstallStatus.Error) Result.success() else Result.failure()
     }
 
     @SuppressLint("MissingPermission")
@@ -195,30 +206,7 @@ class DownloadAndInstallWorker(
                         status = if (it.state == WorkInfo.State.CANCELLED) {
                             DownloadAndInstallStatus.Error(InstallErrorReason.UNKNOWN, it.progress.getString("error") ?: "Unknown error")
                         } else {
-                            when (it.progress.getString("progress")) {
-                                "com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus\$Downloading" ->
-                                    DownloadAndInstallStatus.Downloading(it.progress.getFloat("progressAmount", 0f))
-
-                                "com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus\$Downloaded" ->
-                                    DownloadAndInstallStatus.Downloaded
-
-                                "com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus\$Installing" ->
-                                    DownloadAndInstallStatus.Installing
-
-                                "com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus\$PendingUserAction" ->
-                                    DownloadAndInstallStatus.PendingUserAction
-
-                                "com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus\$PermissionRequired" ->
-                                    DownloadAndInstallStatus.PermissionRequired
-
-                                "com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus\$Cancelled" ->
-                                    DownloadAndInstallStatus.Cancelled
-
-                                "com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus\$Installed" ->
-                                    DownloadAndInstallStatus.Installed
-
-                                else -> DownloadAndInstallStatus.Error(InstallErrorReason.UNKNOWN, it.progress.getString("error") ?: "Unknown error")
-                            }
+                            decodeProgress(it.progress)
                         }
                     )
                 }
@@ -285,7 +273,7 @@ class DownloadWorker(
                     setProgress(
                         workDataOf(
                             "url" to url,
-                            "progress" to it.javaClass.name,
+                            "progress" to it.progressKey(),
                             "progressAmount" to when (it) {
                                 is DownloadAndInstallStatus.Downloading -> it.progress
                                 else -> 0
@@ -397,21 +385,7 @@ class DownloadWorker(
                         status = if (it.state == WorkInfo.State.CANCELLED) {
                             DownloadAndInstallStatus.Error(InstallErrorReason.UNKNOWN, it.progress.getString("error") ?: "Unknown error")
                         } else {
-                            when (it.progress.getString("progress")) {
-                                "com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadAndInstallStatus\$Downloading" ->
-                                    DownloadAndInstallStatus.Downloading(it.progress.getFloat("progressAmount", 0f))
-
-                                "com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadAndInstallStatus\$Downloaded" ->
-                                    DownloadAndInstallStatus.Downloaded
-
-                                "com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadAndInstallStatus\$Installing" ->
-                                    DownloadAndInstallStatus.Installing
-
-                                "com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadAndInstallStatus\$Installed" ->
-                                    DownloadAndInstallStatus.Installed
-
-                                else -> DownloadAndInstallStatus.Error(InstallErrorReason.UNKNOWN, it.progress.getString("error") ?: "Unknown error")
-                            }
+                            decodeProgress(it.progress)
                         }
                     )
                 }
@@ -427,22 +401,23 @@ class InstallWorker(
 ) : CoroutineWorker(context, workerParams) {
 
     override suspend fun doWork(): Result {
-        val url = inputData.getString("url")
-            ?.let { url -> File(applicationContext.cacheDir, "${url.toUri().lastPathSegment}.apk") }
-            ?: return Result.failure()
+        val urlString = inputData.getString("url") ?: return Result.failure()
+        val url = File(applicationContext.cacheDir, "${urlString.toUri().lastPathSegment}.apk")
 
-        val notificationId = inputData.getInt("notification_id", NOTIFICATION_ID + url.hashCode())
+        val notificationId = inputData.getInt("notification_id", NOTIFICATION_ID + urlString.hashCode())
 
         logFirebaseMessage("Downloading and installing")
 
         //TODO: Need to fix so it doesn't start up again when the app starts up after an update
 
-        runCatching {
+        var lastStatus: DownloadAndInstallStatus? = null
+        val result = runCatching {
             downloadAndInstaller.install(
                 file = PlatformFile(url),
                 confirmationType = ConfirmationType.DEFERRED
             )
                 .onEach {
+                    lastStatus = it
                     notify(notificationLogo, notificationId) {
                         when (it) {
                             is DownloadAndInstallStatus.Error -> {
@@ -480,8 +455,8 @@ class InstallWorker(
 
                     setProgress(
                         workDataOf(
-                            "url" to url,
-                            "progress" to it.javaClass.name,
+                            "url" to urlString,
+                            "progress" to it.progressKey(),
                             "progressAmount" to when (it) {
                                 is DownloadAndInstallStatus.Downloading -> it.progress
                                 else -> 0
@@ -495,13 +470,20 @@ class InstallWorker(
                 }
                 .collect()
         }
-            .onSuccess { delay(5000) }
 
-        NotificationManagerCompat
-            .from(applicationContext)
-            .cancel(NOTIFICATION_ID + url.hashCode())
+        val notificationManager = NotificationManagerCompat.from(applicationContext)
+        result.exceptionOrNull()?.let {
+            if (it is CancellationException) {
+                notificationManager.cancel(notificationId)
+                throw it
+            }
+        }
 
-        return Result.success()
+        result.onSuccess { delay(5000) }
+
+        notificationManager.cancel(notificationId)
+
+        return if (result.isSuccess && lastStatus !is DownloadAndInstallStatus.Error) Result.success() else Result.failure()
     }
 
     @SuppressLint("MissingPermission")
@@ -545,4 +527,27 @@ class InstallWorker(
     companion object {
         private const val NOTIFICATION_ID = 40234
     }
+}
+
+// Stable keys so progress survives R8 renaming the status classes.
+private fun DownloadAndInstallStatus.progressKey(): String = when (this) {
+    is DownloadAndInstallStatus.Downloading -> "downloading"
+    DownloadAndInstallStatus.Downloaded -> "downloaded"
+    DownloadAndInstallStatus.Installing -> "installing"
+    DownloadAndInstallStatus.PendingUserAction -> "pendingUserAction"
+    DownloadAndInstallStatus.PermissionRequired -> "permissionRequired"
+    DownloadAndInstallStatus.Installed -> "installed"
+    DownloadAndInstallStatus.Cancelled -> "cancelled"
+    is DownloadAndInstallStatus.Error -> "error"
+}
+
+private fun decodeProgress(progress: Data): DownloadAndInstallStatus = when (progress.getString("progress")) {
+    "downloading" -> DownloadAndInstallStatus.Downloading(progress.getFloat("progressAmount", 0f))
+    "downloaded" -> DownloadAndInstallStatus.Downloaded
+    "installing" -> DownloadAndInstallStatus.Installing
+    "pendingUserAction" -> DownloadAndInstallStatus.PendingUserAction
+    "permissionRequired" -> DownloadAndInstallStatus.PermissionRequired
+    "installed" -> DownloadAndInstallStatus.Installed
+    "cancelled" -> DownloadAndInstallStatus.Cancelled
+    else -> DownloadAndInstallStatus.Error(InstallErrorReason.UNKNOWN, progress.getString("error") ?: "Unknown error")
 }

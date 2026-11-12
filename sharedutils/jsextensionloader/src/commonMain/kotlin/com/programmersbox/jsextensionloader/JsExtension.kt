@@ -6,12 +6,17 @@ import com.programmersbox.extensioninterfaces.ExtensionContent
 import com.programmersbox.extensioninterfaces.ExtensionDetail
 import com.programmersbox.extensioninterfaces.ExtensionItem
 import com.programmersbox.extensioninterfaces.ExtensionManifest
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlin.concurrent.Volatile
+import kotlin.coroutines.EmptyCoroutineContext
+import kotlin.time.Duration
 
 private val jsExtensionJson = Json { ignoreUnknownKeys = true; isLenient = true; coerceInputValues = true }
 
@@ -30,7 +35,17 @@ class JsExtension(
     private val quickJs: QuickJs,
     private val hostBridge: HostBridge,
     private val dispatcher: CoroutineDispatcher,
+    private val deadline: JsEvalDeadline = JsEvalDeadline(Duration.INFINITE),
 ) : Extension {
+
+    @Volatile
+    private var closeRequested = false
+
+    /** Set on [dispatcher] when the context is freed; evaluations check it there. */
+    @Volatile
+    private var closed = false
+
+    private val closedSignal = CompletableDeferred<Unit>()
 
     override suspend fun getPopular(page: Int): List<ExtensionItem> =
         fetchAndParse("getPopularRequest($page)") { body -> "getPopularParse($page, $body)" }
@@ -57,21 +72,38 @@ class JsExtension(
         requestCall: String,
         crossinline parseCall: (bodyJsonLiteral: String) -> String,
     ): T {
-        val requestJson = withContext(dispatcher) {
-            quickJs.evaluate("JSON.stringify($requestCall)", "extension-request.js") as String
-        }
+        val requestJson = evaluate("JSON.stringify($requestCall)", "extension-request.js")
         val request = jsExtensionJson.decodeFromString<JsRequest>(requestJson)
         val headersJson = jsExtensionJson.encodeToString(request.headers)
         val responseBody = withContext(Dispatchers.IO) { hostBridge.httpGet(request.url, headersJson) }
         val bodyLiteral = jsExtensionJson.encodeToString(responseBody)
-        val resultJson = withContext(dispatcher) {
-            quickJs.evaluate("JSON.stringify(${parseCall(bodyLiteral)})", "extension-parse.js") as String
-        }
+        val resultJson = evaluate("JSON.stringify(${parseCall(bodyLiteral)})", "extension-parse.js")
         return jsExtensionJson.decodeFromString<T>(resultJson)
     }
 
-    fun close() {
-        quickJs.close()
-        closeQuickJsDispatcher(dispatcher)
+    private suspend fun evaluate(script: String, fileName: String): String = withContext(dispatcher) {
+        check(!closed) { "${manifest.id} was unloaded" }
+        deadline.guard { quickJs.evaluate(script, fileName) } as String
     }
+
+    /**
+     * Frees the QuickJs context on its own thread, after any evaluation already running there, then stops
+     * that thread. Closing from the caller's thread could free the context while it is in use.
+     */
+    fun close() {
+        if (closeRequested) return
+        closeRequested = true
+        dispatcher.dispatch(EmptyCoroutineContext, Runnable {
+            try {
+                closed = true
+                quickJs.close()
+                closeQuickJsDispatcher(dispatcher)
+            } finally {
+                closedSignal.complete(Unit)
+            }
+        })
+    }
+
+    /** Suspends until a [close] call has released the context. */
+    suspend fun awaitClosed() = closedSignal.await()
 }

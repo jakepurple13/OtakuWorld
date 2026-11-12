@@ -112,99 +112,7 @@ public fun rememberPageCurlConfig(
     onCustomTap: Density.(IntSize, Offset) -> Boolean = { _, _ -> false },
 ): PageCurlConfig =
     rememberSaveable(
-        saver = listSaver(
-            save = {
-                fun Rect.forSave(): List<Any> =
-                    listOf(topLeft.x, topLeft.y, bottomRight.x, bottomRight.y)
-
-                fun PageCurlConfig.DragInteraction.getRectList(): List<Rect> =
-                    when (this) {
-                        is PageCurlConfig.GestureDragInteraction ->
-                            listOf(forward.target, backward.target)
-
-                        is PageCurlConfig.StartEndDragInteraction ->
-                            listOf(forward.start, forward.end, backward.start, backward.end)
-                    }
-
-                fun PageCurlConfig.TapInteraction.getRectList(): List<Rect> =
-                    when (this) {
-                        is PageCurlConfig.TargetTapInteraction ->
-                            listOf(forward.target, backward.target)
-                    }
-
-                fun PageCurlConfig.DragInteraction.forSave(): List<Any> =
-                    listOf(this::class, pointerBehavior.name) + getRectList().flatMap(Rect::forSave)
-
-                fun PageCurlConfig.TapInteraction.forSave(): List<Any> =
-                    listOf(this::class) + getRectList().flatMap(Rect::forSave)
-
-                listOf(
-                    (it.backPageColor.value shr 32).toInt(),
-                    it.backPageContentAlpha,
-                    (it.shadowColor.value shr 32).toInt(),
-                    it.shadowAlpha,
-                    it.shadowRadius.value,
-                    it.shadowOffset.x.value,
-                    it.shadowOffset.y.value,
-                    it.dragForwardEnabled,
-                    it.dragBackwardEnabled,
-                    it.tapForwardEnabled,
-                    it.tapBackwardEnabled,
-                    it.tapCustomEnabled,
-                    *it.dragInteraction.forSave().toTypedArray(),
-                    *it.tapInteraction.forSave().toTypedArray(),
-                )
-            },
-            restore = {
-                val iterator = it.iterator()
-                fun Iterator<Any>.nextRect(): Rect =
-                    Rect(next() as Float, next() as Float, next() as Float, next() as Float)
-
-                PageCurlConfig(
-                    backPageColor = Color(iterator.next() as Int),
-                    backPageContentAlpha = iterator.next() as Float,
-                    shadowColor = Color(iterator.next() as Int),
-                    shadowAlpha = iterator.next() as Float,
-                    shadowRadius = Dp(iterator.next() as Float),
-                    shadowOffset = DpOffset(Dp(iterator.next() as Float), Dp(iterator.next() as Float)),
-                    dragForwardEnabled = iterator.next() as Boolean,
-                    dragBackwardEnabled = iterator.next() as Boolean,
-                    tapForwardEnabled = iterator.next() as Boolean,
-                    tapBackwardEnabled = iterator.next() as Boolean,
-                    tapCustomEnabled = iterator.next() as Boolean,
-                    dragInteraction = when (iterator.next()) {
-                        is PageCurlConfig.GestureDragInteraction -> {
-                            PageCurlConfig.GestureDragInteraction(
-                                PageCurlConfig.DragInteraction.PointerBehavior.valueOf(iterator.next() as String),
-                                PageCurlConfig.GestureDragInteraction.Config(iterator.nextRect()),
-                                PageCurlConfig.GestureDragInteraction.Config(iterator.nextRect()),
-                            )
-                        }
-
-                        is PageCurlConfig.StartEndDragInteraction -> {
-                            PageCurlConfig.StartEndDragInteraction(
-                                PageCurlConfig.DragInteraction.PointerBehavior.valueOf(iterator.next() as String),
-                                PageCurlConfig.StartEndDragInteraction.Config(iterator.nextRect(), iterator.nextRect()),
-                                PageCurlConfig.StartEndDragInteraction.Config(iterator.nextRect(), iterator.nextRect()),
-                            )
-                        }
-
-                        else -> error("Unable to restore PageCurlConfig")
-                    },
-                    tapInteraction = when (iterator.next()) {
-                        is PageCurlConfig.TargetTapInteraction -> {
-                            PageCurlConfig.TargetTapInteraction(
-                                PageCurlConfig.TargetTapInteraction.Config(iterator.nextRect()),
-                                PageCurlConfig.TargetTapInteraction.Config(iterator.nextRect()),
-                            )
-                        }
-
-                        else -> error("Unable to restore PageCurlConfig")
-                    },
-                    onCustomTap = onCustomTap
-                )
-            }
-        )
+        saver = pageCurlConfigSaver(onCustomTap)
     ) {
         PageCurlConfig(
             backPageColor = backPageColor,
@@ -223,6 +131,116 @@ public fun rememberPageCurlConfig(
             onCustomTap = onCustomTap
         )
     }
+
+@ExperimentalPageCurlApi
+internal fun pageCurlConfigSaver(
+    onCustomTap: Density.(IntSize, Offset) -> Boolean,
+): Saver<PageCurlConfig, Any> =
+    listSaver(
+        save = {
+            fun Rect.forSave(): List<Any> =
+                listOf(topLeft.x, topLeft.y, bottomRight.x, bottomRight.y)
+
+            fun PageCurlConfig.DragInteraction.getRectList(): List<Rect> =
+                when (this) {
+                    is PageCurlConfig.GestureDragInteraction ->
+                        listOf(forward.target, backward.target)
+
+                    is PageCurlConfig.StartEndDragInteraction ->
+                        listOf(forward.start, forward.end, backward.start, backward.end)
+                }
+
+            fun PageCurlConfig.TapInteraction.getRectList(): List<Rect> =
+                when (this) {
+                    is PageCurlConfig.TargetTapInteraction ->
+                        listOf(forward.target, backward.target)
+                }
+
+            // Bundles can't hold a KClass, so the interaction type is saved as a string tag
+            fun PageCurlConfig.DragInteraction.saveTag(): String =
+                when (this) {
+                    is PageCurlConfig.GestureDragInteraction -> GESTURE_DRAG_TAG
+                    is PageCurlConfig.StartEndDragInteraction -> START_END_DRAG_TAG
+                }
+
+            fun PageCurlConfig.TapInteraction.saveTag(): String =
+                when (this) {
+                    is PageCurlConfig.TargetTapInteraction -> TARGET_TAP_TAG
+                }
+
+            fun PageCurlConfig.DragInteraction.forSave(): List<Any> =
+                listOf(saveTag(), pointerBehavior.name) + getRectList().flatMap(Rect::forSave)
+
+            fun PageCurlConfig.TapInteraction.forSave(): List<Any> =
+                listOf(saveTag()) + getRectList().flatMap(Rect::forSave)
+
+            listOf(
+                (it.backPageColor.value shr 32).toInt(),
+                it.backPageContentAlpha,
+                (it.shadowColor.value shr 32).toInt(),
+                it.shadowAlpha,
+                it.shadowRadius.value,
+                it.shadowOffset.x.value,
+                it.shadowOffset.y.value,
+                it.dragForwardEnabled,
+                it.dragBackwardEnabled,
+                it.tapForwardEnabled,
+                it.tapBackwardEnabled,
+                it.tapCustomEnabled,
+                *it.dragInteraction.forSave().toTypedArray(),
+                *it.tapInteraction.forSave().toTypedArray(),
+            )
+        },
+        restore = {
+            val iterator = it.iterator()
+            fun Iterator<Any>.nextRect(): Rect =
+                Rect(next() as Float, next() as Float, next() as Float, next() as Float)
+
+            PageCurlConfig(
+                backPageColor = Color(iterator.next() as Int),
+                backPageContentAlpha = iterator.next() as Float,
+                shadowColor = Color(iterator.next() as Int),
+                shadowAlpha = iterator.next() as Float,
+                shadowRadius = Dp(iterator.next() as Float),
+                shadowOffset = DpOffset(Dp(iterator.next() as Float), Dp(iterator.next() as Float)),
+                dragForwardEnabled = iterator.next() as Boolean,
+                dragBackwardEnabled = iterator.next() as Boolean,
+                tapForwardEnabled = iterator.next() as Boolean,
+                tapBackwardEnabled = iterator.next() as Boolean,
+                tapCustomEnabled = iterator.next() as Boolean,
+                dragInteraction = when (iterator.next()) {
+                    GESTURE_DRAG_TAG -> {
+                        PageCurlConfig.GestureDragInteraction(
+                            PageCurlConfig.DragInteraction.PointerBehavior.valueOf(iterator.next() as String),
+                            PageCurlConfig.GestureDragInteraction.Config(iterator.nextRect()),
+                            PageCurlConfig.GestureDragInteraction.Config(iterator.nextRect()),
+                        )
+                    }
+
+                    START_END_DRAG_TAG -> {
+                        PageCurlConfig.StartEndDragInteraction(
+                            PageCurlConfig.DragInteraction.PointerBehavior.valueOf(iterator.next() as String),
+                            PageCurlConfig.StartEndDragInteraction.Config(iterator.nextRect(), iterator.nextRect()),
+                            PageCurlConfig.StartEndDragInteraction.Config(iterator.nextRect(), iterator.nextRect()),
+                        )
+                    }
+
+                    else -> error("Unable to restore PageCurlConfig")
+                },
+                tapInteraction = when (iterator.next()) {
+                    TARGET_TAP_TAG -> {
+                        PageCurlConfig.TargetTapInteraction(
+                            PageCurlConfig.TargetTapInteraction.Config(iterator.nextRect()),
+                            PageCurlConfig.TargetTapInteraction.Config(iterator.nextRect()),
+                        )
+                    }
+
+                    else -> error("Unable to restore PageCurlConfig")
+                },
+                onCustomTap = onCustomTap
+            )
+        }
+    )
 
 /**
  * The configuration for PageCurl.
@@ -1364,6 +1382,10 @@ private val DefaultPrev: suspend Animatable<Edge, AnimationVector4D>.(Size) -> U
         }
     )
 }
+
+private const val GESTURE_DRAG_TAG = "GestureDrag"
+private const val START_END_DRAG_TAG = "StartEndDrag"
+private const val TARGET_TAP_TAG = "TargetTap"
 
 private const val DefaultAnimDuration: Int = 450
 private const val DefaultMidPointDuration: Int = 150

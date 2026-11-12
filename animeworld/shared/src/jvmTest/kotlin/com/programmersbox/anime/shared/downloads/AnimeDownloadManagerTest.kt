@@ -298,6 +298,22 @@ class AnimeDownloadManagerTest {
         assertEquals(emptyList(), showDir.list()?.toList().orEmpty())
     }
 
+    @Test
+    fun startupDeletesPartFilesLeftByAQuit() {
+        val partsDir = File(root, "parts").apply { mkdirs() }
+        showDir.mkdirs()
+        val part = File(showDir, "Ep 1.mp4.part").apply { writeText("partial") }
+        val finished = File(showDir, "Ep 0.mp4").apply { writeText("done") }
+        val record = partsRecordFor(requestFileFor(partsDir, "Show/Ep 1"))
+        record.writeText(listOf(part.absolutePath, finished.absolutePath).joinToString("\n"))
+
+        AnimeDownloadManager(scope, settings, trayState = null, client = OkHttpClient(), partsDir = partsDir)
+
+        assertFalse(part.exists())
+        assertTrue(finished.exists())
+        assertFalse(record.exists())
+    }
+
     private companion object {
         /** DataStore is a process-wide singleton; point it at a temp file once. */
         val settings by lazy {

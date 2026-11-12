@@ -68,11 +68,14 @@ import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
+import kotlin.reflect.KClass
 
 abstract class GenericSharedManga(
     val mangaSettingsHandling: MangaNewSettingsHandling,
@@ -98,23 +101,37 @@ abstract class GenericSharedManga(
         chapters: List<KmpChapterModel>,
         mangaTitle: String,
     ): Flow<Map<String, ChapterDownloadUiState>> {
-        return mangaDownloadManager
-            .observeDownloads()
-            .map { activeDownloads ->
-                chapters.associate { chapter ->
-                    chapter.url to when (val s = activeDownloads.firstOrNull { it.chapterUrl == chapter.url }?.state) {
-                        is DownloadState.Queued -> ChapterDownloadUiState.Queued
-                        is DownloadState.Downloading -> ChapterDownloadUiState.Downloading(
-                            if (s.totalImages > 0) s.imagesDownloaded.toFloat() / s.totalImages else 0f
-                        )
+        return flow {
+            // Disk is checked again only when a download starts, ends or is deleted, not on every page's progress
+            var diskCheckedFor: List<Pair<String, KClass<out DownloadState>>>? = null
+            var onDisk = emptySet<String>()
+            mangaDownloadManager
+                .observeDownloads()
+                .map { activeDownloads ->
+                    val byUrl = activeDownloads.associateBy { it.chapterUrl }
+                    val diskKey = activeDownloads.map { it.chapterUrl to it.state::class }
+                    if (diskKey != diskCheckedFor) {
+                        diskCheckedFor = diskKey
+                        onDisk = chapters
+                            .filter { mangaDownloadManager.getDownloadedChapterPath(it, mangaTitle) != null }
+                            .mapTo(mutableSetOf()) { it.url }
+                    }
+                    chapters.associate { chapter ->
+                        chapter.url to when (val s = byUrl[chapter.url]?.state) {
+                            is DownloadState.Queued -> ChapterDownloadUiState.Queued
+                            is DownloadState.Downloading -> ChapterDownloadUiState.Downloading(
+                                if (s.totalImages > 0) s.imagesDownloaded.toFloat() / s.totalImages else 0f
+                            )
 
-                        else -> if (mangaDownloadManager.getDownloadedChapterPath(chapter, mangaTitle) != null)
-                            ChapterDownloadUiState.Downloaded
-                        else
-                            ChapterDownloadUiState.None
+                            else -> if (chapter.url in onDisk)
+                                ChapterDownloadUiState.Downloaded
+                            else
+                                ChapterDownloadUiState.None
+                        }
                     }
                 }
-            }
+                .let { emitAll(it) }
+        }
             .flowOn(Dispatchers.IO)
     }
 

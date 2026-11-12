@@ -7,6 +7,7 @@ import com.programmersbox.jsextensionloader.JsExtension
 import com.programmersbox.jsextensionloader.JsExtensionRepository
 import com.programmersbox.jsextensionloader.singleThreadQuickJsDispatcher
 import com.programmersbox.kmpmodels.SourceRepository
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
@@ -21,11 +22,12 @@ class JsExtensionSourceBridgeTest {
         override suspend fun httpGet(url: String, headersJson: String): String = ""
     }
 
-    private val createdQuickJs = mutableListOf<QuickJs>()
+    private val createdExtensions = mutableListOf<JsExtension>()
 
+    // JsExtension.close() frees QuickJs on its own thread; closing QuickJs here too would double-close.
     @AfterTest
-    fun tearDown() {
-        createdQuickJs.forEach { it.close() }
+    fun tearDown() = runBlocking {
+        createdExtensions.forEach { it.close(); it.awaitClosed() }
     }
 
     private fun extensionWithId(id: String, version: String = "1.0.0"): JsExtension {
@@ -34,9 +36,9 @@ class JsExtensionSourceBridgeTest {
             description = null, iconUrl = null, updateUrl = null,
         )
         val js = QuickJs.create()
-        createdQuickJs.add(js)
         js.evaluate(BRIDGE_FIXTURE_SCRIPT, "$id.js")
         return JsExtension(manifest, js, StubHostBridge(), singleThreadQuickJsDispatcher(id))
+            .also { createdExtensions.add(it) }
     }
 
     @Test

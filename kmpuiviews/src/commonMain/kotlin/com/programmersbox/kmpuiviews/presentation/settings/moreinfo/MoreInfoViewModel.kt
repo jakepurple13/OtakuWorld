@@ -35,11 +35,9 @@ class MoreInfoViewModel(
 
     @OptIn(ExperimentalAtomicApi::class)
     suspend fun updateChecker() {
+        if (!checker.compareAndSet(expectedValue = false, newValue = true)) return
         try {
-            if (!checker.load()) {
-                checker.store(true)
-                AppUpdate.getUpdate()?.let(appUpdateCheck.updateAppCheck::tryEmit)
-            }
+            AppUpdate.getUpdate()?.let(appUpdateCheck.updateAppCheck::tryEmit)
         } catch (e: Exception) {
             e.printStackTrace()
         } finally {

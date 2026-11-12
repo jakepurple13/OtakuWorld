@@ -108,15 +108,15 @@ private fun TextOnlyWidgetContent(state: WidgetDataState) {
         // Render the Dynamic 2x2 Grid
         val sources = state.topSources
         LazyColumn(modifier = GlanceModifier.fillMaxWidth()) {
-            items(sources.chunked(2)) {
+            items(sources.chunked(2)) { pair ->
                 Row(
                     modifier = GlanceModifier
                         .fillMaxWidth()
                         .padding(bottom = 6.dp)
                 ) {
-                    SourceItemSafe(source = sources.getOrNull(0), modifier = GlanceModifier.defaultWeight())
+                    SourceItemSafe(source = pair.getOrNull(0), modifier = GlanceModifier.defaultWeight())
                     Spacer(modifier = GlanceModifier.width(16.dp))
-                    SourceItemSafe(source = sources.getOrNull(1), modifier = GlanceModifier.defaultWeight())
+                    SourceItemSafe(source = pair.getOrNull(1), modifier = GlanceModifier.defaultWeight())
                 }
             }
         }

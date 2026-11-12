@@ -7,10 +7,12 @@ import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.os.Build
 import dalvik.system.PathClassLoader
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
+import java.util.concurrent.ConcurrentHashMap
 
 private val PACKAGE_FLAGS = PackageManager.GET_CONFIGURATIONS or PackageManager.GET_SIGNING_CERTIFICATES
 
@@ -43,13 +45,7 @@ class ExtensionLoader<T, R>(
 
     @SuppressLint("QueryPermissionsNeeded")
     fun loadExtensions(mapped: (T, ApplicationInfo, PackageInfo) -> R = mapping): List<R> {
-        val packageManager = context.packageManager
-        val packages = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            packageManager.getInstalledPackages(PackageManager.PackageInfoFlags.of(PACKAGE_FLAGS.toLong()))
-        } else {
-            packageManager.getInstalledPackages(PACKAGE_FLAGS)
-        }
-            .filter { it.reqFeatures.orEmpty().any { f -> f.name == extensionFeature } }
+        val packages = extensionPackages()
 
         return runBlocking {
             packages
@@ -60,20 +56,57 @@ class ExtensionLoader<T, R>(
 
     @SuppressLint("QueryPermissionsNeeded")
     suspend fun loadExtensionsBlocking(mapped: (T, ApplicationInfo, PackageInfo) -> R = mapping): List<R> = coroutineScope {
-        val packageManager = context.packageManager
-        val packages = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            packageManager.getInstalledPackages(PackageManager.PackageInfoFlags.of(PACKAGE_FLAGS.toLong()))
-        } else {
-            packageManager.getInstalledPackages(PACKAGE_FLAGS)
-        }
-            .filter { it.reqFeatures.orEmpty().any { f -> f.name == extensionFeature } }
+        val packages = extensionPackages()
 
         packages
             .map { async(limitedDispatcher) { loadExtension(it, mapped) } }
             .flatMap { it.await() }
     }
 
-    private fun loadExtension(packageInfo: PackageInfo, mapped: (T, ApplicationInfo, PackageInfo) -> R): List<R> {
+    /** Instances per installed package version, so a reload reuses them instead of building a new class loader. */
+    private data class InstanceKey(val packageName: String, val versionCode: Long, val lastUpdateTime: Long)
+
+    private val instances = ConcurrentHashMap<InstanceKey, List<T>>()
+
+    /**
+     * Installed packages that declare [extensionFeature]. Signing data is only requested for those,
+     * not for every app on the device. Drops cached instances of packages that are gone or changed.
+     */
+    private fun extensionPackages(): List<PackageInfo> {
+        val packageManager = context.packageManager
+        val packages = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            packageManager.getInstalledPackages(PackageManager.PackageInfoFlags.of(PackageManager.GET_CONFIGURATIONS.toLong()))
+        } else {
+            packageManager.getInstalledPackages(PackageManager.GET_CONFIGURATIONS)
+        }
+            .filter { it.reqFeatures.orEmpty().any { f -> f.name == extensionFeature } }
+            .mapNotNull {
+                // The package can be removed between the two calls.
+                runCatching {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        packageManager.getPackageInfo(it.packageName, PackageManager.PackageInfoFlags.of(PACKAGE_FLAGS.toLong()))
+                    } else {
+                        packageManager.getPackageInfo(it.packageName, PACKAGE_FLAGS)
+                    }
+                }.getOrNull()
+            }
+        instances.keys.retainAll(packages.map { it.instanceKey() }.toSet())
+        return packages
+    }
+
+    private fun PackageInfo.instanceKey() = InstanceKey(packageName, longVersionCode, lastUpdateTime)
+
+    /** One broken package (removed mid-load, missing meta-data, throwing mapping) must not abort loading the rest. */
+    private fun loadExtension(packageInfo: PackageInfo, mapped: (T, ApplicationInfo, PackageInfo) -> R): List<R> = try {
+        loadExtensionOrThrow(packageInfo, mapped)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (t: Throwable) {
+        t.printStackTrace()
+        emptyList()
+    }
+
+    private fun loadExtensionOrThrow(packageInfo: PackageInfo, mapped: (T, ApplicationInfo, PackageInfo) -> R): List<R> {
         val appInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             context.packageManager.getApplicationInfo(
                 packageInfo.packageName,
@@ -86,9 +119,15 @@ class ExtensionLoader<T, R>(
             )
         }
 
+        return instances
+            .getOrPut(packageInfo.instanceKey()) { createInstances(packageInfo, appInfo) }
+            .map { mapped(it, appInfo, packageInfo) }
+    }
+
+    private fun createInstances(packageInfo: PackageInfo, appInfo: ApplicationInfo): List<T> {
         val classLoader = PathClassLoader(appInfo.sourceDir, null, this::class.java.classLoader)
 
-        return appInfo.metaData.getString(metadataClass)
+        return appInfo.metaData?.getString(metadataClass)
             .orEmpty()
             .split(";")
             .map {
@@ -109,6 +148,5 @@ class ExtensionLoader<T, R>(
                     .onFailure { it.printStackTrace() }
                     .getOrNull()
             }
-            .map { mapped(it, appInfo, packageInfo) }
     }
 }

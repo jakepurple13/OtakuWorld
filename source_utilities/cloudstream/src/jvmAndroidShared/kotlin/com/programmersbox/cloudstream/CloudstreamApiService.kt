@@ -12,8 +12,15 @@ import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpStorage
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import java.util.Collections
+
+private const val MAIN_PAGE_PARALLELISM = 4
 
 /**
  * Service names for the APIs of all loaded plugins: `cloudstream:<api name>`, or
@@ -45,19 +52,26 @@ open class CloudstreamApiService(
     /** Every main page section; a failing section is skipped unless all of them fail. */
     override suspend fun allList(page: Int): List<KmpItemModel> = withContext(Dispatchers.IO) {
         if (!hasHomePage()) return@withContext emptyList()
-        var failure: Exception? = null
-        val items = api.mainPage.flatMap { section ->
-            try {
-                mainPage(section, page)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                println("Cloudstream ${api.name}: main page '${section.name}' failed: $e")
-                failure = failure ?: e
-                emptyList()
-            }
+        // Sections are independent requests; fetch a few at a time, keeping their order.
+        val limit = Semaphore(MAIN_PAGE_PARALLELISM)
+        val results = coroutineScope {
+            api.mainPage.map { section ->
+                async {
+                    limit.withPermit {
+                        try {
+                            Result.success(mainPage(section, page))
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            println("Cloudstream ${api.name}: main page '${section.name}' failed: $e")
+                            Result.failure(e)
+                        }
+                    }
+                }
+            }.awaitAll()
         }
-        failure?.takeIf { items.isEmpty() }?.let { throw it }
+        val items = results.flatMap { it.getOrDefault(emptyList()) }
+        results.firstNotNullOfOrNull { it.exceptionOrNull() }?.takeIf { items.isEmpty() }?.let { throw it }
         items.distinctBy { it.url }
     }
 

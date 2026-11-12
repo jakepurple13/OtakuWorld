@@ -2,6 +2,7 @@ package com.programmersbox.favoritesdatabase
 
 import androidx.room3.Room
 import androidx.room3.RoomDatabase
+import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import kotlinx.cinterop.ExperimentalForeignApi
 import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSFileManager
@@ -19,7 +20,7 @@ inline fun <reified T : RoomDatabase> getDatabaseBuilder(
     val dbFilePath = documentDirectory() + "/$name"
     return Room.databaseBuilder<T>(
         name = dbFilePath,
-    )
+    ).setDriver(BundledSQLiteDriver())
 }
 
 

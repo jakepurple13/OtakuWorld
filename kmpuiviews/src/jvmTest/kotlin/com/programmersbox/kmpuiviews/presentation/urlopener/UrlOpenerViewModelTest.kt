@@ -91,6 +91,41 @@ class UrlOpenerViewModelTest {
         assertEquals("Example", vm.currentChosenSource?.name)
     }
 
+    @Test fun `chosen source is kept when sources emit again`() = runTest {
+        val sourceRepository = SourceRepository()
+        val sources = listOf("a", "b", "c", "d").map { sourceInfo(it, packageName = "com.$it") }
+        sourceRepository.setSources(sources)
+
+        val vm = viewModel(sourceRepository)
+        awaitCondition { vm.currentChosenSource != null }
+        val chosen = sources.first { it.packageName != vm.currentChosenSource?.packageName }
+        vm.currentChosenSource = chosen
+
+        repeat(5) { round ->
+            val extra = sourceInfo("extra$round", packageName = "com.extra$round")
+            sourceRepository.setSources(sources + extra)
+            awaitCondition { vm.sourceList.containsKey(extra.packageName) }
+            assertEquals(chosen.packageName, vm.currentChosenSource?.packageName)
+        }
+    }
+
+    @Test fun `uninstalled sources leave sourceList and the choice`() = runTest {
+        val sourceRepository = SourceRepository()
+        val a = sourceInfo("A", packageName = "com.a")
+        val b = sourceInfo("B", packageName = "com.b")
+        sourceRepository.setSources(listOf(a, b))
+
+        val vm = viewModel(sourceRepository)
+        awaitCondition { vm.sourceList.size == 2 }
+        vm.currentChosenSource = a
+
+        sourceRepository.setSources(listOf(b))
+        awaitCondition { vm.sourceList.size == 1 }
+
+        assertEquals(setOf("com.b"), vm.sourceList.keys)
+        assertEquals("com.b", vm.currentChosenSource?.packageName)
+    }
+
     @Test fun `notWorking sources are filtered out of sourceList`() = runTest {
         val notWorkingService = object : KmpApiService {
             override val baseUrl: String = "https://example.com/"

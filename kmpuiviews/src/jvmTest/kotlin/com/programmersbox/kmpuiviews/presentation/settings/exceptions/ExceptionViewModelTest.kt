@@ -109,7 +109,8 @@ class ExceptionViewModelTest {
         val vm = viewModel()
         awaitCondition { vm.exceptions.first().size == 2 }
 
-        vm.deleteItem(first)
+        // Rows are keyed by a generated id, so delete the stored row like the UI does
+        vm.deleteItem(vm.exceptions.first().single { it.time == first.time })
 
         awaitCondition { vm.exceptions.first().size == 1 }
         val remaining = vm.exceptions.first()

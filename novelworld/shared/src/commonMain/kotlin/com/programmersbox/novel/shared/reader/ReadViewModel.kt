@@ -26,7 +26,9 @@ import io.github.vinceglb.filekit.list
 import io.github.vinceglb.filekit.name
 import io.github.vinceglb.filekit.toKotlinxIoPath
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.SharingStarted
@@ -138,6 +140,9 @@ class ReadViewModel(
     var pageList by mutableStateOf("")
     var isLoadingPages by mutableStateOf(false)
 
+    // Declared before init, which starts the first load
+    private var loadPagesJob: Job? = null
+
     val currentChapterModel by derivedStateOf { list.getOrNull(currentChapter) }
 
     /** The list is newest-first, so the chapter before the current one is the next index. */
@@ -162,7 +167,7 @@ class ReadViewModel(
     init {
         val url = chapterHolder.chapterModel?.url ?: novelReader.novelUrl
         list = chapterHolder.chapters.orEmpty()
-        currentChapter = list.indexOfFirst { l -> l.url == url }.coerceIn(0, list.lastIndex)
+        currentChapter = list.indexOfFirst { l -> l.url == url }.coerceIn(0, list.lastIndex.coerceAtLeast(0))
 
         loadPages(modelPath)
 
@@ -210,13 +215,15 @@ class ReadViewModel(
     }
 
     private fun loadPages(modelPath: Flow<List<String>>?) {
-        modelPath
+        loadPagesJob?.cancel()
+        loadPagesJob = modelPath
             ?.onStart {
                 isLoadingPages = true
                 pageList = ""
             }
             ?.onEach { pageList = it.firstOrNull().orEmpty() }
-            ?.onCompletion { isLoadingPages = false }
+            // A cancelled load is replaced by a newer one that owns the loading flag
+            ?.onCompletion { if (it !is CancellationException) isLoadingPages = false }
             ?.launchIn(viewModelScope)
     }
 

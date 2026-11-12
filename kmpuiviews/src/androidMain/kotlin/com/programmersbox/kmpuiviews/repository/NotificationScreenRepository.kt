@@ -40,7 +40,7 @@ class NotificationScreenRepository(
     override fun scheduleNotification(item: NotificationItem, time: Long) {
         WorkManager.getInstance(context)
             .enqueueUniqueWork(
-                item.notiTitle,
+                "notify:${item.url}",
                 ExistingWorkPolicy.REPLACE,
                 OneTimeWorkRequestBuilder<NotifySingleWorker>()
                     .setInputData(

@@ -111,6 +111,41 @@ class MihonApkStoreTest {
         assertTrue(newJar.exists())
     }
 
+    @Test fun installRejectsUpdateSignedByAnotherKey() = runTest {
+        var newSigners = listOf("keyA")
+        val store = MihonApkStore(
+            apkDir, jarDir,
+            // The installed apk keeps the signers it was installed with.
+            inspect = { apk -> fixtureInfo.copy(fingerprints = if (apk.parentFile == apkDir) listOf("keyA") else newSigners) },
+            convert = { apk, dir -> DexConverter.jarFor(apk, dir).also { dir.mkdirs(); it.writeText("jar") } },
+        )
+        store.install(tempFixture())
+        val installed = File(apkDir, "${MihonFixture.PACKAGE}.apk").readBytes()
+
+        newSigners = listOf("keyB")
+        val e = assertFailsWith<ApkInstallException> { store.install(tempFixture().also { it.appendBytes(byteArrayOf(0)) }) }
+        assertEquals(ApkInstallFailure.INVALID, e.failure)
+        assertTrue(installed.contentEquals(File(apkDir, "${MihonFixture.PACKAGE}.apk").readBytes()))
+
+        // A rotated key whose lineage includes the installed signer is still an update.
+        newSigners = listOf("keyA", "keyC")
+        assertEquals(MihonFixture.PACKAGE, store.install(tempFixture().also { it.appendBytes(byteArrayOf(0)) }))
+    }
+
+    @Test fun installedReusesInspectionForUnchangedApk() = runTest {
+        var inspections = 0
+        val store = MihonApkStore(
+            apkDir, jarDir,
+            inspect = { inspections++; fixtureInfo },
+            convert = { apk, dir -> DexConverter.jarFor(apk, dir).also { dir.mkdirs(); it.writeText("jar") } },
+        )
+        store.install(tempFixture())
+        inspections = 0
+        store.installed()
+        store.installed()
+        assertEquals(1, inspections)
+    }
+
     @Test fun installRejectsTraversalPackageName() = runTest {
         val store = MihonApkStore(apkDir, jarDir, inspect = { fixtureInfo.copy(packageName = "../evil") })
         val e = assertFailsWith<ApkInstallException> { store.install(tempFixture()) }

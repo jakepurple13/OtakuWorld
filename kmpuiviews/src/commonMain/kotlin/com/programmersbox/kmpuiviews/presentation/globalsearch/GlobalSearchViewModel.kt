@@ -29,7 +29,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -81,6 +80,7 @@ class GlobalSearchViewModel(
             //TODO: Add option to have live population or all at once
             searchFlow().collect()
             //searchAllFlow()
+            isRefreshing = false
             isSearching = false
         }
     }
@@ -96,8 +96,11 @@ class GlobalSearchViewModel(
                     .dispatchIoAndCatchList()
                     .map { SearchModel(a.apiService.displayName, it, a.apiService.language, a.apiService.serviceName) }
                     .filter { it.data.isNotEmpty() }
-                    .onEach { searchListPublisher += it }
-                    .onCompletion { isRefreshing = false }
+                    .onEach {
+                        searchListPublisher += it
+                        // Stop the placeholder once there is something to show; searchForItems clears it when every source is done
+                        isRefreshing = false
+                    }
                     .catch { exceptionDao.insertException(it) }
             }
             .forEach { launch { send(it.firstOrNull()) } }

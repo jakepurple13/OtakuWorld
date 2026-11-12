@@ -26,13 +26,13 @@ subprojects {
             }
         }
     }
-    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().all {
-        compilerOptions {
-            freeCompilerArgs.addAll(
-                "-P",
-                "plugin:androidx.compose.compiler.plugins.kotlin:reportsDestination=" +
-                        project.layout.buildDirectory.get().asFile.absolutePath + "/compose_metrics"
-            )
+    // Compose compiler reports are opt-in: ./gradlew <task> -PcomposeCompilerReports=true
+    // Written to <module>/build/compose_metrics, only for modules that apply the Compose compiler plugin.
+    if (providers.gradleProperty("composeCompilerReports").orNull?.toBoolean() == true) {
+        plugins.withId("org.jetbrains.kotlin.plugin.compose") {
+            extensions.configure<ComposeCompilerGradlePluginExtension> {
+                reportsDestination.set(layout.buildDirectory.dir("compose_metrics"))
+            }
         }
     }
 
@@ -103,7 +103,7 @@ plugins {
     alias(libs.plugins.compose.compiler) apply false
     //alias(libs.plugins.google.android.libraries.mapsplatform.secrets.gradle.plugin) apply false
     alias(libs.plugins.google.firebase.performance) apply false
-    alias(libs.plugins.room) apply false
+    alias(commonLibs.plugins.room) apply false
     alias(libs.plugins.composeMultiplatform) apply false
     id("com.squareup.wire") version "6.4.7" apply false
     id("org.jetbrains.compose.hot-reload") version "1.2.0" apply false

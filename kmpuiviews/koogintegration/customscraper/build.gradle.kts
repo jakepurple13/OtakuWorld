@@ -1,7 +1,7 @@
 plugins {
     `otaku-multiplatform-no-ios`
     id("kotlinx-serialization")
-    alias(libs.plugins.room)
+    alias(commonLibs.plugins.room)
     alias(libs.plugins.ksp)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.compose.compiler)

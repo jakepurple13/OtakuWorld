@@ -45,7 +45,9 @@ import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
 import org.koin.compose.koinInject
 
 abstract class GenericSharedAnime(
@@ -75,7 +77,8 @@ abstract class GenericSharedAnime(
             action = EpisodeAction.Play,
             model = model,
             infoModel = infoModel,
-            onResolved = { playOrCast(navController, it, model, infoModel, seedColor) },
+            // Callers run this on IO; navigating mutates the back stack, which belongs on Main.
+            onResolved = { withContext(Dispatchers.Main) { playOrCast(navController, it, model, infoModel, seedColor) } },
         )
     }
 
@@ -146,6 +149,8 @@ abstract class GenericSharedAnime(
     ) {
         val colorBlindness: ColorBlindnessType by koinInject<NewSettingsHandling>().rememberColorBlindType()
         val colorFilter by remember { derivedStateOf { colorFilterBlind(colorBlindness) } }
+        val keys = remember(list) { gridItemKeys(list.map { it.url }) }
+        val favoriteUrls = remember(favorites) { favorites.mapTo(HashSet()) { it.url } }
 
         LazyVerticalGrid(
             columns = adaptiveGridCell(),
@@ -157,7 +162,7 @@ abstract class GenericSharedAnime(
         ) {
             itemsIndexed(
                 list,
-                key = { i, it -> "${it.url}$i" },
+                key = { i, _ -> keys[i] },
                 contentType = { _, _ -> "item" }
             ) { _, it ->
                 M3CoverCard(
@@ -169,7 +174,7 @@ abstract class GenericSharedAnime(
                     //placeHolder = { painterLogo() },
                     placeHolder = { rememberVectorPainter(Icons.Default.BrokenImage) },
                     favoriteIcon = {
-                        if (favorites.any { f -> f.url == it.url }) {
+                        if (it.url in favoriteUrls) {
                             Icon(
                                 Icons.Default.Favorite,
                                 contentDescription = null,
@@ -189,5 +194,15 @@ abstract class GenericSharedAnime(
                 ) { onClick(it) }
             }
         }
+    }
+}
+
+/** Grid keys for [urls]: the url itself, so keys don't shift on insert; only repeats get a count so they stay unique. */
+internal fun gridItemKeys(urls: List<String>): List<String> {
+    val seen = mutableMapOf<String, Int>()
+    return urls.map { url ->
+        val count = seen[url] ?: 0
+        seen[url] = count + 1
+        if (count == 0) url else "$url\u0000$count"
     }
 }

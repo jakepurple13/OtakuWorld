@@ -41,8 +41,10 @@ class HistorySyncProcessor(
         local.toHistoryItemRow(uid, app, timestamp)
 
     override suspend fun markLocalSynced(local: HistoryItem, timestamp: Long) {
-        historyDao.markHistorySynced(local.searchText, timestamp)
+        historyDao.markHistorySynced(local.searchText, timestamp, pushedUpdatedAt = local.updatedAt)
     }
+
+    override suspend fun runInTransaction(block: suspend () -> Unit) = historyDao.runInTransaction(block)
 
     override suspend fun deleteLocal(local: HistoryItem) {
         historyDao.deleteHistory(local)

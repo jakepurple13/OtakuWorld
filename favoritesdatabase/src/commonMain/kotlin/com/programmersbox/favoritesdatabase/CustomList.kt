@@ -11,6 +11,7 @@ import androidx.room3.Delete
 import androidx.room3.Embedded
 import androidx.room3.Entity
 import androidx.room3.Ignore
+import androidx.room3.Index
 import androidx.room3.Insert
 import androidx.room3.OnConflictStrategy
 import androidx.room3.PrimaryKey
@@ -32,7 +33,7 @@ import kotlin.uuid.Uuid
 
 @Database(
     entities = [CustomListItem::class, CustomListInfo::class],
-    version = 13,
+    version = 14,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
         AutoMigration(from = 2, to = 7),
@@ -103,15 +104,25 @@ abstract class ListDatabase : RoomDatabase() {
             }
         }
 
+        // Index for the @Relation lookup of a list's items.
+        private val MIGRATION_13_14 = object : Migration(13, 14) {
+            override suspend fun migrate(connection: SQLiteConnection) {
+                connection.execSQL("CREATE INDEX IF NOT EXISTS `index_CustomListInfo_uuid` ON `CustomListInfo` (`uuid`)")
+            }
+        }
+
+        internal val MIGRATIONS: Array<Migration> = arrayOf(
+            MIGRATION_8_9,
+            MIGRATION_9_10,
+            MIGRATION_11_12,
+            MIGRATION_12_13,
+            MIGRATION_13_14,
+        )
+
+        // No destructive fallback: it also applies to downgrades and would silently wipe every list.
         fun getInstance(databaseBuilder: DatabaseBuilder): ListDatabase = databaseBuilder
             .build<ListDatabase>("list.db")
-            .fallbackToDestructiveMigration(true)
-            .addMigrations(
-                MIGRATION_8_9,
-                MIGRATION_9_10,
-                MIGRATION_11_12,
-                MIGRATION_12_13
-            )
+            .addMigrations(*MIGRATIONS)
             .build()
     }
 }
@@ -142,15 +153,17 @@ interface ListDao {
 
     @Transaction
     @Query("SELECT * FROM CustomListItem WHERE :uuid = uuid")
-    suspend fun getCustomListItemWithDeleted(uuid: String): CustomList
+    suspend fun getCustomListItemWithDeleted(uuid: String): CustomList?
 
-    suspend fun getCustomListItem(uuid: String): CustomList = getCustomListItemWithDeleted(uuid).withoutDeleted()
+    /** Null when no list has [uuid]. */
+    suspend fun getCustomListItem(uuid: String): CustomList? = getCustomListItemWithDeleted(uuid)?.withoutDeleted()
 
     @Transaction
     @Query("SELECT * FROM CustomListItem WHERE :uuid = uuid AND is_deleted = 0")
-    fun getCustomListItemFlowWithDeleted(uuid: String): Flow<CustomList>
+    fun getCustomListItemFlowWithDeleted(uuid: String): Flow<CustomList?>
 
-    fun getCustomListItemFlow(uuid: String): Flow<CustomList> = getCustomListItemFlowWithDeleted(uuid).map { it.withoutDeleted() }
+    /** Emits null once the list is deleted. */
+    fun getCustomListItemFlow(uuid: String): Flow<CustomList?> = getCustomListItemFlowWithDeleted(uuid).map { it?.withoutDeleted() }
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun createList(listItem: CustomListItem): Long
@@ -181,20 +194,23 @@ interface ListDao {
         )
     }
 
-    @Ignore
+    @Transaction
     suspend fun removeList(item: CustomList) {
         item.list.forEach { removeItem(it) }
         removeList(item.item)
     }
 
+    // Bumps updated_at and marks dirty so the edit syncs.
     @Ignore
     suspend fun updateFullList(item: CustomListItem) {
-        updateList(item.copy(time = Clock.System.now().toEpochMilliseconds()))
+        val now = Clock.System.now().toEpochMilliseconds()
+        updateList(item.copy(time = now, updatedAt = now, isDirty = true))
     }
 
-    @Ignore
+    /** Returns false when the list doesn't exist or already has [url]. */
+    @Transaction
     suspend fun addToList(uuid: String, title: String, description: String, url: String, imageUrl: String, source: String): Boolean {
-        val item = getCustomListItem(uuid)
+        val item = getCustomListItem(uuid) ?: return false
         return if (item.list.any { it.url == url && it.uuid == uuid }) {
             false
         } else {
@@ -214,8 +230,11 @@ interface ListDao {
         }
     }
 
-    @Query("UPDATE CustomListItem SET useBiometric = :useBiometric WHERE uuid = :uuid")
-    suspend fun updateBiometric(uuid: String, useBiometric: Boolean)
+    @Query("UPDATE CustomListItem SET useBiometric = :useBiometric, is_dirty = 1, updated_at = :timestamp WHERE uuid = :uuid")
+    suspend fun updateBiometric(uuid: String, useBiometric: Boolean, timestamp: Long)
+
+    suspend fun updateBiometric(uuid: String, useBiometric: Boolean) =
+        updateBiometric(uuid, useBiometric, Clock.System.now().toEpochMilliseconds())
 
     @Query("SELECT * FROM CustomListItem WHERE is_dirty = 1")
     suspend fun getDirtyCustomListItems(): List<CustomListItem>
@@ -250,11 +269,16 @@ interface ListDao {
     @Query("UPDATE CustomListInfo SET is_deleted = 1, is_dirty = 1, updated_at = :timestamp WHERE uniqueId = :uniqueId")
     suspend fun softDeleteCustomListInfo(uniqueId: String, timestamp: Long)
 
-    @Query("UPDATE CustomListItem SET updated_at = :timestamp, is_dirty = 0 WHERE uuid = :uuid")
-    suspend fun markCustomListItemSynced(uuid: String, timestamp: Long)
+    // Only clears rows that weren't edited during the push (see ItemDao.markFavoriteSynced).
+    @Query("UPDATE CustomListItem SET updated_at = :timestamp, is_dirty = 0 WHERE uuid = :uuid AND updated_at = :pushedUpdatedAt")
+    suspend fun markCustomListItemSynced(uuid: String, timestamp: Long, pushedUpdatedAt: Long)
 
-    @Query("UPDATE CustomListInfo SET updated_at = :timestamp, is_dirty = 0 WHERE uniqueId = :uniqueId")
-    suspend fun markCustomListInfoSynced(uniqueId: String, timestamp: Long)
+    @Query("UPDATE CustomListInfo SET updated_at = :timestamp, is_dirty = 0 WHERE uniqueId = :uniqueId AND updated_at = :pushedUpdatedAt")
+    suspend fun markCustomListInfoSynced(uniqueId: String, timestamp: Long, pushedUpdatedAt: Long)
+
+    /** Runs [block] in one write transaction, so sync writes a whole batch with one commit. */
+    @Transaction
+    suspend fun runInTransaction(block: suspend () -> Unit) = block()
 
     @Query("UPDATE CustomListItem SET is_dirty = 1")
     suspend fun markAllCustomListItemsDirty()
@@ -323,7 +347,7 @@ data class CustomListItem(
 
 @OptIn(ExperimentalUuidApi::class)
 @Serializable
-@Entity(tableName = "CustomListInfo")
+@Entity(tableName = "CustomListInfo", indices = [Index(value = ["uuid"])])
 data class CustomListInfo(
     @PrimaryKey
     @ColumnInfo(defaultValue = "0c65586e-f3dc-4878-be63-b134fb46466c")

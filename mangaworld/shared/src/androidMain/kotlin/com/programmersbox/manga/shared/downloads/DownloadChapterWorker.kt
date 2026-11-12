@@ -18,6 +18,7 @@ import io.ktor.client.HttpClient
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.io.File
 
@@ -37,12 +38,15 @@ class DownloadChapterWorker(
         val mangaTitle = inputData.getString(KEY_MANGA_TITLE) ?: return Result.failure()
         val chapterName = inputData.getString(KEY_CHAPTER_NAME) ?: return Result.failure()
         val chapterUrl = inputData.getString(KEY_CHAPTER_URL) ?: return Result.failure()
-        val imageUrls = inputData.getString(KEY_IMAGE_URLS)
-            ?.let { Json.decodeFromString<List<String>>(it) }
+        // Older queued work carries the lists inline; newer work points at a request file
+        val requestFile = inputData.getString(KEY_REQUEST_FILE)
+            ?.let { path -> runCatching { Json.decodeFromString<DownloadRequestFile>(File(path).readText()) }.getOrNull() }
+        val imageUrls = requestFile?.imageUrls
+            ?: inputData.getString(KEY_IMAGE_URLS)?.let { Json.decodeFromString<List<String>>(it) }
             ?: return Result.failure()
 
-        val headers = inputData.getString(KEY_HEADERS)
-            ?.let { Json.decodeFromString<Map<String, String>>(it) }
+        val headers = requestFile?.headers
+            ?: inputData.getString(KEY_HEADERS)?.let { Json.decodeFromString<Map<String, String>>(it) }
             ?: emptyMap()
 
         val externalDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
@@ -50,6 +54,8 @@ class DownloadChapterWorker(
 
         val destDir = File(externalDir, "MangaWorld/${mangaTitle.sanitize()}/${chapterName.sanitize()}")
             .also { it.mkdirs() }
+        // Stays behind if the download is cancelled or fails part way, so the chapter isn't counted
+        runCatching { File(destDir, INCOMPLETE_MARKER).createNewFile() }
 
         val request = DownloadRequest(
             chapterUrl = chapterUrl,
@@ -107,6 +113,7 @@ class DownloadChapterWorker(
                         File(destDir, "%03d.png".format(index)).writeBytes(bytes)
                     },
                 )
+                File(destDir, INCOMPLETE_MARKER).delete()
                 MediaScannerConnection.scanFile(
                     applicationContext,
                     destDir.listFiles()?.map { it.absolutePath }?.toTypedArray() ?: emptyArray(),
@@ -205,6 +212,8 @@ class DownloadChapterWorker(
         const val KEY_CHAPTER_URL = "chapterUrl"
         const val KEY_IMAGE_URLS = "imageUrls"
         const val KEY_HEADERS = "headers"
+        const val KEY_REQUEST_FILE = "requestFile"
+        const val REQUEST_DIR = "manga_download_requests"
         const val KEY_PROGRESS_DONE = "done"
         const val KEY_PROGRESS_TOTAL = "total"
         const val KEY_ERROR = "error"
@@ -218,3 +227,9 @@ class DownloadChapterWorker(
         const val DOWNLOAD_QUEUE = "manga_download_queue"
     }
 }
+
+@Serializable
+internal data class DownloadRequestFile(
+    val imageUrls: List<String>,
+    val headers: Map<String, String>,
+)

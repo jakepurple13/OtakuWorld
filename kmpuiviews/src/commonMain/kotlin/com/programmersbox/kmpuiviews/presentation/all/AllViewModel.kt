@@ -4,7 +4,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.toMutableStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.DbModel
@@ -17,14 +16,18 @@ import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.utils.dispatchIoAndCatchList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.flatMapMerge
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
+import kotlin.coroutines.cancellation.CancellationException
 
 class AllViewModel(
     dao: ItemDao,
@@ -44,14 +47,24 @@ class AllViewModel(
 
     var isRefreshing by mutableStateOf(false)
     val sourceList = mutableStateListOf<KmpItemModel>()
-    var favoriteList = mutableStateListOf<DbModel>()
+    val favoriteList = mutableStateListOf<DbModel>()
 
     var count = 1
+
+    /** True when the last page load failed, so reconnecting should retry it. */
+    var lastLoadFailed = false
+        private set
+
+    private var loadJob: Job? = null
+    private var searchJob: Job? = null
 
     init {
         favoritesRepository
             .getAllFavoritesFlow()
-            .onEach { favoriteList = it.toMutableStateList() }
+            .onEach {
+                favoriteList.clear()
+                favoriteList.addAll(it)
+            }
             .launchIn(viewModelScope)
 
         currentSourceRepository.asFlow()
@@ -71,30 +84,38 @@ class AllViewModel(
     }
 
     fun loadMore(sources: KmpApiService) {
+        if (loadJob?.isActive == true) return
         count++
         sourceLoadCompose(sources)
     }
 
     private fun sourceLoadCompose(sources: KmpApiService) {
-        sources
+        loadJob?.cancel()
+        loadJob = sources
             .getListFlow(count)
-            .dispatchIoAndCatchList()
-            .onStart { isRefreshing = true }
+            .dispatchIoAndCatchList { lastLoadFailed = true }
+            .onStart {
+                lastLoadFailed = false
+                isRefreshing = true
+            }
             .onEach { sourceList.addAll(it) }
-            .onCompletion { isRefreshing = false }
+            // A cancelled load was replaced by a newer one, which owns the refreshing flag
+            .onCompletion { if (it !is CancellationException) isRefreshing = false }
             .launchIn(viewModelScope)
     }
 
     fun search() {
-        currentSourceRepository.asFlow()
-            .filterNotNull()
-            .flatMapMerge { it.searchSourceList(searchText, 1, sourceList) }
+        searchJob?.cancel()
+        searchJob = flow {
+            val source = currentSourceRepository.asFlow().filterNotNull().first()
+            emitAll(source.searchSourceList(searchText, 1, sourceList))
+        }
             .onStart { isSearching = true }
             .onEach {
                 searchList = it
                 isSearching = false
             }
-            .onCompletion { isSearching = false }
+            .onCompletion { if (it !is CancellationException) isSearching = false }
             .launchIn(viewModelScope)
     }
 }

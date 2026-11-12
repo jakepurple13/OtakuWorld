@@ -39,7 +39,14 @@ class AnimeDownloadManager(
     private val animeDesktopSettings: AnimeDesktopSettings,
     private val trayState: TrayState?,
     client: OkHttpClient = OkHttpClient(),
+    /** Holds a parts record per running download, so `.part` files left by a quit are deleted on the next start. */
+    private val partsDir: File? = null,
 ) : EpisodeDownloadQueue {
+
+    init {
+        // The queue isn't kept across runs, so any record here belongs to a download the app quit during.
+        partsDir?.listFiles { f -> f.name.endsWith(".parts") }?.forEach(::discardPartsRecord)
+    }
 
     private class Entry(
         val key: String,
@@ -132,7 +139,8 @@ class AnimeDownloadManager(
                 update(entry) { it.copy(state = QueuedDownloadState.Running, progress = 0f) }
                 val folder = File(animeDesktopSettings.downloadsDirectory.get(), sanitizeFileName(entry.animeTitle))
                 var lastPercent = -1
-                downloader.download(entry.request(folder)) { p ->
+                val partsRecord = partsDir?.let { partsRecordFor(requestFileFor(it.apply { mkdirs() }, entry.key)) }
+                downloader.download(entry.request(folder), partsRecord) { p ->
                     // Known-length progress arrives per buffer; publish whole-percent steps only.
                     val percent = p.fraction?.let { (it * 100).toInt() }
                     if (percent == null || percent != lastPercent) {
