@@ -8,6 +8,11 @@ on:
         required: false
         type: boolean
         default: false
+      NO_FIREBASE_ONLY:
+        description: 'Only build the noFirebase flavor (faster PR checks)'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   novelworld:
@@ -34,14 +39,19 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
         with:
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+          build-scan-publish: true
+          build-scan-terms-of-use-url: "https://gradle.com/help/legal-terms-of-use"
+          build-scan-terms-of-use-agree: "yes"
           add-job-summary-as-pr-comment: always
 
       - name: Build NovelWorld artifacts
         id: buildNovelApks
-        run: ./gradlew novelworld:assembleRelease
+        run: ./gradlew novelworld:${{ inputs.NO_FIREBASE_ONLY && 'assembleNoFirebaseRelease' || 'assembleRelease' }}
 
       - uses: kevin-david/zipalign-sign-android-release@v2.0.2
         name: Sign app APK
+        if: ${{ !inputs.NO_FIREBASE_ONLY }}
         id: novel_sign
         with:
           releaseDirectory: novelworld/build/outputs/apk/full/release
@@ -62,10 +72,13 @@ jobs:
 
       - name: Clean up NovelWorld artifacts
         run: |
-          cp ${{ steps.novel_sign.outputs.signedReleaseFile }} novelworld-release.apk
+          if [ "${{ inputs.NO_FIREBASE_ONLY }}" != "true" ]; then
+            cp ${{ steps.novel_sign.outputs.signedReleaseFile }} novelworld-release.apk
+          fi
           cp ${{ steps.novel_sign_no_firebase.outputs.signedReleaseFile }} novelworld-no-firebase-release.apk
 
       - uses: actions/upload-artifact@v7
+        if: ${{ !inputs.NO_FIREBASE_ONLY }}
         with:
           name: Signed Novel App
           path: novelworld-release.apk

@@ -1,4 +1,5 @@
 import com.android.build.api.dsl.CompileSdkSpec
+import org.gradle.api.Project
 
 object AppInfo {
     const val otakuVersionName = "33.1.0"
@@ -28,5 +29,10 @@ object AppInfo {
         }
     }
 
-    const val includeIos = true
+    /**
+     * iOS targets are opt-in to keep configuration and IDE sync fast.
+     * Enable with `-Potaku.includeIos=true` or `otaku.includeIos=true` in ~/.gradle/gradle.properties.
+     */
+    fun includeIos(project: Project): Boolean =
+        project.providers.gradleProperty("otaku.includeIos").orNull?.toBoolean() == true
 }

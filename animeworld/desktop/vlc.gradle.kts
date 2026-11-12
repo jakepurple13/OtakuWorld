@@ -236,6 +236,9 @@ if (vlcTarget != null && vlcArchive != null) {
     tasks.register("prepareVlc") {
         group = "build"
         description = "No bundled libVLC for $hostOs/$hostArch"
-        doLast { logger.warn("libVLC is not bundled for $hostOs/$hostArch; the desktop player will be unavailable.") }
+        // Local val: referencing script-level vals inside doLast captures the script object,
+        // which the configuration cache cannot serialize.
+        val message = "libVLC is not bundled for $hostOs/$hostArch; the desktop player will be unavailable."
+        doLast { logger.warn(message) }
     }
 }

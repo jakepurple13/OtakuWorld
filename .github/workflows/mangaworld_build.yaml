@@ -8,6 +8,11 @@ on:
         required: false
         type: boolean
         default: false
+      NO_FIREBASE_ONLY:
+        description: 'Only build the noFirebase flavor (faster PR checks)'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   mangaworld:
@@ -34,14 +39,19 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
         with:
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+          build-scan-publish: true
+          build-scan-terms-of-use-url: "https://gradle.com/help/legal-terms-of-use"
+          build-scan-terms-of-use-agree: "yes"
           add-job-summary-as-pr-comment: always
 
       - name: Build MangaWorld artifacts
         id: buildMangaApks
-        run: ./gradlew mangaworld:assembleRelease -PreleaseAbis=arm64-v8a,armeabi-v7a
+        run: ./gradlew mangaworld:${{ inputs.NO_FIREBASE_ONLY && 'assembleNoFirebaseRelease' || 'assembleRelease' }} -PreleaseAbis=arm64-v8a,armeabi-v7a
 
       - uses: kevin-david/zipalign-sign-android-release@v2.0.2
         name: Sign app APK
+        if: ${{ !inputs.NO_FIREBASE_ONLY }}
         id: manga_sign
         with:
           releaseDirectory: mangaworld/build/outputs/apk/full/release
@@ -62,10 +72,13 @@ jobs:
 
       - name: Clean up MangaWorld artifacts
         run: |
-          cp ${{ steps.manga_sign.outputs.signedReleaseFile }} mangaworld-release.apk
+          if [ "${{ inputs.NO_FIREBASE_ONLY }}" != "true" ]; then
+            cp ${{ steps.manga_sign.outputs.signedReleaseFile }} mangaworld-release.apk
+          fi
           cp ${{ steps.manga_sign_no_firebase.outputs.signedReleaseFile }} mangaworld-no-firebase-release.apk
 
       - uses: actions/upload-artifact@v7
+        if: ${{ !inputs.NO_FIREBASE_ONLY }}
         with:
           name: Signed Manga App
           path: mangaworld-release.apk

@@ -176,10 +176,10 @@ val appModule = module {
             deleteDialog = { content, onResult ->
                 AlertDialog(
                     onDismissRequest = { onResult(false) },
-                    title = { Text(stringResource(R.string.remove)) },
+                    title = { Text(stringResource(com.programmersbox.uiviews.R.string.remove)) },
                     text = { Text(content.videoName) },
                     confirmButton = {
-                        TextButton(onClick = { onResult(true) }) { Text(stringResource(R.string.remove)) }
+                        TextButton(onClick = { onResult(true) }) { Text(stringResource(com.programmersbox.uiviews.R.string.remove)) }
                     },
                     dismissButton = {
                         TextButton(onClick = { onResult(false) }) { Text(stringResource(R.string.cancelText)) }
@@ -536,10 +536,10 @@ class GenericAnime(
                 deleteDialog = { content, onResult ->
                     AlertDialog(
                         onDismissRequest = { onResult(false) },
-                        title = { Text(stringResource(R.string.remove)) },
+                        title = { Text(stringResource(com.programmersbox.uiviews.R.string.remove)) },
                         text = { Text(content.videoName) },
                         confirmButton = {
-                            TextButton(onClick = { onResult(true) }) { Text(stringResource(R.string.remove)) }
+                            TextButton(onClick = { onResult(true) }) { Text(stringResource(com.programmersbox.uiviews.R.string.remove)) }
                         },
                         dismissButton = {
                             TextButton(onClick = { onResult(false) }) { Text(stringResource(R.string.cancelText)) }
