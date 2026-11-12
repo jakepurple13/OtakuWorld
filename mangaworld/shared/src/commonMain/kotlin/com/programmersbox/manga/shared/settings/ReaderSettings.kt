@@ -78,6 +78,7 @@ import com.programmersbox.kmpuiviews.presentation.components.settings.SliderSett
 import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.manga.shared.reader.FloatingBottomBar
+import com.programmersbox.manga.shared.reader.PageNumberSettings
 import com.programmersbox.manga.shared.reader.ReaderTopBar
 import com.programmersbox.manga.shared.reader.dpToPx
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
@@ -103,6 +104,8 @@ fun ReaderSettings(
     var includeInsets by mangaSettingsHandling.rememberIncludeInsetsForReader()
 
     var useFloatingBar by mangaSettingsHandling.rememberUseFloatingReaderBottomBar()
+
+    val showPageNumberInBar by mangaSettingsHandling.rememberShowPageNumberInBar()
 
     val imageLoaderType by mangaSettingsHandling.rememberImageLoaderType()
 
@@ -159,6 +162,15 @@ fun ReaderSettings(
         onIncludeInsetsChange = { includeInsets = it },
         onPaddingChange = { padding = it },
         onPaddingChangeFinished = { scope.launch { mangaSettingsHandling.pagePadding.updateSetting(padding.toInt()) } },
+        showPageNumberInBar = showPageNumberInBar,
+        pageNumberSettings = { modifier ->
+            PageNumberSettings(
+                mangaSettingsHandling = mangaSettingsHandling,
+                previewScale = .27f,
+                showLargePreview = true,
+                modifier = modifier,
+            )
+        },
     )
 }
 
@@ -178,6 +190,8 @@ private fun ReaderSettings(
     onPaddingChangeFinished: () -> Unit = {},
     onImageLoaderClick: () -> Unit = {},
     onUseFloatingBarChange: (Boolean) -> Unit = {},
+    showPageNumberInBar: Boolean = true,
+    pageNumberSettings: @Composable (Modifier) -> Unit = {},
 ) {
     Scaffold(
         topBar = {
@@ -211,6 +225,7 @@ private fun ReaderSettings(
                     chapterCount = "13",
                     previousButtonEnabled = true,
                     nextButtonEnabled = true,
+                    showPageNumber = showPageNumberInBar,
                     modifier = Modifier
                         .padding(16.dp)
                         .windowInsetsPadding(if (includeInsets) NavigationBarDefaults.windowInsets else WindowInsets(0.dp))
@@ -229,6 +244,10 @@ private fun ReaderSettings(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
+            item { pageNumberSettings(Modifier.animateItem()) }
+
+            item { HorizontalDivider(modifier = Modifier.animateItem()) }
+
             item {
                 ImageLoaderSetting(
                     imageLoaderType = imageLoaderType,

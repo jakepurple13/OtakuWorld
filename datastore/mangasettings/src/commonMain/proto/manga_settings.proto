@@ -15,6 +15,9 @@ message MangaSettings {
   bool includeInsetsForReader = 11;
   // Fraction of the screen width the reader pages use on expanded windows. 0 = full width.
   float readerWidthFraction = 12;
+  PageIndicatorStyle pageIndicatorStyle = 13;
+  // Inverted so the proto3 default (false) keeps the Pages item in the floating bar.
+  bool hidePageNumberInBar = 14;
 }
 
 enum ImageLoaderType {
@@ -31,4 +34,16 @@ enum ReaderType {
   Pager = 1;
   FlipPager = 2;
   CurlPager = 3;
+}
+
+// How the reader shows the current page. The top progress line shows for every style; Segments draws it split per page.
+enum PageIndicatorStyle {
+  Classic = 0;
+  Pill = 1;
+  Scrubber = 2;
+  Rail = 3;
+  Segments = 4;
+  Folio = 5;
+  Morph = 6;
+  LineOnly = 7;
 }
