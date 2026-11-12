@@ -13,27 +13,37 @@ object AppSources {
     // Source sets that never run in the Android apps.
     private val androidExcluded = setOf("jvmMain", "iosMain", "skikoMain", "httpMain")
 
+    // Source sets that never run on desktop (deviceMain is Android + iOS).
+    private val desktopExcluded = setOf("androidMain", "iosMain", "deviceMain", "main")
+
     private val shared = listOf(
         "kmpuiviews",
         "favoritesdatabase/supabase-integration",
-        "UIViews",
     )
+
+    private const val COMMON = "navgraph/overrides/common.navgraph"
+    private const val ANDROID = "navgraph/overrides/android.navgraph"
 
     val apps: Map<String, AppConfig> = mapOf(
         "mangaworld" to AppConfig(
-            dirs = shared + listOf("mihonsupport", "mangaworld/shared", "mangaworld/src"),
+            dirs = shared + listOf("UIViews", "mihonsupport", "mangaworld/shared", "mangaworld/src"),
             excludedSourceSets = androidExcluded,
-            overrides = listOf("navgraph/overrides/common.navgraph", "navgraph/overrides/mangaworld.navgraph"),
+            overrides = listOf(COMMON, ANDROID, "navgraph/overrides/mangaworld.navgraph"),
         ),
         "animeworld" to AppConfig(
-            dirs = shared + listOf("animeworld/shared", "animeworld/src"),
+            dirs = shared + listOf("UIViews", "animeworld/shared", "animeworld/src"),
             excludedSourceSets = androidExcluded,
-            overrides = listOf("navgraph/overrides/common.navgraph", "navgraph/overrides/animeworld.navgraph"),
+            overrides = listOf(COMMON, ANDROID, "navgraph/overrides/animeworld.navgraph"),
         ),
         "novelworld" to AppConfig(
-            dirs = shared + listOf("novelworld/shared", "novelworld/src"),
+            dirs = shared + listOf("UIViews", "novelworld/shared", "novelworld/src"),
             excludedSourceSets = androidExcluded,
-            overrides = listOf("navgraph/overrides/common.navgraph", "navgraph/overrides/novelworld.navgraph"),
+            overrides = listOf(COMMON, ANDROID, "navgraph/overrides/novelworld.navgraph"),
+        ),
+        "mangaworld-desktop" to AppConfig(
+            dirs = shared + listOf("mihonsupport", "mangaworld/shared", "mangaworld/desktop"),
+            excludedSourceSets = desktopExcluded,
+            overrides = listOf(COMMON, "navgraph/overrides/mangaworld.navgraph"),
         ),
     )
 }

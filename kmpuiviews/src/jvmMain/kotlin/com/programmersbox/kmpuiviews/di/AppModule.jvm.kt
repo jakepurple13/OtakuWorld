@@ -52,11 +52,12 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
 import java.io.File
+import com.programmersbox.kmpuiviews.presentation.debug.navmap.FileNavGraphSource
 import com.programmersbox.kmpuiviews.presentation.debug.navmap.NavGraphSource
 
 actual fun platformModule(): Module = module {
-    // Desktop builds don't generate a navigation graph yet.
-    single<NavGraphSource> { NavGraphSource { null } }
+    // Local `run` tasks pass the generated graph's path; packaged builds have none.
+    single<NavGraphSource> { FileNavGraphSource() }
     singleOf(::DateTimeFormatHandler)
     singleOf(::IconLoader)
     singleOf(::PlatformDataStoreHandling)

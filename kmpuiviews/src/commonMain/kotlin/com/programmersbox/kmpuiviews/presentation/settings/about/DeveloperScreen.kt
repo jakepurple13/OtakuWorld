@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.presentation.debug.navmap.NavGraphSource
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroupListItem
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
 import com.programmersbox.kmpuiviews.utils.AppConfig
@@ -24,6 +25,7 @@ import org.koin.compose.koinInject
 fun DeveloperScreen() {
     val navActions = LocalNavActions.current
     val appConfig: AppConfig = koinInject()
+    val navGraphSource: NavGraphSource = koinInject()
 
     SettingsScaffold(
         title = "Developer",
@@ -37,8 +39,8 @@ fun DeveloperScreen() {
                     onClick = navActions::debug,
                 )
             }
-            // The graph asset only ships in debug builds.
-            if (appConfig.isDebug) {
+            // Only debug Android builds and local desktop runs ship a navigation graph.
+            if (navGraphSource.available) {
                 segmentedListItem(
                     content = { Text("Navigation map") },
                     leadingContent = { Icon(Icons.Default.AccountTree, null) },

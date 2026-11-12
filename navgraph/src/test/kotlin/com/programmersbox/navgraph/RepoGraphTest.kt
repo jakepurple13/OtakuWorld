@@ -32,6 +32,15 @@ class RepoGraphTest {
         assertTrue(graph.nodes.any { it.pseudo }, "has entry points")
     }
 
+    @Test
+    fun desktopGraphHasDesktopScreensOnly() {
+        val graph = scanApp(root, "mangaworld-desktop")
+        val ids = graph.nodes.map { it.id }
+        assertTrue("PlatformSettings" in ids, "desktop settings screen")
+        assertTrue("CastRemoteRoute" !in ids && "@DeepLinks" !in ids, "no Android-only screens")
+        assertTrue(graph.edges.any { it.from == "DetailsScreen.Details" && it.to == "ReadViewModel.MangaReader" })
+    }
+
     private fun NavGraphJson.orphans() = nodes.filter { n ->
         !n.pseudo && !n.allowOrphan && edges.none { it.to == n.id }
     }

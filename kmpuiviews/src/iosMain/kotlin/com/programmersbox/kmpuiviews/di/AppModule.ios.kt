@@ -15,5 +15,10 @@ actual fun platformModule(): Module = module {
     singleOf(::EncryptedDataStoreFactory)
     singleOf(::NoOpUpdateCheckReportSharer) { bind<UpdateCheckReportSharer>() }
     single<DailyOverviewScheduler> { NoOpDailyOverviewScheduler }
-    single<NavGraphSource> { NavGraphSource { null } }
+    single<NavGraphSource> {
+        object : NavGraphSource {
+            override suspend fun read(): String? = null
+            override val available = false
+        }
+    }
 }

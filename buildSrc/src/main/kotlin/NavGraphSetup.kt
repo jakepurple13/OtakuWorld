@@ -11,6 +11,7 @@ import org.gradle.api.tasks.JavaExec
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.register
 import org.gradle.process.CommandLineArgumentProvider
@@ -37,6 +38,35 @@ abstract class GenerateNavGraphTask : JavaExec() {
  * [appName] must be a key of `AppSources.apps` in `:navgraph`.
  */
 fun Project.navGraph(appName: String) {
+    val task = registerNavGraphTask(appName)
+    extensions.getByType(ApplicationAndroidComponentsExtension::class.java).onVariants { variant ->
+        // Debug builds only: published noFirebase release APKs must not carry repo paths or the debug screen.
+        if (variant.buildType == "debug") {
+            variant.sources.assets?.addGeneratedSourceDirectory(task, GenerateNavGraphTask::outputDir)
+        }
+    }
+}
+
+/** Local desktop run tasks only; packaged distributions (runDistributable, packageDmg, …) never see the graph. */
+private val localDesktopRunTasks = setOf("run", "hotRunJvm", "jvmRun")
+
+/**
+ * Generates this desktop app's navigation graph and hands its path to local Gradle runs through the
+ * `otaku.navgraph` system property (read by kmpuiviews' FileNavGraphSource). Nothing is packaged.
+ */
+fun Project.desktopNavGraph(appName: String) {
+    val task = registerNavGraphTask(appName)
+    val graphFile = task.flatMap { it.outputDir.file("navgraph.json") }
+    tasks.matching { it.name in localDesktopRunTasks }.configureEach {
+        val run = this as? JavaExec ?: return@configureEach
+        run.dependsOn(task)
+        run.jvmArgumentProviders.add(CommandLineArgumentProvider {
+            listOf("-Dotaku.navgraph=${graphFile.get().asFile.absolutePath}")
+        })
+    }
+}
+
+private fun Project.registerNavGraphTask(appName: String): TaskProvider<GenerateNavGraphTask> {
     val tool = configurations.create("navGraphTool") {
         isCanBeConsumed = false
         isCanBeResolved = true
@@ -44,7 +74,7 @@ fun Project.navGraph(appName: String) {
     }
     dependencies.add(tool.name, dependencies.project(mapOf("path" to ":navgraph")))
 
-    val task = tasks.register<GenerateNavGraphTask>("generateNavGraph") {
+    return tasks.register<GenerateNavGraphTask>("generateNavGraph") {
         group = "otaku"
         description = "Scans sources and writes navgraph.json for the debug Navigation map"
         classpath = tool
@@ -68,12 +98,5 @@ fun Project.navGraph(appName: String) {
                 "--out", out.get().file("navgraph.json").asFile.absolutePath,
             )
         })
-    }
-
-    extensions.getByType(ApplicationAndroidComponentsExtension::class.java).onVariants { variant ->
-        // Debug builds only: published noFirebase release APKs must not carry repo paths or the debug screen.
-        if (variant.buildType == "debug") {
-            variant.sources.assets?.addGeneratedSourceDirectory(task, GenerateNavGraphTask::outputDir)
-        }
     }
 }

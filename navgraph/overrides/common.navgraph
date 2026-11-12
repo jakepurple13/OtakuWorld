@@ -4,7 +4,6 @@
 # ---- Entry points that are not screens ----
 entry @NavBar "Nav bar"
 entry @QuickActions "Quick actions"
-entry @DeepLinks "Deep links + notifications"
 
 # Nav bar / rail items are built from lists, so the scan only sees `homeScreenNavigate(screen)`.
 file HomeNav.kt -> @NavBar
@@ -19,14 +18,6 @@ edge @NavBar -> FavoriteScreen : HomeNav.kt nav items
 edge @NavBar -> ExtensionListScreen : HomeNav.kt nav items
 
 file QuickActionsViewModel.kt -> @QuickActions
-
-# Deep links are registered in kmpuiviews/src/androidMain/.../utils/DeepLinks.kt and opened in BaseMainActivity.
-file BaseMainActivity.kt -> @DeepLinks
-edge @DeepLinks -> DetailsScreen.Details : DeepLinks.kt
-edge @DeepLinks -> NotificationScreen : DeepLinks.kt
-edge @DeepLinks -> Settings : DeepLinks.kt
-edge @DeepLinks -> UpdateCheckErrors : DeepLinks.kt
-edge @DeepLinks -> DailyOverview : DeepLinks.kt
 
 # ---- Shared helpers: which screens call them ----
 # Item taps go through openIfNotIncognito().
@@ -46,8 +37,6 @@ file DiscoverScreen.usesJvm.kt -> Settings.Discover
 file KoogConfiguration.kt -> Koog
 
 # ---- Not navigation ----
-# Dead entryGraph() kept for reference; registrations live in kmpuiviews' Nav3Graph.kt.
-ignore uiviews/presentation/navigation/Nav3Graph.kt
 # The Navigation map's own "Open" button can go anywhere.
 ignore navmap/NavMapScreen.kt
 

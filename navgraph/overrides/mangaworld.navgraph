@@ -1,7 +1,7 @@
-# MangaWorld-only navigation map overrides.
+# MangaWorld navigation map overrides (Android app and desktop).
 
 # Chapters open through ReadViewModel.navigateToMangaReader(), which pushes the key itself.
-edge DetailsScreen.Details -> ReadViewModel.MangaReader : GenericManga.chapterOnClick
+edge DetailsScreen.Details -> ReadViewModel.MangaReader : GenericManga/GenericMangaDesktop chapterOnClick
 edge DownloadRoute -> ReadViewModel.MangaReader : DownloadScreen.kt navigateToMangaReader
 
 # composeCustomPreferences() rows render inside the Settings screen.

@@ -41,8 +41,12 @@ actual fun platformModule(): Module = module {
     // navgraph.json is only packaged in debug/noFirebase builds; elsewhere this reads null.
     single<NavGraphSource> {
         val context = get<Context>()
-        NavGraphSource {
-            withContext(Dispatchers.IO) {
+        object : NavGraphSource {
+            override val available: Boolean by lazy {
+                runCatching { context.assets.list("")?.contains("navgraph.json") == true }.getOrDefault(false)
+            }
+
+            override suspend fun read(): String? = withContext(Dispatchers.IO) {
                 runCatching { context.assets.open("navgraph.json").bufferedReader().use { it.readText() } }.getOrNull()
             }
         }
