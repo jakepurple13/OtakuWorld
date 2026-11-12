@@ -46,15 +46,13 @@ actual fun CustomImageChoice(
 
     GlideImage(
         imageModel = { url },
-        // Decode as a Bitmap, never a GifDrawable. clearTarget can release a request whose image
-        // is still on screen (landscapist re-keys its target on every recomposition), and a
-        // recycled GifDrawable shares a frame loader whose frame is then null, so drawing it or
-        // calling toBitmap() on it throws an NPE. Animated GIF covers show their first frame.
+        // Decode as a Bitmap, never a GifDrawable. Animated GIF covers show their first frame.
         glideRequestType = GlideRequestType.BITMAP,
-        // Release the request when this leaves composition so Glide moves the bitmap into its
-        // LRU memory cache. Without this it stays a weakly-held "active resource" and is lost on
-        // GC, so returning to a screen (e.g. Recent) reloads every cover.
-        clearTarget = true,
+        // Never pass clearTarget = true. landscapist re-keys its target on every recomposition, so
+        // it clears requests whose bitmap is still on screen. Glide then pools and recycles that
+        // bitmap, and the next draw throws "Canvas: trying to use a recycled bitmap".
+        // Without it, Glide still moves the bitmap into its memory cache once the request is
+        // garbage collected (ActiveResources.cleanupActiveReference), so covers stay cached.
         imageOptions = ImageOptions(
             contentScale = contentScale,
             contentDescription = name,

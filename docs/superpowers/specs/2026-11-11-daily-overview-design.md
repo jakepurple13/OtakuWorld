@@ -74,8 +74,7 @@ Built in `commonMain` from existing tables for a `LocalDate` (yesterday in the s
 `ChapterWatched.createdAt` defaults to `0`, and no insert sets it, so reads have no time today.
 `FavoritesRepository.addWatched` will set `createdAt` and `updatedAt` to now before insert, for
 reader reads only. Marking chapters read from Details (`markAs` / `markChaptersAs`) passes
-`stampReadTime = false` and leaves `createdAt = 0`, so a bulk mark never counts as reading that day;
-tapping a chapter or episode in Details (`DetailsViewModel.recordOpened`) does stamp it, so opening counts as activity in every app (anime included).
+`stampReadTime = false` and leaves `createdAt = 0`, so a bulk mark never counts as reading that day.
 Re-reading a chapter replaces the row (`OnConflictStrategy.REPLACE`), which moves its time to the
 latest read. That's fine for a "yesterday" view. No schema change and no migration.
 
