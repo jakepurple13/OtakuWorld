@@ -13,6 +13,7 @@ import com.programmersbox.favoritesdatabase.RecentModel
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -182,12 +183,15 @@ class HistoryViewModel(private val dao: HistoryDao) : ViewModel() {
         if (visibleItems.none { it.source == source }) sourceFilter = null
     }
 
+    // The removals onCleared hands to GlobalScope; tests join it before closing the database.
+    internal var clearedRemovals: Job? = null
+
     // viewModelScope is already cancelled here, so finish the removals the user didn't undo elsewhere.
     @OptIn(DelicateCoroutinesApi::class)
     override fun onCleared() {
         val batches = pending.toList()
         if (batches.isEmpty()) return
-        GlobalScope.launch { batches.forEach { delete(it) } }
+        clearedRemovals = GlobalScope.launch { batches.forEach { delete(it) } }
     }
 }
 

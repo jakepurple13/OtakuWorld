@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.urlopener
 
+import com.programmersbox.kmpuiviews.testing.clearAndJoin
 import androidx.lifecycle.ViewModelStore
 import com.programmersbox.kmpmodels.ExampleService
 import com.programmersbox.kmpmodels.KmpApiService
@@ -66,8 +67,7 @@ class UrlOpenerViewModelTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @AfterTest
     fun tearDown() {
-        viewModelStore.clear()
-        Thread.sleep(50)
+        viewModelStore.clearAndJoin()
         Dispatchers.resetMain()
     }
 
