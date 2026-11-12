@@ -31,6 +31,11 @@ import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.ChapterDownloadUiState
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.domain.TranslationHandler
+import com.programmersbox.kmpuiviews.domain.aitext.AiFeature
+import com.programmersbox.kmpuiviews.domain.aitext.AiText
+import com.programmersbox.kmpuiviews.domain.aitext.AiTextPrompts
+import com.programmersbox.kmpuiviews.domain.aitext.AiTextRunner
+import com.programmersbox.kmpuiviews.domain.aitext.AiTextState
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.toItemModel
 import com.programmersbox.kmpuiviews.recordFirebaseException
@@ -46,17 +51,26 @@ import com.programmersbox.kmpuiviews.utils.composables.sharedelements.sharedItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.io.encoding.Base64
 
 class DetailsViewModel(
@@ -71,6 +85,8 @@ class DetailsViewModel(
     private val imageModifier: ImageModifier,
     private val bookmarkRepository: BookmarkRepository,
     sharedCoverBitmaps: SharedCoverBitmaps,
+    private val aiText: AiText,
+    private val tldrCache: TldrCache,
 ) : ViewModel() {
 
     //private val details: Screen.DetailsScreen.Details? = handle.toRoute()
@@ -102,6 +118,32 @@ class DetailsViewModel(
     var description: String by mutableStateOf("")
 
     var dbModel by mutableStateOf<DbModel?>(null)
+
+    /** True when the description is long enough to be worth summarizing and an on-device engine is ready. */
+    val tldrAvailable: StateFlow<Boolean> = snapshotFlow { description }
+        .map {
+            it.isNotBlank() && it.length > AiTextPrompts.TLDR_MIN_CHARS &&
+                    aiText.engineFor(AiFeature.Tldr, it.length) != null
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    private val tldrRunner = AiTextRunner(viewModelScope)
+    private val cachedTldr = MutableStateFlow<TldrEntry?>(null)
+    private var tldrJob: Job? = null
+
+    val tldr: StateFlow<AiTextState> = combine(tldrRunner.state, cachedTldr) { run, cached ->
+        cached?.done ?: run
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, AiTextState.Idle)
+
+    private val _tldrTranslating = MutableStateFlow(false)
+    val tldrTranslating: StateFlow<Boolean> = _tldrTranslating.asStateFlow()
+
+    private val _tldrTranslated = MutableStateFlow(false)
+
+    /** True when the shown TL;DR was summarized from a translated description. */
+    val tldrTranslated: StateFlow<Boolean> = _tldrTranslated.asStateFlow()
+
+    private val tldrUrl: String? get() = itemModel?.url ?: info?.url
 
     /** A copy of the cover the tapped card already loaded, if any; safe to draw directly */
     val handedOffCover: ImageBitmap? = itemModel?.let { sharedCoverBitmaps.take(it.sharedItemKey()) }
@@ -313,6 +355,51 @@ class DetailsViewModel(
             description = translationHandler.translate(info!!.description)
             progress.value = false
         }
+    }
+
+    fun showTldr() {
+        val url = tldrUrl
+        val cached = url?.let { tldrCache[it] }
+        if (cached != null) {
+            _tldrTranslated.value = cached.translated
+            cachedTldr.value = cached
+            return
+        }
+        tldrJob?.cancel()
+        // Drop any earlier error so Retry isn't shown under the Translating label
+        tldrRunner.reset()
+        tldrJob = viewModelScope.launch(Dispatchers.IO) {
+            val original = description
+            _tldrTranslating.value = true
+            val text = try {
+                translationHandler.translate(original)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                original
+            } finally {
+                _tldrTranslating.value = false
+            }
+            val translated = text != original
+            val engine = aiText.engineFor(AiFeature.Tldr, text.length) ?: return@launch
+            _tldrTranslated.value = translated
+            // On Main, like hideTldr, so a hide either cancels this before the run or resets after it
+            withContext(Dispatchers.Main) {
+                ensureActive()
+                tldrRunner.run(engine) { aiText.tldr(text) }
+            }
+            val result = tldrRunner.state.first { it is AiTextState.Done || it is AiTextState.Error }
+            if (result is AiTextState.Done && url != null) tldrCache[url] = TldrEntry(result, translated)
+        }
+    }
+
+    fun hideTldr() {
+        tldrJob?.cancel()
+        tldrJob = null
+        tldrRunner.reset()
+        cachedTldr.value = null
+        _tldrTranslating.value = false
+        _tldrTranslated.value = false
     }
 
     private fun setup(info: KmpInfoModel) {

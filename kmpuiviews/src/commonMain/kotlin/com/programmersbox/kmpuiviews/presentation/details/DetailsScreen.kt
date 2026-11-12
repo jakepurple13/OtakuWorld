@@ -464,6 +464,19 @@ private fun DetailContent(
         .doesNotificationExistFlow(state.info.url)
         .collectAsStateWithLifecycle(false)
 
+    val tldrAvailable by details.tldrAvailable.collectAsStateWithLifecycle()
+    val tldrState by details.tldr.collectAsStateWithLifecycle()
+    val tldrTranslating by details.tldrTranslating.collectAsStateWithLifecycle()
+    val tldrTranslated by details.tldrTranslated.collectAsStateWithLifecycle()
+    val tldr = TldrUi(
+        available = tldrAvailable,
+        state = tldrState,
+        translating = tldrTranslating,
+        translated = tldrTranslated,
+        onShow = details::showTldr,
+        onHide = details::hideTldr,
+    )
+
     // Shown while the header loads its cover: the card's handed-off cover, else the saved blur hash
     val coverPlaceholder = remember(details.imageBitmap, details.blurHash) {
         details.imageBitmap?.let(::BitmapPainter) ?: details.blurHash
@@ -487,7 +500,8 @@ private fun DetailContent(
                 onBitmapSet = { if (details.imageBitmap == null) details.imageBitmap = it },
                 detailsActions = detailsActions,
                 notesVm = notesVm,
-                downloadStates = details.downloadStates
+                downloadStates = details.downloadStates,
+                tldr = tldr,
             )
         }
 
@@ -508,7 +522,8 @@ private fun DetailContent(
                 blurHash = coverPlaceholder,
                 detailsActions = detailsActions,
                 notesVm = notesVm,
-                downloadStates = details.downloadStates
+                downloadStates = details.downloadStates,
+                tldr = tldr,
             )
         }
     }

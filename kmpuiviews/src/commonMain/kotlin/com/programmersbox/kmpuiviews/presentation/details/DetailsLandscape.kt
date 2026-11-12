@@ -120,6 +120,7 @@ fun DetailsViewLandscape(
     detailsActions: DetailsActions,
     notesVm: DetailsNotesViewModel,
     downloadStates: Map<String, ChapterDownloadUiState>,
+    tldr: TldrUi,
 ) {
     val dao = LocalItemDao.current
     val listDao = koinInject<ListRepository>()
@@ -250,6 +251,7 @@ fun DetailsViewLandscape(
             showNoteSheet = showNoteSheet,
             onNoteSheetDismiss = { showNoteSheet = false },
             downloadStates = downloadStates,
+            tldr = tldr,
             modifier = Modifier.padding(p)
         )
     }
@@ -281,6 +283,7 @@ private fun DetailsLandscapeContent(
     showNoteSheet: Boolean,
     onNoteSheetDismiss: () -> Unit,
     downloadStates: Map<String, ChapterDownloadUiState>,
+    tldr: TldrUi,
     modifier: Modifier = Modifier,
     notificationRepository: NotificationRepository = koinInject(),
 ) {
@@ -391,33 +394,41 @@ private fun DetailsLandscapeContent(
                         blurHash = blurHash,
                         onBitmapSet = onBitmapSet,
                         possibleDescription = {
-                            if (info.description.isNotEmpty()) {
-                                var descriptionVisibility by remember { mutableStateOf(false) }
-                                Box {
-                                    val progress = remember { mutableStateOf(false) }
+                            Column {
+                                if (info.description.isNotEmpty()) {
+                                    var descriptionVisibility by remember { mutableStateOf(false) }
+                                    Box {
+                                        val progress = remember { mutableStateOf(false) }
 
-                                    Text(
-                                        description,
-                                        overflow = TextOverflow.Ellipsis,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        modifier = Modifier
-                                            .combinedClickable(
-                                                interactionSource = null,
-                                                indication = ripple(),
-                                                onClick = { descriptionVisibility = !descriptionVisibility },
-                                                onLongClick = { onTranslateDescription(progress) }
-                                            )
-                                            .padding(horizontal = 4.dp)
-                                            .fillMaxWidth()
-                                            .animateContentSize()
-                                    )
-
-                                    if (progress.value) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.align(Alignment.Center)
+                                        Text(
+                                            description,
+                                            overflow = TextOverflow.Ellipsis,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            modifier = Modifier
+                                                .combinedClickable(
+                                                    interactionSource = null,
+                                                    indication = ripple(),
+                                                    onClick = { descriptionVisibility = !descriptionVisibility },
+                                                    onLongClick = { onTranslateDescription(progress) }
+                                                )
+                                                .padding(horizontal = 4.dp)
+                                                .fillMaxWidth()
+                                                .animateContentSize()
                                         )
+
+                                        if (progress.value) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.align(Alignment.Center)
+                                            )
+                                        }
                                     }
+                                }
+                                if (tldr.visible) {
+                                    TldrSection(
+                                        ui = tldr,
+                                        modifier = Modifier.padding(vertical = 4.dp)
+                                    )
                                 }
                             }
                         }
