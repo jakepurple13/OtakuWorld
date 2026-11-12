@@ -52,6 +52,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -69,6 +70,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.io.encoding.Base64
 
 class DetailsViewModel(
@@ -364,6 +366,8 @@ class DetailsViewModel(
             return
         }
         tldrJob?.cancel()
+        // Drop any earlier error so Retry isn't shown under the Translating label
+        tldrRunner.reset()
         tldrJob = viewModelScope.launch(Dispatchers.IO) {
             val original = description
             _tldrTranslating.value = true
@@ -379,7 +383,11 @@ class DetailsViewModel(
             val translated = text != original
             val engine = aiText.engineFor(AiFeature.Tldr, text.length) ?: return@launch
             _tldrTranslated.value = translated
-            tldrRunner.run(engine) { aiText.tldr(text) }
+            // On Main, like hideTldr, so a hide either cancels this before the run or resets after it
+            withContext(Dispatchers.Main) {
+                ensureActive()
+                tldrRunner.run(engine) { aiText.tldr(text) }
+            }
             val result = tldrRunner.state.first { it is AiTextState.Done || it is AiTextState.Error }
             if (result is AiTextState.Done && url != null) tldrCache[url] = TldrEntry(result, translated)
         }

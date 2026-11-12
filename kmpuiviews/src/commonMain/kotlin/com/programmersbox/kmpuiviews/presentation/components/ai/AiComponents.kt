@@ -42,14 +42,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawOutline
-import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.SpanStyle
@@ -91,21 +92,43 @@ fun Modifier.generatingBorder(active: Boolean, shape: Shape): Modifier = compose
     Modifier.drawBehind {
         val stroke = 1.5.dp.toPx()
         val shift = phase * size.width
-        val inner = Size(size.width - stroke, size.height - stroke)
-        translate(stroke / 2, stroke / 2) {
-            drawOutline(
-                outline = shape.createOutline(inner, layoutDirection, this),
-                brush = Brush.linearGradient(
-                    colors = AiColors + AiColors.first(),
-                    start = Offset(-shift, 0f),
-                    end = Offset(size.width - shift, size.width * 0.58f),
-                    tileMode = TileMode.Repeated,
-                ),
+        val brush = Brush.linearGradient(
+            colors = AiColors + AiColors.first(),
+            start = Offset(-shift, 0f),
+            end = Offset(size.width - shift, size.width * 0.58f),
+            tileMode = TileMode.Repeated,
+        )
+        // The stroke's centre line runs on the shape inset by half the stroke, corner radii included
+        when (val outline = shape.createOutline(size, layoutDirection, this)) {
+            is Outline.Rounded -> drawPath(
+                Path().apply { addRoundRect(outline.roundRect.inset(stroke / 2)) },
+                brush = brush,
                 alpha = alpha,
                 style = Stroke(stroke),
             )
+
+            is Outline.Rectangle -> drawRect(
+                brush = brush,
+                topLeft = outline.rect.topLeft + Offset(stroke / 2, stroke / 2),
+                size = Size(outline.rect.width - stroke, outline.rect.height - stroke),
+                alpha = alpha,
+                style = Stroke(stroke),
+            )
+
+            is Outline.Generic -> drawPath(outline.path, brush = brush, alpha = alpha, style = Stroke(stroke))
         }
     }
+}
+
+private fun RoundRect.inset(d: Float): RoundRect {
+    fun CornerRadius.inset() = CornerRadius((x - d).coerceAtLeast(0f), (y - d).coerceAtLeast(0f))
+    return RoundRect(
+        left = left + d, top = top + d, right = right - d, bottom = bottom - d,
+        topLeftCornerRadius = topLeftCornerRadius.inset(),
+        topRightCornerRadius = topRightCornerRadius.inset(),
+        bottomRightCornerRadius = bottomRightCornerRadius.inset(),
+        bottomLeftCornerRadius = bottomLeftCornerRadius.inset(),
+    )
 }
 
 /** Four-point star filled with the AI gradient; spins while generating. */
@@ -277,7 +300,8 @@ fun AiCard(
             contentKey = {
                 when (it) {
                     is AiTextState.Streaming, is AiTextState.Done -> "text"
-                    else -> it::class
+                    AiTextState.Idle, AiTextState.Loading -> "loading"
+                    is AiTextState.Error -> "error"
                 }
             },
             transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(300)) },

@@ -432,22 +432,25 @@ class DetailsViewModelTest {
     fun `tldr chip hidden for short description`() = runTest {
         val vm = viewModel()
         awaitCondition { vm.currentState is DetailState.Success }
-        setDescription(vm, "a".repeat(400))
-        awaitCondition { vm.tldrAvailable.value.not() && vm.description.length == 400 }
-        assertFalse(vm.tldrAvailable.value)
-
         setDescription(vm, "a".repeat(401))
         awaitCondition { vm.tldrAvailable.value }
-        assertTrue(vm.tldrAvailable.value)
+
+        setDescription(vm, "a".repeat(400))
+        awaitCondition { !vm.tldrAvailable.value }
+        assertFalse(vm.tldrAvailable.value)
     }
 
     @Test
     fun `tldr chip hidden when no engine`() = runTest {
-        val vm = viewModel(aiText = FakeAiText(engine = null))
+        val ai = FakeAiText()
+        val vm = viewModel(aiText = ai)
         awaitCondition { vm.currentState is DetailState.Success }
         setDescription(vm, "a".repeat(500))
-        // let the availability flow see the description before asserting it stays false
-        awaitCondition { vm.description.length == 500 }
+        awaitCondition { vm.tldrAvailable.value }
+
+        ai.engine = null
+        setDescription(vm, "a".repeat(501))
+        awaitCondition { !vm.tldrAvailable.value }
         assertFalse(vm.tldrAvailable.value)
     }
 
@@ -455,8 +458,11 @@ class DetailsViewModelTest {
     fun `tldr chip hidden for blank description`() = runTest {
         val vm = viewModel()
         awaitCondition { vm.currentState is DetailState.Success }
+        setDescription(vm, "a".repeat(500))
+        awaitCondition { vm.tldrAvailable.value }
+
         setDescription(vm, " ".repeat(500))
-        awaitCondition { vm.description.length == 500 }
+        awaitCondition { !vm.tldrAvailable.value }
         assertFalse(vm.tldrAvailable.value)
     }
 
@@ -574,7 +580,7 @@ private class FakeImageBitmap(
 }
 
 private class FakeAiText(
-    private val engine: AiEngineInfo? = ENGINE,
+    var engine: AiEngineInfo? = ENGINE,
     private val tldrOutput: List<String> = listOf("- a\n- b\n- c"),
 ) : AiText {
     val tldrCalls = mutableListOf<String>()
