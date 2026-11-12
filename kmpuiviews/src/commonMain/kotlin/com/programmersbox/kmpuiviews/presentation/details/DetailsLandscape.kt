@@ -309,6 +309,7 @@ private fun DetailsLandscapeContent(
         NoteBottomSheet(
             note = currentNote,
             itemTitle = info.title,
+            ai = notesVm.ai,
             onDismiss = { content ->
                 notesVm.saveNote(content = content)
                 onNoteSheetDismiss()

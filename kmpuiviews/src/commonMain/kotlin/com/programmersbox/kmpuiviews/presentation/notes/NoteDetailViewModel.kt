@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.NoteItem
 import com.programmersbox.favoritesdatabase.NotesDao
+import com.programmersbox.kmpuiviews.domain.aitext.AiText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.NonCancellable
@@ -17,7 +18,10 @@ import kotlin.time.Clock
 class NoteDetailViewModel(
     val itemUrl: String,
     private val notesDao: NotesDao,
+    aiText: AiText,
 ) : ViewModel() {
+
+    val ai = NoteAiAssistant(aiText, viewModelScope)
 
     val note: StateFlow<NoteItem?> = notesDao
         .getNote(itemUrl)

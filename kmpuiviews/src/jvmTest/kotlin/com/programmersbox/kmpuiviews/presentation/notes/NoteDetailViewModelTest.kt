@@ -13,6 +13,7 @@ import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.programmersbox.favoritesdatabase.NoteItem
 import com.programmersbox.favoritesdatabase.NotesDatabase
+import com.programmersbox.kmpuiviews.testing.NoopAiText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -50,6 +51,7 @@ class NoteDetailViewModelTest {
     private fun viewModel() = NoteDetailViewModel(
         itemUrl = url,
         notesDao = database.notesDao(),
+        aiText = NoopAiText(),
     ).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
 
     private suspend fun seed(content: String = "a", supabaseId: String? = null) =

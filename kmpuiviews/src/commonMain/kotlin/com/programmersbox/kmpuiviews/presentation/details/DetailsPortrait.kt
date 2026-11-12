@@ -158,6 +158,7 @@ fun DetailsView(
         NoteBottomSheet(
             note = currentNote,
             itemTitle = info.title,
+            ai = notesVm.ai,
             onDismiss = { content ->
                 notesVm.saveNote(content = content)
                 showNoteSheet = false
