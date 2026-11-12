@@ -13,6 +13,8 @@ import com.programmersbox.kmpuiviews.presentation.quickactions.DaoQuickActionCou
 import com.programmersbox.kmpuiviews.presentation.quickactions.QuickActionCounts
 import com.programmersbox.kmpuiviews.presentation.quickactions.QuickActionsController
 import com.programmersbox.kmpuiviews.domain.MediaUpdateChecker
+import com.programmersbox.kmpuiviews.domain.aitext.AiText
+import com.programmersbox.kmpuiviews.domain.aitext.DefaultAiText
 import com.programmersbox.kmpuiviews.domain.dailyoverview.DailyFactsBuilder
 import com.programmersbox.kmpuiviews.domain.dailyoverview.DailyOverviewSettings
 import com.programmersbox.kmpuiviews.domain.dailyoverview.EngineResolver
@@ -92,6 +94,7 @@ val appModule = module {
     singleOf(::DailyOverviewSettings)
     singleOf(::TemplateEngine) bind SummaryEngine::class
     single { EngineResolver(getAll<SummaryEngine>(), platformAutomaticOrder) }
+    single<AiText> { DefaultAiText(getAll(), getOrNull()) }
     singleOf(::MediaUpdateChecker)
     singleOf(::DataStoreUpdateCheckReportStore) bind UpdateCheckReportStore::class
     singleOf(::SharedCoverBitmaps)
