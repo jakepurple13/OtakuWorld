@@ -72,6 +72,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -401,6 +402,10 @@ fun OtakuCustomListScreen(
     }
 
     var showEditSheet by remember { mutableStateOf(false) }
+    var autoDraftDescription by remember { mutableStateOf(false) }
+    val suggestAvailable by viewModel.suggestAvailable.collectAsStateWithLifecycle()
+    val nameSuggestions by viewModel.nameSuggestions.collectAsStateWithLifecycle()
+    val descriptionDraft by viewModel.descriptionDraft.collectAsStateWithLifecycle()
 
     if (showEditSheet) {
         EditListSheet(
@@ -411,10 +416,21 @@ fun OtakuCustomListScreen(
             onSave = { name, description ->
                 updateDetails(name, description)
                 showEditSheet = false
+                autoDraftDescription = false
             },
             addSecurityItem = addSecurityItem,
             removeSecurityItem = removeSecurityItem,
-            onDismiss = { showEditSheet = false },
+            onDismiss = {
+                showEditSheet = false
+                autoDraftDescription = false
+            },
+            suggestAvailable = suggestAvailable,
+            nameSuggestions = nameSuggestions,
+            descriptionDraft = descriptionDraft,
+            onSuggestNames = viewModel::suggestNames,
+            onDraftDescription = viewModel::draftDescription,
+            onClearDrafts = viewModel::clearDrafts,
+            autoDraftDescription = autoDraftDescription,
         )
     }
 
@@ -548,6 +564,11 @@ fun OtakuCustomListScreen(
                     colorFilter = colorFilter,
                     onBack = navigateBack,
                     onEdit = { showEditSheet = true },
+                    suggestAvailable = suggestAvailable,
+                    onWriteDescription = {
+                        autoDraftDescription = true
+                        showEditSheet = true
+                    },
                 )
             }
 

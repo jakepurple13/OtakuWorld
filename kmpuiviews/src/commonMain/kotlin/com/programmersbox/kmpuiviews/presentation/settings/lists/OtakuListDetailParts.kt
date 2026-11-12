@@ -1,6 +1,28 @@
 package com.programmersbox.kmpuiviews.presentation.settings.lists
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.SheetValue
+import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.SuggestionChipDefaults
+import androidx.compose.runtime.key
+import com.programmersbox.kmpuiviews.domain.aitext.AiTextState
+import com.programmersbox.kmpuiviews.presentation.components.ai.Spark
+import com.programmersbox.kmpuiviews.presentation.components.ai.generatingBorder
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import kotlinx.coroutines.delay
+import otakuworld.kmpuiviews.generated.resources.ai_suggest_names
+import otakuworld.kmpuiviews.generated.resources.ai_write_description
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -111,6 +133,8 @@ internal fun ListHeroHeader(
     onBack: () -> Unit,
     onEdit: () -> Unit,
     modifier: Modifier = Modifier,
+    suggestAvailable: Boolean = false,
+    onWriteDescription: () -> Unit = {},
 ) {
     Box(modifier = modifier.fillMaxWidth()) {
         ImageLoaderChoice(
@@ -164,13 +188,27 @@ internal fun ListHeroHeader(
                         .clip(MaterialTheme.shapes.medium)
                 )
 
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.animateContentSize()
+                ) {
                     Text(
                         customList.item.name,
                         style = MaterialTheme.typography.headlineMedium,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                     )
+                    AnimatedVisibility(
+                        visible = customList.item.description.isBlank() && suggestAvailable,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically(),
+                    ) {
+                        AssistChip(
+                            onClick = onWriteDescription,
+                            label = { Text(stringResource(Res.string.ai_write_description)) },
+                            leadingIcon = { Spark(spinning = false, modifier = Modifier.size(18.dp)) },
+                        )
+                    }
                     if (customList.item.description.isNotBlank()) {
                         Text(
                             customList.item.description,
@@ -535,6 +573,13 @@ internal fun EditListSheet(
     addSecurityItem: (String) -> Unit,
     removeSecurityItem: (String) -> Unit,
     onDismiss: () -> Unit,
+    suggestAvailable: Boolean = false,
+    nameSuggestions: AiTextState = AiTextState.Idle,
+    descriptionDraft: AiTextState = AiTextState.Idle,
+    onSuggestNames: () -> Unit = {},
+    onDraftDescription: () -> Unit = {},
+    onClearDrafts: () -> Unit = {},
+    autoDraftDescription: Boolean = false,
 ) {
     val biometric = rememberBiometricPrompting()
     var showSecurityDialog by remember { mutableStateOf(false) }
@@ -593,9 +638,35 @@ internal fun EditListSheet(
     var name by remember { mutableStateOf(customList.item.name) }
     var description by remember { mutableStateOf(customList.item.description) }
 
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    // Generate once the sheet has finished opening, so the streaming text is seen from the start.
+    var autoDrafted by remember { mutableStateOf(false) }
+    LaunchedEffect(sheetState.currentValue) {
+        if (autoDraftDescription && !autoDrafted && sheetState.currentValue == SheetValue.Expanded) {
+            autoDrafted = true
+            onDraftDescription()
+        }
+    }
+
+    // While streaming the field follows the text; after Done it is a plain editable value.
+    LaunchedEffect(descriptionDraft) {
+        when (descriptionDraft) {
+            is AiTextState.Streaming -> description = descriptionDraft.text
+            is AiTextState.Done -> description = descriptionDraft.text
+            else -> Unit
+        }
+    }
+    val descriptionGenerating = descriptionDraft is AiTextState.Loading || descriptionDraft is AiTextState.Streaming
+    val namesGenerating = nameSuggestions is AiTextState.Loading || nameSuggestions is AiTextState.Streaming
+    val suggestedNames = (nameSuggestions as? AiTextState.Done)?.text?.lines()?.filter { it.isNotBlank() }.orEmpty()
+
     ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        onDismissRequest = {
+            onClearDrafts()
+            onDismiss()
+        },
+        sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surface,
     ) {
         Column(
@@ -630,15 +701,65 @@ internal fun EditListSheet(
                 onValueChange = { name = it },
                 label = { Text("Name") },
                 singleLine = true,
+                trailingIcon = if (suggestAvailable) {
+                    {
+                        IconButton(onClick = onSuggestNames, enabled = !namesGenerating) {
+                            val suggestNamesLabel = stringResource(Res.string.ai_suggest_names)
+                            Spark(
+                                spinning = namesGenerating,
+                                modifier = Modifier.semantics { contentDescription = suggestNamesLabel }
+                            )
+                        }
+                    }
+                } else null,
                 modifier = Modifier.fillMaxWidth()
             )
+
+            AnimatedVisibility(
+                visible = suggestedNames.isNotEmpty(),
+                enter = expandVertically(),
+                exit = shrinkVertically() + fadeOut(),
+            ) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    suggestedNames.forEachIndexed { index, suggestion ->
+                        key(suggestion) {
+                            NameSuggestionChip(
+                                name = suggestion,
+                                selected = name == suggestion,
+                                index = index,
+                                onClick = { name = suggestion },
+                            )
+                        }
+                    }
+                }
+            }
 
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it },
                 label = { Text("Description") },
+                placeholder = {
+                    AnimatedVisibility(
+                        visible = !descriptionGenerating,
+                        enter = fadeIn(),
+                        exit = fadeOut(),
+                    ) { Text(stringResource(Res.string.ai_write_description)) }
+                },
                 minLines = 2,
-                modifier = Modifier.fillMaxWidth()
+                trailingIcon = if (suggestAvailable) {
+                    {
+                        IconButton(onClick = onDraftDescription, enabled = !descriptionGenerating) {
+                            val writeLabel = stringResource(Res.string.ai_write_description)
+                            Spark(
+                                spinning = descriptionGenerating,
+                                modifier = Modifier.semantics { contentDescription = writeLabel }
+                            )
+                        }
+                    }
+                } else null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .generatingBorder(descriptionGenerating, OutlinedTextFieldDefaults.shape)
             )
 
             Row(
@@ -656,11 +777,42 @@ internal fun EditListSheet(
             }
 
             Button(
-                onClick = { onSave(name.trim(), description.trim()) },
+                onClick = {
+                    onSave(name.trim(), description.trim())
+                    onClearDrafts()
+                },
                 enabled = name.isNotBlank() &&
                         (name.trim() != customList.item.name || description.trim() != customList.item.description),
                 modifier = Modifier.align(Alignment.End)
             ) { Text("Save") }
         }
+    }
+}
+
+/** Pops in with a spring, 70 ms after the chip before it. */
+@Composable
+private fun NameSuggestionChip(
+    name: String,
+    selected: Boolean,
+    index: Int,
+    onClick: () -> Unit,
+) {
+    var revealed by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(70L * index)
+        revealed = true
+    }
+    val container by animateColorAsState(
+        if (selected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
+    )
+    AnimatedVisibility(
+        visible = revealed,
+        enter = scaleIn(spring(dampingRatio = 0.6f)) + fadeIn(),
+    ) {
+        SuggestionChip(
+            onClick = onClick,
+            label = { Text(name) },
+            colors = SuggestionChipDefaults.suggestionChipColors(containerColor = container),
+        )
     }
 }

@@ -738,4 +738,6 @@
     <string name="do_notif_continue">Continue %1$s</string>
     <string name="do_notifications_off">Notifications are off for this app</string>
     <string name="do_notifications_allow">Allow</string>
+    <string name="ai_write_description">Write a description</string>
+    <string name="ai_suggest_names">Suggest names</string>
 </resources>
