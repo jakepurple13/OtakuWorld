@@ -12,6 +12,10 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.runtime.Composable
+import org.koin.compose.koinInject
+import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
+import androidx.navigation3.runtime.NavKey
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -79,18 +83,37 @@ fun rememberChapterRevealOrigin(key: String?): Offset? {
 }
 
 /**
- * Animates the reader in and out with its navigation entry. [origin] is a fraction of the window size:
+ * How open the reader is in each state of its entry's transition. It only opens when first added and only closes
+ * when removed; while another screen covers it ([covered]) or is closed back to it ([hasEntered]) it stays open.
+ */
+internal fun chapterOpenTarget(state: EnterExitState, hasEntered: Boolean, covered: Boolean): Float = when (state) {
+    EnterExitState.Visible -> 1f
+    EnterExitState.PreEnter -> if (hasEntered) 1f else 0f
+    EnterExitState.PostExit -> if (covered) 1f else 0f
+}
+
+/**
+ * Animates the reader in and out with its navigation entry [key]. [origin] is a fraction of the window size:
  * non-null reveals a circle from it, null plays the depth move.
  */
 @Composable
-fun Modifier.chapterOpenTransition(origin: Offset?): Modifier {
+fun Modifier.chapterOpenTransition(origin: Offset?, key: NavKey): Modifier {
     val transition = LocalNavAnimatedContentScope.current.transition
+    val backStack = koinInject<Navigation3Actions>().backStack
+    var hasEntered by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(transition.currentState, transition.targetState) {
+        if (transition.currentState == EnterExitState.Visible && transition.targetState == EnterExitState.Visible) hasEntered = true
+    }
     val progress by transition.animateFloat(
         transitionSpec = {
             tween(if (origin != null) ChapterOpenMotion.REVEAL_MS else ChapterOpenMotion.DEPTH_MS, easing = ChapterOpenMotion.Emphasized)
         },
         label = "chapterOpen"
-    ) { if (it == EnterExitState.Visible) 1f else 0f }
+    ) { state ->
+        // Covered: another screen was pushed above this entry, which stays in the back stack
+        val index = backStack.indexOf(key)
+        chapterOpenTarget(state, hasEntered, covered = index in 0 until backStack.lastIndex)
+    }
 
     if (origin == null) {
         return graphicsLayer {

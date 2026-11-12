@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.utils.composables.transitions
 
+import androidx.compose.animation.EnterExitState
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import kotlin.math.hypot
@@ -47,4 +48,23 @@ class ChapterRevealOriginsTest {
     fun radiusReachesFarthestCorner() {
         assertEquals(hypot(90f, 180f), revealRadius(Size(100f, 200f), Offset(10f, 20f)), 0.01f)
     }
+}
+
+class ChapterOpenTargetTest {
+    @Test
+    fun visibleIsFullyOpen() = assertEquals(1f, chapterOpenTarget(EnterExitState.Visible, hasEntered = false, covered = false))
+
+    @Test
+    fun firstEnterStartsClosed() = assertEquals(0f, chapterOpenTarget(EnterExitState.PreEnter, hasEntered = false, covered = false))
+
+    @Test
+    fun uncoveredAfterAnotherScreenPopsStaysOpen() =
+        assertEquals(1f, chapterOpenTarget(EnterExitState.PreEnter, hasEntered = true, covered = false))
+
+    @Test
+    fun coveredByAnotherScreenStaysOpen() =
+        assertEquals(1f, chapterOpenTarget(EnterExitState.PostExit, hasEntered = true, covered = true))
+
+    @Test
+    fun poppedCloses() = assertEquals(0f, chapterOpenTarget(EnterExitState.PostExit, hasEntered = true, covered = false))
 }

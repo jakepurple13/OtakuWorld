@@ -133,7 +133,7 @@ fun main(args: Array<String>) {
             navigation<VideoScreen>(metadata = ChapterOpenMotion.readerMetadata()) {
                 // Library rows record a tap point; streams arrive from the loading overlay and get depth
                 val origin = rememberChapterRevealOrigin(it.showPath)
-                Box(Modifier.fillMaxSize().chapterOpenTransition(origin)) { VideoPlayerUi(it) }
+                Box(Modifier.fillMaxSize().chapterOpenTransition(origin, it)) { VideoPlayerUi(it) }
             }
             navigation<PlatformSettings> { JvmSettingsScreen() }
             navigation<VideoViewerRoute> { ViewVideoScreen() }

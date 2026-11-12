@@ -37,7 +37,7 @@ fun mangaSharedModule() = module {
 
     navigation<ReadViewModel.MangaReader>(metadata = ChapterOpenMotion.readerMetadata()) {
         val origin = rememberChapterRevealOrigin(it.mangaUrl ?: it.filePath)
-        Box(Modifier.fillMaxSize().chapterOpenTransition(origin)) {
+        Box(Modifier.fillMaxSize().chapterOpenTransition(origin, it)) {
             ReadView(
                 viewModel = koinViewModel { parametersOf(it) }
             )

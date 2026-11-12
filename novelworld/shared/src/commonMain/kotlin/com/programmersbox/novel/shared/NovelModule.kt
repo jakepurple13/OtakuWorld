@@ -26,7 +26,7 @@ fun novelSharedModule(): Module = module {
     viewModelOf(::ReadViewModel)
     navigation<ReadViewModel.NovelReader>(metadata = ChapterOpenMotion.readerMetadata()) {
         val origin = rememberChapterRevealOrigin(it.novelUrl)
-        Box(Modifier.fillMaxSize().chapterOpenTransition(origin)) {
+        Box(Modifier.fillMaxSize().chapterOpenTransition(origin, it)) {
             NovelReadView(
                 viewModel = koinViewModel { parametersOf(it) }
             )
