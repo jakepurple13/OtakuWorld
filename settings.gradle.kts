@@ -115,6 +115,7 @@ include(":sharedtools")
 include(":sharedcomponents")
 include(":showcase:annotations")
 include(":showcase:processor")
+include(":navgraph")
 includeIfLocal {
     include(":showcase")
     include(":kmpuiviews:koogintegration:customscraper")
