@@ -36,7 +36,7 @@ fun mangaSharedModule() = module {
     viewModelOf(::DownloadViewModel)
 
     navigation<ReadViewModel.MangaReader>(metadata = ChapterOpenMotion.readerMetadata()) {
-        val origin = rememberChapterRevealOrigin(it.mangaUrl)
+        val origin = rememberChapterRevealOrigin(it.mangaUrl ?: it.filePath)
         Box(Modifier.fillMaxSize().chapterOpenTransition(origin)) {
             ReadView(
                 viewModel = koinViewModel { parametersOf(it) }
