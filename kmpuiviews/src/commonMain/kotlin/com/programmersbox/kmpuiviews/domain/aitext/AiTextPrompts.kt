@@ -2,7 +2,7 @@ package com.programmersbox.kmpuiviews.domain.aitext
 
 object AiTextPrompts {
     const val RECAP_TAIL_CHARS = 3_000
-    const val TLDR_MIN_CHARS = 400
+    const val TLDR_MIN_CHARS = 200
     const val NANO_TEXT_LIMIT = 4_000
     const val MAX_LIST_TITLES = 30
 

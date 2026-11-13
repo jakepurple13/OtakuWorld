@@ -23,6 +23,7 @@ import com.programmersbox.kmpuiviews.domain.TranslationHandler
 import com.programmersbox.kmpuiviews.domain.aitext.AiEngineInfo
 import com.programmersbox.kmpuiviews.domain.aitext.AiFeature
 import com.programmersbox.kmpuiviews.domain.aitext.AiText
+import com.programmersbox.kmpuiviews.domain.aitext.AiTextPrompts
 import com.programmersbox.kmpuiviews.domain.aitext.AiTextState
 import com.programmersbox.kmpuiviews.domain.aitext.RewriteStyle
 import com.programmersbox.kmpuiviews.presentation.Screen
@@ -432,10 +433,10 @@ class DetailsViewModelTest {
     fun `tldr chip hidden for short description`() = runTest {
         val vm = viewModel()
         awaitCondition { vm.currentState is DetailState.Success }
-        setDescription(vm, "a".repeat(401))
+        setDescription(vm, "a".repeat(AiTextPrompts.TLDR_MIN_CHARS + 1))
         awaitCondition { vm.tldrAvailable.value }
 
-        setDescription(vm, "a".repeat(400))
+        setDescription(vm, "a".repeat(AiTextPrompts.TLDR_MIN_CHARS))
         awaitCondition { !vm.tldrAvailable.value }
         assertFalse(vm.tldrAvailable.value)
     }
@@ -452,6 +453,19 @@ class DetailsViewModelTest {
         setDescription(vm, "a".repeat(501))
         awaitCondition { !vm.tldrAvailable.value }
         assertFalse(vm.tldrAvailable.value)
+    }
+
+    @Test
+    fun `tldr chip appears once engine becomes ready`() = runTest {
+        val ai = FakeAiText(engine = null)
+        val vm = viewModel(aiText = ai)
+        awaitCondition { vm.currentState is DetailState.Success }
+        setDescription(vm, "a".repeat(500))
+        assertFalse(vm.tldrAvailable.value)
+
+        // Same description: only the retry can pick up the engine
+        ai.engine = FakeAiText.ENGINE
+        awaitCondition { vm.tldrAvailable.value }
     }
 
     @Test
