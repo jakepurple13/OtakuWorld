@@ -58,7 +58,9 @@ kotlin {
                 implementation(project.dependencies.platform(commonLibs.koin.bom))
                 implementation(commonLibs.koinCores)
                 // CloudStream plugins compile against these; the host must provide them.
-                api(androidLibs.cloudstreamNiceHttp)
+                // Android ships org.json in the framework. A bundled copy becomes an R8 program class,
+                // gets its members renamed, and then crashes against the framework class at runtime.
+                api(androidLibs.cloudstreamNiceHttp.get().toString()) { exclude(group = "org.json", module = "json") }
                 api(androidLibs.cloudstreamJackson)
                 api(androidLibs.cloudstreamRhino)
                 api(androidLibs.cloudstreamKsoup)
