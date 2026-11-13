@@ -56,6 +56,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -76,6 +77,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.io.encoding.Base64
+import kotlin.time.Duration.Companion.seconds
 
 class DetailsViewModel(
     //handle: SavedStateHandle,
@@ -125,9 +127,19 @@ class DetailsViewModel(
 
     /** True when the description is long enough to be worth summarizing and an on-device engine is ready. */
     val tldrAvailable: StateFlow<Boolean> = snapshotFlow { description }
-        .map {
-            it.isNotBlank() && it.length > AiTextPrompts.TLDR_MIN_CHARS &&
-                    aiText.engineFor(AiFeature.Tldr, it.length) != null
+        .flatMapLatest { text ->
+            flow {
+                if (text.isBlank() || text.length <= AiTextPrompts.TLDR_MIN_CHARS) {
+                    emit(false)
+                    return@flow
+                }
+                // Nano can be downloading or AICore not bound yet when the screen opens, so keep checking until ready
+                while (aiText.engineFor(AiFeature.Tldr, text.length) == null) {
+                    emit(false)
+                    delay(TLDR_ENGINE_RETRY)
+                }
+                emit(true)
+            }
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
@@ -500,6 +512,9 @@ class DetailsViewModel(
 }
 
 private const val COVER_THUMBNAIL_WIDTH = 32
+
+/** How often the TL;DR chip re-checks for an engine while none is ready. */
+private val TLDR_ENGINE_RETRY = 2.seconds
 
 /** A small copy of the cover, stored as the placeholder shown before the full cover loads. */
 private fun ImageBitmap.coverThumbnail(): ImageBitmap {
