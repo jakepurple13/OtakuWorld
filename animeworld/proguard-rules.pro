@@ -76,7 +76,8 @@
 -keep class com.google.firebase.installations.** { *; }
 -keep interface com.google.firebase.installations.** { *; }
 
-# org.json is part of the Android framework (boot classpath wins over any bundled copy), so no keep is needed.
+# org.json is part of the Android framework. Never bundle org.json:json: R8 would rename its members
+# and the framework class (which wins at runtime) would not have them. See source_utilities/cloudstream.
 -dontwarn org.json.**
 
 # ============================================================
