@@ -35,7 +35,7 @@ jobs:
         uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 25
 
       - name: Set Java Options
         run: echo "JAVA_OPTS=-Xmx8g" >> $GITHUB_ENV
@@ -131,7 +131,7 @@ jobs:
         uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 25
 
       - name: Set Java Options
         run: echo "JAVA_OPTS=-Xmx8g" >> $GITHUB_ENV
