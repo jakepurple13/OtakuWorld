@@ -480,6 +480,14 @@
     <string name="uc_no_report">No update check yet</string>
     <string name="uc_source_banner_title">Couldn't load %1$s's recent updates</string>
     <string name="uc_source_banner_body">None of its favorites were checked.</string>
+    <string name="uc_explain_common">Common error</string>
+    <string name="uc_explain_ai_label">What this means</string>
+    <string name="uc_explain_timed_out">%1$s didn't answer within 15 seconds. It may be slow or down right now. Try again later.</string>
+    <string name="uc_explain_rate_limited">%1$s is limiting how fast the app can ask for updates. This usually clears in a few minutes.</string>
+    <string name="uc_explain_blocked">%1$s is blocking automatic requests, often with a Cloudflare check. Opening the title in the app once can help.</string>
+    <string name="uc_explain_not_found">This title's page no longer exists on %1$s. The source may have moved or removed it.</string>
+    <string name="uc_explain_server_error">%1$s's server had a problem. This is on their side, so try again later.</string>
+    <string name="uc_explain_offline">Couldn't reach %1$s. Check your internet connection and try again.</string>
     <string name="uc_stopped_early">Check stopped early</string>
     <string name="uc_share_header">Update check · %1$s</string>
     <string name="uc_share_summary">%1$d favorites · %2$d updated · %3$d failed</string>
