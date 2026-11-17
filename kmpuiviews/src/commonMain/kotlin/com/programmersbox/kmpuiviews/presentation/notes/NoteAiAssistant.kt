@@ -3,7 +3,7 @@ package com.programmersbox.kmpuiviews.presentation.notes
 import com.programmersbox.kmpuiviews.domain.aitext.AiFeature
 import com.programmersbox.kmpuiviews.domain.aitext.AiText
 import com.programmersbox.kmpuiviews.domain.aitext.AiTextPrompts
-import com.programmersbox.kmpuiviews.domain.aitext.AiTextRunner
+import com.programmersbox.kmpuiviews.domain.aitext.AiTask
 import com.programmersbox.kmpuiviews.domain.aitext.AiTextState
 import com.programmersbox.kmpuiviews.domain.aitext.DiffSpan
 import com.programmersbox.kmpuiviews.domain.aitext.RewriteStyle
@@ -15,7 +15,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -40,7 +39,7 @@ class NoteAiAssistant(
 ) {
     private class Pending(val original: String, val label: String, val diffed: Boolean)
 
-    private val runner = AiTextRunner(scope)
+    private val task = AiTask(aiText, scope)
     private val pending = MutableStateFlow<Pending?>(null)
     private val _available = MutableStateFlow(false)
     private val _toolsEnabled = MutableStateFlow(false)
@@ -56,7 +55,7 @@ class NoteAiAssistant(
     val toolsEnabled: StateFlow<Boolean> = _toolsEnabled
     val disabledReason: StateFlow<String?> = _disabledReason
 
-    val preview: StateFlow<NotePreview?> = combine(pending, runner.state) { pending, state ->
+    val preview: StateFlow<NotePreview?> = combine(pending, task.state) { pending, state ->
         pending?.let {
             val shown = when {
                 state is AiTextState.Idle -> AiTextState.Loading
@@ -99,10 +98,10 @@ class NoteAiAssistant(
     }
 
     fun fixGrammar(text: String) =
-        start(text, AiFeature.Proofread, Pending(text, FIX_GRAMMAR_LABEL, diffed = true)) { aiText.proofread(text) }
+        start(text, AiFeature.Proofread, Pending(text, FIX_GRAMMAR_LABEL, diffed = true))
 
     fun rewrite(text: String, style: RewriteStyle) =
-        start(text, AiFeature.Rewrite(style), Pending(text, style.name, diffed = false)) { aiText.rewrite(text, style) }
+        start(text, AiFeature.Rewrite(style), Pending(text, style.name, diffed = false))
 
     /** The generated text once it is done, or null when there is nothing to accept. Clears the preview. */
     fun accept(): String? {
@@ -114,7 +113,7 @@ class NoteAiAssistant(
     fun discard() {
         runJob?.cancel()
         runJob = null
-        runner.reset()
+        task.reset()
         pending.value = null
     }
 
@@ -122,19 +121,12 @@ class NoteAiAssistant(
         text: String,
         feature: AiFeature<String>,
         entry: Pending,
-        block: () -> Flow<String>,
     ) {
         runJob?.cancel()
-        runner.reset()
+        task.reset()
         pending.value = entry
         runJob = scope.launch {
-            val engine = aiText.engineFor(feature, text.length)
-            ensureActive()
-            if (engine == null) {
-                pending.value = null
-                return@launch
-            }
-            runner.run(engine, block)
+            if (!task.start(feature, text)) pending.value = null
         }
     }
 
