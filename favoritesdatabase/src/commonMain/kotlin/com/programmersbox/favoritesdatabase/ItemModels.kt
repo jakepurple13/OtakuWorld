@@ -177,3 +177,18 @@ data class SkippedUpdateSource(
     @ColumnInfo(name = "source")
     val source: String,
 )
+
+/**
+ * The moods a title has, on this device only (never synced or backed up). [moods] is a JSON array of
+ * mood names: built-in ids or the user's own. A title with no moods has no row.
+ */
+@Entity(tableName = "mood_tags")
+data class MoodTagRow(
+    @PrimaryKey
+    @ColumnInfo(name = "url")
+    val url: String,
+    @ColumnInfo(name = "moods")
+    val moods: String,
+    @ColumnInfo(name = "updated_at")
+    val updatedAt: Long,
+)

@@ -12,9 +12,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -45,7 +42,7 @@ class NoteAiAssistant(
     private val _toolsEnabled = MutableStateFlow(false)
     private val _disabledReason = MutableStateFlow<String?>(null)
 
-    // Resolved once per screen open by resolveEngines, not per edit
+    // Kept current by resolveEngines, not recomputed per edit
     private var anyEngine = false
     private var engineForLongText = false
     private var lastText = ""
@@ -71,22 +68,29 @@ class NoteAiAssistant(
     private var resolveJob: Job? = null
     private var runJob: Job? = null
 
-    /** Checks which engines are ready. Call once when the note screen opens. */
-    suspend fun resolveEngines(text: String) {
+    /**
+     * Watches which engines are ready, and keeps watching while the note is open so the tools follow
+     * the AI settings. Call when the note screen opens; a second call replaces the first.
+     */
+    fun resolveEngines(text: String) {
         lastText = text
-        // Each check can query the on-device model's status, so run them side by side
-        val (proofread, rewrite, proofreadLong, rewriteLong) = coroutineScope {
-            listOf(
-                async { aiText.engineFor(AiFeature.Proofread, 0) != null },
-                async { aiText.engineFor(AiFeature.Rewrite(RewriteStyle.Rephrase), 0) != null },
-                async { aiText.engineFor(AiFeature.Proofread, AiTextPrompts.NANO_TEXT_LIMIT + 1) != null },
-                async { aiText.engineFor(AiFeature.Rewrite(RewriteStyle.Rephrase), AiTextPrompts.NANO_TEXT_LIMIT + 1) != null },
-            ).awaitAll()
+        resolveJob?.cancel()
+        resolveJob = scope.launch {
+            combine(
+                aiText.availability(AiFeature.Proofread, 0),
+                aiText.availability(AiFeature.Rewrite(RewriteStyle.Rephrase), 0),
+                aiText.availability(AiFeature.Proofread, AiTextPrompts.NANO_TEXT_LIMIT + 1),
+                aiText.availability(AiFeature.Rewrite(RewriteStyle.Rephrase), AiTextPrompts.NANO_TEXT_LIMIT + 1),
+            ) { proofread, rewrite, proofreadLong, rewriteLong ->
+                val any = proofread != null || rewrite != null
+                any to (any && (proofreadLong != null || rewriteLong != null))
+            }.collect { (any, long) ->
+                anyEngine = any
+                engineForLongText = long
+                _available.value = any
+                onTextChanged(lastText)
+            }
         }
-        anyEngine = proofread || rewrite
-        engineForLongText = anyEngine && (proofreadLong || rewriteLong)
-        _available.value = anyEngine
-        onTextChanged(lastText)
     }
 
     /** Cheap, per edit: only compares the length with what the resolved engines can take. */

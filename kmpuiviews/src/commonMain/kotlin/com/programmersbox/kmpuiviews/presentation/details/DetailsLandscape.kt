@@ -121,6 +121,7 @@ fun DetailsViewLandscape(
     notesVm: DetailsNotesViewModel,
     downloadStates: Map<String, ChapterDownloadUiState>,
     tldr: TldrUi,
+    moods: MoodUi,
 ) {
     val dao = LocalItemDao.current
     val listDao = koinInject<ListRepository>()
@@ -252,6 +253,7 @@ fun DetailsViewLandscape(
             onNoteSheetDismiss = { showNoteSheet = false },
             downloadStates = downloadStates,
             tldr = tldr,
+            moods = moods,
             modifier = Modifier.padding(p)
         )
     }
@@ -284,6 +286,7 @@ private fun DetailsLandscapeContent(
     onNoteSheetDismiss: () -> Unit,
     downloadStates: Map<String, ChapterDownloadUiState>,
     tldr: TldrUi,
+    moods: MoodUi,
     modifier: Modifier = Modifier,
     notificationRepository: NotificationRepository = koinInject(),
 ) {
@@ -394,6 +397,7 @@ private fun DetailsLandscapeContent(
                         onPaletteSet = onPaletteSet,
                         blurHash = blurHash,
                         onBitmapSet = onBitmapSet,
+                        moodRow = { MoodRow(moods, info.title) },
                         possibleDescription = {
                             Column {
                                 if (info.description.isNotEmpty()) {

@@ -18,6 +18,28 @@ fun ftsMatch(raw: String, column: String? = null): String? {
     return tokens.joinToString(" ") { "$prefix\"$it\"*" }
 }
 
+/**
+ * Matches rows containing **any** of [keywords]. Each keyword must match as all of its words, like
+ * [ftsMatch]: words of 4+ characters as prefixes, shorter ones exactly. Keywords with no searchable words
+ * are skipped.
+ *
+ * @return null when no keyword has a searchable word.
+ */
+fun ftsMatchAny(keywords: List<String>, column: String? = null): String? {
+    val prefix = column?.let { "$it : " }.orEmpty()
+    val groups = keywords.mapNotNull { keyword ->
+        val tokens = ftsToken.findAll(keyword).map { it.value }.toList()
+        tokens.takeIf { it.isNotEmpty() }?.joinToString(" ") { token ->
+            // A short word as a prefix matches far too much ("man" would match "manga", "many")
+            if (token.length <= EXACT_MAX_LENGTH) "$prefix\"$token\"" else "$prefix\"$token\"*"
+        }
+    }
+    if (groups.isEmpty()) return null
+    return groups.joinToString(" OR ") { "($it)" }
+}
+
+private const val EXACT_MAX_LENGTH = 3
+
 private val fts4Operators = setOf("AND", "OR", "NOT", "NEAR")
 
 /**

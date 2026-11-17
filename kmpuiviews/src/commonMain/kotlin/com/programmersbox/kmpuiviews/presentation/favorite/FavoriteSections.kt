@@ -54,10 +54,17 @@ fun filterGroups(
     quick: Set<QuickFilter>,
     sources: Set<String>,
     now: Long,
+    moods: Set<String> = emptySet(),
+    moodsByUrl: Map<String, List<String>> = emptyMap(),
 ): List<FavoriteGroup> = groups.filter { group ->
     quick.all { it.matches(group, now) } &&
-        (sources.isEmpty() || group.items.any { it.source in sources })
+        (sources.isEmpty() || group.items.any { it.source in sources }) &&
+        (moods.isEmpty() || group.moods(moodsByUrl).any { mood -> moods.any { it.equals(mood, ignoreCase = true) } })
 }
+
+/** Every mood on any of the group's favorites (a title saved from several sources shares one card). */
+fun FavoriteGroup.moods(moodsByUrl: Map<String, List<String>>): List<String> =
+    items.flatMap { moodsByUrl[it.url].orEmpty() }.distinctBy { it.lowercase() }
 
 fun buildSections(groups: List<FavoriteGroup>, sort: FavoriteSort, now: Long): List<FavoriteSection> {
     val sorted = when (sort) {

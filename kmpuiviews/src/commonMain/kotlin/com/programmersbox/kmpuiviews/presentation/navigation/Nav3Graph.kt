@@ -64,6 +64,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.general.DetailsSettin
 import com.programmersbox.kmpuiviews.presentation.settings.general.GeneralSettings
 import com.programmersbox.kmpuiviews.presentation.settings.general.ThemeSettingsScreen
 import com.programmersbox.kmpuiviews.presentation.settings.incognito.IncognitoScreen
+import com.programmersbox.kmpuiviews.presentation.settings.ai.AiSettingsScreen
 import com.programmersbox.kmpuiviews.presentation.settings.integrations.IntegrationsScreen
 import com.programmersbox.kmpuiviews.presentation.settings.library.LibraryScreen
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuCustomListScreenStandAlone
@@ -354,6 +355,7 @@ fun buildKmpGraph(): Module = module {
     detailEntry<Screen.Settings.Discover> { DiscoverScreen() }
     detailEntry<Screen.Settings.Sources> { SourcesScreen() }
     detailEntry<Screen.Settings.Integrations> { IntegrationsScreen() }
+    detailEntry<Screen.Settings.Ai> { AiSettingsScreen() }
     detailEntry<Screen.Settings.Appearance> { AppearanceScreen() }
     detailEntry<Screen.Settings.Colors> { ColorsScreen() }
     detailEntry<Screen.Settings.Behavior> { BehaviorScreen() }

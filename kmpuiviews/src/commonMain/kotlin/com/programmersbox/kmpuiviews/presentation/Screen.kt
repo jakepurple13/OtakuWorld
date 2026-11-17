@@ -41,6 +41,10 @@ sealed class Screen(val route: String) : NavKey {
         @Serializable
         data object Integrations : Screen("integrations")
 
+        /** Master switch, engine preference and one switch per AI feature. */
+        @Serializable
+        data object Ai : Screen("ai")
+
         /** Desktop translation engines and models; Android uses the translation sheet instead. */
         @Serializable
         data object Translation : Screen("translation")

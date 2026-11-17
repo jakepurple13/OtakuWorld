@@ -129,7 +129,7 @@ class DailyOverviewViewModel(
 
     /** The chosen engine, flagging setup when a non-Template choice fell back to Template. */
     private suspend fun resolveAndFlagSetup(): SummaryEngine {
-        val choice = settings.prefs.first().engine
+        val choice = settings.prefs.first().effectiveEngine
         val engine = resolver.resolve(choice)
         _uiState.update {
             it.copy(needsSetup = engine.id == SummaryEngineId.Template && choice != SummaryEngineChoice.Template)

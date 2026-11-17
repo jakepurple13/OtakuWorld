@@ -472,6 +472,27 @@ private fun DetailContent(
     val tldrState by details.tldr.collectAsStateWithLifecycle()
     val tldrTranslating by details.tldrTranslating.collectAsStateWithLifecycle()
     val tldrTranslated by details.tldrTranslated.collectAsStateWithLifecycle()
+    val moodMoods by details.moods.moods.collectAsStateWithLifecycle()
+    val moodCustom by details.moods.customMoods.collectAsStateWithLifecycle()
+    val moodVisible by details.moods.visible.collectAsStateWithLifecycle()
+    val moodCanSuggest by details.moods.canSuggest.collectAsStateWithLifecycle()
+    val moodSuggesting by details.moods.suggesting.collectAsStateWithLifecycle()
+    val moodSheetOpen by details.moods.sheetOpen.collectAsStateWithLifecycle()
+    val moodUi = MoodUi(
+        visible = moodVisible,
+        moods = moodMoods,
+        customMoods = moodCustom,
+        canSuggest = moodCanSuggest,
+        suggesting = moodSuggesting,
+        onSuggest = details::suggestMoods,
+        onToggle = details.moods::toggle,
+        onRemove = details.moods::remove,
+        onCreate = details.moods::create,
+        suggestFailed = details.moods.suggestFailed,
+        sheetOpen = moodSheetOpen,
+        onOpenSheet = details.moods::openSheet,
+        onCloseSheet = details.moods::closeSheet,
+    )
     val tldr = TldrUi(
         available = tldrAvailable,
         state = tldrState,
@@ -506,6 +527,7 @@ private fun DetailContent(
                 notesVm = notesVm,
                 downloadStates = details.downloadStates,
                 tldr = tldr,
+                moods = moodUi,
             )
         }
 
@@ -528,6 +550,7 @@ private fun DetailContent(
                 notesVm = notesVm,
                 downloadStates = details.downloadStates,
                 tldr = tldr,
+                moods = moodUi,
             )
         }
     }

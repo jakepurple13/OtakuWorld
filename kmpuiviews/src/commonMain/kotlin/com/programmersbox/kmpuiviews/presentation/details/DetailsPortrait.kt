@@ -111,6 +111,7 @@ fun DetailsView(
     notesVm: DetailsNotesViewModel,
     downloadStates: Map<String, ChapterDownloadUiState>,
     tldr: TldrUi,
+    moods: MoodUi,
 ) {
     val readUrls = remember(chapters) { chapters.mapTo(HashSet()) { it.url } }
     val dao = LocalItemDao.current
@@ -318,6 +319,7 @@ fun DetailsView(
                     onPaletteSet = onPaletteSet,
                     onBitmapSet = onBitmapSet,
                     blurHash = blurHash,
+                    moodRow = { MoodRow(moods, info.title) },
                 )
             }
 
