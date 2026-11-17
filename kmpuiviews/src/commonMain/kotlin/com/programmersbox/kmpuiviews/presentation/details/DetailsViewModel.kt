@@ -36,9 +36,9 @@ import com.programmersbox.kmpuiviews.ChapterDownloadUiState
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.domain.TranslationHandler
 import com.programmersbox.kmpuiviews.domain.aitext.AiFeature
+import com.programmersbox.kmpuiviews.domain.aitext.AiTask
 import com.programmersbox.kmpuiviews.domain.aitext.AiText
 import com.programmersbox.kmpuiviews.domain.aitext.AiTextPrompts
-import com.programmersbox.kmpuiviews.domain.aitext.AiTextRunner
 import com.programmersbox.kmpuiviews.domain.aitext.AiTextState
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.toItemModel
@@ -56,8 +56,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -70,6 +68,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -77,7 +76,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.io.encoding.Base64
-import kotlin.time.Duration.Companion.seconds
 
 class DetailsViewModel(
     //handle: SavedStateHandle,
@@ -128,26 +126,19 @@ class DetailsViewModel(
     /** True when the description is long enough to be worth summarizing and an on-device engine is ready. */
     val tldrAvailable: StateFlow<Boolean> = snapshotFlow { description }
         .flatMapLatest { text ->
-            flow {
-                if (text.isBlank() || text.length <= AiTextPrompts.TLDR_MIN_CHARS) {
-                    emit(false)
-                    return@flow
-                }
-                // Nano can be downloading or AICore not bound yet when the screen opens, so keep checking until ready
-                while (aiText.engineFor(AiFeature.Tldr, text.length) == null) {
-                    emit(false)
-                    delay(TLDR_ENGINE_RETRY)
-                }
-                emit(true)
+            if (text.isBlank() || text.length <= AiTextPrompts.TLDR_MIN_CHARS) {
+                flowOf(false)
+            } else {
+                aiText.availability(AiFeature.Tldr, AiFeature.Tldr.prepare(text).length).map { it != null }
             }
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
-    private val tldrRunner = AiTextRunner(viewModelScope)
+    private val tldrTask = AiTask(aiText, viewModelScope)
     private val cachedTldr = MutableStateFlow<TldrEntry?>(null)
     private var tldrJob: Job? = null
 
-    val tldr: StateFlow<AiTextState> = combine(tldrRunner.state, cachedTldr) { run, cached ->
+    val tldr: StateFlow<AiTextState> = combine(tldrTask.state, cachedTldr) { run, cached ->
         cached?.done ?: run
     }.stateIn(viewModelScope, SharingStarted.Eagerly, AiTextState.Idle)
 
@@ -386,7 +377,7 @@ class DetailsViewModel(
         }
         tldrJob?.cancel()
         // Drop any earlier error so Retry isn't shown under the Translating label
-        tldrRunner.reset()
+        tldrTask.reset()
         tldrJob = viewModelScope.launch(Dispatchers.IO) {
             val original = description
             _tldrTranslating.value = true
@@ -400,14 +391,12 @@ class DetailsViewModel(
                 _tldrTranslating.value = false
             }
             val translated = text != original
-            val engine = aiText.engineFor(AiFeature.Tldr, text.length) ?: return@launch
-            _tldrTranslated.value = translated
             // On Main, like hideTldr, so a hide either cancels this before the run or resets after it
-            withContext(Dispatchers.Main) {
-                ensureActive()
-                tldrRunner.run(engine) { aiText.tldr(text) }
+            val started = withContext(Dispatchers.Main) {
+                tldrTask.start(AiFeature.Tldr, text).also { if (it) _tldrTranslated.value = translated }
             }
-            val result = tldrRunner.state.first { it is AiTextState.Done || it is AiTextState.Error }
+            if (!started) return@launch
+            val result = tldrTask.state.first { it is AiTextState.Done || it is AiTextState.Error }
             if (result is AiTextState.Done && url != null) tldrCache[url] = TldrEntry(result, translated)
         }
     }
@@ -415,7 +404,7 @@ class DetailsViewModel(
     fun hideTldr() {
         tldrJob?.cancel()
         tldrJob = null
-        tldrRunner.reset()
+        tldrTask.reset()
         cachedTldr.value = null
         _tldrTranslating.value = false
         _tldrTranslated.value = false
@@ -512,9 +501,6 @@ class DetailsViewModel(
 }
 
 private const val COVER_THUMBNAIL_WIDTH = 32
-
-/** How often the TL;DR chip re-checks for an engine while none is ready. */
-private val TLDR_ENGINE_RETRY = 2.seconds
 
 /** A small copy of the cover, stored as the placeholder shown before the full cover loads. */
 private fun ImageBitmap.coverThumbnail(): ImageBitmap {
