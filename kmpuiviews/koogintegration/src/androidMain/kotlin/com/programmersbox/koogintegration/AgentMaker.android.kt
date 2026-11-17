@@ -49,7 +49,10 @@ actual class PlatformAgents(
     fun liteRtClient(): LLMClient = LiteRTLLMClient(
         config = LiteRTClientConfig(
             modelsPath = File(context.filesDir, "models").absolutePath,
-            cacheDir = File(context.cacheDir, "models").absolutePath
+            // LiteRT can't create this folder itself. Without it the XNNPack weight cache can't be
+            // written, so every load keeps the repacked weights in RAM (~2.2 GB even for a 1B model)
+            // and low-memory phones kill the app.
+            cacheDir = File(context.cacheDir, "models").apply { mkdirs() }.absolutePath
         )
     )
 
