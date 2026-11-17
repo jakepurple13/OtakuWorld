@@ -4,6 +4,7 @@ import com.programmersbox.kmpuiviews.domain.dailyoverview.EngineResolver
 import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngine
 import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngineChoice
 import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngineId
+import com.programmersbox.kmpuiviews.domain.dailyoverview.platformAutomaticOrder
 import com.programmersbox.kmpuiviews.utils.dispatchIo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -21,11 +22,13 @@ import kotlinx.coroutines.withContext
 class DefaultAiText(
     engines: List<SummaryEngine>,
     private val nanoTools: NanoTools?,
-    order: List<SummaryEngineId> = onDeviceAiOrder,
+    order: List<SummaryEngineId> = platformAutomaticOrder,
     private val generationLock: Mutex = Mutex(),
 ) : AiText {
-    private val resolver = EngineResolver(engines, order)
-    private val withoutNano = EngineResolver(engines, order - SummaryEngineId.Nano)
+    // AI text stays on device: cloud and the non-AI template are never used, whatever the order says.
+    private val onDeviceOrder = order - SummaryEngineId.Provider - SummaryEngineId.Template
+    private val resolver = EngineResolver(engines, onDeviceOrder)
+    private val withoutNano = EngineResolver(engines, onDeviceOrder - SummaryEngineId.Nano)
 
     override suspend fun engineFor(feature: AiFeature, inputLength: Int): AiEngineInfo? =
         withContext(Dispatchers.IO) {

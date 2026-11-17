@@ -92,6 +92,16 @@ class DefaultAiTextTest {
     }
 
     @Test
+    fun `provider in order is ignored`() = runTest {
+        val ai = DefaultAiText(
+            listOf(TemplateEngine(), FakeEngine(SummaryEngineId.Provider)),
+            nanoTools = null,
+            order = listOf(SummaryEngineId.Provider),
+        )
+        assertNull(ai.engineFor(AiFeature.Tldr))
+    }
+
+    @Test
     fun `availability is re-checked per call`() = runTest {
         val nano = FakeEngine(SummaryEngineId.Nano, EngineStatus.NeedsSetup("download"))
         val ai = aiText(nano)
