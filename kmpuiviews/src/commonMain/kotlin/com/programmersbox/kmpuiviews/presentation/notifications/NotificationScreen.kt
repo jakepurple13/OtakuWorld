@@ -1,6 +1,9 @@
 package com.programmersbox.kmpuiviews.presentation.notifications
 
 import androidx.compose.animation.AnimatedContent
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.programmersbox.kmpuiviews.presentation.components.ai.AiCard
+import otakuworld.kmpuiviews.generated.resources.ai_summary_label
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.fadeIn
@@ -341,6 +344,7 @@ private fun NotificationTimeline(
     val scope = rememberCoroutineScope()
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val is24Hour = koinInject<DateTimeFormatHandler>().is24Time()
+    val updateSummary by vm.updateSummary.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -423,6 +427,19 @@ private fun NotificationTimeline(
                         contentPadding = LocalNavHostPadding.current,
                         modifier = Modifier.fillMaxSize()
                     ) {
+                        val summary = updateSummary
+                        if (summary != null && vm.filter == NotificationFilter.All) {
+                            item(key = "ai-summary") {
+                                AiCard(
+                                    label = stringResource(Res.string.ai_summary_label),
+                                    state = summary,
+                                    onRetry = vm::retrySummary,
+                                    modifier = Modifier
+                                        .animateItem()
+                                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                                )
+                            }
+                        }
                         vm.dayBuckets.forEach { (day, list) ->
                             stickyHeader(key = day) {
                                 DayHeader(

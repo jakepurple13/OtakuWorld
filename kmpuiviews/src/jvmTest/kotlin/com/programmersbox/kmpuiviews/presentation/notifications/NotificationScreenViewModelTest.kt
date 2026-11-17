@@ -64,6 +64,9 @@ class NotificationScreenViewModelTest {
     private fun viewModel() = NotificationScreenViewModel(
         db = database.itemDao(),
         notificationRepository = NotificationRepository(database.itemDao()),
+        aiText = com.programmersbox.kmpuiviews.testing.FakeAiText(engine = null),
+        reportStore = com.programmersbox.kmpuiviews.testing.FakeUpdateCheckReportStore(),
+        summaryCache = UpdateSummaryCache(),
     ).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
 
     private suspend fun insert(vararg items: NotificationItem) {

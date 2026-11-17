@@ -1,5 +1,9 @@
 package com.programmersbox.kmpuiviews.presentation.notifications
 
+import kotlinx.coroutines.flow.StateFlow
+import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckReportStore
+import com.programmersbox.kmpuiviews.domain.aitext.AiTextState
+import com.programmersbox.kmpuiviews.domain.aitext.AiText
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -48,7 +52,17 @@ data class CatchUp(
 class NotificationScreenViewModel(
     private val db: ItemDao,
     private val notificationRepository: NotificationRepository,
+    aiText: AiText,
+    reportStore: UpdateCheckReportStore,
+    summaryCache: UpdateSummaryCache,
 ) : ViewModel() {
+
+    private val summaries = UpdateSummaries(aiText, reportStore, summaryCache, db.getAllNotificationsFlow(), viewModelScope)
+
+    /** The AI summary of the latest update check, or null when hidden. */
+    val updateSummary: StateFlow<AiTextState?> = summaries.state
+
+    fun retrySummary() = summaries.retry()
 
     val items = mutableStateListOf<NotificationItem>()
 
