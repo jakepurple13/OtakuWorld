@@ -190,8 +190,10 @@ class OtakuCustomListViewModelTest {
         vm.suggestNames()
         awaitCondition { vm.nameSuggestions.value is AiTextState.Done }
 
-        assertEquals(30, ai.titleCalls.single().size)
-        assertEquals("T0 (S)", ai.titleCalls.single().first())
+        // The cap is applied by the feature when it prepares the prompt
+        val sent = AiFeature.ListNames.prepare(ai.titleCalls.single()).lines()
+        assertEquals(30, sent.size)
+        assertEquals("T0 (S)", sent.first())
     }
 
     @Test fun `starts with empty items when list does not exist yet`() = runTest {

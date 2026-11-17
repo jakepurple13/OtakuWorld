@@ -16,8 +16,7 @@ import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.favoritesdatabase.resolvedCoverImageUrl
 import com.programmersbox.kmpuiviews.domain.aitext.AiFeature
 import com.programmersbox.kmpuiviews.domain.aitext.AiText
-import com.programmersbox.kmpuiviews.domain.aitext.AiTextPrompts
-import com.programmersbox.kmpuiviews.domain.aitext.AiTextRunner
+import com.programmersbox.kmpuiviews.domain.aitext.AiTask
 import com.programmersbox.kmpuiviews.domain.aitext.AiTextState
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.repository.ListRepository
@@ -27,7 +26,6 @@ import io.github.vinceglb.filekit.createDirectories
 import io.github.vinceglb.filekit.exists
 import io.github.vinceglb.filekit.writeString
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -177,32 +175,26 @@ class OtakuCustomListViewModel(
         .map { it >= MIN_SUGGEST_TITLES && aiText.engineFor(AiFeature.ListNames) != null }
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
-    private val nameRunner = AiTextRunner(viewModelScope)
-    private val descriptionRunner = AiTextRunner(viewModelScope)
+    private val nameTask = AiTask(aiText, viewModelScope)
+    private val descriptionTask = AiTask(aiText, viewModelScope)
     private var nameJob: Job? = null
     private var descriptionJob: Job? = null
 
     /** Done.text is the parsed names, newline-joined. */
-    val nameSuggestions: StateFlow<AiTextState> = nameRunner.state
-        .map { state ->
-            if (state is AiTextState.Done) {
-                state.copy(text = AiTextPrompts.parseNames(state.text).joinToString("\n"))
-            } else state
-        }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, AiTextState.Idle)
+    val nameSuggestions: StateFlow<AiTextState> = nameTask.state
 
-    val descriptionDraft: StateFlow<AiTextState> = descriptionRunner.state
+    val descriptionDraft: StateFlow<AiTextState> = descriptionTask.state
 
     fun suggestNames() {
         nameJob?.cancel()
-        nameRunner.reset()
-        nameJob = suggest(nameRunner) { aiText.listNames(it) }
+        nameTask.reset()
+        nameJob = suggest(nameTask, AiFeature.ListNames)
     }
 
     fun draftDescription() {
         descriptionJob?.cancel()
-        descriptionRunner.reset()
-        descriptionJob = suggest(descriptionRunner) { aiText.listDescription(it) }
+        descriptionTask.reset()
+        descriptionJob = suggest(descriptionTask, AiFeature.ListDescription)
     }
 
     /** Drops any suggestions. Nothing here is saved; saving only goes through [updateDetails]. */
@@ -211,21 +203,16 @@ class OtakuCustomListViewModel(
         descriptionJob?.cancel()
         nameJob = null
         descriptionJob = null
-        nameRunner.reset()
-        descriptionRunner.reset()
+        nameTask.reset()
+        descriptionTask.reset()
     }
 
-    private fun suggest(runner: AiTextRunner, block: (List<String>) -> Flow<String>): Job {
+    private fun suggest(task: AiTask, feature: AiFeature<List<String>>): Job {
         val titles = customList?.list
             .orEmpty()
-            .take(AiTextPrompts.MAX_LIST_TITLES)
             .map { "${it.title} (${it.source})" }
-        return viewModelScope.launch {
-            val engine = aiText.engineFor(AiFeature.ListNames) ?: return@launch
-            // Still on Main, so a clearDrafts either cancels this before the run or resets after it.
-            ensureActive()
-            runner.run(engine) { block(titles) }
-        }
+        // On Main, so a clearDrafts either cancels this before the run or resets after it.
+        return viewModelScope.launch { task.start(feature, titles) }
     }
 
     private fun visibleItems(): List<CustomListInfo> = when (val state = items) {
