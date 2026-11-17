@@ -5,7 +5,12 @@ import com.programmersbox.kmpuiviews.domain.aitext.AiEnginePreference
 import com.programmersbox.kmpuiviews.domain.aitext.AiTextState
 import com.programmersbox.kmpuiviews.domain.aitext.AiToggle
 import com.programmersbox.kmpuiviews.domain.aitext.DefaultAiText
+import com.programmersbox.kmpuiviews.domain.aitext.modelimport.ImportState
+import com.programmersbox.kmpuiviews.domain.aitext.modelimport.ImportedModel
+import com.programmersbox.kmpuiviews.domain.aitext.modelimport.ModelImports
 import com.programmersbox.kmpuiviews.domain.dailyoverview.DailyFacts
+import io.github.vinceglb.filekit.PlatformFile
+import kotlinx.coroutines.flow.MutableStateFlow
 import com.programmersbox.kmpuiviews.domain.dailyoverview.EngineStatus
 import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngine
 import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngineId
@@ -54,6 +59,7 @@ class AiSettingsViewModelTest {
         settings: InMemoryAiSettings = InMemoryAiSettings(),
         engines: List<SummaryEngine> = listOf(Engine(SummaryEngineId.Nano), Engine(SummaryEngineId.Gemma)),
         order: List<SummaryEngineId> = this.order,
+        imports: ModelImports? = null,
     ): AiSettingsViewModel {
         val all = listOf<SummaryEngine>(TemplateEngine()) + engines
         return AiSettingsViewModel(
@@ -61,6 +67,7 @@ class AiSettingsViewModelTest {
             aiText = DefaultAiText(all, null, settings = settings, order = order),
             engines = all,
             order = order,
+            imports = imports,
         ).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
     }
 
@@ -128,6 +135,72 @@ class AiSettingsViewModelTest {
         val vm = viewModel(InMemoryAiSettings(enabled = false))
         vm.trySample()
         vm.sample.await { it is AiTextState.Error }
+    }
+
+    private class FakeImports(var model: ImportedModel? = null) : ModelImports {
+        override val state = MutableStateFlow<ImportState>(ImportState.Idle)
+        val imported = mutableListOf<Pair<String, String?>>()
+        val removed = mutableListOf<String>()
+        override fun import(file: PlatformFile, replacing: String?) {
+            imported += file.file.name to replacing
+        }
+        override fun cancel() = Unit
+        override fun dismissError() = Unit
+        override fun remove(fileName: String) {
+            removed += fileName
+            model = null
+        }
+        override suspend fun current() = model
+    }
+
+    @Test
+    fun `import state follows importer`() = runTest {
+        val imports = FakeImports()
+        val vm = viewModel(imports = imports)
+        imports.state.value = ImportState.Checking("m.litertlm")
+        assertEquals(ImportState.Checking("m.litertlm"), vm.importState.await { it is ImportState.Checking })
+    }
+
+    @Test
+    fun `local model refreshes after an import finishes`() = runTest {
+        val imports = FakeImports()
+        val vm = viewModel(imports = imports)
+        vm.ui.await { it != null }
+        imports.state.value = ImportState.Copying("m.litertlm", 1, 2)
+        imports.model = ImportedModel("m.litertlm", 2)
+        imports.state.value = ImportState.Idle
+        assertEquals(ImportedModel("m.litertlm", 2), vm.ui.await { it?.localModel != null }!!.localModel)
+    }
+
+    @Test
+    fun `replace passes the current model and import does not`() = runTest {
+        val imports = FakeImports(ImportedModel("old.litertlm", 1))
+        val vm = viewModel(imports = imports)
+        vm.ui.await { it?.localModel != null }
+        vm.importModel(PlatformFile(java.io.File("new.litertlm")), replace = true)
+        vm.importModel(PlatformFile(java.io.File("other.litertlm")), replace = false)
+        assertEquals(listOf("new.litertlm" to "old.litertlm", "other.litertlm" to null), imports.imported)
+    }
+
+    @Test
+    fun `remove deletes the current model and refreshes`() = runTest {
+        val imports = FakeImports(ImportedModel("old.litertlm", 1))
+        val vm = viewModel(imports = imports)
+        vm.ui.await { it?.localModel != null }
+        vm.removeModel()
+        // Removal runs on IO; the refresh after it is what clears the row
+        vm.ui.await { it != null && it.localModel == null }
+        assertEquals(listOf("old.litertlm"), imports.removed)
+    }
+
+    @Test
+    fun `preference hidden without Nano`() = runTest {
+        val desktop = viewModel(
+            engines = listOf(Engine(SummaryEngineId.Gemma), Engine(SummaryEngineId.Ollama)),
+            order = listOf(SummaryEngineId.Gemma, SummaryEngineId.Ollama),
+        )
+        val ui = desktop.ui.await { it != null && it.engines.size == 2 }!!
+        assertFalse(ui.showPreference)
     }
 
     @Test

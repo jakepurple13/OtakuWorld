@@ -17,20 +17,6 @@ import java.io.File
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
-sealed interface ImportState {
-    data object Idle : ImportState
-    data class Copying(val name: String, val copied: Long, val total: Long) : ImportState
-    data class Checking(val name: String) : ImportState
-    data class Failed(val reason: ImportError) : ImportState
-}
-
-sealed interface ImportError {
-    data object NotAModel : ImportError
-    data class NoSpace(val needed: Long, val available: Long) : ImportError
-    data class WontLoad(val message: String?) : ImportError
-    data class CopyFailed(val message: String?) : ImportError
-}
-
 /**
  * Copies a picked `.litertlm` file into [modelsDir] and checks that it loads, one import at a time.
  *

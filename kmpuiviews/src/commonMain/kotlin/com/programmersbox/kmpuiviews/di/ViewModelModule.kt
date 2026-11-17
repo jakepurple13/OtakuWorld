@@ -116,7 +116,7 @@ val viewModels: Module = module {
     viewModelOf(::DictionaryFormViewModel)
     viewModelOf(::AccountStatDetailsViewModel)
     viewModelOf(::UpdateCheckErrorsViewModel)
-    viewModel { AiSettingsViewModel(get(), get(), getAll()) }
+    viewModel { AiSettingsViewModel(get(), get(), getAll(), imports = getOrNull()) }
     viewModelOf(::UpdateSourcesViewModel)
     viewModelOf(::NavMapViewModel)
     viewModel {

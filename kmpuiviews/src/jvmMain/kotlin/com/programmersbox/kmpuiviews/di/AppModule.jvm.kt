@@ -52,6 +52,8 @@ import org.koin.core.module.dsl.singleOf
 import com.programmersbox.kmpuiviews.dailyoverview.LocalModelEngine
 import com.programmersbox.kmpuiviews.domain.aitext.modelimport.LocalModel
 import com.programmersbox.kmpuiviews.domain.aitext.modelimport.ModelImporter
+import com.programmersbox.kmpuiviews.domain.aitext.modelimport.ModelImports
+import com.programmersbox.kmpuiviews.domain.aitext.modelimport.PlatformModelImports
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -109,6 +111,7 @@ actual fun platformModule(): Module = module {
             verify = get<LocalModel>()::verify,
         )
     }
+    single<ModelImports> { PlatformModelImports(get(), get()) }
     singleOf(::TrayState)
     singleOf(::AboutLibraryBuilder)
 

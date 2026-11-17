@@ -39,7 +39,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.kmpuiviews.domain.aitext.AiEnginePreference
 import com.programmersbox.kmpuiviews.domain.aitext.AiTextState
 import com.programmersbox.kmpuiviews.domain.aitext.AiToggle
+import com.programmersbox.kmpuiviews.domain.aitext.modelimport.ImportState
 import com.programmersbox.kmpuiviews.domain.dailyoverview.EngineStatus
+import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngineId
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.ai.AiCard
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroupListItem
@@ -127,6 +129,8 @@ fun AiSettingsScreen(
     val navActions = LocalNavActions.current
     val ui by viewModel.ui.collectAsStateWithLifecycle()
     val sample by viewModel.sample.collectAsStateWithLifecycle()
+    val importState by viewModel.importState.collectAsStateWithLifecycle()
+    val picker = rememberModelPicker(viewModel::importModel)
 
     // Statuses change outside the app (Nano downloads, Gemma set up in AI Helper)
     LifecycleResumeEffect(viewModel) {
@@ -160,6 +164,21 @@ fun AiSettingsScreen(
                 onPreference = viewModel::setPreference,
                 onTry = viewModel::trySample,
                 onSetUp = aiHelperSettingsRoute?.let { route -> { navActions.navigate(route) } },
+                localModel = if (state.canImport) {
+                    {
+                        LocalModelImport(
+                            state = importState,
+                            hasModel = state.localModel != null,
+                            picker = picker,
+                            onDrop = { viewModel.importModel(it, replace = state.localModel != null) },
+                            onCancel = viewModel::cancelImport,
+                            onDismiss = viewModel::dismissImportError,
+                        )
+                    }
+                } else null,
+                localModelMenu = if (state.canImport && state.localModel != null && importState is ImportState.Idle) {
+                    { LocalModelMenu(onReplace = { picker.launch(true) }, onRemove = viewModel::removeModel) }
+                } else null,
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
 
@@ -218,6 +237,10 @@ private fun EngineCard(
     onPreference: (AiEnginePreference) -> Unit,
     onTry: () -> Unit,
     onSetUp: (() -> Unit)?,
+    /** Import UI under the local engine's row; null where models can't be imported. */
+    localModel: (@Composable () -> Unit)?,
+    /** ⋮ menu at the end of the local engine's row while it has an imported model. */
+    localModelMenu: (@Composable () -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     Surface(
@@ -251,22 +274,31 @@ private fun EngineCard(
             }
 
             state.engines.forEach { engine ->
+                val local = engine.id == SummaryEngineId.Gemma
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(engine.name, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+                    Column(Modifier.weight(1f)) {
+                        Text(engine.name, style = MaterialTheme.typography.bodyLarge)
+                        if (local && localModel != null) state.localModel?.let { LocalModelSize(it) }
+                    }
                     when (engine.status) {
                         EngineStatus.Ready -> StatusLabel(stringResource(Res.string.ai_status_ready), good = true)
                         EngineStatus.Unavailable -> StatusLabel(stringResource(Res.string.ai_status_unavailable), good = false)
-                        is EngineStatus.NeedsSetup -> if (onSetUp != null) {
+                        // The import below sets the local engine up
+                        is EngineStatus.NeedsSetup -> if (local && localModel != null) {
+                            Unit
+                        } else if (onSetUp != null) {
                             TextButton(onClick = onSetUp) { Text(stringResource(Res.string.ai_set_up)) }
                         } else {
                             StatusLabel(stringResource(Res.string.ai_status_setup), good = false)
                         }
                     }
+                    if (local) localModelMenu?.invoke()
                 }
+                if (local) localModel?.invoke()
             }
 
             if (state.showPreference) {
