@@ -1,9 +1,9 @@
 package com.programmersbox.kmpuiviews.domain.aitext
 
+import com.programmersbox.kmpuiviews.testing.FakeAiText
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -18,29 +18,16 @@ import kotlin.test.assertTrue
 class ChapterRecapsTest {
     private val engine = AiEngineInfo("Fake", onDevice = true, destination = null)
 
-    private class FakeAiText(
-        private val engine: AiEngineInfo?,
-        private val recapFlow: (String) -> Flow<String>,
-    ) : AiText {
-        var recapCalls = 0
-        override suspend fun engineFor(feature: AiFeature, inputLength: Int) = engine
-        override fun recap(previousChapterText: String): Flow<String> {
-            recapCalls++
-            return recapFlow(previousChapterText)
-        }
+    private fun fakeAi(engine: AiEngineInfo?, recapFlow: (String) -> Flow<String>) =
+        FakeAiText(engine = engine, output = { _, input -> recapFlow(input as String) })
 
-        override fun tldr(description: String): Flow<String> = emptyFlow()
-        override fun proofread(text: String): Flow<String> = emptyFlow()
-        override fun rewrite(text: String, style: RewriteStyle): Flow<String> = emptyFlow()
-        override fun listNames(titles: List<String>): Flow<String> = emptyFlow()
-        override fun listDescription(titles: List<String>): Flow<String> = emptyFlow()
-    }
+    private val FakeAiText.recapCalls get() = inputsFor<AiFeature.Recap>().size
 
     private fun TestScope.recaps(ai: AiText) = ChapterRecaps(ai, TestScope(StandardTestDispatcher(testScheduler)))
 
     @Test
     fun `starts idle and does not generate`() = runTest {
-        val ai = FakeAiText(engine) { flow { emit("x") } }
+        val ai = fakeAi(engine) { flow { emit("x") } }
         val recaps = recaps(ai)
         advanceUntilIdle()
         assertEquals(AiTextState.Idle, recaps.stateFor("ch13").value)
@@ -50,7 +37,7 @@ class ChapterRecapsTest {
 
     @Test
     fun `request generates once and caches`() = runTest {
-        val ai = FakeAiText(engine) { flow { emit("sum") } }
+        val ai = fakeAi(engine) { flow { emit("sum") } }
         val recaps = recaps(ai)
         recaps.request("ch13") { "text" }
         advanceUntilIdle()
@@ -63,7 +50,7 @@ class ChapterRecapsTest {
     @Test
     fun `second request while streaming is a no-op`() = runTest {
         val gate = CompletableDeferred<Unit>()
-        val ai = FakeAiText(engine) { flow { emit("a"); gate.await(); emit("b") } }
+        val ai = fakeAi(engine) { flow { emit("a"); gate.await(); emit("b") } }
         val recaps = recaps(ai)
         recaps.request("ch13") { "text" }
         advanceUntilIdle()
@@ -78,7 +65,7 @@ class ChapterRecapsTest {
     @Test
     fun `changing chapter cancels and ignores stale recap`() = runTest {
         val gate = CompletableDeferred<Unit>()
-        val ai = FakeAiText(engine) { flow { emit("a"); gate.await(); emit("b") } }
+        val ai = fakeAi(engine) { flow { emit("a"); gate.await(); emit("b") } }
         val recaps = recaps(ai)
         recaps.request("ch13") { "text" }
         advanceUntilIdle()
@@ -92,7 +79,7 @@ class ChapterRecapsTest {
     @Test
     fun `recap error then retry`() = runTest {
         var fail = true
-        val ai = FakeAiText(engine) {
+        val ai = fakeAi(engine) {
             flow {
                 if (fail) throw IllegalStateException("boom")
                 emit("ok")
@@ -110,7 +97,7 @@ class ChapterRecapsTest {
 
     @Test
     fun `no previous chapter gives Error`() = runTest {
-        val ai = FakeAiText(engine) { flow { emit("x") } }
+        val ai = fakeAi(engine) { flow { emit("x") } }
         val recaps = recaps(ai)
         recaps.request("ch13") { null }
         advanceUntilIdle()
@@ -120,7 +107,7 @@ class ChapterRecapsTest {
 
     @Test
     fun `no engine gives Error without loading the previous chapter`() = runTest {
-        val ai = FakeAiText(null) { flow { emit("x") } }
+        val ai = fakeAi(null) { flow { emit("x") } }
         val recaps = recaps(ai)
         var loads = 0
         recaps.request("ch13") { loads++; "text" }

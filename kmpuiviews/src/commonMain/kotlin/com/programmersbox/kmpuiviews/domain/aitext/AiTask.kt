@@ -4,36 +4,51 @@ import com.programmersbox.kmpuiviews.logFirebaseMessage
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-/** Runs [block] in [scope], mapping deltas to Loading → Streaming → Done, exceptions to Error. Cancels the previous run. */
-class AiTextRunner(private val scope: CoroutineScope) {
+/**
+ * One AI generation slot for a screen: resolves an engine, runs a feature in [scope], and maps the
+ * deltas to Loading → Streaming → Done (with [AiFeature.finish] applied), or exceptions to Error.
+ */
+class AiTask(
+    private val aiText: AiText,
+    private val scope: CoroutineScope,
+) {
     private val _state = MutableStateFlow<AiTextState>(AiTextState.Idle)
     val state: StateFlow<AiTextState> = _state.asStateFlow()
 
     private var job: Job? = null
 
-    fun run(engine: AiEngineInfo, block: () -> Flow<String>) {
+    /**
+     * Resolves an engine for [input] in the caller's coroutine. Returns false, leaving the state as
+     * it was, when none is ready. Otherwise cancels any previous run, launches this one in [scope],
+     * and returns true. Cancelling the caller before the engine is resolved starts nothing.
+     */
+    suspend fun <I> start(feature: AiFeature<I>, input: I): Boolean {
+        val engine = aiText.engineFor(feature, feature.prepare(input).length) ?: return false
+        currentCoroutineContext().ensureActive()
         job?.cancel()
         _state.value = AiTextState.Loading
         job = scope.launch {
             try {
                 val text = StringBuilder()
-                block().collect { delta ->
+                aiText.run(feature, input).collect { delta ->
                     text.append(delta)
                     _state.value = AiTextState.Streaming(text.toString(), engine)
                 }
-                _state.value = AiTextState.Done(text.toString(), engine)
+                _state.value = AiTextState.Done(feature.finish(text.toString()), engine)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 _state.value = AiTextState.Error(errorMessage(e))
             }
         }
+        return true
     }
 
     fun reset() {

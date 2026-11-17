@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.settings.lists
 
+import com.programmersbox.kmpuiviews.testing.FakeAiText as SharedFakeAiText
 import com.programmersbox.kmpuiviews.testing.clearAndJoin
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.lifecycle.ViewModelStore
@@ -13,9 +14,6 @@ import com.programmersbox.kmpuiviews.domain.aitext.AiEngineInfo
 import com.programmersbox.kmpuiviews.domain.aitext.AiFeature
 import com.programmersbox.kmpuiviews.domain.aitext.AiText
 import com.programmersbox.kmpuiviews.domain.aitext.AiTextState
-import com.programmersbox.kmpuiviews.domain.aitext.RewriteStyle
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.repository.ListRepository
@@ -192,8 +190,10 @@ class OtakuCustomListViewModelTest {
         vm.suggestNames()
         awaitCondition { vm.nameSuggestions.value is AiTextState.Done }
 
-        assertEquals(30, ai.titleCalls.single().size)
-        assertEquals("T0 (S)", ai.titleCalls.single().first())
+        // The cap is applied by the feature when it prepares the prompt
+        val sent = AiFeature.ListNames.prepare(ai.titleCalls.single()).lines()
+        assertEquals(30, sent.size)
+        assertEquals("T0 (S)", sent.first())
     }
 
     @Test fun `starts with empty items when list does not exist yet`() = runTest {
@@ -479,35 +479,17 @@ class OtakuCustomListViewModelTest {
     }
 }
 
-private class FakeAiText(
-    var engine: AiEngineInfo? = ENGINE,
-    private val namesOutput: String = "A\nB\nC",
-    private val descriptionOutput: String = "A list.",
-) : AiText {
-    @Volatile var engineCalls = 0
-    val titleCalls = java.util.concurrent.CopyOnWriteArrayList<List<String>>()
+@Suppress("TestFunctionName")
+private fun FakeAiText(
+    engine: AiEngineInfo? = SharedFakeAiText.ENGINE,
+    namesOutput: String = "A\nB\nC",
+    descriptionOutput: String = "A list.",
+) = SharedFakeAiText(
+    engine = engine,
+    output = { feature, _ -> flowOf(if (feature is AiFeature.ListNames) namesOutput else descriptionOutput) },
+)
 
-    override suspend fun engineFor(feature: AiFeature, inputLength: Int): AiEngineInfo? {
-        engineCalls++
-        return engine
-    }
-
-    override fun listNames(titles: List<String>): Flow<String> {
-        titleCalls += titles
-        return flow { emit(namesOutput) }
-    }
-
-    override fun listDescription(titles: List<String>): Flow<String> {
-        titleCalls += titles
-        return flow { emit(descriptionOutput) }
-    }
-
-    override fun recap(previousChapterText: String): Flow<String> = flowOf()
-    override fun tldr(description: String): Flow<String> = flowOf()
-    override fun proofread(text: String): Flow<String> = flowOf()
-    override fun rewrite(text: String, style: RewriteStyle): Flow<String> = flowOf()
-
-    companion object {
-        val ENGINE = AiEngineInfo(label = "Fake", onDevice = true, destination = null)
-    }
-}
+@Suppress("UNCHECKED_CAST")
+private val SharedFakeAiText.titleCalls: List<List<String>>
+    get() = runs.filter { it.first is AiFeature.ListNames || it.first is AiFeature.ListDescription }
+        .map { it.second as List<String> }

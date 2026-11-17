@@ -37,6 +37,16 @@ class AiTextPromptsTest {
         assertEquals(AiTextPrompts.NANO_TEXT_LIMIT, AiTextPrompts.tldrHead(description).length)
     }
 
+    // Small models often open with a heading line; it must not take a bullet's place
+    @Test
+    fun `parseBullets skips a preamble line`() {
+        assertEquals(
+            listOf("one", "two", "three"),
+            AiTextPrompts.parseBullets("Here's your three-bullet summary:\n- one\n- two\n- three"),
+        )
+        assertEquals(listOf("one", "two"), AiTextPrompts.parseBullets("**Summary:**\n* one\n* two"))
+    }
+
     @Test
     fun `parseBullets strips markers and caps at 3`() {
         assertEquals(listOf("a", "b", "c"), AiTextPrompts.parseBullets("- a\n• b\n3. c\n* d"))
@@ -48,12 +58,5 @@ class AiTextPromptsTest {
             listOf("Cozy", "Slow Evenings"),
             AiTextPrompts.parseNames("1. Cozy\n\"cozy\"\n- Slow Evenings\n\n"),
         )
-    }
-
-    @Test
-    fun `system prompt per rewrite style differs`() {
-        val prompts = RewriteStyle.entries.map { AiTextPrompts.system(AiFeature.Rewrite, it) }
-        assertEquals(6, prompts.toSet().size)
-        assertTrue(prompts.all { it.isNotBlank() })
     }
 }

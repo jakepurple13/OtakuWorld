@@ -1,8 +1,10 @@
 package com.programmersbox.kmpuiviews.domain.aitext
 
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-
-enum class AiFeature { Recap, Tldr, Proofread, Rewrite, ListSuggest }
+import kotlinx.coroutines.flow.flow
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 enum class RewriteStyle { Rephrase, Shorten, Elaborate, Friendly, Professional, Emojify }
 
@@ -18,12 +20,29 @@ sealed interface AiTextState {
 }
 
 interface AiText {
-    /** Null when no on-device engine is ready for [feature]. Re-checks status on every call. */
-    suspend fun engineFor(feature: AiFeature, inputLength: Int = 0): AiEngineInfo?
-    fun recap(previousChapterText: String): Flow<String>
-    fun tldr(description: String): Flow<String>          // emits bullet text, one bullet per line
-    fun proofread(text: String): Flow<String>
-    fun rewrite(text: String, style: RewriteStyle): Flow<String>
-    fun listNames(titles: List<String>): Flow<String>    // one name per line
-    fun listDescription(titles: List<String>): Flow<String>
+    /**
+     * Null when no on-device engine is ready for [feature] with input of [inputLength] characters
+     * (the length after [AiFeature.prepare]). Re-checks status on every call.
+     */
+    suspend fun engineFor(feature: AiFeature<*>, inputLength: Int = 0): AiEngineInfo?
+
+    /** Streams the reply as deltas. Throws [IllegalStateException] on collect when no engine is ready. */
+    fun <I> run(feature: AiFeature<I>, input: I): Flow<String>
+
+    /**
+     * Emits null and re-checks every [retry] until an engine is ready, then emits it and completes.
+     * Nano can still be downloading, or AICore not bound yet, when a screen opens.
+     */
+    fun availability(
+        feature: AiFeature<*>,
+        inputLength: Int = 0,
+        retry: Duration = 2.seconds,
+    ): Flow<AiEngineInfo?> = flow {
+        while (true) {
+            val engine = engineFor(feature, inputLength)
+            emit(engine)
+            if (engine != null) return@flow
+            delay(retry)
+        }
+    }
 }
