@@ -52,4 +52,18 @@ class MoodStatisticsProviderTest {
         )
         assertEquals(4, stats.size)
     }
+
+    @Test
+    fun `a title saved from two sources counts once`() = runTest {
+        database.itemDao().insertFavorite(DbModel("Frieren", "D", "a/frieren", "", "SourceA"))
+        database.itemDao().insertFavorite(DbModel("Frieren", "D", "b/frieren", "", "SourceB"))
+        database.itemDao().insertFavorite(DbModel("Dandadan", "D", "a/dandadan", "", "SourceA"))
+        moods.toggle("a/frieren", "cozy")
+        moods.toggle("b/frieren", "cozy")
+
+        val stats = MoodStatisticsProvider(database.itemDao(), moods).observeStats().first()
+
+        assertEquals("1 of 2", stats.first { it.id == "tagged" }.value)
+        assertEquals("cozy · 1", stats.first { it.id == "top0" }.value)
+    }
 }

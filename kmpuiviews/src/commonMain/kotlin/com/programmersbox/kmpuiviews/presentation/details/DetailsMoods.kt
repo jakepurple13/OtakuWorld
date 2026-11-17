@@ -50,12 +50,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.PathEffect
@@ -91,6 +86,9 @@ class MoodUi(
     val onRemove: (String) -> Unit,
     val onCreate: (String) -> Unit,
     val suggestFailed: Flow<Unit>,
+    val sheetOpen: Boolean,
+    val onOpenSheet: () -> Unit,
+    val onCloseSheet: () -> Unit,
 )
 
 /** A built-in mood's label, or the user's own mood as typed. */
@@ -112,7 +110,6 @@ fun Modifier.customMoodOutline(custom: Boolean, color: androidx.compose.ui.graph
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MoodRow(ui: MoodUi, title: String, modifier: Modifier = Modifier) {
-    var showSheet by rememberSaveable { mutableStateOf(false) }
     val haptics = LocalHapticFeedback.current
     val notifier = koinInject<InAppNotifier>()
     val failedText = stringResource(Res.string.moods_suggest_failed)
@@ -183,7 +180,7 @@ fun MoodRow(ui: MoodUi, title: String, modifier: Modifier = Modifier) {
                 }
 
                 AssistChip(
-                    onClick = { showSheet = true },
+                    onClick = ui.onOpenSheet,
                     label = { Text(stringResource(Res.string.moods_add)) },
                     leadingIcon = { Icon(Icons.Default.Add, null, modifier = Modifier.size(AssistChipDefaults.IconSize)) },
                 )
@@ -198,8 +195,8 @@ fun MoodRow(ui: MoodUi, title: String, modifier: Modifier = Modifier) {
         }
     }
 
-    if (showSheet) {
-        MoodSheet(ui = ui, title = title, onDismiss = { showSheet = false })
+    if (ui.sheetOpen) {
+        MoodSheet(ui = ui, title = title, onDismiss = ui.onCloseSheet)
     }
 }
 

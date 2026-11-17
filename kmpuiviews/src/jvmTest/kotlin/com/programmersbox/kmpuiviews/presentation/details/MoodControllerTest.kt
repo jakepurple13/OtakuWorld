@@ -96,4 +96,14 @@ class MoodControllerTest {
         c.suggest("Frieren", "An elf mage")
         withContext(Dispatchers.Default) { withTimeout(5_000) { failed.await() } }
     }
+
+    @Test
+    fun `add sheet state survives in the controller`() = runTest {
+        val c = backgroundScope.controller()
+        assertEquals(false, c.sheetOpen.value)
+        c.openSheet()
+        assertEquals(true, c.sheetOpen.value)
+        c.closeSheet()
+        assertEquals(false, c.sheetOpen.value)
+    }
 }

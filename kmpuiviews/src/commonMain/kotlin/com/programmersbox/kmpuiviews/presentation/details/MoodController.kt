@@ -41,6 +41,19 @@ class MoodController(
     private val _suggesting = MutableStateFlow(false)
     val suggesting: StateFlow<Boolean> = _suggesting.asStateFlow()
 
+    private val _sheetOpen = MutableStateFlow(false)
+
+    /** The ＋ Add sheet. Kept here so it survives rotation (portrait and landscape are different composables). */
+    val sheetOpen: StateFlow<Boolean> = _sheetOpen.asStateFlow()
+
+    fun openSheet() {
+        _sheetOpen.value = true
+    }
+
+    fun closeSheet() {
+        _sheetOpen.value = false
+    }
+
     private val _suggestFailed = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
     /** Emits when the AI couldn't suggest anything usable, so the screen can say so. */

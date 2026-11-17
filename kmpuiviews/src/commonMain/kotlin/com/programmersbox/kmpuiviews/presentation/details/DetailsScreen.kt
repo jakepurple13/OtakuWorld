@@ -477,6 +477,7 @@ private fun DetailContent(
     val moodVisible by details.moods.visible.collectAsStateWithLifecycle()
     val moodCanSuggest by details.moods.canSuggest.collectAsStateWithLifecycle()
     val moodSuggesting by details.moods.suggesting.collectAsStateWithLifecycle()
+    val moodSheetOpen by details.moods.sheetOpen.collectAsStateWithLifecycle()
     val moodUi = MoodUi(
         visible = moodVisible,
         moods = moodMoods,
@@ -488,6 +489,9 @@ private fun DetailContent(
         onRemove = details.moods::remove,
         onCreate = details.moods::create,
         suggestFailed = details.moods.suggestFailed,
+        sheetOpen = moodSheetOpen,
+        onOpenSheet = details.moods::openSheet,
+        onCloseSheet = details.moods::closeSheet,
     )
     val tldr = TldrUi(
         available = tldrAvailable,
