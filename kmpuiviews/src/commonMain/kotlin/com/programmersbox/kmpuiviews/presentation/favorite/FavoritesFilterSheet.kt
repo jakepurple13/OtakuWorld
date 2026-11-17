@@ -1,5 +1,10 @@
 package com.programmersbox.kmpuiviews.presentation.favorite
 
+import otakuworld.kmpuiviews.generated.resources.moods_untagged
+import otakuworld.kmpuiviews.generated.resources.moods_filter
+import com.programmersbox.kmpuiviews.presentation.details.moodLabel
+import com.programmersbox.kmpuiviews.presentation.details.customMoodOutline
+import com.programmersbox.kmpuiviews.domain.moodtags.Moods
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -76,6 +81,10 @@ internal fun FavoritesFilterSheet(
     onOnlySource: (String) -> Unit,
     onSelectAll: (List<String>) -> Unit,
     onSelectNone: (List<String>) -> Unit,
+    moodCounts: List<Pair<String, Int>>,
+    selectedMoods: Set<String>,
+    onToggleMood: (String) -> Unit,
+    untaggedCount: Int,
     activeFilterCount: Int,
     onReset: () -> Unit,
     resultCount: Int,
@@ -128,6 +137,35 @@ internal fun FavoritesFilterSheet(
                                 onClick = { onToggleQuick(filter) },
                                 label = { Text("${quickFilterLabel(filter)}  ${quickCounts[filter] ?: 0}") },
                             )
+                        }
+                    }
+                }
+
+                if (moodCounts.isNotEmpty()) {
+                    item(key = "moods-label") { SheetLabel(stringResource(Res.string.moods_filter)) }
+                    item(key = "moods") {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier.padding(horizontal = 20.dp),
+                        ) {
+                            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                moodCounts.forEach { (mood, count) ->
+                                    val custom = !Moods.isBuiltIn(mood)
+                                    FilterChip(
+                                        selected = selectedMoods.any { it.equals(mood, ignoreCase = true) },
+                                        onClick = { onToggleMood(mood) },
+                                        label = { Text("${moodLabel(mood)}  $count") },
+                                        modifier = Modifier.customMoodOutline(custom, MaterialTheme.colorScheme.outline),
+                                    )
+                                }
+                            }
+                            if (untaggedCount > 0) {
+                                Text(
+                                    stringResource(Res.string.moods_untagged, untaggedCount),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
                         }
                     }
                 }

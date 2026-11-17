@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.favorite
 
+import com.programmersbox.kmpuiviews.domain.moodtags.MoodRepository
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.derivedStateOf
@@ -60,6 +61,7 @@ class FavoriteViewModel(
     favoritesRepository: FavoritesRepository,
     searchRepository: FavoritesSearchRepository,
     private val aiText: AiText,
+    moodRepository: MoodRepository,
 ) : ViewModel() {
 
     private var favorites by mutableStateOf<List<DbModel>>(emptyList())
@@ -103,11 +105,31 @@ class FavoriteViewModel(
     var selectedSources by mutableStateOf<Set<String>>(emptySet())
         private set
 
+    /** Empty means any mood. A favorite matches when it has any selected mood. */
+    var selectedMoods by mutableStateOf<Set<String>>(emptySet())
+        private set
+
+    private var moodsByUrl by mutableStateOf<Map<String, List<String>>>(emptyMap())
+
     private fun now() = Clock.System.now().toEpochMilliseconds()
 
     private val groups by derivedStateOf { groupFavorites(favorites) }
 
-    private val filtered by derivedStateOf { filterGroups(groups, quickFilters, selectedSources, now()) }
+    private val filtered by derivedStateOf {
+        filterGroups(groups, quickFilters, selectedSources, now(), selectedMoods, moodsByUrl)
+    }
+
+    /** Moods present among favorites with how many titles have each, most first. */
+    val moodCounts by derivedStateOf {
+        // Each group's moods are already distinct, so a mood's list size is how many titles have it
+        groups.flatMap { it.moods(moodsByUrl) }
+            .groupBy { it.lowercase() }
+            .map { (_, names) -> names.first() to names.size }
+            .sortedWith(compareByDescending<Pair<String, Int>> { it.second }.thenBy { it.first.lowercase() })
+    }
+
+    /** Favorites (titles) with no moods yet. */
+    val untaggedCount by derivedStateOf { groups.count { it.moods(moodsByUrl).isEmpty() } }
 
     val isSearching by derivedStateOf { keywords != null || ftsMatch(searchQuery) != null }
 
@@ -125,7 +147,9 @@ class FavoriteViewModel(
         QuickFilter.entries.associateWith { filter -> groups.count { filter.matches(it, now) } }
     }
 
-    val activeFilterCount by derivedStateOf { quickFilters.size + if (selectedSources.isEmpty()) 0 else 1 }
+    val activeFilterCount by derivedStateOf {
+        quickFilters.size + (if (selectedSources.isEmpty()) 0 else 1) + (if (selectedMoods.isEmpty()) 0 else 1)
+    }
 
     /** Every installed source plus every source that has favorites, most favorites first. */
     val sourceCounts by derivedStateOf {
@@ -159,6 +183,10 @@ class FavoriteViewModel(
 
         sourceRepository.sources
             .onEach { list -> installedSources = list.map { it.apiService.serviceName } }
+            .launchIn(viewModelScope)
+
+        moodRepository.favoriteMoods
+            .onEach { moodsByUrl = it }
             .launchIn(viewModelScope)
 
         aiText.availability(AiFeature.SearchKeywords)
@@ -255,7 +283,16 @@ class FavoriteViewModel(
         selectedSources = selectedSources - visible.toSet()
     }
 
+    fun toggleMood(mood: String) {
+        selectedMoods = if (selectedMoods.any { it.equals(mood, ignoreCase = true) }) {
+            selectedMoods.filterNot { it.equals(mood, ignoreCase = true) }.toSet()
+        } else {
+            selectedMoods + mood
+        }
+    }
+
     fun resetFilters() {
+        selectedMoods = emptySet()
         quickFilters = emptySet()
         selectedSources = emptySet()
     }
@@ -264,6 +301,7 @@ class FavoriteViewModel(
     fun seeAll(filter: QuickFilter) {
         quickFilters = setOf(filter)
         selectedSources = emptySet()
+        selectedMoods = emptySet()
         sort = if (filter == QuickFilter.RECENT) FavoriteSort.ADDED else FavoriteSort.TITLE
     }
 }
