@@ -5,7 +5,14 @@ import com.programmersbox.kmpuiviews.domain.dailyoverview.EngineStatus
 import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngine
 import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngineId
 import com.programmersbox.kmpuiviews.domain.dailyoverview.TemplateEngine
+import com.programmersbox.kmpuiviews.testing.InMemoryAiSettings
 import kotlinx.coroutines.CompletableDeferred
+import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -58,7 +65,7 @@ class DefaultAiTextTest {
     private val order = listOf(SummaryEngineId.Nano, SummaryEngineId.Gemma)
 
     private fun aiText(vararg engines: SummaryEngine, tools: NanoTools? = null) =
-        DefaultAiText(listOf<SummaryEngine>(TemplateEngine()) + engines, tools, order)
+        DefaultAiText(listOf<SummaryEngine>(TemplateEngine()) + engines, tools, order = order)
 
     @Test
     fun `nano ready uses nano`() = runTest {
@@ -89,6 +96,71 @@ class DefaultAiTextTest {
             FakeEngine(SummaryEngineId.Provider, onDevice = false),
         )
         assertNull(ai.engineFor(AiFeature.Recap))
+    }
+
+    private fun gated(settings: InMemoryAiSettings, vararg engines: SummaryEngine) =
+        DefaultAiText(listOf<SummaryEngine>(TemplateEngine()) + engines, null, settings = settings, order = order)
+
+    @Test
+    fun `disabled feature has no engine`() = runTest {
+        val settings = InMemoryAiSettings(disabled = setOf(AiToggle.Tldr))
+        val ai = gated(settings, FakeEngine(SummaryEngineId.Nano))
+        assertNull(ai.engineFor(AiFeature.Tldr))
+        assertEquals("Nano", ai.engineFor(AiFeature.Recap)?.label)
+        assertFailsWith<IllegalStateException> { ai.run(AiFeature.Tldr, "x").toList() }
+        settings.setFeatureEnabled(AiToggle.Tldr, true)
+        assertEquals("Nano", ai.engineFor(AiFeature.Tldr)?.label)
+    }
+
+    @Test
+    fun `availability follows a switch flipped while a screen is open`() = runTest {
+        val settings = InMemoryAiSettings()
+        val ai = gated(settings, FakeEngine(SummaryEngineId.Nano))
+        val seen = Channel<AiEngineInfo?>(Channel.UNLIMITED)
+        backgroundScope.launch(Dispatchers.Default) {
+            ai.availability(AiFeature.Tldr, retry = 50.milliseconds).collect { seen.send(it) }
+        }
+        suspend fun next() = withContext(Dispatchers.Default) { withTimeout(5_000) { seen.receive() } }
+        assertEquals("Nano", next()?.label)
+        settings.setFeatureEnabled(AiToggle.Tldr, false)
+        assertNull(next())
+        settings.setFeatureEnabled(AiToggle.Tldr, true)
+        var back = next()
+        while (back == null) back = next()
+        assertEquals("Nano", back.label)
+    }
+
+    @Test
+    fun `master off means no engine even for sample`() = runTest {
+        val ai = gated(InMemoryAiSettings(enabled = false), FakeEngine(SummaryEngineId.Nano))
+        assertNull(ai.engineFor(AiFeature.TrySample))
+        assertNull(ai.engineFor(AiFeature.Recap))
+    }
+
+    @Test
+    fun `sample ignores feature toggles`() = runTest {
+        val ai = gated(InMemoryAiSettings(disabled = AiToggle.entries.toSet()), FakeEngine(SummaryEngineId.Nano))
+        assertEquals("Nano", ai.engineFor(AiFeature.TrySample)?.label)
+    }
+
+    @Test
+    fun `preferred engine not ready means none`() = runTest {
+        val ai = gated(
+            InMemoryAiSettings(preference = AiEnginePreference.Nano),
+            FakeEngine(SummaryEngineId.Nano, EngineStatus.Unavailable),
+            FakeEngine(SummaryEngineId.Gemma),
+        )
+        assertNull(ai.engineFor(AiFeature.Tldr))
+    }
+
+    @Test
+    fun `preference gemma skips ready nano`() = runTest {
+        val ai = gated(
+            InMemoryAiSettings(preference = AiEnginePreference.Gemma),
+            FakeEngine(SummaryEngineId.Nano),
+            FakeEngine(SummaryEngineId.Gemma),
+        )
+        assertEquals("Gemma", ai.engineFor(AiFeature.Tldr)?.label)
     }
 
     @Test

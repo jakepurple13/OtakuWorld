@@ -4,6 +4,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
@@ -104,6 +105,22 @@ class DataStoreHandling {
     val dailyOverviewEngine = DataStoreHandler(
         key = stringPreferencesKey("dailyOverviewEngine"),
         defaultValue = "Automatic"
+    )
+
+    val aiEnabled = DataStoreHandler(
+        key = booleanPreferencesKey("aiEnabled"),
+        defaultValue = true
+    )
+
+    val aiEnginePreference = DataStoreHandler(
+        key = stringPreferencesKey("aiEnginePreference"),
+        defaultValue = "Automatic"
+    )
+
+    /** Names of AI features the user turned off. Stored as the off set so new features start on. */
+    val aiDisabledFeatures = DataStoreHandler(
+        key = stringSetPreferencesKey("aiDisabledFeatures"),
+        defaultValue = emptySet()
     )
 
     val dailyOverviewCache = DataStoreHandler(
