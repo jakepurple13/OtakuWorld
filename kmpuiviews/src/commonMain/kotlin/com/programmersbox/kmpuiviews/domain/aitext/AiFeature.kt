@@ -121,9 +121,14 @@ sealed class AiFeature<in I>(
         override val toggle = AiToggle.DescribeSearch
         override fun prepare(input: String) = input.trim().take(MAX_DESCRIBE_CHARS)
         override fun userPrompt(prepared: String) = "Description: $prepared"
+        // Small models often ignore "one per line": accept commas or semicolons, and drop preambles
+        // ("Here are the keywords:") and anything without a searchable word.
         override fun finish(raw: String) = raw.lines()
-            .map { line -> line.replace(Regex("""^\s*(?:[-•*]|\d+[.)])\s*"""), "").trim('"', '\'', '“', '”', '`', ' ').lowercase() }
-            .filter { it.isNotBlank() }
+            .filterNot { it.trim().endsWith(':') }
+            .map { it.replace(keywordsLabel, "") }
+            .flatMap { it.split(',', ';') }
+            .map { it.replace(listMarker, "").trim('"', '\'', '“', '”', '`', ' ').lowercase() }
+            .filter { searchableWord.containsMatchIn(it) }
             .distinct()
             .take(MAX_KEYWORDS)
             .joinToString("\n")
@@ -148,6 +153,10 @@ private const val MAX_ERROR_DETAIL_CHARS = 1_500
 private const val MAX_UPDATE_LINES = 25
 private const val MAX_DESCRIBE_CHARS = 300
 private const val MAX_KEYWORDS = 6
+private val listMarker = Regex("""^\s*(?:[-•*]|\d+[.)])\s*""")
+private val keywordsLabel = Regex("""^\s*keywords?\s*:\s*""", RegexOption.IGNORE_CASE)
+// Letters, digits and combining marks, the same runs FTS5 keeps (see ftsMatch)
+private val searchableWord = Regex("""[\p{L}\p{N}\p{M}]""")
 
 private fun rewriteInstruction(style: RewriteStyle) = when (style) {
     RewriteStyle.Rephrase -> "Rephrase the text using different wording but the same meaning."

@@ -83,4 +83,12 @@ class AiFeatureTest {
         assertEquals(300, AiFeature.SearchKeywords.prepare("a".repeat(500)).length)
         assertTrue(AiFeature.SearchKeywords.userPrompt("x").startsWith("Description: "))
     }
+
+    @Test
+    fun `search keywords finish handles comma and preamble replies`() {
+        assertEquals("slime\nisekai\nreincarnation", AiFeature.SearchKeywords.finish("slime, isekai, reincarnation"))
+        assertEquals("slime\nisekai", AiFeature.SearchKeywords.finish("Here are the keywords:\nslime\nisekai"))
+        assertEquals("slime\nisekai", AiFeature.SearchKeywords.finish("Keywords: slime; isekai"))
+        assertEquals("", AiFeature.SearchKeywords.finish("***\n—\n\"\""))
+    }
 }

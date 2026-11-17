@@ -410,13 +410,18 @@ private fun FavoriteSearchBar(
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 onKeyboardAction = { focusManager.clearFocus() },
                 shape = CircleShape,
+                // The container is drawn by the modifier below instead, so the AI border isn't covered by it
                 colors = TextFieldDefaults.colors(
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
                     disabledIndicatorColor = Color.Transparent,
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    disabledContainerColor = Color.Transparent,
                 ),
                 modifier = Modifier
                     .weight(1f)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHighest, CircleShape)
                     .generatingBorder(viewModel.describing, CircleShape),
             )
             val popSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()

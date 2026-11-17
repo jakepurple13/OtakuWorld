@@ -19,6 +19,7 @@ import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.repository.FavoritesSearchRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.fold
@@ -73,6 +74,9 @@ class FavoriteViewModel(
 
     // The query the current keywords came from; typing anything else drops them
     private var describedText: String? = null
+    private var describeJob: Job? = null
+    // The query a running describe was started for
+    private var describingText: String? = null
 
     /** True when the query reads like a description and an engine is ready. */
     val canDescribe by derivedStateOf {
@@ -157,6 +161,12 @@ class FavoriteViewModel(
                     keywords = null
                     describedText = null
                 }
+                // The user moved on: stop the AI so the button comes back and the shared AI lock frees up
+                if (describing && text != describingText) {
+                    describeJob?.cancel()
+                    describeJob = null
+                    describing = false
+                }
             }
             .launchIn(viewModelScope)
 
@@ -178,7 +188,8 @@ class FavoriteViewModel(
         val query = searchText.text.toString()
         if (describing) return
         describing = true
-        viewModelScope.launch {
+        describingText = query
+        describeJob = viewModelScope.launch {
             try {
                 val raw = aiText.run(AiFeature.SearchKeywords, query).fold("") { acc, delta -> acc + delta }
                 val found = AiFeature.SearchKeywords.finish(raw).lines().filter { it.isNotBlank() }
@@ -192,7 +203,7 @@ class FavoriteViewModel(
             } catch (_: Exception) {
                 // Keep the normal word search
             } finally {
-                describing = false
+                if (describingText == query) describing = false
             }
         }
     }

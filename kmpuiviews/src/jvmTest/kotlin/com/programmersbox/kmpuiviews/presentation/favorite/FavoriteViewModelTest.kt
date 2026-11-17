@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.favorite
 
+import kotlinx.coroutines.CompletableDeferred
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlinx.coroutines.flow.flow
@@ -265,5 +266,19 @@ class FavoriteViewModelTest {
         awaitCondition { vm.canDescribe }
         ai.engine = null
         awaitCondition { !vm.canDescribe }
+    }
+
+    @Test
+    fun `typing during describe cancels it`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val vm = viewModel(FakeAiText(output = { _, _ -> flow { gate.await(); emit("slime") } }))
+        vm.search(describing)
+        awaitCondition { vm.canDescribe }
+        vm.describe()
+        awaitCondition { vm.describing }
+        vm.search("the elf mage who outlives her party")
+        awaitCondition { !vm.describing && vm.canDescribe }
+        gate.complete(Unit)
+        assertNull(vm.keywords)
     }
 }
