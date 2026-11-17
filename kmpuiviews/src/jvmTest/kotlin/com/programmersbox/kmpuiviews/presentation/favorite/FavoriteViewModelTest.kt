@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.favorite
 
+import com.programmersbox.kmpuiviews.domain.moodtags.MoodRepository
 import kotlinx.coroutines.CompletableDeferred
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
@@ -69,6 +70,8 @@ class FavoriteViewModelTest {
         source = source,
     )
 
+    private val moods by lazy { MoodRepository(database.itemDao(), FakeAiText(engine = null)) }
+
     private fun viewModel(ai: FakeAiText = FakeAiText(engine = null)) = FavoriteViewModel(
         sourceRepository = SourceRepository(),
         favoritesRepository = FavoritesRepository(
@@ -79,6 +82,7 @@ class FavoriteViewModelTest {
         ),
         searchRepository = FavoritesSearchRepository(database.itemDao(), notes.notesDao()),
         aiText = ai,
+        moodRepository = moods,
     ).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
 
     private suspend fun FavoriteViewModel.search(text: String) {
@@ -301,5 +305,63 @@ class FavoriteViewModelTest {
         val vm = viewModel(FakeAiText())
         vm.search("?? !! -- .. ok")
         assertFalse(vm.canDescribe)
+    }
+
+    @Test
+    fun `mood filter keeps favorites with any selected mood`() = runTest {
+        database.itemDao().insertFavorite(favorite("u1", "Frieren"))
+        database.itemDao().insertFavorite(favorite("u2", "Dandadan"))
+        database.itemDao().insertFavorite(favorite("u3", "Witch Hat"))
+        moods.toggle("u1", "cozy")
+        moods.toggle("u2", "chaotic")
+        moods.create("u3", "comfort read")
+        val vm = viewModel()
+        awaitCondition { vm.moodCounts.size == 3 }
+
+        vm.toggleMood("cozy")
+        vm.toggleMood("comfort read")
+        awaitCondition { vm.resultCount == 2 }
+        assertEquals(setOf("Frieren", "Witch Hat"), vm.sections.flatMap { s -> s.groups.map { it.title } }.toSet())
+        assertEquals(1, vm.activeFilterCount)
+
+        vm.resetFilters()
+        assertTrue(vm.selectedMoods.isEmpty())
+    }
+
+    @Test
+    fun `mood counts only list present moods`() = runTest {
+        database.itemDao().insertFavorite(favorite("u1", "Frieren"))
+        database.itemDao().insertFavorite(favorite("u2", "Witch Hat"))
+        moods.toggle("u1", "cozy")
+        moods.toggle("u2", "cozy")
+        moods.toggle("u2", "dark")
+        moods.toggle("notfav", "funny")
+        val vm = viewModel()
+        awaitCondition { vm.moodCounts.isNotEmpty() }
+        assertEquals(listOf("cozy" to 2, "dark" to 1), vm.moodCounts)
+    }
+
+    @Test
+    fun `untagged count`() = runTest {
+        database.itemDao().insertFavorite(favorite("u1", "Frieren"))
+        database.itemDao().insertFavorite(favorite("u2", "Witch Hat"))
+        database.itemDao().insertFavorite(favorite("u3", "Dandadan"))
+        moods.toggle("u1", "cozy")
+        val vm = viewModel()
+        awaitCondition { vm.untaggedCount == 2 }
+    }
+
+    @Test
+    fun `a selected mood that disappears stops filtering`() = runTest {
+        database.itemDao().insertFavorite(favorite("u1", "Frieren"))
+        database.itemDao().insertFavorite(favorite("u2", "Dandadan"))
+        moods.toggle("u1", "cozy")
+        val vm = viewModel()
+        awaitCondition { vm.moodCounts.isNotEmpty() }
+        vm.toggleMood("cozy")
+        awaitCondition { vm.resultCount == 1 }
+        moods.remove("u1", "cozy")
+        awaitCondition { vm.resultCount == 2 }
+        assertEquals(0, vm.activeFilterCount)
     }
 }

@@ -21,7 +21,7 @@ class DiscoveryStatisticsProvider(
     override val header: String = "🔍 Discovery"
     override val key: String = "discovery"
     override val contentType: String = "discovery"
-    override val priority: Int = 2
+    override val priority: Int = 3
 
     override fun observeStats(): Flow<List<StatData>> = combine(
         sourceRepository

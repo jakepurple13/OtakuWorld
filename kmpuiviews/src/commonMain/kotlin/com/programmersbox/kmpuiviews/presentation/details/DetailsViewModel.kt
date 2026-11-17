@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.details
 
+import com.programmersbox.kmpuiviews.domain.moodtags.MoodRepository
 import androidx.compose.material3.ColorScheme
 import com.programmersbox.kmpuiviews.theme.SchemeInputs
 import androidx.compose.runtime.MutableState
@@ -91,6 +92,7 @@ class DetailsViewModel(
     sharedCoverBitmaps: SharedCoverBitmaps,
     private val aiText: AiText,
     private val tldrCache: TldrCache,
+    moodRepository: MoodRepository,
 ) : ViewModel() {
 
     //private val details: Screen.DetailsScreen.Details? = handle.toRoute()
@@ -112,6 +114,14 @@ class DetailsViewModel(
     private var addRemoveFavoriteJob: Job? = null
 
     var favoriteListener by mutableStateOf(false)
+
+    /** The Mood row (favorites only). */
+    val moods = MoodController(moodRepository, aiText, viewModelScope, itemModel?.url, snapshotFlow { favoriteListener })
+
+    fun suggestMoods() {
+        val info = info ?: return
+        moods.suggest(info.title, info.description)
+    }
     var chapters: List<ChapterWatched> by mutableStateOf(emptyList())
     val bookmarkedChapterUrls = mutableStateSetOf<String>()
 

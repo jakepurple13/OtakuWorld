@@ -110,6 +110,7 @@ internal fun DetailsHeader(
     favoriteClick: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     possibleDescription: @Composable () -> Unit = {},
+    moodRow: @Composable () -> Unit = {},
     onPaletteSet: (Palette) -> Unit,
     blurHash: BitmapPainter? = null,
     onBitmapSet: (ImageBitmap) -> Unit = {},
@@ -300,6 +301,7 @@ internal fun DetailsHeader(
                     )
                 }
             }
+            moodRow()
             possibleDescription()
         }
     }

@@ -45,6 +45,26 @@ interface ItemDao {
     @Query("SELECT COUNT(url) FROM FavoriteItem  WHERE is_deleted = 0")
     fun getAllFavoritesCount(): Flow<Int>
 
+    @Query("SELECT * FROM mood_tags WHERE url = :url")
+    fun moodsFlow(url: String): Flow<MoodTagRow?>
+
+    @Query("SELECT * FROM mood_tags WHERE url = :url")
+    suspend fun moodsOnce(url: String): MoodTagRow?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertMoods(row: MoodTagRow)
+
+    @Query("DELETE FROM mood_tags WHERE url = :url")
+    suspend fun deleteMoods(url: String)
+
+    /** Mood rows of current favorites only; unfavorited titles keep their row but aren't counted. */
+    @Query("SELECT mood_tags.* FROM mood_tags INNER JOIN FavoriteItem ON FavoriteItem.url = mood_tags.url WHERE FavoriteItem.is_deleted = 0")
+    fun favoriteMoodRows(): Flow<List<MoodTagRow>>
+
+    /** Every mood row, favorite or not; the user's own moods are collected from these. */
+    @Query("SELECT * FROM mood_tags")
+    fun allMoodRows(): Flow<List<MoodTagRow>>
+
     // Includes soft-deleted rows; sync and backup need them.
     @Query("SELECT * FROM FavoriteItem")
     suspend fun getAllFavoritesSync(): List<DbModel>
