@@ -31,8 +31,15 @@ import com.programmersbox.kmpuiviews.utils.PackageInstallEngine
 import com.programmersbox.kmpuiviews.workers.WorkManagerDailyOverviewScheduler
 import com.programmersbox.kmpuiviews.workers.UpdateNotification
 import com.programmersbox.kmpuiviews.domain.aitext.NanoTools
+import com.programmersbox.kmpuiviews.domain.aitext.modelimport.LocalModel
+import com.programmersbox.kmpuiviews.domain.aitext.modelimport.ModelImporter
+import com.programmersbox.kmpuiviews.domain.aitext.modelimport.ModelImports
+import com.programmersbox.kmpuiviews.domain.aitext.modelimport.PlatformModelImports
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.withContext
+import java.io.File
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.bind
@@ -90,7 +97,20 @@ actual fun platformModule(): Module = module {
     singleOf(::EncryptedDataStoreFactory)
     single<NanoTools> { MlKitNanoTools(androidContext(), get()) }
     singleOf(::NanoEngine) { bind<SummaryEngine>() }
-    singleOf(::GemmaEngine) { bind<SummaryEngine>() }
+    singleOf(::GemmaEngine) {
+        bind<SummaryEngine>()
+        bind<LocalModel>()
+    }
+    single {
+        ModelImporter(
+            modelsDir = File(androidContext().filesDir, "models"),
+            // Where the LiteRT client writes the weight cache
+            cacheDir = File(androidContext().cacheDir, "models"),
+            scope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
+            verify = get<LocalModel>()::verify,
+        )
+    }
+    single<ModelImports> { PlatformModelImports(get(), get()) }
     singleOf(::ProviderEngine) { bind<SummaryEngine>() }
     single<DailyOverviewScheduler> { WorkManagerDailyOverviewScheduler(get()) }
     kmpWorkers()

@@ -1,3 +1,4 @@
 package com.programmersbox.kmpuiviews.domain.dailyoverview
 
-actual val platformAutomaticOrder: List<SummaryEngineId> = listOf(SummaryEngineId.Ollama)
+// An imported local model runs first; Ollama only when there is none
+actual val platformAutomaticOrder: List<SummaryEngineId> = listOf(SummaryEngineId.Gemma, SummaryEngineId.Ollama)

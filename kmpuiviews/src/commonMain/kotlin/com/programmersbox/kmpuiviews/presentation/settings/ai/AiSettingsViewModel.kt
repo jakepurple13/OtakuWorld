@@ -13,7 +13,14 @@ import com.programmersbox.kmpuiviews.domain.dailyoverview.EngineStatus
 import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngine
 import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngineId
 import com.programmersbox.kmpuiviews.domain.dailyoverview.platformAutomaticOrder
+import com.programmersbox.kmpuiviews.domain.aitext.modelimport.ImportState
+import com.programmersbox.kmpuiviews.domain.aitext.modelimport.ImportedModel
+import com.programmersbox.kmpuiviews.domain.aitext.modelimport.ModelImports
+import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -34,6 +41,10 @@ data class AiSettingsUi(
     val current: String?,
     val engines: List<AiEngineStatus>,
     val disabled: Set<AiToggle>,
+    /** True where model files can be imported (Android, desktop). */
+    val canImport: Boolean = false,
+    /** The model file the local engine runs, or null. */
+    val localModel: ImportedModel? = null,
 )
 
 /** (features on, total), or null when the master switch is off. Shown on the Integrations row. */
@@ -53,8 +64,11 @@ class AiSettingsViewModel(
     private val aiText: AiText,
     private val engines: List<SummaryEngine>,
     private val order: List<SummaryEngineId> = platformAutomaticOrder,
+    private val imports: ModelImports? = null,
 ) : ViewModel() {
-    private class EngineInfo(val current: String?, val statuses: List<AiEngineStatus>)
+    private class EngineInfo(val current: String?, val statuses: List<AiEngineStatus>, val localModel: ImportedModel?)
+
+    val importState: StateFlow<ImportState> = imports?.state ?: MutableStateFlow(ImportState.Idle)
 
     private val engineInfo = MutableStateFlow<EngineInfo?>(null)
     private val refreshes = MutableStateFlow(0)
@@ -75,10 +89,13 @@ class AiSettingsViewModel(
         AiSettingsUi(
             enabled = enabled,
             preference = preference,
-            showPreference = onDevice.size > 1,
+            // The choices name Nano, so only where Nano is one of the engines
+            showPreference = onDevice.size > 1 && onDevice.any { it.id == SummaryEngineId.Nano },
             current = info.current,
             engines = info.statuses,
             disabled = disabled,
+            canImport = imports != null,
+            localModel = info.localModel,
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
@@ -91,6 +108,36 @@ class AiSettingsViewModel(
         viewModelScope.launch {
             combine(settings.enabled, settings.preference, refreshes) { _, _, _ -> }
                 .collectLatest { engineInfo.value = loadEngines() }
+        }
+        // A finished or failed import changes which model the local engine has
+        viewModelScope.launch {
+            var busy = false
+            importState.collect { state ->
+                val nowBusy = state is ImportState.Copying || state is ImportState.Checking
+                if (busy && !nowBusy) refresh()
+                busy = nowBusy
+            }
+        }
+    }
+
+    /** Imports [file]; with [replace], the current model is deleted once the new one passes its check. */
+    fun importModel(file: PlatformFile, replace: Boolean) {
+        imports?.import(file, replacing = if (replace) engineInfo.value?.localModel?.fileName else null)
+    }
+
+    fun cancelImport() {
+        imports?.cancel()
+    }
+
+    fun dismissImportError() {
+        imports?.dismissError()
+    }
+
+    fun removeModel() {
+        val model = engineInfo.value?.localModel ?: return
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) { imports?.remove(model.fileName) }
+            refresh()
         }
     }
 
@@ -123,6 +170,7 @@ class AiSettingsViewModel(
                 status = orNull { engine.status() } ?: EngineStatus.Unavailable,
             )
         },
+        localModel = orNull { imports?.current() },
     )
 
     /** A failing engine call must not take the page down. */
