@@ -1,6 +1,14 @@
 package com.programmersbox.kmpuiviews.presentation.updatecheck
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import com.programmersbox.kmpuiviews.domain.aitext.AiTextState
+import com.programmersbox.kmpuiviews.domain.updatecheck.KnownError
+import com.programmersbox.kmpuiviews.domain.updatecheck.knownError
+import com.programmersbox.kmpuiviews.presentation.components.ai.AiCard
+import otakuworld.kmpuiviews.generated.resources.uc_explain_ai_label
+import otakuworld.kmpuiviews.generated.resources.uc_explain_common
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
@@ -121,6 +129,7 @@ fun UpdateCheckErrorsScreen(
     val report by viewModel.report.collectAsStateWithLifecycle()
     val groups by viewModel.groups.collectAsStateWithLifecycle()
     val canRetry by viewModel.canRetry.collectAsStateWithLifecycle()
+    val explainAvailable by viewModel.explainAvailable.collectAsStateWithLifecycle()
     val notifier = koinInject<InAppNotifier>()
 
     HideNavBarWhileOnScreen()
@@ -240,8 +249,12 @@ fun UpdateCheckErrorsScreen(
                     }
 
                     items(group.items, key = { "item:${group.source}:${it.url}" }) { item ->
+                        val explanation by viewModel.explanation(item).collectAsStateWithLifecycle()
                         FailureRow(
                             item = item,
+                            explainAvailable = explainAvailable,
+                            explanation = explanation,
+                            onExplain = { viewModel.explain(item) },
                             onOpen = {
                                 navActions.navigate(
                                     Screen.DetailsScreen.Details(
@@ -419,18 +432,24 @@ private fun Banner(title: String, body: String, modifier: Modifier = Modifier) {
 @Composable
 private fun FailureRow(
     item: ItemFailure,
+    explainAvailable: Boolean,
+    explanation: AiTextState,
+    onExplain: () -> Unit,
     onOpen: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var expanded by rememberSaveable(item.url) { mutableStateOf(false) }
     val message by produceState("", item) { value = item.message() }
+    val known = remember(item) { item.knownError() }
+    val sourceName = LocalSourcesRepository.current.displayNameFor(item.source)
+    val showAi = known == null && explainAvailable
 
     Row(
         verticalAlignment = Alignment.Top,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         modifier = modifier
             .fillMaxWidth()
-            .clickable(enabled = item.detail.isNotBlank()) { expanded = !expanded }
+            .clickable(enabled = item.detail.isNotBlank() || known != null) { expanded = !expanded }
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .animateContentSize()
     ) {
@@ -458,19 +477,63 @@ private fun FailureRow(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            if (expanded) {
-                Text(
-                    item.detail,
-                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
+            AnimatedVisibility(
+                visible = expanded,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut(),
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(top = 8.dp)
+                ) {
+                    when {
+                        known != null -> KnownExplanation(known, sourceName)
+                        showAi -> {
+                            LaunchedEffect(Unit) { onExplain() }
+                            AiCard(
+                                label = stringResource(Res.string.uc_explain_ai_label),
+                                state = explanation,
+                                onRetry = onExplain,
+                            )
+                        }
+                    }
+                    if (item.detail.isNotBlank()) {
+                        Text(
+                            item.detail,
+                            style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
             }
         }
         IconButton(onClick = onOpen) {
             Icon(
                 Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = stringResource(Res.string.uc_open_details)
+            )
+        }
+    }
+}
+
+/** Fixed explanation for a common error. A plain tonal card, so it reads differently from AI text. */
+@Composable
+private fun KnownExplanation(known: KnownError, sourceName: String, modifier: Modifier = Modifier) {
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        shape = MaterialTheme.shapes.large,
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Column(Modifier.padding(12.dp)) {
+            Text(
+                stringResource(Res.string.uc_explain_common).uppercase(),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                stringResource(known.resource, sourceName),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(top = 2.dp)
             )
         }
     }

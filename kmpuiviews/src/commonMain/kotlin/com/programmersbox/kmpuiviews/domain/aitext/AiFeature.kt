@@ -82,7 +82,22 @@ sealed class AiFeature<in I>(
         override fun prepare(input: List<String>) = listTitles(input)
         override fun userPrompt(prepared: String) = listPrompt(prepared)
     }
+
+    /** Explains an update-check failure that has no fixed explanation. */
+    data object ExplainError : AiFeature<ErrorDetails>(
+        system = "You explain why an app couldn't check a manga, anime or novel source for new chapters. " +
+                "The reader is not technical. In 2 sentences, say what most likely went wrong and one thing " +
+                "they can try. Don't mention code, exceptions or stack traces. Return only the explanation.",
+    ) {
+        override fun prepare(input: ErrorDetails) =
+            "Source: ${input.sourceName}\nError:\n${input.detail.take(MAX_ERROR_DETAIL_CHARS)}"
+    }
 }
+
+/** A failed update check: the source's display name and the error detail (message and top stack lines). */
+data class ErrorDetails(val sourceName: String, val detail: String)
+
+private const val MAX_ERROR_DETAIL_CHARS = 1_500
 
 private fun rewriteInstruction(style: RewriteStyle) = when (style) {
     RewriteStyle.Rephrase -> "Rephrase the text using different wording but the same meaning."

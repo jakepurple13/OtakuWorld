@@ -49,6 +49,15 @@ class AiFeatureTest {
     }
 
     @Test
+    fun `explain error prepares source and capped detail`() {
+        val prepared = AiFeature.ExplainError.prepare(ErrorDetails("MangaDex", "x".repeat(5_000)))
+        assertTrue(prepared.startsWith("Source: MangaDex\nError:\n"))
+        assertEquals("Source: MangaDex\nError:\n".length + 1_500, prepared.length)
+        assertNull(AiFeature.ExplainError.nanoTask)
+        assertNull(AiFeature.ExplainError.nanoMaxChars)
+    }
+
+    @Test
     fun `nano tasks map to ml kit apis`() {
         assertEquals(NanoTask.Summarize, AiFeature.Tldr.nanoTask)
         assertEquals(NanoTask.Proofread, AiFeature.Proofread.nanoTask)

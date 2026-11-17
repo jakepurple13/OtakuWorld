@@ -3,15 +3,22 @@ package com.programmersbox.kmpuiviews.presentation.updatecheck
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.kmpmodels.SourceRepository
+import com.programmersbox.kmpuiviews.domain.aitext.AiFeature
+import com.programmersbox.kmpuiviews.domain.aitext.AiTask
+import com.programmersbox.kmpuiviews.domain.aitext.AiText
+import com.programmersbox.kmpuiviews.domain.aitext.AiTextState
+import com.programmersbox.kmpuiviews.domain.aitext.ErrorDetails
 import com.programmersbox.kmpuiviews.domain.updatecheck.FailureKind
 import com.programmersbox.kmpuiviews.domain.updatecheck.ItemFailure
 import com.programmersbox.kmpuiviews.domain.updatecheck.SourceFailure
 import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckReport
 import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckReportStore
 import com.programmersbox.kmpuiviews.domain.updatecheck.failureMessage
+import com.programmersbox.kmpuiviews.domain.updatecheck.knownError
 import com.programmersbox.kmpuiviews.repository.WorkRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -67,6 +74,15 @@ fun UpdateCheckReport.groupFailures(): List<FailureGroup> {
                 .thenByDescending { it.items.size }
                 .thenBy { it.source }
         )
+}
+
+/**
+ * Items with the same source, failure kind, HTTP code and exception class share one explanation.
+ * The exception message is left out: it often holds the title's URL, so it differs on every row.
+ */
+fun ItemFailure.explanationKey(): String {
+    val exceptionClass = detail.lineSequence().firstOrNull().orEmpty().substringBefore(':').trim()
+    return "$source|$kind|${httpCode ?: ""}|$exceptionClass"
 }
 
 /** One-line reason shown for an item. */
@@ -129,6 +145,7 @@ class UpdateCheckErrorsViewModel(
     private val workRepository: WorkRepository,
     private val sharer: UpdateCheckReportSharer,
     private val sourceRepository: SourceRepository,
+    private val aiText: AiText,
 ) : ViewModel() {
 
     private val loadedState = MutableStateFlow(false)
@@ -159,6 +176,38 @@ class UpdateCheckErrorsViewModel(
             messageChannel.send(
                 if (started) UpdateCheckErrorsMessage.Rechecking(count) else UpdateCheckErrorsMessage.AlreadyRunning
             )
+        }
+    }
+
+    /** True once an on-device engine can explain unknown errors. Keeps re-checking until one is ready. */
+    val explainAvailable: StateFlow<Boolean> = aiText.availability(AiFeature.ExplainError)
+        .map { it != null }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    // One task per distinct error, so identical failures across many titles generate once. Main only.
+    private val explanationTasks = mutableMapOf<String, AiTask>()
+    private val explanationJobs = mutableMapOf<String, Job>()
+
+    private fun taskFor(item: ItemFailure) =
+        explanationTasks.getOrPut(item.explanationKey()) { AiTask(aiText, viewModelScope) }
+
+    /** The AI explanation for [item]'s error. Stays Idle for known errors, which use fixed text. */
+    fun explanation(item: ItemFailure): StateFlow<AiTextState> = taskFor(item).state
+
+    /** Starts the AI explanation for [item] unless it's a known error or already generating or done. Restarts after an error. */
+    fun explain(item: ItemFailure) {
+        if (item.knownError() != null) return
+        val key = item.explanationKey()
+        val task = taskFor(item)
+        if (explanationJobs[key]?.isActive == true) return
+        when (task.state.value) {
+            AiTextState.Idle, is AiTextState.Error -> Unit
+            else -> return
+        }
+        explanationJobs[key] = viewModelScope.launch {
+            val started = task.start(AiFeature.ExplainError, ErrorDetails(sourceRepository.displayNameFor(item.source), item.detail))
+            // The engine was ready when the screen opened but isn't now; show Retry instead of an endless shimmer
+            if (!started) task.fail("No on-device AI engine is ready")
         }
     }
 
