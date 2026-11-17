@@ -36,7 +36,8 @@ class ModelImporterTest {
         space: Long = Long.MAX_VALUE,
     ) = ModelImporter(models, cache, scope, verify, usableSpace = { space })
 
-    private fun bytes(n: Int) = ByteArray(n) { (it % 251).toByte() }
+    /** [n] bytes of a model file: the LITERTLM header, then filler. */
+    private fun bytes(n: Int) = ByteArray(n) { (it % 251).toByte() }.also { "LITERTLM".encodeToByteArray().copyInto(it) }
 
     /** A source that hands out [data] in small pieces, optionally waiting on [gate] after the first one. */
     private fun source(data: ByteArray, gate: CompletableDeferred<Unit>? = null): () -> RawSource = {
@@ -68,6 +69,29 @@ class ModelImporterTest {
         i.import("model.task", 10, source(bytes(10)), replacing = null)
         assertEquals(ImportState.Failed(ImportError.NotAModel), i.state.value)
         assertTrue(models.listFiles().isNullOrEmpty())
+    }
+
+    // LiteRT aborts the whole process (CheckJNI) on some broken files, so they must never reach it
+    @Test
+    fun `file without the LITERTLM header fails NotAModel without verifying`() {
+        var verified = false
+        val i = importer(verify = { verified = true })
+        val data = ByteArray(5000) { 7 }
+        i.import("m.litertlm", data.size.toLong(), source(data), replacing = null)
+        assertEquals(ImportState.Failed(ImportError.NotAModel), i.awaitEnd())
+        assertFalse(verified)
+        assertFalse(File(models, "m.litertlm").exists())
+        assertTrue(partFiles().isEmpty())
+    }
+
+    @Test
+    fun `leftover staging folder from a killed import is cleared on start`() {
+        val staging = File(models, ModelImporter.STAGING_DIR).apply { mkdirs() }
+        File(staging, "m.litertlm").writeText("half")
+        importer()
+        // The cleanup runs off the caller's thread
+        runBlocking { withTimeout(5_000) { while (staging.exists()) kotlinx.coroutines.delay(10) } }
+        assertFalse(staging.exists())
     }
 
     @Test

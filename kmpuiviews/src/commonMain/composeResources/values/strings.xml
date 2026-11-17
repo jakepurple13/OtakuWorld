@@ -800,7 +800,7 @@
     <string name="ai_import_try_another">Try another file</string>
     <string name="ai_import_dismiss">Dismiss</string>
     <string name="ai_import_err_type">Not a model file</string>
-    <string name="ai_import_err_type_desc">Pick a .litertlm file. .task and .tflite files are a different format.</string>
+    <string name="ai_import_err_type_desc">This isn’t a LiteRT-LM model (.litertlm). .task and .tflite files are a different format.</string>
     <string name="ai_import_err_space">Not enough space</string>
     <string name="ai_import_err_space_desc">The model needs %1$d MB free; there is %2$d MB.</string>
     <string name="ai_import_err_load">This model didn’t load</string>

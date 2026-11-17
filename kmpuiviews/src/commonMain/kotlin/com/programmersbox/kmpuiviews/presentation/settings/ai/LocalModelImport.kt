@@ -71,7 +71,8 @@ import otakuworld.kmpuiviews.generated.resources.ai_import_where
 /** Gemma 3 1B is gated on Hugging Face: the user signs in and accepts the license there. */
 private const val MODEL_HELP_URL = "https://huggingface.co/litert-community/Gemma3-1B-IT"
 
-private const val MB = 1024L * 1024L
+// Decimal, like the system file picker shows sizes
+private const val MB = 1_000_000L
 
 /** The ⋮ menu for the imported model, shown at the end of the local engine's row. */
 @Composable

@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.io.RawSource
 import kotlinx.io.buffered
+import kotlinx.io.readByteArray
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
@@ -37,6 +38,10 @@ class ModelImporter(
     private val _state = MutableStateFlow<ImportState>(ImportState.Idle)
     val state: StateFlow<ImportState> = _state.asStateFlow()
 
+    // Clears a staging folder left by an import the app was killed during. Imports wait for it, so it
+    // can't delete their files.
+    private val cleanup: Job = scope.launch(Dispatchers.IO) { File(modelsDir, STAGING_DIR).deleteRecursively() }
+
     private var job: Job? = null
 
     /**
@@ -58,6 +63,7 @@ class ModelImporter(
         }
         _state.value = ImportState.Copying(name, 0, size)
         job = scope.launch(Dispatchers.IO) {
+            cleanup.join()
             val staging = File(modelsDir, STAGING_DIR).apply { mkdirs() }
             val part = File(staging, "$name.part")
             val checking = File(staging, name)
@@ -83,6 +89,8 @@ class ModelImporter(
                 if (replacing != null && replacing != name) remove(replacing)
             } catch (e: CancellationException) {
                 throw e
+            } catch (_: NotAModelException) {
+                end = ImportState.Failed(ImportError.NotAModel)
             } catch (e: Exception) {
                 end = ImportState.Failed(ImportError.CopyFailed(e.message))
             } finally {
@@ -96,6 +104,10 @@ class ModelImporter(
         val buffer = ByteArray(CHUNK_BYTES)
         var copied = 0L
         open().buffered().use { input ->
+            // LiteRT can abort the whole process on a broken file (CheckJNI rejects its error message),
+            // so a file without the format's header never reaches it
+            val header = if (input.request(MAGIC.size.toLong())) input.peek().readByteArray(MAGIC.size) else ByteArray(0)
+            if (!header.contentEquals(MAGIC)) throw NotAModelException()
             part.outputStream().use { output ->
                 while (true) {
                     kotlin.coroutines.coroutineContext.ensureActive()
@@ -124,7 +136,11 @@ class ModelImporter(
         cacheDir.listFiles().orEmpty().filter { it.name.startsWith(fileName) }.forEach { it.deleteRecursively() }
     }
 
+    private class NotAModelException : Exception()
+
     companion object {
+        /** Every `.litertlm` file starts with these bytes. */
+        private val MAGIC = "LITERTLM".encodeToByteArray()
         const val EXTENSION = ".litertlm"
         const val STAGING_DIR = ".import"
 
