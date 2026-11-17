@@ -326,7 +326,7 @@ fun FavoriteScreen(
                                 FavoritesLibrary(
                                     sections = viewModel.sections,
                                     isSearching = viewModel.isSearching,
-                                    query = viewModel.searchQuery,
+                                    query = viewModel.keywords?.joinToString(", ") ?: viewModel.searchQuery,
                                     resultCount = viewModel.resultCount,
                                     totalCount = viewModel.totalCount,
                                     gridView = gridView,

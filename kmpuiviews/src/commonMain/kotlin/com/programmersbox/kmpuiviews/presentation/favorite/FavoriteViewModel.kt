@@ -21,6 +21,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.fold
 import kotlinx.coroutines.launch
@@ -42,6 +43,15 @@ data class FavoritesOverview(
 
 private const val SEARCH_DEBOUNCE_MS = 150L
 private const val MIN_DESCRIBE_WORDS = 4
+// Japanese and Chinese have no spaces, so count characters there instead
+private const val MIN_DESCRIBE_CJK_CHARS = 8
+private val describeWord = Regex("[\\p{L}\\p{N}\\p{M}]+")
+// Hiragana, Katakana, CJK ideographs (incl. extension A) and Hangul syllables; plain ranges so every KMP target supports it
+private val cjkChar = Regex("[\\u3040-\\u30FF\\u3400-\\u4DBF\\u4E00-\\u9FFF\\uAC00-\\uD7AF]")
+
+/** True for a query that reads like a sentence: 4+ words, or 8+ CJK characters. */
+internal fun looksLikeDescription(text: String): Boolean =
+    describeWord.findAll(text).count() >= MIN_DESCRIBE_WORDS || cjkChar.findAll(text).count() >= MIN_DESCRIBE_CJK_CHARS
 private const val RECENT_SHELF_SIZE = 10
 
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
@@ -81,7 +91,7 @@ class FavoriteViewModel(
     /** True when the query reads like a description and an engine is ready. */
     val canDescribe by derivedStateOf {
         aiReady && !describing && keywords == null &&
-            searchText.text.split(' ').count { it.isNotBlank() } >= MIN_DESCRIBE_WORDS
+            looksLikeDescription(searchText.text.toString())
     }
 
     var sort by mutableStateOf(FavoriteSort.TITLE)
@@ -99,7 +109,7 @@ class FavoriteViewModel(
 
     private val filtered by derivedStateOf { filterGroups(groups, quickFilters, selectedSources, now()) }
 
-    val isSearching by derivedStateOf { ftsMatch(searchQuery) != null }
+    val isSearching by derivedStateOf { keywords != null || ftsMatch(searchQuery) != null }
 
     val sections by derivedStateOf {
         if (isSearching) buildSearchSections(filtered, searchHits)
@@ -170,8 +180,11 @@ class FavoriteViewModel(
             }
             .launchIn(viewModelScope)
 
-        snapshotFlow { searchText.text.toString() to keywords }
-            .debounce(SEARCH_DEBOUNCE_MS)
+        // Only typing is debounced; keywords come from a tap and should show right away
+        combine(
+            snapshotFlow { searchText.text.toString() }.debounce(SEARCH_DEBOUNCE_MS),
+            snapshotFlow { keywords },
+        ) { query, keywords -> query to keywords }
             .flatMapLatest { (query, keywords) ->
                 val hits = if (keywords != null) searchRepository.searchAny(keywords) else searchRepository.search(query)
                 hits.map { query to it }

@@ -29,11 +29,15 @@ class FtsQueryTest {
     @Test fun `ftsMatchAny joins keywords with OR`() =
         assertEquals("(\"slime\"*) OR (\"found\"* \"family\"*)", ftsMatchAny(listOf("slime", "found family")))
 
+    // A short AI keyword as a prefix would match far too much ("man" -> "manga", "many")
+    @Test fun `ftsMatchAny keeps short words exact`() =
+        assertEquals("(\"man\") OR (\"the\" \"slime\"*)", ftsMatchAny(listOf("man", "the slime")))
+
     @Test fun `ftsMatchAny sanitizes keywords`() =
-        assertEquals("(\"a\"* \"b\"*) OR (\"OR\"*)", ftsMatchAny(listOf("a\"* -b:", "OR", " *\"- ")))
+        assertEquals("(\"a\" \"b\") OR (\"OR\")", ftsMatchAny(listOf("a\"* -b:", "OR", " *\"- ")))
 
     @Test fun `ftsMatchAny scopes every token to the column`() =
-        assertEquals("(content : \"x\"*) OR (content : \"y\"* content : \"z\"*)", ftsMatchAny(listOf("x", "y z"), column = "content"))
+        assertEquals("(content : \"x\") OR (content : \"y\" content : \"z\")", ftsMatchAny(listOf("x", "y z"), column = "content"))
 
     @Test fun `ftsMatchAny returns null without tokens`() {
         assertNull(ftsMatchAny(emptyList()))

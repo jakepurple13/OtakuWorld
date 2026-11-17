@@ -281,4 +281,25 @@ class FavoriteViewModelTest {
         gate.complete(Unit)
         assertNull(vm.keywords)
     }
+
+    @Test
+    fun `cjk descriptions can describe`() = runTest {
+        val vm = viewModel(FakeAiText())
+        vm.search("スライムに転生した男の話")
+        awaitCondition { vm.canDescribe }
+    }
+
+    @Test
+    fun `tabs count as word breaks`() = runTest {
+        val vm = viewModel(FakeAiText())
+        vm.search("that\tisekai\twith\tslime")
+        awaitCondition { vm.canDescribe }
+    }
+
+    @Test
+    fun `punctuation does not count as words`() = runTest {
+        val vm = viewModel(FakeAiText())
+        vm.search("?? !! -- .. ok")
+        assertFalse(vm.canDescribe)
+    }
 }
