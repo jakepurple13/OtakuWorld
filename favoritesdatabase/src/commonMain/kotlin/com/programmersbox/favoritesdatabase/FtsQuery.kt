@@ -18,6 +18,18 @@ fun ftsMatch(raw: String, column: String? = null): String? {
     return tokens.joinToString(" ") { "$prefix\"$it\"*" }
 }
 
+/**
+ * Matches rows containing **any** of [keywords]. Each keyword must match as all of its words (prefix),
+ * like [ftsMatch]. Keywords with no searchable words are skipped.
+ *
+ * @return null when no keyword has a searchable word.
+ */
+fun ftsMatchAny(keywords: List<String>, column: String? = null): String? {
+    val groups = keywords.mapNotNull { ftsMatch(it, column) }
+    if (groups.isEmpty()) return null
+    return groups.joinToString(" OR ") { "($it)" }
+}
+
 private val fts4Operators = setOf("AND", "OR", "NOT", "NEAR")
 
 /**

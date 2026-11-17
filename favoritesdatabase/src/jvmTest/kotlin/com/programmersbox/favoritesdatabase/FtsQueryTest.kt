@@ -25,4 +25,18 @@ class FtsQueryTest {
 
     // unicode61 keeps combining marks inside tokens (Devanagari, Thai)
     @Test fun `combining marks stay in the word`() = assertEquals("\"हिन्दी\"*", ftsMatch("हिन्दी"))
+
+    @Test fun `ftsMatchAny joins keywords with OR`() =
+        assertEquals("(\"slime\"*) OR (\"found\"* \"family\"*)", ftsMatchAny(listOf("slime", "found family")))
+
+    @Test fun `ftsMatchAny sanitizes keywords`() =
+        assertEquals("(\"a\"* \"b\"*) OR (\"OR\"*)", ftsMatchAny(listOf("a\"* -b:", "OR", " *\"- ")))
+
+    @Test fun `ftsMatchAny scopes every token to the column`() =
+        assertEquals("(content : \"x\"*) OR (content : \"y\"* content : \"z\"*)", ftsMatchAny(listOf("x", "y z"), column = "content"))
+
+    @Test fun `ftsMatchAny returns null without tokens`() {
+        assertNull(ftsMatchAny(emptyList()))
+        assertNull(ftsMatchAny(listOf(" ", "*-")))
+    }
 }

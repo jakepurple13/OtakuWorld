@@ -5,6 +5,7 @@ import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.NoteFtsHit
 import com.programmersbox.favoritesdatabase.NotesDao
 import com.programmersbox.favoritesdatabase.ftsMatch
+import com.programmersbox.favoritesdatabase.ftsMatchAny
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
@@ -38,6 +39,17 @@ class FavoritesSearchRepository(
     fun search(raw: String): Flow<List<FavoriteSearchHit>> {
         val favoritesMatch = ftsMatch(raw) ?: return flowOf(emptyList())
         val notesMatch = ftsMatch(raw, column = "content") ?: return flowOf(emptyList())
+        return combine(
+            itemDao.searchFavorites(favoritesMatch),
+            notesDao.searchNoteHits(notesMatch),
+            ::merge,
+        )
+    }
+
+    /** Like [search], but a row matches when it contains any of [keywords] (each keyword's words all match). */
+    fun searchAny(keywords: List<String>): Flow<List<FavoriteSearchHit>> {
+        val favoritesMatch = ftsMatchAny(keywords) ?: return flowOf(emptyList())
+        val notesMatch = ftsMatchAny(keywords, column = "content") ?: return flowOf(emptyList())
         return combine(
             itemDao.searchFavorites(favoritesMatch),
             notesDao.searchNoteHits(notesMatch),

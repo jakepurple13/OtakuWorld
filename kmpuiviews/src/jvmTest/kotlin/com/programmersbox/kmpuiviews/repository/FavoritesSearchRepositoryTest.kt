@@ -109,4 +109,20 @@ class FavoritesSearchRepositoryTest {
 
         assertEquals(listOf("t", "d", "n"), search("mage").map { it.url })
     }
+
+    @Test fun `searchAny finds titles matching any keyword`() = runTest {
+        favorite("u1", "That Time I Got Reincarnated as a Slime")
+        favorite("u2", "Frieren", "An elf mage after the hero's party")
+        favorite("u3", "Blue Lock")
+        note("u3", "rewatch the slime arc? no")
+
+        val urls = repository.searchAny(listOf("slime", "elf mage")).first().map { it.url }.toSet()
+
+        assertEquals(setOf("u1", "u2", "u3"), urls)
+    }
+
+    @Test fun `searchAny with no usable keywords is empty`() = runTest {
+        favorite("u1", "Blue Lock")
+        assertEquals(emptyList(), repository.searchAny(listOf("*", "-")).first())
+    }
 }
