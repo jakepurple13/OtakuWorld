@@ -49,11 +49,4 @@ class AiTextPromptsTest {
             AiTextPrompts.parseNames("1. Cozy\n\"cozy\"\n- Slow Evenings\n\n"),
         )
     }
-
-    @Test
-    fun `system prompt per rewrite style differs`() {
-        val prompts = RewriteStyle.entries.map { AiTextPrompts.system(AiFeature.Rewrite, it) }
-        assertEquals(6, prompts.toSet().size)
-        assertTrue(prompts.all { it.isNotBlank() })
-    }
 }

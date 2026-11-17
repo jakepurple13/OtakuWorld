@@ -2,11 +2,11 @@ package com.programmersbox.kmpuiviews.presentation.notes
 
 import com.programmersbox.kmpuiviews.domain.aitext.AiEngineInfo
 import com.programmersbox.kmpuiviews.domain.aitext.AiFeature
-import com.programmersbox.kmpuiviews.domain.aitext.AiText
 import com.programmersbox.kmpuiviews.domain.aitext.AiTextPrompts
 import com.programmersbox.kmpuiviews.domain.aitext.AiTextState
 import com.programmersbox.kmpuiviews.domain.aitext.DiffSpan
 import com.programmersbox.kmpuiviews.domain.aitext.RewriteStyle
+import com.programmersbox.kmpuiviews.testing.FakeAiText
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -23,28 +23,20 @@ import kotlin.test.assertNull
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class NoteAiAssistantTest {
-    private class Fake(
-        var nanoOnly: Boolean = false,
-        var noEngine: Boolean = false,
-        var proofreadOutput: () -> Flow<String> = { flowOf("Stopped at ch 45") },
-        var rewriteOutput: () -> Flow<String> = { flowOf("Rewritten") },
-    ) : AiText {
-        var engineCalls = 0
+    @Suppress("TestFunctionName")
+    private fun Fake(
+        nanoOnly: Boolean = false,
+        noEngine: Boolean = false,
+        proofreadOutput: () -> Flow<String> = { flowOf("Stopped at ch 45") },
+        rewriteOutput: () -> Flow<String> = { flowOf("Rewritten") },
+    ) = FakeAiText(
+        engineRule = { _, inputLength ->
+            if (noEngine) null else if (nanoOnly && inputLength > AiTextPrompts.NANO_TEXT_LIMIT) null else ENGINE
+        },
+        output = { feature, _ -> if (feature is AiFeature.Rewrite) rewriteOutput() else proofreadOutput() },
+    )
 
-        override suspend fun engineFor(feature: AiFeature, inputLength: Int): AiEngineInfo? {
-            engineCalls++
-            return if (noEngine) null else if (nanoOnly && inputLength > AiTextPrompts.NANO_TEXT_LIMIT) null else ENGINE
-        }
-
-        override fun proofread(text: String) = proofreadOutput()
-        override fun rewrite(text: String, style: RewriteStyle) = rewriteOutput()
-        override fun recap(previousChapterText: String): Flow<String> = flowOf()
-        override fun tldr(description: String): Flow<String> = flowOf()
-        override fun listNames(titles: List<String>): Flow<String> = flowOf()
-        override fun listDescription(titles: List<String>): Flow<String> = flowOf()
-    }
-
-    private fun TestScope.assistant(fake: Fake = Fake()) =
+    private fun TestScope.assistant(fake: FakeAiText = Fake()) =
         NoteAiAssistant(
             fake,
             TestScope(StandardTestDispatcher(testScheduler)),

@@ -47,10 +47,10 @@ class DefaultAiTextTest {
     }
 
     private class FakeNanoTools(var ready: Boolean = true) : NanoTools {
-        val features = mutableListOf<AiFeature>()
-        override suspend fun isReady(feature: AiFeature, inputLength: Int) = ready
-        override fun run(feature: AiFeature, input: String, style: RewriteStyle?): Flow<String> {
-            features += feature
+        val tasks = mutableListOf<NanoTask>()
+        override suspend fun isReady(task: NanoTask, inputLength: Int) = ready
+        override fun run(task: NanoTask, input: String): Flow<String> {
+            tasks += task
             return flowOf("nano-out")
         }
     }
@@ -117,6 +117,28 @@ class DefaultAiTextTest {
     }
 
     @Test
+    fun `long tldr input may still use nano`() = runTest {
+        val ai = aiText(FakeEngine(SummaryEngineId.Nano), FakeEngine(SummaryEngineId.Gemma))
+        assertEquals("Nano", ai.engineFor(AiFeature.Tldr, AiTextPrompts.NANO_TEXT_LIMIT + 1)?.label)
+    }
+
+    @Test
+    fun `rewrite passes its style to nano tools`() = runTest {
+        val tools = FakeNanoTools()
+        aiText(FakeEngine(SummaryEngineId.Nano), tools = tools).run(AiFeature.Rewrite(RewriteStyle.Emojify), "hi").toList()
+        assertEquals(listOf<NanoTask>(NanoTask.Rewrite(RewriteStyle.Emojify)), tools.tasks)
+    }
+
+    @Test
+    fun `features without a nano task use the prompt api on nano`() = runTest {
+        val nano = FakeEngine(SummaryEngineId.Nano)
+        val tools = FakeNanoTools()
+        aiText(nano, tools = tools).run(AiFeature.Recap, "x").toList()
+        assertTrue(tools.tasks.isEmpty())
+        assertEquals(1, nano.generateCalls)
+    }
+
+    @Test
     fun `long proofread with only nano returns null`() = runTest {
         val ai = aiText(FakeEngine(SummaryEngineId.Nano))
         assertNull(ai.engineFor(AiFeature.Proofread, AiTextPrompts.NANO_TEXT_LIMIT + 1))
@@ -127,8 +149,8 @@ class DefaultAiTextTest {
         val nano = FakeEngine(SummaryEngineId.Nano)
         val tools = FakeNanoTools()
         val ai = aiText(nano, tools = tools)
-        assertEquals(listOf("nano-out"), ai.tldr("x").toList())
-        assertEquals(listOf(AiFeature.Tldr), tools.features)
+        assertEquals(listOf("nano-out"), ai.run(AiFeature.Tldr, "x").toList())
+        assertEquals(listOf<NanoTask>(NanoTask.Summarize), tools.tasks)
         assertEquals(0, nano.generateCalls)
     }
 
@@ -136,14 +158,14 @@ class DefaultAiTextTest {
     fun `nano without ready tools uses generate`() = runTest {
         val nano = FakeEngine(SummaryEngineId.Nano)
         val ai = aiText(nano, tools = FakeNanoTools(ready = false))
-        assertEquals(listOf("generated"), ai.tldr("x").toList())
+        assertEquals(listOf("generated"), ai.run(AiFeature.Tldr, "x").toList())
         assertEquals(1, nano.generateCalls)
     }
 
     @Test
     fun `no engine ready makes the flow throw on collect`() = runTest {
         val ai = aiText(FakeEngine(SummaryEngineId.Nano, EngineStatus.Unavailable))
-        val flow = ai.tldr("x")
+        val flow = ai.run(AiFeature.Tldr, "x")
         assertFailsWith<IllegalStateException> { flow.toList() }
     }
 
@@ -152,7 +174,7 @@ class DefaultAiTextTest {
         val gemma = FakeEngine(SummaryEngineId.Gemma)
         val ai = aiText(gemma)
         val testThread = Thread.currentThread().name
-        ai.tldr("x").toList()
+        ai.run(AiFeature.Tldr, "x").toList()
         assertNotEquals(testThread, gemma.collectThread)
         assertTrue(gemma.collectThread!!.startsWith("DefaultDispatcher"))
     }
@@ -204,8 +226,8 @@ class DefaultAiTextTest {
             order = order,
             generationLock = LockWatcher({ otherArrived.complete(Unit) }),
         )
-        val tldr = async { ai.tldr("a").toList() }
-        val names = async { ai.listNames(listOf("b")).toList() }
+        val tldr = async { ai.run(AiFeature.Tldr, "a").toList() }
+        val names = async { ai.run(AiFeature.ListNames, listOf("b")).toList() }
         tldr.await()
         names.await()
         assertEquals(2, engine.starts.get())

@@ -20,15 +20,14 @@ import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.SystemAlerter
 import com.programmersbox.kmpuiviews.domain.TranslationHandler
-import com.programmersbox.kmpuiviews.domain.aitext.AiEngineInfo
 import com.programmersbox.kmpuiviews.domain.aitext.AiFeature
 import com.programmersbox.kmpuiviews.domain.aitext.AiText
 import com.programmersbox.kmpuiviews.domain.aitext.AiTextPrompts
 import com.programmersbox.kmpuiviews.domain.aitext.AiTextState
-import com.programmersbox.kmpuiviews.domain.aitext.RewriteStyle
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.repository.BookmarkRepository
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
+import com.programmersbox.kmpuiviews.testing.FakeAiText
 import com.programmersbox.kmpuiviews.testing.FakeAuthManager
 import com.programmersbox.kmpuiviews.testing.FakeKmpGenericInfo
 import com.programmersbox.kmpuiviews.testing.FakeTranslationHandler
@@ -482,7 +481,7 @@ class DetailsViewModelTest {
 
     @Test
     fun `showTldr streams bullets to Done`() = runTest {
-        val ai = FakeAiText(tldrOutput = listOf("- one\n", "- two"))
+        val ai = FakeAiText(output = { _, _ -> flowOf("- one\n", "- two") })
         val vm = viewModel(aiText = ai)
         awaitCondition { vm.currentState is DetailState.Success }
         setDescription(vm, "a".repeat(500))
@@ -593,25 +592,4 @@ private class FakeImageBitmap(
     ) = Unit
 }
 
-private class FakeAiText(
-    var engine: AiEngineInfo? = ENGINE,
-    private val tldrOutput: List<String> = listOf("- a\n- b\n- c"),
-) : AiText {
-    val tldrCalls = mutableListOf<String>()
-
-    override suspend fun engineFor(feature: AiFeature, inputLength: Int): AiEngineInfo? = engine
-    override fun tldr(description: String): Flow<String> {
-        tldrCalls += description
-        return kotlinx.coroutines.flow.flow { tldrOutput.forEach { emit(it) } }
-    }
-
-    override fun recap(previousChapterText: String): Flow<String> = flowOf()
-    override fun proofread(text: String): Flow<String> = flowOf()
-    override fun rewrite(text: String, style: RewriteStyle): Flow<String> = flowOf()
-    override fun listNames(titles: List<String>): Flow<String> = flowOf()
-    override fun listDescription(titles: List<String>): Flow<String> = flowOf()
-
-    companion object {
-        val ENGINE = AiEngineInfo(label = "Fake", onDevice = true, destination = null)
-    }
-}
+private val FakeAiText.tldrCalls get() = inputsFor<AiFeature.Tldr>()

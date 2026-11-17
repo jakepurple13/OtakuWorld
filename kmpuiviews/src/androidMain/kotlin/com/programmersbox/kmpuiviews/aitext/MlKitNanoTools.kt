@@ -17,8 +17,8 @@ import com.google.mlkit.genai.summarization.SummarizationRequest
 import com.google.mlkit.genai.summarization.Summarizer
 import com.google.mlkit.genai.summarization.SummarizerOptions
 import com.programmersbox.datastore.NewSettingsHandling
-import com.programmersbox.kmpuiviews.domain.aitext.AiFeature
 import com.programmersbox.kmpuiviews.domain.aitext.AiTextPrompts
+import com.programmersbox.kmpuiviews.domain.aitext.NanoTask
 import com.programmersbox.kmpuiviews.domain.aitext.NanoTools
 import com.programmersbox.kmpuiviews.domain.aitext.RewriteStyle
 import kotlinx.coroutines.CancellationException
@@ -35,14 +35,16 @@ import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import kotlin.reflect.KClass
 
 /**
  * Task-specific Gemini Nano APIs (ML Kit GenAI Summarization / Proofreading / Rewriting).
  *
- * Recap and ListSuggest are never ready here: Summarization only offers 1-3 bullets, not the
- * 2-3 sentence prose Recap needs, so those go through the Prompt API.
+ * Features without an [com.programmersbox.kmpuiviews.domain.aitext.AiFeature.nanoTask] (Recap,
+ * list suggestions) never come here: Summarization only offers 1-3 bullets, not the 2-3 sentence
+ * prose Recap needs, so those go through the Prompt API.
  *
- * Tldr is only ready when the translation target language is one Summarization supports
+ * Summarize (TL;DR) is only ready when the translation target language is one Summarization supports
  * (English, Japanese, Korean): the Details screen translates the description to that target
  * before summarizing. For any other target, Tldr goes through the Prompt API, then Koog.
  */
@@ -51,7 +53,8 @@ class MlKitNanoTools(
     private val settings: NewSettingsHandling,
 ) : NanoTools {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val downloadStarted = mutableMapOf<AiFeature, AtomicBoolean>()
+    // Keyed by task kind: one download covers every rewrite style
+    private val downloadStarted = mutableMapOf<KClass<out NanoTask>, AtomicBoolean>()
 
     private val summarizers = mutableMapOf<Int, Summarizer>()
 
@@ -100,16 +103,15 @@ class MlKitNanoTools(
         }
     }
 
-    override suspend fun isReady(feature: AiFeature, inputLength: Int): Boolean = withContext(Dispatchers.IO) {
+    override suspend fun isReady(task: NanoTask, inputLength: Int): Boolean = withContext(Dispatchers.IO) {
         if (inputLength > AiTextPrompts.NANO_TEXT_LIMIT) return@withContext false
-        val check: Pair<ListenableFuture<Int>, (DownloadCallback) -> ListenableFuture<Void>> = when (feature) {
-            AiFeature.Tldr -> targetSummarizer()
+        val check: Pair<ListenableFuture<Int>, (DownloadCallback) -> ListenableFuture<Void>> = when (task) {
+            NanoTask.Summarize -> targetSummarizer()
                 ?.let { it.checkFeatureStatus() to it::downloadFeature }
                 ?: return@withContext false
-            AiFeature.Proofread -> proofreader.checkFeatureStatus() to proofreader::downloadFeature
-            // The status is per model, so any style stands in for "rewriting is ready".
-            AiFeature.Rewrite -> rewriter(RewriteStyle.Rephrase).let { it.checkFeatureStatus() to it::downloadFeature }
-            AiFeature.Recap, AiFeature.ListSuggest -> return@withContext false
+            NanoTask.Proofread -> proofreader.checkFeatureStatus() to proofreader::downloadFeature
+            // The status is per model, so the requested style stands in for "rewriting is ready".
+            is NanoTask.Rewrite -> rewriter(task.style).let { it.checkFeatureStatus() to it::downloadFeature }
         }
         val status = try {
             check.first.await()
@@ -119,7 +121,7 @@ class MlKitNanoTools(
             FeatureStatus.UNAVAILABLE
         }
         if (status == FeatureStatus.DOWNLOADABLE) {
-            val started = synchronized(downloadStarted) { downloadStarted.getOrPut(feature) { AtomicBoolean(false) } }
+            val started = synchronized(downloadStarted) { downloadStarted.getOrPut(task::class) { AtomicBoolean(false) } }
             if (started.compareAndSet(false, true)) {
                 scope.launch {
                     try {
@@ -136,22 +138,19 @@ class MlKitNanoTools(
         status == FeatureStatus.AVAILABLE
     }
 
-    override fun run(feature: AiFeature, input: String, style: RewriteStyle?): Flow<String> = flow {
-        val text = when (feature) {
-            AiFeature.Tldr -> (targetSummarizer() ?: error("Summarization doesn't support the target language"))
+    override fun run(task: NanoTask, input: String): Flow<String> = flow {
+        val text = when (task) {
+            NanoTask.Summarize -> (targetSummarizer() ?: error("Summarization doesn't support the target language"))
                 .runInference(SummarizationRequest.builder(input).build()).await()
                 .summary
 
-            AiFeature.Proofread -> proofreader
+            NanoTask.Proofread -> proofreader
                 .runInference(ProofreadingRequest.builder(input).build()).await()
                 .results.firstOrNull()?.text
 
-            AiFeature.Rewrite -> rewriter(style ?: RewriteStyle.Rephrase)
+            is NanoTask.Rewrite -> rewriter(task.style)
                 .runInference(RewritingRequest.builder(input).build()).await()
                 .results.firstOrNull()?.text
-
-            AiFeature.Recap, AiFeature.ListSuggest ->
-                throw UnsupportedOperationException("$feature is not supported by ML Kit Nano tools")
         }
         // A single chunk is a valid delta stream.
         emit(text?.takeIf { it.isNotBlank() } ?: error("ML Kit returned no result"))

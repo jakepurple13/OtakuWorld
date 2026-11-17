@@ -79,9 +79,9 @@ class NoteAiAssistant(
         val (proofread, rewrite, proofreadLong, rewriteLong) = coroutineScope {
             listOf(
                 async { aiText.engineFor(AiFeature.Proofread, 0) != null },
-                async { aiText.engineFor(AiFeature.Rewrite, 0) != null },
+                async { aiText.engineFor(AiFeature.Rewrite(RewriteStyle.Rephrase), 0) != null },
                 async { aiText.engineFor(AiFeature.Proofread, AiTextPrompts.NANO_TEXT_LIMIT + 1) != null },
-                async { aiText.engineFor(AiFeature.Rewrite, AiTextPrompts.NANO_TEXT_LIMIT + 1) != null },
+                async { aiText.engineFor(AiFeature.Rewrite(RewriteStyle.Rephrase), AiTextPrompts.NANO_TEXT_LIMIT + 1) != null },
             ).awaitAll()
         }
         anyEngine = proofread || rewrite
@@ -102,7 +102,7 @@ class NoteAiAssistant(
         start(text, AiFeature.Proofread, Pending(text, FIX_GRAMMAR_LABEL, diffed = true)) { aiText.proofread(text) }
 
     fun rewrite(text: String, style: RewriteStyle) =
-        start(text, AiFeature.Rewrite, Pending(text, style.name, diffed = false)) { aiText.rewrite(text, style) }
+        start(text, AiFeature.Rewrite(style), Pending(text, style.name, diffed = false)) { aiText.rewrite(text, style) }
 
     /** The generated text once it is done, or null when there is nothing to accept. Clears the preview. */
     fun accept(): String? {
@@ -120,7 +120,7 @@ class NoteAiAssistant(
 
     private fun start(
         text: String,
-        feature: AiFeature,
+        feature: AiFeature<String>,
         entry: Pending,
         block: () -> Flow<String>,
     ) {

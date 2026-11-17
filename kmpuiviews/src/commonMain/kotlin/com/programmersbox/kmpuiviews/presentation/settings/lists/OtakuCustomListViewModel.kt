@@ -174,7 +174,7 @@ class OtakuCustomListViewModel(
 
     /** True when an on-device engine is ready and the list has enough titles to say something about. */
     val suggestAvailable: StateFlow<Boolean> = snapshotFlow { customList?.list?.size ?: 0 }
-        .map { it >= MIN_SUGGEST_TITLES && aiText.engineFor(AiFeature.ListSuggest) != null }
+        .map { it >= MIN_SUGGEST_TITLES && aiText.engineFor(AiFeature.ListNames) != null }
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     private val nameRunner = AiTextRunner(viewModelScope)
@@ -221,7 +221,7 @@ class OtakuCustomListViewModel(
             .take(AiTextPrompts.MAX_LIST_TITLES)
             .map { "${it.title} (${it.source})" }
         return viewModelScope.launch {
-            val engine = aiText.engineFor(AiFeature.ListSuggest) ?: return@launch
+            val engine = aiText.engineFor(AiFeature.ListNames) ?: return@launch
             // Still on Main, so a clearDrafts either cancels this before the run or resets after it.
             ensureActive()
             runner.run(engine) { block(titles) }
