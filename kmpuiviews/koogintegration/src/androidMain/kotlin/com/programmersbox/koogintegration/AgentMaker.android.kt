@@ -5,6 +5,7 @@ import ai.koog.prompt.executor.clients.litert.LiteRTClientConfig
 import ai.koog.prompt.executor.clients.litert.LiteRTLLMClient
 import ai.koog.prompt.executor.clients.litert.LiteRTLLMProvider
 import ai.koog.prompt.executor.clients.litert.LiteRTLLModels
+import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import android.content.Context
@@ -40,10 +41,25 @@ actual class PlatformAgents(
         else -> null
     }
 
-    /** LiteRT models whose file is in the AI Helper's models folder. A LiteRT model id is its file name. */
+    /**
+     * LiteRT models whose file is in the AI Helper's models folder. A LiteRT model id is its file name.
+     * A `.litertlm` file Koog doesn't know (e.g. a smaller model copied in by hand) is registered as a
+     * plain text model, so any LiteRT-LM model placed in the folder can be used.
+     */
     fun downloadedLiteRtModels(): List<LLModel> {
-        val files = modelManager.listModels().map { it.fileName }.toSet()
-        return LiteRTLLModels.models.filter { it.id in files }
+        val files = modelManager.listModels().map { it.fileName }.filter { it.endsWith(".litertlm") }
+        return files.map { file -> LiteRTLLModels.models.find { it.id == file } ?: registerCustomModel(file) }
+    }
+
+    private fun registerCustomModel(file: String): LLModel = synchronized(LiteRTLLModels) {
+        LiteRTLLModels.models.find { it.id == file } ?: LLModel(
+            provider = LiteRTLLMProvider,
+            id = file,
+            capabilities = listOf(LLMCapability.Completion),
+            // Small models are often built with a short context; our prompts are well under this
+            contextLength = 4_096,
+            maxOutputTokens = 1_024,
+        ).also { LiteRTLLModels.addCustomModel(it) }
     }
 
     fun liteRtClient(): LLMClient = LiteRTLLMClient(
