@@ -1,5 +1,8 @@
 package com.programmersbox.kmpuiviews.presentation.details
 
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import com.programmersbox.kmpuiviews.domain.aitext.AiFeature
 import com.programmersbox.kmpuiviews.domain.aitext.AiText
 import com.programmersbox.kmpuiviews.domain.moodtags.MoodRepository
@@ -38,6 +41,11 @@ class MoodController(
     private val _suggesting = MutableStateFlow(false)
     val suggesting: StateFlow<Boolean> = _suggesting.asStateFlow()
 
+    private val _suggestFailed = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    /** Emits when the AI couldn't suggest anything usable, so the screen can say so. */
+    val suggestFailed: SharedFlow<Unit> = _suggestFailed.asSharedFlow()
+
     /** The AI chip: a favorite with no moods, an engine ready and the switch on, and not already working. */
     val canSuggest: StateFlow<Boolean> = combine(
         visible,
@@ -53,7 +61,7 @@ class MoodController(
         _suggesting.value = true
         scope.launch {
             try {
-                repository.suggest(url, title, description)
+                if (!repository.suggest(url, title, description)) _suggestFailed.tryEmit(Unit)
             } finally {
                 _suggesting.value = false
             }

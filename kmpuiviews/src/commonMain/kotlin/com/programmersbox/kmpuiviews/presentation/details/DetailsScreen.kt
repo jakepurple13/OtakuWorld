@@ -487,6 +487,7 @@ private fun DetailContent(
         onToggle = details.moods::toggle,
         onRemove = details.moods::remove,
         onCreate = details.moods::create,
+        suggestFailed = details.moods.suggestFailed,
     )
     val tldr = TldrUi(
         available = tldrAvailable,

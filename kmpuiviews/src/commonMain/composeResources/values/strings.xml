@@ -813,7 +813,12 @@
     <string name="moods_done">Done</string>
     <string name="moods_remove_hint">Long-press a mood to remove it</string>
     <string name="moods_filter">Mood</string>
-    <string name="moods_untagged">%1$d favorites have no moods yet · add them from their pages</string>
+    <plurals name="moods_untagged">
+        <item quantity="one">%1$d favorite has no moods yet · add them from its page</item>
+        <item quantity="other">%1$d favorites have no moods yet · add them from their pages</item>
+    </plurals>
+    <string name="moods_suggest_failed">Couldn't suggest moods</string>
+    <string name="moods_remove_action">Remove mood</string>
     <string name="mood_cozy">cozy</string>
     <string name="mood_wholesome">wholesome</string>
     <string name="mood_heartwarming">heartwarming</string>

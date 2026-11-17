@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.details
 
+import kotlinx.coroutines.launch
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.kmpuiviews.domain.moodtags.MoodRepository
 import com.programmersbox.kmpuiviews.testing.FakeAiText
@@ -77,11 +78,22 @@ class MoodControllerTest {
 
     @Test
     fun `chip hidden when ai is off but moods still work`() = runTest {
+        database.itemDao().insertFavorite(com.programmersbox.favoritesdatabase.DbModel("T", "D", "u1", "", "S"))
         val ai = FakeAiText(engine = null)
         val c = backgroundScope.controller(ai)
         c.create("comfort read")
         c.moods.await { it == listOf("comfort read") }
         assertEquals(false, c.canSuggest.value)
         c.customMoods.await { it == listOf("comfort read") }
+    }
+
+    @Test
+    fun `failed suggestion is reported`() = runTest {
+        val c = backgroundScope.controller(FakeAiText(output = { _, _ -> flowOf("nothing usable") }))
+        c.canSuggest.await { it }
+        val failed = kotlinx.coroutines.CompletableDeferred<Unit>()
+        backgroundScope.launch(Dispatchers.Default) { c.suggestFailed.first(); failed.complete(Unit) }
+        c.suggest("Frieren", "An elf mage")
+        withContext(Dispatchers.Default) { withTimeout(5_000) { failed.await() } }
     }
 }

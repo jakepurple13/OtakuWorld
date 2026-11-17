@@ -1,5 +1,8 @@
 package com.programmersbox.kmpuiviews.presentation.favorite
 
+import androidx.compose.ui.unit.Dp
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import otakuworld.kmpuiviews.generated.resources.moods_untagged
 import otakuworld.kmpuiviews.generated.resources.moods_filter
 import com.programmersbox.kmpuiviews.presentation.details.moodLabel
@@ -151,17 +154,20 @@ internal fun FavoritesFilterSheet(
                             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 moodCounts.forEach { (mood, count) ->
                                     val custom = !Moods.isBuiltIn(mood)
-                                    FilterChip(
-                                        selected = selectedMoods.any { it.equals(mood, ignoreCase = true) },
-                                        onClick = { onToggleMood(mood) },
-                                        label = { Text("${moodLabel(mood)}  $count") },
-                                        modifier = Modifier.customMoodOutline(custom, MaterialTheme.colorScheme.outline),
-                                    )
+                                    // Without the 48dp touch box, so the dashed outline hugs the chip
+                                    CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides if (custom) Dp.Unspecified else LocalMinimumInteractiveComponentSize.current) {
+                                        FilterChip(
+                                            selected = selectedMoods.any { it.equals(mood, ignoreCase = true) },
+                                            onClick = { onToggleMood(mood) },
+                                            label = { Text("${moodLabel(mood)}  $count") },
+                                            modifier = Modifier.customMoodOutline(custom, MaterialTheme.colorScheme.outline),
+                                        )
+                                    }
                                 }
                             }
                             if (untaggedCount > 0) {
                                 Text(
-                                    stringResource(Res.string.moods_untagged, untaggedCount),
+                                    pluralStringResource(Res.plurals.moods_untagged, untaggedCount, untaggedCount),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )

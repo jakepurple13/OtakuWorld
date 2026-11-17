@@ -48,6 +48,9 @@ interface ItemDao {
     @Query("SELECT * FROM mood_tags WHERE url = :url")
     fun moodsFlow(url: String): Flow<MoodTagRow?>
 
+    @Query("SELECT * FROM mood_tags WHERE url = :url")
+    suspend fun moodsOnce(url: String): MoodTagRow?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertMoods(row: MoodTagRow)
 

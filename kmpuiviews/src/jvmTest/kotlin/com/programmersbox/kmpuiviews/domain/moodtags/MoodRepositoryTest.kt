@@ -1,5 +1,9 @@
 package com.programmersbox.kmpuiviews.domain.moodtags
 
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.async
+import kotlinx.coroutines.Dispatchers
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.kmpuiviews.domain.aitext.AiFeature
@@ -55,6 +59,7 @@ class MoodRepositoryTest {
 
     @Test
     fun `custom names are cleaned and deduped`() = runTest {
+        listOf("u1", "u2", "u3", "u4").forEach { favorite(it) }
         val repo = repo()
         assertTrue(repo.create("u1", "  Comfort   Read "))
         assertTrue(repo.create("u2", "comfort read"))
@@ -67,6 +72,7 @@ class MoodRepositoryTest {
 
     @Test
     fun `custom moods disappear when unused`() = runTest {
+        favorite("u1")
         val repo = repo()
         repo.create("u1", "rainy day read")
         repo.remove("u1", "rainy day read")
@@ -77,6 +83,7 @@ class MoodRepositoryTest {
     fun `suggest keeps only allowed moods`() = runTest {
         val ai = FakeAiText(output = { _, _ -> flowOf("Cozy, Space Opera\nfound family\ndark\nfunny") })
         val repo = repo(ai)
+        favorite("other")
         repo.create("other", "space opera")
         assertTrue(repo.suggest("u1", "Frieren", "An elf mage"))
         assertEquals(listOf("cozy", "space opera", "found family"), repo.moods("u1").first())
@@ -98,5 +105,23 @@ class MoodRepositoryTest {
         repo.toggle("fav", "cozy")
         repo.toggle("notfav", "dark")
         assertEquals(mapOf("fav" to listOf("cozy")), repo.favoriteMoods.first())
+    }
+
+    @Test
+    fun `concurrent toggles keep every mood`() = runTest {
+        val repo = repo()
+        withContext(Dispatchers.Default) {
+            Moods.builtIn.map { mood -> async { repo.toggle("u1", mood) } }.awaitAll()
+        }
+        assertEquals(Moods.builtIn.toSet(), repo.moods("u1").first().toSet())
+    }
+
+    @Test
+    fun `custom moods come from favorites only`() = runTest {
+        favorite("fav")
+        val repo = repo()
+        repo.create("fav", "comfort read")
+        repo.create("gone", "rainy day read")
+        assertEquals(listOf("comfort read"), repo.customMoods.first())
     }
 }

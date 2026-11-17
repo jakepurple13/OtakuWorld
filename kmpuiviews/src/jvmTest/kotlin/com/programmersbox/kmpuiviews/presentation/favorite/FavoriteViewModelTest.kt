@@ -350,4 +350,18 @@ class FavoriteViewModelTest {
         val vm = viewModel()
         awaitCondition { vm.untaggedCount == 2 }
     }
+
+    @Test
+    fun `a selected mood that disappears stops filtering`() = runTest {
+        database.itemDao().insertFavorite(favorite("u1", "Frieren"))
+        database.itemDao().insertFavorite(favorite("u2", "Dandadan"))
+        moods.toggle("u1", "cozy")
+        val vm = viewModel()
+        awaitCondition { vm.moodCounts.isNotEmpty() }
+        vm.toggleMood("cozy")
+        awaitCondition { vm.resultCount == 1 }
+        moods.remove("u1", "cozy")
+        awaitCondition { vm.resultCount == 2 }
+        assertEquals(0, vm.activeFilterCount)
+    }
 }

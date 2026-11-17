@@ -56,12 +56,15 @@ object Moods {
     private const val MAX_CUSTOM_LENGTH = 30
     private val spaces = Regex("\\s+")
 
+    // AI answers are split on these, so a name containing them could never be suggested
+    private val separators = Regex("[,;]")
+
     fun isBuiltIn(name: String): Boolean = name.lowercase() in labels
 
     /** The label for a built-in mood, or null for the user's own (shown as typed). */
     fun label(name: String): StringResource? = labels[name.lowercase()]
 
-    /** Trimmed, single-spaced and capped at 30 characters; null when nothing is left. */
+    /** Without commas or semicolons, trimmed, single-spaced and capped at 30 characters; null when nothing is left. */
     fun cleanCustom(raw: String): String? =
-        raw.trim().replace(spaces, " ").take(MAX_CUSTOM_LENGTH).trim().takeIf { it.isNotEmpty() }
+        raw.replace(separators, " ").trim().replace(spaces, " ").take(MAX_CUSTOM_LENGTH).trim().takeIf { it.isNotEmpty() }
 }

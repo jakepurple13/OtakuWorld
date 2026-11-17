@@ -116,7 +116,12 @@ class FavoriteViewModel(
     private val groups by derivedStateOf { groupFavorites(favorites) }
 
     private val filtered by derivedStateOf {
-        filterGroups(groups, quickFilters, selectedSources, now(), selectedMoods, moodsByUrl)
+        filterGroups(groups, quickFilters, selectedSources, now(), activeMoods, moodsByUrl)
+    }
+
+    /** Selected moods that some favorite still has; one removed elsewhere stops filtering. */
+    private val activeMoods by derivedStateOf {
+        selectedMoods.filter { mood -> moodCounts.any { it.first.equals(mood, ignoreCase = true) } }.toSet()
     }
 
     /** Moods present among favorites with how many titles have each, most first. */
@@ -148,7 +153,7 @@ class FavoriteViewModel(
     }
 
     val activeFilterCount by derivedStateOf {
-        quickFilters.size + (if (selectedSources.isEmpty()) 0 else 1) + (if (selectedMoods.isEmpty()) 0 else 1)
+        quickFilters.size + (if (selectedSources.isEmpty()) 0 else 1) + (if (activeMoods.isEmpty()) 0 else 1)
     }
 
     /** Every installed source plus every source that has favorites, most favorites first. */

@@ -42,4 +42,9 @@ class MoodsTest {
     fun `mood finish splits and cleans`() {
         assertEquals("cozy\nfound family\ndark", AiFeature.MoodTags.finish("1. Cozy, Found Family\n- \"dark\"\ncozy"))
     }
+
+    @Test
+    fun `custom names drop list separators`() {
+        assertEquals("rainy cozy", Moods.cleanCustom("rainy, cozy;"))
+    }
 }

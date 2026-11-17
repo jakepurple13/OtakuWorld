@@ -17,7 +17,7 @@ class MoodStatisticsProvider(
     override val header: String = "🏷 Moods"
     override val key: String = "moods"
     override val contentType: String = "moods"
-    override val priority: Int = 1
+    override val priority: Int = 2
 
     override fun observeStats(): Flow<List<StatData>> = combine(
         itemDao.getAllFavoritesCount(),

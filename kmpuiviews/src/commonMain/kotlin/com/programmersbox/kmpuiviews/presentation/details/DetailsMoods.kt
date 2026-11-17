@@ -1,5 +1,15 @@
 package com.programmersbox.kmpuiviews.presentation.details
 
+import otakuworld.kmpuiviews.generated.resources.moods_remove_action
+import otakuworld.kmpuiviews.generated.resources.moods_suggest_failed
+import com.programmersbox.sharedcomponents.notifier.InAppNotifier
+import org.koin.compose.koinInject
+import kotlinx.coroutines.flow.Flow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
+import androidx.compose.ui.draw.clip
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
@@ -80,6 +90,7 @@ class MoodUi(
     val onToggle: (String) -> Unit,
     val onRemove: (String) -> Unit,
     val onCreate: (String) -> Unit,
+    val suggestFailed: Flow<Unit>,
 )
 
 /** A built-in mood's label, or the user's own mood as typed. */
@@ -103,6 +114,9 @@ fun Modifier.customMoodOutline(custom: Boolean, color: androidx.compose.ui.graph
 fun MoodRow(ui: MoodUi, title: String, modifier: Modifier = Modifier) {
     var showSheet by rememberSaveable { mutableStateOf(false) }
     val haptics = LocalHapticFeedback.current
+    val notifier = koinInject<InAppNotifier>()
+    val failedText = stringResource(Res.string.moods_suggest_failed)
+    LaunchedEffect(ui.suggestFailed) { ui.suggestFailed.collect { notifier.info(failedText) } }
 
     AnimatedVisibility(
         visible = ui.visible,
@@ -119,10 +133,14 @@ fun MoodRow(ui: MoodUi, title: String, modifier: Modifier = Modifier) {
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                itemVerticalAlignment = Alignment.CenterVertically,
+            ) {
                 ui.moods.forEach { mood ->
                     key(mood) {
                         val custom = !Moods.isBuiltIn(mood)
+                        val removeLabel = stringResource(Res.string.moods_remove_action)
                         Surface(
                             color = MaterialTheme.colorScheme.tertiaryContainer,
                             contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
@@ -130,8 +148,10 @@ fun MoodRow(ui: MoodUi, title: String, modifier: Modifier = Modifier) {
                             modifier = Modifier
                                 .padding(vertical = 4.dp)
                                 .customMoodOutline(custom, MaterialTheme.colorScheme.onTertiaryContainer)
+                                .clip(RoundedCornerShape(8.dp))
                                 .combinedClickable(
                                     onClick = {},
+                                    onLongClickLabel = removeLabel,
                                     onLongClick = {
                                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                         ui.onRemove(mood)
@@ -206,13 +226,16 @@ private fun MoodSheet(ui: MoodUi, title: String, onDismiss: () -> Unit) {
                     key(mood) {
                         val selected = ui.moods.any { it.equals(mood, ignoreCase = true) }
                         val custom = !Moods.isBuiltIn(mood)
-                        FilterChip(
-                            selected = selected,
-                            onClick = { ui.onToggle(mood) },
-                            label = { Text(moodLabel(mood)) },
-                            border = if (custom) BorderStroke(0.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0f)) else null,
-                            modifier = Modifier.customMoodOutline(custom, MaterialTheme.colorScheme.outline),
-                        )
+                        // Without the 48dp touch box, so the dashed outline hugs the chip
+                        CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides if (custom) Dp.Unspecified else LocalMinimumInteractiveComponentSize.current) {
+                            FilterChip(
+                                selected = selected,
+                                onClick = { ui.onToggle(mood) },
+                                label = { Text(moodLabel(mood)) },
+                                border = if (custom) BorderStroke(0.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0f)) else null,
+                                modifier = Modifier.customMoodOutline(custom, MaterialTheme.colorScheme.outline),
+                            )
+                        }
                     }
                 }
             }

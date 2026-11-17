@@ -1,5 +1,7 @@
 package com.programmersbox.kmpuiviews.domain.moodtags
 
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.sync.Mutex
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.MoodTagRow
 import com.programmersbox.kmpuiviews.domain.aitext.AiFeature
@@ -25,26 +27,28 @@ class MoodRepository(
 ) {
     private val serializer = ListSerializer(String.serializer())
 
+    // Every edit is read-modify-write; without this, fast taps overwrite each other
+    private val writeLock = Mutex()
+
     fun moods(url: String): Flow<List<String>> = dao.moodsFlow(url).map { decode(it?.moods) }
 
     /** url → moods, current favorites only. */
     val favoriteMoods: Flow<Map<String, List<String>>> =
         dao.favoriteMoodRows().map { rows -> rows.associate { it.url to decode(it.moods) } }
 
-    /** The user's own moods still used by any title, alphabetical. */
-    val customMoods: Flow<List<String>> = dao.allMoodRows().map { rows ->
+    /** The user's own moods still used by a favorite, alphabetical. */
+    val customMoods: Flow<List<String>> = dao.favoriteMoodRows().map { rows ->
         rows.flatMap { decode(it.moods) }
             .filterNot { Moods.isBuiltIn(it) }
             .distinctBy { it.lowercase() }
             .sortedBy { it.lowercase() }
     }
 
-    suspend fun toggle(url: String, mood: String) {
-        val current = current(url)
-        set(url, if (current.any { it.equals(mood, ignoreCase = true) }) current.without(mood) else current + mood)
+    suspend fun toggle(url: String, mood: String) = update(url) { current ->
+        if (current.any { it.equals(mood, ignoreCase = true) }) current.without(mood) else current + mood
     }
 
-    suspend fun remove(url: String, mood: String) = set(url, current(url).without(mood))
+    suspend fun remove(url: String, mood: String) = update(url) { it.without(mood) }
 
     /**
      * Adds the user's own mood to [url]. A name matching a built-in or an existing custom mood reuses
@@ -53,8 +57,7 @@ class MoodRepository(
     suspend fun create(url: String, raw: String): Boolean {
         val name = Moods.cleanCustom(raw) ?: return false
         val canonical = (Moods.builtIn + customMoods.first()).firstOrNull { it.equals(name, ignoreCase = true) } ?: name
-        val current = current(url)
-        if (current.none { it.equals(canonical, ignoreCase = true) }) set(url, current + canonical)
+        update(url) { current -> if (current.none { it.equals(canonical, ignoreCase = true) }) current + canonical else current }
         return true
     }
 
@@ -76,12 +79,14 @@ class MoodRepository(
             .distinct()
             .take(MAX_SUGGESTED)
         if (picked.isEmpty()) return false
-        val current = current(url)
-        set(url, current + picked.filter { pick -> current.none { it.equals(pick, ignoreCase = true) } })
+        // Read the moods again under the lock: the user may have edited them while the AI worked
+        update(url) { current -> current + picked.filter { pick -> current.none { it.equals(pick, ignoreCase = true) } } }
         return true
     }
 
-    private suspend fun current(url: String): List<String> = decode(dao.moodsFlow(url).first()?.moods)
+    private suspend fun update(url: String, change: (List<String>) -> List<String>) = writeLock.withLock {
+        set(url, change(decode(dao.moodsOnce(url)?.moods)))
+    }
 
     private suspend fun set(url: String, moods: List<String>) {
         val unique = moods.distinctBy { it.lowercase() }
