@@ -112,6 +112,23 @@ sealed class AiFeature<in I>(
         override fun userPrompt(prepared: String) = "New updates:\n$prepared"
     }
 
+    /** Turns a description like "that isekai where the guy is a slime" into favorites search keywords. */
+    data object SearchKeywords : AiFeature<String>(
+        system = "You turn a reader's description of a manga, anime or novel into search keywords. Return 3 to " +
+                "6 short keywords or title words likely to appear in its title or description, one per line, " +
+                "lowercase. No numbering, no explanations.",
+    ) {
+        override val toggle = AiToggle.DescribeSearch
+        override fun prepare(input: String) = input.trim().take(MAX_DESCRIBE_CHARS)
+        override fun userPrompt(prepared: String) = "Description: $prepared"
+        override fun finish(raw: String) = raw.lines()
+            .map { line -> line.replace(Regex("""^\s*(?:[-•*]|\d+[.)])\s*"""), "").trim('"', '\'', '“', '”', '`', ' ').lowercase() }
+            .filter { it.isNotBlank() }
+            .distinct()
+            .take(MAX_KEYWORDS)
+            .joinToString("\n")
+    }
+
     /** Explains an update-check failure that has no fixed explanation. */
     data object ExplainError : AiFeature<ErrorDetails>(
         system = "You explain why an app couldn't check a manga, anime or novel source for new chapters. " +
@@ -129,6 +146,8 @@ data class ErrorDetails(val sourceName: String, val detail: String)
 
 private const val MAX_ERROR_DETAIL_CHARS = 1_500
 private const val MAX_UPDATE_LINES = 25
+private const val MAX_DESCRIBE_CHARS = 300
+private const val MAX_KEYWORDS = 6
 
 private fun rewriteInstruction(style: RewriteStyle) = when (style) {
     RewriteStyle.Rephrase -> "Rephrase the text using different wording but the same meaning."

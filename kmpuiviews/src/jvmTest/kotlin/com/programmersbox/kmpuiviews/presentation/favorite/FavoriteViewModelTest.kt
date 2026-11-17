@@ -1,5 +1,10 @@
 package com.programmersbox.kmpuiviews.presentation.favorite
 
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
+import com.programmersbox.kmpuiviews.testing.FakeAiText
 import com.programmersbox.kmpuiviews.testing.clearAndJoin
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.snapshots.Snapshot
@@ -63,7 +68,7 @@ class FavoriteViewModelTest {
         source = source,
     )
 
-    private fun viewModel() = FavoriteViewModel(
+    private fun viewModel(ai: FakeAiText = FakeAiText(engine = null)) = FavoriteViewModel(
         sourceRepository = SourceRepository(),
         favoritesRepository = FavoritesRepository(
             dao = database.itemDao(),
@@ -72,6 +77,7 @@ class FavoriteViewModelTest {
             sourceRepository = SourceRepository(),
         ),
         searchRepository = FavoritesSearchRepository(database.itemDao(), notes.notesDao()),
+        aiText = ai,
     ).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
 
     private suspend fun FavoriteViewModel.search(text: String) {
@@ -189,5 +195,75 @@ class FavoriteViewModelTest {
         vm.search("lock")
 
         assertEquals(listOf("Lock Up"), vm.sections.flatMap { s -> s.groups.map { it.title } })
+    }
+
+    private val describing = "that isekai where the guy is a slime"
+
+    @Test
+    fun `short queries cannot describe`() = runTest {
+        val vm = viewModel(FakeAiText())
+        vm.search("blue lock")
+        assertFalse(vm.canDescribe)
+        vm.search(describing)
+        awaitCondition { vm.canDescribe }
+    }
+
+    @Test
+    fun `describe searches any keyword`() = runTest {
+        database.itemDao().insertFavorite(favorite("u1", "That Time I Got Reincarnated as a Slime"))
+        database.itemDao().insertFavorite(favorite("u2", "Dandadan"))
+        val vm = viewModel(FakeAiText(output = { _, _ -> flowOf("Slime\nreincarnated") }))
+        vm.search(describing)
+        awaitCondition { vm.canDescribe }
+        assertTrue(vm.sections.isEmpty())
+        vm.describe()
+        awaitCondition { vm.keywords == listOf("slime", "reincarnated") && vm.sections.isNotEmpty() }
+        assertEquals("That Time I Got Reincarnated as a Slime", vm.sections.single().groups.single().title)
+        assertFalse(vm.describing)
+    }
+
+    @Test
+    fun `typing again clears keywords`() = runTest {
+        val vm = viewModel(FakeAiText(output = { _, _ -> flowOf("slime") }))
+        vm.search(describing)
+        awaitCondition { vm.canDescribe }
+        vm.describe()
+        awaitCondition { vm.keywords != null }
+        vm.search("blue")
+        awaitCondition { vm.keywords == null }
+    }
+
+    @Test
+    fun `removing the last keyword returns to normal search`() = runTest {
+        val vm = viewModel(FakeAiText(output = { _, _ -> flowOf("slime\nisekai") }))
+        vm.search(describing)
+        awaitCondition { vm.canDescribe }
+        vm.describe()
+        awaitCondition { vm.keywords != null }
+        vm.removeKeyword("slime")
+        assertEquals(listOf("isekai"), vm.keywords)
+        vm.removeKeyword("isekai")
+        assertNull(vm.keywords)
+    }
+
+    @Test
+    fun `failed describe keeps normal search`() = runTest {
+        val vm = viewModel(FakeAiText(output = { _, _ -> flow { error("boom") } }))
+        vm.search(describing)
+        awaitCondition { vm.canDescribe }
+        vm.describe()
+        awaitCondition { !vm.describing }
+        assertNull(vm.keywords)
+        assertEquals(describing, vm.searchQuery)
+    }
+
+    @Test
+    fun `describe availability follows settings`() = runTest {
+        val ai = FakeAiText()
+        val vm = viewModel(ai)
+        vm.search(describing)
+        awaitCondition { vm.canDescribe }
+        ai.engine = null
+        awaitCondition { !vm.canDescribe }
     }
 }
