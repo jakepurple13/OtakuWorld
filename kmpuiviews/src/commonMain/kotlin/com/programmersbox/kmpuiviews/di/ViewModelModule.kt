@@ -41,6 +41,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.prerelease.Prerelease
 import com.programmersbox.kmpuiviews.presentation.settings.translationmodels.TranslationViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfoViewModel
 import com.programmersbox.kmpuiviews.presentation.updatecheck.UpdateCheckErrorsViewModel
+import com.programmersbox.kmpuiviews.presentation.settings.ai.AiSettingsViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.updatesources.UpdateSourcesViewModel
 import com.programmersbox.kmpuiviews.presentation.urlopener.UrlOpenerViewModel
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
@@ -115,6 +116,7 @@ val viewModels: Module = module {
     viewModelOf(::DictionaryFormViewModel)
     viewModelOf(::AccountStatDetailsViewModel)
     viewModelOf(::UpdateCheckErrorsViewModel)
+    viewModel { AiSettingsViewModel(get(), get(), getAll()) }
     viewModelOf(::UpdateSourcesViewModel)
     viewModelOf(::NavMapViewModel)
     viewModel {
