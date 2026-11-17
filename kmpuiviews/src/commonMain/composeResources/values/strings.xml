@@ -797,6 +797,11 @@
     <string name="ai_feature_recap_desc">The “Previously” bar in the novel reader</string>
     <string name="ai_feature_writing">Writing tools in notes</string>
     <string name="ai_feature_writing_desc">Fix grammar and rewrite</string>
+    <string name="ai_feature_describe">Describe to search</string>
+    <string name="ai_feature_describe_desc">Search favorites by describing them</string>
+    <string name="fav_describe">Search by description</string>
+    <string name="fav_searching_for">Searching for</string>
+    <string name="fav_remove_keyword">Remove %1$s</string>
     <string name="ai_feature_lists">List suggestions</string>
     <string name="ai_feature_lists_desc">Names and descriptions for custom lists</string>
     <string name="ai_feature_update_summary">Update summary</string>

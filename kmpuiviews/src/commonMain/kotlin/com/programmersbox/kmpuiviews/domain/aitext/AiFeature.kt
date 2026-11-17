@@ -112,6 +112,28 @@ sealed class AiFeature<in I>(
         override fun userPrompt(prepared: String) = "New updates:\n$prepared"
     }
 
+    /** Turns a description like "that isekai where the guy is a slime" into favorites search keywords. */
+    data object SearchKeywords : AiFeature<String>(
+        system = "You turn a reader's description of a manga, anime or novel into search keywords. Return 3 to " +
+                "6 short keywords or title words likely to appear in its title or description, one per line, " +
+                "lowercase. No numbering, no explanations.",
+    ) {
+        override val toggle = AiToggle.DescribeSearch
+        override fun prepare(input: String) = input.trim().take(MAX_DESCRIBE_CHARS)
+        override fun userPrompt(prepared: String) = "Description: $prepared"
+        // Small models often ignore "one per line": accept commas or semicolons, and drop preambles
+        // ("Here are the keywords:") and anything without a searchable word.
+        override fun finish(raw: String) = raw.lines()
+            .filterNot { it.trim().endsWith(':') }
+            .map { it.replace(keywordsLabel, "") }
+            .flatMap { it.split(',', ';') }
+            .map { it.replace(listMarker, "").trim('"', '\'', '“', '”', '`', ' ').lowercase() }
+            .filter { searchableWord.containsMatchIn(it) }
+            .distinct()
+            .take(MAX_KEYWORDS)
+            .joinToString("\n")
+    }
+
     /** Explains an update-check failure that has no fixed explanation. */
     data object ExplainError : AiFeature<ErrorDetails>(
         system = "You explain why an app couldn't check a manga, anime or novel source for new chapters. " +
@@ -129,6 +151,12 @@ data class ErrorDetails(val sourceName: String, val detail: String)
 
 private const val MAX_ERROR_DETAIL_CHARS = 1_500
 private const val MAX_UPDATE_LINES = 25
+private const val MAX_DESCRIBE_CHARS = 300
+private const val MAX_KEYWORDS = 6
+private val listMarker = Regex("""^\s*(?:[-•*]|\d+[.)])\s*""")
+private val keywordsLabel = Regex("""^\s*keywords?\s*:\s*""", RegexOption.IGNORE_CASE)
+// Letters, digits and combining marks, the same runs FTS5 keeps (see ftsMatch)
+private val searchableWord = Regex("""[\p{L}\p{N}\p{M}]""")
 
 private fun rewriteInstruction(style: RewriteStyle) = when (style) {
     RewriteStyle.Rephrase -> "Rephrase the text using different wording but the same meaning."

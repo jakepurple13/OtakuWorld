@@ -73,4 +73,22 @@ class AiFeatureTest {
         assertNull(AiFeature.UpdateSummary.nanoTask)
         assertTrue("episodes" in AiFeature.UpdateSummary.system)
     }
+
+    @Test
+    fun `search keywords finish cleans and caps`() {
+        assertEquals(
+            "slime\nreincarnated\nisekai\nmonster\nnation\ngoblin",
+            AiFeature.SearchKeywords.finish("1. Slime\n- \"reincarnated\"\n* Isekai\nslime\n\nmonster\nnation\ngoblin\nextra"),
+        )
+        assertEquals(300, AiFeature.SearchKeywords.prepare("a".repeat(500)).length)
+        assertTrue(AiFeature.SearchKeywords.userPrompt("x").startsWith("Description: "))
+    }
+
+    @Test
+    fun `search keywords finish handles comma and preamble replies`() {
+        assertEquals("slime\nisekai\nreincarnation", AiFeature.SearchKeywords.finish("slime, isekai, reincarnation"))
+        assertEquals("slime\nisekai", AiFeature.SearchKeywords.finish("Here are the keywords:\nslime\nisekai"))
+        assertEquals("slime\nisekai", AiFeature.SearchKeywords.finish("Keywords: slime; isekai"))
+        assertEquals("", AiFeature.SearchKeywords.finish("***\n—\n\"\""))
+    }
 }
