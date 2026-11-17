@@ -1,5 +1,20 @@
 package com.programmersbox.kmpuiviews.presentation.favorite
 
+import otakuworld.kmpuiviews.generated.resources.fav_searching_for
+import otakuworld.kmpuiviews.generated.resources.fav_remove_keyword
+import otakuworld.kmpuiviews.generated.resources.fav_describe
+import com.programmersbox.kmpuiviews.presentation.components.ai.generatingBorder
+import androidx.compose.runtime.key
+import androidx.compose.material3.InputChipDefaults
+import androidx.compose.material3.InputChip
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
@@ -358,57 +373,111 @@ private fun FavoriteSearchBar(
     onOpenFilters: () -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 4.dp, end = 4.dp, top = 4.dp),
-    ) {
-        BackButton()
-        TextField(
-            state = viewModel.searchText,
-            placeholder = { Text(stringResource(Res.string.fav_search_placeholder), maxLines = 1, overflow = TextOverflow.Ellipsis) },
-            leadingIcon = { Icon(Icons.Default.Search, null) },
-            trailingIcon = {
-                if (viewModel.searchText.text.isNotEmpty()) {
-                    IconButton(onClick = { viewModel.searchText.clearText() }) {
-                        Icon(Icons.Default.Close, stringResource(Res.string.fav_clear_search))
+    Column {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 4.dp, end = 4.dp, top = 4.dp),
+        ) {
+            BackButton()
+            TextField(
+                state = viewModel.searchText,
+                placeholder = { Text(stringResource(Res.string.fav_search_placeholder), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                leadingIcon = { Icon(Icons.Default.Search, null) },
+                trailingIcon = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        AnimatedVisibility(
+                            visible = viewModel.canDescribe,
+                            enter = scaleIn(spring(dampingRatio = 0.5f)) + fadeIn(),
+                            exit = scaleOut() + fadeOut(),
+                        ) {
+                            IconButton(
+                                onClick = {
+                                    focusManager.clearFocus()
+                                    viewModel.describe()
+                                }
+                            ) { Icon(Icons.Default.AutoAwesome, stringResource(Res.string.fav_describe)) }
+                        }
+                        if (viewModel.searchText.text.isNotEmpty()) {
+                            IconButton(onClick = { viewModel.searchText.clearText() }) {
+                                Icon(Icons.Default.Close, stringResource(Res.string.fav_clear_search))
+                            }
+                        }
+                    }
+                },
+                lineLimits = TextFieldLineLimits.SingleLine,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                onKeyboardAction = { focusManager.clearFocus() },
+                shape = CircleShape,
+                colors = TextFieldDefaults.colors(
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent,
+                ),
+                modifier = Modifier
+                    .weight(1f)
+                    .generatingBorder(viewModel.describing, CircleShape),
+            )
+            val popSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
+            val shrinkSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+            BadgedBox(
+                badge = {
+                    AnimatedContent(
+                        targetState = viewModel.activeFilterCount,
+                        transitionSpec = { scaleIn(popSpec) togetherWith scaleOut(shrinkSpec) },
+                        label = "filterBadge",
+                    ) { count ->
+                        if (count > 0) Badge { Text(count.toString()) }
+                    }
+                },
+                modifier = Modifier.padding(horizontal = 4.dp),
+            ) {
+                // Drop focus first so the keyboard doesn't come back when the sheet closes
+                IconButton(
+                    onClick = {
+                        focusManager.clearFocus()
+                        onOpenFilters()
+                    }
+                ) {
+                    Icon(Icons.Default.FilterList, stringResource(Res.string.fav_filter))
+                }
+            }
+        }
+
+        // The AI keywords the search is matching; remove one to search without it
+        AnimatedVisibility(
+            visible = viewModel.keywords != null,
+            enter = expandVertically() + fadeIn(),
+            exit = shrinkVertically() + fadeOut(),
+        ) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    stringResource(Res.string.fav_searching_for),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    viewModel.keywords.orEmpty().forEach { keyword ->
+                        key(keyword) {
+                            InputChip(
+                                selected = true,
+                                onClick = { viewModel.removeKeyword(keyword) },
+                                label = { Text(keyword) },
+                                trailingIcon = {
+                                    Icon(
+                                        Icons.Default.Close,
+                                        stringResource(Res.string.fav_remove_keyword, keyword),
+                                        modifier = Modifier.size(InputChipDefaults.IconSize)
+                                    )
+                                },
+                            )
+                        }
                     }
                 }
-            },
-            lineLimits = TextFieldLineLimits.SingleLine,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-            onKeyboardAction = { focusManager.clearFocus() },
-            shape = CircleShape,
-            colors = TextFieldDefaults.colors(
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                disabledIndicatorColor = Color.Transparent,
-            ),
-            modifier = Modifier.weight(1f),
-        )
-        val popSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
-        val shrinkSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
-        BadgedBox(
-            badge = {
-                AnimatedContent(
-                    targetState = viewModel.activeFilterCount,
-                    transitionSpec = { scaleIn(popSpec) togetherWith scaleOut(shrinkSpec) },
-                    label = "filterBadge",
-                ) { count ->
-                    if (count > 0) Badge { Text(count.toString()) }
-                }
-            },
-            modifier = Modifier.padding(horizontal = 4.dp),
-        ) {
-            // Drop focus first so the keyboard doesn't come back when the sheet closes
-            IconButton(
-                onClick = {
-                    focusManager.clearFocus()
-                    onOpenFilters()
-                }
-            ) {
-                Icon(Icons.Default.FilterList, stringResource(Res.string.fav_filter))
             }
         }
     }
