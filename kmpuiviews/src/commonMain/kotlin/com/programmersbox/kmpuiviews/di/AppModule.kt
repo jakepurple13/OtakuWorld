@@ -17,6 +17,7 @@ import com.programmersbox.kmpuiviews.domain.aitext.AiSettings
 import com.programmersbox.kmpuiviews.domain.aitext.AiText
 import com.programmersbox.kmpuiviews.domain.aitext.DataStoreAiSettings
 import com.programmersbox.kmpuiviews.presentation.notifications.UpdateSummaryCache
+import com.programmersbox.kmpuiviews.domain.moodtags.MoodRepository
 import com.programmersbox.kmpuiviews.presentation.details.TldrCache
 import com.programmersbox.kmpuiviews.domain.aitext.DefaultAiText
 import com.programmersbox.kmpuiviews.domain.dailyoverview.DailyFactsBuilder
@@ -101,6 +102,7 @@ val appModule = module {
     singleOf(::TldrCache)
     single<AiSettings> { DataStoreAiSettings(get()) }
     singleOf(::UpdateSummaryCache)
+    singleOf(::MoodRepository)
     single<AiText> { DefaultAiText(getAll(), getOrNull(), get()) }
     singleOf(::MediaUpdateChecker)
     singleOf(::DataStoreUpdateCheckReportStore) bind UpdateCheckReportStore::class
