@@ -17,6 +17,7 @@ import com.programmersbox.kmpuiviews.domain.aitext.AiSettings
 import com.programmersbox.kmpuiviews.domain.aitext.AiText
 import com.programmersbox.kmpuiviews.domain.aitext.DataStoreAiSettings
 import com.programmersbox.kmpuiviews.presentation.notifications.UpdateSummaryCache
+import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.accountstats.MoodStatisticsProvider
 import com.programmersbox.kmpuiviews.domain.moodtags.MoodRepository
 import com.programmersbox.kmpuiviews.presentation.details.TldrCache
 import com.programmersbox.kmpuiviews.domain.aitext.DefaultAiText
@@ -158,6 +159,7 @@ val appModule = module {
     singleOf(::DefaultSettingsItems) bind SearchRegistryItem::class
 
     factoryOf(::CollectionStatisticsProvider) bind StatisticsProvider::class
+    factoryOf(::MoodStatisticsProvider) bind StatisticsProvider::class
     factoryOf(::DiscoveryStatisticsProvider) bind StatisticsProvider::class
     factoryOf(::SystemStatisticsProvider) bind StatisticsProvider::class
 

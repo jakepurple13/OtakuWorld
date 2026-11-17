@@ -131,8 +131,9 @@ fun AccountInfoScreen(
                 }
             }
 
+            // A provider with nothing to show (e.g. Moods before anything is tagged) has no section
             items(
-                list,
+                list.filter { it.stats.isNotEmpty() },
                 key = { it.key },
                 contentType = { it.contentType },
             ) { statInfo ->
