@@ -32,10 +32,16 @@ sealed class AiFeature<in I>(
     /** Cleans up the finished text. Applied only once generation is done, never to streamed text. */
     open fun finish(raw: String): String = raw
 
+    /** The AI settings switch for this feature. Null is only gated by the master switch. */
+    abstract val toggle: AiToggle?
+
     data object Recap : AiFeature<String>(
         system = "You recap the end of a story chapter for a reader who is about to start the next one. " +
                 "Write 2–3 sentences, plain prose, no preamble.",
     ) {
+        // The reader shows the recap bar only when its "Chapter recap" switch (AiToggle.ChapterRecap) is on,
+        // so the engine itself isn't gated by it; otherwise the reader could never offer the switch again.
+        override val toggle: AiToggle? = null
         override fun prepare(input: String) = AiTextPrompts.recapTail(input)
         override fun userPrompt(prepared: String) = "Chapter ending:\n$prepared"
     }
@@ -45,6 +51,7 @@ sealed class AiFeature<in I>(
                 "each starting with \"- \". No preamble.",
         nanoTask = NanoTask.Summarize,
     ) {
+        override val toggle = AiToggle.Tldr
         override fun prepare(input: String) = AiTextPrompts.tldrHead(input)
         override fun userPrompt(prepared: String) = "Description:\n$prepared"
     }
@@ -55,6 +62,7 @@ sealed class AiFeature<in I>(
         nanoTask = NanoTask.Proofread,
         nanoMaxChars = AiTextPrompts.NANO_TEXT_LIMIT,
     ) {
+        override val toggle = AiToggle.WritingTools
         override fun prepare(input: String) = input
     }
 
@@ -63,6 +71,7 @@ sealed class AiFeature<in I>(
         nanoTask = NanoTask.Rewrite(style),
         nanoMaxChars = AiTextPrompts.NANO_TEXT_LIMIT,
     ) {
+        override val toggle = AiToggle.WritingTools
         override fun prepare(input: String) = input
     }
 
@@ -70,6 +79,7 @@ sealed class AiFeature<in I>(
         system = "You name a user's custom list of titles. Suggest 3 names, one per line, max 4 words each. " +
                 "No numbering, no preamble.",
     ) {
+        override val toggle = AiToggle.ListSuggestions
         override fun prepare(input: List<String>) = listTitles(input)
         override fun userPrompt(prepared: String) = listPrompt(prepared)
         override fun finish(raw: String) = AiTextPrompts.parseNames(raw).joinToString("\n")
@@ -79,8 +89,16 @@ sealed class AiFeature<in I>(
         system = "You write short descriptions for a user's custom list of titles. " +
                 "Write 1–2 sentences describing what the list is about. Return only the description.",
     ) {
+        override val toggle = AiToggle.ListSuggestions
         override fun prepare(input: List<String>) = listTitles(input)
         override fun userPrompt(prepared: String) = listPrompt(prepared)
+    }
+
+    /** The AI settings page's "Try it": a TL;DR of a fixed sample, gated only by the master switch. */
+    data object TrySample : AiFeature<String>(system = Tldr.system) {
+        override val toggle: AiToggle? = null
+        override fun prepare(input: String) = Tldr.prepare(input)
+        override fun userPrompt(prepared: String) = Tldr.userPrompt(prepared)
     }
 
     /** Explains an update-check failure that has no fixed explanation. */
@@ -89,6 +107,7 @@ sealed class AiFeature<in I>(
                 "The reader is not technical. In 2 sentences, say what most likely went wrong and one thing " +
                 "they can try. Don't mention code, exceptions or stack traces. Return only the explanation.",
     ) {
+        override val toggle = AiToggle.ErrorExplanations
         override fun prepare(input: ErrorDetails) =
             "Source: ${input.sourceName}\nError:\n${input.detail.take(MAX_ERROR_DETAIL_CHARS)}"
     }

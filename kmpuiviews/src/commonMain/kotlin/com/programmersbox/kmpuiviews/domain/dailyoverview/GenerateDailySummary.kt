@@ -5,8 +5,12 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.fold
 
 /** The cached summary, only when it is for the same date as [facts]. Any other date is stale. */
-internal suspend fun DailyOverviewSettings.cachedFor(facts: DailyFacts): DailySummary? =
-    cached()?.takeIf { it.date == facts.date }
+internal suspend fun DailyOverviewSettings.cachedFor(facts: DailyFacts): DailySummary? {
+    val cached = cached()?.takeIf { it.date == facts.date } ?: return null
+    // AI was turned off after this was written: an AI summary must not be shown anymore
+    val aiOff = prefs.first().effectiveEngine == SummaryEngineChoice.Template
+    return cached.takeUnless { aiOff && it.engine != SummaryEngineId.Template }
+}
 
 /** Quiet days and Template resolutions skip the engine and use template text. */
 internal fun DailyFacts.needsEngine(engine: SummaryEngine): Boolean =
@@ -43,7 +47,7 @@ suspend fun generateDailySummary(
 
     // A quiet day never needs the engine, so it is not resolved.
     if (facts.isQuiet) return templateSummary()
-    val engine = resolver.resolve(settings.prefs.first().engine)
+    val engine = resolver.resolve(settings.prefs.first().effectiveEngine)
     if (!facts.needsEngine(engine)) return templateSummary()
 
     val text = try {

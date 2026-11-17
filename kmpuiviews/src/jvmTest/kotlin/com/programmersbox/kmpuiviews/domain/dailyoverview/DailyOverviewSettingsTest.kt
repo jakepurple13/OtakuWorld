@@ -1,5 +1,14 @@
 package com.programmersbox.kmpuiviews.domain.dailyoverview
 
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
+import com.programmersbox.kmpuiviews.domain.aitext.AiEnginePreference
+import com.programmersbox.kmpuiviews.domain.aitext.AiToggle
+import com.programmersbox.kmpuiviews.domain.aitext.DataStoreAiSettings
+import com.programmersbox.kmpuiviews.testing.InMemoryAiSettings
 import com.programmersbox.kmpuiviews.testing.createTestDataStoreHandling
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -57,5 +66,58 @@ class DailyOverviewSettingsTest {
     fun corruptCacheReadsAsNull() = runTest {
         handling.dailyOverviewCache.set("{not json")
         assertNull(settings.cached())
+    }
+
+    private fun withAi(ai: InMemoryAiSettings) = DailyOverviewSettings(handling, ai)
+
+    @Test
+    fun `master off forces numbers only`() = runTest {
+        handling.dailyOverviewEngine.set("Provider")
+        val prefs = withAi(InMemoryAiSettings(enabled = false)).prefs.first()
+        assertEquals(SummaryEngineChoice.Provider, prefs.engine)
+        assertEquals(SummaryEngineChoice.Template, prefs.effectiveEngine)
+    }
+
+    @Test
+    fun `daily toggle off forces numbers only`() = runTest {
+        val prefs = withAi(InMemoryAiSettings(disabled = setOf(AiToggle.DailyOverview))).prefs.first()
+        assertEquals(SummaryEngineChoice.Template, prefs.effectiveEngine)
+    }
+
+    @Test
+    fun `automatic follows ai preference`() = runTest {
+        val prefs = withAi(InMemoryAiSettings(preference = AiEnginePreference.Gemma)).prefs.first()
+        assertEquals(SummaryEngineChoice.Automatic, prefs.engine)
+        assertEquals(SummaryEngineChoice.Gemma, prefs.effectiveEngine)
+    }
+
+    @Test
+    fun `explicit choice kept`() = runTest {
+        handling.dailyOverviewEngine.set("Ollama")
+        val prefs = withAi(InMemoryAiSettings(preference = AiEnginePreference.Nano)).prefs.first()
+        assertEquals(SummaryEngineChoice.Ollama, prefs.effectiveEngine)
+    }
+
+    @Test
+    fun `chapter recap switch writes the reader key`() = runTest {
+        val ai = DataStoreAiSettings(handling)
+        ai.setFeatureEnabled(AiToggle.ChapterRecap, false)
+        assertEquals(false, handling.novelChapterRecap.get())
+        assertEquals(setOf(AiToggle.ChapterRecap), ai.disabled.first())
+        ai.setFeatureEnabled(AiToggle.Tldr, false)
+        assertEquals(setOf(AiToggle.ChapterRecap, AiToggle.Tldr), ai.disabled.first())
+    }
+
+    @Test
+    fun `unrelated writes do not re-emit ai settings`() = runTest {
+        val ai = DataStoreAiSettings(handling)
+        val emissions = java.util.concurrent.atomic.AtomicInteger()
+        val job = backgroundScope.launch(Dispatchers.Default) { ai.disabled.collect { emissions.incrementAndGet() } }
+        withContext(Dispatchers.Default) { withTimeout(5_000) { while (emissions.get() == 0) delay(10) } }
+        handling.dailyOverviewCache.set("unrelated")
+        handling.dailyOverviewSkipQuiet.set(false)
+        withContext(Dispatchers.Default) { delay(500) }
+        assertEquals(1, emissions.get())
+        job.cancel()
     }
 }

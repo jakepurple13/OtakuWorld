@@ -37,12 +37,15 @@ interface AiText {
         feature: AiFeature<*>,
         inputLength: Int = 0,
         retry: Duration = 2.seconds,
-    ): Flow<AiEngineInfo?> = flow {
-        while (true) {
-            val engine = engineFor(feature, inputLength)
-            emit(engine)
-            if (engine != null) return@flow
-            delay(retry)
-        }
+    ): Flow<AiEngineInfo?> = pollAvailability(feature, inputLength, retry)
+}
+
+/** Emits null and re-checks every [retry] until [AiText.engineFor] finds an engine, then emits it and completes. */
+fun AiText.pollAvailability(feature: AiFeature<*>, inputLength: Int, retry: Duration): Flow<AiEngineInfo?> = flow {
+    while (true) {
+        val engine = engineFor(feature, inputLength)
+        emit(engine)
+        if (engine != null) return@flow
+        delay(retry)
     }
 }
