@@ -37,6 +37,16 @@ class AiTextPromptsTest {
         assertEquals(AiTextPrompts.NANO_TEXT_LIMIT, AiTextPrompts.tldrHead(description).length)
     }
 
+    // Small models often open with a heading line; it must not take a bullet's place
+    @Test
+    fun `parseBullets skips a preamble line`() {
+        assertEquals(
+            listOf("one", "two", "three"),
+            AiTextPrompts.parseBullets("Here's your three-bullet summary:\n- one\n- two\n- three"),
+        )
+        assertEquals(listOf("one", "two"), AiTextPrompts.parseBullets("**Summary:**\n* one\n* two"))
+    }
+
     @Test
     fun `parseBullets strips markers and caps at 3`() {
         assertEquals(listOf("a", "b", "c"), AiTextPrompts.parseBullets("- a\n• b\n3. c\n* d"))
