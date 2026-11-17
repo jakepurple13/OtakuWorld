@@ -8,7 +8,7 @@ recommended one: about 584 MB, and it runs on the CPU of low-end phones.
 The update summary on the Notifications screen works with Gemma, but Gemma 3 1B writes poor
 summaries (it ignores the format and can invent plot details).
 
-Android only. On desktop, the AI features use Ollama (AI Helper settings).
+This works on Android and desktop. On desktop, an imported model runs before Ollama.
 
 ## 1. Download the model
 
@@ -22,10 +22,22 @@ Gemma is gated on Hugging Face, so the app can't download it for you.
 Any other `.litertlm` text model works the same way (for example
 `litert-community/Qwen3-0.6B`). The app picks up every `.litertlm` file in its models folder.
 
-## 2. Copy it into the app
+## 2. Import it in the app
 
-The model must be in the app's private folder `files/models/`. Getting a file there needs
-`adb` and a **debug build**: `run-as` only works on debuggable apps.
+1. Open **Settings → Integrations → AI**.
+2. In the Engine card, tap **Import model file** and pick the downloaded file. On desktop you can
+   also drop the file onto the card.
+3. The app copies the file (with a progress bar and Cancel), then loads it once to check it. A file
+   that doesn't load is deleted and the card says why.
+4. When it's done, the model shows as Ready. Its ⋮ menu has **Replace model…** and **Remove**.
+
+The model folder is `files/models/` inside the app on Android, and `models/` in the app's user
+data folder on desktop.
+
+### Debug builds: copy it with adb instead
+
+On a **debug build** you can copy the file straight into `files/models/` (`run-as` only works on
+debuggable apps).
 
 | App        | Debug package id (noFirebase flavor)            |
 |------------|-------------------------------------------------|
@@ -55,7 +67,7 @@ Force-stop the app and open it again.
 
 1. Open **Settings → Integrations → AI**.
 2. The engine card lists the model (for example "Gemma3 1b It Int4 · Ready").
-3. **Prefer** decides which engine runs: *Automatic* uses Nano when it's ready and Gemma
+3. **Prefer** (Android) decides which engine runs: *Automatic* uses Nano when it's ready and Gemma
    otherwise; *Gemma* always uses Gemma.
 4. Tap **Run sample**. The first run loads the model (about 8–10 seconds on a low-end phone);
    later runs take a few seconds.
@@ -65,6 +77,8 @@ The first load also writes a prepared copy of the weights to the app's cache
 cache only makes the next load slow again.
 
 ## Removing the model
+
+Use **Remove** in the model's ⋮ menu on the AI page. On a debug build you can also run:
 
 ```bash
 adb -s <serial> shell run-as <package> rm files/models/gemma3-1b-it-int4.litertlm
