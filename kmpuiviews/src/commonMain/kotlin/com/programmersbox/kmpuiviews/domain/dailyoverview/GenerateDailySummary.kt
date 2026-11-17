@@ -43,7 +43,7 @@ suspend fun generateDailySummary(
 
     // A quiet day never needs the engine, so it is not resolved.
     if (facts.isQuiet) return templateSummary()
-    val engine = resolver.resolve(settings.prefs.first().engine)
+    val engine = resolver.resolve(settings.prefs.first().effectiveEngine)
     if (!facts.needsEngine(engine)) return templateSummary()
 
     val text = try {

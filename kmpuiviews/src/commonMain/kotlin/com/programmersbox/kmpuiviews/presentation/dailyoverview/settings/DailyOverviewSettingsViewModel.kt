@@ -93,7 +93,7 @@ class DailyOverviewSettingsViewModel(
         // Statuses can be slow (Ollama is a network call), so only the engine choice and an
         // explicit refresh recompute them, not every switch.
         viewModelScope.launch {
-            combine(settings.prefs.map { it.engine }.distinctUntilChanged(), refreshes) { choice, _ -> choice }
+            combine(settings.prefs.map { it.effectiveEngine }.distinctUntilChanged(), refreshes) { choice, _ -> choice }
                 .collectLatest { engineInfo.value = loadEngines(it) }
         }
     }
@@ -113,7 +113,7 @@ class DailyOverviewSettingsViewModel(
         testJob = viewModelScope.launch {
             _test.value = SummaryState.Loading
             val facts = SampleFacts.create(genericInfo.updateUnit)
-            val engine = resolver.resolve(settings.prefs.first().engine)
+            val engine = resolver.resolve(settings.prefs.first().effectiveEngine)
             var label = ""
             var destination: String? = null
             var text = ""
