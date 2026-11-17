@@ -101,6 +101,17 @@ sealed class AiFeature<in I>(
         override fun userPrompt(prepared: String) = Tldr.userPrompt(prepared)
     }
 
+    /** A short summary of the notifications from the latest update check, shown atop Notifications. */
+    data object UpdateSummary : AiFeature<List<String>>(
+        system = "You summarize new chapter and episode updates for a reader. In 2 short sentences, say which " +
+                "titles got the most new chapters or episodes, and anything notable in their names. Use only what's " +
+                "given; don't invent plot. Plain prose, no lists, no preamble.",
+    ) {
+        override val toggle = AiToggle.UpdateSummary
+        override fun prepare(input: List<String>) = input.take(MAX_UPDATE_LINES).joinToString("\n")
+        override fun userPrompt(prepared: String) = "New updates:\n$prepared"
+    }
+
     /** Explains an update-check failure that has no fixed explanation. */
     data object ExplainError : AiFeature<ErrorDetails>(
         system = "You explain why an app couldn't check a manga, anime or novel source for new chapters. " +
@@ -117,6 +128,7 @@ sealed class AiFeature<in I>(
 data class ErrorDetails(val sourceName: String, val detail: String)
 
 private const val MAX_ERROR_DETAIL_CHARS = 1_500
+private const val MAX_UPDATE_LINES = 25
 
 private fun rewriteInstruction(style: RewriteStyle) = when (style) {
     RewriteStyle.Rephrase -> "Rephrase the text using different wording but the same meaning."

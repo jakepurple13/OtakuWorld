@@ -799,6 +799,9 @@
     <string name="ai_feature_writing_desc">Fix grammar and rewrite</string>
     <string name="ai_feature_lists">List suggestions</string>
     <string name="ai_feature_lists_desc">Names and descriptions for custom lists</string>
+    <string name="ai_feature_update_summary">Update summary</string>
+    <string name="ai_feature_update_summary_desc">A short summary at the top of Notifications</string>
+    <string name="ai_summary_label">From the last update check</string>
     <string name="ai_feature_errors">Error explanations</string>
     <string name="ai_feature_errors_desc">Plain words for update check errors</string>
     <string name="ai_feature_daily">AI summary</string>

@@ -47,6 +47,7 @@ class AiSettingsTest {
         assertEquals(AiToggle.ListSuggestions, AiFeature.ListNames.toggle)
         assertEquals(AiToggle.ListSuggestions, AiFeature.ListDescription.toggle)
         assertEquals(AiToggle.ErrorExplanations, AiFeature.ExplainError.toggle)
+        assertEquals(AiToggle.UpdateSummary, AiFeature.UpdateSummary.toggle)
         assertEquals(null, AiFeature.TrySample.toggle)
     }
 }

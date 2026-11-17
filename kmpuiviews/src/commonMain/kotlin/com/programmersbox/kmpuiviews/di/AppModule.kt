@@ -16,6 +16,7 @@ import com.programmersbox.kmpuiviews.domain.MediaUpdateChecker
 import com.programmersbox.kmpuiviews.domain.aitext.AiSettings
 import com.programmersbox.kmpuiviews.domain.aitext.AiText
 import com.programmersbox.kmpuiviews.domain.aitext.DataStoreAiSettings
+import com.programmersbox.kmpuiviews.presentation.notifications.UpdateSummaryCache
 import com.programmersbox.kmpuiviews.presentation.details.TldrCache
 import com.programmersbox.kmpuiviews.domain.aitext.DefaultAiText
 import com.programmersbox.kmpuiviews.domain.dailyoverview.DailyFactsBuilder
@@ -99,6 +100,7 @@ val appModule = module {
     single { EngineResolver(getAll<SummaryEngine>(), platformAutomaticOrder) }
     singleOf(::TldrCache)
     single<AiSettings> { DataStoreAiSettings(get()) }
+    singleOf(::UpdateSummaryCache)
     single<AiText> { DefaultAiText(getAll(), getOrNull(), get()) }
     singleOf(::MediaUpdateChecker)
     singleOf(::DataStoreUpdateCheckReportStore) bind UpdateCheckReportStore::class

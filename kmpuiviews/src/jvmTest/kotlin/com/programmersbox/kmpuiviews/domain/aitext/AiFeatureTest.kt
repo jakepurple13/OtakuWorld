@@ -64,4 +64,13 @@ class AiFeatureTest {
         assertEquals(NanoTask.Rewrite(RewriteStyle.Emojify), AiFeature.Rewrite(RewriteStyle.Emojify).nanoTask)
         listOf(AiFeature.Recap, AiFeature.ListNames, AiFeature.ListDescription).forEach { assertNull(it.nanoTask) }
     }
+
+    @Test
+    fun `update summary prepares at most 25 lines and wraps prompt`() {
+        val prepared = AiFeature.UpdateSummary.prepare(List(40) { "Title $it · 1 new chapter: Ch $it" })
+        assertEquals(25, prepared.lines().size)
+        assertTrue(AiFeature.UpdateSummary.userPrompt(prepared).startsWith("New updates:\n"))
+        assertNull(AiFeature.UpdateSummary.nanoTask)
+        assertTrue("episodes" in AiFeature.UpdateSummary.system)
+    }
 }
