@@ -71,5 +71,6 @@ class AiFeatureTest {
         assertEquals(25, prepared.lines().size)
         assertTrue(AiFeature.UpdateSummary.userPrompt(prepared).startsWith("New updates:\n"))
         assertNull(AiFeature.UpdateSummary.nanoTask)
+        assertTrue("episodes" in AiFeature.UpdateSummary.system)
     }
 }

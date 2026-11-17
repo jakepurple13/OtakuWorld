@@ -104,7 +104,7 @@ sealed class AiFeature<in I>(
     /** A short summary of the notifications from the latest update check, shown atop Notifications. */
     data object UpdateSummary : AiFeature<List<String>>(
         system = "You summarize new chapter and episode updates for a reader. In 2 short sentences, say which " +
-                "titles got the most new chapters and anything notable in the chapter names. Use only what's " +
+                "titles got the most new chapters or episodes, and anything notable in their names. Use only what's " +
                 "given; don't invent plot. Plain prose, no lists, no preamble.",
     ) {
         override val toggle = AiToggle.UpdateSummary

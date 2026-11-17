@@ -15,6 +15,8 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlinx.coroutines.flow.onCompletion
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class UpdateSummariesTest {
@@ -143,5 +145,79 @@ class UpdateSummariesTest {
         s.retry()
         advanceUntilIdle()
         assertEquals(AiTextState.Done("ok", FakeAiText.ENGINE), s.state.value)
+    }
+
+    @Test
+    fun `rows arriving after the report restart the summary`() = runTest {
+        val ai = FakeAiText()
+        items.value = listOf(noti("Old", 500))
+        val store = FakeUpdateCheckReportStore(report(startedAt = 1_000))
+        val cache = UpdateSummaryCache()
+        val s = summaries(ai = ai, store = store, cache = cache)
+        advanceUntilIdle()
+        // The worker writes one row at a time after saving the report
+        items.value = items.value + noti("A", 2_000)
+        advanceUntilIdle()
+        items.value = items.value + noti("B", 2_100)
+        advanceUntilIdle()
+        items.value = items.value + noti("C", 2_200)
+        advanceUntilIdle()
+        @Suppress("UNCHECKED_CAST")
+        val last = ai.inputsFor<AiFeature.UpdateSummary>().last() as List<String>
+        assertEquals(3, last.size)
+        assertEquals(AiTextState.Done("out", FakeAiText.ENGINE), s.state.value)
+        // A new screen with the same cache shows it without another run
+        val again = FakeAiText()
+        summaries(ai = again, store = store, cache = cache)
+        advanceUntilIdle()
+        assertEquals(0, again.runs.size)
+    }
+
+    @Test
+    fun `a retry run summarizes again`() = runTest {
+        val ai = FakeAiText()
+        val store = FakeUpdateCheckReportStore(report(startedAt = 1_000, finishedAt = 3_000))
+        val cache = UpdateSummaryCache()
+        summaries(ai = ai, store = store, cache = cache)
+        advanceUntilIdle()
+        items.value = items.value + noti("C", 5_000)
+        store.save(report(startedAt = 1_000, finishedAt = 3_000).copy(retriedAt = 6_000))
+        advanceUntilIdle()
+        @Suppress("UNCHECKED_CAST")
+        val last = ai.inputsFor<AiFeature.UpdateSummary>().last() as List<String>
+        assertEquals(3, last.size)
+    }
+
+    @Test
+    fun `turning ai off stops the running summary`() = runTest {
+        val gate = kotlinx.coroutines.CompletableDeferred<Unit>()
+        var stopped = false
+        val ai = FakeAiText(output = { _, _ ->
+            kotlinx.coroutines.flow.flow {
+                gate.await()
+                emit("late")
+            }.onCompletion { stopped = it != null }
+        })
+        val s = summaries(ai)
+        advanceUntilIdle()
+        ai.engine = null
+        advanceUntilIdle()
+        assertNull(s.state.value)
+        assertTrue(stopped)
+    }
+
+    @Test
+    fun `an update during engine resolution still finishes`() = runTest {
+        val gate = kotlinx.coroutines.CompletableDeferred<Unit>()
+        var calls = 0
+        // The first call is the availability check; the second (the run's own) waits on the gate
+        val ai = FakeAiText(engineRule = { _, _ -> if (++calls == 2) gate.await(); FakeAiText.ENGINE })
+        val s = summaries(ai)
+        advanceUntilIdle()
+        items.value = items.value + noti("Older", 100) // same lines from the check, another emission
+        advanceUntilIdle()
+        gate.complete(Unit)
+        advanceUntilIdle()
+        assertEquals(AiTextState.Done("out", FakeAiText.ENGINE), s.state.value)
     }
 }
