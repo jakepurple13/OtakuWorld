@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.domain.aitext
 
+import kotlin.test.assertFalse
 import com.programmersbox.kmpuiviews.testing.FakeAiText
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -115,5 +116,19 @@ class ChapterRecapsTest {
         assertIs<AiTextState.Error>(recaps.stateFor("ch13").value)
         assertEquals(0, loads)
         assertEquals(0, ai.recapCalls)
+    }
+
+    @Test
+    fun `available follows settings while the reader is open`() = runTest {
+        val ai = fakeAi(engine) { flow { emit("x") } }
+        val recaps = recaps(ai)
+        advanceUntilIdle()
+        assertTrue(recaps.available.value)
+        ai.engine = null
+        advanceUntilIdle()
+        assertFalse(recaps.available.value)
+        ai.engine = engine
+        advanceUntilIdle()
+        assertTrue(recaps.available.value)
     }
 }

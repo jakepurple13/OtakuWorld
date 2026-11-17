@@ -40,7 +40,8 @@ class AiSettingsTest {
     @Test
     fun `features map to their toggles`() {
         assertEquals(AiToggle.Tldr, AiFeature.Tldr.toggle)
-        assertEquals(AiToggle.ChapterRecap, AiFeature.Recap.toggle)
+        // The reader gates the recap bar with its own switch (the same setting), so the engine stays available
+        kotlin.test.assertNull(AiFeature.Recap.toggle as AiToggle?)
         assertEquals(AiToggle.WritingTools, AiFeature.Proofread.toggle)
         assertEquals(AiToggle.WritingTools, AiFeature.Rewrite(RewriteStyle.Emojify).toggle)
         assertEquals(AiToggle.ListSuggestions, AiFeature.ListNames.toggle)

@@ -4,6 +4,7 @@ import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngineId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 
@@ -54,16 +55,18 @@ internal fun storedDisabledToggles(stored: Set<String>, chapterRecap: Boolean): 
 }
 
 class DataStoreAiSettings(private val dataStore: DataStoreHandling) : AiSettings {
-    override val enabled: Flow<Boolean> = dataStore.aiEnabled.asFlow()
+    // Every key shares one preferences file, so any write re-emits; only real changes should restart work
+    override val enabled: Flow<Boolean> = dataStore.aiEnabled.asFlow().distinctUntilChanged()
 
     override val preference: Flow<AiEnginePreference> = dataStore.aiEnginePreference.asFlow()
         .map { stored -> AiEnginePreference.entries.firstOrNull { it.name == stored } ?: AiEnginePreference.Automatic }
+        .distinctUntilChanged()
 
     override val disabled: Flow<Set<AiToggle>> = combine(
         dataStore.aiDisabledFeatures.asFlow(),
         dataStore.novelChapterRecap.asFlow(),
         ::storedDisabledToggles,
-    )
+    ).distinctUntilChanged()
 
     override suspend fun setEnabled(v: Boolean) = dataStore.aiEnabled.set(v)
 

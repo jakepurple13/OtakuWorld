@@ -31,6 +31,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
@@ -171,8 +173,11 @@ class OtakuCustomListViewModel(
     }
 
     /** True when an on-device engine is ready and the list has enough titles to say something about. */
-    val suggestAvailable: StateFlow<Boolean> = snapshotFlow { customList?.list?.size ?: 0 }
-        .map { it >= MIN_SUGGEST_TITLES && aiText.engineFor(AiFeature.ListNames) != null }
+    val suggestAvailable: StateFlow<Boolean> = combine(
+        snapshotFlow { (customList?.list?.size ?: 0) >= MIN_SUGGEST_TITLES }.distinctUntilChanged(),
+        // Follows the AI settings while the list is open
+        aiText.availability(AiFeature.ListNames),
+    ) { enoughTitles, engine -> enoughTitles && engine != null }
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     private val nameTask = AiTask(aiText, viewModelScope)

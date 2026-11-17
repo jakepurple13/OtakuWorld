@@ -1,5 +1,10 @@
 package com.programmersbox.kmpuiviews.domain.dailyoverview
 
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
 import com.programmersbox.kmpuiviews.domain.aitext.AiEnginePreference
 import com.programmersbox.kmpuiviews.domain.aitext.AiToggle
 import com.programmersbox.kmpuiviews.domain.aitext.DataStoreAiSettings
@@ -101,5 +106,18 @@ class DailyOverviewSettingsTest {
         assertEquals(setOf(AiToggle.ChapterRecap), ai.disabled.first())
         ai.setFeatureEnabled(AiToggle.Tldr, false)
         assertEquals(setOf(AiToggle.ChapterRecap, AiToggle.Tldr), ai.disabled.first())
+    }
+
+    @Test
+    fun `unrelated writes do not re-emit ai settings`() = runTest {
+        val ai = DataStoreAiSettings(handling)
+        val emissions = java.util.concurrent.atomic.AtomicInteger()
+        val job = backgroundScope.launch(Dispatchers.Default) { ai.disabled.collect { emissions.incrementAndGet() } }
+        withContext(Dispatchers.Default) { withTimeout(5_000) { while (emissions.get() == 0) delay(10) } }
+        handling.dailyOverviewCache.set("unrelated")
+        handling.dailyOverviewSkipQuiet.set(false)
+        withContext(Dispatchers.Default) { delay(500) }
+        assertEquals(1, emissions.get())
+        job.cancel()
     }
 }

@@ -39,7 +39,9 @@ sealed class AiFeature<in I>(
         system = "You recap the end of a story chapter for a reader who is about to start the next one. " +
                 "Write 2–3 sentences, plain prose, no preamble.",
     ) {
-        override val toggle = AiToggle.ChapterRecap
+        // The reader shows the recap bar only when its "Chapter recap" switch (AiToggle.ChapterRecap) is on,
+        // so the engine itself isn't gated by it; otherwise the reader could never offer the switch again.
+        override val toggle: AiToggle? = null
         override fun prepare(input: String) = AiTextPrompts.recapTail(input)
         override fun userPrompt(prepared: String) = "Chapter ending:\n$prepared"
     }

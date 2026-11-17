@@ -24,7 +24,8 @@ class ChapterRecaps(
     private val jobs = mutableMapOf<String, Job>()
 
     init {
-        scope.launch { _available.value = aiText.engineFor(AiFeature.Recap) != null }
+        // Follows the AI settings while the reader is open
+        scope.launch { aiText.availability(AiFeature.Recap).collect { _available.value = it != null } }
     }
 
     private fun flowFor(chapterUrl: String) = states.getOrPut(chapterUrl) { MutableStateFlow(AiTextState.Idle) }

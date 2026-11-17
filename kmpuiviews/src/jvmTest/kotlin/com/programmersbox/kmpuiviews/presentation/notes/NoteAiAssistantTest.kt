@@ -179,4 +179,17 @@ class NoteAiAssistantTest {
     private companion object {
         val ENGINE = AiEngineInfo("Fake", onDevice = true, destination = null)
     }
+
+    @Test
+    fun `tools follow settings while the note is open`() = runTest {
+        val fake = Fake()
+        val ai = assistant(fake)
+        opened(ai, "some note")
+        assertEquals(true, ai.available.value)
+        fake.engineRule = { _, _ -> null }
+        fake.changeSettings()
+        advanceUntilIdle()
+        assertEquals(false, ai.available.value)
+        assertEquals(false, ai.toolsEnabled.value)
+    }
 }

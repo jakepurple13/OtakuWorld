@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.domain.dailyoverview
 
+import com.programmersbox.kmpuiviews.testing.InMemoryAiSettings
 import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateUnit
 import com.programmersbox.kmpuiviews.testing.createTestDataStoreHandling
 import kotlinx.coroutines.flow.Flow
@@ -109,5 +110,24 @@ class GenerateDailySummaryTest {
         assertEquals(SummaryEngineId.Template, run(engine).engine)
         assertEquals(0, engine.calls)
         assertNull(settings.cached())
+    }
+
+    @Test
+    fun `cached ai summary is ignored once ai is off`() = runTest {
+        val handling = createTestDataStoreHandling()
+        val off = DailyOverviewSettings(handling, InMemoryAiSettings(enabled = false))
+        off.cache(DailySummary(day, SummaryEngineId.Gemma, "AI text"))
+        val engine = FakeEngine()
+        val summary = generateDailySummary(facts(), resolver(engine), off, template, bypassCache = false)
+        assertEquals(SummaryEngineId.Template, summary.engine)
+        assertEquals(0, engine.calls)
+    }
+
+    @Test
+    fun `cached numbers only summary is still used with ai off`() = runTest {
+        val handling = createTestDataStoreHandling()
+        val off = DailyOverviewSettings(handling, InMemoryAiSettings(enabled = false))
+        off.cache(DailySummary(day, SummaryEngineId.Template, "Cached numbers"))
+        assertEquals("Cached numbers", generateDailySummary(facts(), resolver(FakeEngine()), off, template, false).text)
     }
 }

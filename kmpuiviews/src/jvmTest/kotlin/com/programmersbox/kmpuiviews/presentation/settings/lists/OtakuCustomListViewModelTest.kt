@@ -105,6 +105,17 @@ class OtakuCustomListViewModelTest {
         dbFile.delete()
     }
 
+    @Test fun `suggest follows settings while the list is open`() = runTest {
+        val ai = FakeAiText()
+        val uuid = listWith("A" to "S", "B" to "S", "C" to "S")
+        val vm = viewModel(uuid, ai)
+        awaitCondition { vm.suggestAvailable.value }
+        ai.engine = null
+        awaitCondition { !vm.suggestAvailable.value }
+        ai.engine = SharedFakeAiText.ENGINE
+        awaitCondition { vm.suggestAvailable.value }
+    }
+
     @Test fun `suggest hidden with fewer than 3 titles`() = runTest {
         val ai = FakeAiText()
         val uuid = listWith("A" to "S", "B" to "S", "C" to "S")

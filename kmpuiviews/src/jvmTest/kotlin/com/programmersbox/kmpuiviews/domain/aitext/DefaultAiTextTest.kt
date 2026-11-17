@@ -305,4 +305,10 @@ class DefaultAiTextTest {
         assertEquals(2, engine.starts.get())
         assertEquals(1, engine.maxActive.get())
     }
+
+    @Test
+    fun `recap stays available with the reader switch off`() = runTest {
+        val ai = gated(InMemoryAiSettings(disabled = setOf(AiToggle.ChapterRecap)), FakeEngine(SummaryEngineId.Nano))
+        assertEquals("Nano", ai.engineFor(AiFeature.Recap)?.label)
+    }
 }
