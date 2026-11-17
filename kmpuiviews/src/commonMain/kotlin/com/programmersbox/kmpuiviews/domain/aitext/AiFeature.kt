@@ -134,6 +134,25 @@ sealed class AiFeature<in I>(
             .joinToString("\n")
     }
 
+    /** Suggests up to 3 moods for a favorite from the built-in moods plus the user's own. */
+    data object MoodTags : AiFeature<MoodInput>(
+        system = "You tag a manga, anime or novel with moods. Pick 1 to 3 moods from the given list that " +
+                "best fit it, one per line, written exactly as in the list. No other words.",
+    ) {
+        override val toggle = AiToggle.MoodTags
+        override fun prepare(input: MoodInput) =
+            "Title: ${input.title}\nDescription: ${input.description.take(MAX_MOOD_DESCRIPTION_CHARS)}\n" +
+                    "Moods to choose from: ${input.choices.joinToString(", ")}"
+
+        // The caller keeps only names from the list; this just splits and tidies
+        override fun finish(raw: String) = raw.lines()
+            .flatMap { it.split(',', ';') }
+            .map { it.replace(listMarker, "").trim('"', '\'', '“', '”', '`', ' ').lowercase() }
+            .filter { it.isNotBlank() }
+            .distinct()
+            .joinToString("\n")
+    }
+
     /** Explains an update-check failure that has no fixed explanation. */
     data object ExplainError : AiFeature<ErrorDetails>(
         system = "You explain why an app couldn't check a manga, anime or novel source for new chapters. " +
@@ -146,6 +165,9 @@ sealed class AiFeature<in I>(
     }
 }
 
+/** A favorite to tag: its title, description and the moods the AI may pick from. */
+data class MoodInput(val title: String, val description: String, val choices: List<String>)
+
 /** A failed update check: the source's display name and the error detail (message and top stack lines). */
 data class ErrorDetails(val sourceName: String, val detail: String)
 
@@ -153,6 +175,7 @@ private const val MAX_ERROR_DETAIL_CHARS = 1_500
 private const val MAX_UPDATE_LINES = 25
 private const val MAX_DESCRIBE_CHARS = 300
 private const val MAX_KEYWORDS = 6
+private const val MAX_MOOD_DESCRIPTION_CHARS = 1_500
 private val listMarker = Regex("""^\s*(?:[-•*]|\d+[.)])\s*""")
 private val keywordsLabel = Regex("""^\s*keywords?\s*:\s*""", RegexOption.IGNORE_CASE)
 // Letters, digits and combining marks, the same runs FTS5 keeps (see ftsMatch)

@@ -60,6 +60,8 @@ import otakuworld.kmpuiviews.generated.resources.ai_feature_describe_desc
 import otakuworld.kmpuiviews.generated.resources.ai_feature_errors
 import otakuworld.kmpuiviews.generated.resources.ai_feature_errors_desc
 import otakuworld.kmpuiviews.generated.resources.ai_feature_lists
+import otakuworld.kmpuiviews.generated.resources.ai_feature_moods
+import otakuworld.kmpuiviews.generated.resources.ai_feature_moods_desc
 import otakuworld.kmpuiviews.generated.resources.ai_feature_lists_desc
 import otakuworld.kmpuiviews.generated.resources.ai_feature_recap
 import otakuworld.kmpuiviews.generated.resources.ai_feature_recap_desc
@@ -109,6 +111,7 @@ private val featureGroups: List<Pair<StringResource, List<FeatureRow>>> = listOf
     ),
     Res.string.ai_group_library to listOf(
         FeatureRow(AiToggle.DescribeSearch, Res.string.ai_feature_describe, Res.string.ai_feature_describe_desc),
+        FeatureRow(AiToggle.MoodTags, Res.string.ai_feature_moods, Res.string.ai_feature_moods_desc),
         FeatureRow(AiToggle.ListSuggestions, Res.string.ai_feature_lists, Res.string.ai_feature_lists_desc),
     ),
     Res.string.ai_group_updates to listOf(
