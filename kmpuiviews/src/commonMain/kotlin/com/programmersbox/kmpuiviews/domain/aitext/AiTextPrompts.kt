@@ -28,8 +28,13 @@ object AiTextPrompts {
         return if (lastGap < 0) head else head.substring(0, lastGap).trimEnd()
     }
 
-    /** Strips "-", "•", "*", "1." markers; at most 3. */
-    fun parseBullets(raw: String): List<String> = lines(raw).take(MAX_RESULTS)
+    /**
+     * Strips "-", "•", "*", "1." markers; at most 3. A heading line such as "Here's your summary:"
+     * (small models often add one) is dropped so it doesn't take a bullet's place.
+     */
+    fun parseBullets(raw: String): List<String> = lines(raw)
+        .filterNot { it.trimEnd('*', ' ').endsWith(':') }
+        .take(MAX_RESULTS)
 
     /** Strips markers and quotes, trims, drops blanks and case-insensitive duplicates; at most 3. */
     fun parseNames(raw: String): List<String> = lines(raw)
