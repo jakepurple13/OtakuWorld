@@ -212,6 +212,8 @@ kotlin {
                 implementation(desktopLibs.core)
                 implementation(desktopLibs.javase)
                 implementation(desktopLibs.knotify)
+                // On-device LiteRT models on desktop (Koog has no JVM LiteRT client)
+                implementation(desktopLibs.litertlm.jvm)
                 implementation(desktopLibs.kotlinx.coroutines.swing)
                 api(desktopLibs.kotlin.multiplatform.appdirs)
                 api(desktopLibs.kfswatch)

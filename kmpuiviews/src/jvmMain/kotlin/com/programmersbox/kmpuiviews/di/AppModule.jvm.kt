@@ -49,7 +49,14 @@ import org.koin.core.qualifier.named
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
+import com.programmersbox.kmpuiviews.dailyoverview.LocalModelEngine
+import com.programmersbox.kmpuiviews.domain.aitext.modelimport.LocalModel
+import com.programmersbox.kmpuiviews.domain.aitext.modelimport.ModelImporter
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import org.koin.dsl.bind
+import org.koin.dsl.binds
 import org.koin.dsl.module
 import java.io.File
 import com.programmersbox.kmpuiviews.presentation.debug.navmap.FileNavGraphSource
@@ -88,6 +95,20 @@ actual fun platformModule(): Module = module {
     }
     factory<TranslationModelHandler> { TranslationModelHandlerImpl() }
     single { OllamaSummaryEngine(get(), HttpClient()) } bind SummaryEngine::class
+    // Same folder AI Helper's ModelManager uses on desktop
+    single {
+        val dataDir = File(get<AppDirs>().getUserDataDir())
+        LocalModelEngine(File(dataDir, "models"), File(dataDir, "models-cache"))
+    } binds arrayOf(SummaryEngine::class, LocalModel::class)
+    single {
+        val dataDir = File(get<AppDirs>().getUserDataDir())
+        ModelImporter(
+            modelsDir = File(dataDir, "models"),
+            cacheDir = File(dataDir, "models-cache"),
+            scope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
+            verify = get<LocalModel>()::verify,
+        )
+    }
     singleOf(::TrayState)
     singleOf(::AboutLibraryBuilder)
 

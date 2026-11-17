@@ -10,8 +10,10 @@ camerak = "1.2"
 ksafe = "3.3.0"
 vlcj = "4.12.1"
 languageDetector = "0.6"
+litertlm = "0.18.1"
 
 [libraries]
+litertlm-jvm = { module = "com.google.ai.edge.litertlm:litertlm-jvm", version.ref = "litertlm" }
 core = { module = "com.google.zxing:core", version.ref = "javase" }
 github-nucleus-notifications-common = { module = "dev.nucleusframework:nucleus.notification-common", version.ref = "nucleusSystem" }
 github-nucleus-scheduler = { module = "dev.nucleusframework:nucleus.scheduler", version.ref = "nucleusSystem" }
