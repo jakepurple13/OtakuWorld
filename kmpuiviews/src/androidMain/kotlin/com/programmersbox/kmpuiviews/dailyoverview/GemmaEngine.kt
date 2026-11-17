@@ -10,6 +10,7 @@ import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngineId
 import com.programmersbox.kmpuiviews.domain.dailyoverview.liteRtDisplayName
 import com.programmersbox.koogintegration.AgentMaker
 import com.programmersbox.koogintegration.PlatformAgents
+import com.programmersbox.koogintegration.getModelLinkToDownload
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.getString
@@ -41,8 +42,12 @@ class GemmaEngine(
     override suspend fun client(): Pair<LLMClient, LLModel>? =
         model()?.let { platformAgents.liteRtClient() to it }
 
-    override suspend fun currentFile(): File? =
-        model()?.let { File(platformAgents.liteRtModelsDir, it.id) }?.takeIf { it.exists() }
+    // AI Helper's own downloads (Gemma 4 E2B/E4B) are managed there, so they never count as imported:
+    // the AI page must not label them "imported" or offer to delete them
+    override suspend fun currentFile(): File? = model()
+        ?.takeIf { getModelLinkToDownload(it.id) == null }
+        ?.let { File(platformAgents.liteRtModelsDir, it.id) }
+        ?.takeIf { it.exists() }
 
     override suspend fun verify(file: File) = withContext(Dispatchers.IO) {
         val prompt = prompt("verify-model") {

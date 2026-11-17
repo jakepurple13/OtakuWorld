@@ -134,6 +134,8 @@ internal fun rememberModelPicker(onPicked: (PlatformFile, replace: Boolean) -> U
 internal fun LocalModelImport(
     state: ImportState,
     hasModel: Boolean,
+    /** The engine already runs something (e.g. an AI Helper download), so "no model yet" would be wrong. */
+    engineReady: Boolean,
     picker: ModelPicker,
     onDrop: (PlatformFile) -> Unit,
     onCancel: () -> Unit,
@@ -150,11 +152,13 @@ internal fun LocalModelImport(
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             when (s) {
                 ImportState.Idle -> if (!hasModel) {
-                    Text(
-                        stringResource(Res.string.ai_import_none),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    if (!engineReady) {
+                        Text(
+                            stringResource(Res.string.ai_import_none),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                     if (supportsModelFileDrop) DropZone(onDrop)
                     ImportActions(stringResource(Res.string.ai_import_model)) { picker.launch(false) }
                 }

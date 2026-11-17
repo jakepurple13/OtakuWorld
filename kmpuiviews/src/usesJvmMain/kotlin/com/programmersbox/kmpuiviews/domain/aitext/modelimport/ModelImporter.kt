@@ -73,6 +73,8 @@ class ModelImporter(
                 copy(open, part, name, size)
                 Files.move(part.toPath(), checking.toPath(), StandardCopyOption.REPLACE_EXISTING)
                 _state.value = ImportState.Checking(name)
+                // LiteRT names its weight cache after the file, so a same-name model's cache must not be reused
+                clearCache(name)
                 val loadError = try {
                     verify(checking)
                     null
@@ -82,6 +84,7 @@ class ModelImporter(
                     e
                 }
                 if (loadError != null) {
+                    clearCache(name)
                     end = ImportState.Failed(ImportError.WontLoad(loadError.message))
                     return@launch
                 }
@@ -133,6 +136,10 @@ class ModelImporter(
     /** Deletes [fileName] from the models folder and the weight cache LiteRT wrote for it. */
     fun remove(fileName: String) {
         File(modelsDir, fileName).delete()
+        clearCache(fileName)
+    }
+
+    private fun clearCache(fileName: String) {
         cacheDir.listFiles().orEmpty().filter { it.name.startsWith(fileName) }.forEach { it.deleteRecursively() }
     }
 

@@ -185,6 +185,27 @@ class ModelImporterTest {
         assertTrue(partFiles().isEmpty())
     }
 
+    // LiteRT names its weight cache after the model file, so a same-name import must not see the old one
+    @Test
+    fun `check starts without a weight cache for that name`() {
+        cache.mkdirs()
+        val stale = File(cache, "m.litertlm.xnnpack_cache").apply { writeText("old weights") }
+        var sawStale = true
+        val i = importer(verify = { sawStale = stale.exists() })
+        i.import("m.litertlm", 10, source(bytes(10)), replacing = "m.litertlm")
+        assertEquals(ImportState.Idle, i.awaitEnd())
+        assertFalse(sawStale)
+    }
+
+    @Test
+    fun `failed check deletes the weight cache it wrote`() {
+        val written = File(cache, "m.litertlm.xnnpack_cache")
+        val i = importer(verify = { cache.mkdirs(); written.writeText("new weights"); error("bad") })
+        i.import("m.litertlm", 10, source(bytes(10)), replacing = null)
+        assertIs<ImportState.Failed>(i.awaitEnd())
+        assertFalse(written.exists())
+    }
+
     @Test
     fun `remove deletes model and its cache files`() {
         models.mkdirs(); cache.mkdirs()

@@ -165,10 +165,11 @@ fun AiSettingsScreen(
                 onTry = viewModel::trySample,
                 onSetUp = aiHelperSettingsRoute?.let { route -> { navActions.navigate(route) } },
                 localModel = if (state.canImport) {
-                    {
+                    { engineReady ->
                         LocalModelImport(
                             state = importState,
                             hasModel = state.localModel != null,
+                            engineReady = engineReady,
                             picker = picker,
                             onDrop = { viewModel.importModel(it, replace = state.localModel != null) },
                             onCancel = viewModel::cancelImport,
@@ -238,7 +239,7 @@ private fun EngineCard(
     onTry: () -> Unit,
     onSetUp: (() -> Unit)?,
     /** Import UI under the local engine's row; null where models can't be imported. */
-    localModel: (@Composable () -> Unit)?,
+    localModel: (@Composable (engineReady: Boolean) -> Unit)?,
     /** ⋮ menu at the end of the local engine's row while it has an imported model. */
     localModelMenu: (@Composable () -> Unit)?,
     modifier: Modifier = Modifier,
@@ -287,8 +288,8 @@ private fun EngineCard(
                     when (engine.status) {
                         EngineStatus.Ready -> StatusLabel(stringResource(Res.string.ai_status_ready), good = true)
                         EngineStatus.Unavailable -> StatusLabel(stringResource(Res.string.ai_status_unavailable), good = false)
-                        // The import below sets the local engine up
-                        is EngineStatus.NeedsSetup -> if (local && localModel != null) {
+                        // On desktop the import below is the only setup; Android keeps AI Helper's downloads too
+                        is EngineStatus.NeedsSetup -> if (local && localModel != null && supportsModelFileDrop) {
                             Unit
                         } else if (onSetUp != null) {
                             TextButton(onClick = onSetUp) { Text(stringResource(Res.string.ai_set_up)) }
@@ -298,7 +299,7 @@ private fun EngineCard(
                     }
                     if (local) localModelMenu?.invoke()
                 }
-                if (local) localModel?.invoke()
+                if (local) localModel?.invoke(engine.status == EngineStatus.Ready)
             }
 
             if (state.showPreference) {
