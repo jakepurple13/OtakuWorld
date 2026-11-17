@@ -76,8 +76,14 @@ fun UpdateCheckReport.groupFailures(): List<FailureGroup> {
         )
 }
 
-/** Items with the same source and first error line share one explanation. */
-fun ItemFailure.explanationKey(): String = "$source\n${detail.lineSequence().firstOrNull().orEmpty()}"
+/**
+ * Items with the same source, failure kind, HTTP code and exception class share one explanation.
+ * The exception message is left out: it often holds the title's URL, so it differs on every row.
+ */
+fun ItemFailure.explanationKey(): String {
+    val exceptionClass = detail.lineSequence().firstOrNull().orEmpty().substringBefore(':').trim()
+    return "$source|$kind|${httpCode ?: ""}|$exceptionClass"
+}
 
 /** One-line reason shown for an item. */
 suspend fun ItemFailure.message(): String =
@@ -199,7 +205,9 @@ class UpdateCheckErrorsViewModel(
             else -> return
         }
         explanationJobs[key] = viewModelScope.launch {
-            task.start(AiFeature.ExplainError, ErrorDetails(sourceRepository.displayNameFor(item.source), item.detail))
+            val started = task.start(AiFeature.ExplainError, ErrorDetails(sourceRepository.displayNameFor(item.source), item.detail))
+            // The engine was ready when the screen opened but isn't now; show Retry instead of an endless shimmer
+            if (!started) task.fail("No on-device AI engine is ready")
         }
     }
 

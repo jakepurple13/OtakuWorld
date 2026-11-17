@@ -293,4 +293,30 @@ class UpdateCheckErrorsViewModelTest {
         assertEquals(1, ai.runs.size)
         assertTrue(AiFeature.ExplainError.prepare(ErrorDetails("asura", "")).startsWith("Source: asura"))
     }
+
+    @Test
+    fun `same error with different urls explains once`() = runTest {
+        val a = item("One Piece", "asura", FailureKind.Http, 401,
+            "ClientRequestException: Client request(GET https://asura.example/one-piece) invalid: 401 Unauthorized\nat a.B")
+        val b = item("Bleach", "asura", FailureKind.Http, 401,
+            "ClientRequestException: Client request(GET https://asura.example/bleach) invalid: 401 Unauthorized\nat a.B")
+        val ai = FakeAiText()
+        val vm = viewModel(report(itemFailures = listOf(a, b)), aiText = ai)
+        vm.explain(a)
+        vm.explain(b)
+        assertEquals(1, ai.runs.size)
+    }
+
+    @Test
+    fun `engine gone after the screen opened shows a retryable error`() = runTest {
+        val ai = FakeAiText()
+        val vm = viewModel(report(itemFailures = listOf(unknownA)), aiText = ai)
+        assertTrue(vm.explainAvailable.value)
+        ai.engine = null
+        vm.explain(unknownA)
+        assertIs<AiTextState.Error>(vm.explanation(unknownA).value)
+        ai.engine = FakeAiText.ENGINE
+        vm.explain(unknownA)
+        assertEquals(AiTextState.Done("out", FakeAiText.ENGINE), vm.explanation(unknownA).value)
+    }
 }

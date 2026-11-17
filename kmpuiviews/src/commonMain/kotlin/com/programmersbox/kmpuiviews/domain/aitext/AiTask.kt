@@ -51,6 +51,13 @@ class AiTask(
         return true
     }
 
+    /** Shows [message] as an Error (with Retry) without running anything, e.g. when [start] found no engine. */
+    fun fail(message: String) {
+        job?.cancel()
+        job = null
+        _state.value = AiTextState.Error(message)
+    }
+
     fun reset() {
         job?.cancel()
         job = null
