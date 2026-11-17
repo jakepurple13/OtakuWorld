@@ -50,13 +50,13 @@ class ChapterRecaps(
                     state.value = AiTextState.Error("No previous chapter")
                     return@launch
                 }
-                val engine = aiText.engineFor(AiFeature.Recap, text.length)
+                val engine = aiText.engineFor(AiFeature.Recap, AiFeature.Recap.prepare(text).length)
                 if (engine == null) {
                     state.value = AiTextState.Error("No on-device engine is ready")
                     return@launch
                 }
                 val out = StringBuilder()
-                aiText.recap(AiTextPrompts.recapTail(text)).collect { delta ->
+                aiText.run(AiFeature.Recap, text).collect { delta ->
                     out.append(delta)
                     state.value = AiTextState.Streaming(out.toString(), engine)
                 }

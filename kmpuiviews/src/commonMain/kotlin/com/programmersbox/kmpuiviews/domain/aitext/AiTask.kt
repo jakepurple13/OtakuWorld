@@ -6,7 +6,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -50,39 +49,6 @@ class AiTask(
             }
         }
         return true
-    }
-
-    fun reset() {
-        job?.cancel()
-        job = null
-        _state.value = AiTextState.Idle
-    }
-}
-
-/** Temporary: still used by notes and lists until they move to [AiTask]. */
-class AiTextRunner(private val scope: CoroutineScope) {
-    private val _state = MutableStateFlow<AiTextState>(AiTextState.Idle)
-    val state: StateFlow<AiTextState> = _state.asStateFlow()
-
-    private var job: Job? = null
-
-    fun run(engine: AiEngineInfo, block: () -> Flow<String>) {
-        job?.cancel()
-        _state.value = AiTextState.Loading
-        job = scope.launch {
-            try {
-                val text = StringBuilder()
-                block().collect { delta ->
-                    text.append(delta)
-                    _state.value = AiTextState.Streaming(text.toString(), engine)
-                }
-                _state.value = AiTextState.Done(text.toString(), engine)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                _state.value = AiTextState.Error(errorMessage(e))
-            }
-        }
     }
 
     fun reset() {

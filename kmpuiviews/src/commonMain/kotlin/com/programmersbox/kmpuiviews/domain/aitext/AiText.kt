@@ -45,12 +45,4 @@ interface AiText {
             delay(retry)
         }
     }
-
-    // Temporary per-feature entry points, removed once every caller uses run()
-    fun recap(previousChapterText: String): Flow<String> = run(AiFeature.Recap, previousChapterText)
-    fun tldr(description: String): Flow<String> = run(AiFeature.Tldr, description)
-    fun proofread(text: String): Flow<String> = run(AiFeature.Proofread, text)
-    fun rewrite(text: String, style: RewriteStyle): Flow<String> = run(AiFeature.Rewrite(style), text)
-    fun listNames(titles: List<String>): Flow<String> = run(AiFeature.ListNames, titles)
-    fun listDescription(titles: List<String>): Flow<String> = run(AiFeature.ListDescription, titles)
 }
