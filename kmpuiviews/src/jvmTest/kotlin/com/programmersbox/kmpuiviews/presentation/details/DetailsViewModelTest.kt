@@ -128,6 +128,7 @@ class DetailsViewModelTest {
         sharedCoverBitmaps = sharedCoverBitmaps,
         aiText = aiText,
         tldrCache = tldrCache,
+        moodRepository = com.programmersbox.kmpuiviews.domain.moodtags.MoodRepository(itemDatabase.itemDao(), aiText),
     ).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
 
     @OptIn(ExperimentalCoroutinesApi::class)
