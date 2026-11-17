@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 
 /** The switches on the AI settings page, one per feature. Every one starts on. */
-enum class AiToggle { Tldr, ChapterRecap, WritingTools, ListSuggestions, ErrorExplanations, DailyOverview }
+enum class AiToggle { Tldr, ChapterRecap, WritingTools, ListSuggestions, ErrorExplanations, UpdateSummary, DailyOverview }
 
 /** Which on-device engine AI text should use. A preferred engine that isn't ready means no engine. */
 enum class AiEnginePreference { Automatic, Nano, Gemma }
