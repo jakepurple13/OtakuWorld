@@ -2,6 +2,12 @@ package com.programmersbox.kmpuiviews.presentation.updatecheck
 
 import com.programmersbox.kmpuiviews.testing.clearAndJoin
 import androidx.lifecycle.ViewModelStore
+import kotlin.test.assertIs
+import kotlinx.coroutines.flow.flow
+import com.programmersbox.kmpuiviews.testing.FakeAiText
+import com.programmersbox.kmpuiviews.domain.aitext.ErrorDetails
+import com.programmersbox.kmpuiviews.domain.aitext.AiTextState
+import com.programmersbox.kmpuiviews.domain.aitext.AiFeature
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.domain.updatecheck.FailureKind
 import com.programmersbox.kmpuiviews.domain.updatecheck.ItemFailure
@@ -88,11 +94,13 @@ class UpdateCheckErrorsViewModelTest {
         report: UpdateCheckReport?,
         workRepository: FakeWorkRepository = FakeWorkRepository(),
         sharer: UpdateCheckReportSharer = FakeSharer(),
+        aiText: FakeAiText = FakeAiText(),
     ) = UpdateCheckErrorsViewModel(
         store = FakeUpdateCheckReportStore(report),
         workRepository = workRepository,
         sharer = sharer,
         sourceRepository = SourceRepository(),
+        aiText = aiText,
     ).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
 
     @BeforeTest
@@ -205,5 +213,84 @@ class UpdateCheckErrorsViewModelTest {
             """.trimIndent(),
             text,
         )
+    }
+
+    private val unknownA = item("One Piece", "asura", FailureKind.CouldNotRead, detail = "SerializationException: bad token\nat a.B")
+    private val unknownB = item("Bleach", "asura", FailureKind.CouldNotRead, detail = "SerializationException: bad token\nat c.D")
+    private val unknownOther = item("Naruto", "asura", FailureKind.CouldNotRead, detail = "IllegalStateException: nope")
+
+    @Test
+    fun `explain runs once per distinct error`() = runTest {
+        val ai = FakeAiText()
+        val vm = viewModel(report(itemFailures = listOf(unknownA, unknownB)), aiText = ai)
+        vm.explain(unknownA)
+        vm.explain(unknownB)
+        assertEquals(1, ai.runs.size)
+        assertEquals(AiTextState.Done("out", FakeAiText.ENGINE), vm.explanation(unknownB).value)
+        assertEquals(ErrorDetails("asura", unknownA.detail), ai.runs.single().second)
+    }
+
+    @Test
+    fun `different errors run separately`() = runTest {
+        val ai = FakeAiText()
+        val vm = viewModel(report(itemFailures = listOf(unknownA, unknownOther)), aiText = ai)
+        vm.explain(unknownA)
+        vm.explain(unknownOther)
+        assertEquals(2, ai.runs.size)
+    }
+
+    @Test
+    fun `known errors never reach ai`() = runTest {
+        val ai = FakeAiText()
+        val timedOut = item("Blue Lock", "mangapark", detail = "Timed out waiting for 15000 ms")
+        val vm = viewModel(report(itemFailures = listOf(timedOut)), aiText = ai)
+        vm.explain(timedOut)
+        assertTrue(ai.runs.isEmpty())
+        assertEquals(AiTextState.Idle, vm.explanation(timedOut).value)
+    }
+
+    @Test
+    fun `no engine means not available and no run`() = runTest {
+        val ai = FakeAiText(engine = null)
+        val vm = viewModel(report(itemFailures = listOf(unknownA)), aiText = ai)
+        assertFalse(vm.explainAvailable.value)
+        vm.explain(unknownA)
+        assertTrue(ai.runs.isEmpty())
+        // The availability check retries forever with no engine; stop it so runTest can finish.
+        viewModelStore.clearAndJoin()
+    }
+
+    @Test
+    fun `engine ready means available`() = runTest {
+        val vm = viewModel(report(itemFailures = listOf(unknownA)))
+        assertTrue(vm.explainAvailable.value)
+    }
+
+    @Test
+    fun `failed explanation can retry`() = runTest {
+        var fail = true
+        val ai = FakeAiText(output = { _, _ ->
+            flow {
+                if (fail) throw IllegalStateException("boom")
+                emit("ok")
+            }
+        })
+        val vm = viewModel(report(itemFailures = listOf(unknownA)), aiText = ai)
+        vm.explain(unknownA)
+        assertIs<AiTextState.Error>(vm.explanation(unknownA).value)
+        fail = false
+        vm.explain(unknownA)
+        assertEquals(AiTextState.Done("ok", FakeAiText.ENGINE), vm.explanation(unknownA).value)
+        assertEquals(2, ai.runs.size)
+    }
+
+    @Test
+    fun `blank detail still keys and prepares`() = runTest {
+        val blank = item("Empty", "asura", FailureKind.CouldNotRead, detail = "")
+        val ai = FakeAiText()
+        val vm = viewModel(report(itemFailures = listOf(blank)), aiText = ai)
+        vm.explain(blank)
+        assertEquals(1, ai.runs.size)
+        assertTrue(AiFeature.ExplainError.prepare(ErrorDetails("asura", "")).startsWith("Source: asura"))
     }
 }
