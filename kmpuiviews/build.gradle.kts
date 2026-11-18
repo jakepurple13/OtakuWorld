@@ -60,6 +60,7 @@ kotlin {
                 implementation(commonLibs.material3.adaptive.navigation.suite)
                 implementation(commonLibs.components.resources)
                 api(commonLibs.ui.backhandler)
+                api(projects.telemetry)
                 implementation(commonLibs.material3.window.size)
                 api(commonLibs.bundles.hazeLibs)
                 //api(commonLibs.backdrop)

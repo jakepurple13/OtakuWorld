@@ -46,6 +46,7 @@ import org.koin.core.component.inject
 import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
+import com.programmersbox.telemetry.noOpTelemetryModule
 import java.io.File
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.measureTimedValue
@@ -163,7 +164,7 @@ class BackgroundWorkHandlerImpl(
                             }
                         },
                         module {
-                            includes(kmpModule)
+                            includes(kmpModule, noOpTelemetryModule(printToConsole = true))
                             singleOf(::DataStoreHandling)
                             single {
                                 NewSettingsHandling(

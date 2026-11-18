@@ -59,6 +59,7 @@ dependencies {
     implementation(projects.sharedutils)
     api(projects.datastore)
     api(projects.kmpuiviews)
+    implementation(projects.telemetry.android)
 
     //Extension Loader
     api(projects.sharedutils.kmpextensionloader)

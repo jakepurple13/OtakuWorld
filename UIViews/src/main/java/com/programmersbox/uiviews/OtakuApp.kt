@@ -11,9 +11,6 @@ import androidx.work.Configuration
 import com.google.android.material.color.DynamicColors
 import com.google.firebase.Firebase
 import com.google.firebase.FirebaseApp
-import com.google.firebase.analytics.analytics
-import com.google.firebase.crashlytics.crashlytics
-import com.google.firebase.crashlytics.setCustomKeys
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.remoteconfig.configUpdates
 import com.google.firebase.remoteconfig.remoteConfig
@@ -22,6 +19,8 @@ import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.KmpOtakuApp
+import com.programmersbox.kmpuiviews.telemetry.startTelemetry
+import com.programmersbox.telemetry.android.androidTelemetryModule
 import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.recordFirebaseException
 import com.programmersbox.kmpuiviews.utils.AppConfig
@@ -72,6 +71,7 @@ abstract class OtakuApp : KmpOtakuApp(), Configuration.Provider {
             appModules,
             androidViewModels,
             kmpInterop,
+            androidTelemetryModule(printToConsole = BuildConfig.DEBUG),
         )
     }
 
@@ -80,13 +80,8 @@ abstract class OtakuApp : KmpOtakuApp(), Configuration.Provider {
     private fun firebaseSetup() {
         runCatching {
             FirebaseApp.initializeApp(this)
-            Firebase.crashlytics.setCustomKeys {
-                key("buildType", BuildConfig.BUILD_TYPE)
-                key("buildFlavor", BuildConfig.FLAVOR)
-            }
-            Firebase.analytics.setUserProperty("buildType", BuildConfig.BUILD_TYPE)
-            Firebase.analytics.setUserProperty("buildFlavor", BuildConfig.FLAVOR)
         }
+        startTelemetry(get(), get(), BuildConfig.BUILD_TYPE, BuildConfig.FLAVOR)
 
         createFirebaseIds().let {
             FirebaseDb.DOCUMENT_ID = it.documentId
