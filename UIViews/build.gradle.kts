@@ -47,7 +47,7 @@ dependencies {
     androidTestImplementation(TestDeps.androidEspresso)
 
     implementation(platform(androidLibs.firebasePlatform))
-    implementation(androidLibs.bundles.firebaseCrashLibs)
+    implementation(androidLibs.firebase.perf)
 
     api(platform(commonLibs.koin.bom))
     api(androidLibs.bundles.koinLibs)

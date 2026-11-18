@@ -174,7 +174,7 @@ kotlin {
                 implementation(project.dependencies.platform(androidLibs.firebasePlatform))
                 implementation(androidLibs.firebaseAuth)
                 implementation(androidLibs.playServices)
-                implementation(androidLibs.bundles.firebaseCrashLibs)
+                implementation(androidLibs.firebase.perf)
                 implementation(androidLibs.drawablePainter)
                 implementation(androidLibs.glideCompose)
                 implementation(androidLibs.landscapist.bom)

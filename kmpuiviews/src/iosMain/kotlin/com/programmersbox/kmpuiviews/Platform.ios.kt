@@ -90,14 +90,6 @@ actual class DateTimeFormatHandler {
     }
 }
 
-actual fun recordFirebaseException(throwable: Throwable) {
-    throwable.printStackTrace()
-}
-
-actual fun logFirebaseMessage(message: String) {
-    println(message)
-}
-
 actual fun readPlatformFile(uri: String): PlatformFile = PlatformFile(uri)
 
 @Composable
@@ -159,9 +151,6 @@ fun provideBiometricAuthenticator(): BiometricAuthenticator {
 }*/
 @Composable
 actual fun rememberCustomUriHandler(): CustomUriHandler = CustomUriHandler()
-actual fun analyticsScreen(screenName: String) {
-}
-
 @Composable
 actual fun versionCode(): String = BuildKonfig.VERSION_CODE_KMP
 
