@@ -1,10 +1,10 @@
 package com.programmersbox.kmpuiviews.utils
 
 import android.content.Context
+import com.programmersbox.kmpuiviews.telemetry.koinCrashReporter
 import android.os.ParcelFileDescriptor
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.ExceptionDao
-import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.utils.backupproccesor.ListBackupProcessor
 import com.programmersbox.sharedcomponents.backup.BackupDataSummary
 import com.programmersbox.sharedcomponents.backup.BackupUiInfo
@@ -60,7 +60,7 @@ actual open class Zipper(
         val pfd = context.contentResolver.openFileDescriptor(platformFile.toAndroidUri(""), "wt")!!
         ZipOutputStream(ParcelFileDescriptor.AutoCloseOutputStream(pfd)).use { zip ->
             backupProcessors.filter { it.fileName in selectedKeys }.forEach { backup ->
-                logFirebaseMessage("Zipping ${backup.fileName}")
+                koinCrashReporter().log("Zipping ${backup.fileName}")
                 val duration = measureTime {
                     zip.putNextEntry(ZipEntry(backup.fileName))
                     val result = runCatching {
@@ -93,7 +93,7 @@ actual open class Zipper(
                     results += result
                     onItemComplete(result)
                 }
-                logFirebaseMessage("Zipped ${backup.fileName} in $duration")
+                koinCrashReporter().log("Zipped ${backup.fileName} in $duration")
             }
         }
         results
@@ -147,7 +147,7 @@ actual open class Zipper(
                                 results += result
                                 onItemComplete(result)
                             }
-                            logFirebaseMessage("Unzipped $name in $duration")
+                            koinCrashReporter().log("Unzipped $name in $duration")
                         }
                         entry = zipIs.nextEntry
                     }

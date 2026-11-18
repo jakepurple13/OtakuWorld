@@ -1,10 +1,10 @@
 package com.programmersbox.kmpuiviews.utils
 
 import android.content.Context
+import com.programmersbox.kmpuiviews.telemetry.koinCrashReporter
 import android.content.Intent
 import androidx.core.net.toUri
 import com.google.firebase.perf.trace
-import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.repository.InstallStatusRepository
 import io.github.vinceglb.filekit.AndroidFile
 import io.github.vinceglb.filekit.PlatformFile
@@ -72,7 +72,7 @@ actual class DownloadAndInstaller(
             }
             .onEach {
                 printLogs { it }
-                if (it !is DownloadAndInstallStatus.Downloading) logFirebaseMessage(it.toString())
+                if (it !is DownloadAndInstallStatus.Downloading) koinCrashReporter().log("app update: ${it::class.simpleName}")
             }
             .onCompletion { cause -> if (cause != null) file.delete() }
     }
@@ -101,7 +101,7 @@ actual class DownloadAndInstaller(
             }
             .onEach {
                 printLogs { it }
-                if (it !is DownloadAndInstallStatus.Downloading) logFirebaseMessage(it.toString())
+                if (it !is DownloadAndInstallStatus.Downloading) koinCrashReporter().log("app update: ${it::class.simpleName}")
             }
             .onCompletion { cause -> if (cause != null) file.delete() }
     }

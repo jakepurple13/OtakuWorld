@@ -1,10 +1,9 @@
 package com.programmersbox.kmpuiviews.workers
 
 import android.graphics.Bitmap
+import com.programmersbox.kmpuiviews.telemetry.koinCrashReporter
 import android.graphics.BitmapFactory
 import androidx.work.ListenableWorker
-import com.programmersbox.kmpuiviews.logFirebaseMessage
-import com.programmersbox.kmpuiviews.recordFirebaseException
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.header
@@ -26,8 +25,8 @@ suspend fun HttpClient.getBitmapFromURL(strURL: String?, headers: Map<String, An
     }
         .mapCatching { BitmapFactory.decodeStream(it) }
         .onFailure {
-            logFirebaseMessage("Getting bitmap from $strURL")
-            recordFirebaseException(it)
+            koinCrashReporter().log("worker bitmap load failed")
+            koinCrashReporter().recordException(it)
             it.printStackTrace()
         }
         .getOrNull()

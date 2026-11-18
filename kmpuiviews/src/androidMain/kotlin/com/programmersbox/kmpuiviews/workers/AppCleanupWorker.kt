@@ -1,13 +1,13 @@
 package com.programmersbox.kmpuiviews.workers
 
 import android.content.Context
+import com.programmersbox.kmpuiviews.telemetry.koinCrashReporter
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.google.firebase.perf.trace
-import com.programmersbox.kmpuiviews.logFirebaseMessage
 import java.util.concurrent.TimeUnit
 
 class AppCleanupWorker(
@@ -15,7 +15,7 @@ class AppCleanupWorker(
     workerParams: WorkerParameters,
 ) : CoroutineWorker(context, workerParams) {
     override suspend fun doWork(): Result = trace("app_cleanup") {
-        logFirebaseMessage("Starting App Cleanup")
+        koinCrashReporter().log("Starting App Cleanup")
         var count = 0
         runCatching {
             applicationContext
@@ -27,7 +27,7 @@ class AppCleanupWorker(
                     it.delete()
                 }
         }
-            .also { logFirebaseMessage("Deleted $count files") }
+            .also { koinCrashReporter().log("Deleted $count files") }
             .workerReturn()
     }
 

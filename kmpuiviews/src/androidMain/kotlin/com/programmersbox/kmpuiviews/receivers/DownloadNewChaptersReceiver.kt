@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.receivers
 
 import android.content.BroadcastReceiver
+import com.programmersbox.kmpuiviews.telemetry.koinCrashReporter
 import android.content.Context
 import android.content.Intent
 import com.programmersbox.favoritesdatabase.ItemDao
@@ -8,7 +9,6 @@ import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.domain.updatecheck.newChapters
-import com.programmersbox.kmpuiviews.recordFirebaseException
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.firstOrNull
@@ -42,7 +42,7 @@ class DownloadNewChaptersReceiver : BroadcastReceiver(), KoinComponent {
                     val chapters = newChapters(info, info.chapters.size - count)
                     if (chapters.isNotEmpty()) genericInfo.batchDownloadChapters(chapters, info)
                     clearUpdateNotification(context, dao, favorite.url, id)
-                }.onFailure { recordFirebaseException(it) }
+                }.onFailure { koinCrashReporter().recordException(it) }
             } finally {
                 pending.finish()
             }

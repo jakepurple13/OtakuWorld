@@ -8,5 +8,5 @@ import org.koin.mp.KoinPlatform
  * The Koin [CrashReporter] for top-level helpers that have no injection scope.
  * Falls back to [NoOpCrashReporter] when Koin is not started or has no binding.
  */
-internal fun koinCrashReporter(): CrashReporter =
+fun koinCrashReporter(): CrashReporter =
     KoinPlatform.getKoinOrNull()?.getOrNull<CrashReporter>() ?: NoOpCrashReporter

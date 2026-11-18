@@ -1,14 +1,13 @@
 package com.programmersbox.kmpuiviews.receivers
 
 import android.content.BroadcastReceiver
+import com.programmersbox.kmpuiviews.telemetry.koinCrashReporter
 import android.content.Context
 import android.content.Intent
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.PlatformGenericInfo
-import com.programmersbox.kmpuiviews.logFirebaseMessage
-import com.programmersbox.kmpuiviews.recordFirebaseException
 import com.programmersbox.kmpuiviews.utils.NotificationLogo
 import com.programmersbox.kmpuiviews.workers.SavedNotifications
 import com.programmersbox.kmpuiviews.workers.UpdateNotification
@@ -31,7 +30,7 @@ class BootReceived : BroadcastReceiver(), KoinComponent {
     private val itemDao: ItemDao by inject()
 
     override fun onReceive(context: Context?, intent: Intent?) {
-        logFirebaseMessage("BootReceived ${intent?.action}")
+        koinCrashReporter().log("BootReceived ${intent?.action}")
         runCatching {
             goAsync {
                 if (settingsHandling.notifyOnReboot.get()) {
@@ -62,7 +61,7 @@ fun BroadcastReceiver.goAsync(
             block(pendingResult)
         } catch (e: Exception) {
             // An uncaught exception in GlobalScope would crash the process
-            recordFirebaseException(e)
+            koinCrashReporter().recordException(e)
         } finally {
             pendingResult.finish()
         }

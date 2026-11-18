@@ -3,6 +3,7 @@
 package com.programmersbox.uiviews
 
 import android.util.Log
+import com.programmersbox.kmpuiviews.telemetry.koinCrashReporter
 import androidx.annotation.CallSuper
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.runtime.ExperimentalComposeRuntimeApi
@@ -21,8 +22,6 @@ import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.KmpOtakuApp
 import com.programmersbox.kmpuiviews.telemetry.startTelemetry
 import com.programmersbox.telemetry.android.androidTelemetryModule
-import com.programmersbox.kmpuiviews.logFirebaseMessage
-import com.programmersbox.kmpuiviews.recordFirebaseException
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.datastore.OtakuDataStoreHandling
@@ -137,7 +136,7 @@ abstract class OtakuApp : KmpOtakuApp(), Configuration.Provider {
                         GlobalScope.launch {
                             val dataStoreKeys = RemoteConfigKeys.entries
                             configUpdate.updatedKeys.forEach { t ->
-                                logFirebaseMessage("Updated key: $t")
+                                koinCrashReporter().log("Updated key: $t")
                                 runCatching {
                                     dataStoreKeys.first { keys -> keys.key == t }
                                 }
@@ -153,7 +152,7 @@ abstract class OtakuApp : KmpOtakuApp(), Configuration.Provider {
                             }
                         }
                     } else {
-                        task.exception?.let(::recordFirebaseException)
+                        task.exception?.let(koinCrashReporter()::recordException)
                     }
                 }
             }

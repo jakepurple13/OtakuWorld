@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.workers
 
 import android.app.NotificationManager
+import com.programmersbox.kmpuiviews.telemetry.koinCrashReporter
 import android.content.Context
 import android.content.pm.ServiceInfo
 import android.os.Build
@@ -10,7 +11,6 @@ import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.programmersbox.kmpuiviews.readPlatformFile
-import com.programmersbox.kmpuiviews.recordFirebaseException
 import com.programmersbox.kmpuiviews.utils.Backup
 import com.programmersbox.kmpuiviews.utils.NotificationChannels
 import com.programmersbox.kmpuiviews.utils.NotificationDslBuilder
@@ -49,7 +49,7 @@ class BackupWorker(
                 Result.success(workDataOf("results" to Json.encodeToString(finalResults)))
             },
             onFailure = { e ->
-                recordFirebaseException(e)
+                koinCrashReporter().recordException(e)
                 postCompletionNotification("Backup failed", timeoutAfter = null)
                 Result.failure(workDataOf("results" to Json.encodeToString(results.toList())))
             }

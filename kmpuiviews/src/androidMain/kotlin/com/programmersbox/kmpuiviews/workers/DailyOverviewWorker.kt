@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.workers
 
 import android.Manifest
+import com.programmersbox.kmpuiviews.telemetry.koinCrashReporter
 import android.annotation.SuppressLint
 import android.app.Notification
 import android.content.Context
@@ -18,7 +19,6 @@ import com.programmersbox.kmpuiviews.domain.dailyoverview.TemplateEngine
 import com.programmersbox.kmpuiviews.domain.dailyoverview.firstSentence
 import com.programmersbox.kmpuiviews.domain.dailyoverview.generateDailySummary
 import com.programmersbox.kmpuiviews.domain.dailyoverview.morningNotificationTitle
-import com.programmersbox.kmpuiviews.recordFirebaseException
 import com.programmersbox.kmpuiviews.utils.NotificationChannels
 import com.programmersbox.kmpuiviews.utils.NotificationDslBuilder
 import com.programmersbox.kmpuiviews.utils.NotificationLogo
@@ -99,7 +99,7 @@ class DailyOverviewWorker(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            recordFirebaseException(e)
+            koinCrashReporter().recordException(e)
             Result.success()
         }
     }
