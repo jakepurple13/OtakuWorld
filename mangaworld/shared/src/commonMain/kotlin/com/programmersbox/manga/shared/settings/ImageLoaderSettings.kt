@@ -27,7 +27,8 @@ import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
 import com.programmersbox.datastore.mangasettings.ImageLoaderType
-import com.programmersbox.kmpuiviews.logFirebaseMessage
+import com.programmersbox.telemetry.CrashReporter
+import org.koin.compose.koinInject
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
@@ -56,8 +57,9 @@ fun ImageLoaderSettings(
     var savedImageLoaderType by mangaSettingsHandling.rememberImageLoaderType()
     val imageLoaderType = savedImageLoaderType.orWorkingLoader()
 
+    val crashReporter = koinInject<CrashReporter>()
     LaunchedEffect(imageLoaderType) {
-        logFirebaseMessage("ImageLoader Selected: $imageLoaderType")
+        crashReporter.log("ImageLoader selected: $imageLoaderType")
     }
 
     SettingsScaffold(

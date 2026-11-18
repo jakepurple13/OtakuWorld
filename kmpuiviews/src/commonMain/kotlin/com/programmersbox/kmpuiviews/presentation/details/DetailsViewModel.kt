@@ -43,7 +43,7 @@ import com.programmersbox.kmpuiviews.domain.aitext.AiTextPrompts
 import com.programmersbox.kmpuiviews.domain.aitext.AiTextState
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.toItemModel
-import com.programmersbox.kmpuiviews.recordFirebaseException
+import com.programmersbox.telemetry.CrashReporter
 import com.programmersbox.kmpuiviews.repository.BookmarkRepository
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.utils.Cached
@@ -93,6 +93,7 @@ class DetailsViewModel(
     private val aiText: AiText,
     private val tldrCache: TldrCache,
     moodRepository: MoodRepository,
+    private val crashReporter: CrashReporter,
 ) : ViewModel() {
 
     //private val details: Screen.DetailsScreen.Details? = handle.toRoute()
@@ -189,7 +190,7 @@ class DetailsViewModel(
         }
             ?.dispatchIo()
             ?.catch {
-                recordFirebaseException(it)
+                crashReporter.recordException(it)
                 exceptionDao.insertException(it)
                 it.printStackTrace()
                 emit(Result.failure(it))

@@ -28,6 +28,7 @@ import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.repository.BookmarkRepository
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.testing.FakeAiText
+import com.programmersbox.kmpuiviews.testing.FakeCrashReporter
 import com.programmersbox.kmpuiviews.testing.FakeAuthManager
 import com.programmersbox.kmpuiviews.testing.FakeKmpGenericInfo
 import com.programmersbox.kmpuiviews.testing.FakeTranslationHandler
@@ -129,6 +130,7 @@ class DetailsViewModelTest {
         aiText = aiText,
         tldrCache = tldrCache,
         moodRepository = com.programmersbox.kmpuiviews.domain.moodtags.MoodRepository(itemDatabase.itemDao(), aiText),
+        crashReporter = FakeCrashReporter(),
     ).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
 
     @OptIn(ExperimentalCoroutinesApi::class)

@@ -20,7 +20,7 @@ import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.createConnectivity
 import com.programmersbox.kmpuiviews.presentation.settings.languageorder.languageOrderState
-import com.programmersbox.kmpuiviews.recordFirebaseException
+import com.programmersbox.telemetry.CrashReporter
 import com.programmersbox.kmpuiviews.repository.CurrentSourceRepository
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.repository.combineSources
@@ -56,6 +56,7 @@ class RecentViewModel(
     private val favoritesRepository: FavoritesRepository,
     private val exceptionDao: ExceptionDao,
     private val notifier: InAppNotifier,
+    private val crashReporter: CrashReporter,
 ) : ViewModel() {
 
     var isRefreshing by mutableStateOf(false)
@@ -165,7 +166,7 @@ class RecentViewModel(
                     )
                 }
                 emit(emptyList())
-                recordFirebaseException(it)
+                crashReporter.recordException(it)
             }
             // A cancelled load was replaced by a newer one, which owns the refreshing flag
             ?.onCompletion { if (it !is CancellationException) isRefreshing = false }

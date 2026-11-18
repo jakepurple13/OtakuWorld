@@ -1,7 +1,6 @@
 package com.programmersbox.kmpuiviews.repository
 
-import com.programmersbox.kmpuiviews.logFirebaseMessage
-import com.programmersbox.kmpuiviews.recordFirebaseException
+import com.programmersbox.telemetry.CrashReporter
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandlerImpl.Companion.ManualSyncId
 import dev.nucleusframework.scheduler.TaskData
 import dev.nucleusframework.scheduler.TaskResult
@@ -15,6 +14,7 @@ import kotlinx.coroutines.launch
 
 class WorkerRepositoryImpl(
     private val tracker: DesktopManualCheckTracker,
+    private val crashReporter: CrashReporter,
 ) : WorkRepository {
     override val manualCheck: Flow<List<WorkInfoKmp>>
         get() = tracker.state
@@ -47,8 +47,8 @@ class WorkerRepositoryImpl(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                logFirebaseMessage("Manual update check failed: ${e.message}")
-                recordFirebaseException(e)
+                crashReporter.log("manual update check failed (${e::class.simpleName})")
+                crashReporter.recordException(e)
             } finally {
                 // Whatever ended the run (exception, error, cancellation), never leave it RUNNING
                 if (tracker.isRunning) tracker.finish(false)
