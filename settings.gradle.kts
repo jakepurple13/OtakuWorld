@@ -117,6 +117,7 @@ include(":showcase:annotations")
 include(":showcase:processor")
 include(":navgraph")
 include(":telemetry")
+include(":telemetry:android")
 includeIfLocal {
     include(":showcase")
     include(":kmpuiviews:koogintegration:customscraper")
