@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.presentation.details
 
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.plus
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.kmpuiviews.domain.moodtags.MoodRepository
 import com.programmersbox.kmpuiviews.testing.FakeAiText
@@ -53,6 +54,16 @@ class MoodControllerTest {
         c.suggest("Frieren", "An elf mage")
         c.moods.await { it == listOf("cozy") }
         c.canSuggest.await { !it }
+    }
+
+    @Test
+    fun `suggesting stays on until the moods arrive`() = runTest {
+        // Real time: the wait for the moods has a timeout, which virtual time would skip straight past
+        val c = (backgroundScope + Dispatchers.Default).controller()
+        c.canSuggest.await { it }
+        c.suggest("Frieren", "An elf mage")
+        c.suggesting.await { !it }
+        assertEquals(listOf("cozy"), c.moods.value)
     }
 
     @Test
