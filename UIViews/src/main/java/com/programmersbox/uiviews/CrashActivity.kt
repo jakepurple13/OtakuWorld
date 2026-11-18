@@ -1,6 +1,7 @@
 package com.programmersbox.uiviews
 
 import android.annotation.SuppressLint
+import com.programmersbox.kmpuiviews.telemetry.koinCrashReporter
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -38,7 +39,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.programmersbox.kmpuiviews.recordFirebaseException
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
@@ -54,7 +54,7 @@ class CrashActivity : ComponentActivity() {
         enableEdgeToEdge()
         val exception = GlobalExceptionHandler.getThrowableFromIntent(intent)
         exception?.printStackTrace()
-        exception?.let { recordFirebaseException(it) }
+        exception?.let { koinCrashReporter().recordException(it) }
         setContent {
             val darkTheme = isSystemInDarkTheme()
             val colorScheme = when {

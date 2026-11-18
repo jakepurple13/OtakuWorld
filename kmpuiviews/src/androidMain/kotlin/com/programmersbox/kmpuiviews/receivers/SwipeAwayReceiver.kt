@@ -1,12 +1,12 @@
 package com.programmersbox.kmpuiviews.receivers
 
 import android.app.NotificationManager
+import com.programmersbox.kmpuiviews.telemetry.koinCrashReporter
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import androidx.core.content.getSystemService
 import com.programmersbox.favoritesdatabase.ItemDao
-import com.programmersbox.kmpuiviews.recordFirebaseException
 import com.programmersbox.kmpuiviews.utils.printLogs
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -23,7 +23,7 @@ class SwipeAwayReceiver : BroadcastReceiver(), KoinComponent {
         goAsync {
             runCatching {
                 url?.let { dao.updateNotification(it, false) }
-            }.onFailure { recordFirebaseException(it) }
+            }.onFailure { koinCrashReporter().recordException(it) }
             id
                 ?.takeIf { it != -1 }
                 ?.let { notificationManager?.cancel(it) }

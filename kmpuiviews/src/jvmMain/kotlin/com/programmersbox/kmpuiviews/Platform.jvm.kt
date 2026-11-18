@@ -150,14 +150,6 @@ actual class DateTimeFormatHandler {
     }
 }
 
-actual fun recordFirebaseException(throwable: Throwable) {
-    throwable.printStackTrace()
-}
-
-actual fun logFirebaseMessage(message: String) {
-    println(message)
-}
-
 actual fun readPlatformFile(uri: String): PlatformFile = PlatformFile(uri)
 
 @Composable
@@ -198,9 +190,6 @@ actual fun InitialSetup() {
 
 @Composable
 actual fun HideScreen(shouldHide: Boolean) {
-}
-
-actual fun analyticsScreen(screenName: String) {
 }
 
 actual class SystemAlerter {

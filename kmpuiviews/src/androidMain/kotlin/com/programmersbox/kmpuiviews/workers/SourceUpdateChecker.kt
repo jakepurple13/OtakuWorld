@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.workers
 
 import android.app.NotificationManager
+import com.programmersbox.kmpuiviews.telemetry.koinCrashReporter
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
@@ -12,7 +13,6 @@ import com.programmersbox.kmpmodels.KmpExternalApiServicesCatalog
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.OtakuWorldCatalog
 import com.programmersbox.kmpuiviews.domain.AppUpdate
-import com.programmersbox.kmpuiviews.recordFirebaseException
 import com.programmersbox.kmpuiviews.utils.GroupBehavior
 import com.programmersbox.kmpuiviews.utils.NotificationChannels
 import com.programmersbox.kmpuiviews.utils.NotificationDslBuilder
@@ -92,7 +92,7 @@ class SourceUpdateChecker(
             Result.success()
         } catch (e: Exception) {
             e.printStackTrace()
-            recordFirebaseException(e)
+            koinCrashReporter().recordException(e)
             Result.success()
         }
     }

@@ -17,6 +17,7 @@ import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckReport
 import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckResult
 import com.programmersbox.kmpuiviews.domain.updatecheck.UpdatedItem
 import com.programmersbox.kmpuiviews.testing.FakeApiService
+import com.programmersbox.kmpuiviews.testing.FakeCrashReporter
 import com.programmersbox.kmpuiviews.testing.FakeExceptionDao
 import com.programmersbox.kmpuiviews.testing.FakeUpdateCheckReportStore
 import com.programmersbox.kmpuiviews.testing.createTestItemDatabase
@@ -53,7 +54,10 @@ class MediaUpdateCheckerTest {
         source = "ExampleService",
     )
 
-    private fun checker(store: FakeUpdateCheckReportStore = FakeUpdateCheckReportStore()): MediaUpdateChecker {
+    private fun checker(
+        store: FakeUpdateCheckReportStore = FakeUpdateCheckReportStore(),
+        crash: FakeCrashReporter = FakeCrashReporter(),
+    ): MediaUpdateChecker {
         return MediaUpdateChecker(
             dao = database.itemDao(),
             sourceRepository = sourceRepository,
@@ -68,7 +72,32 @@ class MediaUpdateCheckerTest {
             ),
             exceptionDao = FakeExceptionDao(),
             reportStore = store,
+            crashReporter = crash,
         )
+    }
+
+    @Test
+    fun `breadcrumbs never contain titles urls or exception messages`() = runTest {
+        sourceRepository.register(
+            FakeApiService(serviceName = "Broken", recentError = IllegalStateException("failed at https://example.com/secret")),
+            FakeApiService(
+                serviceName = "Working",
+                recentUrls = listOf("ok", "bad"),
+                onItemInfo = {
+                    if (it.url == "bad") throw IllegalStateException("failed at https://example.com/secret")
+                    infoModel(it.url, chapters = 2)
+                },
+            ),
+        )
+        favorite("ok", source = "Working")
+        favorite("bad", source = "Working")
+        val crash = FakeCrashReporter()
+
+        checker(crash = crash).run()
+
+        assertTrue(crash.logs.isNotEmpty())
+        assertTrue(crash.logs.none { "Title" in it || "https://" in it || "secret" in it }, crash.logs.joinToString("\n"))
+        assertTrue(crash.logs.any { "IllegalStateException" in it }, crash.logs.joinToString("\n"))
     }
 
     private suspend fun favorite(url: String, source: String = "FakeService", numChapters: Int = 0) =

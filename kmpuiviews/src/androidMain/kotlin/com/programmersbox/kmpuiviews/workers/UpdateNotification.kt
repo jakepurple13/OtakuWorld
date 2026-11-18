@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.workers
 
 import android.app.Notification
+import com.programmersbox.kmpuiviews.telemetry.koinCrashReporter
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
@@ -23,7 +24,6 @@ import com.programmersbox.kmpuiviews.domain.updatecheck.updateTitle
 import com.programmersbox.kmpuiviews.receivers.DownloadNewChaptersReceiver
 import com.programmersbox.kmpuiviews.domain.updatecheck.finishedText
 import com.programmersbox.kmpuiviews.domain.updatecheck.finishedTitle
-import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.receivers.DeleteNotificationReceiver
 import com.programmersbox.kmpuiviews.receivers.SwipeAwayReceiver
 import com.programmersbox.kmpuiviews.utils.AppConfig
@@ -231,7 +231,7 @@ class UpdateNotification(
 
             block()
         }
-        logFirebaseMessage("Checking for $contextText")
+        koinCrashReporter().log("update notification progress")
         return notification
     }
 

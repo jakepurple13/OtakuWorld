@@ -28,13 +28,13 @@ import androidx.navigation3.scene.DialogSceneStrategy
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
 import com.programmersbox.kmpuiviews.KmpGenericInfo
-import com.programmersbox.kmpuiviews.analyticsScreen
-import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import com.programmersbox.kmpuiviews.presentation.navigation.scenestrategy.BottomSheetSceneStrategy
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalNavigationAnimatedScope
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalSharedElementScope
+import com.programmersbox.telemetry.Analytics
+import com.programmersbox.telemetry.CrashReporter
 import org.koin.compose.koinInject
 import org.koin.compose.navigation3.koinEntryProvider
 
@@ -45,14 +45,17 @@ fun Nav3(
     windowSize: WindowSizeClass,
     customPreferences: ComposeSettingsDsl,
     navigation3Actions: Navigation3Actions = koinInject(),
+    analytics: Analytics = koinInject(),
+    crashReporter: CrashReporter = koinInject(),
 ) {
     val backStack = navigation3Actions.backStack
     LaunchedEffect(Unit) {
         // Read the top entry, not the list itself: the list instance never changes, so it would emit once
         snapshotFlow { backStack.lastOrNull() }
             .collect { screen ->
-                logFirebaseMessage("Navigated to: ${screen.toString()}")
-                analyticsScreen(screen.toString())
+                val name = screen.analyticsName()
+                crashReporter.log("nav → $name")
+                analytics.screen(name)
             }
     }
 

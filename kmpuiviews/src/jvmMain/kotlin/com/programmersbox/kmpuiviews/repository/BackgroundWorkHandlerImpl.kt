@@ -11,7 +11,7 @@ import com.programmersbox.kmpuiviews.MangaDesktopSettings
 import com.programmersbox.kmpuiviews.di.kmpModule
 import com.programmersbox.kmpuiviews.domain.MediaUpdateChecker
 import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckMode
-import com.programmersbox.kmpuiviews.logFirebaseMessage
+import com.programmersbox.telemetry.CrashReporter
 import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfoModel
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandlerImpl.Companion.ManualSyncId
 import com.programmersbox.kmpuiviews.utils.AppConfig
@@ -46,6 +46,7 @@ import org.koin.core.component.inject
 import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
+import com.programmersbox.telemetry.noOpTelemetryModule
 import java.io.File
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.measureTimedValue
@@ -163,7 +164,7 @@ class BackgroundWorkHandlerImpl(
                             }
                         },
                         module {
-                            includes(kmpModule)
+                            includes(kmpModule, noOpTelemetryModule(printToConsole = true))
                             singleOf(::DataStoreHandling)
                             single {
                                 NewSettingsHandling(
@@ -198,6 +199,7 @@ class SyncCheckWorker : DesktopTask, KoinComponent {
     private val mediaUpdateChecker: MediaUpdateChecker by inject()
     private val dataStoreHandling: DataStoreHandling by inject()
     private val tracker: DesktopManualCheckTracker by inject()
+    private val crashReporter: CrashReporter by inject()
 
     override suspend fun doWork(context: TaskContext): TaskResult {
         return try {
@@ -214,9 +216,8 @@ class SyncCheckWorker : DesktopTask, KoinComponent {
                     )
                 )*/
             }
-            logFirebaseMessage("Starting check here")
+            crashReporter.log("SyncCheckWorker start")
             dataStoreHandling.updateCheckingStart.set(System.currentTimeMillis())
-            logFirebaseMessage("Start")
 
             val items = mediaUpdateChecker.getFavoritesThatNeedUpdates(
                 // The periodic run has no input data and only checks favorites with notifications on
@@ -243,7 +244,7 @@ class SyncCheckWorker : DesktopTask, KoinComponent {
             println("Items: ${items.updates}")
 
             //update.onEnd(update.mapDbModel(items))/* { id, notification -> setForegroundInfo(id, notification) }*/
-            logFirebaseMessage("Finished!")
+            crashReporter.log("SyncCheckWorker finished")
 
             if (data?.cancel == true) {
                 val scheduler = DesktopTaskScheduler

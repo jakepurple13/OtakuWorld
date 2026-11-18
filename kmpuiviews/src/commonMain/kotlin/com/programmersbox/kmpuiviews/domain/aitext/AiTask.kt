@@ -1,6 +1,6 @@
 package com.programmersbox.kmpuiviews.domain.aitext
 
-import com.programmersbox.kmpuiviews.logFirebaseMessage
+import com.programmersbox.kmpuiviews.telemetry.koinCrashReporter
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -70,4 +70,4 @@ class AiTask(
  * the UI always shows the localized `ai_error` string, never raw engine text.
  */
 internal fun errorMessage(e: Exception): String =
-    (e.message ?: e::class.simpleName ?: "Unknown error").also { logFirebaseMessage("AI text failed: $it") }
+    (e.message ?: e::class.simpleName ?: "Unknown error").also { koinCrashReporter().log("ai failed: ${e::class.simpleName}") }

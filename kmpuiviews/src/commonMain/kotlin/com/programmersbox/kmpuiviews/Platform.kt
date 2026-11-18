@@ -50,12 +50,6 @@ expect class DateTimeFormatHandler {
 
 expect fun createConnectivity(): Connectivity
 
-expect fun recordFirebaseException(throwable: Throwable)
-
-expect fun logFirebaseMessage(message: String)
-
-expect fun analyticsScreen(screenName: String)
-
 expect fun readPlatformFile(uri: String): PlatformFile
 
 @Composable

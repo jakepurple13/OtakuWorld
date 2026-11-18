@@ -112,6 +112,7 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.core.scope.Scope
 import org.koin.dsl.koinConfiguration
 import org.koin.dsl.module
+import com.programmersbox.telemetry.noOpTelemetryModule
 import java.io.File
 
 private class DesktopViewModelStoreOwner : ViewModelStoreOwner {
@@ -250,7 +251,7 @@ private fun InternalDesktopUi(
                 printLogger(Level.DEBUG)
                 modules(
                     module {
-                        includes(kmpModule)
+                        includes(kmpModule, noOpTelemetryModule(printToConsole = true))
 
                         singleOf(::DataStoreHandling)
                         single {
@@ -361,7 +362,7 @@ fun InternalBaseDesktopUi(
                 printLogger(Level.DEBUG)
                 modules(
                     module {
-                        includes(kmpModule)
+                        includes(kmpModule, noOpTelemetryModule(printToConsole = true))
 
                         singleOf(::DataStoreHandling)
                         single {

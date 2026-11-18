@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.workers
 
 import android.app.Notification
+import com.programmersbox.kmpuiviews.telemetry.koinCrashReporter
 import android.content.Context
 import android.content.pm.ServiceInfo
 import android.os.Build
@@ -18,8 +19,6 @@ import com.programmersbox.kmpuiviews.domain.MediaUpdateChecker
 import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckMode
 import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckProgress
 import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckReportStore
-import com.programmersbox.kmpuiviews.logFirebaseMessage
-import com.programmersbox.kmpuiviews.recordFirebaseException
 import com.programmersbox.kmpuiviews.utils.printLogs
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
@@ -59,9 +58,8 @@ class UpdateFlowWorker(
             update.cancelFinishedNotification()
             //update.sendRunningNotification(100, 0, getString(Res.string.startingCheck))
             runCatching { setForeground(createStartingNotification()) }
-            logFirebaseMessage("Starting check here")
+            koinCrashReporter().log("Starting check here")
             dataStoreHandling.updateCheckingStart.set(System.currentTimeMillis())
-            logFirebaseMessage("Start")
 
             val retryFailed = inputData.getBoolean(RETRY_FAILED, false)
             val result = withProgressNotifications { onProgress ->
@@ -84,7 +82,7 @@ class UpdateFlowWorker(
             }
 
             update.onEnd(update.mapDbModel(result.updates))/* { id, notification -> setForegroundInfo(id, notification) }*/
-            logFirebaseMessage("Finished!")
+            koinCrashReporter().log("Finished!")
             dataStoreHandling.updateCheckingEnd.set(System.currentTimeMillis())
             update.cancelProgressNotification()
             update.sendFinishedNotification(result.report)
@@ -94,7 +92,7 @@ class UpdateFlowWorker(
             update.cancelProgressNotification()
             throw e
         } catch (e: Exception) {
-            recordFirebaseException(e)
+            koinCrashReporter().recordException(e)
             dataStoreHandling.updateCheckingEnd.set(System.currentTimeMillis())
             update.cancelProgressNotification()
             // The checker saved a stopped-early report before rethrowing.

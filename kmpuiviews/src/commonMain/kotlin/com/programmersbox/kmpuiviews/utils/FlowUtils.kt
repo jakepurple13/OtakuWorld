@@ -1,6 +1,6 @@
 package com.programmersbox.kmpuiviews.utils
 
-import com.programmersbox.kmpuiviews.recordFirebaseException
+import com.programmersbox.kmpuiviews.telemetry.koinCrashReporter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
@@ -12,7 +12,7 @@ fun <T> Flow<T>.dispatchIo() = this.flowOn(Dispatchers.IO)
 fun <T> Flow<List<T>>.dispatchIoAndCatchList(action: suspend (Throwable) -> Unit = {}) = this
     .dispatchIo()
     .catch {
-        recordFirebaseException(it)
+        koinCrashReporter().recordException(it)
         it.printStackTrace()
         emit(emptyList())
         action(it)

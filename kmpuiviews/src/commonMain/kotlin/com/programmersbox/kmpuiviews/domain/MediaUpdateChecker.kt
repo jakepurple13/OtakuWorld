@@ -26,8 +26,7 @@ import com.programmersbox.kmpuiviews.domain.updatecheck.classifyFailure
 import com.programmersbox.kmpuiviews.domain.updatecheck.mergeRetry
 import com.programmersbox.kmpuiviews.domain.updatecheck.newChapters
 import com.programmersbox.kmpuiviews.domain.updatecheck.updateTitle
-import com.programmersbox.kmpuiviews.logFirebaseMessage
-import com.programmersbox.kmpuiviews.recordFirebaseException
+import com.programmersbox.telemetry.CrashReporter
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -55,6 +54,7 @@ class MediaUpdateChecker(
     private val sourceLoader: SourceLoader,
     private val exceptionDao: ExceptionDao,
     private val reportStore: UpdateCheckReportStore,
+    private val crashReporter: CrashReporter,
 ) {
 
     // Configurable network dispatcher based on the provided parallelism value
@@ -121,7 +121,7 @@ class MediaUpdateChecker(
             val favoriteItems = getConsolidatedFavoriteItems(checkAll)
                 .let { all -> if (onlyUrls == null) all else all.filter { it.url in onlyUrls } }
 
-            logFirebaseMessage("Sources: ${sourceRepository.apiServiceList.joinToString { it.serviceName }}")
+            crashReporter.log("update check sources: ${sourceRepository.apiServiceList.joinToString { it.serviceName }}")
             val sourceSize = sourceRepository.apiServiceList.size
             putMetric("sourceSize", sourceSize.toLong())
 
@@ -160,7 +160,7 @@ class MediaUpdateChecker(
             run.recentsLoaded(itemsToCheckForUpdates.size)
 
             putMetric("updateCheckSize", itemsToCheckForUpdates.size.toLong())
-            logFirebaseMessage("Found ${itemsToCheckForUpdates.size} items to check for updates.")
+            crashReporter.log("update check: ${itemsToCheckForUpdates.size} items to check")
 
             // 5. Check Individual Items for Updates Concurrently
             val updatedItems = checkItemsForActualUpdates(
@@ -290,7 +290,7 @@ class MediaUpdateChecker(
     }
 
     private suspend fun fetchRecentItems(sourceApiService: KmpApiService): Result<List<KmpItemModel>> {
-        logFirebaseMessage("Fetching recent items from ${sourceApiService.serviceName}")
+        crashReporter.log("update check: recent from ${sourceApiService.serviceName}")
         return attempt {
             withTimeout(DEFAULT_TIMEOUT_MS.milliseconds) { // Timeout per source
                 sourceApiService
@@ -303,8 +303,8 @@ class MediaUpdateChecker(
             }
         }.onFailure { e ->
             exceptionDao.insertException(e)
-            logFirebaseMessage("Exception during recent fetch for ${sourceApiService.serviceName}: ${e.message}")
-            recordFirebaseException(e)
+            crashReporter.log("update check: recent failed ${sourceApiService.serviceName} (${e::class.simpleName})")
+            crashReporter.recordException(e)
         }
     }
 
@@ -318,12 +318,12 @@ class MediaUpdateChecker(
 
             async(networkDispatcher, start = CoroutineStart.LAZY) {
                 run.itemStarted(model.title)
-                logFirebaseMessage("Checking for update: ${model.title} from ${model.source}")
+                crashReporter.log("update check: item from ${model.source}")
                 val apiService = sourceRepository
                     .toSourceByApiServiceName(model.source)
                     ?.apiService
                 if (apiService == null) {
-                    logFirebaseMessage("Source API service not found for ${model.source}")
+                    crashReporter.log("update check: source not found ${model.source}")
                     run.itemFinished(sourceIndex, updated = false, failure = null)
                     return@async null
                 }
@@ -338,7 +338,7 @@ class MediaUpdateChecker(
                     }
                 }.fold(
                     onSuccess = { infoModel ->
-                        logFirebaseMessage("Old chapters: ${model.numChapters}, New chapters: ${infoModel.chapters.size} for ${model.title}")
+                        crashReporter.log("update check: ${model.source} chapters ${model.numChapters} -> ${infoModel.chapters.size}")
                         // newChapters must be computed before saveUpdatedItems overwrites numChapters
                         val updated = if (infoModel.chapters.size > model.numChapters) {
                             UpdatedItem(infoModel, model, newChapters(infoModel, model.numChapters))
@@ -350,8 +350,8 @@ class MediaUpdateChecker(
                     },
                     onFailure = { e ->
                         exceptionDao.insertException(e)
-                        logFirebaseMessage("Error checking update for ${model.title}: ${e.message}")
-                        recordFirebaseException(e)
+                        crashReporter.log("update check: item failed ${model.source} (${e::class.simpleName})")
+                        crashReporter.recordException(e)
                         run.itemFinished(
                             sourceIndex = sourceIndex,
                             updated = false,
@@ -375,12 +375,12 @@ class MediaUpdateChecker(
                 try {
                     // This should be an update if the item exists. Dirty with a new timestamp so the count syncs.
                     dao.insertFavorite(dbModel.copy(isDirty = true, updatedAt = Clock.System.now().toEpochMilliseconds()))
-                    logFirebaseMessage("Saved update for ${dbModel.title}. Chapters: $oldNumChapters -> ${dbModel.numChapters}")
+                    crashReporter.log("update check: saved ${dbModel.source} chapters $oldNumChapters -> ${dbModel.numChapters}")
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    recordFirebaseException(e)
-                    logFirebaseMessage("Database save failed for ${dbModel.title}: ${e.message}")
+                    crashReporter.recordException(e)
+                    crashReporter.log("update check: save failed ${dbModel.source} (${e::class.simpleName})")
                     // Potentially revert dbModel.numChapters if the save fails and you need atomicity
                 }
             }

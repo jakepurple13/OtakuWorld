@@ -1,9 +1,9 @@
 package com.programmersbox.uiviews.datastore
 
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
+import com.programmersbox.kmpuiviews.telemetry.koinCrashReporter
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.NewSettingsHandling
-import com.programmersbox.kmpuiviews.recordFirebaseException
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.serialization.json.Json
 
@@ -37,7 +37,7 @@ enum class RemoteConfigKeys(val key: String) {
                         .forEach { newSettingsHandling.addCustomUrl(it) }
                 }.onFailure {
                     it.printStackTrace()
-                    recordFirebaseException(it)
+                    koinCrashReporter().recordException(it)
                 }
             }
         }

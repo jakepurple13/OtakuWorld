@@ -1,11 +1,11 @@
 package com.programmersbox.kmpuiviews.receivers
 
 import android.app.Notification
+import com.programmersbox.kmpuiviews.telemetry.koinCrashReporter
 import android.app.NotificationManager
 import android.content.Context
 import androidx.core.content.getSystemService
 import com.programmersbox.favoritesdatabase.ItemDao
-import com.programmersbox.kmpuiviews.recordFirebaseException
 import com.programmersbox.kmpuiviews.utils.NotificationGroups
 import com.programmersbox.kmpuiviews.utils.printLogs
 
@@ -19,7 +19,7 @@ suspend fun clearUpdateNotification(context: Context?, dao: ItemDao, url: String
         url?.let { dao.getNotificationItem(it) }
             .also { printLogs { it } }
             ?.let { dao.deleteNotification(it) }
-    }.onFailure { recordFirebaseException(it) }
+    }.onFailure { koinCrashReporter().recordException(it) }
     id?.let { if (it != -1) notificationManager?.cancel(it) }
     notificationManager?.cancelUpdateSummaryIfEmpty(cancelledId = id)
 }

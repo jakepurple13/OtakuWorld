@@ -1,0 +1,259 @@
+<title>Privacy &amp; Security Mockup</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Roboto+Flex:opsz,wght@8..144,400;8..144,500;8..144,600&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+/* Layout: two phone frames side by side (option A, option B), stacked at phone width; notes under each. Phone colors follow an M3 dark-teal scheme. */
+:root {
+  --bg: #f6f7f9; --fg: #1a1f2b; --muted: #5b6475; --line: #d9dde5; --accent: #0f7b74; --card: #ffffff;
+  --m-surface: #f4fbf9; --m-container: #ffffff; --m-on: #161d1c; --m-on-var: #3f4947; --m-primary: #006a63;
+  --m-on-primary: #ffffff; --m-track-off: #dae5e2; --m-thumb-off: #6f7977; --m-outline: #6f7977; --m-sec: #cce8e3;
+  --font-ui: "Roboto Flex", Roboto, system-ui, sans-serif;
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12151c; --fg: #e5e8ef; --muted: #9aa3b5; --line: #2e3442; --accent: #4cc7bc; --card: #1a1e27;
+    --m-surface: #0e1514; --m-container: #1a2120; --m-on: #dde4e2; --m-on-var: #bec9c6; --m-primary: #80d5cb;
+    --m-on-primary: #003733; --m-track-off: #2f3634; --m-thumb-off: #899390; --m-outline: #899390; --m-sec: #334b48; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12151c; --fg: #e5e8ef; --muted: #9aa3b5; --line: #2e3442; --accent: #4cc7bc; --card: #1a1e27;
+  --m-surface: #0e1514; --m-container: #1a2120; --m-on: #dde4e2; --m-on-var: #bec9c6; --m-primary: #80d5cb;
+  --m-on-primary: #003733; --m-track-off: #2f3634; --m-thumb-off: #899390; --m-outline: #899390; --m-sec: #334b48; color-scheme: dark;
+}
+body { background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 76rem; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 36px 72px; display: grid; gap: 32px; }
+h1, h2 { font-family: var(--font-display); margin: 0; text-wrap: balance; }
+h1 { font-size: 1.8rem; } h2 { font-size: 1.15rem; }
+p { margin: 0; max-width: 64ch; }
+code { font-family: var(--font-mono); font-size: .85em; }
+.eyebrow { font-family: var(--font-mono); font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.options { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 28px; }
+.opt { display: grid; gap: 14px; align-content: start; min-width: 0; }
+.opt header { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.tag { font-family: var(--font-mono); font-size: .72rem; padding: 2px 8px; border-radius: 999px; background: var(--accent); color: var(--bg); }
+.notes { margin: 0; padding-left: 18px; display: grid; gap: 6px; color: var(--muted); font-size: .9rem; }
+
+/* phone */
+.phone { width: 100%; max-width: 360px; border-radius: 28px; border: 8px solid var(--fg); background: var(--m-surface); color: var(--m-on); overflow: hidden; justify-self: center; }
+.screen { height: 640px; overflow-y: auto; position: relative; }
+.status { height: 24px; display: flex; justify-content: space-between; padding: 4px 18px; font-size: 12px; color: var(--m-on-var); }
+.bar { display: flex; align-items: center; gap: 12px; padding: 8px 8px 4px; }
+.bar .ib { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; border: 0; background: none; color: var(--m-on); cursor: pointer; }
+.bar h3 { margin: 0; font-size: 22px; font-weight: 400; font-family: var(--font-ui); }
+.content { padding: 12px 16px 24px; display: grid; gap: 16px; }
+.label { font-size: 14px; font-weight: 500; color: var(--m-primary); padding: 4px 4px 0; }
+.group { display: grid; gap: 2px; }
+.row { background: var(--m-container); display: flex; align-items: center; gap: 16px; padding: 14px 16px; min-height: 56px; border-radius: 4px; cursor: pointer; border: 0; width: 100%; text-align: left; font: inherit; color: inherit; }
+.group .row:first-child { border-radius: 20px 20px 4px 4px; }
+.group .row:last-child { border-radius: 4px 4px 20px 20px; }
+.group .row:only-child { border-radius: 20px; }
+.row svg { flex: none; width: 24px; height: 24px; fill: var(--m-on-var); }
+.row .txt { flex: 1 1 auto; min-width: 0; display: grid; gap: 2px; }
+.row .t { font-size: 16px; }
+.row .s { font-size: 13.5px; color: var(--m-on-var); line-height: 1.35; }
+.row .chev { width: 20px; height: 20px; }
+.row:focus-visible, .sw:focus-visible { outline: 2px solid var(--m-primary); outline-offset: 2px; }
+.footnote { font-size: 12.5px; color: var(--m-on-var); padding: 0 4px; line-height: 1.4; }
+.footnote code { font-size: 11.5px; }
+
+/* M3 switch */
+.sw { flex: none; position: relative; width: 52px; height: 32px; border-radius: 16px; border: 2px solid var(--m-outline); background: var(--m-track-off); transition: background .2s, border-color .2s; }
+.sw::after { content: ""; position: absolute; top: 50%; left: 6px; width: 16px; height: 16px; border-radius: 50%; background: var(--m-thumb-off); transform: translateY(-50%); transition: left .25s cubic-bezier(.2,0,0,1), width .25s cubic-bezier(.2,0,0,1), height .25s cubic-bezier(.2,0,0,1), background .2s; }
+.sw[aria-checked="true"] { background: var(--m-primary); border-color: var(--m-primary); }
+.sw[aria-checked="true"]::after { left: 22px; width: 24px; height: 24px; background: var(--m-on-primary); }
+.hint { overflow: hidden; display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s cubic-bezier(.2,0,0,1); }
+.hint > div { min-height: 0; }
+.hint.show { grid-template-rows: 1fr; }
+.chipline { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 4px; }
+.mchip { font-size: 12.5px; padding: 4px 10px; border-radius: 8px; background: var(--m-sec); color: var(--m-on); }
+.mchip.never { background: none; border: 1px solid var(--m-outline); color: var(--m-on-var); text-decoration: line-through; text-decoration-color: var(--m-outline); }
+.sent { display: grid; gap: 8px; padding-top: 4px; transition: opacity .3s; }
+.sent.off { opacity: .4; }
+
+/* option B sub-screen slide */
+.stack { position: relative; height: 616px; overflow: hidden; }
+.page { position: absolute; inset: 0; overflow-y: auto; transition: transform .35s cubic-bezier(.2,0,0,1), opacity .35s; background: var(--m-surface); }
+.page.sub { transform: translateX(100%); }
+.stack.open .page.main { transform: translateX(-25%); opacity: .4; }
+.stack.open .page.sub { transform: translateX(0); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+.mapping { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; display: grid; gap: 8px; }
+.mapping ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+</style>
+
+<div class="wrap">
+  <header style="display:grid;gap:10px">
+    <div class="eyebrow">Telemetry · screen preview · full flavor</div>
+    <h1>Privacy &amp; Security Mockup</h1>
+    <p>Two ways to add the usage and crash toggles. Tap the switches and rows. Both are interactive. In <code>noFirebase</code> builds the new group is hidden and the screen looks like today.</p>
+  </header>
+
+  <div class="options">
+    <!-- Option C -->
+    <section class="opt">
+      <header><h2>C · Inline group + what's sent</h2><span class="tag">your pick</span></header>
+      <div class="phone"><div class="screen">
+        <div class="status"><span>9:41</span><span>●●● 82%</span></div>
+        <div class="bar">
+          <button class="ib" aria-label="Back"><svg width="24" height="24" viewBox="0 0 24 24" style="fill:currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20z"/></svg></button>
+          <h3>Privacy &amp; Security</h3>
+        </div>
+        <div class="content">
+          <div class="group">
+            <button class="row"><svg viewBox="0 0 24 24"><path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5z"/></svg><span class="txt"><span class="t">Biometric Lock</span></span></button>
+            <button class="row"><svg viewBox="0 0 24 24"><path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92A11.8 11.8 0 0 0 23 12c-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7M2 4.27l2.28 2.28.46.46A11.8 11.8 0 0 0 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3z"/></svg><span class="txt"><span class="t">Incognito Sources</span></span></button>
+          </div>
+
+          <div class="label">Usage &amp; crash data</div>
+          <div class="group">
+            <div class="row" data-toggle="c1"><svg viewBox="0 0 24 24"><path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/></svg><span class="txt"><span class="t">Share usage analytics</span><span class="s">Which features get used.</span></span><span class="sw" role="switch" tabindex="0" aria-checked="true" aria-label="Share usage analytics"></span></div>
+            <div class="row" data-toggle="c2"><svg viewBox="0 0 24 24"><path d="M20 8h-2.81a6 6 0 0 0-1.82-1.96L17 4.41 15.59 3l-2.17 2.17a6 6 0 0 0-2.83 0L8.41 3 7 4.41l1.62 1.63C7.88 6.55 7.26 7.22 6.81 8H4v2h2.09c-.05.33-.09.66-.09 1v1H4v2h2v1c0 .34.04.67.09 1H4v2h2.81c1.04 1.79 2.97 3 5.19 3s4.15-1.21 5.19-3H20v-2h-2.09c.05-.33.09-.66.09-1v-1h2v-2h-2v-1c0-.34-.04-.67-.09-1H20zm-6 8h-4v-2h4zm0-4h-4v-2h4z"/></svg><span class="txt"><span class="t">Send crash reports</span><span class="s">Helps fix bugs faster.</span></span><span class="sw" role="switch" tabindex="0" aria-checked="true" aria-label="Send crash reports"></span></div>
+          </div>
+          <div class="hint" id="c2hint"><div><p class="footnote">Crash reporting turns off the next time the app starts.</p></div></div>
+          <div class="sent" id="cSentA">
+            <p class="footnote" style="font-weight:500;color:var(--m-on)">Usage analytics sends</p>
+            <div class="chipline"><span class="mchip">Features used</span><span class="mchip">Screen names</span><span class="mchip">Source &amp; extension names</span><span class="mchip">Settings choices</span><span class="mchip">Rounded counts</span><span class="mchip">Rounded durations</span><span class="mchip">AI engine used</span></div>
+          </div>
+          <div class="sent" id="cSentC">
+            <p class="footnote" style="font-weight:500;color:var(--m-on)">Crash reports send</p>
+            <div class="chipline"><span class="mchip">Crash stack trace</span><span class="mchip">Recent app steps</span><span class="mchip">Current screen</span><span class="mchip">Current source</span><span class="mchip">App version</span><span class="mchip">Commit</span><span class="mchip">Build type</span></div>
+          </div>
+          <div class="sent" id="cSentF">
+            <p class="footnote" style="font-weight:500;color:var(--m-on)">Firebase adds to both</p>
+            <div class="chipline"><span class="mchip">Device model</span><span class="mchip">Android version</span><span class="mchip">Language</span><span class="mchip">Country (from IP)</span><span class="mchip">App instance ID</span></div>
+          </div>
+          <div class="sent">
+            <p class="footnote" style="font-weight:500;color:var(--m-on)">Never sent</p>
+            <div class="chipline"><span class="mchip never">Titles</span><span class="mchip never">Links</span><span class="mchip never">Searches</span><span class="mchip never">Notes</span><span class="mchip never">List names</span><span class="mchip never">Account email</span><span class="mchip never">Files</span></div>
+          </div>
+          <div class="group">
+            <a class="row" href="https://github.com/jakepurple13/OtakuWorld/blob/develop/TELEMETRY.md" target="_blank" rel="noopener" style="text-decoration:none"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8zm2 16H8v-2h8zm0-4H8v-2h8zm-3-5V3.5L18.5 9z"/></svg><span class="txt"><span class="t">Full details</span><span class="s">Every event and field, on GitHub</span></span><svg class="chev" viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3z"/></svg></a>
+          </div>
+        </div>
+      </div></div>
+      <ul class="notes">
+        <li>A's layout, with B's "what gets sent" chips under the switches.</li>
+        <li>Subtitles get shorter because the chips carry the detail.</li>
+        <li>Chips grouped by switch. Turning a switch off fades its group; Firebase's group fades when both are off.</li>
+        <li>"Full details" opens <code>TELEMETRY.md</code> on GitHub, which lists every event and field.</li>
+      </ul>
+    </section>
+
+    <!-- Option A -->
+    <section class="opt">
+      <header><h2>A · Inline group</h2></header>
+      <div class="phone"><div class="screen">
+        <div class="status"><span>9:41</span><span>●●● 82%</span></div>
+        <div class="bar">
+          <button class="ib" aria-label="Back"><svg width="24" height="24" viewBox="0 0 24 24" style="fill:currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20z"/></svg></button>
+          <h3>Privacy &amp; Security</h3>
+        </div>
+        <div class="content">
+          <div class="group">
+            <button class="row"><svg viewBox="0 0 24 24"><path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5z"/></svg><span class="txt"><span class="t">Biometric Lock</span></span></button>
+            <button class="row"><svg viewBox="0 0 24 24"><path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92A11.8 11.8 0 0 0 23 12c-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7M2 4.27l2.28 2.28.46.46A11.8 11.8 0 0 0 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2"/></svg><span class="txt"><span class="t">Incognito Sources</span></span></button>
+          </div>
+
+          <div class="label">Usage &amp; crash data</div>
+          <div class="group">
+            <div class="row" data-toggle="a1"><svg viewBox="0 0 24 24"><path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/></svg><span class="txt"><span class="t">Share usage analytics</span><span class="s">Which features get used. Never titles, links, or searches.</span></span><span class="sw" role="switch" tabindex="0" aria-checked="true" aria-label="Share usage analytics"></span></div>
+            <div class="row" data-toggle="a2"><svg viewBox="0 0 24 24"><path d="M20 8h-2.81a6 6 0 0 0-1.82-1.96L17 4.41 15.59 3l-2.17 2.17a6 6 0 0 0-2.83 0L8.41 3 7 4.41l1.62 1.63C7.88 6.55 7.26 7.22 6.81 8H4v2h2.09c-.05.33-.09.66-.09 1v1H4v2h2v1c0 .34.04.67.09 1H4v2h2.81c1.04 1.79 2.97 3 5.19 3s4.15-1.21 5.19-3H20v-2h-2.09c.05-.33.09-.66.09-1v-1h2v-2h-2v-1c0-.34-.04-.67-.09-1H20zm-6 8h-4v-2h4zm0-4h-4v-2h4z"/></svg><span class="txt"><span class="t">Send crash reports</span><span class="s">Crash logs with app version and commit, to fix bugs faster.</span></span><span class="sw" role="switch" tabindex="0" aria-checked="true" aria-label="Send crash reports"></span></div>
+          </div>
+          <div class="hint" id="a2hint"><div><p class="footnote">Crash reporting turns off the next time the app starts.</p></div></div>
+          <p class="footnote">Off in this build? <code>noFirebase</code> sends nothing and hides this group.</p>
+        </div>
+      </div></div>
+      <ul class="notes">
+        <li>One glance shows both choices. No extra screen.</li>
+        <li>Subtitle states the privacy rule in plain words.</li>
+        <li>Turning crash reports off reveals a one-line hint: Crashlytics applies <code>setCrashlyticsCollectionEnabled(false)</code> on next launch.</li>
+      </ul>
+    </section>
+
+    <!-- Option B -->
+    <section class="opt">
+      <header><h2>B · Sub-screen</h2></header>
+      <div class="phone"><div class="screen" style="overflow:hidden">
+        <div class="status"><span>9:41</span><span>●●● 82%</span></div>
+        <div class="stack" id="stackB">
+          <div class="page main">
+            <div class="bar">
+              <button class="ib" aria-label="Back"><svg width="24" height="24" viewBox="0 0 24 24" style="fill:currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20z"/></svg></button>
+              <h3>Privacy &amp; Security</h3>
+            </div>
+            <div class="content">
+              <div class="group">
+                <button class="row"><svg viewBox="0 0 24 24"><path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5z"/></svg><span class="txt"><span class="t">Biometric Lock</span></span></button>
+                <button class="row"><svg viewBox="0 0 24 24"><path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92A11.8 11.8 0 0 0 23 12c-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7M2 4.27l2.28 2.28.46.46A11.8 11.8 0 0 0 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3z"/></svg><span class="txt"><span class="t">Incognito Sources</span></span></button>
+                <button class="row" id="openB"><svg viewBox="0 0 24 24"><path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/></svg><span class="txt"><span class="t">Usage &amp; crash data</span><span class="s" id="bSummary">Analytics on · Crash reports on</span></span><svg class="chev" viewBox="0 0 24 24"><path d="M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></button>
+              </div>
+            </div>
+          </div>
+          <div class="page sub">
+            <div class="bar">
+              <button class="ib" id="closeB" aria-label="Back"><svg width="24" height="24" viewBox="0 0 24 24" style="fill:currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20z"/></svg></button>
+              <h3>Usage &amp; crash data</h3>
+            </div>
+            <div class="content">
+              <div class="group">
+                <div class="row" data-toggle="b1"><span class="txt"><span class="t">Share usage analytics</span><span class="s">Which features get used.</span></span><span class="sw" role="switch" tabindex="0" aria-checked="true" aria-label="Share usage analytics"></span></div>
+                <div class="row" data-toggle="b2"><span class="txt"><span class="t">Send crash reports</span><span class="s">Takes effect next app start.</span></span><span class="sw" role="switch" tabindex="0" aria-checked="true" aria-label="Send crash reports"></span></div>
+              </div>
+              <div class="label">What gets sent</div>
+              <div class="chipline"><span class="mchip">Source names</span><span class="mchip">Feature used</span><span class="mchip">Counts</span><span class="mchip">App version</span><span class="mchip">Commit</span><span class="mchip">Device model</span></div>
+              <div class="label">Never sent</div>
+              <div class="chipline"><span class="mchip">Titles</span><span class="mchip">Links</span><span class="mchip">Searches</span><span class="mchip">Notes</span><span class="mchip">List names</span></div>
+            </div>
+          </div>
+        </div>
+      </div></div>
+      <ul class="notes">
+        <li>Room to explain what is and isn't sent.</li>
+        <li>Costs a new <code>Screen</code> entry, nav action, and settings-search entry.</li>
+        <li>Summary line on the row shows current state.</li>
+      </ul>
+    </section>
+  </div>
+
+  <div class="mapping">
+    <h2>Compose mapping</h2>
+    <ul>
+      <li>Rows: existing <code>CategoryGroupListItem { segmentedListItem(…) }</code> with <code>trailingContent = { Switch(…) }</code> and <code>supportingContent</code> for the subtitle.</li>
+      <li>Group label: same style as other settings section headers.</li>
+      <li>Crash hint: <code>AnimatedVisibility(expandVertically() + fadeIn())</code> under the group, shown when the crash switch is off.</li>
+      <li>Option B slide: Navigation3 default push transition.</li>
+      <li>Visibility: group renders only when <code>koinInject&lt;CrashReporter&gt;().isAvailable</code>, which is false for the no-op implementations.</li>
+      <li>Settings search: register both toggles in <code>SettingsSearchRegistry</code> so "analytics" and "crash" find them.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll("[data-toggle]").forEach(row => {
+  const sw = row.querySelector(".sw");
+  const flip = () => {
+    const on = sw.getAttribute("aria-checked") !== "true";
+    sw.setAttribute("aria-checked", String(on));
+    const id = row.dataset.toggle;
+    if (id === "a2" || id === "c2") document.getElementById(id + "hint").classList.toggle("show", !on);
+    if (id[0] === "c") {
+      const c1 = document.querySelector('[data-toggle="c1"] .sw').getAttribute("aria-checked") === "true";
+      const c2 = document.querySelector('[data-toggle="c2"] .sw').getAttribute("aria-checked") === "true";
+      document.getElementById("cSentA").classList.toggle("off", !c1);
+      document.getElementById("cSentC").classList.toggle("off", !c2);
+      document.getElementById("cSentF").classList.toggle("off", !c1 && !c2);
+    }
+    const b1 = document.querySelector('[data-toggle="b1"] .sw').getAttribute("aria-checked") === "true";
+    const b2 = document.querySelector('[data-toggle="b2"] .sw').getAttribute("aria-checked") === "true";
+    document.getElementById("bSummary").textContent = `Analytics ${b1 ? "on" : "off"} · Crash reports ${b2 ? "on" : "off"}`;
+  };
+  row.addEventListener("click", flip);
+  sw.addEventListener("keydown", e => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); flip(); } });
+});
+document.getElementById("openB").addEventListener("click", () => document.getElementById("stackB").classList.add("open"));
+document.getElementById("closeB").addEventListener("click", () => document.getElementById("stackB").classList.remove("open"));
+</script>

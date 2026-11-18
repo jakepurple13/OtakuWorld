@@ -15,6 +15,7 @@ android {
     }
 
     defaultConfig {
+        consumerProguardFiles("consumer-rules.pro")
         buildConfigField(
             type = "Boolean",
             name = "IS_PRERELEASE",
@@ -47,7 +48,7 @@ dependencies {
     androidTestImplementation(TestDeps.androidEspresso)
 
     implementation(platform(androidLibs.firebasePlatform))
-    implementation(androidLibs.bundles.firebaseCrashLibs)
+    implementation(androidLibs.firebase.perf)
 
     api(platform(commonLibs.koin.bom))
     api(androidLibs.bundles.koinLibs)
@@ -59,6 +60,7 @@ dependencies {
     implementation(projects.sharedutils)
     api(projects.datastore)
     api(projects.kmpuiviews)
+    implementation(projects.telemetry.android)
 
     //Extension Loader
     api(projects.sharedutils.kmpextensionloader)

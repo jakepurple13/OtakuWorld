@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.workers
 
 import android.Manifest
+import com.programmersbox.kmpuiviews.telemetry.koinCrashReporter
 import android.annotation.SuppressLint
 import android.content.Context
 import androidx.core.app.NotificationCompat
@@ -17,7 +18,6 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
-import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.repository.DownloadAndInstallState
 import com.programmersbox.kmpuiviews.utils.ConfirmationType
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus
@@ -44,7 +44,7 @@ class DownloadAndInstallWorker(
     override suspend fun doWork(): Result {
         val url = inputData.getString("url") ?: return Result.failure()
 
-        logFirebaseMessage("Downloading and installing")
+        koinCrashReporter().log("Downloading and installing")
 
         //TODO: Need to fix so it doesn't start up again when the app starts up after an update
 
@@ -226,7 +226,7 @@ class DownloadWorker(
     override suspend fun doWork(): Result {
         val url = inputData.getString("url") ?: return Result.failure()
 
-        logFirebaseMessage("Downloading and installing")
+        koinCrashReporter().log("Downloading and installing")
 
         //TODO: Need to fix so it doesn't start up again when the app starts up after an update
 
@@ -406,7 +406,7 @@ class InstallWorker(
 
         val notificationId = inputData.getInt("notification_id", NOTIFICATION_ID + urlString.hashCode())
 
-        logFirebaseMessage("Downloading and installing")
+        koinCrashReporter().log("Downloading and installing")
 
         //TODO: Need to fix so it doesn't start up again when the app starts up after an update
 

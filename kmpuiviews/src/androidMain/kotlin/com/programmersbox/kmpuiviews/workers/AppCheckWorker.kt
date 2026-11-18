@@ -1,14 +1,13 @@
 package com.programmersbox.kmpuiviews.workers
 
 import android.app.NotificationManager
+import com.programmersbox.kmpuiviews.telemetry.koinCrashReporter
 import android.content.Context
 import androidx.core.content.getSystemService
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.programmersbox.kmpuiviews.appVersion
 import com.programmersbox.kmpuiviews.domain.AppUpdate
-import com.programmersbox.kmpuiviews.logFirebaseMessage
-import com.programmersbox.kmpuiviews.recordFirebaseException
 import com.programmersbox.kmpuiviews.utils.NotificationChannels
 import com.programmersbox.kmpuiviews.utils.NotificationDslBuilder
 import com.programmersbox.kmpuiviews.utils.NotificationLogo
@@ -27,7 +26,7 @@ class AppCheckWorker(
     override suspend fun doWork(): Result {
         return try {
             val f = withTimeoutOrNull(60000) { AppUpdate.getUpdate()?.updateRealVersion.orEmpty() }
-            logFirebaseMessage("Current Version: $f")
+            koinCrashReporter().log("Current Version: $f")
             val appVersion = applicationContext.appVersion
             if (f != null && AppUpdate.checkForUpdate(appVersion, f)) {
                 val n = NotificationDslBuilder.builder(
@@ -42,7 +41,7 @@ class AppCheckWorker(
             }
             Result.success()
         } catch (e: Exception) {
-            recordFirebaseException(e)
+            koinCrashReporter().recordException(e)
             Result.success()
         }
     }
