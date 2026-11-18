@@ -10,7 +10,9 @@ import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.JvmAppLogo
 import com.programmersbox.manga.shared.downloads.DownloadedMediaHandler
 import com.programmersbox.manga.shared.downloads.MangaDownloadManager
+import com.programmersbox.kmpuiviews.presentation.shortcuts.ShortcutSection
 import com.programmersbox.manga.shared.mangaSharedModule
+import com.programmersbox.manga.shared.reader.readerShortcutSection
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangasettings.MangaNewSettingsSerializer
 import com.programmersbox.mihon.mihonModule
@@ -20,6 +22,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.qualifier.named
 import org.koin.dsl.navigation3.navigation
 import java.io.File
 
@@ -68,6 +71,8 @@ fun main(args: Array<String>) {
                     )
                 )
             }
+
+            single<ShortcutSection>(named("mangaReaderShortcuts")) { readerShortcutSection() }
 
             navigation<PlatformSettings> { JvmSettingsScreen() }
 
