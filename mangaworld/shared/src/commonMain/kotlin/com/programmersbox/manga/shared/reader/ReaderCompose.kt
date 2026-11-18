@@ -98,6 +98,17 @@ import net.engawapg.lib.zoomable.zoomableWithScroll
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.math.absoluteValue
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.pointerInput
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalZoomableApi::class, ExperimentalPageCurlApi::class)
 @ExperimentalMaterial3Api
@@ -382,6 +393,81 @@ private fun ReadViewContent(
         }
     }
 
+    val platformActions = rememberReaderPlatformActions()
+    val readerFocus = remember { FocusRequester() }
+    LaunchedEffect(Unit) {
+        // The focus target may not be attached during the navigation transition, so retry for a few frames
+        repeat(READER_FOCUS_ATTEMPTS) {
+            withFrameNanos {}
+            if (readerFocus.requestFocus()) return@LaunchedEffect
+        }
+    }
+
+    fun stepPage(forward: Boolean) {
+        scope.launch {
+            when (readerType) {
+                ReaderType.List -> {
+                    val first = listState.firstVisibleItemIndex
+                    val target = when {
+                        forward -> first + 1
+                        listState.firstVisibleItemScrollOffset > 0 -> first
+                        else -> first - 1
+                    }
+                    listState.animateScrollToItem(target.coerceIn(0, (viewModel.pageItems.size - 1).coerceAtLeast(0)))
+                }
+
+                ReaderType.Pager, ReaderType.FlipPager ->
+                    pagerState.animateScrollToPage(pagerState.currentPage + if (forward) 1 else -1)
+
+                ReaderType.CurlPager -> when {
+                    forward && curlState.current < pagesInCurrentChapter - 1 -> curlState.next()
+                    !forward && curlState.current > 0 -> curlState.prev()
+                }
+            }
+        }
+    }
+
+    fun onReaderKey(action: ReaderKeyAction): Boolean {
+        when (action) {
+            ReaderKeyAction.NextPage -> stepPage(forward = true)
+            ReaderKeyAction.PreviousPage -> stepPage(forward = false)
+            ReaderKeyAction.ScreenDown, ReaderKeyAction.ScreenUp -> {
+                val down = action == ReaderKeyAction.ScreenDown
+                if (readerType == ReaderType.List) {
+                    val distance = listState.layoutInfo.viewportSize.height * SCREEN_SCROLL_FRACTION
+                    scope.launch { listState.animateScrollBy(if (down) distance else -distance) }
+                } else {
+                    stepPage(forward = down)
+                }
+            }
+
+            ReaderKeyAction.FirstPage -> jumpToPage(0)
+            ReaderKeyAction.LastPage -> jumpToPage(pagesInCurrentChapter - 1)
+            ReaderKeyAction.NextChapter -> if (viewModel.currentChapter > 0 && viewModel.chapterCount > 1) {
+                viewModel.loadNextChapter { onChapterChange(it, isNext = true) }
+            }
+
+            ReaderKeyAction.PreviousChapter -> if (viewModel.currentChapter < viewModel.chapterCount - 1 && viewModel.chapterCount > 1) {
+                viewModel.loadPreviousChapter { onChapterChange(it, isNext = false) }
+            }
+
+            ReaderKeyAction.ChapterList -> scope.launch { drawerState.open() }
+            ReaderKeyAction.PageGrid -> showBottomSheet = true
+            ReaderKeyAction.Bookmark -> if (!viewModel.currentChapterIsDownloaded) viewModel.toggleBookmark(!isBookmarked)
+            ReaderKeyAction.SwitchMode -> readerType = readerType.nextReaderType()
+            ReaderKeyAction.ToggleBars -> viewModel.showInfo = !viewModel.showInfo
+            ReaderKeyAction.Fullscreen -> platformActions.toggleFullscreen?.invoke() ?: return false
+            ReaderKeyAction.Settings -> settingsPopup = true
+            ReaderKeyAction.ShortcutsList -> platformActions.openShortcuts?.invoke() ?: return false
+            ReaderKeyAction.Escape -> when {
+                drawerState.isOpen -> scope.launch { drawerState.close() }
+                platformActions.exitFullscreen() -> Unit
+                else -> navActions.popBackStack()
+            }
+        }
+        return true
+    }
+
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -418,6 +504,22 @@ private fun ReadViewContent(
         }
 
         Scaffold(
+            modifier = Modifier
+                // Any press puts the keyboard back on the reader, e.g. after a bar button took focus
+                .pointerInput(Unit) {
+                    awaitPointerEventScope {
+                        while (true) {
+                            val event = awaitPointerEvent(PointerEventPass.Initial)
+                            if (event.type == PointerEventType.Press) readerFocus.requestFocus()
+                        }
+                    }
+                }
+                .onPreviewKeyEvent { event ->
+                    event.type == KeyEventType.KeyDown &&
+                            event.readerKeyAction(readerType)?.let(::onReaderKey) == true
+                }
+                .focusRequester(readerFocus)
+                .focusable(),
             topBar = {
                 AnimatedVisibility(
                     visible = showItems,
@@ -668,6 +770,23 @@ private fun ReadViewContent(
                     }
                 }
 
+                if (isWidthAdjustable) {
+                    ReaderRail(
+                        readerType = readerType,
+                        viewModel = viewModel,
+                        listState = listState,
+                        pagerState = pagerState,
+                        curlState = curlState,
+                        pagesInCurrentChapter = pagesInCurrentChapter,
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .padding(
+                                top = p.calculateTopPadding() + 8.dp,
+                                bottom = p.calculateBottomPadding() + 8.dp,
+                            )
+                    )
+                }
+
                 PageIndicatorOverlay(
                     style = pageIndicatorStyle,
                     currentPage = currentPage,
@@ -888,6 +1007,10 @@ private fun LazyListScope.reader(
 }
 
 private const val PREFETCH_AHEAD = 3
+private const val READER_FOCUS_ATTEMPTS = 5
+
+/** PgDn/PgUp scroll this share of the screen, leaving a little overlap to keep your place. */
+private const val SCREEN_SCROLL_FRACTION = 0.85f
 
 /**
  * Lazy keys that survive items being trimmed from the front of [pageItems] (unlike list indices),
