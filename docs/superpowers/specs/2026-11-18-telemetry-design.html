@@ -1,0 +1,499 @@
+<title>OtakuWorld Telemetry Plan</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+/* Layout: single reading column (~72rem) for prose, full-width tables for the catalog; sticky filter bar over the event list. */
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --sunken: #eef0f4;
+  --fg: #1a1f2b;
+  --muted: #5b6475;
+  --line: #d9dde5;
+  --accent: #0f7b74;
+  --accent-soft: #d8efec;
+  --useful: #3d5a99;
+  --useful-soft: #e1e7f5;
+  --nice: #7a6a4f;
+  --nice-soft: #efe9de;
+  --warn: #9a4b10;
+  --warn-soft: #fbeadb;
+  --code-bg: #f1f3f7;
+  --font-display: "Space Grotesk", "IBM Plex Sans", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12151c; --surface: #1a1e27; --sunken: #20252f; --fg: #e5e8ef; --muted: #9aa3b5; --line: #2e3442;
+    --accent: #4cc7bc; --accent-soft: #173b39; --useful: #93abe6; --useful-soft: #232d45; --nice: #cdb68c; --nice-soft: #352e22;
+    --warn: #f0a46a; --warn-soft: #3a2615; --code-bg: #161a22; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12151c; --surface: #1a1e27; --sunken: #20252f; --fg: #e5e8ef; --muted: #9aa3b5; --line: #2e3442;
+  --accent: #4cc7bc; --accent-soft: #173b39; --useful: #93abe6; --useful-soft: #232d45; --nice: #cdb68c; --nice-soft: #352e22;
+  --warn: #f0a46a; --warn-soft: #3a2615; --code-bg: #161a22; color-scheme: dark;
+}
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.55; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.wrap { max-width: 72rem; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 40px 80px; display: grid; gap: 56px; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; line-height: 1.2; margin: 0; }
+h1 { font-size: 2.1rem; font-weight: 600; }
+h2 { font-size: 1.45rem; font-weight: 600; }
+h3 { font-size: 1.05rem; font-weight: 600; }
+p { margin: 0; max-width: 68ch; }
+code, .mono { font-family: var(--font-mono); font-size: 0.88em; }
+:not(pre) > code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+a { color: var(--accent); }
+section { display: grid; gap: 18px; min-width: 0; }
+.eyebrow { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+header.top { display: grid; gap: 12px; }
+header.top p { color: var(--muted); font-size: 1.05rem; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px; }
+.fact { font-family: var(--font-mono); font-size: 0.8rem; padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); background: var(--surface); }
+.fact b { color: var(--fg); font-weight: 500; }
+
+.diagram { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+.diagram svg { display: block; min-width: 680px; width: 100%; height: auto; }
+.diagram text { font-family: var(--font-body); fill: var(--fg); }
+.diagram .mono { font-family: var(--font-mono); }
+.diagram .sub { fill: var(--muted); }
+.b-out { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+.b-kmp { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+.b-and { fill: var(--sunken); stroke: var(--muted); stroke-width: 1.2; }
+.b-full { fill: var(--warn-soft); stroke: var(--warn); stroke-width: 1.2; }
+.b-chip { fill: var(--surface); stroke: var(--line); stroke-width: 1; }
+.arrow { stroke: var(--muted); stroke-width: 1.5; fill: none; }
+.arrowhead { fill: var(--muted); }
+
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 16px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.panel ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+pre { margin: 0; background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; overflow-x: auto; font-family: var(--font-mono); font-size: 0.82rem; line-height: 1.55; }
+pre .k { color: var(--accent); }
+pre .c { color: var(--muted); }
+
+.tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--font-mono); font-weight: 500; font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); background: var(--sunken); white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+td.name { font-family: var(--font-mono); font-size: 0.84rem; white-space: nowrap; }
+td.params { font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); }
+.strike { text-decoration: line-through; color: var(--muted); }
+
+.pill { display: inline-block; font-family: var(--font-mono); font-size: 0.72rem; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.p-core { background: var(--accent-soft); color: var(--accent); }
+.p-useful { background: var(--useful-soft); color: var(--useful); }
+.p-nice { background: var(--nice-soft); color: var(--nice); }
+.app { font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
+
+.rule { border-left: 3px solid var(--warn); background: var(--warn-soft); padding: 14px 16px; border-radius: 0 8px 8px 0; display: grid; gap: 6px; }
+.rule p { max-width: none; }
+
+.filterbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; border-bottom: 1px solid var(--line); }
+.filterbar .spacer { flex: 1 1 auto; }
+button.chip { font: inherit; font-size: 0.82rem; border: 1px solid var(--line); background: var(--surface); color: var(--fg); padding: 5px 12px; border-radius: 999px; cursor: pointer; }
+button.chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+button.primary { font: inherit; font-size: 0.85rem; font-weight: 500; border: 0; background: var(--accent); color: var(--bg); padding: 7px 14px; border-radius: 8px; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.count { font-family: var(--font-mono); font-size: 0.82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.area { display: grid; gap: 8px; }
+.area h3 { display: flex; gap: 10px; align-items: baseline; }
+.area h3 span { font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted); font-weight: 400; }
+td.pick { width: 28px; }
+td.pick input { width: 16px; height: 16px; accent-color: var(--accent); }
+#copyOut { width: 100%; font-family: var(--font-mono); font-size: 0.8rem; background: var(--code-bg); color: var(--fg); border: 1px solid var(--line); border-radius: 8px; padding: 10px; }
+ol.decisions { margin: 0; padding-left: 20px; display: grid; gap: 14px; }
+ol.decisions li p { margin-top: 4px; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+
+<header class="top">
+  <div class="eyebrow">Design proposal · 2026-11-18 · worktree-telemetry</div>
+  <h1>OtakuWorld Telemetry Plan</h1>
+  <p>A new <code>:telemetry</code> KMP module owns analytics, crash reporting and crash-log breadcrumbs. Firebase lives only in the <code>full</code> flavor of <code>:telemetry:android</code>. Everything else gets interfaces through Koin.</p>
+  <div class="facts">
+    <span class="fact">targets <b>android · jvm · ios</b></span>
+    <span class="fact">firebase in <b>full</b> only</span>
+    <span class="fact">desktop + iOS <b>no-op</b></span>
+    <span class="fact">~<b>100</b> call sites to migrate</span>
+  </div>
+</header>
+
+<section id="architecture">
+  <div class="eyebrow">1 · Architecture</div>
+  <h2>Two modules, one contract</h2>
+  <p>The KMP Android plugin (<code>com.android.kotlin.multiplatform.library</code>) has no product flavors, so <code>:telemetry</code> can't hold <code>noFirebase</code>/<code>full</code> source sets. The flavor split moves one level down into <code>:telemetry:android</code>, a plain Android library that copies the <code>sharedutils</code> flavor setup. Gradle matches flavors automatically when an app depends on it.</p>
+
+  <div class="diagram" role="img" aria-label="Module diagram: callers depend on :telemetry; :telemetry:android implements it with noFirebase and full flavors; apps pick a Koin module at startup.">
+    <svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="arrowhead"/></marker>
+      </defs>
+      <!-- callers -->
+      <rect x="20" y="16" width="760" height="64" rx="8" class="b-out"/>
+      <text x="40" y="42" font-size="15" font-weight="600">Callers</text>
+      <text x="40" y="64" font-size="13" class="sub mono">kmpuiviews · UIViews · mangaworld:shared · novelworld:shared · workers · ViewModels</text>
+      <text x="610" y="42" font-size="12" class="sub">inject Analytics /</text>
+      <text x="610" y="58" font-size="12" class="sub">CrashReporter via Koin</text>
+
+      <path d="M400 80 V 118" class="arrow" marker-end="url(#ah)"/>
+      <text x="410" y="104" font-size="12" class="sub">depends on interfaces only</text>
+
+      <!-- :telemetry -->
+      <rect x="20" y="122" width="760" height="140" rx="8" class="b-kmp"/>
+      <text x="40" y="148" font-size="15" font-weight="600" class="mono">:telemetry</text>
+      <text x="160" y="148" font-size="13" class="sub">KMP · otaku-multiplatform · android / jvm / ios</text>
+      <text x="40" y="176" font-size="12" class="sub mono">commonMain</text>
+      <rect x="40" y="186" width="118" height="30" rx="6" class="b-chip"/><text x="52" y="206" font-size="12" class="mono">Analytics</text>
+      <rect x="168" y="186" width="136" height="30" rx="6" class="b-chip"/><text x="180" y="206" font-size="12" class="mono">CrashReporter</text>
+      <rect x="314" y="186" width="140" height="30" rx="6" class="b-chip"/><text x="326" y="206" font-size="12" class="mono">AnalyticsEvent</text>
+      <rect x="464" y="186" width="148" height="30" rx="6" class="b-chip"/><text x="476" y="206" font-size="12" class="mono">NoOp* impls</text>
+      <rect x="622" y="186" width="140" height="30" rx="6" class="b-chip"/><text x="632" y="206" font-size="12" class="mono">TelemetryKeys</text>
+      <text x="40" y="244" font-size="12" class="sub">exports</text>
+      <text x="96" y="244" font-size="12" class="mono">noOpTelemetryModule</text>
+      <text x="262" y="244" font-size="12" class="sub">· jvmMain / iosMain stay empty (no-op comes from commonMain)</text>
+
+      <!-- :telemetry:android -->
+      <rect x="20" y="312" width="500" height="172" rx="8" class="b-and"/>
+      <text x="40" y="338" font-size="15" font-weight="600" class="mono">:telemetry:android</text>
+      <text x="212" y="338" font-size="13" class="sub">otaku-library · flavor dimension "version"</text>
+      <rect x="40" y="354" width="224" height="78" rx="6" class="b-chip"/>
+      <text x="54" y="376" font-size="12" class="mono" font-weight="500">src/noFirebase</text>
+      <text x="54" y="396" font-size="12" class="sub">binds NoOpAnalytics,</text>
+      <text x="54" y="413" font-size="12" class="sub">NoOpCrashReporter</text>
+      <rect x="278" y="354" width="226" height="78" rx="6" class="b-full"/>
+      <text x="292" y="376" font-size="12" class="mono" font-weight="500">src/full</text>
+      <text x="292" y="396" font-size="12" class="sub">FirebaseAnalyticsImpl,</text>
+      <text x="292" y="413" font-size="12" class="sub">CrashlyticsReporter</text>
+      <text x="40" y="460" font-size="12" class="sub">src/main exports</text>
+      <text x="150" y="460" font-size="12" class="mono">androidTelemetryModule</text>
+      <text x="40" y="476" font-size="11" class="sub">firebase-analytics + firebase-crashlytics are fullImplementation only</text>
+
+      <path d="M270 312 V 266" class="arrow" marker-end="url(#ah)"/>
+      <text x="280" y="294" font-size="12" class="sub">api(projects.telemetry)</text>
+
+      <!-- Koin start -->
+      <rect x="540" y="312" width="240" height="172" rx="8" class="b-out"/>
+      <text x="560" y="338" font-size="15" font-weight="600">Koin start</text>
+      <text x="560" y="366" font-size="12" class="sub">mangaworld · animeworld</text>
+      <text x="560" y="382" font-size="12" class="sub">novelworld · animeworldtv · app</text>
+      <text x="560" y="402" font-size="12" class="mono">androidTelemetryModule</text>
+      <text x="560" y="434" font-size="12" class="sub">mangaworld:desktop · iOS</text>
+      <text x="560" y="454" font-size="12" class="mono">noOpTelemetryModule</text>
+      <path d="M540 398 H 524" class="arrow" marker-end="url(#ah)"/>
+      <path d="M700 312 V 266" class="arrow" marker-end="url(#ah)"/>
+    </svg>
+  </div>
+
+  <div class="cols">
+    <div class="panel">
+      <h3>Why the app picks the Koin module</h3>
+      <p><code>:telemetry</code>'s <code>androidMain</code> can't depend on <code>:telemetry:android</code>, because that would be a cycle. So <code>kmpuiviews</code> sees only interfaces, and each app's Koin start includes the binding module for its platform. Gradle flavor matching decides whether the Android module is no-op or Firebase.</p>
+    </div>
+    <div class="panel">
+      <h3>What leaves other modules</h3>
+      <ul>
+        <li><code>firebaseCrashLibs</code> removed from <code>kmpuiviews</code> androidMain, <code>UIViews</code>, and the four app modules.</li>
+        <li><code>expect</code> <code>recordFirebaseException</code> / <code>logFirebaseMessage</code> / <code>analyticsScreen</code> deleted from <code>Platform.kt</code> and its three <code>actual</code>s.</li>
+        <li>Crashlytics keys and user properties in <code>OtakuApp.firebaseSetup()</code> move to <code>Telemetry.start()</code>.</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h3>Stays where it is</h3>
+      <ul>
+        <li>Crashlytics Gradle plugin and task disabling in <code>buildSrc</code> (it's per app).</li>
+        <li>Firebase Auth, Firestore, Remote Config, Performance. They aren't telemetry.</li>
+        <li><code>GlobalExceptionHandler</code> and <code>CrashActivity</code>. The handler only gains a <code>CrashReporter</code> call.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Contract (commonMain)</h3>
+  <pre><span class="k">interface</span> Analytics {
+    <span class="k">fun</span> log(event: AnalyticsEvent)
+    <span class="k">fun</span> screen(name: String)                      <span class="c">// replaces analyticsScreen()</span>
+    <span class="k">fun</span> setUserProperty(name: String, value: String?)
+    <span class="k">fun</span> setEnabled(enabled: Boolean)
+}
+
+<span class="k">interface</span> CrashReporter {
+    <span class="k">fun</span> log(message: String)                      <span class="c">// breadcrumb; replaces logFirebaseMessage(), also printLogs in debug</span>
+    <span class="k">fun</span> recordException(throwable: Throwable)     <span class="c">// non-fatal; replaces recordFirebaseException()</span>
+    <span class="k">fun</span> setKey(key: String, value: String)
+    <span class="k">fun</span> setEnabled(enabled: Boolean)
+}
+
+<span class="c">// Typed events: one class per catalog row, so names and params are compile-checked.</span>
+<span class="k">sealed class</span> AnalyticsEvent(<span class="k">val</span> name: String, <span class="k">val</span> params: Map&lt;String, Any&gt; = emptyMap()) {
+    <span class="k">data class</span> ChapterOpened(<span class="k">val</span> source: String, <span class="k">val</span> mediaType: String, <span class="k">val</span> from: OpenedFrom) :
+        AnalyticsEvent(<span class="k">"chapter_opened"</span>, mapOf(<span class="k">"source"</span> to source, <span class="k">"media_type"</span> to mediaType, <span class="k">"from"</span> to from.key))
+    <span class="c">// …</span>
+}
+
+<span class="c">// Call sites</span>
+<span class="k">class</span> DetailsViewModel(…, <span class="k">private val</span> analytics: Analytics, <span class="k">private val</span> crash: CrashReporter)
+<span class="k">class</span> UpdateChecker(…) : CoroutineWorker(…), KoinComponent { <span class="k">private val</span> crash: CrashReporter <span class="k">by</span> inject() }</pre>
+
+  <h3>Migration map</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Today</th><th>After</th><th>Where</th></tr></thead>
+    <tbody>
+      <tr><td class="name">logFirebaseMessage(msg)</td><td class="name">crashReporter.log(msg)</td><td>MediaUpdateChecker (15), workers (~30), receivers, Nav3View, AiTask, ImageLoaderSettings, OtakuApp</td></tr>
+      <tr><td class="name">recordFirebaseException(t)</td><td class="name">crashReporter.recordException(t)</td><td>RecentViewModel, DetailsViewModel, FlowUtils, CrashActivity, workers</td></tr>
+      <tr><td class="name">analyticsScreen(screen.toString())</td><td class="name">analytics.screen(screen.analyticsName)</td><td>Nav3View. Use a stable name so <code>Details(title=…)</code> data doesn't leak.</td></tr>
+      <tr><td class="name">Firebase.crashlytics.setCustomKeys</td><td class="name">crashReporter.setKey(…)</td><td>OtakuApp.firebaseSetup</td></tr>
+      <tr><td class="name">Firebase.analytics.setUserProperty</td><td class="name">analytics.setUserProperty(…)</td><td>OtakuApp.firebaseSetup</td></tr>
+    </tbody>
+  </table></div>
+  <p class="mono" style="color:var(--muted);font-size:.82rem">Note: <code>screen.toString()</code> on data classes sends <code>Details(title=…, url=…)</code> to Analytics today. The new <code>analyticsName</code> uses the route only (<code>details</code>).</p>
+</section>
+
+<section id="privacy">
+  <div class="eyebrow">2 · Ground rules</div>
+  <h2>What may be sent</h2>
+  <div class="rule">
+    <p><b>Never sent:</b> item titles, item or chapter URLs, search text, note text, custom list names, account emails, file paths.</p>
+    <p><b>Allowed:</b> source and extension names, media type, enum values, booleans, and counts or durations bucketed (<code>0</code>, <code>1-5</code>, <code>6-20</code>, <code>21+</code>).</p>
+    <p><b>Firebase limits:</b> event names ≤ 40 chars, ≤ 25 params per event, values ≤ 100 chars, 500 distinct event names, 25 user properties. Crashlytics keeps 64 custom keys, a 64 KB breadcrumb log, and 8 non-fatals per session.</p>
+  </div>
+  <div class="cols">
+    <div class="panel">
+      <h3>Free from Firebase (no code)</h3>
+      <p><code>first_open</code>, <code>session_start</code>, <code>user_engagement</code>, <code>app_update</code>, <code>os_update</code>, <code>app_remove</code>, crash-free users, plus device, OS, country, and app version on every event.</p>
+    </div>
+    <div class="panel">
+      <h3>Opt-out toggles (proposed)</h3>
+      <p>Settings › Privacy &amp; security gets <b>Share usage analytics</b> and <b>Send crash reports</b>. Both default on in <code>full</code> and are hidden in <code>noFirebase</code>. They call <code>setEnabled</code> on start and when changed.</p>
+    </div>
+  </div>
+</section>
+
+<section id="events">
+  <div class="eyebrow">3 · Analytics catalog</div>
+  <h2>Possible events</h2>
+  <p><b>Core</b> answers "is the app working and what do people use". <b>Useful</b> shapes feature decisions. <b>Nice</b> is cheap, but nobody may ever look at it. Core rows start checked. Change the checks, then copy the list back into chat.</p>
+
+  <div class="filterbar" role="toolbar" aria-label="Filter events">
+    <button class="chip" data-f="all" aria-pressed="true">All</button>
+    <button class="chip" data-f="core" aria-pressed="false">Core</button>
+    <button class="chip" data-f="useful" aria-pressed="false">Useful</button>
+    <button class="chip" data-f="nice" aria-pressed="false">Nice</button>
+    <span class="spacer"></span>
+    <span class="count" id="selCount">0 selected</span>
+    <button class="primary" id="copyBtn">Copy selection</button>
+  </div>
+  <textarea id="copyOut" rows="3" readonly hidden aria-label="Selected events"></textarea>
+  <div id="catalog" style="display:grid;gap:28px"></div>
+
+  <h3>User properties</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Property</th><th>Value</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td class="name">buildType / buildFlavor</td><td>debug · release · beta / full</td><td><span class="pill p-core">exists</span></td></tr>
+      <tr><td class="name">app_name</td><td>mangaworld · animeworld · novelworld · animeworldtv · otakuworld</td><td><span class="pill p-core">Core</span></td></tr>
+      <tr><td class="name">extension_count</td><td>bucketed count of installed sources</td><td><span class="pill p-core">Core</span></td></tr>
+      <tr><td class="name">favorites_count</td><td>bucketed</td><td><span class="pill p-useful">Useful</span></td></tr>
+      <tr><td class="name">ai_engine</td><td>nano · gemma · none</td><td><span class="pill p-useful">Useful</span></td></tr>
+      <tr><td class="name">theme_mode / floating_nav</td><td>system · light · dark / on · off</td><td><span class="pill p-nice">Nice</span></td></tr>
+      <tr><td class="name">player_style</td><td>classic · floating · theater (anime)</td><td><span class="pill p-nice">Nice</span></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="logging">
+  <div class="eyebrow">4 · Crash logging</div>
+  <h2>What a crash report carries</h2>
+  <p>A Crashlytics report has three layers: <b>custom keys</b> (state at the moment of the crash), <b>breadcrumbs</b> (the last ~64 KB of <code>log()</code> lines), and <b>non-fatals</b> (caught exceptions recorded on purpose).</p>
+
+  <h3>Custom keys</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Key</th><th>Set when</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td class="name">buildType, buildFlavor</td><td>start</td><td>Exists today.</td></tr>
+      <tr><td class="name">current_screen</td><td>every navigation</td><td>Which screen crashed, without reading breadcrumbs.</td></tr>
+      <tr><td class="name">current_source</td><td>source selected / details opened</td><td>Most crashes in an extension app trace back to one source.</td></tr>
+      <tr><td class="name">extension_loader</td><td>extension loaded</td><td>native · mihon · aniyomi · cloudstream · js</td></tr>
+      <tr><td class="name">last_worker</td><td>worker start</td><td>Background crashes have no screen.</td></tr>
+      <tr><td class="name">image_loader</td><td>start / setting change</td><td>Replaces today's "ImageLoader Selected" breadcrumb.</td></tr>
+      <tr><td class="name">ai_engine, incognito, player_style</td><td>start / change</td><td>Feature state that changes code paths.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Breadcrumbs</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Area</th><th>Example line</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>Navigation</td><td class="params">nav → details</td><td><span class="pill p-core">exists</span> but sends full toString</td></tr>
+      <tr><td>Update checker</td><td class="params">update check: 42 items, 3 sources · MangaDex recent failed (SocketTimeout)</td><td><span class="pill p-core">exists</span> includes titles today</td></tr>
+      <tr><td>Workers</td><td class="params">BackupWorker start · BackupWorker success 1.2s</td><td><span class="pill p-core">exists</span></td></tr>
+      <tr><td>Remote config</td><td class="params">remote config updated: showAds</td><td><span class="pill p-core">exists</span></td></tr>
+      <tr><td>AI</td><td class="params">ai tldr gemma failed: model not loaded</td><td><span class="pill p-core">exists</span></td></tr>
+      <tr><td>Source calls</td><td class="params">source MangaDex info start · done 840ms</td><td><span class="pill p-core">new</span></td></tr>
+      <tr><td>Extension loading</td><td class="params">load ext eu.kanade.en.mangadex (mihon) ok · failed ClassNotFound</td><td><span class="pill p-core">new</span></td></tr>
+      <tr><td>Reader / player</td><td class="params">reader open MangaDex ch#12 pages=24 · player state BUFFERING→READY</td><td><span class="pill p-core">new</span></td></tr>
+      <tr><td>Downloads</td><td class="params">download start MangaDex · failed IOException</td><td><span class="pill p-useful">new</span></td></tr>
+      <tr><td>Database</td><td class="params">ItemDatabase migrate 11→12</td><td><span class="pill p-useful">new</span></td></tr>
+      <tr><td>Backup / sync</td><td class="params">restore: 120 favorites, 8 lists · supabase sync push failed 401</td><td><span class="pill p-useful">new</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Non-fatals</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Caught where</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>RecentViewModel, DetailsViewModel, FlowUtils source errors</td><td><span class="pill p-core">exists</span></td></tr>
+      <tr><td>CrashActivity / GlobalExceptionHandler</td><td><span class="pill p-core">exists</span></td></tr>
+      <tr><td>Worker failures (update, backup, restore, cleanup, install)</td><td><span class="pill p-core">partial</span></td></tr>
+      <tr><td>Extension load and install failures</td><td><span class="pill p-core">new</span></td></tr>
+      <tr><td>Video player errors (AnimeWorld)</td><td><span class="pill p-core">new</span></td></tr>
+      <tr><td>AI engine init failures (Nano / Gemma LiteRT)</td><td><span class="pill p-useful">new</span></td></tr>
+      <tr><td>Room migration and DB write failures</td><td><span class="pill p-useful">new</span></td></tr>
+      <tr><td>Image decode failures</td><td><span class="pill p-nice">new, noisy</span></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="decisions">
+  <div class="eyebrow">5 · Open decisions</div>
+  <h2>Needs your call</h2>
+  <ol class="decisions">
+    <li><b>Event selection.</b><p>Use the catalog checkboxes and paste the copied list back.</p></li>
+    <li><b>Titles in existing breadcrumbs.</b><p>MediaUpdateChecker logs item titles today. Proposed: replace them with source names and counts so crash logs follow the same rule as analytics.</p></li>
+    <li><b>Opt-out toggles.</b><p>Proposed: add both toggles in Privacy &amp; security, default on, <code>full</code> only.</p></li>
+    <li><b>Rollout.</b><p>Proposed: PR 1 creates the module and migrates the existing ~100 calls with no behavior change. PR 2 adds the chosen events.</p></li>
+  </ol>
+</section>
+
+</div>
+
+<script>
+const E = [
+ ["Onboarding & settings", [
+  ["onboarding_finished","Onboarding closes","skipped, steps_seen","core","all"],
+  ["onboarding_step","An onboarding page is completed","step","nice","all"],
+  ["setting_changed","Any toggle or choice in Settings","key, value (enum/bool only)","useful","all"],
+ ]],
+ ["Browse & search", [
+  ["source_selected","Current source switched","source, media_type","core","all"],
+  ["search","Global or source search submitted","scope, source_count, result_count","core","all"],
+  ["search_result_opened","Search result tapped","scope, position","useful","all"],
+  ["describe_search","AI describe-to-search run","outcome, result_count","useful","all"],
+  ["url_opened","URL opener or QR resolves an item","via (qr|link|share), resolved","nice","all"],
+  ["incognito_toggled","Source marked incognito","enabled","nice","all"],
+ ]],
+ ["Details", [
+  ["item_viewed","Details screen loads","source, media_type, from","core","all"],
+  ["favorite_added","Item favorited","source, from (details|long_press|quick_action)","core","all"],
+  ["favorite_removed","Item unfavorited","source","core","all"],
+  ["list_item_added","Item added to a custom list","list_count","useful","all"],
+  ["list_created","Custom list created","—","useful","all"],
+  ["list_imported","List imported from file or QR","item_count_bucket, kind (list|full)","useful","all"],
+  ["item_shared","Share sheet, card, or QR used","method (link|card|qr)","useful","all"],
+  ["note_saved","Note saved","is_new","useful","all"],
+  ["mood_tag_added","Mood tag added","kind (preset|custom|ai)","nice","all"],
+  ["update_check_toggled","Per-item update notifications toggled","enabled","nice","all"],
+ ]],
+ ["Reading", [
+  ["chapter_opened","Reader opens a chapter","source, media_type, from (details|history|notification|continue)","core","all"],
+  ["reading_session","Reader closes","pages_read_bucket, duration_bucket, reached_end","core","manga · novel"],
+  ["reader_setting_changed","Setting changed inside the reader","key, value","useful","manga · novel"],
+  ["chapter_bookmarked","Chapter bookmarked","—","nice","manga · novel"],
+  ["dictionary_lookup","Dictionary entry opened or added","action (lookup|add)","nice","all"],
+ ]],
+ ["Watching", [
+  ["episode_play_requested","Play tapped","source, link_count","core","anime"],
+  ["playback_started","First frame rendered","player_style, casting, ttff_bucket","core","anime"],
+  ["playback_error","Player reports an error","source, error_type","core","anime"],
+  ["playback_session","Player closes","watched_pct_bucket","useful","anime"],
+  ["cast_session_started","Cast session begins","—","useful","anime"],
+  ["player_style_changed","Classic / Floating / Theater picked","style","nice","anime"],
+ ]],
+ ["Downloads", [
+  ["download_started","Chapter or episode download starts","source, media_type","core","all"],
+  ["download_finished","Download ends","outcome (success|fail|cancel), duration_bucket","core","all"],
+ ]],
+ ["Library & history", [
+  ["favorites_filtered","Favorites filter sheet applied","filters, sort","nice","all"],
+  ["favorites_searched","Favorites search run","result_count_bucket","nice","all"],
+  ["history_cleared","History cleared","scope (all|item)","useful","all"],
+ ]],
+ ["Updates & notifications", [
+  ["update_check_finished","Update worker completes","trigger, items_checked, updates_found, sources_failed, duration_bucket","core","all"],
+  ["update_notification_opened","Update notification tapped","count","core","all"],
+  ["catch_up_used","Catch-up deck card swiped","action (read|dismiss)","useful","all"],
+  ["notification_dismissed","Update notification swiped away","—","nice","all"],
+ ]],
+ ["Extensions & sources", [
+  ["extension_installed","Extension installed","package, catalog (otaku|mihon|aniyomi|cloudstream)","core","all"],
+  ["extension_install_failed","Install fails","catalog, reason","core","all"],
+  ["source_error","A source call throws","source, operation (recent|all|search|info|chapters|pages), error_class","core","all"],
+  ["extension_uninstalled","Extension removed","package","useful","all"],
+  ["extension_updated","Extension updated","package","useful","all"],
+  ["source_update_skipped","Extension update skipped","package","nice","all"],
+ ]],
+ ["Backup & sync", [
+  ["backup_created","Backup written","destination (file|cloud), success","useful","all"],
+  ["restore_finished","Restore completes","success, item_count_bucket","useful","all"],
+  ["sync_sign_in","Cloud sync signed in","provider (firebase|supabase)","useful","all"],
+  ["sync_failed","Sync push or pull fails","provider, error_class","useful","all"],
+ ]],
+ ["On-device AI", [
+  ["ai_task","Any AiTask runs","feature (tldr|recap|notes|list_suggest|mood_suggest|update_summary|describe_search|error_explainer|daily_overview), engine, outcome, latency_bucket","core","all"],
+  ["ai_model_installed","Model downloaded or imported","engine, via (download|import)","useful","all"],
+  ["translation_used","Title or description translated","target_lang","useful","all"],
+ ]],
+ ["Quick actions & overview", [
+  ["quick_action_used","Quick action run","action, surface (recent|settings)","useful","all"],
+  ["daily_overview_opened","Daily overview opened","from (notification|quick_action)","useful","all"],
+ ]],
+];
+
+const KEY = "otaku-telemetry-picks";
+let picks;
+try { picks = JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) { picks = null; }
+if (!picks) { picks = {}; E.forEach(([, rows]) => rows.forEach(r => { picks[r[0]] = r[3] === "core"; })); }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(picks)); } catch (e) {} };
+
+const label = { core: "Core", useful: "Useful", nice: "Nice" };
+const cat = document.getElementById("catalog");
+E.forEach(([area, rows]) => {
+  const div = document.createElement("div");
+  div.className = "area";
+  div.innerHTML = `<h3>${area} <span>${rows.length} events</span></h3>
+  <div class="tbl"><table><thead><tr><th></th><th>Event</th><th>Fires when</th><th>Params</th><th>Tier</th><th>Apps</th></tr></thead><tbody>${
+    rows.map(([n, w, p, t, a]) => `<tr data-tier="${t}"><td class="pick"><input type="checkbox" id="ev-${n}" data-ev="${n}" aria-label="Include ${n}"></td><td class="name"><label for="ev-${n}">${n}</label></td><td>${w}</td><td class="params">${p}</td><td><span class="pill p-${t}">${label[t]}</span></td><td class="app">${a}</td></tr>`).join("")
+  }</tbody></table></div>`;
+  cat.appendChild(div);
+});
+
+const boxes = [...document.querySelectorAll("input[data-ev]")];
+const count = document.getElementById("selCount");
+const refresh = () => { count.textContent = boxes.filter(b => b.checked).length + " of " + boxes.length + " selected"; };
+boxes.forEach(b => {
+  b.checked = !!picks[b.dataset.ev];
+  b.addEventListener("change", () => { picks[b.dataset.ev] = b.checked; save(); refresh(); });
+});
+refresh();
+
+document.querySelectorAll("button.chip").forEach(btn => btn.addEventListener("click", () => {
+  document.querySelectorAll("button.chip").forEach(b => b.setAttribute("aria-pressed", String(b === btn)));
+  const f = btn.dataset.f;
+  document.querySelectorAll("tr[data-tier]").forEach(tr => { tr.hidden = f !== "all" && tr.dataset.tier !== f; });
+  document.querySelectorAll(".area").forEach(a => { a.hidden = !a.querySelector("tr[data-tier]:not([hidden])"); });
+}));
+
+const out = document.getElementById("copyOut");
+document.getElementById("copyBtn").addEventListener("click", () => {
+  const text = "Telemetry events: " + boxes.filter(b => b.checked).map(b => b.dataset.ev).join(", ");
+  out.value = text; out.hidden = false;
+  const btn = document.getElementById("copyBtn");
+  navigator.clipboard.writeText(text).then(() => { btn.textContent = "Copied"; setTimeout(() => btn.textContent = "Copy selection", 1500); })
+    .catch(() => { out.focus(); out.select(); btn.textContent = "Select and copy below"; });
+});
+</script>
