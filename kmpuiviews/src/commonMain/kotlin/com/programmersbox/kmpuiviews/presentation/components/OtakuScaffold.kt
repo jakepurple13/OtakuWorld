@@ -11,6 +11,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.programmersbox.kmpuiviews.presentation.components.blurkind.BlurKindState
+import com.programmersbox.kmpuiviews.presentation.components.blurkind.rememberBlurKindState
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import dev.chrisbanes.haze.blur.HazeBlurStyleScope
 
@@ -23,6 +25,7 @@ fun OtakuHazeScaffold(
     snackbarHost: @Composable () -> Unit = {},
     contentWindowInsets: WindowInsets = WindowInsets(0.dp),
     floatingActionButton: @Composable () -> Unit = {},
+    blurKindState: BlurKindState = rememberBlurKindState(),
     floatingActionButtonPosition: FabPosition = FabPosition.End,
     containerColor: Color = MaterialTheme.colorScheme.background,
     contentColor: Color = contentColorFor(containerColor),
@@ -39,6 +42,7 @@ fun OtakuHazeScaffold(
         snackbarHost = snackbarHost,
         floatingActionButton = floatingActionButton,
         floatingActionButtonPosition = floatingActionButtonPosition,
+        blurKindState = blurKindState,
         containerColor = containerColor,
         contentColor = contentColor,
         contentWindowInsets = contentWindowInsets,
