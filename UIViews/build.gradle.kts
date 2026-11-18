@@ -15,6 +15,7 @@ android {
     }
 
     defaultConfig {
+        consumerProguardFiles("consumer-rules.pro")
         buildConfigField(
             type = "Boolean",
             name = "IS_PRERELEASE",

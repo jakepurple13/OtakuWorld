@@ -15,7 +15,7 @@ class AnalyticsNameTest {
     @Test
     fun detailsNeverLeaksTitleOrUrl() {
         val name = Screen.DetailsScreen.Details("Secret Title", "d", "https://site/item", "i", "Src").analyticsName()
-        assertEquals("Details", name)
+        assertEquals("details", name)
     }
 
     @Test
