@@ -202,8 +202,8 @@ fun Spark(spinning: Boolean, modifier: Modifier = Modifier) {
     }
 }
 
-@Composable
-fun AiShimmer(modifier: Modifier = Modifier) {
+/** The AI shimmer: a tinted highlight band sweeping right to left over a surfaceContainerHighest fill. */
+fun Modifier.aiShimmer(): Modifier = composed {
     // Reduced motion: the highlight band stays at a fixed spot.
     val phase = if (rememberReducedMotion()) {
         0.5f
@@ -219,6 +219,23 @@ fun AiShimmer(modifier: Modifier = Modifier) {
     }
     val base = MaterialTheme.colorScheme.surfaceContainerHighest
     val highlight = lerp(base, AiColors[1], 0.25f)
+    drawBehind {
+        // A highlight band twice the width sweeps right to left.
+        val band = size.width * 2
+        val start = size.width - phase * band
+        drawRect(
+            Brush.linearGradient(
+                colors = listOf(base, highlight, base),
+                start = Offset(start, 0f),
+                end = Offset(start + band, 0f),
+                tileMode = TileMode.Repeated,
+            )
+        )
+    }
+}
+
+@Composable
+fun AiShimmer(modifier: Modifier = Modifier) {
     Column(
         verticalArrangement = Arrangement.spacedBy(7.dp),
         modifier = modifier.heightIn(min = 44.dp)
@@ -229,19 +246,7 @@ fun AiShimmer(modifier: Modifier = Modifier) {
                     .fillMaxWidth(width)
                     .height(11.dp)
                     .clip(RoundedCornerShape(6.dp))
-                    .drawBehind {
-                        // A highlight band twice the line width sweeps right to left.
-                        val band = size.width * 2
-                        val start = size.width - phase * band
-                        drawRect(
-                            Brush.linearGradient(
-                                colors = listOf(base, highlight, base),
-                                start = Offset(start, 0f),
-                                end = Offset(start + band, 0f),
-                                tileMode = TileMode.Repeated,
-                            )
-                        )
-                    }
+                    .aiShimmer()
             )
         }
     }

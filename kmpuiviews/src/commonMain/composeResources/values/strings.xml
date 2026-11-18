@@ -835,6 +835,8 @@
     <string name="moods_custom_hint">Your own mood</string>
     <string name="moods_create">Create</string>
     <string name="moods_done">Done</string>
+    <string name="moods_yours">Your moods</string>
+    <string name="moods_yours_empty">Moods you create show up here.</string>
     <string name="moods_remove_hint">Long-press a mood to remove it</string>
     <string name="moods_filter">Mood</string>
     <plurals name="moods_untagged">

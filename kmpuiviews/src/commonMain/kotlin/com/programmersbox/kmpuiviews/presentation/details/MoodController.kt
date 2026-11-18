@@ -16,6 +16,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * The Mood row on a favorite's Details page. Moods are added by hand or with the AI chip; nothing
@@ -74,7 +76,12 @@ class MoodController(
         _suggesting.value = true
         scope.launch {
             try {
-                if (!repository.suggest(url, title, description)) _suggestFailed.tryEmit(Unit)
+                if (repository.suggest(url, title, description)) {
+                    // Stay "suggesting" until the moods reach the row, so its placeholders resolve into them in place
+                    withTimeoutOrNull(MOODS_ARRIVE_TIMEOUT_MS) { moods.first { it.isNotEmpty() } }
+                } else {
+                    _suggestFailed.tryEmit(Unit)
+                }
             } finally {
                 _suggesting.value = false
             }
@@ -84,6 +91,10 @@ class MoodController(
     fun toggle(mood: String) = edit { repository.toggle(it, mood) }
     fun remove(mood: String) = edit { repository.remove(it, mood) }
     fun create(name: String) = edit { repository.create(it, name) }
+
+    private companion object {
+        const val MOODS_ARRIVE_TIMEOUT_MS = 2_000L
+    }
 
     private fun edit(block: suspend (String) -> Unit) {
         val url = url ?: return
