@@ -48,9 +48,17 @@ per-app sync must run `docs/supabase/migration_add_app_column.sql` once.
 
 Firebase sync and the custom server sync are no longer used.
 
+## Privacy & Telemetry
+
+Builds from the Play Store and GitHub releases can send anonymous usage analytics and crash reports
+through Firebase. Titles, links, searches and notes are never sent, and both can be turned off in
+Settings › Behavior › Privacy & Security. `noFirebase` builds and the desktop apps send nothing.
+See [TELEMETRY.md](TELEMETRY.md) for every event and field.
+
 ## Contents
    * [Extensions](#extensions)
    * [Cloud Sync](#cloud-sync)
+   * [Privacy & Telemetry](#privacy--telemetry)
    * [Screenshots](#screenshots)
       * [MangaWorld](#mangaworld)
       * [AnimeWorld](#animeworld)
