@@ -1,0 +1,786 @@
+<title>Desktop Launch &amp; Quit Motion</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Dela+Gothic+One&family=Courier+Prime:wght@400;700&family=Cormorant+Garamond:ital,wght@1,500;1,600&display=swap">
+<style>
+/* Layout: header + app tabs, then Launch and Quit rows of looping "window" stages, each with a Compose mapping note. */
+:root{
+  --bg:#eceef2; --surface:#ffffff; --fg:#14161b; --muted:#5a6170; --line:#d6dae1; --chip:#e3e6ec;
+  --manga:#c93b5a; --anime:#3f5fe0; --novel:#1f7f62;
+  --accent:var(--manga);
+  --f-display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --f-body:Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0f1115; --surface:#181b21; --fg:#e7e9ee; --muted:#9aa1ae; --line:#2a2f38; --chip:#242832;
+  --manga:#ef6f8b; --anime:#7c95ff; --novel:#4cc49c; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0f1115; --surface:#181b21; --fg:#e7e9ee; --muted:#9aa1ae; --line:#2a2f38; --chip:#242832;
+  --manga:#ef6f8b; --anime:#7c95ff; --novel:#4cc49c; color-scheme:dark }
+body[data-tab="anime"]{--accent:var(--anime)} body[data-tab="novel"]{--accent:var(--novel)}
+
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding-block:32px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:28px}
+header{display:grid;gap:10px}
+h1{font-family:var(--f-display);font-weight:800;font-size:clamp(28px,4.4vw,44px);line-height:1.05;margin:0;text-wrap:balance;letter-spacing:-.01em}
+.lede{color:var(--muted);max-width:68ch;margin:0}
+.bar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tab{font:600 14px var(--f-body);padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.tab:focus-visible,.btn:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ctrls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.ctrls label{display:flex;gap:6px;align-items:center}
+select{font:13px var(--f-body);padding:5px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg)}
+.btn{font:600 13px var(--f-body);padding:7px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+
+section.kind{display:grid;gap:14px}
+.kind h2{font-family:var(--f-display);font-weight:800;font-size:22px;margin:0;display:flex;gap:10px;align-items:baseline}
+.kind h2 small{font:500 13px var(--f-body);color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.card .meta{padding:14px 16px 16px;display:grid;gap:8px}
+.card .top{display:flex;gap:8px;align-items:center;justify-content:space-between}
+.card h3{margin:0;font:700 16px var(--f-body)}
+.chip{font:500 11px var(--f-mono);background:var(--chip);color:var(--muted);padding:2px 7px;border-radius:6px;letter-spacing:.02em;white-space:nowrap}
+.chip.pick{background:var(--accent);color:#fff}
+.desc{margin:0;color:var(--fg);font-size:14px}
+.compose{margin:0;font:12px/1.55 var(--f-mono);color:var(--muted);border-top:1px dashed var(--line);padding-top:8px}
+.compose b{color:var(--fg);font-weight:500}
+.card .actions{display:flex;gap:8px}
+
+.notes{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 20px;display:grid;gap:8px}
+.notes h2{font-family:var(--f-display);font-weight:800;font-size:20px;margin:0}
+.notes ul{margin:0;padding-left:18px;display:grid;gap:6px;max-width:90ch}
+.notes code{font:12.5px var(--f-mono);background:var(--chip);padding:1px 5px;border-radius:4px}
+
+/* ---------- stage (a desktop window's content area) ---------- */
+.stage{position:relative;aspect-ratio:16/10;max-width:100%;overflow:hidden;container-type:inline-size;
+  background:radial-gradient(120% 90% at 20% 0%,#3a4660 0%,#1d2230 55%,#141720 100%);isolation:isolate}
+.stage::before{content:"desktop";position:absolute;right:2cqw;bottom:1.6cqw;font:500 2cqw var(--f-mono);color:#ffffff40;letter-spacing:.1em;text-transform:uppercase}
+.stage > *{position:absolute}
+.ov{inset:0}
+.zoomer > *,.fx > *{position:absolute}
+
+/* mock app */
+.app{inset:0;display:flex;flex-direction:column;background:var(--abg);font-family:var(--f-body);transform-origin:50% 50%}
+.app[data-app="manga"]{--abg:#17121a;--acc:#e05571}
+.app[data-app="anime"]{--abg:#0f121c;--acc:#5f7dff}
+.app[data-app="novel"]{--abg:#191612;--acc:#4fb48f}
+.app .ab{height:7cqw;display:flex;align-items:center;gap:1.4cqw;padding:0 2.6cqw;border-bottom:1px solid #ffffff12;color:#eef0f4;font-size:2.2cqw;font-weight:600}
+.app .ab i{width:2.4cqw;height:2.4cqw;border-radius:.7cqw;background:var(--acc)}
+.app .ab s{margin-left:auto;width:22cqw;height:3.4cqw;border-radius:2cqw;background:#ffffff14}
+.app .body{flex:1;display:flex;min-height:0}
+.app .rail{width:8cqw;display:flex;flex-direction:column;align-items:center;gap:2cqw;padding-top:2.6cqw}
+.app .rail i{width:3.4cqw;height:3.4cqw;border-radius:1cqw;background:#ffffff1a}
+.app .rail i:first-child{background:var(--acc)}
+.app .main{flex:1;padding:2.4cqw 3cqw 0 0;display:grid;gap:1.6cqw;align-content:start}
+.app .h{height:2cqw;width:24cqw;border-radius:1cqw;background:#ffffff26}
+.app .tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:1.8cqw}
+.app .tile{aspect-ratio:3/4;border-radius:1.2cqw;position:relative;overflow:hidden}
+.app .tile::after{content:"";position:absolute;left:1cqw;right:3cqw;bottom:1.2cqw;height:1.3cqw;border-radius:1cqw;background:#ffffffb8}
+
+/* sushi */
+.board{background:repeating-linear-gradient(92deg,#c79b6b 0 3cqw,#bf9161 3cqw 4.6cqw,#cda274 4.6cqw 9cqw,#c39566 9cqw 10cqw)}
+.nori{background:
+  radial-gradient(ellipse .9cqw .45cqw at 50% 50%,#fffdf6 55%,transparent 62%) 0 0/3cqw 2.2cqw,
+  radial-gradient(ellipse .9cqw .45cqw at 50% 50%,#eee7d8 55%,transparent 62%) 1.5cqw 1.1cqw/3cqw 2.2cqw,#f4efe3}
+.nori::after{content:"";position:absolute;left:0;right:0;top:43%;height:14%;background:linear-gradient(#ff9a6c,#ee7547);box-shadow:0 -1.4cqw 0 -.4cqw #7cb35b inset}
+.rw{left:6cqw;top:50%;width:20cqw;height:20cqw;margin-top:-10cqw}
+.rx{inset:0;position:absolute}
+.maki{position:absolute;inset:0;border-radius:50%;background:#1c271d;box-shadow:0 1.4cqw 2cqw #0006}
+.maki i{position:absolute;border-radius:50%}
+.maki .rice{inset:1.3cqw;background:radial-gradient(ellipse .8cqw .4cqw,#fffdf6 55%,transparent 62%) 0 0/2.4cqw 1.8cqw,#f1ebdd}
+.maki .fish{inset:5.6cqw 4.6cqw 5cqw 5.4cqw;border-radius:42% 58% 50% 50%;background:linear-gradient(135deg,#ffab7e,#f0703f)}
+.maki .cuc{width:3.2cqw;height:3.2cqw;left:11.5cqw;top:5cqw;background:#86c35c;box-shadow:inset 0 0 0 .6cqw #2f6b2a}
+.sticks{position:absolute;left:50%;top:50%;width:0;height:0}
+.stick{position:absolute;bottom:1.4cqw;width:1.5cqw;height:48cqw;margin-left:-.75cqw;transform-origin:50% 100%;
+  background:linear-gradient(90deg,#d29e66,#a8743f);clip-path:polygon(28% 100%,72% 100%,100% 0,0 0)}
+.stick.sa{left:-10.6cqw}.stick.sb{left:10.6cqw}
+
+/* ink panels + impact */
+.paper{background:#f7f5ef}
+.panelsvg{inset:0;width:100%;height:100%}
+.panelsvg path{fill:none;stroke:#121212;stroke-width:.75cqw;stroke-linejoin:miter}
+.pnl{border:.75cqw solid #121212;background:radial-gradient(circle,#0000002b .34cqw,transparent .4cqw) 0 0/1.3cqw 1.3cqw,#fff;overflow:hidden;display:grid;place-items:center}
+.pnl .t{font:5.6cqw "Dela Gothic One",var(--f-display);color:#121212;line-height:1;text-align:center}
+.pnl .t small{display:block;font:2cqw var(--f-mono);margin-top:1cqw;letter-spacing:.2em}
+.pnl .bub{width:60%;height:46%;border-radius:50%;background:#fff;border:.5cqw solid #121212}
+.pnl .spd{position:absolute;inset:0;background:repeating-linear-gradient(90deg,#121212 0 .25cqw,transparent .25cqw 2.4cqw);opacity:.6}
+.lines{inset:-30%;background:repeating-conic-gradient(from 0deg at 50% 50%,#111 0 1.6deg,transparent 1.6deg 7deg);
+  -webkit-mask:radial-gradient(circle,transparent 16%,#000 48%);mask:radial-gradient(circle,transparent 16%,#000 48%)}
+.sfx{left:50%;top:44%;font:16cqw/1 "Dela Gothic One",var(--f-display);color:#111;-webkit-text-stroke:.5cqw #fff;paint-order:stroke fill;text-shadow:1cqw 1cqw 0 var(--sacc);white-space:nowrap}
+.sub{left:0;right:0;top:68%;text-align:center;font:600 3cqw var(--f-mono);letter-spacing:.5em;color:#111}
+.flash{inset:0;background:#fff}
+@property --r{syntax:"<length>";inherits:false;initial-value:0px}
+.tone{background:radial-gradient(circle,#0b0b0d var(--r),transparent calc(var(--r) + .5px)) 0 0/2.4cqw 2.4cqw}
+.owari{left:50%;top:50%;font:9cqw/1 "Dela Gothic One",var(--f-display);color:#fff;white-space:nowrap}
+.cap{left:16cqw;top:8cqw;background:#fff;border:.5cqw solid #111;padding:.8cqw 2cqw;font:3.6cqw/1 "Dela Gothic One",var(--f-display);color:#111;transform-origin:0 0}
+
+/* anime */
+.room{background:#06070a}
+.tv{left:20cqw;top:12.5cqw;width:60cqw;height:37.5cqw;border-radius:1.6cqw;background:#0a0c10;
+  box-shadow:0 0 0 2.4cqw #262833,0 0 0 2.8cqw #101117,0 3cqw 6cqw #000a}
+.tv::after{content:"";position:absolute;left:50%;bottom:-6.2cqw;width:16cqw;height:2.6cqw;margin-left:-8cqw;background:#1d1f27;border-radius:0 0 1cqw 1cqw}
+.zoomer{inset:0}
+.scr{left:20cqw;top:12.5cqw;width:60cqw;height:37.5cqw;border-radius:1.6cqw;pointer-events:none}
+.scan{background:repeating-linear-gradient(#0000004d 0 1px,transparent 1px 3px)}
+.glow{left:50%;top:50%;width:2cqw;height:2cqw;margin:-1cqw 0 0 -1cqw;border-radius:50%;background:#fff;box-shadow:0 0 3cqw 1.4cqw #cfe0ff}
+.ring{left:50%;top:50%;width:26cqw;height:26cqw;margin:-13cqw 0 0 -13cqw}
+.ring circle{fill:none;stroke:var(--sacc);stroke-width:1.2;stroke-linecap:round}
+.bw{left:50%;top:50%;width:16cqw;height:16cqw;margin:-8cqw 0 0 -8cqw}
+.pbtn{position:absolute;inset:0;border-radius:50%;background:var(--sacc);box-shadow:0 0 6cqw var(--sacc);display:grid;place-items:center}
+.pbtn::after{content:"";width:0;height:0;border-left:5cqw solid #fff;border-top:3cqw solid transparent;border-bottom:3cqw solid transparent;margin-left:1.4cqw}
+.slab{inset:0;display:grid;padding:0 6cqw}
+.slab.a{background:var(--sacc);clip-path:polygon(0 0,100% 0,100% 40%,0 62%);align-content:start;padding-top:9cqw}
+.slab.b{background:#f3f1ec;clip-path:polygon(0 62%,100% 40%,100% 100%,0 100%);align-content:end;justify-items:end;padding-bottom:7cqw}
+.slab b{font:800 12cqw/0.9 var(--f-display);letter-spacing:-.02em}
+.slab.a b{color:#fff}.slab.b b{color:#0f121c}
+.slab small{font:500 2cqw var(--f-mono);letter-spacing:.3em;color:#ffffffcc;margin-bottom:1cqw}
+.banner{left:0;bottom:8cqw;padding:1.6cqw 8cqw 1.6cqw 4cqw;background:var(--sacc);color:#fff;clip-path:polygon(0 0,90% 0,100% 50%,90% 100%,0 100%)}
+.banner b{display:block;font:800 5cqw/1 var(--f-display);font-style:italic;letter-spacing:.02em}
+.banner small{font:500 1.8cqw var(--f-mono);letter-spacing:.2em;opacity:.85}
+.black{background:#000}
+
+/* novel */
+.desk{background:radial-gradient(90% 80% at 50% 40%,#3b2c22,#1c140f)}
+.bk-zoom,.bk-slide{inset:0}
+.book{left:35cqw;top:11.25cqw;width:30cqw;height:40cqw;perspective:110cqw}
+.pages{position:absolute;inset:0;background:#f4ecdc;border-radius:0 .6cqw .6cqw 0;padding:4cqw 3cqw;display:grid;gap:1.4cqw;align-content:start;
+  box-shadow:inset 1.4cqw 0 1.6cqw -1cqw #0000003a,.35cqw .35cqw 0 #e3d7c0,.7cqw .7cqw 0 #d3c4a8,1.4cqw 1.8cqw 3cqw #0007}
+.pages h4{margin:0 0 .6cqw;font:italic 600 3.4cqw "Cormorant Garamond",Georgia,serif;color:#3a2c20}
+.pages i{display:block;height:.8cqw;border-radius:.4cqw;background:#3a2c2030}
+.pages i:nth-child(3n){width:80%}
+.cover{position:absolute;inset:0;transform-origin:0 50%;transform-style:preserve-3d}
+.cover > div{position:absolute;inset:0;-webkit-backface-visibility:hidden;backface-visibility:hidden}
+.cover .front{border-radius:0 .8cqw .8cqw 0;background:linear-gradient(100deg,#123527 0 6%,#1f4d3c 8% 100%);display:grid;place-items:center;
+  box-shadow:inset 0 0 0 1.4cqw #1f4d3c,inset 0 0 0 1.6cqw #c9a85c80,1.4cqw 1.8cqw 3cqw #0007}
+.cover .front span{font:italic 600 4.6cqw "Cormorant Garamond",Georgia,serif;color:#e4c77d;text-align:center;line-height:1.05}
+.cover .front span small{display:block;font:500 1.5cqw var(--f-mono);letter-spacing:.3em;font-style:normal;margin-top:1.4cqw;color:#c9a85ccc}
+.cover .back{transform:rotateY(180deg);background:#efe5d1;border-radius:.6cqw 0 0 .6cqw;box-shadow:inset -1.4cqw 0 1.6cqw -1cqw #0000003a}
+.cream{background:#f3ecdd;background-image:repeating-linear-gradient(transparent 0 3.9cqw,#b7a98c33 3.9cqw 4cqw)}
+.tw{left:12cqw;top:20cqw;display:grid;gap:2cqw;font-family:"Courier Prime",ui-monospace,monospace;color:#2a2219}
+.tw span{display:inline-block;overflow:hidden;white-space:nowrap;border-right:.35cqw solid #2a2219;width:0}
+.tw .l1{font-size:7cqw;font-weight:700;line-height:1.1}
+.tw .l2{font-size:3cqw;line-height:1.3}
+.sheet{box-shadow:0 2cqw 4cqw #0008}
+.ttl{left:0;right:0;top:22%;text-align:center;font:italic 600 8cqw/1 "Cormorant Garamond",Georgia,serif;color:#2a2219}
+.drop{left:50%;top:50%;width:3cqw;height:3cqw;background:#1b2030;border-radius:0 50% 50% 50%}
+.splash{left:50%;top:50%;width:4cqw;height:4cqw;margin:-2cqw 0 0 -2cqw;border-radius:50%;border:.4cqw solid #1b2030}
+.ink{inset:0;background:#1b2030}
+.end{left:0;right:0;top:40%;text-align:center;font-family:"Courier Prime",ui-monospace,monospace;color:#2a2219;display:grid;justify-items:center;gap:2cqw}
+.end span{display:inline-block;overflow:hidden;white-space:nowrap;width:0;font-size:7cqw;font-weight:700;line-height:1.1}
+.end em{font:normal 5cqw Georgia,serif;color:#7a6142}
+@property --v{syntax:"<percentage>";inherits:false;initial-value:100%}
+.dark{background:radial-gradient(circle at 50% 55%,transparent var(--v),#0a0705 calc(var(--v) + 22%))}
+.flame{left:50%;top:55%;width:3cqw;height:4.4cqw;margin:-3cqw 0 0 -1.5cqw;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;
+  background:radial-gradient(circle at 50% 70%,#fff6d0 0,#ffc25a 35%,#ff7a12 65%,transparent 72%);box-shadow:0 0 7cqw 2.5cqw #ff962e66}
+
+.stage{--sacc:#5f7dff}
+.stage[data-a="manga"]{--sacc:#e05571}.stage[data-a="anime"]{--sacc:#5f7dff}.stage[data-a="novel"]{--sacc:#3fa57f}
+
+/* ---------- settings mock: a desktop window in the app's M3 dark scheme ---------- */
+.win{--s0:#141317;--s1:#1d1b20;--s2:#211f24;--s3:#2b2930;--on:#e6e1e9;--onv:#cac4cf;--outl:#938f99;
+  border-radius:12px;overflow:hidden;background:var(--s0);color:var(--on);border:1px solid #ffffff1a;box-shadow:0 18px 50px #0000002e;font-family:var(--f-body);max-width:100%}
+.win[data-app="manga"]{--p:#ffb2bf;--pc:#733343;--opc:#ffd9df}
+.win[data-app="anime"]{--p:#b8c4ff;--pc:#34428f;--opc:#dde1ff}
+.win[data-app="novel"]{--p:#8fd5b6;--pc:#0f5038;--opc:#abf2d1}
+.tbar{height:34px;display:flex;align-items:center;gap:8px;padding:0 12px;background:var(--s1);font:500 12px var(--f-body);color:var(--onv)}
+.tbar i{width:12px;height:12px;border-radius:50%;background:#ff5f57}.tbar i:nth-child(2){background:#febc2e}.tbar i:nth-child(3){background:#28c840}
+.tbar span{flex:1;text-align:center;margin-right:52px}
+.wbody{display:flex;height:640px}
+.wrail{width:80px;flex:none;background:var(--s0);display:flex;flex-direction:column;align-items:center;gap:18px;padding-top:18px;border-right:1px solid #ffffff0d}
+.wrail i{width:56px;height:32px;border-radius:16px;display:grid;place-items:center}
+.wrail i::after{content:"";width:22px;height:22px;border-radius:6px;background:#ffffff26}
+.wrail i.on{background:var(--pc)}.wrail i.on::after{background:var(--opc)}
+.wmain{flex:1;min-width:0;position:relative;overflow:hidden;container-type:inline-size}
+.view{position:absolute;inset:0;overflow:auto;padding:0 24px 28px}
+.topbar{display:grid;gap:14px;padding:10px 0 20px}
+.iconbtn{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;border:0;background:transparent;color:var(--on);cursor:pointer}
+.iconbtn:hover{background:#ffffff14}
+.topbar h3{margin:0;font:400 28px/1.2 var(--f-body);letter-spacing:0}
+svg.ic{width:24px;height:24px;fill:currentColor;flex:none}
+.sechdr{font:500 14px var(--f-body);color:var(--p);padding:18px 16px 8px}
+.seglist{display:grid;gap:2px}
+.seg{background:var(--s2);padding:12px 16px;min-height:56px;display:flex;gap:16px;align-items:center;border-radius:4px;color:var(--on)}
+.seglist > .seg:first-child{border-top-left-radius:16px;border-top-right-radius:16px}
+.seglist > .seg:last-child{border-bottom-left-radius:16px;border-bottom-right-radius:16px}
+.seg .ic{color:var(--onv)}
+.seg .tx{flex:1;min-width:0;display:grid}
+.seg .tx b{font:400 16px/1.35 var(--f-body);display:flex;gap:8px;align-items:center}
+.seg .tx span{font-size:14px;color:var(--onv);overflow-wrap:anywhere}
+.seg.go,.seg[role="radio"]{cursor:pointer}
+.seg.go:hover,.seg[role="radio"]:hover{background:var(--s3)}
+.seg:focus-visible,.segbtn button:focus-visible,.tonal:focus-visible,.iconbtn:focus-visible{outline:2px solid var(--p);outline-offset:2px}
+.seg.new{box-shadow:inset 0 0 0 2px var(--p)}
+.newchip{font:600 10px var(--f-mono);letter-spacing:.06em;background:var(--p);color:var(--pc);padding:2px 6px;border-radius:6px}
+.txtbtn{font:500 14px var(--f-body);color:var(--p)}
+.sw{width:52px;height:32px;border-radius:16px;background:var(--p);position:relative;flex:none}
+.sw::after{content:"";position:absolute;right:4px;top:4px;width:24px;height:24px;border-radius:50%;background:var(--pc)}
+.segbtn{display:inline-flex;border:1px solid var(--outl);border-radius:20px;overflow:hidden;justify-self:start}
+.segbtn button{display:flex;gap:6px;align-items:center;padding:8px 22px;background:transparent;color:var(--on);border:0;font:500 14px var(--f-body);cursor:pointer}
+.segbtn button + button{border-left:1px solid var(--outl)}
+.segbtn button[aria-pressed="true"]{background:var(--pc);color:var(--opc)}
+.segbtn button[aria-pressed="true"]::before{content:"✓";font-size:13px}
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:24px;align-items:start;padding-top:6px}
+.radio{width:20px;height:20px;border-radius:50%;border:2px solid var(--onv);flex:none;box-sizing:border-box}
+.seg[aria-checked="true"]{background:color-mix(in srgb,var(--p) 13%,var(--s2))}
+.seg[aria-checked="true"] .radio{border-color:var(--p);background:radial-gradient(circle,var(--p) 0 4px,transparent 4.5px)}
+.preview{position:sticky;top:12px;background:var(--s2);border-radius:20px;padding:12px;display:grid;gap:12px}
+.preview .stage{border-radius:12px}
+.pvmeta{display:flex;gap:12px;justify-content:space-between;align-items:center;padding:0 4px 2px}
+.pvmeta div{display:grid;min-width:0}
+.pvmeta b{font:500 16px var(--f-body)}
+.pvmeta span{font-size:13px;color:var(--onv)}
+.tonal{background:var(--pc);color:var(--opc);border:0;border-radius:20px;padding:10px 18px;font:500 14px var(--f-body);cursor:pointer;flex:none}
+.pvlabel{font:500 12px var(--f-body);color:var(--onv);padding:2px 4px 0;letter-spacing:.04em}
+@container (max-width: 640px){ .split{grid-template-columns:1fr} .preview{position:static;order:-1} }
+@media (max-width: 560px){ .wrail{display:none} .wbody{height:720px} .view{padding:0 14px 24px} }
+.hint{margin:0;color:var(--muted);font-size:14px;max-width:80ch}
+
+@media (prefers-reduced-motion: reduce){ .autonote{display:block!important} }
+.autonote{display:none;font-size:13px;color:var(--muted)}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Desktop launch &amp; quit motion</h1>
+    <p class="lede">Three launch and three quit animations per app. Each stage is the main window's content area: launch ends on the app, quit ends on the desktop. The first card in each row is the concept you described. Each app offers only its own three, plus Off and Fade, chosen from a new page in Desktop Settings.</p>
+    <p class="autonote">Reduced motion is on, so nothing autoplays. Use Replay on a card.</p>
+  </header>
+
+  <div class="bar">
+    <div class="tabs" role="tablist" aria-label="App">
+      <button class="tab" role="tab" id="tab-manga" data-tab="manga">MangaWorld</button>
+      <button class="tab" role="tab" id="tab-anime" data-tab="anime">AnimeWorld</button>
+      <button class="tab" role="tab" id="tab-novel" data-tab="novel">NovelWorld</button>
+    </div>
+    <div class="ctrls">
+      <label for="speed">Speed <select id="speed"><option value="1">1×</option><option value="2">0.5×</option><option value="4">0.25×</option></select></label>
+      <label for="loop"><input type="checkbox" id="loop" checked> Loop</label>
+      <button class="btn primary" id="playall">Play all</button>
+    </div>
+  </div>
+
+  <section class="kind" id="settings-mock">
+    <h2>Settings <small>Desktop Settings → Launch &amp; quit animations</small></h2>
+    <div class="win" id="win">
+      <div class="tbar"><i></i><i></i><i></i><span id="win-title">MangaWorld</span></div>
+      <div class="wbody">
+        <nav class="wrail" aria-hidden="true"><i></i><i></i><i></i><i class="on"></i></nav>
+        <div class="wmain">
+          <div class="view" id="v-desk"></div>
+          <div class="view" id="v-anim" hidden></div>
+        </div>
+      </div>
+    </div>
+    <p class="hint">Click <b>Launch &amp; quit animations</b> to open the page. In the list, hover a row to preview it and click to choose it. Each app lists only its own animations and saves its own choices.</p>
+  </section>
+
+  <section class="kind"><h2>Launch <small>plays on the first frame after the native splash closes</small></h2><div class="grid" id="g-launch"></div></section>
+  <section class="kind"><h2>Quit <small>plays after the close request, then the app exits</small></h2><div class="grid" id="g-quit"></div></section>
+
+  <div class="notes">
+    <h2>How it would plug in</h2>
+    <ul>
+      <li><b>Launch</b>: a full-window overlay composable above the nav host in <code>DesktopUi.kt</code>. It starts when the native <code>-splash:</code> card hands off to the first window, so the progress bar in <code>NativeSplash</code> stays as it is.</li>
+      <li><b>Quit</b>: <code>onCloseRequest</code> (and the macOS ⌘Q quit handler) sets <code>closing = true</code> instead of calling <code>exitApplication</code> directly. The overlay runs, then calls <code>exitApplication()</code> in its finished callback.</li>
+      <li><b>Ending on the desktop</b>: these mocks fade to the wallpaper. Chosen: quit ends on the wallpaper. The main <code>DecoratedWindow</code> stays as it is. On quit, a short-lived transparent, undecorated window opens at the same bounds with a snapshot of the app, the main window hides, the animation plays there, then <code>exitApplication()</code>.</li>
+      <li><b>Settings</b>: a Motion row in each app's Desktop Settings (<code>PlatformSettings.kt</code>) opens a Launch &amp; quit animations page. The list is Off, Fade, then the app's own three. Animations never cross between apps. Each app stores its two choices in its own desktop settings. Any click or key skips a launch animation, and every animation stays under about 3.5 seconds.</li>
+      <li><b>Common tools</b>: <code>Animatable</code> + <code>Modifier.graphicsLayer</code> for transforms, <code>graphicsLayer { clip = true; shape = … }</code> or <code>drawWithContent { clipRect / clipPath }</code> for reveals, and <code>Canvas</code> for strokes, dots and noise.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+let SPEED = 1;
+const E = {o:'cubic-bezier(.2,.8,.2,1)', io:'cubic-bezier(.65,0,.35,1)', i:'cubic-bezier(.55,0,.9,.35)', back:'cubic-bezier(.3,1.55,.5,1)'};
+
+// Multi-phase keyframes on absolute times: [[ms, props, easingForNextSegment], ...]
+function seq(el, frames){
+  const total = frames[frames.length-1][0];
+  return el.animate(frames.map(([t,p,e]) => ({...p, offset: t/total, easing: e || 'linear'})), {duration: total*SPEED, fill:'both'});
+}
+function h(parent, cls, html=''){ const d=document.createElement('div'); d.className=cls; d.innerHTML=html; parent.appendChild(d); return d; }
+const ov = (s, cls, html) => h(s, 'ov ' + cls, html);
+
+// Settings previews run another app's animation inside the current app's theme.
+let THEME = null;
+const NAMES = {manga:'MangaWorld', anime:'AnimeWorld', novel:'NovelWorld'};
+const KANA = {manga:'マンガ', anime:'アニメ', novel:'ノベル'};
+const nm = d => NAMES[THEME || d];
+
+function appUI(s, app){
+  app = THEME || app;
+  const titles = {manga:'MangaWorld', anime:'AnimeWorld', novel:'NovelWorld'};
+  const base = {manga:340, anime:225, novel:150}[app];
+  let tiles = '';
+  for (let i=0;i<10;i++){ const hue=(base + i*37)%360; tiles += `<div class="tile" style="background:linear-gradient(160deg,hsl(${hue} 62% 58%),hsl(${(hue+50)%360} 48% 24%))"></div>`; }
+  const a = h(s, 'app', `<div class="ab"><i></i>${titles[app]}<s></s></div><div class="body"><div class="rail"><i></i><i></i><i></i><i></i></div><div class="main"><div class="h"></div><div class="tiles">${tiles}</div></div></div>`);
+  a.dataset.app = app;
+  return a;
+}
+
+let noiseURL;
+function noiseTile(){
+  if (noiseURL) return noiseURL;
+  const c=document.createElement('canvas'); c.width=c.height=96; const x=c.getContext('2d'); const d=x.createImageData(96,96);
+  for (let i=0;i<d.data.length;i+=4){ const v=Math.random()*255|0; d.data[i]=d.data[i+1]=d.data[i+2]=v; d.data[i+3]=255; }
+  x.putImageData(d,0,0); return noiseURL=c.toDataURL();
+}
+function makeRoll(s){
+  const rw = h(s, 'rw', `<div class="rx"><div class="maki"><i class="rice"></i><i class="fish"></i><i class="cuc"></i></div></div><div class="sticks"><i class="stick sa"></i><i class="stick sb"></i></div>`);
+  return {rw, rx:rw.querySelector('.rx'), maki:rw.querySelector('.maki'), sa:rw.querySelector('.sa'), sb:rw.querySelector('.sb')};
+}
+function makeBook(s){
+  const desk = ov(s,'desk');
+  const app = appUI(s,'novel');
+  const zoom = ov(s,'bk-zoom');
+  const slide = h(zoom,'bk-slide');
+  slide.style.position='absolute';
+  const book = h(slide,'book',`<div class="pages"><h4>Chapter One</h4><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="cover"><div class="front"><span>${nm('novel')}<small>VOL. I</small></span></div><div class="back"></div></div>`);
+  book.style.position='absolute';
+  return {desk, app, zoom, slide, book, cover: book.querySelector('.cover')};
+}
+const tf = t => ({transform:t});
+const op = o => ({opacity:o});
+const cp = c => ({clipPath:c});
+
+const CONCEPTS = {
+manga:{
+ launch:[
+  {name:'Sushi unroll', pick:true, dur:3200,
+   desc:'Chopsticks set a maki roll on a cutting board, let go, and the roll unrolls to the right. The rice sheet it leaves behind fades into the app.',
+   compose:'<b>Animatable</b> y for the drop; roll x + rotation = x / radius in <b>graphicsLayer</b>; app clipped with <b>drawWithContent { clipRect(right = rollX) }</b>.',
+   run(s){
+     ov(s,'board'); const app=appUI(s,'manga'); const sheet=ov(s,'nori'); const r=makeRoll(s);
+     seq(r.rw,[[0,tf('translateY(-60cqw)'),'cubic-bezier(.25,.9,.3,1)'],[850,tf('translateY(0)')],[3200,tf('translateY(0)')]]);
+     seq(r.sa,[[0,tf('translate(0,0) rotate(10deg)')],[950,tf('translate(0,0) rotate(10deg)'),E.o],[1100,tf('translate(-1.6cqw,0) rotate(14deg)'),E.i],[1550,tf('translate(-1.6cqw,-70cqw) rotate(14deg)')],[3200,tf('translate(-1.6cqw,-70cqw) rotate(14deg)')]]);
+     seq(r.sb,[[0,tf('translate(0,0) rotate(-10deg)')],[950,tf('translate(0,0) rotate(-10deg)'),E.o],[1100,tf('translate(1.6cqw,0) rotate(-14deg)'),E.i],[1550,tf('translate(1.6cqw,-70cqw) rotate(-14deg)')],[3200,tf('translate(1.6cqw,-70cqw) rotate(-14deg)')]]);
+     seq(r.rx,[[0,tf('translateX(0)')],[1500,tf('translateX(0)')],[2800,tf('translateX(100cqw)')],[3200,tf('translateX(100cqw)')]]);
+     seq(r.maki,[[0,tf('rotate(0deg)')],[1500,tf('rotate(0deg)')],[2800,tf('rotate(540deg)')],[3200,tf('rotate(540deg)')]]);
+     const clip=[[0,cp('inset(0 84% 0 16%)')],[1500,cp('inset(0 84% 0 16%)')],[2592,cp('inset(0 0% 0 16%)')],[2800,cp('inset(0 0% 0 16%)'),E.o],[3200,cp('inset(0 0% 0 0%)')]];
+     seq(app,clip); seq(sheet,clip);
+     seq(sheet,[[0,op(1)],[2650,op(1),E.io],[3200,op(0)]]);
+     return 3200;
+   }},
+  {name:'Ink panels', dur:2600,
+   desc:'Panel borders ink themselves onto a blank page, fill with screentone and the title, then the panels fly apart to reveal the app.',
+   compose:'<b>Canvas</b> + <b>PathMeasure.getSegment</b> for the strokes; each panel is a box with its own <b>graphicsLayer</b> translation and rotation.',
+   run(s){
+     appUI(s,'manga'); const paper=ov(s,'paper');
+     const G=[[2,3,56,45],[60,3,38,45],[2,51,30,46],[34,51,30,46],[66,51,32,46]];
+     const fly=[[-70,-40,-9],[70,-40,9],[-70,40,-7],[0,60,5],[70,40,8]];
+     const inner=[`<div class="t">${KANA[THEME||'manga']}<small>${nm('manga').toUpperCase()}</small></div>`,'<div class="bub"></div>','','<div class="spd"></div>',''];
+     const svg=document.createElementNS('http://www.w3.org/2000/svg','svg'); svg.setAttribute('viewBox','0 0 100 100'); svg.setAttribute('preserveAspectRatio','none'); svg.classList.add('panelsvg'); s.appendChild(svg);
+     G.forEach(([x,y,w,hh],i)=>{
+       const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+       p.setAttribute('d',`M${x} ${y}h${w}v${hh}h${-w}Z`); p.setAttribute('pathLength','1'); p.setAttribute('vector-effect','non-scaling-stroke');
+       p.style.strokeDasharray='1'; svg.appendChild(p);
+       seq(p,[[0,{strokeDashoffset:1}],[i*140,{strokeDashoffset:1},E.io],[i*140+500,{strokeDashoffset:0}],[2600,{strokeDashoffset:0}]]);
+       const d=h(s,'pnl',inner[i]); Object.assign(d.style,{left:x+'%',top:y+'%',width:w+'%',height:hh+'%'});
+       const [dx,dy,rot]=fly[i];
+       seq(d,[[0,{opacity:0,transform:'translate(0,0) rotate(0deg)'}],[950+i*70,{opacity:0,transform:'translate(0,0) rotate(0deg)'}],[1200+i*70,{opacity:1,transform:'translate(0,0) rotate(0deg)'}],[1800+i*40,{opacity:1,transform:'translate(0,0) rotate(0deg)'},E.i],[2400+i*40,{opacity:0,transform:`translate(${dx}cqw,${dy}cqw) rotate(${rot}deg)`}],[2600,{opacity:0,transform:`translate(${dx}cqw,${dy}cqw) rotate(${rot}deg)`}]]);
+     });
+     seq(svg,[[0,op(1)],[1350,op(1)],[1500,op(0)],[2600,op(0)]]);
+     seq(paper,[[0,op(1)],[1800,op(1),E.io],[2250,op(0)],[2600,op(0)]]);
+     return 2600;
+   }},
+  {name:'Impact', dur:2200,
+   desc:'Speed lines rush in, a sound-effect title slams down and shakes the frame, and a white flash cuts to the app.',
+   compose:'<b>Canvas</b> radial lines; title <b>scale</b> 4→1 with an ease-in; shake = short <b>keyframes</b> on translation; flash is a white <b>Box</b> alpha.',
+   run(s){
+     const app=appUI(s,'manga'); const fx=ov(s,'fx'); h(fx,'ov paper'); const lines=h(fx,'lines');
+     const sfx=h(fx,'sfx','ドン!'); const sub=h(fx,'sub',nm('manga').toUpperCase()); const flash=ov(s,'flash');
+     seq(lines,[[0,tf('scale(1.6) rotate(-6deg)'),E.o],[500,tf('scale(1) rotate(0deg)')],[2200,tf('scale(1.04) rotate(2deg)')]]);
+     seq(sfx,[[0,{opacity:0,transform:'translate(-50%,-50%) scale(4) rotate(-14deg)'}],[250,{opacity:0,transform:'translate(-50%,-50%) scale(4) rotate(-14deg)'},'cubic-bezier(.6,0,.9,.5)'],[480,{opacity:1,transform:'translate(-50%,-50%) scale(1) rotate(-6deg)'}],[2200,{opacity:1,transform:'translate(-50%,-50%) scale(1.06) rotate(-6deg)'}]]);
+     seq(fx,[[0,{transform:'translate(0,0)',opacity:1}],[480,{transform:'translate(0,0)',opacity:1}],[520,{transform:'translate(-1.4cqw,.9cqw)',opacity:1}],[560,{transform:'translate(1.2cqw,-1cqw)',opacity:1}],[600,{transform:'translate(-.8cqw,.6cqw)',opacity:1}],[640,{transform:'translate(.5cqw,-.3cqw)',opacity:1}],[690,{transform:'translate(0,0)',opacity:1}],[1640,{transform:'translate(0,0)',opacity:1}],[1650,{transform:'translate(0,0)',opacity:0}],[2200,{transform:'translate(0,0)',opacity:0}]]);
+     seq(sub,[[0,{opacity:0,transform:'translateY(1.5cqw)'}],[650,{opacity:0,transform:'translateY(1.5cqw)'},E.o],[950,{opacity:1,transform:'translateY(0)'}],[2200,{opacity:1,transform:'translateY(0)'}]]);
+     seq(flash,[[0,op(0)],[1530,op(0)],[1650,op(1),E.o],[2000,op(0)],[2200,op(0)]]);
+     seq(app,[[0,tf('scale(1.08)')],[1650,tf('scale(1.08)'),E.o],[2200,tf('scale(1)')]]);
+     return 2200;
+   }},
+ ],
+ quit:[
+  {name:'Sushi roll-up', pick:true, dur:3100,
+   desc:'The app turns into a rice sheet, a roll sweeps in from the right and rolls it up, then the chopsticks pick it up and carry it off.',
+   compose:'Same pieces as the unroll, reversed. Call <b>exitApplication()</b> when the lift finishes.',
+   run(s){
+     const board=ov(s,'board'); const app=appUI(s,'manga'); const sheet=ov(s,'nori'); const r=makeRoll(s);
+     seq(sheet,[[0,op(0),E.io],[450,op(1)],[3100,op(1)]]);
+     seq(r.rx,[[0,tf('translateX(100cqw)')],[400,tf('translateX(100cqw)')],[1600,tf('translateX(0)')],[3100,tf('translateX(0)')]]);
+     seq(r.maki,[[0,tf('rotate(540deg)')],[400,tf('rotate(540deg)')],[1600,tf('rotate(0deg)')],[3100,tf('rotate(0deg)')]]);
+     const clip=[[0,cp('inset(0 0% 0 0%)')],[592,cp('inset(0 0% 0 0%)')],[1400,cp('inset(0 67.3% 0 0%)')],[1600,cp('inset(0 84% 0 16%)')],[3100,cp('inset(0 84% 0 16%)')]];
+     seq(app,clip); seq(sheet,clip);
+     seq(r.sa,[[0,tf('translate(-1.6cqw,-70cqw) rotate(14deg)')],[1650,tf('translate(-1.6cqw,-70cqw) rotate(14deg)'),E.o],[2100,tf('translate(-1.6cqw,0) rotate(14deg)'),E.io],[2250,tf('translate(0,0) rotate(10deg)')],[3100,tf('translate(0,0) rotate(10deg)')]]);
+     seq(r.sb,[[0,tf('translate(1.6cqw,-70cqw) rotate(-14deg)')],[1650,tf('translate(1.6cqw,-70cqw) rotate(-14deg)'),E.o],[2100,tf('translate(1.6cqw,0) rotate(-14deg)'),E.io],[2250,tf('translate(0,0) rotate(-10deg)')],[3100,tf('translate(0,0) rotate(-10deg)')]]);
+     seq(r.rw,[[0,tf('translateY(0)')],[2350,tf('translateY(0)'),E.i],[2850,tf('translateY(-62cqw)')],[3100,tf('translateY(-62cqw)')]]);
+     seq(board,[[0,op(1)],[2650,op(1)],[3100,op(0)]]);
+     return 3100;
+   }},
+  {name:'Screentone fade', dur:2400,
+   desc:'The app drains to grayscale while halftone dots grow until the frame is solid black. おわり appears, then everything fades out.',
+   compose:'<b>Canvas</b> dot grid with an animated radius; app gets a <b>ColorMatrix</b> saturation of 0 via <b>graphicsLayer.renderEffect</b>.',
+   run(s){
+     const app=appUI(s,'manga'); const tone=ov(s,'tone'); const t=h(s,'owari','おわり');
+     seq(app,[[0,{filter:'grayscale(0) contrast(1)',opacity:1}],[600,{filter:'grayscale(1) contrast(1.3)',opacity:1}],[1300,{filter:'grayscale(1) contrast(1.3)',opacity:1}],[1310,{filter:'grayscale(1) contrast(1.3)',opacity:0}],[2400,{filter:'grayscale(1) contrast(1.3)',opacity:0}]]);
+     seq(tone,[[0,{'--r':'0px',opacity:1},E.i],[1250,{'--r':'2cqw',opacity:1}],[1900,{'--r':'2cqw',opacity:1},E.i],[2300,{'--r':'2cqw',opacity:0}],[2400,{'--r':'2cqw',opacity:0}]]);
+     seq(t,[[0,{opacity:0,transform:'translate(-50%,-50%) scale(.85)'}],[1200,{opacity:0,transform:'translate(-50%,-50%) scale(.85)'},E.o],[1500,{opacity:1,transform:'translate(-50%,-50%) scale(1)'}],[1900,{opacity:1,transform:'translate(-50%,-50%) scale(1)'},E.i],[2300,{opacity:0,transform:'translate(-50%,-50%) scale(1)'}],[2400,{opacity:0,transform:'translate(-50%,-50%) scale(1)'}]]);
+     return 2400;
+   }},
+  {name:'The End panel', dur:2300,
+   desc:'The app shrinks into a single inked panel on a white page, a THE END caption box pops onto its corner, and the page fades away.',
+   compose:'<b>graphicsLayer</b> scale + rotation, <b>border</b> width animated with <b>animateDpAsState</b>; caption uses a spring overshoot.',
+   run(s){
+     const paper=ov(s,'paper'); const app=appUI(s,'manga'); const cap=h(s,'cap','THE END');
+     const panel={transform:'scale(.6) rotate(-2deg)',boxShadow:'0 0 0 1.4cqw #111',filter:'grayscale(1) contrast(1.2)'};
+     seq(app,[[0,{transform:'scale(1) rotate(0deg)',boxShadow:'0 0 0 0 #111',filter:'grayscale(0) contrast(1)',opacity:1},E.io],[800,{...panel,opacity:1}],[1700,{...panel,opacity:1},E.i],[2200,{...panel,opacity:0}],[2300,{...panel,opacity:0}]]);
+     seq(cap,[[0,{opacity:0,transform:'rotate(-5deg) scale(.4)'}],[850,{opacity:0,transform:'rotate(-5deg) scale(.4)'},E.back],[1150,{opacity:1,transform:'rotate(-5deg) scale(1)'}],[1700,{opacity:1,transform:'rotate(-5deg) scale(1)'},E.i],[2200,{opacity:0,transform:'rotate(-5deg) scale(1)'}],[2300,{opacity:0,transform:'rotate(-5deg) scale(1)'}]]);
+     seq(paper,[[0,op(1)],[1700,op(1),E.i],[2200,op(0)],[2300,op(0)]]);
+     return 2300;
+   }},
+ ]},
+
+anime:{
+ launch:[
+  {name:'CRT power-on', pick:true, dur:2300,
+   desc:'A TV in a dark room clicks on: a bright dot stretches to a line, opens into the picture through static, then the camera pushes into the screen until it fills the window.',
+   compose:'App in <b>graphicsLayer</b> scaleX/scaleY with a brightness <b>ColorMatrix</b>; static is a <b>Canvas</b> noise texture; the push-in scales the TV and app together.',
+   run(s){
+     ov(s,'room'); const z=ov(s,'zoomer'); const tv=h(z,'tv'); const app=appUI(z,'anime');
+     const noise=h(z,'scr'); noise.style.background=`url(${noiseTile()}) 0 0/14cqw`; const scan=h(z,'scr scan'); const glow=h(z,'glow');
+     seq(tv,[[0,op(0)],[300,op(1)],[1650,op(1)],[2100,op(0)],[2300,op(0)]]);
+     seq(app,[[0,{transform:'scale(0,.004)',filter:'brightness(8)'}],[350,{transform:'scale(.02,.004)',filter:'brightness(8)'},E.o],[650,{transform:'scale(.6,.004)',filter:'brightness(8)'},E.o],[950,{transform:'scale(.6,.6)',filter:'brightness(3)'}],[1300,{transform:'scale(.6,.6)',filter:'brightness(1)'}],[2300,{transform:'scale(.6,.6)',filter:'brightness(1)'}]]);
+     seq(glow,[[0,op(0)],[300,op(0)],[380,op(1)],[650,op(0)],[2300,op(0)]]);
+     seq(noise,[[0,op(0)],[650,op(0)],[750,op(.9)],[1350,op(0)],[2300,op(0)]]);
+     noise.animate([0,1,2,3,4,5].map(i=>({backgroundPosition:`${(i*37)%96}px ${(i*61)%96}px`,easing:'steps(1,end)'})),{duration:240,iterations:Infinity});
+     seq(scan,[[0,op(1)],[1650,op(1)],[2150,op(0)],[2300,op(0)]]);
+     seq(z,[[0,tf('scale(1)')],[1650,tf('scale(1)'),E.io],[2300,tf('scale(1.6667)')]]);
+     return 2300;
+   }},
+  {name:'Play button', dur:1900,
+   desc:'A play button pops in while a ring loads around it, gets pressed, and the app opens outward from it in a growing circle.',
+   compose:'Ring via <b>drawArc</b> sweep; press with <b>animateFloatAsState</b>; reveal with <b>graphicsLayer { clip = true; shape = CircleShape }</b> on a growing size.',
+   run(s){
+     ov(s,'room'); const bw=h(s,'bw'); const btn=h(bw,'pbtn');
+     const ring=document.createElementNS('http://www.w3.org/2000/svg','svg'); ring.setAttribute('viewBox','0 0 40 40'); ring.classList.add('ring');
+     ring.innerHTML='<circle cx="20" cy="20" r="18" pathLength="1" transform="rotate(-90 20 20)" style="stroke-dasharray:1"/>'; s.appendChild(ring);
+     const app=appUI(s,'anime');
+     seq(bw,[[0,{opacity:0,transform:'scale(.6)'},E.back],[350,{opacity:1,transform:'scale(1)'}],[1150,{opacity:1,transform:'scale(1)'},E.i],[1500,{opacity:0,transform:'scale(1.5)'}],[1900,{opacity:0,transform:'scale(1.5)'}]]);
+     seq(btn,[[0,tf('scale(1)')],[950,tf('scale(1)')],[1050,tf('scale(.86)'),E.back],[1250,tf('scale(1)')],[1900,tf('scale(1)')]]);
+     seq(ring.firstChild,[[0,{strokeDashoffset:1}],[200,{strokeDashoffset:1},E.io],[950,{strokeDashoffset:0}],[1900,{strokeDashoffset:0}]]);
+     seq(ring,[[0,{opacity:1,transform:'scale(1)'}],[1150,{opacity:1,transform:'scale(1)'},E.o],[1600,{opacity:0,transform:'scale(2)'}],[1900,{opacity:0,transform:'scale(2)'}]]);
+     seq(app,[[0,cp('circle(0% at 50% 50%)')],[1150,cp('circle(0% at 50% 50%)'),E.io],[1800,cp('circle(75% at 50% 50%)')],[1900,cp('circle(75% at 50% 50%)')]]);
+     return 1900;
+   }},
+  {name:'Eyecatch', dur:1900,
+   desc:'Two diagonal slabs slide in from opposite sides like a mid-episode eyecatch, hold on the title, then keep moving to uncover the app.',
+   compose:'Two <b>Box</b>es with a <b>GenericShape</b> diagonal clip, each with <b>graphicsLayer.translationX</b> on one keyframes spec.',
+   run(s){
+     const app=appUI(s,'anime'); const bg=ov(s,'room');
+     const a=h(s,'slab a',`<small>EPISODE 01</small><b>${nm('anime').replace('World','').toUpperCase()}</b>`); const b=h(s,'slab b','<b>WORLD</b>');
+     seq(bg,[[0,op(1)],[1350,op(1)],[1360,op(0)],[1900,op(0)]]);
+     seq(a,[[0,tf('translateX(-105%)'),E.o],[420,tf('translateX(0)')],[1350,tf('translateX(0)'),E.i],[1800,tf('translateX(105%)')],[1900,tf('translateX(105%)')]]);
+     seq(b,[[0,tf('translateX(105%)')],[80,tf('translateX(105%)'),E.o],[500,tf('translateX(0)')],[1400,tf('translateX(0)'),E.i],[1850,tf('translateX(-105%)')],[1900,tf('translateX(-105%)')]]);
+     seq(app,[[0,tf('scale(1.05)')],[1350,tf('scale(1.05)'),E.o],[1900,tf('scale(1)')]]);
+     return 1900;
+   }},
+ ],
+ quit:[
+  {name:'CRT power-off', pick:true, dur:1500,
+   desc:'The picture collapses to a bright horizontal line, then to a dot that lingers and fades, like switching off an old tube TV.',
+   compose:'<b>graphicsLayer</b> scaleY then scaleX with an ease-in, brightness <b>ColorMatrix</b>, and a radial-gradient dot drawn on <b>Canvas</b>.',
+   run(s){
+     const room=ov(s,'room'); const app=appUI(s,'anime'); const glow=h(s,'glow');
+     seq(app,[[0,{transform:'scale(1,1)',filter:'brightness(1)'},'cubic-bezier(.6,0,.9,.4)'],[260,{transform:'scale(1,.006)',filter:'brightness(6)'},E.io],[480,{transform:'scale(0,.006)',filter:'brightness(8)'}],[1500,{transform:'scale(0,.006)',filter:'brightness(8)'}]]);
+     seq(glow,[[0,{opacity:0,transform:'scale(1)'}],[440,{opacity:0,transform:'scale(1)'}],[500,{opacity:1,transform:'scale(1)'},'cubic-bezier(.3,0,.2,1)'],[1150,{opacity:0,transform:'scale(.2)'}],[1500,{opacity:0,transform:'scale(.2)'}]]);
+     seq(room,[[0,op(1)],[1150,op(1)],[1500,op(0)]]);
+     return 1500;
+   }},
+  {name:'Next episode', dur:2300,
+   desc:'The frame freezes into a sepia still, a NEXT EPISODE arrow slides in from the left, then the screen cuts to black.',
+   compose:'Sepia via <b>ColorMatrix</b> in <b>renderEffect</b>; arrow banner is a <b>GenericShape</b> sliding with <b>AnimatedVisibility(slideInHorizontally)</b>.',
+   run(s){
+     const app=appUI(s,'anime'); const ban=h(s,'banner','<b>NEXT EPISODE</b><small>SEE YOU SOON</small>'); const blk=ov(s,'black');
+     const still={filter:'grayscale(1) sepia(.65) contrast(1.1)',transform:'scale(1.03)'};
+     seq(app,[[0,{filter:'grayscale(0) sepia(0) contrast(1)',transform:'scale(1)',opacity:1},E.o],[300,{...still,opacity:1}],[1900,{...still,opacity:1}],[1910,{...still,opacity:0}],[2300,{...still,opacity:0}]]);
+     seq(ban,[[0,{transform:'translateX(-110%)',opacity:1}],[400,{transform:'translateX(-110%)',opacity:1},E.o],[800,{transform:'translateX(0)',opacity:1}],[1900,{transform:'translateX(0)',opacity:1}],[1910,{transform:'translateX(0)',opacity:0}],[2300,{transform:'translateX(0)',opacity:0}]]);
+     seq(blk,[[0,op(0)],[1500,op(0),E.i],[1900,op(1)],[2300,op(0)]]);
+     return 2300;
+   }},
+  {name:'Iris out', dur:1700,
+   desc:'A shrinking circle closes in on the center of the app, pauses as a small spot, and snaps shut on black.',
+   compose:'<b>graphicsLayer</b> clip with a <b>CircleShape</b> whose size animates; pause is a keyframe hold.',
+   run(s){
+     const room=ov(s,'black'); const app=appUI(s,'anime');
+     seq(app,[[0,cp('circle(75% at 50% 50%)'),E.i],[700,cp('circle(8% at 50% 50%)')],[950,cp('circle(8% at 50% 50%)'),E.i],[1150,cp('circle(0% at 50% 50%)')],[1700,cp('circle(0% at 50% 50%)')]]);
+     seq(room,[[0,op(1)],[1300,op(1)],[1700,op(0)]]);
+     return 1700;
+   }},
+ ]},
+
+novel:{
+ launch:[
+  {name:'Book opening', pick:true, dur:2400,
+   desc:'A closed book rises onto a desk, the cover swings open to the left, and the camera dives into the open pages as they become the app.',
+   compose:'Cover uses <b>graphicsLayer { rotationY; cameraDistance; transformOrigin = TransformOrigin(0f, .5f) }</b> and swaps to the inside face past 90°.',
+   run(s){
+     const b=makeBook(s);
+     seq(b.book,[[0,{opacity:0,transform:'translateY(3cqw)'},E.o],[450,{opacity:1,transform:'translateY(0)'}],[2400,{opacity:1,transform:'translateY(0)'}]]);
+     seq(b.cover,[[0,tf('rotateY(0deg)')],[500,tf('rotateY(0deg)'),E.io],[1400,tf('rotateY(-180deg)')],[2400,tf('rotateY(-180deg)')]]);
+     seq(b.slide,[[0,tf('translateX(0)')],[500,tf('translateX(0)'),E.io],[1400,tf('translateX(15cqw)')],[2400,tf('translateX(15cqw)')]]);
+     seq(b.zoom,[[0,{transform:'scale(1)',opacity:1}],[1500,{transform:'scale(1)',opacity:1},E.i],[2300,{transform:'scale(3.2)',opacity:0}],[2400,{transform:'scale(3.2)',opacity:0}]]);
+     seq(b.desk,[[0,op(1)],[1500,op(1)],[2100,op(0)],[2400,op(0)]]);
+     seq(b.app,[[0,{opacity:0,transform:'scale(1.04)'}],[1600,{opacity:0,transform:'scale(1.04)'},E.o],[2300,{opacity:1,transform:'scale(1)'}],[2400,{opacity:1,transform:'scale(1)'}]]);
+     return 2400;
+   }},
+  {name:'Typewriter', dur:2600,
+   desc:'NovelWorld and a chapter line type out on ruled paper, then the sheet feeds up and out of the window to reveal the app.',
+   compose:'Text typed by growing <b>substring</b> length on a <b>LaunchedEffect</b> timer; sheet exits with <b>graphicsLayer.translationY</b>.',
+   run(s){
+     const app=appUI(s,'novel'); const paper=ov(s,'cream sheet');
+     const tw=h(paper,'tw',`<span class="l1">${nm('novel')}</span><span class="l2">Chapter One, page 1</span>`); tw.style.position='absolute';
+     const [l1,l2]=tw.querySelectorAll('span');
+     seq(l1,[[0,{width:'0ch',borderRightColor:'#2a2219'}],[200,{width:'0ch',borderRightColor:'#2a2219'},'steps(10,end)'],[1100,{width:'10ch',borderRightColor:'#2a2219'}],[1150,{width:'10ch',borderRightColor:'transparent'}],[2600,{width:'10ch',borderRightColor:'transparent'}]]);
+     seq(l2,[[0,{width:'0ch',borderRightColor:'transparent'}],[1200,{width:'0ch',borderRightColor:'#2a2219'},'steps(19,end)'],[1850,{width:'19ch',borderRightColor:'#2a2219'}],[2600,{width:'19ch',borderRightColor:'#2a2219'}]]);
+     seq(paper,[[0,tf('translateY(0)')],[2000,tf('translateY(0)'),E.io],[2600,tf('translateY(-105%)')]]);
+     seq(app,[[0,tf('translateY(8cqw)')],[2000,tf('translateY(8cqw)'),E.o],[2600,tf('translateY(0)')]]);
+     return 2600;
+   }},
+  {name:'Ink drop', dur:1900,
+   desc:'The title appears on paper, a drop of ink falls and lands, and the spreading ink stain opens into the app.',
+   compose:'Drop is a <b>Canvas</b> teardrop on an ease-in fall; ink and app are two <b>CircleShape</b> clips with staggered radii.',
+   run(s){
+     const paper=ov(s,'cream'); const ttl=h(s,'ttl',nm('novel')); const drop=h(s,'drop'); const sp=h(s,'splash'); const ink=ov(s,'ink'); const app=appUI(s,'novel');
+     seq(ttl,[[0,{opacity:0,transform:'translateY(1cqw)'},E.o],[500,{opacity:1,transform:'translateY(0)'}],[1900,{opacity:1,transform:'translateY(0)'}]]);
+     seq(drop,[[0,{opacity:1,transform:'translate(-50%,-70cqw) rotate(45deg)'}],[350,{opacity:1,transform:'translate(-50%,-70cqw) rotate(45deg)'},'cubic-bezier(.55,0,1,.45)'],[800,{opacity:1,transform:'translate(-50%,-50%) rotate(45deg)'}],[820,{opacity:0,transform:'translate(-50%,-50%) rotate(45deg)'}],[1900,{opacity:0,transform:'translate(-50%,-50%) rotate(45deg)'}]]);
+     seq(sp,[[0,{opacity:0,transform:'scale(0)'}],[790,{opacity:0,transform:'scale(0)'}],[800,{opacity:1,transform:'scale(.4)'},E.o],[1250,{opacity:0,transform:'scale(6)'}],[1900,{opacity:0,transform:'scale(6)'}]]);
+     seq(ink,[[0,cp('circle(0% at 50% 50%)')],[800,cp('circle(0% at 50% 50%)'),E.o],[1500,cp('circle(80% at 50% 50%)')],[1900,cp('circle(80% at 50% 50%)')]]);
+     seq(app,[[0,cp('circle(0% at 50% 50%)')],[1050,cp('circle(0% at 50% 50%)'),E.io],[1800,cp('circle(80% at 50% 50%)')],[1900,cp('circle(80% at 50% 50%)')]]);
+     return 1900;
+   }},
+ ],
+ quit:[
+  {name:'Book closing', pick:true, dur:2300,
+   desc:'The app pulls back into the pages of an open book, the cover swings shut, and the book sinks away off the desk.',
+   compose:'The book-opening layers played in reverse; <b>exitApplication()</b> after the book fades.',
+   run(s){
+     const b=makeBook(s);
+     seq(b.app,[[0,{opacity:1,transform:'scale(1)'},E.i],[600,{opacity:0,transform:'scale(1.04)'}],[2300,{opacity:0,transform:'scale(1.04)'}]]);
+     seq(b.zoom,[[0,{transform:'scale(3.2)',opacity:0},E.o],[700,{transform:'scale(1)',opacity:1}],[2300,{transform:'scale(1)',opacity:1}]]);
+     seq(b.slide,[[0,tf('translateX(15cqw)')],[800,tf('translateX(15cqw)'),E.io],[1600,tf('translateX(0)')],[2300,tf('translateX(0)')]]);
+     seq(b.cover,[[0,tf('rotateY(-180deg)')],[800,tf('rotateY(-180deg)'),E.io],[1600,tf('rotateY(0deg)')],[2300,tf('rotateY(0deg)')]]);
+     seq(b.book,[[0,{opacity:1,transform:'translateY(0)'}],[1700,{opacity:1,transform:'translateY(0)'},E.i],[2100,{opacity:0,transform:'translateY(3cqw)'}],[2300,{opacity:0,transform:'translateY(3cqw)'}]]);
+     seq(b.desk,[[0,op(1)],[1800,op(1)],[2300,op(0)]]);
+     return 2300;
+   }},
+  {name:'The End', dur:2400,
+   desc:'Ruled paper settles over a blurred app, "The End." types out with a fleuron beneath it, and the page fades.',
+   compose:'<b>Modifier.blur</b> on the app, paper <b>alpha</b>, and the same typed-substring effect as the Typewriter launch.',
+   run(s){
+     const app=appUI(s,'novel'); const paper=ov(s,'cream'); const end=h(s,'end','<span>The End.</span><em>❦</em>');
+     const [txt,fl]=[end.querySelector('span'),end.querySelector('em')];
+     seq(app,[[0,{filter:'blur(0px)',opacity:1}],[500,{filter:'blur(6px)',opacity:1}],[1890,{filter:'blur(6px)',opacity:1}],[1900,{filter:'blur(6px)',opacity:0}],[2400,{filter:'blur(6px)',opacity:0}]]);
+     seq(paper,[[0,op(0)],[500,op(1)],[1900,op(1),E.i],[2400,op(0)]]);
+     seq(txt,[[0,{width:'0ch'}],[650,{width:'0ch'},'steps(8,end)'],[1250,{width:'8ch'}],[2400,{width:'8ch'}]]);
+     seq(fl,[[0,op(0)],[1300,op(0)],[1600,op(1)],[1900,op(1),E.i],[2400,op(0)]]);
+     seq(end,[[0,op(1)],[1900,op(1),E.i],[2400,op(0)]]);
+     return 2400;
+   }},
+  {name:'Lamp out', dur:2200,
+   desc:'The app warms to lamplight, darkness flickers in from the edges, and a last small flame gutters out.',
+   compose:'Vignette as a <b>Brush.radialGradient</b> with an animated stop; flicker from irregular <b>keyframes</b>; sepia <b>ColorMatrix</b> on the app.',
+   run(s){
+     const app=appUI(s,'novel'); const dk=ov(s,'dark'); const fl=h(s,'flame');
+     seq(app,[[0,{filter:'sepia(0) saturate(1)',opacity:1}],[800,{filter:'sepia(.55) saturate(1.2)',opacity:1}],[1490,{filter:'sepia(.55) saturate(1.2)',opacity:1}],[1500,{filter:'sepia(.55) saturate(1.2)',opacity:0}],[2200,{filter:'sepia(.55) saturate(1.2)',opacity:0}]]);
+     seq(dk,[[0,{'--v':'95%',opacity:1}],[300,{'--v':'68%',opacity:1}],[420,{'--v':'78%',opacity:1}],[700,{'--v':'44%',opacity:1}],[820,{'--v':'52%',opacity:1},E.i],[1250,{'--v':'6%',opacity:1}],[1500,{'--v':'-30%',opacity:1}],[1800,{'--v':'-30%',opacity:1}],[2200,{'--v':'-30%',opacity:0}]]);
+     seq(fl,[[0,{opacity:0,transform:'scale(1)'}],[900,{opacity:0,transform:'scale(1)'}],[1100,{opacity:1,transform:'scale(1)'}],[1220,{opacity:.6,transform:'scale(.9,1.1)'}],[1320,{opacity:1,transform:'scale(1)'}],[1450,{opacity:.8,transform:'scale(.8)'},E.i],[1700,{opacity:0,transform:'scale(.2,.5)'}],[2200,{opacity:0,transform:'scale(.2,.5)'}]]);
+     return 2200;
+   }},
+ ]}
+};
+
+/* ---------- page wiring ---------- */
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const loopEl = document.getElementById('loop'); if (reduce) loopEl.checked = false;
+let cards = [];
+
+function play(card, settle){
+  clearTimeout(card.timer);
+  card.stage.replaceChildren();
+  THEME = card.theme || null;
+  const dur = card.c.run(card.stage);
+  THEME = null;
+  if (settle){
+    card.stage.getAnimations({subtree:true}).forEach(a => { if (a.effect.getTiming().iterations === Infinity) a.cancel(); else a.finish(); });
+    return;
+  }
+  card.timer = setTimeout(() => { if (loopEl.checked && !card.once) play(card); else play(card, true); }, (dur + (card.once ? 400 : 1300)) * SPEED);
+}
+
+/* ---------- settings mock ---------- */
+const BASIC = {
+  launch:[
+    {name:'Off', sub:'Opens straight to the app', run(s){ const a=appUI(s,'manga'); seq(a,[[0,op(0)],[500,op(0)],[510,op(1)],[800,op(1)]]); return 800; }},
+    {name:'Fade', sub:'0.45 s', run(s){ const a=appUI(s,'manga'); seq(a,[[0,{opacity:0,transform:'scale(.985)'},E.o],[450,{opacity:1,transform:'scale(1)'}]]); return 450; }},
+  ],
+  quit:[
+    {name:'Off', sub:'Closes right away', run(s){ const a=appUI(s,'manga'); seq(a,[[0,op(1)],[500,op(1)],[510,op(0)],[800,op(0)]]); return 800; }},
+    {name:'Fade', sub:'0.35 s', run(s){ const a=appUI(s,'manga'); seq(a,[[0,{opacity:1,transform:'scale(1)'},E.i],[350,{opacity:0,transform:'scale(.985)'}]]); return 350; }},
+  ]
+};
+const SEL = {manga:{launch:'manga:0',quit:'manga:0'}, anime:{launch:'anime:0',quit:'anime:0'}, novel:{launch:'novel:0',quit:'novel:0'}};
+const ICON = {
+  back:'M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z',
+  chev:'M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z',
+  download:'M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z',
+  folder:'M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z',
+  web:'M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z',
+  library:'M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8 12.5v-9l6 4.5-6 4.5z',
+  motion:'M15 2c-2.71 0-5.05 1.54-6.22 3.78a7.06 7.06 0 0 0-3 3A7.01 7.01 0 0 0 2 15c0 3.87 3.13 7 7 7 2.71 0 5.05-1.54 6.22-3.78a7.06 7.06 0 0 0 3-3A7.01 7.01 0 0 0 22 9c0-3.87-3.13-7-7-7zM9 20a5 5 0 0 1-4-8c0 3.87 3.13 7 7 7-.84.63-1.88 1-3 1zm3-3a5 5 0 0 1-4-8c0 3.86 3.13 6.99 7 7-.84.63-1.88 1-3 1zm4.7-3.3c-.53.19-1.1.3-1.7.3-2.76 0-5-2.24-5-5 0-.6.11-1.17.3-1.7.53-.19 1.1-.3 1.7-.3 2.76 0 5 2.24 5 5 0 .6-.11 1.17-.3 1.7zM19 12c0-3.86-3.13-6.99-7-7a5 5 0 0 1 7 7z',
+  update:'M12 16.5l4-4h-3v-9h-2v9H8l4 4zm9-13h-6v1.99h6v14.03H3V5.49h6V3.5H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2v-14c0-1.1-.9-2-2-2z',
+  clock:'M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z'
+};
+const svgI = k => `<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="${ICON[k]}"/></svg>`;
+const row = ({icon, title, sub='', trail='', cls='', attrs=''}) =>
+  `<div class="seg ${cls}" ${attrs}>${icon ? svgI(icon) : ''}<div class="tx"><b>${title}</b>${sub ? `<span>${sub}</span>` : ''}</div>${trail}</div>`;
+const group = rows => `<div class="seglist">${rows.join('')}</div>`;
+const topbar = (title, back) => `<div class="topbar"><button class="iconbtn" ${back ? 'id="nav-back"' : ''} aria-label="Back">${svgI('back')}</button><h3>${title}</h3></div>`;
+
+function optionGroups(app, kind){
+  const groups = [{label:'Basic', items: BASIC[kind].map((c,i) => ({...c, key: i ? 'fade' : 'off'}))}];
+  [app].forEach((a, gi) =>
+    groups.push({label: gi ? 'From ' + NAMES[a] : NAMES[a], items: CONCEPTS[a][kind].map((c,i) => ({...c, key: a + ':' + i, sub: (c.dur/1000).toFixed(1) + ' s'}))}));
+  return groups;
+}
+const findOpt = (app, kind, key) => optionGroups(app, kind).flatMap(g => g.items).find(o => o.key === key);
+
+let S = {app:'manga', kind:'launch', pv:null, hoverT:null};
+
+function deskRows(app){
+  const rows = {
+    manga:[row({icon:'download',title:'Download Path',sub:'~/Library/Application Support/MangaWorld/extensions'}),
+           row({icon:'download',title:'Download Chapter Path',sub:'~/Downloads/MangaWorld'}),
+           row({icon:'web',title:'Use WebView',sub:'Use a webview instead of the built in reader',trail:'<span class="sw"></span>'}),
+           row({icon:'folder',title:'View Data Directory',sub:'View the directory where the data is stored'})],
+    anime:[row({icon:'download',title:'Download Path',sub:'~/Library/Application Support/AnimeWorld/extensions'}),
+           row({icon:'folder',title:'View Data Directory',sub:'View the directory where the data is stored'}),
+           row({icon:'library',title:'Library folders',sub:'Choose which folders on this computer show up in Downloads'})],
+    novel:[row({icon:'folder',title:'View Data Directory',sub:'View the directory where the data is stored'})]
+  }[app];
+  const sel = SEL[app];
+  const summary = `Launch: ${findOpt(app,'launch',sel.launch).name} · Quit: ${findOpt(app,'quit',sel.quit).name}`;
+  return group(rows)
+    + `<div class="sechdr">Motion</div>`
+    + group([row({icon:'motion',title:'Launch &amp; quit animations <span class="newchip">NEW</span>',sub:summary,trail:svgI('chev'),cls:'go new',attrs:'id="open-anim" role="button" tabindex="0"'})])
+    + `<div class="sechdr">Updates</div>`
+    + group([row({icon:'update',title:'Up to date',sub:'Current: 33.0.0',trail:'<span class="txtbtn">Check now</span>'}),
+             row({icon:'clock',title:'Check automatically',sub:'Look for updates each time the app starts',trail:'<span class="sw"></span>'}),
+             row({icon:'clock',title:'Update track · Stable',sub:'Stable releases. Set by the build you installed.'}),
+             row({icon:'web',title:'Download from GitHub',sub:'Open the Stable release page and install it yourself'})]);
+}
+
+function renderOpts(){
+  const {app, kind} = S;
+  const html = optionGroups(app, kind).map(g =>
+    `<div class="sechdr">${g.label}</div><div class="seglist" role="radiogroup" aria-label="${g.label}">` +
+    g.items.map(o => `<div class="seg" role="radio" tabindex="0" data-key="${o.key}" aria-checked="${SEL[app][kind] === o.key}"><span class="radio"></span><div class="tx"><b>${o.name}</b><span>${o.sub}</span></div></div>`).join('') +
+    `</div>`).join('');
+  document.getElementById('opts').innerHTML = html;
+}
+
+function preview(key){
+  const o = findOpt(S.app, S.kind, key);
+  S.pv.c = o; S.pv.theme = S.app; S.pv.stage.dataset.a = S.app; S.pv.key = key;
+  document.getElementById('pvname').textContent = o.name;
+  document.getElementById('pvsub').textContent = (SEL[S.app][S.kind] === key ? 'Selected · ' : 'Previewing · ') + o.sub;
+  play(S.pv, reduce);
+}
+
+function renderAnimView(){
+  const v = document.getElementById('v-anim');
+  v.innerHTML = topbar('Launch &amp; quit animations', true) +
+    `<div class="segbtn" role="group" aria-label="Animation type"><button data-k="launch" aria-pressed="${S.kind==='launch'}">Launch</button><button data-k="quit" aria-pressed="${S.kind==='quit'}">Quit</button></div>
+     <div class="split"><div id="opts"></div>
+       <div class="preview"><div class="pvlabel">PREVIEW</div><div class="stage" role="img" aria-label="Animation preview"></div>
+         <div class="pvmeta"><div><b id="pvname"></b><span id="pvsub"></span></div><button class="tonal" id="pvplay">Play again</button></div></div></div>`;
+  S.pv = {stage: v.querySelector('.stage'), once: true};
+  renderOpts();
+  preview(SEL[S.app][S.kind]);
+  v.querySelector('#nav-back').onclick = () => go('desk');
+  v.querySelector('#pvplay').onclick = () => play(S.pv);
+  v.querySelectorAll('.segbtn button').forEach(b => b.onclick = () => { S.kind = b.dataset.k; renderAnimView(); });
+  const opts = v.querySelector('#opts');
+  const choose = el => { SEL[S.app][S.kind] = el.dataset.key; renderOpts(); preview(el.dataset.key); opts.querySelector(`[data-key="${el.dataset.key}"]`).focus(); };
+  opts.addEventListener('click', e => { const el = e.target.closest('[role=radio]'); if (el) choose(el); });
+  opts.addEventListener('keydown', e => { const el = e.target.closest('[role=radio]'); if (el && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); choose(el); } });
+  opts.addEventListener('mouseover', e => {
+    const el = e.target.closest('[role=radio]'); if (!el || el.dataset.key === S.pv.key) return;
+    clearTimeout(S.hoverT); S.hoverT = setTimeout(() => preview(el.dataset.key), 180);
+  });
+  opts.addEventListener('mouseleave', () => { clearTimeout(S.hoverT); if (S.pv.key !== SEL[S.app][S.kind]) S.hoverT = setTimeout(() => preview(SEL[S.app][S.kind]), 400); });
+}
+
+function renderDesk(){
+  const v = document.getElementById('v-desk');
+  v.innerHTML = topbar('Desktop Settings', false) + deskRows(S.app);
+  const open = v.querySelector('#open-anim');
+  open.onclick = () => go('anim');
+  open.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go('anim'); } };
+}
+
+function go(to){
+  const desk = document.getElementById('v-desk'), anim = document.getElementById('v-anim');
+  const [from, into, dir] = to === 'anim' ? [desk, anim, 1] : [anim, desk, -1];
+  if (to === 'anim') renderAnimView(); else { if (S.pv) clearTimeout(S.pv.timer); renderDesk(); }
+  into.hidden = false;
+  const d = reduce ? 1 : 320;
+  from.animate([{transform:'translateX(0)',opacity:1},{transform:`translateX(${-dir*8}%)`,opacity:0}],{duration:d,easing:E.io,fill:'forwards'}).onfinish = () => { from.hidden = true; from.getAnimations().forEach(a => a.cancel()); };
+  into.animate([{transform:`translateX(${dir*8}%)`,opacity:0},{transform:'translateX(0)',opacity:1}],{duration:d,easing:E.io});
+  (to === 'anim' ? into.querySelector('#nav-back') : into.querySelector('#open-anim')).focus({preventScroll:true});
+}
+
+function renderSettings(app){
+  S.app = app; S.kind = 'launch';
+  if (S.pv) clearTimeout(S.pv.timer);
+  document.getElementById('win').dataset.app = app;
+  document.getElementById('win-title').textContent = NAMES[app];
+  document.getElementById('v-anim').hidden = true;
+  const desk = document.getElementById('v-desk'); desk.hidden = false; desk.getAnimations().forEach(a => a.cancel());
+  renderDesk();
+}
+
+function render(app){
+  document.body.dataset.tab = app;
+  document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.tab === app)));
+  renderSettings(app);
+  cards.forEach(c => clearTimeout(c.timer)); cards = [];
+  for (const kind of ['launch','quit']){
+    const g = document.getElementById('g-' + kind); g.replaceChildren();
+    CONCEPTS[app][kind].forEach(c => {
+      const el = document.createElement('article'); el.className = 'card';
+      el.innerHTML = `<div class="stage" role="img" aria-label="${c.name} ${kind} animation preview"></div>
+        <div class="meta"><div class="top"><h3>${c.name}</h3><span style="display:flex;gap:6px">${c.pick?'<span class="chip pick">your idea</span>':''}<span class="chip">${(c.dur/1000).toFixed(1)} s</span></span></div>
+        <p class="desc">${c.desc}</p><p class="compose">${c.compose}</p>
+        <div class="actions"><button class="btn">Replay</button></div></div>`;
+      g.appendChild(el);
+      const card = {c, stage: el.querySelector('.stage')};
+      card.stage.dataset.a = app;
+      el.querySelector('.btn').onclick = () => play(card);
+      cards.push(card);
+      play(card, true);
+    });
+  }
+  if (!reduce) cards.forEach((c, i) => setTimeout(() => play(c), i * 150));
+}
+
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => { location.hash = t.dataset.tab; });
+document.getElementById('playall').onclick = () => cards.forEach(c => play(c));
+document.getElementById('speed').onchange = e => { SPEED = +e.target.value; cards.forEach(c => play(c)); };
+loopEl.onchange = () => { if (loopEl.checked) cards.forEach(c => play(c)); };
+const route = () => render(['manga','anime','novel'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'manga');
+addEventListener('hashchange', route);
+document.fonts?.ready.then(route); if (!document.fonts) route();
+</script>
