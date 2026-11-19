@@ -33,6 +33,12 @@ class DesktopMotionCatalogTest {
         assertEquals(1f, a.progress(900, 100, 200, LinearEasing))
     }
 
+    @Test
+    fun progressZeroLengthSegment() {
+        assertEquals(0f, a.progress(99, 100, 100, LinearEasing))
+        assertEquals(1f, a.progress(100, 100, 100, LinearEasing))
+    }
+
     private fun fake(k: String) = object : DesktopMotion {
         override val key = k
         override val title = k

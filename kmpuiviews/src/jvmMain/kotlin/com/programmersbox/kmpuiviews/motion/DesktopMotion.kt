@@ -47,4 +47,8 @@ fun DesktopMotionCatalog.resolve(phase: MotionPhase, key: String): DesktopMotion
 /** Maps [time] within the mockup segment [[start], [end]] to eased 0..1, clamped. */
 @Suppress("UnusedReceiverParameter")
 fun DesktopMotion.progress(time: Int, start: Int, end: Int, easing: Easing): Float =
-    easing.transform(((time - start).toFloat() / (end - start)).coerceIn(0f, 1f))
+    if (end <= start) {
+        if (time >= end) 1f else 0f
+    } else {
+        easing.transform(((time - start).toFloat() / (end - start)).coerceIn(0f, 1f))
+    }
