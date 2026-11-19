@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.motion
 
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithText
@@ -46,6 +47,15 @@ class MotionSettingsScreenTest {
         onNodeWithText("Quit").performClick()
         onNodeWithText("Off").performClick()
         assertEquals("off", saved)
+    }
+
+    @Test
+    fun groupEmitsNothingWithoutCatalog() = runComposeUiTest {
+        setContent {
+            MaterialTheme { LazyColumn { motionSettingsGroup(null) } }
+        }
+        onNodeWithText("Motion").assertDoesNotExist()
+        onNodeWithText("Launch & quit animations").assertDoesNotExist()
     }
 
     private fun fake(k: String, t: String) = object : DesktopMotion {

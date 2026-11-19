@@ -42,6 +42,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import org.koin.compose.getKoin
 import org.koin.compose.koinInject
 import java.util.Locale
 
@@ -54,7 +55,11 @@ private val SplitBreakpoint = 640.dp
 
 @Composable
 fun MotionSettingsScreen() {
-    val catalog = koinInject<DesktopMotionCatalog>()
+    val catalog = getKoin().getOrNull<DesktopMotionCatalog>()
+    if (catalog == null) {
+        MotionUnavailableContent()
+        return
+    }
     val settings = koinInject<MangaDesktopSettings>()
     var launchKey by settings.launchAnimation.asState()
     var quitKey by settings.quitAnimation.asState()
@@ -65,6 +70,21 @@ fun MotionSettingsScreen() {
         onLaunchKey = { launchKey = it },
         onQuitKey = { quitKey = it },
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MotionUnavailableContent() {
+    Scaffold(
+        topBar = {
+            LargeTopAppBar(
+                title = { Text("Launch & quit animations") },
+                navigationIcon = { BackButton() },
+            )
+        },
+    ) { padding ->
+        Text("No animations available", Modifier.padding(padding).padding(16.dp))
+    }
 }
 
 /** Testable body: no Koin, no DataStore. */

@@ -18,14 +18,16 @@ import androidx.compose.ui.unit.dp
 import com.programmersbox.datastore.asState
 import com.programmersbox.kmpuiviews.MangaDesktopSettings
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
-import org.koin.compose.getKoin
 import org.koin.compose.koinInject
 
-/** "Motion" header + one row that opens [MotionSettingsRoute]. Adds nothing when no [DesktopMotionCatalog] is in Koin. */
+/**
+ * "Motion" header + one row that opens [MotionSettingsRoute]. Adds nothing when [catalog] is null.
+ * Call sites look it up with `getKoin().getOrNull<DesktopMotionCatalog>()`.
+ */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
-fun LazyListScope.motionSettingsGroup() {
+fun LazyListScope.motionSettingsGroup(catalog: DesktopMotionCatalog?) {
+    if (catalog == null) return
     item(contentType = "motionHeader") {
-        if (getKoin().getOrNull<DesktopMotionCatalog>() == null) return@item
         Text(
             "Motion",
             style = MaterialTheme.typography.titleSmall,
@@ -37,7 +39,6 @@ fun LazyListScope.motionSettingsGroup() {
         )
     }
     item(contentType = "motionRow") {
-        val catalog = getKoin().getOrNull<DesktopMotionCatalog>() ?: return@item
         val settings = koinInject<MangaDesktopSettings>()
         val launchKey by settings.launchAnimation.asState()
         val quitKey by settings.quitAnimation.asState()
