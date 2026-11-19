@@ -64,6 +64,17 @@ import com.programmersbox.kmpextensionloader.SourceLoader
 import com.programmersbox.kmpmodels.ExampleService
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.di.kmpModule
+import com.programmersbox.kmpuiviews.motion.AppQuitHandler
+import com.programmersbox.kmpuiviews.motion.QuitController
+import com.programmersbox.kmpuiviews.motion.QuitHost
+import com.programmersbox.kmpuiviews.motion.QuitOverlay
+import com.programmersbox.kmpuiviews.motion.WindowPicture
+import com.programmersbox.kmpuiviews.motion.quitPlan
+import com.programmersbox.kmpuiviews.motion.recordInto
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.window.WindowPlacement
 import com.programmersbox.kmpuiviews.motion.DesktopMotionCatalog
 import com.programmersbox.kmpuiviews.motion.MotionConditions
 import com.programmersbox.kmpuiviews.motion.MotionHost
@@ -343,20 +354,59 @@ private fun InternalDesktopUi(
                     )
                 )
             }
+            val picture = remember { WindowPicture() }
+            var contentHeight by remember { mutableStateOf(Dp.Unspecified) }
+            var contentColors by remember { mutableStateOf<ColorScheme?>(null) }
+            val quitController = remember {
+                QuitController(
+                    plan = {
+                        val key = runBlocking { settings.quitAnimation.get() }
+                        val plan = quitPlan(
+                            catalog?.resolve(MotionPhase.Quit, key) ?: OffMotion,
+                            MotionConditions(
+                                systemReducesMotion(),
+                                fullscreen = windowState.placement == WindowPlacement.Fullscreen,
+                                minimized = windowState.isMinimized,
+                                platform = OverlayPlatform.current(),
+                            ),
+                        )
+                        // The overlay needs the window's real position.
+                        if (windowState.position.isSpecified) plan else plan.copy(host = QuitHost.InWindow)
+                    },
+                    launch = { launchRun },
+                    exit = exitApplication,
+                )
+            }
+            AppQuitHandler(quitController::requestQuit)
+            val quitInWindow = (quitController.state as? QuitController.State.Playing)
+                ?.takeIf { it.plan.host == QuitHost.InWindow }
+                ?.run
             OtakuDecoratedWindow(
                 title = title,
-                onCloseRequest = exitApplication,
+                onCloseRequest = quitController::requestQuit,
                 state = windowState,
+                // Hidden once exiting too, so the content never shows unfaded before the window goes.
+                visible = !quitController.hideMainWindow && quitController.state != QuitController.State.Exited,
                 showQuickActions = true,
                 onAnyKey = { launchRun.skip() },
             ) {
+                val colors = MaterialTheme.colorScheme
+                SideEffect { contentColors = colors }
                 launchRun.Play()
+                quitInWindow?.Play(onEnd = quitController::finished)
+                val activeRun = quitInWindow ?: launchRun
                 MotionHost(
-                    motion = if (launchRun.finished) OffMotion else launchRun.motion,
-                    time = { launchRun.timeMillis },
+                    motion = if (activeRun.finished) OffMotion else activeRun.motion,
+                    time = { activeRun.timeMillis },
                     modifier = Modifier.fillMaxSize().skipMotionOnInput(launchRun),
                 ) {
-                    Box(modifier = Modifier.fillMaxSize()) {
+                    val density = LocalDensity.current
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .recordInto(picture)
+                            .onSizeChanged { contentHeight = with(density) { it.height.toDp() } }
+                    ) {
                         //UrlOpenerScreen()
                         //ScanQrCode()
                         val genericInfo = koinInject<KmpGenericInfo>()
@@ -377,6 +427,16 @@ private fun InternalDesktopUi(
                     }
                 }
             }
+
+            val chromeColors = contentColors ?: MaterialTheme.colorScheme
+            QuitOverlay(
+                controller = quitController,
+                picture = picture,
+                windowState = windowState,
+                contentHeight = contentHeight,
+                titleBarColor = rememberMaterialTitleBarStyle(chromeColors).colors.background,
+                surfaceColor = chromeColors.surface,
+            )
 
             // Tray must come after Window: the Skiko graphics implementation is registered
             // when the window's ComposeContainer is created, and Tray converts its icon
