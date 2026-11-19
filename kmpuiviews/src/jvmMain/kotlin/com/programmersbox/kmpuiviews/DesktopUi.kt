@@ -80,6 +80,8 @@ import com.programmersbox.kmpuiviews.motion.MotionConditions
 import com.programmersbox.kmpuiviews.motion.MotionHost
 import com.programmersbox.kmpuiviews.motion.MotionPhase
 import com.programmersbox.kmpuiviews.motion.MotionRun
+import com.programmersbox.kmpuiviews.motion.MotionSettingsRoute
+import com.programmersbox.kmpuiviews.motion.MotionSettingsScreen
 import com.programmersbox.kmpuiviews.motion.OffMotion
 import com.programmersbox.kmpuiviews.motion.OverlayPlatform
 import com.programmersbox.kmpuiviews.motion.Play
@@ -138,6 +140,7 @@ import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.scope.Scope
 import org.koin.dsl.koinConfiguration
+import org.koin.dsl.navigation3.navigation
 import org.koin.dsl.module
 import com.programmersbox.telemetry.noOpTelemetryModule
 import java.io.File
@@ -180,6 +183,7 @@ fun desktopSetup(
                             single<UpdaterEngine> { NucleusUpdaterEngine(channel = name.lowercase()) }
                             single { DesktopUpdater(get(), get(), CoroutineScope(Dispatchers.IO + SupervisorJob())) }
                             single { jvmAppLogo() }
+                            navigation<MotionSettingsRoute> { MotionSettingsScreen() }
                             genericInfo(this).bindsPlatformGenericInfo()
                             moduleBlock()
                         }
@@ -371,7 +375,10 @@ private fun InternalDesktopUi(
                             ),
                         )
                         // The overlay needs the window's real position.
-                        if (windowState.position.isSpecified) plan else plan.copy(host = QuitHost.InWindow)
+                        if (windowState.position.isSpecified) plan else {
+                            println("Quit motion: window position unspecified, playing in-window")
+                            plan.copy(host = QuitHost.InWindow)
+                        }
                     },
                     launch = { launchRun },
                     exit = exitApplication,
