@@ -12,8 +12,6 @@ internal val EaseIn = CubicBezierEasing(.55f, 0f, .9f, .35f)
 /** One mockup `seq` frame: [value] at [at] ms; [easing] shapes the segment that starts here. */
 internal class Key(val at: Int, val value: Float, val easing: Easing = LinearEasing)
 
-internal fun key(at: Int, value: Float, easing: Easing = LinearEasing) = Key(at, value, easing)
-
 /** Piecewise interpolation of [keys] (sorted by time) at [time] ms; holds the first/last value outside them. */
 internal fun track(time: Int, vararg keys: Key): Float {
     if (time <= keys.first().at) return keys.first().value

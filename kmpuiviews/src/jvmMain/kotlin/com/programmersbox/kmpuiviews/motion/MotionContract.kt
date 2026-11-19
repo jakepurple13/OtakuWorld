@@ -33,25 +33,26 @@ fun renderMotionFrame(
 object MotionContract {
     private val appColor = Color.Red
 
-    /** Problems with [motion] as a [phase] animation; empty when it obeys the contract. */
-    fun violations(motion: DesktopMotion, phase: MotionPhase): List<String> {
+    /** Problems with [motion] as a [phase] animation in a [width]×[height] host; empty when it obeys the contract. */
+    fun violations(motion: DesktopMotion, phase: MotionPhase, width: Int = 320, height: Int = 200): List<String> {
         if (motion === OffMotion) return emptyList()
         val end = motion.durationMillis
         val problems = mutableListOf<String>()
+        fun frame(time: Int) = points(renderMotionFrame(motion, time, width, height, appColor))
         when (phase) {
             MotionPhase.Launch -> {
-                points(renderMotionFrame(motion, end, appColor = appColor)).forEach { (name, c) ->
+                frame(end).forEach { (name, c) ->
                     if (c != appColor) problems += "launch at $end ms: $name is $c, expected $appColor"
                 }
-                val centre = points(renderMotionFrame(motion, 0, appColor = appColor)).getValue("centre")
+                val centre = frame(0).getValue("centre")
                 if (centre == appColor) problems += "launch at 0 ms: centre is already $appColor"
             }
 
             MotionPhase.Quit -> {
-                points(renderMotionFrame(motion, 0, appColor = appColor)).forEach { (name, c) ->
+                frame(0).forEach { (name, c) ->
                     if (c != appColor) problems += "quit at 0 ms: $name is $c, expected $appColor"
                 }
-                points(renderMotionFrame(motion, end, appColor = appColor)).forEach { (name, c) ->
+                frame(end).forEach { (name, c) ->
                     if (c.alpha != 0f) problems += "quit at $end ms: $name is $c, expected alpha 0"
                 }
             }

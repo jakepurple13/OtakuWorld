@@ -2,8 +2,10 @@ package com.programmersbox.desktop.motion
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -23,27 +25,27 @@ import com.programmersbox.kmpuiviews.motion.DesktopMotion
 import kotlin.math.cos
 import kotlin.math.sin
 
-/**
- * One frame of the sushi scene. Lengths are in cqw (percent of the host width) and angles in
- * degrees, as in the mockup; the insets are the `clip-path: inset(0 right 0 left)` percentages.
- */
+/** One frame of the sushi scene, in the mockup's units. */
 internal class SushiFrame(
-    /** App and rice sheet clip. */
+    /** App and rice sheet `clip-path: inset(0 R 0 L)` left inset, percent of the host width. */
     val insetLeft: Float,
+    /** Same clip's right inset, percent of the host width. */
     val insetRight: Float,
+    /** Rice sheet opacity, 0..1. */
     val sheetAlpha: Float,
+    /** Board opacity, 0..1. */
     val boardAlpha: Float,
-    /** `.rw` translateY: moves the roll and the chopsticks together. */
+    /** `.rw` translateY in vertical cqw (see [verticalCqw]); moves the roll and the chopsticks together. */
     val rollDrop: Float,
-    /** `.rx` translateX: the roll only. */
+    /** `.rx` translateX in cqw; the roll only. */
     val rollTravel: Float,
-    /** `.maki` rotate. */
+    /** `.maki` rotate, degrees clockwise. */
     val rollSpin: Float,
-    /** How far each chopstick moves outwards. */
+    /** How far each chopstick moves outwards, cqw. */
     val stickSpread: Float,
-    /** How far each chopstick leans in. */
+    /** How far each chopstick leans in, degrees. */
     val stickTilt: Float,
-    /** The chopsticks' own translateY. */
+    /** The chopsticks' own translateY in vertical cqw (see [verticalCqw]). */
     val stickLift: Float,
 )
 
@@ -65,9 +67,20 @@ internal abstract class SushiScene : DesktopMotion {
 
     @Composable
     override fun BoxScope.InFront(time: () -> Int) {
-        Canvas(Modifier.matchParentSize().graphicsLayer { alpha = frame(time()).sheetAlpha }) {
-            clipReveal(frame(time())) { drawRiceSheet() }
-        }
+        Spacer(
+            Modifier
+                .matchParentSize()
+                .graphicsLayer { alpha = frame(time()).sheetAlpha }
+                .drawWithCache {
+                    val sheet = RiceSheet(size)
+                    onDrawBehind {
+                        val frame = frame(time())
+                        if (frame.sheetAlpha > 0f && frame.insetLeft + frame.insetRight < 100f) {
+                            clipReveal(frame) { drawRiceSheet(sheet) }
+                        }
+                    }
+                }
+        )
         Canvas(Modifier.matchParentSize()) {
             val frame = frame(time())
             drawRoll(frame)
@@ -101,6 +114,12 @@ private val StickDark = Color(0xFFA8743F)
 /** 1cqw in pixels. */
 private val DrawScope.cqw get() = size.width / 100
 
+/**
+ * Unit for vertical moves: 1cqw on the mockup's 16:10 stage (height = 62.5cqw), growing with taller
+ * hosts so off-screen drops and lifts still clear the window.
+ */
+private val DrawScope.verticalCqw get() = maxOf(cqw, size.height / 62.5f)
+
 /** Roll centre x before travel: `.rw` left 6cqw + half its 20cqw width. */
 private const val ROLL_X = 16f
 
@@ -120,15 +139,22 @@ private fun DrawScope.drawBoard(alpha: Float) {
     )
 }
 
+/** `.nori` grain layers for one host size; built once per size in `drawWithCache`. */
+private class RiceSheet(size: Size) {
+    private val u = size.width / 100
+    private val all = Rect(Offset.Zero, size)
+    private val step = Size(3 * u, 2.2f * u)
+    private val grain = Size(.52f * u, .26f * u)
+    val light = grains(all, first = Offset(1.5f * u, 1.1f * u), step, grain)
+    val shade = grains(all, first = Offset.Zero, step, grain)
+}
+
 /** `.nori`: two offset grids of rice grains, then the salmon stripe with its cucumber edge (`::after`). */
-private fun DrawScope.drawRiceSheet() {
+private fun DrawScope.drawRiceSheet(sheet: RiceSheet) {
     val u = cqw
     drawRect(SheetRice)
-    val all = Rect(Offset.Zero, size)
-    val grain = Size(.52f * u, .26f * u)
-    val step = Size(3 * u, 2.2f * u)
-    drawGrains(all, first = Offset(1.5f * u, 1.1f * u), step, grain, GrainLight)
-    drawGrains(all, first = Offset.Zero, step, grain, GrainShade)
+    drawPath(sheet.light, GrainLight)
+    drawPath(sheet.shade, GrainShade)
 
     val top = size.height * .43f
     val height = size.height * .14f
@@ -143,7 +169,7 @@ private fun DrawScope.drawRiceSheet() {
 /** `.maki`: a 20cqw nori circle with rice, fish and cucumber, spun about its centre. */
 private fun DrawScope.drawRoll(frame: SushiFrame) {
     val u = cqw
-    val centre = Offset((ROLL_X + frame.rollTravel) * u, size.height / 2 + frame.rollDrop * u)
+    val centre = Offset((ROLL_X + frame.rollTravel) * u, size.height / 2 + frame.rollDrop * verticalCqw)
     // box-shadow: 0 1.4cqw 2cqw #0006
     val shadowCentre = centre + Offset(0f, 1.4f * u)
     drawCircle(
@@ -158,7 +184,7 @@ private fun DrawScope.drawRoll(frame: SushiFrame) {
         val rice = Rect(centre, 8.7f * u)
         drawCircle(RollRice, radius = rice.width / 2, center = centre)
         clipPath(Path().apply { addOval(rice) }) {
-            drawGrains(rice, first = rice.topLeft + Offset(1.2f * u, .9f * u), Size(2.4f * u, 1.8f * u), Size(.47f * u, .23f * u), GrainLight)
+            drawPath(grains(rice, first = rice.topLeft + Offset(1.2f * u, .9f * u), Size(2.4f * u, 1.8f * u), Size(.47f * u, .23f * u)), GrainLight)
         }
 
         // .fish: inset 5.6 4.6 5 5.4 (cqw), border-radius 42% 58% 50% 50%, 135deg gradient
@@ -179,7 +205,8 @@ private fun DrawScope.drawRoll(frame: SushiFrame) {
 /** `.stick`: 48cqw tapered sticks either side of the roll, each leaning in about its tip. */
 private fun DrawScope.drawChopsticks(frame: SushiFrame) {
     val u = cqw
-    val tipY = size.height / 2 + (frame.rollDrop + frame.stickLift - 1.4f) * u
+    // Tips sit 1.4cqw above the roll centre (`.stick` bottom: 1.4cqw).
+    val tipY = size.height / 2 + (frame.rollDrop + frame.stickLift) * verticalCqw - 1.4f * u
     for (side in floatArrayOf(-1f, 1f)) {
         val tip = Offset((ROLL_X + side * (10.6f + frame.stickSpread)) * u, tipY)
         rotate(-side * frame.stickTilt, pivot = tip) {
@@ -195,13 +222,13 @@ private fun DrawScope.drawChopsticks(frame: SushiFrame) {
     }
 }
 
-/** Ovals of [radius] every [step] from [first], covering [area]. */
-private fun DrawScope.drawGrains(area: Rect, first: Offset, step: Size, radius: Size, color: Color) {
+/** One path of ovals with [radius] every [step] from [first], covering [area]. */
+private fun grains(area: Rect, first: Offset, step: Size, radius: Size): Path = Path().apply {
     var y = first.y
     while (y - radius.height < area.bottom) {
         var x = first.x
         while (x - radius.width < area.right) {
-            drawOval(color, topLeft = Offset(x - radius.width, y - radius.height), size = radius * 2f)
+            addOval(Rect(Offset(x - radius.width, y - radius.height), radius * 2f))
             x += step.width
         }
         y += step.height
