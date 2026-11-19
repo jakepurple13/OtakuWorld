@@ -234,6 +234,32 @@ Windows/Linux). The existing global-search shortcut opens or switches to the Sea
 8. Restore on launch.
 9. Tear-out windows, move-between-windows, tear-out overlay with Lift fallback.
 
+## Feature parity (no desktop feature may be dropped)
+
+The tab shell replaces the desktop window's use of `HomeNav`. Everything `HomeNav` does on desktop today must survive:
+
+- **Every rail destination is still one click away.** The Home tab keeps a side nav with all of today's desktop rail
+  items: Recent, All, Notifications, Lists, Search, Favorites, Extensions and Settings. The Settings update badge
+  (`updateCheck()`) moves to the toolbar's Settings button. Notifications, Search, Lists and Settings open their
+  single-instance tabs, and the others navigate inside the Home tab. The mockup's shorter Home nav was illustrative
+  only.
+- **`HomeNav`'s side effects move into the shell, run once per app (not per tab):** `InitialSetup()`,
+  `SyncManager.start()`, `genericInfo.DialogSetups()`, `QuickActionsOverlay()`, theme/AMOLED/blur handling, and
+  `LocalWindowSizeClass`.
+- **The existing setup in `InternalDesktopUi` keeps working:** the onboarding redirect, extension loading, the
+  JS-extension scan, background checkers, the updater dialog, the just-updated snackbar, and quick actions with their
+  shortcuts.
+- **App-specific hooks still apply inside every tab:** `KmpGenericInfo` nav setup hooks (`globalNav3Setup`,
+  `settingsNav3Setup`) and the app's Koin `navigation<Key>` entries. The list-detail, dialog and bottom-sheet scene
+  strategies in `Nav3` also work per tab.
+- **Mobile-only bar settings don't apply on desktop, just as today:** floating nav, middle nav action, and multiple
+  actions. Today's desktop windows are wide enough to use the rail, which ignores them. Their settings stay
+  untouched, and Android keeps using them.
+- **Desktop shortcuts carry over:** reader keys, player keys, the shortcuts dialog and global search. Tab shortcuts
+  must not override existing reader/player bare-key shortcuts.
+- **Parity check:** before the shell replaces `HomeNav` on desktop, a checklist of the above is ticked by hand on
+  macOS for all three desktop apps.
+
 ## Calls made while writing this (user may override)
 
 1. **Where one-tab-per-title applies.** Every navigation to a keyed page checks for duplicates: plain same-tab clicks
