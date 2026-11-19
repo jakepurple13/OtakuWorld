@@ -13,10 +13,12 @@ import com.programmersbox.sharedcomponents.repository.ChangingSettingsRepository
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
+import com.programmersbox.kmpuiviews.telemetry.TelemetrySourceNamer
 
 val repositories = module {
     singleOf(::SourceRepository)
     singleOf(::CurrentSourceRepository)
+    singleOf(::TelemetrySourceNamer)
     singleOf(::ChangingSettingsRepository)
     // Explicit so the defaulted clock stays Clock.System; singleOf would ask Koin for a Clock
     single { FavoritesRepository(dao = get(), systemAlerter = get(), authManager = get(), sourceRepository = get()) }
