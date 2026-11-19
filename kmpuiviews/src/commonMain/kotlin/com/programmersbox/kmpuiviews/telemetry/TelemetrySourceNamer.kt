@@ -4,6 +4,8 @@ import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.kmpmodels.SourceRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
@@ -17,6 +19,9 @@ class TelemetrySourceNamer(
 ) {
     // Package names and display names of sources the user marked incognito
     private val incognito = MutableStateFlow(emptySet<String>())
+
+    /** Emits when the incognito set changes, so cached names can be recomputed. */
+    internal val changes: StateFlow<Set<String>> = incognito.asStateFlow()
 
     fun start(scope: CoroutineScope) {
         dao.getAllIncognitoSources()

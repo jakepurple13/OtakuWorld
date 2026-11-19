@@ -41,6 +41,18 @@ class DataStoreHandling {
         defaultValue = ""
     )
 
+    /** Opt-out for usage analytics; only shown in builds with a telemetry backend. */
+    val shareUsageAnalytics = DataStoreHandler(
+        key = booleanPreferencesKey("shareUsageAnalytics"),
+        defaultValue = true,
+    )
+
+    /** Opt-out for crash reports; Crashlytics applies a change on the next app start. */
+    val sendCrashReports = DataStoreHandler(
+        key = booleanPreferencesKey("sendCrashReports"),
+        defaultValue = true,
+    )
+
     val floatingNavigation = DataStoreHandler(
         key = booleanPreferencesKey("floatingNavigation"),
         defaultValue = true
