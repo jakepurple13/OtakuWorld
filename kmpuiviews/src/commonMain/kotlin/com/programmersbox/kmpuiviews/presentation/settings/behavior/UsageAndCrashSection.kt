@@ -125,7 +125,7 @@ fun UsageAndCrashSection(
             stringResource(Res.string.telemetry_section),
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(horizontal = 4.dp),
+            modifier = Modifier.padding(horizontal = 20.dp),
         )
 
         CategoryGroupListItem {
@@ -174,7 +174,7 @@ private fun Footnote(text: String) {
         text,
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(horizontal = 4.dp),
+        modifier = Modifier.padding(horizontal = 20.dp),
     )
 }
 
@@ -191,7 +191,7 @@ private fun ChipGroup(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier
             .alpha(groupAlpha)
-            .padding(horizontal = 4.dp),
+            .padding(horizontal = 20.dp),
     ) {
         Text(stringResource(title), style = MaterialTheme.typography.labelLarge)
         FlowRow(
