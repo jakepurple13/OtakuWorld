@@ -225,3 +225,34 @@ every call site goes through it. `TELEMETRY.md` and the settings chips mention t
 - Whether apps can drop `firebaseCrashLibs` after PR 1.
 - Unit tests: `Buckets`, event param maps (name ≤ 40, ≤ 25 params, no forbidden keys), a fake
   `Analytics` in existing ViewModel tests where events are added.
+
+## Amendments (2026-11-19, PR 2 planning)
+
+Owner decisions:
+
+- **`from` params are plumbed.** `Screen.DetailsScreen.Details` and `Screen.DailyOverview` get an
+  origin field with a default; `FavoritesRepository.addFavorite` gets a `from` parameter; readers
+  get an origin nav arg. Every call site sets it.
+- **`source_error` is logged at the existing catch sites** (Recent, Details, source search, global
+  search, manga reader, update checker). No `KmpApiService` wrapper. `AllViewModel` gains a catch.
+- **Reader events hook the composables.** `reading_session` counts pages viewed and time in the
+  reader composable and fires on dispose; `reader_setting_changed` fires from each settings-sheet
+  control.
+- **PR 2 splits into 2a and 2b.** 2a: event classes, buckets, source naming, settings switches,
+  Privacy & Security section, user properties, common crash keys, `isAvailable` fix,
+  `TELEMETRY.md` + README links. 2b: wiring the 47 events, app-specific keys/properties
+  (`image_loader`, `player_style`, `last_worker`), new breadcrumbs and non-fatals.
+
+Corrections found while mapping the code (planner's calls):
+
+- `custom` source name applies to sources whose package starts with `js.` (JS extensions). The
+  custom scraper is not a `KmpApiService` and never reaches telemetry.
+- `translation_used` drops `target_lang` (not exposed by `TranslationHandler`) and gains
+  `kind` (`description|tldr`). Title translation does not exist.
+- `sync_sign_in` / `sync_failed` are Supabase only; Firebase sign-in is a stub.
+- `source_update_skipped` means a source skipped in update checks (`UpdateSourcesViewModel`),
+  the only skip that exists.
+- `list_imported` has no QR path; `kind` is `list|full`.
+- `ai_model_installed` covers local model import and Nano download; Gemma downloads happen in the
+  external AI Helper app.
+- `media_type` comes from `KmpGenericInfo.sourceType` (`manga|anime|novel`).
