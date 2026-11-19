@@ -5,6 +5,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 
@@ -28,6 +29,7 @@ class MotionRun(val motion: DesktopMotion) {
 /** Advances [MotionRun.timeMillis] with withFrameNanos; after the last frame plus one, sets finished and calls [onEnd] once. */
 @Composable
 fun MotionRun.Play(onEnd: () -> Unit = {}) {
+    val currentOnEnd by rememberUpdatedState(onEnd)
     LaunchedEffect(this) {
         if (!finished) {
             val start = withFrameNanos { it }
@@ -39,6 +41,6 @@ fun MotionRun.Play(onEnd: () -> Unit = {}) {
             withFrameNanos { }
         }
         skip()
-        onEnd()
+        currentOnEnd()
     }
 }

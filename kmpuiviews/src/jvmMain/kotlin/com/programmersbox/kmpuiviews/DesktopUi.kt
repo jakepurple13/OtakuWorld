@@ -45,7 +45,9 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.window.ApplicationScope
 import androidx.compose.ui.window.Tray
 import androidx.compose.ui.window.TrayState
+import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
+import androidx.compose.ui.window.rememberWindowState
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
@@ -62,6 +64,18 @@ import com.programmersbox.kmpextensionloader.SourceLoader
 import com.programmersbox.kmpmodels.ExampleService
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.di.kmpModule
+import com.programmersbox.kmpuiviews.motion.DesktopMotionCatalog
+import com.programmersbox.kmpuiviews.motion.MotionConditions
+import com.programmersbox.kmpuiviews.motion.MotionHost
+import com.programmersbox.kmpuiviews.motion.MotionPhase
+import com.programmersbox.kmpuiviews.motion.MotionRun
+import com.programmersbox.kmpuiviews.motion.OffMotion
+import com.programmersbox.kmpuiviews.motion.OverlayPlatform
+import com.programmersbox.kmpuiviews.motion.Play
+import com.programmersbox.kmpuiviews.motion.launchMotion
+import com.programmersbox.kmpuiviews.motion.resolve
+import com.programmersbox.kmpuiviews.motion.skipMotionOnInput
+import com.programmersbox.kmpuiviews.motion.systemReducesMotion
 import com.programmersbox.kmpuiviews.presentation.HomeNav
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.quickactions.OpenOrigin
@@ -101,8 +115,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.koin.compose.KoinApplication
+import org.koin.compose.getKoin
 import org.koin.compose.koinInject
 import org.koin.core.KoinApplication
 import org.koin.core.definition.KoinDefinition
@@ -313,29 +329,52 @@ private fun InternalDesktopUi(
                 backgroundWorkHandler.setupPeriodicCheckers()
             }
 
+            val windowState = rememberWindowState()
+            val settings = koinInject<MangaDesktopSettings>()
+            val koin = getKoin()
+            val catalog = remember { koin.getOrNull<DesktopMotionCatalog>() }
+            val launchRun = remember {
+                val key = runBlocking { settings.launchAnimation.get() }
+                val chosen = catalog?.resolve(MotionPhase.Launch, key) ?: OffMotion
+                MotionRun(
+                    launchMotion(
+                        chosen,
+                        MotionConditions(systemReducesMotion(), platform = OverlayPlatform.current()),
+                    )
+                )
+            }
+            launchRun.Play()
+
             OtakuDecoratedWindow(
                 title = title,
                 onCloseRequest = exitApplication,
+                state = windowState,
                 showQuickActions = true,
             ) {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    //UrlOpenerScreen()
-                    //ScanQrCode()
-                    val genericInfo = koinInject<KmpGenericInfo>()
-                    val customSettings = remember {
-                        ComposeSettingsDsl().apply(genericInfo.composeCustomPreferences())
+                MotionHost(
+                    motion = if (launchRun.finished) OffMotion else launchRun.motion,
+                    time = { launchRun.timeMillis },
+                    modifier = Modifier.fillMaxSize().skipMotionOnInput(launchRun),
+                ) {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        //UrlOpenerScreen()
+                        //ScanQrCode()
+                        val genericInfo = koinInject<KmpGenericInfo>()
+                        val customSettings = remember {
+                            ComposeSettingsDsl().apply(genericInfo.composeCustomPreferences())
+                        }
+                        val windowSize = calculateWindowSizeClass()
+                        HomeNav(
+                            genericInfo = genericInfo,
+                            windowSize = windowSize,
+                            bottomBarAdditions = {},
+                            customPreferences = customSettings,
+                        )
+                        val updater = koinInject<DesktopUpdater>()
+                        LaunchedEffect(Unit) { updater.checkOnLaunch() }
+                        UpdateLaunchDialog(updater)
+                        JustUpdatedSnackbar(updater)
                     }
-                    val windowSize = calculateWindowSizeClass()
-                    HomeNav(
-                        genericInfo = genericInfo,
-                        windowSize = windowSize,
-                        bottomBarAdditions = {},
-                        customPreferences = customSettings,
-                    )
-                    val updater = koinInject<DesktopUpdater>()
-                    LaunchedEffect(Unit) { updater.checkOnLaunch() }
-                    UpdateLaunchDialog(updater)
-                    JustUpdatedSnackbar(updater)
                 }
             }
 
@@ -432,6 +471,8 @@ fun BaseWindow(
 private fun OtakuDecoratedWindow(
     title: String,
     onCloseRequest: () -> Unit,
+    state: WindowState = rememberWindowState(),
+    visible: Boolean = true,
     showQuickActions: Boolean = false,
     content: @Composable () -> Unit,
 ) {
@@ -451,6 +492,8 @@ private fun OtakuDecoratedWindow(
     ) {
         DecoratedWindow(
             onCloseRequest = onCloseRequest,
+            state = state,
+            visible = visible,
             title = title,
             onPreviewKeyEvent = { event ->
                 when {
