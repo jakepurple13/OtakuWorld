@@ -343,14 +343,14 @@ private fun InternalDesktopUi(
                     )
                 )
             }
-            launchRun.Play()
-
             OtakuDecoratedWindow(
                 title = title,
                 onCloseRequest = exitApplication,
                 state = windowState,
                 showQuickActions = true,
+                onAnyKey = { launchRun.skip() },
             ) {
+                launchRun.Play()
                 MotionHost(
                     motion = if (launchRun.finished) OffMotion else launchRun.motion,
                     time = { launchRun.timeMillis },
@@ -474,6 +474,7 @@ private fun OtakuDecoratedWindow(
     state: WindowState = rememberWindowState(),
     visible: Boolean = true,
     showQuickActions: Boolean = false,
+    onAnyKey: () -> Unit = {},
     content: @Composable () -> Unit,
 ) {
     val quickActionsController = if (showQuickActions) koinInject<QuickActionsController>() else null
@@ -496,6 +497,7 @@ private fun OtakuDecoratedWindow(
             visible = visible,
             title = title,
             onPreviewKeyEvent = { event ->
+                if (event.type == KeyEventType.KeyDown) onAnyKey()
                 when {
                     quickActionsController == null -> false
                     !isMacOs && isQuickActionsShortcut(event, isMac = false) -> {
