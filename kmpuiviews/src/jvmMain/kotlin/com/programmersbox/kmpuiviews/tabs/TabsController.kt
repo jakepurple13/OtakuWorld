@@ -44,6 +44,9 @@ class TabsController(
     private val _events = MutableSharedFlow<TabEvent>(extraBufferCapacity = 64)
     val events: SharedFlow<TabEvent> = _events.asSharedFlow()
 
+    /** Shared state for the open, close, switch and flash motion. */
+    val motion = TabMotionState()
+
     private class Arm(val mode: TabOpenMode, val origin: Rect?, val at: Long)
 
     private val arms = mutableMapOf<TabId, Arm>()
@@ -291,6 +294,7 @@ class TabsController(
     }
 
     private fun emit(event: TabEvent) {
+        motion.record(event)
         _events.tryEmit(event)
     }
 

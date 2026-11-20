@@ -1,5 +1,20 @@
 package com.programmersbox.kmpuiviews.tabs
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Box
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.unit.IntOffset
+import kotlin.math.roundToInt
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
@@ -49,6 +64,11 @@ fun TabStrip(
     modifier: Modifier = Modifier,
     keys: TabKeys = koinInject(),
 ) {
+    val motion = controller.motion
+    // Tabs already open when the strip appears are not "new": only later ones animate in.
+    remember(window.id) { window.tabs.forEach { motion.markSeen(it.id) } }
+    val closeSpec = tween<IntOffset>(motion.ms(TabMotion.Close), easing = motion.easing(TabMotion.Close))
+    val closeFade = tween<Float>(motion.ms(TabMotion.Close), easing = motion.easing(TabMotion.Close))
     Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier) {
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -60,9 +80,10 @@ fun TabStrip(
                     tab = tab,
                     label = keys.labelOf(tab.current),
                     selected = tab.id == window.activeId.value,
+                    motion = motion,
                     onActivate = { controller.activate(tab.id) },
                     onClose = { controller.close(tab.id) },
-                    modifier = Modifier.animateItem(),
+                    modifier = Modifier.animateItem(fadeInSpec = null, placementSpec = closeSpec, fadeOutSpec = closeFade),
                 )
             }
         }
@@ -79,10 +100,25 @@ private fun TabChip(
     tab: TabState,
     label: TabLabel,
     selected: Boolean,
+    motion: TabMotionState,
     onActivate: () -> Unit,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // A new tab's slot opens (its width, or just a fade when motion is reduced).
+    val open = remember { Animatable(if (motion.markSeen(tab.id)) 0f else 1f) }
+    LaunchedEffect(Unit) {
+        if (open.value < 1f) open.animateTo(1f, tween(motion.ms(TabMotion.SlotOpen), easing = motion.easing(TabMotion.SlotOpen)))
+    }
+    val ring = remember { Animatable(0f) }
+    val flashCount = motion.flashes[tab.id]
+    LaunchedEffect(flashCount) {
+        if (flashCount != null) {
+            ring.snapTo(1f)
+            ring.animateTo(0f, tween(motion.ms(TabMotion.Flash), easing = motion.easing(TabMotion.Flash)))
+        }
+    }
+    val accent = MaterialTheme.colorScheme.primary
     Surface(
         shape = TabShape,
         color = if (selected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -90,6 +126,23 @@ private fun TabChip(
         modifier = modifier
             .height(30.dp)
             .clip(TabShape)
+            .layout { measurable, constraints ->
+                val placeable = measurable.measure(constraints)
+                val w = if (motion.reduced) placeable.width else (placeable.width * open.value).roundToInt()
+                layout(w, placeable.height) { placeable.placeRelative(0, 0) }
+            }
+            .graphicsLayer { alpha = if (motion.reduced) open.value else 1f }
+            .drawWithContent {
+                drawContent()
+                if (ring.value > 0f) {
+                    drawRoundRect(
+                        color = accent,
+                        alpha = ring.value,
+                        cornerRadius = CornerRadius(8.dp.toPx()),
+                        style = Stroke(2.dp.toPx()),
+                    )
+                }
+            }
             .pointerInput(tab.id) {
                 awaitPointerEventScope {
                     while (true) {
@@ -120,7 +173,13 @@ private fun TabChip(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             modifier = Modifier.padding(start = 10.dp, end = if (tab.pinned) 10.dp else 2.dp),
         ) {
-            TabIcon(tab, label)
+            // The icon waits for the cover that is flying into it.
+            Box(
+                Modifier
+                    .onGloballyPositioned { motion.slotBounds[tab.id] = it.boundsInWindow() }
+                    .graphicsLayer { alpha = if (tab.id in motion.flying) 0f else 1f }
+            ) { TabIcon(tab, label) }
+            DisposableEffect(tab.id) { onDispose { motion.slotBounds.remove(tab.id) } }
             Text(
                 text = if (tab.pinned) stringResource(Res.string.tabs_home) else label.text,
                 style = MaterialTheme.typography.labelLarge,
