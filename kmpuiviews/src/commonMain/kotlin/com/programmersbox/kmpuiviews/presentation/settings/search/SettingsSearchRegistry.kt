@@ -324,6 +324,20 @@ class DefaultSettingsItems : SearchRegistryItem {
                 targetScreen = Screen.IncognitoScreen,
                 highlightKey = "incognito",
             ),
+            SettingSearchItem(
+                displayName = "Share usage analytics",
+                keywords = listOf("analytics", "usage", "tracking", "telemetry", "privacy"),
+                breadcrumb = listOf(Screen.Settings.Behavior, Screen.Settings.PrivacySecurity),
+                targetScreen = Screen.Settings.PrivacySecurity,
+                highlightKey = "telemetry_analytics",
+            ),
+            SettingSearchItem(
+                displayName = "Send crash reports",
+                keywords = listOf("crash", "crashlytics", "bug", "report", "telemetry"),
+                breadcrumb = listOf(Screen.Settings.Behavior, Screen.Settings.PrivacySecurity),
+                targetScreen = Screen.Settings.PrivacySecurity,
+                highlightKey = "telemetry_crash",
+            ),
             // ── Data Management ──────────────────────────────────────
             SettingSearchItem(
                 displayName = "Create Full Backup",

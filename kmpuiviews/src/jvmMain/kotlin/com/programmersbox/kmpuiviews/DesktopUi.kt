@@ -113,6 +113,7 @@ import org.koin.core.scope.Scope
 import org.koin.dsl.koinConfiguration
 import org.koin.dsl.module
 import com.programmersbox.telemetry.noOpTelemetryModule
+import com.programmersbox.kmpuiviews.telemetry.TelemetryController
 import java.io.File
 
 private class DesktopViewModelStoreOwner : ViewModelStoreOwner {
@@ -283,8 +284,10 @@ private fun InternalDesktopUi(
             val sourceRepository = koinInject<SourceRepository>()
             val setupRepository = koinInject<SetupRepository>()
             val extensionWatcher = koinInject<ExtensionWatcher>()
+            val telemetryController = koinInject<TelemetryController>()
             LaunchedEffect(Unit) {
                 setupRepository.setup(this)
+                telemetryController.start(this)
                 val exampleService = ExampleService.getSourceInformation()
                 extensionWatcher
                     .observeExtensionsDir()

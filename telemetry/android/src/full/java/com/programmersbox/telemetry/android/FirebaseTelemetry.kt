@@ -1,6 +1,7 @@
 package com.programmersbox.telemetry.android
 
 import com.google.firebase.Firebase
+import com.google.firebase.FirebaseApp
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.analytics
 import com.google.firebase.analytics.logEvent
@@ -10,7 +11,7 @@ import com.programmersbox.telemetry.AnalyticsEvent
 import com.programmersbox.telemetry.CrashReporter
 
 internal class CrashlyticsReporter(private val printToConsole: Boolean) : CrashReporter {
-    override val isAvailable: Boolean = true
+    override val isAvailable: Boolean by lazy { firebaseReady() }
 
     override fun log(message: String) {
         if (printToConsole) println(message)
@@ -32,7 +33,7 @@ internal class CrashlyticsReporter(private val printToConsole: Boolean) : CrashR
 }
 
 internal class FirebaseAnalyticsImpl : Analytics {
-    override val isAvailable: Boolean = true
+    override val isAvailable: Boolean by lazy { firebaseReady() }
 
     override fun log(event: AnalyticsEvent) {
         runCatching {
@@ -68,3 +69,6 @@ internal class FirebaseAnalyticsImpl : Analytics {
         runCatching { Firebase.analytics.setAnalyticsCollectionEnabled(enabled) }
     }
 }
+
+/** False when FirebaseApp never initialized (e.g. no google-services config), so the settings UI hides the switches. */
+private fun firebaseReady(): Boolean = runCatching { FirebaseApp.getInstance() }.isSuccess
