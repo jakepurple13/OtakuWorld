@@ -43,7 +43,7 @@ object AppSources {
         "mangaworld-desktop" to AppConfig(
             dirs = shared + listOf("mihonsupport", "mangaworld/shared", "mangaworld/desktop"),
             excludedSourceSets = desktopExcluded,
-            overrides = listOf(COMMON, "navgraph/overrides/mangaworld.navgraph"),
+            overrides = listOf(COMMON, "navgraph/overrides/mangaworld.navgraph", "navgraph/overrides/desktop.navgraph"),
         ),
     )
 }

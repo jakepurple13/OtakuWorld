@@ -1,0 +1,4 @@
+# Overrides for desktop app graphs only (screens that do not exist on Android).
+
+# motionSettingsGroup() rows render inside each desktop app's Desktop Settings screen.
+file MotionSettingsGroup.kt -> PlatformSettings
