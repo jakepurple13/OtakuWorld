@@ -17,14 +17,18 @@ import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
 import ca.gosyer.appdirs.AppDirs
+import com.programmersbox.kmpuiviews.motion.DesktopMotionCatalog
+import com.programmersbox.kmpuiviews.motion.motionSettingsGroup
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.updates.updatesSettingsGroup
 import kotlinx.serialization.Serializable
+import org.koin.compose.getKoin
 import org.koin.compose.koinInject
 import java.awt.Desktop
 import java.io.File
@@ -36,6 +40,8 @@ data object PlatformSettings : NavKey
 @Composable
 fun JvmSettingsScreen() {
     val appDirs = koinInject<AppDirs>()
+    val koin = getKoin()
+    val motionCatalog = remember(koin) { koin.getOrNull<DesktopMotionCatalog>() }
 
     val colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -73,6 +79,7 @@ fun JvmSettingsScreen() {
                 )
             }
 
+            motionSettingsGroup(motionCatalog)
             updatesSettingsGroup()
         }
     }
