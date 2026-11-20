@@ -84,7 +84,7 @@ import com.programmersbox.kmpuiviews.updates.UpdaterEngine
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.JvmAppLogo
 import com.programmersbox.sharedcomponents.repository.ChangingSettingsRepository
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.collectAsState
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.tabs.BrowserWindow
@@ -324,7 +324,8 @@ private fun InternalDesktopUi(
             val tabsController = koinInject<TabsController>()
             val mainWindow = tabsController.windows.first { it.isMain }
             // Onboarding and immersive screens hide the nav bar; the tab chrome follows it, as HomeNav's rail did.
-            val showNavBar by koinInject<ChangingSettingsRepository>().showNavBar.collectAsStateWithLifecycle(true)
+            // Plain collectAsState: this runs outside the Window, where there is no LocalLifecycleOwner.
+            val showNavBar by koinInject<ChangingSettingsRepository>().showNavBar.collectAsState(true)
             OtakuDecoratedWindow(
                 title = title,
                 onCloseRequest = exitApplication,
