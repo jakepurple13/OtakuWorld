@@ -148,6 +148,8 @@ fun StoryStepsScaffold(
                     size = heroSize,
                     modifier = Modifier
                         .align(Alignment.TopStart)
+                        // Inset so the Done hero (scaled 1.15) is not cut by the clipToBounds above.
+                        .padding(start = 8.dp, top = 8.dp)
                         .graphicsLayer {
                             translationY = if (expanded) 0f
                             else -minOf(heroScroll.offsetOf(spec.id).toLong(), reservePx.toLong()).toFloat()

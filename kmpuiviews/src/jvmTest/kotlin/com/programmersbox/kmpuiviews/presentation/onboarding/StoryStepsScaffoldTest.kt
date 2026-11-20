@@ -42,6 +42,7 @@ import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.runComposeUiTest
 import com.programmersbox.kmpuiviews.presentation.onboarding.frame.StoryStepsScaffold
 import com.programmersbox.kmpuiviews.presentation.onboarding.motion.LocalReducedMotionOverride
+import androidx.compose.ui.unit.dp
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -257,7 +258,9 @@ class StoryStepsScaffoldTest {
         setScaffold(sc, p)
         val pane = onNodeWithTag(OnboardingTags.SinglePane).fetchSemanticsNode().boundsInRoot
         val before = onNodeWithTag(OnboardingTags.Hero).fetchSemanticsNode().boundsInRoot
-        assertEquals(pane.top, before.top)
+        // The hero is inset 8 dp so the Done hero (scaled 1.15) is not clipped.
+        val inset = with(density) { 8.dp.toPx() }
+        assertEquals(pane.top + inset, before.top)
 
         onNodeWithTag(OnboardingTags.SinglePane).performTouchInput { swipeUp(startY = bottom - 10f, endY = top + 10f) }
         waitForIdle()
@@ -268,6 +271,6 @@ class StoryStepsScaffoldTest {
         onNodeWithTag(OnboardingTags.Next).performClick()
         waitForIdle()
         val next = onNodeWithTag(OnboardingTags.Hero).fetchSemanticsNode().boundsInRoot
-        assertEquals(pane.top, next.top)
+        assertEquals(pane.top + inset, next.top)
     }
 }
