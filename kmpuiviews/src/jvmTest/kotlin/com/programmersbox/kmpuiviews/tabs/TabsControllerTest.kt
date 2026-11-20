@@ -50,7 +50,7 @@ class TabsControllerTest {
         }
 
     @Test
-    fun homeIsPinnedAndCannotClose() {
+    fun homeIsPinnedAndCannotClose() = eventsTest { events ->
         assertEquals(1, controller.windows.size)
         assertTrue(main.isMain)
         val homeTab = main.tabs.single()
@@ -62,6 +62,7 @@ class TabsControllerTest {
 
         assertEquals(listOf(homeId), main.tabs.map { it.id })
         assertEquals(homeId, main.activeId.value)
+        assertEquals(emptyList(), events)
     }
 
     @Test
@@ -83,18 +84,28 @@ class TabsControllerTest {
 
     @Test
     fun rapidBackgroundOpensKeepOrderAndDedupe() = eventsTest { events ->
-        listOf("A", "B", "C", "B", "D").forEach {
+        val ids = listOf("A", "B", "C", "B", "D").map {
             controller.open(title(it), TabOpenMode.Background, homeId)
         }
+        val (a, b, c, b2, d) = ids
 
+        assertEquals(b, b2)
+        assertEquals(listOf(homeId, a, b, c, d), main.tabs.map { it.id })
         assertEquals(
             listOf<NavKey>(Screen.RecentScreen, title("A"), title("B"), title("C"), title("D")),
             main.currents(),
         )
         assertEquals(homeId, main.activeId.value)
-        assertEquals(4, events.count { it is TabEvent.Opened })
-        val flash = events.filterIsInstance<TabEvent.Flash>().single()
-        assertEquals(title("B"), tab(flash.tab).current)
+        assertEquals(
+            listOf<TabEvent>(
+                TabEvent.Opened(a, main.id, TabOpenMode.Background, null),
+                TabEvent.Opened(b, main.id, TabOpenMode.Background, null),
+                TabEvent.Opened(c, main.id, TabOpenMode.Background, null),
+                TabEvent.Flash(b),
+                TabEvent.Opened(d, main.id, TabOpenMode.Background, null),
+            ),
+            events,
+        )
     }
 
     @Test
@@ -127,18 +138,22 @@ class TabsControllerTest {
         home.navigate(title("A"))
         assertEquals(a, main.activeId.value)
         assertEquals(listOf<NavKey>(Screen.RecentScreen), home.backStack.toList())
+        assertEquals(listOf<TabEvent>(TabEvent.Flash(a), TabEvent.Flash(a)), events)
     }
 
     @Test
-    fun navigatingWithinOwnTabIsNotDeduped() {
+    fun navigatingWithinOwnTabIsNotDeduped() = eventsTest { events ->
         val a = controller.open(title("A"), TabOpenMode.Foreground, homeId)
         val nav = tab(a).nav
+        events.clear()
 
         nav.navigate(title("A"))
         nav.navigate(Screen.HistoryScreen)
 
         assertEquals(listOf<NavKey>(title("A"), title("A"), Screen.HistoryScreen), nav.backStack.toList())
-        assertEquals(2, main.tabs.size)
+        assertEquals(listOf(homeId, a), main.tabs.map { it.id })
+        assertEquals(a, main.activeId.value)
+        assertEquals(emptyList(), events)
     }
 
     @Test
@@ -149,24 +164,28 @@ class TabsControllerTest {
         home.navigate(Screen.Settings.Sources)
 
         assertEquals(listOf<NavKey>(Screen.Settings, Screen.Settings.Sources), tab(s).nav.backStack.toList())
+        assertEquals(listOf(homeId, s), main.tabs.map { it.id })
         assertEquals(s, main.activeId.value)
         assertEquals(listOf<NavKey>(Screen.RecentScreen), home.backStack.toList())
         assertEquals(listOf<TabEvent>(TabEvent.Flash(s)), events)
     }
 
     @Test
-    fun settingsFamilyOpensNewTabWhenNoneExists() {
+    fun settingsFamilyOpensNewTabWhenNoneExists() = eventsTest { events ->
         home.navigate(Screen.Settings.Sources)
 
         assertEquals(listOf<NavKey>(Screen.RecentScreen, Screen.Settings.Sources), main.currents())
-        assertEquals(main.tabs[1].id, main.activeId.value)
+        val s = main.tabs[1].id
+        assertEquals(s, main.activeId.value)
         assertEquals(listOf<NavKey>(Screen.RecentScreen), home.backStack.toList())
+        assertEquals(listOf<TabEvent>(TabEvent.Opened(s, main.id, TabOpenMode.Foreground, null)), events)
     }
 
     @Test
-    fun settingsSubpagesInsideSettingsTabPushNormally() {
+    fun settingsSubpagesInsideSettingsTabPushNormally() = eventsTest { events ->
         val s = controller.open(Screen.Settings, TabOpenMode.Foreground, homeId)
         val nav = tab(s).nav
+        events.clear()
 
         nav.navigate(Screen.Settings.Sources)
         nav.navigate(Screen.Settings.Colors)
@@ -175,12 +194,15 @@ class TabsControllerTest {
             listOf<NavKey>(Screen.Settings, Screen.Settings.Sources, Screen.Settings.Colors),
             nav.backStack.toList(),
         )
-        assertEquals(2, main.tabs.size)
+        assertEquals(listOf(homeId, s), main.tabs.map { it.id })
+        assertEquals(s, main.activeId.value)
+        assertEquals(emptyList(), events)
     }
 
     @Test
-    fun searchReusesSearchTabWithNewQuery() {
+    fun searchReusesSearchTabWithNewQuery() = eventsTest { events ->
         val s = controller.open(Screen.GlobalSearchScreen("a"), TabOpenMode.Background, homeId)
+        events.clear()
 
         home.globalSearch("b")
 
@@ -188,23 +210,31 @@ class TabsControllerTest {
             listOf<NavKey>(Screen.GlobalSearchScreen("a"), Screen.GlobalSearchScreen("b")),
             tab(s).nav.backStack.toList(),
         )
+        assertEquals(listOf(homeId, s), main.tabs.map { it.id })
         assertEquals(s, main.activeId.value)
-        assertEquals(2, main.tabs.size)
+        assertEquals(listOf<NavKey>(Screen.RecentScreen), home.backStack.toList())
+        assertEquals(listOf<TabEvent>(TabEvent.Flash(s)), events)
     }
 
     @Test
-    fun clickOpensNewTabPrefOpensTitlesInForeground() {
+    fun clickOpensNewTabPrefOpensTitlesInForeground() = eventsTest { events ->
         controller.prefs = TabPrefsSnapshot(clickOpensNewTab = true)
 
         home.navigate(title("A"))
 
         assertEquals(listOf<NavKey>(Screen.RecentScreen, title("A")), main.currents())
-        assertEquals(main.tabs[1].id, main.activeId.value)
+        val a = main.tabs[1].id
+        assertEquals(a, main.activeId.value)
         assertEquals(listOf<NavKey>(Screen.RecentScreen), home.backStack.toList())
+        assertEquals(listOf<TabEvent>(TabEvent.Opened(a, main.id, TabOpenMode.Foreground, null)), events)
 
         home.navigate(Screen.HistoryScreen)
+
         // Pages without a Title key still navigate in place.
         assertEquals(listOf<NavKey>(Screen.RecentScreen, Screen.HistoryScreen), home.backStack.toList())
+        assertEquals(listOf(homeId, a), main.tabs.map { it.id })
+        assertEquals(homeId, main.activeId.value)
+        assertEquals(listOf<TabEvent>(TabEvent.Opened(a, main.id, TabOpenMode.Foreground, null)), events)
     }
 
     @Test
@@ -215,34 +245,38 @@ class TabsControllerTest {
         home.navigate(title("A"))
         home.navigate(title("B"))
 
+        val a = main.tabs[1].id
+        assertEquals(listOf(homeId, a), main.tabs.map { it.id })
         assertEquals(listOf<NavKey>(title("B"), title("A")), main.currents())
         assertEquals(listOf<NavKey>(Screen.RecentScreen, title("B")), home.backStack.toList())
         assertEquals(homeId, main.activeId.value)
-        val opened = events.filterIsInstance<TabEvent.Opened>().single()
-        assertEquals(TabOpenMode.Background, opened.mode)
-        assertEquals(origin, opened.origin)
+        assertEquals(listOf<TabEvent>(TabEvent.Opened(a, main.id, TabOpenMode.Background, origin)), events)
     }
 
     @Test
-    fun armExpiresAfterTenSeconds() {
+    fun armExpiresAfterTenSeconds() = eventsTest { events ->
         controller.arm(homeId, TabOpenMode.Background, null)
         time += 10_001
 
         home.navigate(title("A"))
 
-        assertEquals(1, main.tabs.size)
+        assertEquals(listOf(homeId), main.tabs.map { it.id })
+        assertEquals(homeId, main.activeId.value)
         assertEquals(listOf<NavKey>(Screen.RecentScreen, title("A")), home.backStack.toList())
+        assertEquals(emptyList(), events)
     }
 
     @Test
-    fun navigationOnInactiveTabActivatesIt() {
+    fun navigationOnInactiveTabActivatesIt() = eventsTest { events ->
         val a = controller.open(title("A"), TabOpenMode.Foreground, homeId)
+        events.clear()
 
         home.navigate(Screen.HistoryScreen)
 
+        assertEquals(listOf(homeId, a), main.tabs.map { it.id })
         assertEquals(homeId, main.activeId.value)
         assertEquals(listOf<NavKey>(Screen.RecentScreen, Screen.HistoryScreen), home.backStack.toList())
-        assertEquals(listOf(homeId, a), main.tabs.map { it.id })
+        assertEquals(emptyList(), events)
     }
 
     @Test
@@ -267,16 +301,24 @@ class TabsControllerTest {
         assertEquals(listOf<TabEvent>(TabEvent.Closed(b, main.id)), events)
 
         controller.close(c)
+        assertEquals(listOf(homeId, a), main.tabs.map { it.id })
         assertEquals(a, main.activeId.value)
+        assertEquals(listOf<TabEvent>(TabEvent.Closed(b, main.id), TabEvent.Closed(c, main.id)), events)
     }
 
     @Test
-    fun closedStackReopensMostRecentFirst() {
+    fun closedStackReopensMostRecentFirst() = eventsTest { events ->
         val a = controller.open(title("A"), TabOpenMode.Background, homeId)
         val b = controller.open(title("B"), TabOpenMode.Background, homeId)
         tab(b).nav.navigate(Screen.HistoryScreen)
+        controller.activate(homeId)
+        events.clear()
+
         controller.close(a)
         controller.close(b)
+        assertEquals(listOf(homeId), main.tabs.map { it.id })
+        assertEquals(listOf<TabEvent>(TabEvent.Closed(a, main.id), TabEvent.Closed(b, main.id)), events)
+        events.clear()
 
         val first = controller.reopenClosed(main.id)!!
         assertEquals(listOf<NavKey>(title("B"), Screen.HistoryScreen), tab(first).nav.backStack.toList())
@@ -286,14 +328,55 @@ class TabsControllerTest {
         val second = controller.reopenClosed(main.id)!!
         assertEquals(title("A"), tab(second).current)
         assertNull(controller.reopenClosed(main.id))
-        assertEquals(3, main.tabs.size)
+        assertEquals(listOf(homeId, first, second), main.tabs.map { it.id })
+        assertEquals(second, main.activeId.value)
+        assertEquals(
+            listOf<TabEvent>(
+                TabEvent.Opened(first, main.id, TabOpenMode.Foreground, null),
+                TabEvent.Opened(second, main.id, TabOpenMode.Foreground, null),
+            ),
+            events,
+        )
     }
 
     @Test
-    fun backMovesToForwardAndForwardRestores() {
+    fun reopenClosedTitleOpenElsewhereSwitchesAndFlashes() = eventsTest { events ->
+        val a = controller.open(title("A"), TabOpenMode.Background, homeId)
+        controller.close(a)
+        val again = controller.open(title("A"), TabOpenMode.Background, homeId)
+        events.clear()
+
+        assertEquals(again, controller.reopenClosed(main.id))
+
+        assertEquals(listOf(homeId, again), main.tabs.map { it.id })
+        assertEquals(again, main.activeId.value)
+        assertEquals(listOf<TabEvent>(TabEvent.Flash(again)), events)
+        assertNull(controller.reopenClosed(main.id))
+    }
+
+    @Test
+    fun reopenClosedSettingsReusesSettingsTab() = eventsTest { events ->
+        val s = controller.open(Screen.Settings, TabOpenMode.Foreground, homeId)
+        tab(s).nav.navigate(Screen.Settings.Sources)
+        controller.close(s)
+        home.navigate(Screen.Settings)
+        val again = main.tabs[1].id
+        controller.activate(homeId)
+        events.clear()
+
+        assertEquals(again, controller.reopenClosed(main.id))
+
+        assertEquals(listOf(homeId, again), main.tabs.map { it.id })
+        assertEquals(again, main.activeId.value)
+        assertEquals(listOf<TabEvent>(TabEvent.Flash(again)), events)
+    }
+
+    @Test
+    fun backMovesToForwardAndForwardRestores() = eventsTest { events ->
         val a = controller.open(title("A"), TabOpenMode.Foreground, homeId)
         val t = tab(a)
         t.nav.navigate(Screen.HistoryScreen)
+        events.clear()
 
         controller.back(a)
         assertEquals(listOf<NavKey>(title("A")), t.nav.backStack.toList())
@@ -305,6 +388,9 @@ class TabsControllerTest {
         controller.forward(a)
         assertEquals(listOf<NavKey>(title("A"), Screen.HistoryScreen), t.nav.backStack.toList())
         assertTrue(t.forward.isEmpty())
+        assertEquals(listOf(homeId, a), main.tabs.map { it.id })
+        assertEquals(a, main.activeId.value)
+        assertEquals(emptyList(), events)
     }
 
     @Test
@@ -320,20 +406,25 @@ class TabsControllerTest {
         assertEquals(listOf<NavKey>(title("A")), tab(x).nav.backStack.toList())
         assertEquals(listOf(homeId, x, y), main.tabs.map { it.id })
         assertEquals(homeId, main.activeId.value)
-        assertTrue(events.isEmpty())
+        assertEquals(emptyList(), events)
     }
 
     @Test
-    fun newNavigationClearsForward() {
+    fun newNavigationClearsForward() = eventsTest { events ->
         val a = controller.open(title("A"), TabOpenMode.Foreground, homeId)
         val t = tab(a)
         t.nav.navigate(Screen.HistoryScreen)
         controller.back(a)
         assertEquals(1, t.forward.size)
+        events.clear()
 
         t.nav.navigate(Screen.FavoriteScreen)
 
         assertTrue(t.forward.isEmpty())
+        assertEquals(listOf<NavKey>(title("A"), Screen.FavoriteScreen), t.nav.backStack.toList())
+        assertEquals(listOf(homeId, a), main.tabs.map { it.id })
+        assertEquals(a, main.activeId.value)
+        assertEquals(emptyList(), events)
     }
 
     @Test
@@ -374,39 +465,50 @@ class TabsControllerTest {
     }
 
     @Test
-    fun newWindowModeOpensInNewWindow() {
+    fun newWindowModeOpensInNewWindow() = eventsTest { events ->
         val a = controller.open(title("A"), TabOpenMode.NewWindow, homeId)
 
         assertEquals(2, controller.windows.size)
         val second = controller.windowOf(a)
         assertFalse(second.isMain)
         assertEquals(listOf(a), second.tabs.map { it.id })
+        assertEquals(a, second.activeId.value)
         assertEquals(second.id, controller.focusedWindow)
         assertEquals(listOf(homeId), main.tabs.map { it.id })
+        assertEquals(homeId, main.activeId.value)
+        assertEquals(listOf<TabEvent>(TabEvent.Opened(a, second.id, TabOpenMode.NewWindow, null)), events)
     }
 
     @Test
-    fun closingLastTabOfTornWindowClosesWindow() {
+    fun closingLastTabOfTornWindowClosesWindow() = eventsTest { events ->
         val a = controller.open(title("A"), TabOpenMode.Foreground, homeId)
-        controller.tearOut(a, WindowBounds(0.dp, 0.dp, 800.dp, 600.dp))
+        val w2 = controller.tearOut(a, WindowBounds(0.dp, 0.dp, 800.dp, 600.dp))
+        events.clear()
 
         controller.close(a)
 
         assertEquals(listOf(main.id), controller.windows.map { it.id })
         assertEquals(main.id, controller.focusedWindow)
+        assertEquals(listOf(homeId), main.tabs.map { it.id })
+        assertEquals(homeId, main.activeId.value)
+        assertEquals(listOf<TabEvent>(TabEvent.Closed(a, w2)), events)
     }
 
     @Test
-    fun mainWindowCannotLoseHome() {
+    fun mainWindowCannotLoseHome() = eventsTest { events ->
         val a = controller.open(title("A"), TabOpenMode.Foreground, homeId)
         val w2 = controller.tearOut(a, WindowBounds(0.dp, 0.dp, 800.dp, 600.dp))
+        events.clear()
 
         controller.move(homeId, w2, 0)
-        controller.tearOut(homeId, WindowBounds(0.dp, 0.dp, 800.dp, 600.dp))
+        assertEquals(main.id, controller.tearOut(homeId, WindowBounds(0.dp, 0.dp, 800.dp, 600.dp)))
         controller.close(homeId)
 
-        assertEquals(2, controller.windows.size)
+        assertEquals(listOf(main.id, w2), controller.windows.map { it.id })
         assertEquals(listOf(homeId), main.tabs.map { it.id })
+        assertEquals(homeId, main.activeId.value)
         assertEquals(listOf(a), controller.windowOf(a).tabs.map { it.id })
+        assertEquals(a, controller.windowOf(a).activeId.value)
+        assertEquals(emptyList(), events)
     }
 }

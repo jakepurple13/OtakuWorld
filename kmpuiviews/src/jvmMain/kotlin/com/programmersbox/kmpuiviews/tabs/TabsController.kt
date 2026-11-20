@@ -145,6 +145,14 @@ class TabsController(
     fun reopenClosed(window: WindowId): TabId? {
         val target = window(window) ?: return null
         val stack = closed.removeLastOrNull() ?: return null
+        val tk = keys.keyOf(stack.last())
+        val existing = tk?.let { allTabs().firstOrNull { tab -> keys.keyOf(tab.current) == tk } }
+        if (existing != null) {
+            activate(existing.id)
+            emit(TabEvent.Flash(existing.id))
+            return existing.id
+        }
+
         val tab = newTab(stack.first())
         stack.drop(1).forEach { tab.nav.navBackStack.add(it) }
 
