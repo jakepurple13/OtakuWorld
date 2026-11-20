@@ -23,6 +23,7 @@ class TabsController(
     private val keys: TabKeys,
     prefs: TabPrefsSnapshot,
     private val now: () -> Long = System::currentTimeMillis,
+    private val handoffs: List<TabHandoff> = emptyList(),
 ) : NavInterceptor {
 
     var prefs: TabPrefsSnapshot by mutableStateOf(prefs)
@@ -52,6 +53,12 @@ class TabsController(
 
     /** Back stacks of closed tabs, most recent last. Session only. */
     private val closed = ArrayDeque<List<NavKey>>()
+
+    /** Per tab, what [handoffs] held for it, saved when it was opened or last left. */
+    private val snapshots = mutableMapOf<TabId, List<Any?>>()
+
+    /** The tab whose state [handoffs] hold now. */
+    private var handoffOwner: TabId? = windows.first().activeId.value
 
     init {
         homeNav.interceptor = this
@@ -85,6 +92,8 @@ class TabsController(
             return true
         }
 
+        // The click that navigates in place just wrote this tab's handoffs; keep them.
+        if (handoffs.isNotEmpty()) handoffOwner = fromTab.id
         val focused = window(focusedWindow)
         if (focused?.activeId?.value != fromTab.id) activate(fromTab.id)
         fromTab.forward.clear()
@@ -100,6 +109,8 @@ class TabsController(
         }
 
         val tab = newTab(key)
+        // The click that opened it just wrote its chapter into the handoff holders.
+        if (handoffs.isNotEmpty()) snapshots[tab.id] = captureHandoffs()
         if (mode == TabOpenMode.NewWindow) {
             val window = newWindow(tab, DefaultWindowBounds)
             emit(TabEvent.Opened(tab.id, window.id, mode, origin))
@@ -123,6 +134,7 @@ class TabsController(
 
     fun activate(tab: TabId) {
         val window = findTab(tab)?.let { windowOf(it.id) } ?: return
+        switchHandoffs(tab)
         if (window.activeId.value != tab) {
             window.activeId.value = tab
             backgroundRun.remove(window.id)
@@ -137,8 +149,13 @@ class TabsController(
 
         detach(state, window)
         arms.remove(tab)
+        snapshots.remove(tab)
+        if (handoffOwner == tab) handoffOwner = null
         closed.addLast(state.nav.backStack.toList())
+        // Readers null the handoff holders when cleared; the tab that owns them keeps its state.
+        val held = captureHandoffs()
         state.viewModelStoreOwner.viewModelStore.clear()
+        restoreHandoffs(held)
         emit(TabEvent.Closed(tab, window.id))
     }
 
@@ -173,6 +190,11 @@ class TabsController(
         val state = findTab(tab) ?: return
         val key = state.forward.removeLastOrNull() ?: return
         state.nav.navBackStack.add(key)
+    }
+
+    /** Drops [tab]'s pending arm, if any. */
+    fun disarm(tab: TabId) {
+        arms.remove(tab)
     }
 
     /** Sends the next navigation from [tab], within [ARM_TIMEOUT_MS], to a new tab instead. */
@@ -252,6 +274,20 @@ class TabsController(
         } else if (window.activeId.value == tab.id) {
             activate(window.tabs[index.coerceAtMost(window.tabs.lastIndex)].id)
         }
+    }
+
+    /** Saves the holders into the tab that owns them, then restores [to]'s snapshot before it composes. */
+    private fun switchHandoffs(to: TabId) {
+        if (handoffs.isEmpty() || handoffOwner == to) return
+        handoffOwner?.let { snapshots[it] = captureHandoffs() }
+        snapshots[to]?.let(::restoreHandoffs)
+        handoffOwner = to
+    }
+
+    private fun captureHandoffs(): List<Any?> = handoffs.map { it.capture() }
+
+    private fun restoreHandoffs(state: List<Any?>) {
+        handoffs.forEachIndexed { i, handoff -> handoff.restore(state[i]) }
     }
 
     private fun emit(event: TabEvent) {

@@ -3,7 +3,9 @@ package com.programmersbox.kmpuiviews.tabs
 import androidx.compose.ui.input.pointer.PointerButton
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class DesktopTabActionsTest {
 
@@ -53,5 +55,38 @@ class DesktopTabActionsTest {
     @Test
     fun rightClickIsNotAMode() {
         assertNull(mode(isMac = true, meta = true, button = PointerButton.Secondary))
+    }
+
+    private fun click(
+        consumed: Boolean = false,
+        inside: Boolean = true,
+        movedPastSlop: Boolean = false,
+        heldMillis: Long = 100,
+    ) = isTabClick(consumed = consumed, inside = inside, movedPastSlop = movedPastSlop, heldMillis = heldMillis, longPressMillis = 500)
+
+    @Test
+    fun quickReleaseInsideIsAClick() {
+        assertTrue(click())
+    }
+
+    @Test
+    fun longPressIsNotAClick() {
+        assertFalse(click(heldMillis = 500))
+        assertFalse(click(heldMillis = 800))
+    }
+
+    @Test
+    fun releaseOutsideIsNotAClick() {
+        assertFalse(click(inside = false))
+    }
+
+    @Test
+    fun dragOrSwipeIsNotAClick() {
+        assertFalse(click(movedPastSlop = true))
+    }
+
+    @Test
+    fun consumedReleaseIsNotAClick() {
+        assertFalse(click(consumed = true))
     }
 }

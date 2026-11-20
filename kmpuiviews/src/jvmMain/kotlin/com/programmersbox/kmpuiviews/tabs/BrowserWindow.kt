@@ -56,23 +56,25 @@ fun BrowserWindow(
                 key(active.id.v) {
                     val tabActions = remember { DesktopTabActions(controller, active.id) }
                     CompositionLocalProvider(LocalTabActions provides tabActions) {
-                        if (active.pinned) {
-                            HomeTab(
-                                tab = active,
-                                controller = controller,
-                                stateHolder = stateHolder,
-                                genericInfo = genericInfo,
-                                windowSize = windowSize,
-                                customPreferences = customPreferences,
-                            )
-                        } else {
-                            TabContent(
-                                tab = active,
-                                stateHolder = stateHolder,
-                                genericInfo = genericInfo,
-                                windowSize = windowSize,
-                                customPreferences = customPreferences,
-                            )
+                        Box(with(tabActions) { Modifier.fillMaxSize().disarmOnPress() }) {
+                            if (active.pinned) {
+                                HomeTab(
+                                    tab = active,
+                                    controller = controller,
+                                    stateHolder = stateHolder,
+                                    genericInfo = genericInfo,
+                                    windowSize = windowSize,
+                                    customPreferences = customPreferences,
+                                )
+                            } else {
+                                TabContent(
+                                    tab = active,
+                                    stateHolder = stateHolder,
+                                    genericInfo = genericInfo,
+                                    windowSize = windowSize,
+                                    customPreferences = customPreferences,
+                                )
+                            }
                         }
                     }
                     tabActions.Menu()

@@ -71,6 +71,7 @@ internal val desktopTabsModule: Module = module {
             homeNav = get<Navigation3Actions>(),
             keys = get(),
             prefs = TabPrefsSnapshot(clickOpensNewTab = false),
+            handoffs = getAll(),
         ).also { controller ->
             tabClickOpensPref.asFlow()
                 .onEach { controller.prefs = TabPrefsSnapshot(clickOpensNewTab = it == ClickOpens.NewTab) }

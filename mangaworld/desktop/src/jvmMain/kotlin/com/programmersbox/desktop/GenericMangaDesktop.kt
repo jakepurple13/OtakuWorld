@@ -52,7 +52,8 @@ class GenericMangaDesktop(
         seedColor: Int?,
     ) {
         if (desktopSettings.useWebViewForReader.get()) {
-            navigationActions.webView(model.url)
+            // The clicking tab's nav, so desktop tabs can redirect it
+            navController.webView(model.url)
         } else {
             chapterHolder.chapters = allChapters
             chapterHolder.chapterModel = model

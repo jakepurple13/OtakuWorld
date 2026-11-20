@@ -60,7 +60,7 @@ fun modeFor(isMac: Boolean, meta: Boolean, ctrl: Boolean, shift: Boolean, button
     }
 
 /**
- * [TabActions] for one tab. Presses arm [controller] so the element's own click opens a new tab;
+ * [TabActions] for one tab. Modifier-clicks arm [controller] so the element's own click opens a new tab;
  * right-click opens [Menu], which the tab shell composes once per tab.
  */
 class DesktopTabActions(
@@ -97,12 +97,46 @@ class DesktopTabActions(
                         val mods = event.keyboardModifiers
                         val mode = modeFor(isMac, mods.isMetaPressed, mods.isCtrlPressed, mods.isShiftPressed, button)
                             ?: continue
-                        controller.arm(tabId, mode, bounds.rect)
-                        // Clickables ignore the middle button, so open here.
-                        if (button == PointerButton.Tertiary) currentOpen()
+                        val down = event.changes.first()
+                        var moved = false
+                        // Arm on the release, still in the Initial pass so before the element's own onClick.
+                        while (true) {
+                            val change = awaitPointerEvent(PointerEventPass.Initial).changes
+                                .firstOrNull { it.id == down.id } ?: break
+                            if ((change.position - down.position).getDistance() > viewConfiguration.touchSlop) moved = true
+                            if (change.pressed) continue
+                            val inside = change.position.x in 0f..size.width.toFloat() &&
+                                change.position.y in 0f..size.height.toFloat()
+                            val click = isTabClick(
+                                consumed = change.isConsumed,
+                                inside = inside,
+                                movedPastSlop = moved,
+                                heldMillis = change.uptimeMillis - down.uptimeMillis,
+                                longPressMillis = viewConfiguration.longPressTimeoutMillis,
+                            )
+                            if (click) {
+                                controller.arm(tabId, mode, bounds.rect)
+                                // Clickables ignore the middle button, so open here.
+                                if (button == PointerButton.Tertiary) currentOpen()
+                            }
+                            break
+                        }
                     }
                 }
             }
+    }
+
+    /**
+     * Drops this tab's pending arm on any press inside the tab. A modifier-click that never navigated
+     * (an inner button, a checkbox) would otherwise send a later plain click to a new tab.
+     */
+    fun Modifier.disarmOnPress(): Modifier = pointerInput(Unit) {
+        awaitPointerEventScope {
+            while (true) {
+                val event = awaitPointerEvent(PointerEventPass.Initial)
+                if (event.type == PointerEventType.Press) controller.disarm(tabId)
+            }
+        }
     }
 
     /** The right-click menu, at the cursor. */
@@ -153,3 +187,10 @@ class DesktopTabActions(
         }
     }
 }
+
+/**
+ * Whether a modifier or middle press that just released counts as a click: not consumed, released
+ * inside the element, no drag past touch slop, and shorter than a long press.
+ */
+fun isTabClick(consumed: Boolean, inside: Boolean, movedPastSlop: Boolean, heldMillis: Long, longPressMillis: Long): Boolean =
+    !consumed && inside && !movedPastSlop && heldMillis < longPressMillis

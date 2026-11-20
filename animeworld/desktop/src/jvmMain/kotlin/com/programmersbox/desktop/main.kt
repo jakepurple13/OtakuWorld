@@ -1,5 +1,7 @@
 package com.programmersbox.desktop
 
+import com.programmersbox.kmpmodels.KmpStorage
+import com.programmersbox.kmpuiviews.tabs.TabHandoff
 import androidx.navigation3.runtime.NavKey
 import com.programmersbox.kmpuiviews.tabs.DownloadsDestination
 import com.programmersbox.kmpuiviews.tabs.TabKey
@@ -97,6 +99,21 @@ fun main(args: Array<String>) {
             } bind TabKeyProvider::class
             single<ShortcutSection>(named("videoPlayerShortcuts")) { playerShortcutSection() }
             singleOf(::StorageHolder)
+            // Each player tab keeps the stream its click handed over.
+            single {
+                val holder = get<StorageHolder>()
+                object : TabHandoff {
+                    override fun capture(): Any? = Triple(holder.storageModel, holder.showTitle, holder.posterUrl)
+
+                    override fun restore(state: Any?) {
+                        @Suppress("UNCHECKED_CAST")
+                        val (storage, title, poster) = state as Triple<KmpStorage?, String?, String?>
+                        holder.storageModel = storage
+                        holder.showTitle = title
+                        holder.posterUrl = poster
+                    }
+                }
+            } bind TabHandoff::class
             single<SubtitleSettingsRepository> {
                 JvmSubtitleSettingsRepository(File(get<AppDirs>().getUserDataDir(), "subtitle_style.json"))
             }

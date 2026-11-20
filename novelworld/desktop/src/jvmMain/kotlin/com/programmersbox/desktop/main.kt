@@ -1,5 +1,8 @@
 package com.programmersbox.desktop
 
+import com.programmersbox.kmpmodels.KmpChapterModel
+import com.programmersbox.novel.shared.ChapterHolder
+import com.programmersbox.kmpuiviews.tabs.TabHandoff
 import androidx.navigation3.runtime.NavKey
 import com.programmersbox.kmpuiviews.tabs.DownloadsDestination
 import com.programmersbox.kmpuiviews.tabs.TabKey
@@ -52,6 +55,20 @@ fun main(args: Array<String>) {
                     }
                 }
             } bind TabKeyProvider::class
+            // Each reader tab keeps the chapter its click handed over.
+            single {
+                val holder = get<ChapterHolder>()
+                object : TabHandoff {
+                    override fun capture(): Any? = holder.chapterModel to holder.chapters
+
+                    override fun restore(state: Any?) {
+                        @Suppress("UNCHECKED_CAST")
+                        val (model, chapters) = state as Pair<KmpChapterModel?, List<KmpChapterModel>?>
+                        holder.chapterModel = model
+                        holder.chapters = chapters
+                    }
+                }
+            } bind TabHandoff::class
             single {
                 ExtensionWatcher(
                     extensionsDir = get<MangaDesktopSettings>()
