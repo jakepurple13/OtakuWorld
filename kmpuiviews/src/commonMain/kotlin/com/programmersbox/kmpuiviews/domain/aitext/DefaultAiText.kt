@@ -1,6 +1,12 @@
 package com.programmersbox.kmpuiviews.domain.aitext
 
 import com.programmersbox.kmpuiviews.domain.dailyoverview.EngineResolver
+import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.TimeSource
+import com.programmersbox.telemetry.events.AiTaskRun
+import com.programmersbox.telemetry.Buckets
+import com.programmersbox.telemetry.NoOpAnalytics
+import com.programmersbox.telemetry.Analytics
 import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngine
 import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngineChoice
 import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngineId
@@ -30,6 +36,7 @@ class DefaultAiText(
     private val settings: AiSettings = AlwaysOnAiSettings,
     order: List<SummaryEngineId> = platformAutomaticOrder,
     private val generationLock: Mutex = Mutex(),
+    private val analytics: Analytics = NoOpAnalytics,
 ) : AiText {
     // AI text stays on device: cloud and the non-AI template are never used, whatever the order says.
     private val onDeviceOrder = order - SummaryEngineId.Provider - SummaryEngineId.Template
@@ -42,17 +49,32 @@ class DefaultAiText(
         }
 
     override fun <I> run(feature: AiFeature<I>, input: I): Flow<String> = flow {
+        val featureName = feature::class.simpleName?.lowercase() ?: "unknown"
+        val started = TimeSource.Monotonic.markNow()
+        fun log(engine: String, outcome: String) =
+            analytics.log(AiTaskRun(featureName, engine, outcome, Buckets.durationMs(started.elapsedNow().inWholeMilliseconds)))
+
         val prepared = feature.prepare(input)
-        val engine = resolve(feature, prepared.length) ?: throw noEngine()
+        val engine = resolve(feature, prepared.length)
+            ?: run { log("none", AiTaskRun.UNAVAILABLE); throw noEngine() }
+        val engineName = engine.id.name.lowercase()
         val tools = nanoTools
         val task = feature.nanoTask
-        generationLock.withLock {
-            if (engine.id == SummaryEngineId.Nano && tools != null && task != null && tools.isReady(task, prepared.length)) {
-                emitAll(tools.run(task, prepared))
-            } else {
-                emitAll(engine.generate(feature.system, feature.userPrompt(prepared)))
+        try {
+            generationLock.withLock {
+                if (engine.id == SummaryEngineId.Nano && tools != null && task != null && tools.isReady(task, prepared.length)) {
+                    emitAll(tools.run(task, prepared))
+                } else {
+                    emitAll(engine.generate(feature.system, feature.userPrompt(prepared)))
+                }
             }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            log(engineName, AiTaskRun.ERROR)
+            throw e
         }
+        log(engineName, AiTaskRun.SUCCESS)
     }.dispatchIo()
 
     /** Like the default, but starts over whenever an AI setting changes, so open screens follow the switches. */

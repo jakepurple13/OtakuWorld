@@ -3,6 +3,9 @@
 package com.programmersbox.supabaseintegration.sync
 
 import com.programmersbox.supabaseintegration.auth.AuthManager
+import com.programmersbox.telemetry.events.SyncFailed
+import com.programmersbox.telemetry.NoOpAnalytics
+import com.programmersbox.telemetry.Analytics
 import com.programmersbox.supabaseintegration.auth.AuthState
 import dev.jordond.connectivity.Connectivity
 import kotlinx.coroutines.CoroutineScope
@@ -35,7 +38,13 @@ class SyncManager(
     private val connectivityMonitor: ConnectivityMonitor,
     private val fullSyncHandler: FullSyncHandler,
     configFlow: Flow<SyncConfig> = flowOf(SyncConfig()),
+    private val analytics: Analytics = NoOpAnalytics,
 ) {
+    private fun syncFailed(e: Exception, fallback: String) {
+        _syncState.value = SyncState.Error(e.message ?: fallback)
+        analytics.log(SyncFailed(provider = "supabase", errorClass = e::class.simpleName ?: "Exception"))
+    }
+
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     val config = configFlow.stateIn(scope, SharingStarted.Eagerly, SyncConfig())
     private val _syncState = MutableStateFlow<SyncState>(SyncState.Idle)
@@ -105,7 +114,7 @@ class SyncManager(
             try {
                 withRetry { doSync() }
             } catch (e: Exception) {
-                _syncState.value = SyncState.Error(e.message ?: "Sync failed")
+                syncFailed(e, "Sync failed")
             }
 
             // Push local changes reactively: any is_dirty row → debounce 1s → push only.
@@ -117,7 +126,7 @@ class SyncManager(
                         try {
                             withRetry { syncEngine.pushLocalChanges() }
                         } catch (e: Exception) {
-                            _syncState.value = SyncState.Error(e.message ?: "Push failed")
+                            syncFailed(e, "Push failed")
                         }
                     }
             }
@@ -128,7 +137,7 @@ class SyncManager(
                     try {
                         withRetry { doSync(tables) }
                     } catch (e: Exception) {
-                        _syncState.value = SyncState.Error(e.message ?: "Sync failed")
+                        syncFailed(e, "Sync failed")
                     }
                 }
             }
@@ -149,7 +158,7 @@ class SyncManager(
                 try {
                     withRetry { doSync() }
                 } catch (e: Exception) {
-                    _syncState.value = SyncState.Error(e.message ?: "Sync failed")
+                    syncFailed(e, "Sync failed")
                 }
             }
         }
@@ -176,7 +185,7 @@ class SyncManager(
         try {
             withRetry { doSync() }
         } catch (e: Exception) {
-            _syncState.value = SyncState.Error(e.message ?: "Sync failed")
+            syncFailed(e, "Sync failed")
         }
         if (connectivityMonitor.isOnline.value is Connectivity.Status.Disconnected) _syncState.value = SyncState.Offline
     }

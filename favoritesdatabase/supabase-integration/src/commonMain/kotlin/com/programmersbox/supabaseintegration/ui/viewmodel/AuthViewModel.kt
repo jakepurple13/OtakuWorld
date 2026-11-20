@@ -1,6 +1,15 @@
 package com.programmersbox.supabaseintegration.ui.viewmodel
 
 import androidx.compose.runtime.Stable
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import com.programmersbox.telemetry.events.SyncSignIn
+import com.programmersbox.telemetry.NoOpAnalytics
+import com.programmersbox.telemetry.Analytics
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.supabaseintegration.auth.AuthManager
@@ -71,8 +80,20 @@ class AuthViewModel(
     private val credentialManager: CredentialManager,
     private val credentialSignIn: CredentialSignIn,
     private val databaseRepository: DatabaseRepository,
+    private val analytics: Analytics = NoOpAnalytics,
 ) : ViewModel() {
     val authState: StateFlow<AuthState> = authManager.authState
+
+    init {
+        // Only sign-ins that happen while the account screen is open; a session restored at launch is not one
+        authState
+            .map { it is AuthState.Authenticated }
+            .distinctUntilChanged()
+            .drop(1)
+            .filter { it }
+            .onEach { analytics.log(SyncSignIn(provider = "supabase")) }
+            .launchIn(viewModelScope)
+    }
 
     val credentialManagerSupported: Boolean = credentialSignIn.isSupported
 

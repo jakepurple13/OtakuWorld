@@ -1,6 +1,9 @@
 package com.programmersbox.kmpuiviews.presentation.settings.backuprestore
 
 import androidx.lifecycle.ViewModel
+import com.programmersbox.telemetry.events.BackupCreated
+import com.programmersbox.telemetry.NoOpAnalytics
+import com.programmersbox.telemetry.Analytics
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.sharedcomponents.backup.BackupUiInfo
@@ -30,6 +33,7 @@ class BackupWizardViewModel<F>(
     private val listDao: ListDao? = null,
     private val resultsFlow: Flow<List<ItemResult>> = emptyFlow(),
     private val startBackup: (F, Set<String>, Set<String>?) -> Unit,
+    private val analytics: Analytics = NoOpAnalytics,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(
@@ -111,6 +115,7 @@ class BackupWizardViewModel<F>(
                 _state.update { it.copy(results = results) }
                 if (results.map { r -> r.key }.toSet() == keys) {
                     _state.update { it.copy(step = BackupWizardStep.Complete) }
+                    analytics.log(BackupCreated(BackupCreated.FILE, success = results.all { r -> r.success }))
                 }
             }
         }
