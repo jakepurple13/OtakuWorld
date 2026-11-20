@@ -188,8 +188,6 @@
     <string name="share_item">Share %1$s</string>
     <string name="share_chapters">Share Chapter</string>
 
-    <string name="show_all_screen">Show All Screen</string>
-
     <string name="selectDate">Select Date to be Notified At</string>
     <string name="selectTime">Select Time to be Notified At</string>
     <string name="notifyAtTime">Notify At…</string>
@@ -294,13 +292,6 @@
     <string name="show_download_button">Show Download Button</string>
     <string name="show_list_detail_pane_for_lists">Show List Detail Pane for Lists</string>
     <string name="delete">Delete</string>
-
-    <string name="welcome_description">Welcome to %1$s! We're pouring our hearts and souls into crafting an app that truly understands and celebrates your world. We envision a space where your love for anime, manga, games, and all things nerdy can flourish.
-
-\n\nThis isn't just another app; it's a labor of love fueled by our own otaku spirit. We're building this for you, with you in mind. Your enthusiasm inspires us, and we can't wait to share what we've been working on.
-
-\n\nStay tuned for updates, and know that every line of code, every design choice, is driven by our desire to create the ultimate otaku experience. Thank you for being the amazing community that you are!
-\n\nNow, let's create your perfect experience! You can change any of these settings at any time in the settings menu</string>
     <string name="catch_up">Catch up</string>
     <string name="catch_up_progress">%1$d of %2$d</string>
     <string name="catch_up_left">%1$d left</string>

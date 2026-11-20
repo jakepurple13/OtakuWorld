@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.onboarding.steps
 
+import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingTags
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -117,14 +118,16 @@ fun OnboardingScope.lookStep(handling: NewSettingsHandling) {
     step(spec) {
         // Uses a host a parent provides (Task 10 may lift it to the scaffold); otherwise wraps the step itself.
         val outerSweep = LocalColorSweep.current
-        if (outerSweep != null) {
-            LookContent(spec, handling, outerSweep)
-        } else {
-            var hostCoords by remember { mutableStateOf<LayoutCoordinates?>(null) }
-            ColorSweepHost { sweepFrom ->
-                Box(Modifier.fillMaxSize().onGloballyPositioned { hostCoords = it }) {
-                    LookContent(spec, handling) { root ->
-                        sweepFrom(root - (hostCoords?.positionInRoot() ?: Offset.Zero))
+        Box(Modifier.fillMaxSize().testTag(OnboardingTags.step(spec.id))) {
+            if (outerSweep != null) {
+                LookContent(spec, handling, outerSweep)
+            } else {
+                var hostCoords by remember { mutableStateOf<LayoutCoordinates?>(null) }
+                ColorSweepHost { sweepFrom ->
+                    Box(Modifier.fillMaxSize().onGloballyPositioned { hostCoords = it }) {
+                        LookContent(spec, handling) { root ->
+                            sweepFrom(root - (hostCoords?.positionInRoot() ?: Offset.Zero))
+                        }
                     }
                 }
             }

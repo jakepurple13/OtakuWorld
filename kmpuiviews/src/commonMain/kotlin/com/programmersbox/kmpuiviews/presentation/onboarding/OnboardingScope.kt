@@ -1,20 +1,11 @@
 package com.programmersbox.kmpuiviews.presentation.onboarding
 
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.OverscrollEffect
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.TargetedFlingBehavior
 import androidx.compose.foundation.gestures.snapping.SnapPosition
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.layout.MutableIntervalList
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PageSize
@@ -22,15 +13,11 @@ import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberOverscrollEffect
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -112,41 +99,4 @@ fun Onboarding(
             }
         }
     )
-}
-
-@Composable
-fun OnboardingIndicator(
-    pagerState: PagerState,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-            .wrapContentHeight()
-            .fillMaxWidth()
-    ) {
-        repeat(pagerState.pageCount) { iteration ->
-            val color by animateColorAsState(
-                when {
-                    pagerState.currentPage == iteration -> MaterialTheme.colorScheme.primary
-                    pagerState.currentPage > iteration -> MaterialTheme.colorScheme.primaryContainer
-                    else -> MaterialTheme.colorScheme.surfaceVariant
-                },
-                MaterialTheme.motionScheme.fastEffectsSpec()
-            )
-            // The current page stretches into a pill so 8+ pages still fit.
-            val width by animateDpAsState(
-                if (pagerState.currentPage == iteration) 20.dp else 8.dp,
-                MaterialTheme.motionScheme.fastSpatialSpec(),
-            )
-
-            Box(
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .background(color)
-                    .size(width = width, height = 8.dp)
-            )
-        }
-    }
 }

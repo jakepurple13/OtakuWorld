@@ -66,8 +66,9 @@ import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingTags
 import com.programmersbox.kmpuiviews.presentation.onboarding.frame.StepLayout
 import com.programmersbox.kmpuiviews.presentation.onboarding.motion.onboardingReducedMotion
 
-/** "Multiple" stays in Settings; the onboarding picker offers the four single destinations. */
+/** "Multiple" stays in Settings; the onboarding picker offers All (the default) and the four single destinations. */
 internal val middleOptions = listOf(
+    MiddleNavigationAction.All,
     MiddleNavigationAction.Notifications,
     MiddleNavigationAction.Lists,
     MiddleNavigationAction.Favorites,

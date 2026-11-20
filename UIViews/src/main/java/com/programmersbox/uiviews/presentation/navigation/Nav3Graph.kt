@@ -79,7 +79,6 @@ fun entryGraph(
         OnboardingScreen(
             navController = LocalNavActions.current,
             customPreferences = customPreferences,
-            accountContent = { }
         )
     }
 

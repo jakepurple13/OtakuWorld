@@ -1,5 +1,8 @@
 package com.programmersbox.kmpuiviews.presentation.onboarding.steps
 
+import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingTags
+import androidx.compose.ui.platform.testTag
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -57,14 +60,16 @@ fun OnboardingScope.welcomeStep(
         shape = HeroShape.Hidden,
     )
     step(spec) {
-        StepLayout(spec) {
-            GenreFan(config.genres)
-            Text(
-                "Coming up",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            ComingUpChips(comingUp)
+        Box(Modifier.fillMaxSize().testTag(OnboardingTags.step(spec.id))) {
+            StepLayout(spec) {
+                GenreFan(config.genres)
+                Text(
+                    "Coming up",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                ComingUpChips(comingUp)
+            }
         }
     }
 }

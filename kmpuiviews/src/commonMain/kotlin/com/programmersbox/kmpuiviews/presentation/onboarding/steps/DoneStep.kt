@@ -1,5 +1,7 @@
 package com.programmersbox.kmpuiviews.presentation.onboarding.steps
 
+import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingTags
+import androidx.compose.ui.platform.testTag
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -52,7 +54,7 @@ fun OnboardingScope.doneStep(summaries: List<OnboardingStepSpec>) {
             scheme.tertiaryContainer,
             scheme.secondaryContainer,
         )
-        Box(Modifier.fillMaxSize()) {
+        Box(Modifier.fillMaxSize().testTag(OnboardingTags.step(spec.id))) {
             StepLayout(spec) {
                 rows.forEachIndexed { i, row -> SummaryRow(i, row.summaryLabel.orEmpty(), row.summary!!()) }
             }

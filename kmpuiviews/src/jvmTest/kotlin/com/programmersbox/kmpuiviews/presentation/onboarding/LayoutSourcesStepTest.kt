@@ -10,6 +10,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasStateDescription
@@ -77,6 +79,7 @@ class LayoutSourcesStepTest {
         assertFalse(MiddleNavigationAction.Multiple in middleOptions)
         assertEquals(
             listOf(
+                MiddleNavigationAction.All,
                 MiddleNavigationAction.Notifications,
                 MiddleNavigationAction.Lists,
                 MiddleNavigationAction.Favorites,
@@ -84,6 +87,15 @@ class LayoutSourcesStepTest {
             ),
             middleOptions,
         )
+    }
+
+    @Test
+    fun all_chip_first_and_selected_by_default() = runComposeUiTest {
+        createTestDataStoreHandling()
+        val handling = createTestNewSettingsHandling()
+        show(buildOnboardingScope { layoutStep(handling) })
+        onNodeWithText("All").assertIsSelected()
+        onNodeWithText("Notifications").assertIsNotSelected()
     }
 
     @Test

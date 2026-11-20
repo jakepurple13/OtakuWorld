@@ -103,7 +103,11 @@ private val HowItWorks = listOf(
 )
 
 /** Step 4: explain only. No buttons; the catalog list is [catalogs]. */
-fun OnboardingScope.sourcesStep(appName: String, catalogs: List<CatalogInfo>) {
+fun OnboardingScope.sourcesStep(appName: String, catalogs: List<CatalogInfo>) =
+    sourcesStep(appName) { catalogs }
+
+/** Same as above, reading the catalogs while the step is shown so a list that loads later is picked up. */
+fun OnboardingScope.sourcesStep(appName: String, catalogs: @Composable () -> List<CatalogInfo>) {
     val spec = OnboardingStepSpec(
         id = "sources",
         title = "Plug in sources",
@@ -111,7 +115,7 @@ fun OnboardingScope.sourcesStep(appName: String, catalogs: List<CatalogInfo>) {
         icon = Icons.Default.Power,
         shape = HeroShape.Arch,
     )
-    step(spec) { SourcesContent(spec, catalogs) }
+    step(spec) { SourcesContent(spec, catalogs()) }
 }
 
 @Composable
