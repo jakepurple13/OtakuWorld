@@ -18,6 +18,12 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import com.programmersbox.kmpuiviews.motion.DesktopMotion
+import com.programmersbox.kmpuiviews.motion.EaseBack
+import com.programmersbox.kmpuiviews.motion.EaseIn
+import com.programmersbox.kmpuiviews.motion.EaseInOut
+import com.programmersbox.kmpuiviews.motion.Key
+import com.programmersbox.kmpuiviews.motion.cqw
+import com.programmersbox.kmpuiviews.motion.track
 
 /*
  * Ported from the `The End panel` entry in docs/mockups/desktop-launch-quit-animations.html.

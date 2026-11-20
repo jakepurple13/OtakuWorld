@@ -1,6 +1,11 @@
 package com.programmersbox.desktop.motion
 
 import androidx.compose.animation.core.CubicBezierEasing
+import com.programmersbox.kmpuiviews.motion.EaseIn
+import com.programmersbox.kmpuiviews.motion.EaseInOut
+import com.programmersbox.kmpuiviews.motion.EaseOut
+import com.programmersbox.kmpuiviews.motion.Key
+import com.programmersbox.kmpuiviews.motion.track
 
 /*
  * Ported from the `Sushi unroll` / `Sushi roll-up` entries in docs/mockups/desktop-launch-quit-animations.html.

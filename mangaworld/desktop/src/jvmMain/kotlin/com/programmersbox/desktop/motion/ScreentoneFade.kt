@@ -16,6 +16,11 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import com.programmersbox.kmpuiviews.motion.DesktopMotion
+import com.programmersbox.kmpuiviews.motion.EaseIn
+import com.programmersbox.kmpuiviews.motion.EaseOut
+import com.programmersbox.kmpuiviews.motion.Key
+import com.programmersbox.kmpuiviews.motion.cqw
+import com.programmersbox.kmpuiviews.motion.track
 
 /*
  * Ported from the `Screentone fade` entry in docs/mockups/desktop-launch-quit-animations.html.

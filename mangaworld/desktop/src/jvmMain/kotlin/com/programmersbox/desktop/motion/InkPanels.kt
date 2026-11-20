@@ -28,6 +28,12 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.em
 import com.programmersbox.kmpuiviews.motion.DesktopMotion
+import com.programmersbox.kmpuiviews.motion.EaseIn
+import com.programmersbox.kmpuiviews.motion.EaseInOut
+import com.programmersbox.kmpuiviews.motion.Key
+import com.programmersbox.kmpuiviews.motion.cqw
+import com.programmersbox.kmpuiviews.motion.track
+import com.programmersbox.kmpuiviews.motion.verticalCqw
 
 /*
  * Ported from the `Ink panels` entry in docs/mockups/desktop-launch-quit-animations.html.

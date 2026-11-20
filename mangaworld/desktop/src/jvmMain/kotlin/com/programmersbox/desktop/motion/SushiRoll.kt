@@ -22,6 +22,8 @@ import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import com.programmersbox.kmpuiviews.motion.DesktopMotion
+import com.programmersbox.kmpuiviews.motion.cqw
+import com.programmersbox.kmpuiviews.motion.verticalCqw
 import kotlin.math.cos
 import kotlin.math.sin
 

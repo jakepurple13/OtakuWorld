@@ -27,6 +27,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.em
 import com.programmersbox.kmpuiviews.motion.DesktopMotion
+import com.programmersbox.kmpuiviews.motion.EaseOut
+import com.programmersbox.kmpuiviews.motion.Key
+import com.programmersbox.kmpuiviews.motion.cqw
+import com.programmersbox.kmpuiviews.motion.track
 import kotlin.math.cos
 import kotlin.math.hypot
 import kotlin.math.sin
