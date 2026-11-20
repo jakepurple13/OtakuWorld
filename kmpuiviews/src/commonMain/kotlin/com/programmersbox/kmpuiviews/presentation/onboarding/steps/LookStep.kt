@@ -57,11 +57,13 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.materialkolor.material3.rememberDynamicColorScheme
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.SystemThemeMode
 import com.programmersbox.datastore.ThemeColor
+import com.programmersbox.kmpuiviews.createColorScheme
 import com.programmersbox.kmpuiviews.presentation.components.seedColor
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
@@ -169,7 +171,7 @@ private fun LookContent(
             }
         }
 
-        SwatchRow(MainSwatches, themeColor, dark, isAmoled) { color, root ->
+        SwatchRow(handling, MainSwatches, themeColor, dark, isAmoled) { color, root ->
             sweepFromRoot(root)
             themeColor = color
         }
@@ -227,8 +229,8 @@ private fun LookContent(
                         )
                     }
                 }
-                SwatchRow(ExtraSwatches, themeColor, dark, isAmoled) { color, root ->
-                    sweepFromRoot(root)
+                // No sweep from here: the sheet is its own window, so its offsets are not root coordinates.
+                SwatchRow(handling, ExtraSwatches, themeColor, dark, isAmoled) { color, _ ->
                     themeColor = color
                 }
             }
@@ -239,12 +241,14 @@ private fun LookContent(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun SwatchRow(
+    handling: NewSettingsHandling,
     colors: List<ThemeColor>,
     selected: ThemeColor,
     dark: Boolean,
     isAmoled: Boolean,
     onPick: (ThemeColor, Offset) -> Unit,
 ) {
+    val expressive by handling.rememberShowExpressiveness()
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -252,7 +256,8 @@ private fun SwatchRow(
     ) {
         colors.forEach { color ->
             val scheme = when (color) {
-                ThemeColor.Dynamic -> MaterialTheme.colorScheme
+                // The real dynamic palette, not the live theme (which shows whatever color is picked).
+                ThemeColor.Dynamic -> createColorScheme(dark, expressive)
                 ThemeColor.Ugly, ThemeColor.MyEyes -> if (dark) UglyDarkColorScheme else UglyLightColorScheme
                 else -> rememberDynamicColorScheme(color.seedColor, isDark = dark, isAmoled = isAmoled && dark)
             }
@@ -270,7 +275,10 @@ private fun Swatch(
 ) {
     var center by remember { mutableStateOf(Offset.Zero) }
     // Circle at rest, rounded square (11 dp) when selected.
-    val corner by animateDpAsState(if (selected) 11.dp else SwatchSize / 2)
+    val reduced = onboardingReducedMotion()
+    val target = if (selected) 11.dp else SwatchSize / 2
+    val animatedCorner by animateDpAsState(target)
+    val corner = if (reduced) target else animatedCorner
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.clip(RoundedCornerShape(12.dp)).clickable { onPick(color, center) },
@@ -279,6 +287,7 @@ private fun Swatch(
             contentAlignment = Alignment.Center,
             modifier = Modifier
                 .size(SwatchSize)
+                .testTag("swatch-${color.name}")
                 .onGloballyPositioned {
                     center = it.positionInRoot() + Offset(it.size.width / 2f, it.size.height / 2f)
                 }
@@ -286,7 +295,7 @@ private fun Swatch(
                 .background(scheme.primary),
         ) {
             Box(Modifier.align(Alignment.BottomEnd).size(SwatchSize / 2).background(scheme.tertiary, CircleShape))
-            SwatchCheck(selected, scheme.onPrimary)
+            SwatchCheck(selected, scheme.onPrimary, reduced)
         }
         Text(color.name, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(top = 4.dp))
     }
@@ -294,8 +303,12 @@ private fun Swatch(
 
 // Separate composable: inside the swatch Box the Column receiver is blocked by the layout DSL marker.
 @Composable
-private fun SwatchCheck(visible: Boolean, tint: androidx.compose.ui.graphics.Color) {
-    AnimatedVisibility(visible, enter = scaleIn(), exit = scaleOut()) {
+private fun SwatchCheck(visible: Boolean, tint: androidx.compose.ui.graphics.Color, reduced: Boolean) {
+    AnimatedVisibility(
+        visible,
+        enter = if (reduced) EnterTransition.None else scaleIn(),
+        exit = if (reduced) ExitTransition.None else scaleOut(),
+    ) {
         Icon(Icons.Default.Check, null, tint = tint)
     }
 }

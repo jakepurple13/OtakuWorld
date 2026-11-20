@@ -7,6 +7,10 @@ import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.runComposeUiTest
@@ -22,6 +26,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 
 @OptIn(
     ExperimentalTestApi::class,
@@ -58,13 +63,28 @@ class LookStepTest {
         show(handling)
         onNodeWithText("Blue").performClick()
         // The preference write is asynchronous (DataStore IO), so poll the real flow.
-        var stored = ThemeColor.Dynamic
-        val deadline = System.currentTimeMillis() + 5_000
-        while (stored != ThemeColor.Blue && System.currentTimeMillis() < deadline) {
-            waitForIdle()
-            stored = runBlocking { handling.preferences.data.first().themeColor }
+        waitUntil(timeoutMillis = 5_000) {
+            runBlocking { handling.preferences.data.first().themeColor } == ThemeColor.Blue
         }
-        assertEquals(ThemeColor.Blue, stored)
+        assertEquals(ThemeColor.Blue, runBlocking { handling.preferences.data.first().themeColor })
+    }
+
+    @Test
+    fun dynamic_swatch_keeps_its_own_colors_when_another_color_is_picked() = runComposeUiTest {
+        val handling = createTestNewSettingsHandling()
+        show(handling)
+        fun pixel(tag: String): Int {
+            val img = onNodeWithTag(tag, useUnmergedTree = true).captureToImage()
+            return img.toPixelMap()[3, img.height / 2].toArgb()
+        }
+        val dynamicBefore = pixel("swatch-Dynamic")
+        onNodeWithText("Blue").performClick()
+        waitUntil(timeoutMillis = 5_000) {
+            runBlocking { handling.preferences.data.first().themeColor } == ThemeColor.Blue
+        }
+        waitForIdle()
+        assertEquals(dynamicBefore, pixel("swatch-Dynamic"))
+        assertNotEquals(pixel("swatch-Blue"), pixel("swatch-Dynamic"))
     }
 
     @Test
