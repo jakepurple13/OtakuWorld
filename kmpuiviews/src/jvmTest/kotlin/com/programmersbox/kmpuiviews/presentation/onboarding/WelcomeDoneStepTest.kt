@@ -72,10 +72,19 @@ class WelcomeDoneStepTest {
     fun done_has_no_summary_for_sources() = runComposeUiTest {
         show(
             buildOnboardingScope {
-                doneStep(listOf(spec("look", "Look", "Dark"), spec("sources", null, null)))
+                doneStep(
+                    listOf(
+                        spec("look", "Look", "Dark"),
+                        OnboardingStepSpec(
+                            "sources", "Plug in sources", "", Icons.Default.Star, HeroShape.Arch,
+                            summaryLabel = null, summary = null,
+                        ),
+                    )
+                )
             }
         )
         onNodeWithText("Look").assertExists()
+        onNodeWithText("Plug in sources").assertDoesNotExist()
         onNodeWithText("sources").assertDoesNotExist()
     }
 }

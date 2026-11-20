@@ -22,7 +22,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import com.programmersbox.kmpuiviews.presentation.onboarding.HeroShape
@@ -50,8 +49,8 @@ fun OnboardingScope.doneStep(summaries: List<OnboardingStepSpec>) {
             scheme.primaryContainer,
             scheme.tertiary,
             scheme.secondary,
-            Color(0xFFFFC107),
-            Color(0xFFFF5252),
+            scheme.tertiaryContainer,
+            scheme.secondaryContainer,
         )
         Box(Modifier.fillMaxSize()) {
             StepLayout(spec) {

@@ -50,7 +50,13 @@ internal class HeroScroll {
 internal val LocalHeroScroll = staticCompositionLocalOf<HeroScroll?> { null }
 
 /** Space [StepLayout] keeps free at the top-left for the hero the scaffold overlays there. */
-internal fun heroReserveFor(expanded: Boolean): Dp = if (expanded) 120.dp else 92.dp
+internal fun heroReserveFor(expanded: Boolean): Dp = heroSizeFor(expanded) + heroInsetFor(expanded) * 2 + 12.dp
+
+/**
+ * How far the hero is inset from the top-left of the pager area so its largest scale
+ * ([HeroShape.Done]) still fits inside the area's clip: overflow per side = size * (maxScale - 1) / 2.
+ */
+internal fun heroInsetFor(expanded: Boolean): Dp = heroSizeFor(expanded) * (HeroShape.Done.scale - 1f) / 2f
 
 @Composable
 fun isExpandedWidth(): Boolean = LocalWindowSizeClass.current.widthSizeClass == WindowWidthSizeClass.Expanded

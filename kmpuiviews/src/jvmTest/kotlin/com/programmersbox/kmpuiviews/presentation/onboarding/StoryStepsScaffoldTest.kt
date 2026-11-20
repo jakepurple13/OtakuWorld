@@ -42,7 +42,7 @@ import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.runComposeUiTest
 import com.programmersbox.kmpuiviews.presentation.onboarding.frame.StoryStepsScaffold
 import com.programmersbox.kmpuiviews.presentation.onboarding.motion.LocalReducedMotionOverride
-import androidx.compose.ui.unit.dp
+import com.programmersbox.kmpuiviews.presentation.onboarding.frame.heroInsetFor
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -68,7 +68,11 @@ class StoryStepsScaffoldTest {
         lateinit var pager: PagerState
     }
 
-    private fun ComposeUiTest.setScaffold(scope: OnboardingScope = scope(), probe: Probe = Probe()): Probe {
+    private fun ComposeUiTest.setScaffold(
+        scope: OnboardingScope = scope(),
+        probe: Probe = Probe(),
+        expanded: Boolean = false,
+    ): Probe {
         setContent {
             MaterialExpressiveTheme {
                 CompositionLocalProvider(LocalReducedMotionOverride provides true) {
@@ -80,7 +84,7 @@ class StoryStepsScaffoldTest {
                         onFinish = { probe.finished++ },
                         onSkipConfirmed = { probe.skipped++ },
                         pagerState = probe.pager,
-                        expanded = false,
+                        expanded = expanded,
                     )
                 }
             }
@@ -88,6 +92,25 @@ class StoryStepsScaffoldTest {
         waitForIdle()
         return probe
     }
+
+    private fun doneHeroFits(expanded: Boolean) = runComposeUiTest {
+        val p = setScaffold(scope(expanded = expanded), expanded = expanded)
+        goTo(p, 3)
+        val paneTag = if (expanded) OnboardingTags.TwoPane else OnboardingTags.SinglePane
+        val pane = onNodeWithTag(paneTag).fetchSemanticsNode().boundsInRoot
+        val hero = onNodeWithTag(OnboardingTags.Hero).fetchSemanticsNode().boundsInRoot
+        val title = onNodeWithText("Title done").fetchSemanticsNode().boundsInRoot
+        val eps = 0.5f
+        assertTrue(hero.left >= pane.left - eps && hero.top >= pane.top - eps, "hero clipped top/left: hero=$hero pane=$pane")
+        assertTrue(hero.right <= pane.right + eps && hero.bottom <= pane.bottom + eps, "hero outside pane: hero=$hero pane=$pane")
+        assertTrue(title.top >= hero.bottom - eps, "title overlaps hero: title=$title hero=$hero")
+    }
+
+    @Test
+    fun done_hero_not_clipped_compact() = doneHeroFits(expanded = false)
+
+    @Test
+    fun done_hero_not_clipped_expanded() = doneHeroFits(expanded = true)
 
     private fun ComposeUiTest.goTo(probe: Probe, page: Int) {
         while (probe.pager.currentPage < page) {
@@ -258,9 +281,9 @@ class StoryStepsScaffoldTest {
         setScaffold(sc, p)
         val pane = onNodeWithTag(OnboardingTags.SinglePane).fetchSemanticsNode().boundsInRoot
         val before = onNodeWithTag(OnboardingTags.Hero).fetchSemanticsNode().boundsInRoot
-        // The hero is inset 8 dp so the Done hero (scaled 1.15) is not clipped.
-        val inset = with(density) { 8.dp.toPx() }
-        assertEquals(pane.top + inset, before.top)
+        // The hero is inset so the Done hero (scaled 1.15) is not clipped.
+        val inset = with(density) { heroInsetFor(false).toPx() }
+        assertEquals(pane.top + inset, before.top, 1f)
 
         onNodeWithTag(OnboardingTags.SinglePane).performTouchInput { swipeUp(startY = bottom - 10f, endY = top + 10f) }
         waitForIdle()
@@ -271,6 +294,6 @@ class StoryStepsScaffoldTest {
         onNodeWithTag(OnboardingTags.Next).performClick()
         waitForIdle()
         val next = onNodeWithTag(OnboardingTags.Hero).fetchSemanticsNode().boundsInRoot
-        assertEquals(pane.top + inset, next.top)
+        assertEquals(pane.top + inset, next.top, 1f)
     }
 }
