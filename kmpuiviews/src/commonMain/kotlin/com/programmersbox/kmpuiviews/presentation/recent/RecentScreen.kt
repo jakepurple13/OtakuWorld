@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.presentation.recent
 
 import androidx.compose.animation.AnimatedContent
+import com.programmersbox.telemetry.events.OpenedFrom
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.fadeIn
@@ -235,7 +236,7 @@ fun RecentView(
                             //showBanner = c == ComponentState.Pressed
                         },
                         modifier = Modifier.fillMaxSize()
-                    ) { scope.launch { biometric.openIfNotIncognito(it) } }
+                    ) { scope.launch { biometric.openIfNotIncognito(it, OpenedFrom.RECENT) } }
                 }
             }
         }

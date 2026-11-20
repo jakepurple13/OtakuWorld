@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.presentation.history
 
 import androidx.compose.animation.AnimatedContent
+import com.programmersbox.telemetry.events.OpenedFrom
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.expandVertically
@@ -255,7 +256,7 @@ fun HistoryUi(
                             }
                             ?.onEach { m ->
                                 showLoadingDialog = false
-                                navController.details(m)
+                                navController.details(m, OpenedFrom.HISTORY)
                             }
                             ?.collect() ?: onError(item)
                     }

@@ -3,6 +3,7 @@
 package com.programmersbox.kmpuiviews.presentation.components
 
 import androidx.compose.animation.Crossfade
+import com.programmersbox.telemetry.events.OpenedFrom
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -287,7 +288,7 @@ fun optionsKmpSheet(
                 sheet = sheetState,
                 scope = scope,
                 optionsSheetValues = item,
-                onOpen = { navController.details(item.itemModel) },
+                onOpen = { navController.details(item.itemModel, OpenedFrom.LONG_PRESS) },
                 onGlobalSearch = { navController.globalSearch(it) },
                 onDismiss = { itemInfo.value = null },
             )
@@ -319,7 +320,7 @@ fun optionsKmpSheetList(
                 sheet = sheetState,
                 scope = scope,
                 optionsSheetValuesList = item,
-                onOpen = { navController.details(it.itemModel) },
+                onOpen = { navController.details(it.itemModel, OpenedFrom.LONG_PRESS) },
                 onGlobalSearch = { navController.globalSearch(it) },
                 onDismiss = { itemInfo.value = null },
                 utilities = utilities

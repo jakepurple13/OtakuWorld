@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.presentation
 
 import androidx.navigation.NavController
+import com.programmersbox.telemetry.events.OpenedFrom
 import androidx.navigation3.runtime.NavKey
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.SourceRepository
@@ -128,6 +129,8 @@ sealed class Screen(val route: String) : NavKey {
             val url: String,
             val imageUrl: String,
             val source: String,
+            /** Where the user opened it from (OpenedFrom); analytics only. */
+            val from: String = OpenedFrom.OTHER,
         ) : NavKey
     }
 
@@ -249,7 +252,10 @@ sealed class Screen(val route: String) : NavKey {
     }
 
     @Serializable
-    data object DailyOverview : Screen("daily_overview") {
+    data class DailyOverview(
+        /** Where the user opened it from (OpenedFrom); analytics only. */
+        val from: String = OpenedFrom.OTHER,
+    ) : Screen("daily_overview") {
         @Serializable
         data object Settings : Screen("daily_overview_settings")
 

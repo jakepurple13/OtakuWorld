@@ -17,9 +17,9 @@ class NavKeyFactoryTest {
 
     @Test
     fun dataClassWithSampleStrings() {
-        val args = listOf("title", "description", "url", "imageUrl", "source").map { NavArg(it, "String", false) }
+        val args = listOf("title", "description", "url", "imageUrl", "source", "from").map { NavArg(it, "String", false) }
         assertEquals(
-            Screen.DetailsScreen.Details("sample", "sample", "sample", "sample", "sample"),
+            Screen.DetailsScreen.Details("sample", "sample", "sample", "sample", "sample", "sample"),
             createNavKey("$screen\$DetailsScreen\$Details", args),
         )
     }

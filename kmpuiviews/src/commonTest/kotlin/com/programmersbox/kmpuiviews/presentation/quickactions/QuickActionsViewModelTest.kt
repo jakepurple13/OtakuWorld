@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.presentation.quickactions
 
 import androidx.compose.runtime.Composable
+import com.programmersbox.telemetry.events.OpenedFrom
 import androidx.navigation3.runtime.NavKey
 import app.cash.turbine.test
 import com.programmersbox.favoritesdatabase.CustomList
@@ -88,7 +89,7 @@ private class FakeHandler : BackgroundWorkHandler {
 private class RecordingNav : NavigationActions {
     val calls = mutableListOf<String>()
     var top: NavKey? = null
-    override fun isOnTop(key: NavKey): Boolean = top == key
+    override fun isOnTop(key: NavKey): Boolean = top?.let { it::class == key::class } == true
     override fun scanQrCode() {
         calls += "scanQrCode"
     }
@@ -102,8 +103,8 @@ private class RecordingNav : NavigationActions {
     }
 
     override fun recent() = Unit
-    override fun details(title: String, description: String, url: String, imageUrl: String, source: String) = Unit
-    override fun details(model: KmpItemModel) = Unit
+    override fun details(title: String, description: String, url: String, imageUrl: String, source: String, from: String) = Unit
+    override fun details(model: KmpItemModel, from: String) = Unit
     override fun onboarding() = Unit
     override fun all() = Unit
     override fun webView(url: String) = Unit
@@ -316,14 +317,14 @@ class QuickActionsViewModelTest {
         val vm = vm()
         controller.open(OpenOrigin.Bolt)
         vm.run(QuickAction.DailyOverview)
-        assertEquals(listOf("navigate:${Screen.DailyOverview}"), nav.calls)
+        assertEquals(listOf("navigate:${Screen.DailyOverview(OpenedFrom.QUICK_ACTION)}"), nav.calls)
         assertNull(controller.open.value)
     }
 
     @Test
     fun runDailyOverviewIsANoOpWhenAlreadyOnTop() = runTest {
         val vm = vm()
-        nav.top = Screen.DailyOverview
+        nav.top = Screen.DailyOverview(OpenedFrom.NOTIFICATION)
         controller.open(OpenOrigin.Bolt)
         vm.run(QuickAction.DailyOverview)
         assertEquals(emptyList(), nav.calls)

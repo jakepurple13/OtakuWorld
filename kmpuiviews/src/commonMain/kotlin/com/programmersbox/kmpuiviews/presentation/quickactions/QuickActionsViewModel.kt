@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.presentation.quickactions
 
 import androidx.lifecycle.ViewModel
+import com.programmersbox.telemetry.events.OpenedFrom
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckReportStore
 import com.programmersbox.kmpuiviews.presentation.Screen
@@ -127,8 +128,8 @@ class QuickActionsViewModel(
             }
 
             // Already showing it: don't stack a second copy.
-            QuickAction.DailyOverview -> if (!navigationActions.isOnTop(Screen.DailyOverview)) {
-                navigationActions.navigate(Screen.DailyOverview)
+            QuickAction.DailyOverview -> if (!navigationActions.isOnTop(Screen.DailyOverview())) {
+                navigationActions.navigate(Screen.DailyOverview(OpenedFrom.QUICK_ACTION))
             }
             QuickAction.ScanQrCode -> navigationActions.scanQrCode()
             QuickAction.GlobalSearch -> navigationActions.globalSearch()
