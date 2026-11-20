@@ -10,6 +10,7 @@ import ca.gosyer.appdirs.AppDirs
 import com.programmersbox.anime.shared.AnimeDesktopSettings
 import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.anime.shared.subtitlegen.DesktopSubtitleGenerator
+import com.programmersbox.desktop.motion.animeMotionCatalog
 import com.programmersbox.anime.shared.subtitlegen.SubtitleGenerator
 import com.programmersbox.anime.shared.subtitlegen.WhisperCliInstaller
 import com.programmersbox.anime.shared.subtitlegen.WhisperModelStore
@@ -75,6 +76,7 @@ fun main(args: Array<String>) {
         genericInfo = { singleOf(::GenericAnimeDesktop) },
         moduleBlock = {
             singleOf(::AnimeDesktopSettings)
+            single { animeMotionCatalog() }
             single<ShortcutSection>(named("videoPlayerShortcuts")) { playerShortcutSection() }
             singleOf(::StorageHolder)
             single<SubtitleSettingsRepository> {
