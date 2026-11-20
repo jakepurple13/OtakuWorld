@@ -65,12 +65,15 @@ import com.programmersbox.kmpmodels.ExampleService
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.di.kmpModule
 import com.programmersbox.kmpuiviews.motion.AppQuitHandler
+import com.programmersbox.kmpuiviews.motion.PendingQuitReply
 import com.programmersbox.kmpuiviews.motion.QuitController
+import com.programmersbox.kmpuiviews.motion.REDUCED_MOTION_REFRESH_MILLIS
 import com.programmersbox.kmpuiviews.motion.QuitHost
 import com.programmersbox.kmpuiviews.motion.QuitOverlay
 import com.programmersbox.kmpuiviews.motion.WindowPicture
 import com.programmersbox.kmpuiviews.motion.quitPlan
 import com.programmersbox.kmpuiviews.motion.recordInto
+import com.programmersbox.kmpuiviews.motion.refreshSystemReducesMotion
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
@@ -126,6 +129,7 @@ import dev.nucleusframework.window.material.rememberMaterialWindowStyle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.runBlocking
@@ -354,21 +358,33 @@ private fun InternalDesktopUi(
                 MotionRun(
                     launchMotion(
                         chosen,
-                        MotionConditions(systemReducesMotion(), platform = OverlayPlatform.current()),
+                        // Off never reads the system setting (it runs a process); otherwise this first read blocks once.
+                        MotionConditions(chosen !== OffMotion && systemReducesMotion(), platform = OverlayPlatform.current()),
                     )
                 )
+            }
+            // Keeps systemReducesMotion()'s cache fresh off the UI thread, so the quit read never runs a process.
+            LaunchedEffect(Unit) {
+                withContext(Dispatchers.IO) {
+                    while (true) {
+                        refreshSystemReducesMotion()
+                        delay(REDUCED_MOTION_REFRESH_MILLIS)
+                    }
+                }
             }
             val picture = remember { WindowPicture() }
             var contentHeight by remember { mutableStateOf(Dp.Unspecified) }
             var contentColors by remember { mutableStateOf<ColorScheme?>(null) }
+            val quitReply = remember { PendingQuitReply() }
             val quitController = remember {
                 QuitController(
                     plan = {
                         val key = runBlocking { settings.quitAnimation.get() }
+                        val chosen = catalog?.resolve(MotionPhase.Quit, key) ?: OffMotion
                         val plan = quitPlan(
-                            catalog?.resolve(MotionPhase.Quit, key) ?: OffMotion,
+                            chosen,
                             MotionConditions(
-                                systemReducesMotion(),
+                                chosen !== OffMotion && systemReducesMotion(),
                                 fullscreen = windowState.placement == WindowPlacement.Fullscreen,
                                 minimized = windowState.isMinimized,
                                 platform = OverlayPlatform.current(),
@@ -381,10 +397,18 @@ private fun InternalDesktopUi(
                         }
                     },
                     launch = { launchRun },
-                    exit = exitApplication,
+                    exit = {
+                        exitApplication()
+                        // Accept the OS quit (logout/restart/shutdown) only now that the app has exited.
+                        quitReply.release()
+                    },
                 )
             }
-            AppQuitHandler(quitController::requestQuit)
+            AppQuitHandler(quitReply) {
+                quitController.requestQuit()
+                // Already exited before this request (it was a no-op): answer the OS now.
+                if (quitController.state == QuitController.State.Exited) quitReply.release()
+            }
             val quitInWindow = (quitController.state as? QuitController.State.Playing)
                 ?.takeIf { it.plan.host == QuitHost.InWindow }
                 ?.run
@@ -440,7 +464,7 @@ private fun InternalDesktopUi(
                 controller = quitController,
                 picture = picture,
                 windowState = windowState,
-                contentHeight = contentHeight,
+                contentHeight = { contentHeight },
                 titleBarColor = rememberMaterialTitleBarStyle(chromeColors).colors.background,
                 surfaceColor = chromeColors.surface,
             )

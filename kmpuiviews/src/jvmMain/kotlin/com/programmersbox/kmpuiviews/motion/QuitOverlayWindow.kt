@@ -81,14 +81,14 @@ fun QuitOverlayWindow(
 /**
  * The quit overlay for [controller] while it plays with [QuitHost.Overlay]: takes [picture] of the main window (at
  * [windowState]), then shows [QuitOverlayWindow] over it. [contentHeight] is the recorded content's height, so the
- * band above it matches the main window's title bar.
+ * band above it matches the main window's title bar; it is a lambda so resizes don't recompose the caller.
  */
 @Composable
 fun QuitOverlay(
     controller: QuitController,
     picture: WindowPicture,
     windowState: WindowState,
-    contentHeight: Dp,
+    contentHeight: () -> Dp,
     titleBarColor: Color,
     surfaceColor: Color,
 ) {
@@ -97,6 +97,7 @@ fun QuitOverlay(
     var captured by remember(playing) { mutableStateOf(false) }
     var image by remember(playing) { mutableStateOf<ImageBitmap?>(null) }
     LaunchedEffect(playing) {
+        // Waits for the main window's next frame, so a launch motion skipped by this quit is not in the picture.
         image = picture.capture()
         captured = true
     }
@@ -105,7 +106,7 @@ fun QuitOverlay(
         position = windowState.position,
         size = windowState.size,
         picture = image,
-        titleBarHeight = titleBarBand(windowState.size.height, contentHeight),
+        titleBarHeight = titleBarBand(windowState.size.height, contentHeight()),
         titleBarColor = titleBarColor,
         surfaceColor = surfaceColor,
         run = playing.run,
@@ -119,17 +120,20 @@ fun titleBarBand(windowHeight: Dp, contentHeight: Dp): Dp =
     if (!windowHeight.isSpecified || !contentHeight.isSpecified) 0.dp
     else (windowHeight - contentHeight).coerceAtLeast(0.dp)
 
-/** Routes the app's Quit (⌘Q on macOS) to [onQuit] instead of exiting at once, where the platform supports it. */
+/**
+ * Routes the app's Quit (⌘Q, Dock, logout on macOS) to [onQuit] instead of exiting at once, where the platform supports
+ * it. The OS's answer is deferred into [reply], never refused, so the exit path must call [PendingQuitReply.release].
+ */
 @Composable
-fun AppQuitHandler(onQuit: () -> Unit) {
+fun AppQuitHandler(reply: PendingQuitReply, onQuit: () -> Unit) {
     val quit by rememberUpdatedState(onQuit)
-    DisposableEffect(Unit) {
+    DisposableEffect(reply) {
         val desktop = Desktop.isDesktopSupported()
             .takeIf { it }
             ?.let { Desktop.getDesktop() }
             ?.takeIf { it.isSupported(Desktop.Action.APP_QUIT_HANDLER) }
         desktop?.setQuitHandler { _, response ->
-            response.cancelQuit()
+            reply.hold(response::performQuit)
             quit()
         }
         onDispose { desktop?.setQuitHandler(null) }

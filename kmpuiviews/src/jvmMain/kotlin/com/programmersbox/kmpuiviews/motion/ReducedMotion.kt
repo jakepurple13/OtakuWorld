@@ -9,6 +9,17 @@ import java.util.concurrent.TimeUnit
  */
 fun systemReducesMotion(): Boolean = reducesMotion.get()
 
+/**
+ * Re-reads [systemReducesMotion] now, whatever its cache age. Blocks for up to 500 ms: call it off the UI thread
+ * (at least every [REDUCED_MOTION_REFRESH_MILLIS]) so UI-thread reads always hit the cache.
+ */
+fun refreshSystemReducesMotion() {
+    reducesMotion.refresh()
+}
+
+/** How often to [refreshSystemReducesMotion] so the one-minute cache never expires. */
+const val REDUCED_MOTION_REFRESH_MILLIS = 30_000L
+
 private val reducesMotion = TimedCache(60_000) {
     runCatching {
         val os = System.getProperty("os.name").orEmpty()
@@ -49,6 +60,15 @@ private class TimedCache<T>(
         return load().also {
             value = it
             readAt = now
+        }
+    }
+
+    /** Loads outside the lock, so readers keep getting the cached value meanwhile. */
+    fun refresh() {
+        val loaded = load()
+        synchronized(this) {
+            value = loaded
+            readAt = clock()
         }
     }
 }

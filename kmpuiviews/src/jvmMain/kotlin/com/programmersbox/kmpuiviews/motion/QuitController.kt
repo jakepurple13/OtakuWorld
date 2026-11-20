@@ -50,3 +50,24 @@ class QuitController(
         exit()
     }
 }
+
+/**
+ * The OS's deferred answer to a quit it asked for (macOS: logout, restart, shutdown, Dock or ⌘Q). Refusing it would
+ * make macOS abort a logout ("<App> interrupted logout"), so the quit handler [hold]s the answer and the exit path
+ * [release]s it once the app has exited. Quits the OS did not ask for (close button) hold nothing.
+ */
+class PendingQuitReply {
+    private var performQuit: (() -> Unit)? = null
+
+    /** Keeps [performQuit] until [release]; a newer request replaces an older unanswered one. */
+    @Synchronized
+    fun hold(performQuit: () -> Unit) {
+        this.performQuit = performQuit
+    }
+
+    /** Calls the held answer once, if any. */
+    fun release() {
+        val reply = synchronized(this) { performQuit.also { performQuit = null } }
+        reply?.invoke()
+    }
+}

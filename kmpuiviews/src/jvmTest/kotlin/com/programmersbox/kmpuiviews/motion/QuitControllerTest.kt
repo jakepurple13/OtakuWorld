@@ -24,4 +24,31 @@ class QuitControllerTest {
         c.requestQuit(); c.finished()
         assertEquals(1, plans)
     }
+
+    // PendingQuitReply wired as in DesktopUi: exit = { exitApplication(); reply.release() }.
+    private val reply = PendingQuitReply()
+    private var replies = 0
+    private val events = mutableListOf<String>()
+    private fun replying(motion: DesktopMotion) =
+        QuitController({ QuitPlan(motion, QuitHost.Overlay) }, { null }, { exits++; events += "exit"; reply.release() })
+    private fun osQuit(c: QuitController) {
+        reply.hold { replies++; events += "reply" }
+        c.requestQuit()
+        if (c.state == QuitController.State.Exited) reply.release()
+    }
+
+    @Test fun osQuitWithOffRepliesAfterExit() { osQuit(replying(OffMotion)); assertEquals(1, exits); assertEquals(listOf("exit", "reply"), events) }
+    @Test fun osQuitRepliesOnlyWhenMotionEnds() {
+        val c = replying(FadeOutMotion); osQuit(c)
+        assertEquals(0, replies)
+        c.finished()
+        assertEquals(listOf("exit", "reply"), events)
+    }
+    @Test fun closeButtonExitsWithoutReply() { val c = replying(OffMotion); c.requestQuit(); assertEquals(1, exits); assertEquals(0, replies) }
+    @Test fun osQuitWhilePlayingExitsAndRepliesOnce() {
+        val c = replying(FadeOutMotion); osQuit(c); osQuit(c); c.finished()
+        assertEquals(1, exits); assertEquals(1, replies)
+    }
+    @Test fun osQuitAfterExitStillReplies() { val c = replying(OffMotion); c.requestQuit(); osQuit(c); assertEquals(1, exits); assertEquals(1, replies) }
+    @Test fun releaseWithoutHoldIsNoOp() { PendingQuitReply().release() }
 }
