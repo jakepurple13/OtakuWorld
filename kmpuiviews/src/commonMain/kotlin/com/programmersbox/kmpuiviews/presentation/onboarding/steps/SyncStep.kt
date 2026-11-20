@@ -18,13 +18,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.CloudSync
-import androidx.compose.material.icons.filled.Fingerprint
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -43,9 +44,12 @@ import com.programmersbox.kmpuiviews.presentation.onboarding.frame.StepLayout
 import com.programmersbox.kmpuiviews.presentation.onboarding.motion.onboardingReducedMotion
 import com.programmersbox.kmpuiviews.presentation.settings.moresettings.MoreSettingsViewModel
 import com.programmersbox.supabaseintegration.ui.SupabaseRoutes
+import com.programmersbox.supabaseintegration.auth.AuthManager
+import com.programmersbox.supabaseintegration.auth.AuthState
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 /** Returns a function that opens the backup picker and reports the chosen file (null on cancel). */
@@ -63,21 +67,28 @@ private val DefaultBackupImporter: @Composable () -> (PlatformFile) -> Unit = {
     import
 }
 
+/** Reads the real Supabase signed-in state from DI. */
+private val DefaultSignedIn: @Composable () -> Boolean = {
+    val auth = koinInject<AuthManager>()
+    val state by auth.authState.collectAsState()
+    state is AuthState.Authenticated
+}
+
 /**
  * Step 6: Supabase sync, backup restore and (Android only) biometric lock.
  *
- * Sync "On" can't be read from the Supabase auth state here (it needs the sync module in DI), so
- * it flips once the user opens the Supabase route. "Restored" flips after a file is chosen and
- * handed to the importer; the import itself runs in the background and reports no count.
+ * Sync "On" follows [signedIn] (the real Supabase auth state), so backing out of sign-in leaves it
+ * off. Restore only reports a started state: `importFullBackup` launches a background restore and
+ * exposes no result, so the step says "Restoring" rather than claiming success.
  */
 fun OnboardingScope.syncStep(
     navController: NavigationActions,
     showBiometric: Boolean = platform() == "Android",
     backupPicker: BackupPicker = DefaultBackupPicker,
     backupImporter: @Composable () -> (PlatformFile) -> Unit = DefaultBackupImporter,
+    signedIn: @Composable () -> Boolean = DefaultSignedIn,
 ) {
-    var syncOn by mutableStateOf(false)
-    var restored by mutableStateOf(false)
+    var restoring by mutableStateOf(false)
     val spec = OnboardingStepSpec(
         id = "sync",
         title = "Keep it safe",
@@ -86,18 +97,20 @@ fun OnboardingScope.syncStep(
         shape = HeroShape.Bun,
         summaryLabel = "Sync & privacy",
         summary = {
+            val syncOn = signedIn()
             listOfNotNull(
                 "Sync on".takeIf { syncOn },
-                "Backup restored".takeIf { restored },
+                "Backup restoring".takeIf { restoring },
             ).joinToString(" · ").ifEmpty { "Nothing turned on" }
         },
     )
     step(spec) {
         val import = backupImporter()
+        val syncOn = signedIn()
         val launchPicker = backupPicker { file ->
             if (file != null) {
                 import(file)
-                restored = true
+                restoring = true
             }
         }
         Box(Modifier.fillMaxSize().testTag(OnboardingTags.step(spec.id))) {
@@ -106,36 +119,28 @@ fun OnboardingScope.syncStep(
                     icon = Icons.Default.CloudSync,
                     title = "Sync with Supabase",
                     sub = "Favorites on every device",
-                    idle = "Set up",
-                    done = "On",
-                    isDone = syncOn,
-                ) {
-                    syncOn = true
-                    navController.navigate(SupabaseRoutes)
-                }
+                    trailing = { StatePill("Set up", "On", syncOn) },
+                    onClick = { navController.navigate(SupabaseRoutes) },
+                )
                 SyncRow(
                     icon = Icons.Default.Restore,
                     title = "Restore from backup",
                     sub = "Import a .zip backup",
-                    idle = "Choose",
-                    done = "Done",
-                    isDone = restored,
+                    trailing = { StatePill("Choose", "Restoring…", restoring) },
                     onClick = launchPicker,
                 )
                 if (showBiometric) {
                     SyncRow(
-                        icon = Icons.Default.Fingerprint,
+                        icon = Icons.Default.Lock,
                         title = "Biometric lock",
                         sub = "Fingerprint, face or PIN for locked lists",
-                        idle = null,
-                        done = "",
-                        isDone = false,
+                        trailing = null,
                         onClick = navController::security,
                     )
                 }
-                if (restored) {
+                if (restoring) {
                     Text(
-                        "Backup restored",
+                        "Restoring your backup in the background",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(top = 4.dp),
@@ -151,12 +156,9 @@ private fun SyncRow(
     icon: ImageVector,
     title: String,
     sub: String,
-    idle: String?,
-    done: String,
-    isDone: Boolean,
+    trailing: (@Composable () -> Unit)?,
     onClick: () -> Unit,
 ) {
-    val reduced = onboardingReducedMotion()
     val scheme = MaterialTheme.colorScheme
     Surface(
         onClick = onClick,
@@ -174,32 +176,37 @@ private fun SyncRow(
                 Text(title, style = MaterialTheme.typography.titleSmall)
                 Text(sub, style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant)
             }
-            if (idle != null) {
-                Surface(
-                    shape = RoundedCornerShape(50),
-                    color = if (isDone) scheme.primary else scheme.secondaryContainer,
-                ) {
-                    AnimatedContent(
-                        targetState = isDone,
-                        transitionSpec = {
-                            if (reduced) {
-                                fadeIn() togetherWith fadeOut()
-                            } else {
-                                (fadeIn() + scaleIn(initialScale = 0.8f)) togetherWith
-                                        (fadeOut() + scaleOut(targetScale = 0.8f))
-                            }
-                        },
-                        label = "sync pill",
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-                    ) { on ->
-                        Text(
-                            if (on) done else idle,
-                            style = MaterialTheme.typography.labelLarge,
-                            color = if (on) scheme.onPrimary else scheme.onSecondaryContainer,
-                        )
-                    }
+            trailing?.invoke()
+        }
+    }
+}
+
+@Composable
+private fun StatePill(idle: String, done: String, isDone: Boolean) {
+    val reduced = onboardingReducedMotion()
+    val scheme = MaterialTheme.colorScheme
+    Surface(
+        shape = RoundedCornerShape(50),
+        color = if (isDone) scheme.primary else scheme.secondaryContainer,
+    ) {
+        AnimatedContent(
+            targetState = isDone,
+            transitionSpec = {
+                if (reduced) {
+                    fadeIn() togetherWith fadeOut()
+                } else {
+                    (fadeIn() + scaleIn(initialScale = 0.8f)) togetherWith
+                            (fadeOut() + scaleOut(targetScale = 0.8f))
                 }
-            }
+            },
+            label = "sync pill",
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+        ) { on ->
+            Text(
+                if (on) done else idle,
+                style = MaterialTheme.typography.labelLarge,
+                color = if (on) scheme.onPrimary else scheme.onSecondaryContainer,
+            )
         }
     }
 }

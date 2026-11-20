@@ -4,7 +4,9 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.Text
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
@@ -49,9 +51,11 @@ class SyncStepTest {
         launch
     }
 
+    private val signedIn = mutableStateOf(false)
+
     private fun ComposeUiTest.show(showBiometric: Boolean) {
         val scope = buildOnboardingScope {
-            syncStep(nav, showBiometric, picker) { { imported += it } }
+            syncStep(nav, showBiometric, picker, { { imported += it } }, { signedIn.value })
         }
         setContent {
             MaterialExpressiveTheme {
@@ -75,7 +79,28 @@ class SyncStepTest {
         show(showBiometric = true)
         onNodeWithText("Sync with Supabase").performClick()
         assertEquals(listOf("navigate:$SupabaseRoutes"), calls)
+        onAllNodesWithText("On").assertCountEquals(0)
+    }
+
+    @Test
+    fun on_state_follows_signed_in() = runComposeUiTest {
+        show(showBiometric = false)
+        onAllNodesWithText("On").assertCountEquals(0)
+        runOnIdle { signedIn.value = true }
+        waitForIdle()
         onNodeWithText("On").assertExists()
+    }
+
+    @Test
+    fun summary_reflects_sync_and_restore() = runComposeUiTest {
+        val scope = buildOnboardingScope {
+            syncStep(nav, false, picker, { { imported += it } }, { signedIn.value })
+        }
+        setContent { Text(scope[0].spec.summary!!()) }
+        onNodeWithText("Nothing turned on").assertExists()
+        runOnIdle { signedIn.value = true }
+        waitForIdle()
+        onNodeWithText("Sync on").assertExists()
     }
 
     @Test
@@ -85,18 +110,18 @@ class SyncStepTest {
         runOnIdle { pickerResult(null) }
         waitForIdle()
         onNodeWithText("Choose").assertExists()
-        onAllNodesWithText("Backup restored").assertCountEquals(0)
+        onAllNodesWithText("Restoring…").assertCountEquals(0)
         assertEquals(0, imported.size)
     }
 
     @Test
-    fun restore_success_imports_and_confirms() = runComposeUiTest {
+    fun restore_pick_imports_and_shows_restoring() = runComposeUiTest {
         show(showBiometric = true)
         val file = PlatformFile(File("backup.zip"))
         runOnIdle { pickerResult(file) }
         waitForIdle()
-        onNodeWithText("Done").assertExists()
-        onNodeWithText("Backup restored").assertExists()
+        onNodeWithText("Restoring…").assertExists()
+        onNodeWithText("Restoring your backup in the background").assertExists()
         assertEquals(listOf(file), imported)
     }
 
