@@ -34,6 +34,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.programmersbox.kmpuiviews.presentation.onboarding.motion.onboardingReducedMotion
 import com.programmersbox.kmpuiviews.utils.composables.modifiers.pagerStagger
 
 interface OnboardingScope {
@@ -89,6 +90,7 @@ fun Onboarding(
     overscrollEffect: OverscrollEffect? = rememberOverscrollEffect(),
 ) {
     val stateHolder = rememberSaveableStateHolder()
+    val reduced = onboardingReducedMotion()
     HorizontalPager(
         state = state,
         modifier = modifier,
@@ -105,7 +107,7 @@ fun Onboarding(
         pageSpacing = pageSpacing,
         verticalAlignment = verticalAlignment,
         pageContent = { page ->
-            Box(Modifier.pagerStagger(state, page, index = 0)) {
+            Box(if (reduced) Modifier else Modifier.pagerStagger(state, page, index = 0)) {
                 stateHolder.SaveableStateProvider(page) { onboardingScope[page].content() }
             }
         }

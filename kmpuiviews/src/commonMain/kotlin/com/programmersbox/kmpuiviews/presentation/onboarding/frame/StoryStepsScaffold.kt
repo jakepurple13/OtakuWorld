@@ -4,19 +4,16 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.snap
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.pager.PagerState
@@ -44,10 +41,9 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.programmersbox.kmpuiviews.presentation.onboarding.Onboarding
 import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingScope
@@ -69,6 +65,7 @@ fun StoryStepsScaffold(
     onFinish: () -> Unit,
     onSkipConfirmed: () -> Unit,
     userScrollEnabled: Boolean = true,
+    expanded: Boolean = isExpandedWidth(),
     pagerState: PagerState = rememberPagerState { scope.size },
     modifier: Modifier = Modifier,
 ) {
@@ -76,8 +73,6 @@ fun StoryStepsScaffold(
     val animationScope = rememberCoroutineScope()
     var showSkip by remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
-    val heroSpec = MaterialTheme.motionScheme.defaultSpatialSpec<androidx.compose.ui.unit.Dp>()
-    val effectsSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
 
     val page = pagerState.currentPage
     val lastPage = scope.size - 1
@@ -94,11 +89,11 @@ fun StoryStepsScaffold(
     BackHandler(enabled = page > 0) { goTo(page - 1) }
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
 
-    BoxWithConstraints(
+    Box(
         modifier = modifier
             .fillMaxSize()
-            .onPreviewKeyEvent { event ->
-                if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+            .onKeyEvent { event ->
+                if (event.type != KeyEventType.KeyDown) return@onKeyEvent false
                 when (event.key) {
                     Key.DirectionLeft -> (page > 0).also { if (it) goTo(page - 1) }
                     Key.DirectionRight -> (page < lastPage).also { if (it) goTo(page + 1) }
@@ -109,7 +104,7 @@ fun StoryStepsScaffold(
             .focusable()
             .safeDrawingPadding(),
     ) {
-        val heroSize = if (maxWidth >= 840.dp) 104.dp else 64.dp
+        val heroSize = heroSizeFor(expanded)
         Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -129,54 +124,22 @@ fun StoryStepsScaffold(
                 }
             }
 
-            val heroHeight by animateDpAsState(
-                if (spec.shape == Hero.Hidden) 0.dp else heroSize,
-                if (reduced) snap() else heroSpec,
-                label = "heroHeight",
-            )
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-            ) {
-                Row(Modifier.height(heroHeight), verticalAlignment = Alignment.CenterVertically) {
-                    HeroShape(shape = spec.shape, icon = spec.icon, size = heroSize)
-                }
-                AnimatedContent(
-                    targetState = spec.title to spec.body,
-                    transitionSpec = {
-                        // Content still crossfades under reduced motion.
-                        fadeIn(effectsSpec) togetherWith fadeOut(effectsSpec)
-                    },
-                    label = "stepText",
-                ) { (title, body) ->
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(top = 12.dp),
-                    ) {
-                        Text(
-                            title,
-                            style = MaterialTheme.typography.headlineSmall,
-                            textAlign = TextAlign.Center,
-                        )
-                        if (body.isNotBlank()) {
-                            Text(
-                                body,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.padding(top = 4.dp),
-                            )
-                        }
-                    }
-                }
+            // The hero is overlaid on the top-left of the pager area, over the space StepLayout reserves
+            // (heroReserveFor); it is sized unconstrained so it never squeezes while the shape changes.
+            Box(Modifier.weight(1f).fillMaxWidth()) {
+                Onboarding(
+                    onboardingScope = scope,
+                    state = pagerState,
+                    userScrollEnabled = userScrollEnabled,
+                    modifier = Modifier.fillMaxSize(),
+                )
+                HeroShape(
+                    shape = spec.shape,
+                    icon = spec.icon,
+                    size = heroSize,
+                    modifier = Modifier.align(Alignment.TopStart),
+                )
             }
-
-            Onboarding(
-                onboardingScope = scope,
-                state = pagerState,
-                userScrollEnabled = userScrollEnabled,
-                modifier = Modifier.weight(1f),
-            )
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,

@@ -89,11 +89,13 @@ fun HeroShape(
         if (reduced) snapSpec() else spatial,
         label = "heroRotation",
     )
-    val scale by animateFloatAsState(
+    val animatedScale by animateFloatAsState(
         shape.scale,
         if (reduced) snapSpec() else spatial,
         label = "heroScale",
     )
+    // A spring can overshoot below zero (toward Hidden); never mirror the hero.
+    val scale = animatedScale.coerceAtLeast(0f)
 
     Box(
         contentAlignment = Alignment.Center,

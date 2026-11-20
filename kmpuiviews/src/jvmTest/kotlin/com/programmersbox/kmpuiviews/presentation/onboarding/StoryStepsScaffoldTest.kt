@@ -1,6 +1,15 @@
 package com.programmersbox.kmpuiviews.presentation.onboarding
 
 import androidx.compose.foundation.pager.PagerState
+import androidx.compose.material3.Slider
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.testTag
+import com.programmersbox.kmpuiviews.presentation.onboarding.frame.StepLayout
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
@@ -8,7 +17,13 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.Key
+import androidx.compose.material3.TextField
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.performTextInput
+import kotlin.test.assertTrue
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
@@ -18,6 +33,7 @@ import androidx.compose.ui.test.onChildren
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.requestFocus
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.runComposeUiTest
@@ -32,10 +48,15 @@ class StoryStepsScaffoldTest {
     private fun spec(id: String, shape: HeroShape = HeroShape.Cookie) =
         OnboardingStepSpec(id, "Title $id", "Body $id", Icons.Default.Star, shape)
 
-    private fun scope(count: Int = 4) = buildOnboardingScope {
-        repeat(count - 1) { i -> step(spec("s$i", if (i == 0) HeroShape.Cookie else HeroShape.Diamond)) { Text("content $i") } }
-        step(spec("done", HeroShape.Done)) { Text("content done") }
-    }
+    private fun scope(count: Int = 4, expanded: Boolean = false, extra: @Composable (Int) -> Unit = {}) =
+        buildOnboardingScope {
+            repeat(count - 1) { i ->
+                val sp = spec("s$i", if (i == 0) HeroShape.Cookie else HeroShape.Diamond)
+                step(sp) { StepLayout(sp, expanded = expanded) { Text("content $i"); extra(i) } }
+            }
+            val sp = spec("done", HeroShape.Done)
+            step(sp) { StepLayout(sp, expanded = expanded) { Text("content done") } }
+        }
 
     private class Probe {
         var finished = 0
@@ -55,6 +76,7 @@ class StoryStepsScaffoldTest {
                         onFinish = { probe.finished++ },
                         onSkipConfirmed = { probe.skipped++ },
                         pagerState = probe.pager,
+                        expanded = false,
                     )
                 }
             }
@@ -156,5 +178,72 @@ class StoryStepsScaffoldTest {
     fun flow_without_app_step_has_eight_segments() = runComposeUiTest {
         setScaffold(scope(8))
         onNodeWithTag(OnboardingTags.Progress).onChildren().assertCountEquals(8)
+    }
+
+    @Test
+    fun scaffold_does_not_draw_titles_itself_but_step_layout_does() = runComposeUiTest {
+        setScaffold()
+        onNodeWithText("Title s0").assertExists()
+        onNodeWithText("Body s0").assertExists()
+    }
+
+    @Test
+    fun slider_keeps_arrow_keys_and_page_does_not_change() = runComposeUiTest {
+        var value = 0.5f
+        val p = Probe()
+        val sc = scope(extra = { i ->
+            if (i == 0) {
+                var v by remember { mutableFloatStateOf(0.5f) }
+                Slider(v, { v = it; value = it }, modifier = Modifier.testTag("slider"))
+            }
+        })
+        setScaffold(sc, p)
+        onNodeWithTag("slider").requestFocus()
+        waitForIdle()
+        onNodeWithTag("slider").performKeyInput { pressKey(Key.DirectionRight) }
+        waitForIdle()
+        assertEquals(0, p.pager.currentPage)
+        assertTrue(value > 0.5f, "slider should have moved, was $value")
+    }
+
+    @Test
+    fun width_change_keeps_page_and_text() = runComposeUiTest {
+        var expanded by mutableStateOf(false)
+        lateinit var pager: PagerState
+        setContent {
+            MaterialExpressiveTheme {
+                CompositionLocalProvider(LocalReducedMotionOverride provides true) {
+                    pager = rememberPagerState { 4 }
+                    val sc = remember {
+                        buildOnboardingScope {
+                            repeat(4) { i ->
+                                val sp = spec("w$i")
+                                step(sp) {
+                                    var text by rememberSaveable { mutableStateOf("") }
+                                    StepLayout(sp, expanded = expanded) {
+                                        TextField(text, { text = it }, modifier = Modifier.testTag("field$i"))
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    StoryStepsScaffold(sc, "TestApp", "Go", {}, {}, pagerState = pager, expanded = expanded)
+                }
+            }
+        }
+        waitForIdle()
+        onNodeWithTag(OnboardingTags.SinglePane).assertExists()
+        onNodeWithTag(OnboardingTags.Next).performClick()
+        waitForIdle()
+        onNodeWithTag(OnboardingTags.Next).performClick()
+        waitForIdle()
+        assertEquals(2, pager.currentPage)
+        onNodeWithTag("field2").performTextInput("hello")
+        waitForIdle()
+        expanded = true
+        waitForIdle()
+        assertEquals(2, pager.currentPage)
+        onNodeWithTag(OnboardingTags.TwoPane).assertExists()
+        onNodeWithTag("field2").assertTextContains("hello")
     }
 }
