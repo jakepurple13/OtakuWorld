@@ -126,9 +126,11 @@ internal object InkDrop : DesktopMotion {
                     }
                     // The drop's centre starts 70 vertical cqw above `top: 50%` plus half its height, and lands centred.
                     val dropFrom = centre.y + 1.5f * u + DROP_HEIGHT * size.verticalCqw
-                    // `.splash`: a 4cqw circle with a .4cqw border inside it, scaled about its centre.
+                    // `.splash`: a content-box 4cqw circle with a .4cqw border outside it (centreline radius 2.2cqw),
+                    // scaled about the host centre. The mockup's -2cqw margin leaves it .4cqw right and down of centre;
+                    // that offset is dropped so the splash stays centred on the drop.
                     val ring = Stroke(.4f * u)
-                    val ringRadius = 1.8f * u
+                    val ringRadius = 2.2f * u
                     onDrawBehind {
                         val f = frame(time())
                         with(paper) { drawPaper() }

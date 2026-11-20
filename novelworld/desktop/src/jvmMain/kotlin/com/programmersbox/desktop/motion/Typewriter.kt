@@ -71,8 +71,8 @@ internal object Typewriter : DesktopMotion {
         titleChars = typedChars(time, 200, 1100, TYPEWRITER_TITLE.length),
         titleCaret = track(time, Keyframe(1100, 1f), Keyframe(1150, 0f)),
         lineChars = typedChars(time, 1200, 1850, TYPEWRITER_LINE.length),
-        // The border colour interpolates from transparent to ink over the whole wait before the line starts.
-        lineCaret = track(time, Keyframe(0, 0f), Keyframe(1200, 1f)),
+        // Switches on as line 2 starts typing (the mockup's colour fade across 0-1200 ms is dropped on purpose).
+        lineCaret = if (time >= 1200) 1f else 0f,
         sheetLift = track(time, Keyframe(2000, 0f, MockupEasing.InOut), Keyframe(2600, SHEET_FED)),
         appDrop = track(time, Keyframe(2000, 8f, MockupEasing.Out), Keyframe(2600, 0f)),
     )

@@ -92,12 +92,25 @@ class NovelMotionsTest {
         val early = renderMotionFrame(Typewriter, 600)
         assertEquals(NovelPaperCream, early.pixel(300, 5))
         assertEquals(0, early.inkPixels(130..300, 66..86))
+        // ...and the first four ("Nove", about 38..92px) are inked.
+        assertTrue(early.inkPixels(40..85, 66..86) > 0)
         // At 1100 ms all of "NovelWorld" is typed.
         assertTrue(renderMotionFrame(Typewriter, 1100).inkPixels(130..300, 66..86) > 0)
         // At 2300 ms the sheet has fed halfway up and out, uncovering the bottom of the app.
         val feeding = renderMotionFrame(Typewriter, 2300)
         assertEquals(Color.Red, feeding.pixel(160, 190))
         assertEquals(NovelPaperCream, feeding.pixel(300, 50))
+    }
+
+    /** The line-2 caret switches on as line 2 starts typing at 1200 ms, not before. */
+    @Test
+    fun typewriterLineCaretSwitchesOn() {
+        // Line 2 starts at x = 12cqw = 38.4px, y = 64 + 24.6 + 2cqw ≈ 95px; its .35cqw caret covers about 38.4..39.5px.
+        // The caret is narrower than a pixel pair, so its anti-aliased pixels are matched with a looser threshold.
+        val caret = 37..41
+        val rows = 97..105
+        assertEquals(0, renderMotionFrame(Typewriter, 1100).inkPixels(caret, rows, darkness = 2.3f))
+        assertTrue(renderMotionFrame(Typewriter, 1200).inkPixels(caret, rows, darkness = 2.3f) > 0)
     }
 
     /** Mid-spread the ink stain covers the paper while the app opens through a smaller circle at its centre. */
@@ -117,6 +130,11 @@ class NovelMotionsTest {
         val before = renderMotionFrame(TheEnd, 640)
         assertEquals(NovelPaperCream, before.pixel(300, 5))
         assertEquals(0, before.inkPixels(0..319, 82..102))
+        // At 950 ms floor(8 × 300 / 600) = 4 characters ("The ") show, re-centred: about 133..187px of the full
+        // 106..214px line. Ink sits on the left of the line, none on its right.
+        val partial = renderMotionFrame(TheEnd, 950)
+        assertTrue(partial.inkPixels(125..190, 82..102) > 0)
+        assertEquals(0, partial.inkPixels(195..319, 82..102))
         assertTrue(renderMotionFrame(TheEnd, 1300).inkPixels(0..319, 82..102) > 0)
     }
 
@@ -140,14 +158,17 @@ class NovelMotionsTest {
         assertTrue(pixel.alpha > 0f, "desk is drawn: $pixel")
     }
 
-    /** Pixels in the area dark enough to be the ink (`#2a2219`), not paper or ruling. */
-    private fun ImageBitmap.inkPixels(xs: IntRange, ys: IntRange): Int {
+    /**
+     * Pixels in the area dark enough to be the ink (`#2a2219`), not paper or ruling: opaque with r + g + b under
+     * [darkness] (paper and ruling sum to about 2.7).
+     */
+    private fun ImageBitmap.inkPixels(xs: IntRange, ys: IntRange, darkness: Float = 1.2f): Int {
         val buffer = IntArray(width * height)
         readPixels(buffer)
         var count = 0
         for (y in ys) for (x in xs) {
             val c = Color(buffer[y * width + x])
-            if (c.alpha > .5f && c.red + c.green + c.blue < 1.2f) count++
+            if (c.alpha > .5f && c.red + c.green + c.blue < darkness) count++
         }
         return count
     }

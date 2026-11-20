@@ -73,14 +73,14 @@ internal object TheEnd : DesktopMotion {
         endAlpha = track(time, Keyframe(1900, 1f, MockupEasing.In), Keyframe(2400, 0f)),
     )
 
-    override fun Modifier.app(time: () -> Int): Modifier {
-        val blurs = TheEndBlurSteps()
-        return graphicsLayer {
-            val f = frame(time())
-            alpha = f.appAlpha
-            renderEffect = blurs.at((f.blur / BLUR_PX * BLUR_STEPS).roundToInt(), density)
-        }
+    override fun Modifier.app(time: () -> Int): Modifier = graphicsLayer {
+        val f = frame(time())
+        alpha = f.appAlpha
+        renderEffect = blurs.at((f.blur / BLUR_PX * BLUR_STEPS).roundToInt(), density)
     }
+
+    /** Blur effects per step, kept across [app] calls and recompositions; rebuilt only when the density changes. */
+    private val blurs = TheEndBlurSteps()
 
     /** `.cream`, then `.end` over it. */
     @Composable
@@ -137,8 +137,8 @@ internal object TheEnd : DesktopMotion {
 }
 
 /**
- * The app's blur effect per step, built the first time each step is shown for a density (one set per [TheEnd.app]
- * chain), so frames reuse immutable effects instead of allocating one each.
+ * The app's blur effect per step, built the first time each step is shown for a density, so frames reuse immutable
+ * effects instead of allocating one each. Only touched from graphicsLayer blocks on the UI thread.
  */
 private class TheEndBlurSteps {
     private var density = 0f
