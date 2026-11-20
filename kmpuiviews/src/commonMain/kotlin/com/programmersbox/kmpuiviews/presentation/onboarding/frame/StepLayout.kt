@@ -15,6 +15,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
@@ -28,6 +32,22 @@ import com.programmersbox.kmpuiviews.utils.LocalWindowSizeClass
 
 /** Hero size shared by [StoryStepsScaffold] (which draws it) and [StepLayout] (which reserves its space). */
 internal fun heroSizeFor(expanded: Boolean): Dp = if (expanded) 104.dp else 64.dp
+
+/**
+ * Lets the scaffold read each compact step's list scroll (keyed by step id) so the hero can leave with
+ * the space [StepLayout] reserves for it instead of covering the content that scrolls up.
+ */
+internal class HeroScroll {
+    val states = mutableStateMapOf<String, LazyListState>()
+
+    /** Pixels the page [id] has scrolled, or [Int.MAX_VALUE] once the reserved space is off screen. */
+    fun offsetOf(id: String): Int {
+        val state = states[id] ?: return 0
+        return if (state.firstVisibleItemIndex > 0) Int.MAX_VALUE else state.firstVisibleItemScrollOffset
+    }
+}
+
+internal val LocalHeroScroll = staticCompositionLocalOf<HeroScroll?> { null }
 
 /** Space [StepLayout] keeps free at the top-left for the hero the scaffold overlays there. */
 internal fun heroReserveFor(expanded: Boolean): Dp = if (expanded) 120.dp else 92.dp
@@ -69,8 +89,16 @@ fun StepLayout(
             }
         }
     } else {
+        val listState = rememberLazyListState()
+        val heroScroll = LocalHeroScroll.current
+        if (heroScroll != null) {
+            DisposableEffect(heroScroll, spec.id, listState) {
+                heroScroll.states[spec.id] = listState
+                onDispose { if (heroScroll.states[spec.id] === listState) heroScroll.states.remove(spec.id) }
+            }
+        }
         LazyColumn(
-            state = rememberLazyListState(),
+            state = listState,
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxSize().testTag(OnboardingTags.SinglePane),
         ) {

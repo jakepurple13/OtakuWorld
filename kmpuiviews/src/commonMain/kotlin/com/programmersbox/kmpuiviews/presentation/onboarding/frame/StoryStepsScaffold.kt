@@ -26,6 +26,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -73,6 +77,7 @@ fun StoryStepsScaffold(
     val animationScope = rememberCoroutineScope()
     var showSkip by remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
+    val heroScroll = remember { HeroScroll() }
 
     val page = pagerState.currentPage
     val lastPage = scope.size - 1
@@ -126,18 +131,27 @@ fun StoryStepsScaffold(
 
             // The hero is overlaid on the top-left of the pager area, over the space StepLayout reserves
             // (heroReserveFor); it is sized unconstrained so it never squeezes while the shape changes.
-            Box(Modifier.weight(1f).fillMaxWidth()) {
-                Onboarding(
-                    onboardingScope = scope,
-                    state = pagerState,
-                    userScrollEnabled = userScrollEnabled,
-                    modifier = Modifier.fillMaxSize(),
-                )
+            // Compact: the hero leaves with the reserved space as the current page scrolls (expanded keeps it put).
+            val reservePx = with(LocalDensity.current) { heroReserveFor(expanded).toPx() }
+            Box(Modifier.weight(1f).fillMaxWidth().clipToBounds()) {
+                CompositionLocalProvider(LocalHeroScroll provides heroScroll) {
+                    Onboarding(
+                        onboardingScope = scope,
+                        state = pagerState,
+                        userScrollEnabled = userScrollEnabled,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
                 HeroShape(
                     shape = spec.shape,
                     icon = spec.icon,
                     size = heroSize,
-                    modifier = Modifier.align(Alignment.TopStart),
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .graphicsLayer {
+                            translationY = if (expanded) 0f
+                            else -minOf(heroScroll.offsetOf(spec.id).toLong(), reservePx.toLong()).toFloat()
+                        },
                 )
             }
 

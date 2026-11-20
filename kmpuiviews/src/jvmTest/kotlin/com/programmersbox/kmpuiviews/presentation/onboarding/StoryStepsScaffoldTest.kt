@@ -33,6 +33,9 @@ import androidx.compose.ui.test.onChildren
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeUp
+import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.test.requestFocus
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.pressKey
@@ -245,5 +248,26 @@ class StoryStepsScaffoldTest {
         assertEquals(2, pager.currentPage)
         onNodeWithTag(OnboardingTags.TwoPane).assertExists()
         onNodeWithTag("field2").assertTextContains("hello")
+    }
+
+    @Test
+    fun compact_hero_leaves_with_scroll() = runComposeUiTest {
+        val p = Probe()
+        val sc = scope(extra = { repeat(30) { Text("row $it") } })
+        setScaffold(sc, p)
+        val pane = onNodeWithTag(OnboardingTags.SinglePane).fetchSemanticsNode().boundsInRoot
+        val before = onNodeWithTag(OnboardingTags.Hero).fetchSemanticsNode().boundsInRoot
+        assertEquals(pane.top, before.top)
+
+        onNodeWithTag(OnboardingTags.SinglePane).performTouchInput { swipeUp(startY = bottom - 10f, endY = top + 10f) }
+        waitForIdle()
+        val after = onNodeWithTag(OnboardingTags.Hero).fetchSemanticsNode().boundsInRoot
+        assertTrue(after.bottom <= pane.top + 1f, "hero should be above the content, hero=$after pane=$pane")
+
+        // Page change: the new page starts at scroll 0, so the hero comes back.
+        onNodeWithTag(OnboardingTags.Next).performClick()
+        waitForIdle()
+        val next = onNodeWithTag(OnboardingTags.Hero).fetchSemanticsNode().boundsInRoot
+        assertEquals(pane.top, next.top)
     }
 }
