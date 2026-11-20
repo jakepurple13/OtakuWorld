@@ -12,9 +12,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.graphicsLayer
 import com.programmersbox.kmpuiviews.motion.DesktopMotion
-import com.programmersbox.kmpuiviews.motion.EaseInOut
-import com.programmersbox.kmpuiviews.motion.EaseOut
-import com.programmersbox.kmpuiviews.motion.Key
+import com.programmersbox.kmpuiviews.motion.Keyframe
+import com.programmersbox.kmpuiviews.motion.MockupEasing
 import com.programmersbox.kmpuiviews.motion.track
 
 /*
@@ -49,15 +48,15 @@ internal object CrtPowerOn : DesktopMotion {
     override val durationMillis = 2300
 
     fun frame(time: Int) = CrtPowerOnFrame(
-        tvAlpha = track(time, Key(0, 0f), Key(300, 1f), Key(1650, 1f), Key(2100, 0f)),
-        appScaleX = track(time, Key(0, 0f), Key(350, .02f, EaseOut), Key(650, .6f)),
-        appScaleY = track(time, Key(650, .004f, EaseOut), Key(950, .6f)),
-        brightness = track(time, Key(650, 8f, EaseOut), Key(950, 3f), Key(1300, 1f)),
-        glowAlpha = track(time, Key(300, 0f), Key(380, 1f), Key(650, 0f)),
-        noiseAlpha = track(time, Key(650, 0f), Key(750, .9f), Key(1350, 0f)),
-        scanAlpha = track(time, Key(1650, 1f), Key(2150, 0f)),
+        tvAlpha = track(time, Keyframe(0, 0f), Keyframe(300, 1f), Keyframe(1650, 1f), Keyframe(2100, 0f)),
+        appScaleX = track(time, Keyframe(0, 0f), Keyframe(350, .02f, MockupEasing.Out), Keyframe(650, .6f)),
+        appScaleY = track(time, Keyframe(650, .004f, MockupEasing.Out), Keyframe(950, .6f)),
+        brightness = track(time, Keyframe(650, 8f, MockupEasing.Out), Keyframe(950, 3f), Keyframe(1300, 1f)),
+        glowAlpha = track(time, Keyframe(300, 0f), Keyframe(380, 1f), Keyframe(650, 0f)),
+        noiseAlpha = track(time, Keyframe(650, 0f), Keyframe(750, .9f), Keyframe(1350, 0f)),
+        scanAlpha = track(time, Keyframe(1650, 1f), Keyframe(2150, 0f)),
         // .6 × 1.6667 brings the TV screen to the window edges.
-        zoom = track(time, Key(1650, 1f, EaseInOut), Key(2300, 1.6667f)),
+        zoom = track(time, Keyframe(1650, 1f, MockupEasing.InOut), Keyframe(2300, 1.6667f)),
     )
 
     override fun Modifier.app(time: () -> Int): Modifier = this
@@ -85,7 +84,7 @@ internal object CrtPowerOn : DesktopMotion {
                     scaleY = frame.zoom
                 }
                 .drawWithCache {
-                    val tv = CrtTv(size)
+                    val tv = CrtTv(size, this)
                     onDrawBehind { with(tv) { drawSet() } }
                 }
         )
@@ -102,7 +101,7 @@ internal object CrtPowerOn : DesktopMotion {
                     scaleY = zoom
                 }
                 .drawWithCache {
-                    val tv = CrtTv(size)
+                    val tv = CrtTv(size, this)
                     val glow = CrtGlow(size)
                     onDrawBehind {
                         val now = time()
@@ -147,12 +146,12 @@ internal object CrtPowerOff : DesktopMotion {
     private val DotFade = CubicBezierEasing(.3f, 0f, .2f, 1f)
 
     fun frame(time: Int) = CrtPowerOffFrame(
-        roomAlpha = track(time, Key(1150, 1f), Key(1500, 0f)),
-        appScaleX = track(time, Key(260, 1f, EaseInOut), Key(480, 0f)),
-        appScaleY = track(time, Key(0, 1f, Collapse), Key(260, .006f)),
-        brightness = track(time, Key(0, 1f, Collapse), Key(260, 6f, EaseInOut), Key(480, 8f)),
-        glowAlpha = track(time, Key(440, 0f), Key(500, 1f, DotFade), Key(1150, 0f)),
-        glowScale = track(time, Key(500, 1f, DotFade), Key(1150, .2f)),
+        roomAlpha = track(time, Keyframe(1150, 1f), Keyframe(1500, 0f)),
+        appScaleX = track(time, Keyframe(260, 1f, MockupEasing.InOut), Keyframe(480, 0f)),
+        appScaleY = track(time, Keyframe(0, 1f, Collapse), Keyframe(260, .006f)),
+        brightness = track(time, Keyframe(0, 1f, Collapse), Keyframe(260, 6f, MockupEasing.InOut), Keyframe(480, 8f)),
+        glowAlpha = track(time, Keyframe(440, 0f), Keyframe(500, 1f, DotFade), Keyframe(1150, 0f)),
+        glowScale = track(time, Keyframe(500, 1f, DotFade), Keyframe(1150, .2f)),
     )
 
     override fun Modifier.app(time: () -> Int): Modifier = this

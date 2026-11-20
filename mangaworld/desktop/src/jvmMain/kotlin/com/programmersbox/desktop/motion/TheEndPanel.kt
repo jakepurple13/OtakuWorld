@@ -18,10 +18,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import com.programmersbox.kmpuiviews.motion.DesktopMotion
-import com.programmersbox.kmpuiviews.motion.EaseBack
-import com.programmersbox.kmpuiviews.motion.EaseIn
-import com.programmersbox.kmpuiviews.motion.EaseInOut
-import com.programmersbox.kmpuiviews.motion.Key
+import com.programmersbox.kmpuiviews.motion.Keyframe
+import com.programmersbox.kmpuiviews.motion.MockupEasing
 import com.programmersbox.kmpuiviews.motion.cqw
 import com.programmersbox.kmpuiviews.motion.track
 
@@ -62,15 +60,15 @@ internal object TheEndPanel : DesktopMotion {
     private const val CAPTION_ROTATION = -5f
 
     fun frame(time: Int) = TheEndFrame(
-        paperAlpha = track(time, Key(1700, 1f, EaseIn), Key(2200, 0f)),
-        appScale = track(time, Key(0, 1f, EaseInOut), Key(800, .6f)),
-        appRotation = track(time, Key(0, 0f, EaseInOut), Key(800, -2f)),
-        frameWidth = track(time, Key(0, 0f, EaseInOut), Key(800, 1.4f)),
-        grayscale = track(time, Key(0, 0f, EaseInOut), Key(800, 1f)),
-        contrast = track(time, Key(0, 1f, EaseInOut), Key(800, 1.2f)),
-        appAlpha = track(time, Key(1700, 1f, EaseIn), Key(2200, 0f)),
-        captionAlpha = track(time, Key(850, 0f, EaseBack), Key(1150, 1f), Key(1700, 1f, EaseIn), Key(2200, 0f)),
-        captionScale = track(time, Key(850, .4f, EaseBack), Key(1150, 1f)),
+        paperAlpha = track(time, Keyframe(1700, 1f, MockupEasing.In), Keyframe(2200, 0f)),
+        appScale = track(time, Keyframe(0, 1f, MockupEasing.InOut), Keyframe(800, .6f)),
+        appRotation = track(time, Keyframe(0, 0f, MockupEasing.InOut), Keyframe(800, -2f)),
+        frameWidth = track(time, Keyframe(0, 0f, MockupEasing.InOut), Keyframe(800, 1.4f)),
+        grayscale = track(time, Keyframe(0, 0f, MockupEasing.InOut), Keyframe(800, 1f)),
+        contrast = track(time, Keyframe(0, 1f, MockupEasing.InOut), Keyframe(800, 1.2f)),
+        appAlpha = track(time, Keyframe(1700, 1f, MockupEasing.In), Keyframe(2200, 0f)),
+        captionAlpha = track(time, Keyframe(850, 0f, MockupEasing.Back), Keyframe(1150, 1f), Keyframe(1700, 1f, MockupEasing.In), Keyframe(2200, 0f)),
+        captionScale = track(time, Keyframe(850, .4f, MockupEasing.Back), Keyframe(1150, 1f)),
     )
 
     override fun Modifier.app(time: () -> Int): Modifier = this

@@ -16,9 +16,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import com.programmersbox.kmpuiviews.motion.DesktopMotion
-import com.programmersbox.kmpuiviews.motion.EaseIn
-import com.programmersbox.kmpuiviews.motion.EaseOut
-import com.programmersbox.kmpuiviews.motion.Key
+import com.programmersbox.kmpuiviews.motion.Keyframe
+import com.programmersbox.kmpuiviews.motion.MockupEasing
 import com.programmersbox.kmpuiviews.motion.cqw
 import com.programmersbox.kmpuiviews.motion.track
 
@@ -52,13 +51,13 @@ internal object ScreentoneFade : DesktopMotion {
     override val durationMillis = 2400
 
     fun frame(time: Int) = ScreentoneFrame(
-        grayscale = track(time, Key(0, 0f), Key(600, 1f)),
-        contrast = track(time, Key(0, 1f), Key(600, 1.3f)),
-        appAlpha = track(time, Key(1300, 1f), Key(1310, 0f)),
-        toneRadius = track(time, Key(0, 0f, EaseIn), Key(1250, 2f)),
-        toneAlpha = track(time, Key(1900, 1f, EaseIn), Key(2300, 0f)),
-        owariAlpha = track(time, Key(1200, 0f, EaseOut), Key(1500, 1f), Key(1900, 1f, EaseIn), Key(2300, 0f)),
-        owariScale = track(time, Key(1200, .85f, EaseOut), Key(1500, 1f)),
+        grayscale = track(time, Keyframe(0, 0f), Keyframe(600, 1f)),
+        contrast = track(time, Keyframe(0, 1f), Keyframe(600, 1.3f)),
+        appAlpha = track(time, Keyframe(1300, 1f), Keyframe(1310, 0f)),
+        toneRadius = track(time, Keyframe(0, 0f, MockupEasing.In), Keyframe(1250, 2f)),
+        toneAlpha = track(time, Keyframe(1900, 1f, MockupEasing.In), Keyframe(2300, 0f)),
+        owariAlpha = track(time, Keyframe(1200, 0f, MockupEasing.Out), Keyframe(1500, 1f), Keyframe(1900, 1f, MockupEasing.In), Keyframe(2300, 0f)),
+        owariScale = track(time, Keyframe(1200, .85f, MockupEasing.Out), Keyframe(1500, 1f)),
     )
 
     override fun Modifier.app(time: () -> Int): Modifier = this

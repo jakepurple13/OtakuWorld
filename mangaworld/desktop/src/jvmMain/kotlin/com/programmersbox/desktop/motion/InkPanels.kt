@@ -28,9 +28,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.em
 import com.programmersbox.kmpuiviews.motion.DesktopMotion
-import com.programmersbox.kmpuiviews.motion.EaseIn
-import com.programmersbox.kmpuiviews.motion.EaseInOut
-import com.programmersbox.kmpuiviews.motion.Key
+import com.programmersbox.kmpuiviews.motion.Keyframe
+import com.programmersbox.kmpuiviews.motion.MockupEasing
 import com.programmersbox.kmpuiviews.motion.cqw
 import com.programmersbox.kmpuiviews.motion.track
 import com.programmersbox.kmpuiviews.motion.verticalCqw
@@ -87,14 +86,14 @@ internal object InkPanels : DesktopMotion {
     )
 
     fun frame(time: Int) = InkPanelsFrame(
-        paperAlpha = track(time, Key(1800, 1f, EaseInOut), Key(2250, 0f)),
-        strokeAlpha = track(time, Key(1350, 1f), Key(1500, 0f)),
+        paperAlpha = track(time, Keyframe(1800, 1f, MockupEasing.InOut), Keyframe(2250, 0f)),
+        strokeAlpha = track(time, Keyframe(1350, 1f), Keyframe(1500, 0f)),
     )
 
     fun panel(index: Int, time: Int) = InkPanelFrame(
-        drawn = track(time, Key(index * 140, 0f, EaseInOut), Key(index * 140 + 500, 1f)),
-        alpha = track(time, Key(950 + index * 70, 0f), Key(1200 + index * 70, 1f), Key(1800 + index * 40, 1f, EaseIn), Key(2400 + index * 40, 0f)),
-        fly = track(time, Key(1800 + index * 40, 0f, EaseIn), Key(2400 + index * 40, 1f)),
+        drawn = track(time, Keyframe(index * 140, 0f, MockupEasing.InOut), Keyframe(index * 140 + 500, 1f)),
+        alpha = track(time, Keyframe(950 + index * 70, 0f), Keyframe(1200 + index * 70, 1f), Keyframe(1800 + index * 40, 1f, MockupEasing.In), Keyframe(2400 + index * 40, 0f)),
+        fly = track(time, Keyframe(1800 + index * 40, 0f, MockupEasing.In), Keyframe(2400 + index * 40, 1f)),
     )
 
     @Composable

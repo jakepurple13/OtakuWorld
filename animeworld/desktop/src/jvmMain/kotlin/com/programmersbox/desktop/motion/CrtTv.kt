@@ -18,8 +18,10 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.toComposeImageBitmap
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
 import com.programmersbox.kmpuiviews.motion.cqw
 import org.jetbrains.skia.ColorAlphaType
 import org.jetbrains.skia.ImageInfo
@@ -67,7 +69,7 @@ private const val GLOW_RADIUS = 5.4f
 private fun Size.crtScreen() = Rect(width * .2f, height * .2f, width * .8f, height * .8f)
 
 /** The TV set (bezel, screen, stand) and the screen-sized overlays, for one host size; built in `drawWithCache`. */
-internal class CrtTv(size: Size) {
+internal class CrtTv(size: Size, density: Density) {
     private val u = size.cqw
     val screen = size.crtScreen()
     private val screenCorner = CornerRadius(SCREEN_RADIUS * u)
@@ -86,12 +88,13 @@ internal class CrtTv(size: Size) {
         addRoundRect(RoundRect(rect, CornerRadius.Zero, CornerRadius.Zero, foot, foot))
     }
 
-    /** `.scan`: `repeating-linear-gradient(#0000004d 0 1px, transparent 1px 3px)`, 1px lines every 3px. */
+    /** `.scan`: `repeating-linear-gradient(#0000004d 0 1px, transparent 1px 3px)`: 1dp lines every 3dp (CSS px are dp). */
     private val scanlines = Path().apply {
+        val line = with(density) { 1.dp.toPx() }
         var y = screen.top
         while (y < screen.bottom) {
-            addRect(Rect(screen.left, y, screen.right, minOf(y + 1, screen.bottom)))
-            y += 3
+            addRect(Rect(screen.left, y, screen.right, minOf(y + line, screen.bottom)))
+            y += 3 * line
         }
     }
 

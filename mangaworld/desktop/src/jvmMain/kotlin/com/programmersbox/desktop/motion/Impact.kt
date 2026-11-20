@@ -27,8 +27,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.em
 import com.programmersbox.kmpuiviews.motion.DesktopMotion
-import com.programmersbox.kmpuiviews.motion.EaseOut
-import com.programmersbox.kmpuiviews.motion.Key
+import com.programmersbox.kmpuiviews.motion.Keyframe
+import com.programmersbox.kmpuiviews.motion.MockupEasing
 import com.programmersbox.kmpuiviews.motion.cqw
 import com.programmersbox.kmpuiviews.motion.track
 import kotlin.math.cos
@@ -78,18 +78,18 @@ internal object Impact : DesktopMotion {
     private val Slam = CubicBezierEasing(.6f, 0f, .9f, .5f)
 
     fun frame(time: Int) = ImpactFrame(
-        linesScale = track(time, Key(0, 1.6f, EaseOut), Key(500, 1f), Key(2200, 1.04f)),
-        linesRotation = track(time, Key(0, -6f, EaseOut), Key(500, 0f), Key(2200, 2f)),
-        sfxAlpha = track(time, Key(250, 0f, Slam), Key(480, 1f)),
-        sfxScale = track(time, Key(250, 4f, Slam), Key(480, 1f), Key(2200, 1.06f)),
-        sfxRotation = track(time, Key(250, -14f, Slam), Key(480, -6f)),
-        shakeX = track(time, Key(480, 0f), Key(520, -1.4f), Key(560, 1.2f), Key(600, -.8f), Key(640, .5f), Key(690, 0f)),
-        shakeY = track(time, Key(480, 0f), Key(520, .9f), Key(560, -1f), Key(600, .6f), Key(640, -.3f), Key(690, 0f)),
-        fxAlpha = track(time, Key(1640, 1f), Key(1650, 0f)),
-        subAlpha = track(time, Key(650, 0f, EaseOut), Key(950, 1f)),
-        subRise = track(time, Key(650, 1.5f, EaseOut), Key(950, 0f)),
-        flashAlpha = track(time, Key(1530, 0f), Key(1650, 1f, EaseOut), Key(2000, 0f)),
-        appScale = track(time, Key(1650, 1.08f, EaseOut), Key(2200, 1f)),
+        linesScale = track(time, Keyframe(0, 1.6f, MockupEasing.Out), Keyframe(500, 1f), Keyframe(2200, 1.04f)),
+        linesRotation = track(time, Keyframe(0, -6f, MockupEasing.Out), Keyframe(500, 0f), Keyframe(2200, 2f)),
+        sfxAlpha = track(time, Keyframe(250, 0f, Slam), Keyframe(480, 1f)),
+        sfxScale = track(time, Keyframe(250, 4f, Slam), Keyframe(480, 1f), Keyframe(2200, 1.06f)),
+        sfxRotation = track(time, Keyframe(250, -14f, Slam), Keyframe(480, -6f)),
+        shakeX = track(time, Keyframe(480, 0f), Keyframe(520, -1.4f), Keyframe(560, 1.2f), Keyframe(600, -.8f), Keyframe(640, .5f), Keyframe(690, 0f)),
+        shakeY = track(time, Keyframe(480, 0f), Keyframe(520, .9f), Keyframe(560, -1f), Keyframe(600, .6f), Keyframe(640, -.3f), Keyframe(690, 0f)),
+        fxAlpha = track(time, Keyframe(1640, 1f), Keyframe(1650, 0f)),
+        subAlpha = track(time, Keyframe(650, 0f, MockupEasing.Out), Keyframe(950, 1f)),
+        subRise = track(time, Keyframe(650, 1.5f, MockupEasing.Out), Keyframe(950, 0f)),
+        flashAlpha = track(time, Keyframe(1530, 0f), Keyframe(1650, 1f, MockupEasing.Out), Keyframe(2000, 0f)),
+        appScale = track(time, Keyframe(1650, 1.08f, MockupEasing.Out), Keyframe(2200, 1f)),
     )
 
     override fun Modifier.app(time: () -> Int): Modifier = graphicsLayer {

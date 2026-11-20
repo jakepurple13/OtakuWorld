@@ -11,17 +11,22 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
  * into a [DesktopMotion].
  */
 
-/** The mockup's `E.o`: a strong ease-out. */
-val EaseOut = CubicBezierEasing(.2f, .8f, .2f, 1f)
+/**
+ * The mockup's `E` easings. Named apart from Compose's `EaseOut`/`EaseInOut`/`EaseIn`, which use different curves.
+ */
+object MockupEasing {
+    /** `E.o`: a strong ease-out. */
+    val Out = CubicBezierEasing(.2f, .8f, .2f, 1f)
 
-/** The mockup's `E.io`: a symmetric ease-in-out. */
-val EaseInOut = CubicBezierEasing(.65f, 0f, .35f, 1f)
+    /** `E.io`: a symmetric ease-in-out. */
+    val InOut = CubicBezierEasing(.65f, 0f, .35f, 1f)
 
-/** The mockup's `E.i`: a strong ease-in. */
-val EaseIn = CubicBezierEasing(.55f, 0f, .9f, .35f)
+    /** `E.i`: a strong ease-in. */
+    val In = CubicBezierEasing(.55f, 0f, .9f, .35f)
 
-/** The mockup's `E.back`: overshoots then settles. */
-val EaseBack = CubicBezierEasing(.3f, 1.55f, .5f, 1f)
+    /** `E.back`: overshoots then settles. */
+    val Back = CubicBezierEasing(.3f, 1.55f, .5f, 1f)
+}
 
 /** 1cqw (1% of the host width) in pixels for a host of [this] size. */
 val Size.cqw get() = width / 100
@@ -39,10 +44,10 @@ val DrawScope.cqw get() = size.cqw
 val DrawScope.verticalCqw get() = size.verticalCqw
 
 /** One mockup `seq` frame: [value] at [at] ms; [easing] shapes the segment that starts here. */
-class Key(val at: Int, val value: Float, val easing: Easing = LinearEasing)
+class Keyframe(val at: Int, val value: Float, val easing: Easing = LinearEasing)
 
 /** Piecewise interpolation of [keys] (sorted by time) at [time] ms; holds the first/last value outside them. */
-fun track(time: Int, vararg keys: Key): Float {
+fun track(time: Int, vararg keys: Keyframe): Float {
     if (time <= keys.first().at) return keys.first().value
     for (i in 0 until keys.lastIndex) {
         val from = keys[i]
