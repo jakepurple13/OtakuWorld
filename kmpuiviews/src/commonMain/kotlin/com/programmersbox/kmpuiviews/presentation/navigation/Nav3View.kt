@@ -31,6 +31,7 @@ import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import com.programmersbox.kmpuiviews.presentation.navigation.scenestrategy.BottomSheetSceneStrategy
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
+import com.programmersbox.kmpuiviews.utils.LocalNav3Actions
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalNavigationAnimatedScope
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalSharedElementScope
 import com.programmersbox.telemetry.Analytics
@@ -94,38 +95,40 @@ fun Nav3(
 
     val motion = MaterialTheme.motionScheme
 
-    NavDisplay(
-        backStack = backStack,
-        //onBack = { backStack.removeLastOrNull() },
-        sceneStrategies = listOf(
-            rememberListDetailSceneStrategy<NavKey>(),
-            DialogSceneStrategy(),
-            BottomSheetSceneStrategy()
-        ),
-        onBack = { navigation3Actions.popBackStack() },
-        entryDecorators = listOf(
-            //sharedEntryInSceneNavEntryDecorator,
-            navigationAnimatedScopeDecorator,
-            rememberSaveableStateHolderNavEntryDecorator(),
-            rememberViewModelStoreNavEntryDecorator()
-        ),
-        entryProvider = koinEntryProvider(),
-        // Material shared-axis X: a short offset plus a crossfade instead of a full-width push
-        transitionSpec = {
-            (slideInHorizontally(motion.defaultSpatialSpec()) { it / 3 } + fadeIn(motion.defaultEffectsSpec())) togetherWith
-                    (slideOutHorizontally(motion.defaultSpatialSpec()) { -it / 3 } + fadeOut(motion.fastEffectsSpec()))
-        },
-        popTransitionSpec = {
-            (slideInHorizontally(motion.defaultSpatialSpec()) { -it / 3 } + fadeIn(motion.defaultEffectsSpec())) togetherWith
-                    (slideOutHorizontally(motion.defaultSpatialSpec()) { it / 3 } + fadeOut(motion.fastEffectsSpec()))
-        },
-        // While the back gesture is held the leaving page shrinks, so the gesture reads as a peek
-        predictivePopTransitionSpec = {
-            (slideInHorizontally(motion.defaultSpatialSpec()) { -it / 4 } + fadeIn(motion.defaultEffectsSpec())) togetherWith
-                    (scaleOut(motion.defaultSpatialSpec(), targetScale = 0.9f) + fadeOut(motion.defaultEffectsSpec()))
-        },
-        modifier = Modifier.fillMaxSize()
-    )
+    CompositionLocalProvider(LocalNav3Actions provides navigation3Actions) {
+        NavDisplay(
+            backStack = backStack,
+            //onBack = { backStack.removeLastOrNull() },
+            sceneStrategies = listOf(
+                rememberListDetailSceneStrategy<NavKey>(),
+                DialogSceneStrategy(),
+                BottomSheetSceneStrategy()
+            ),
+            onBack = { navigation3Actions.popBackStack() },
+            entryDecorators = listOf(
+                //sharedEntryInSceneNavEntryDecorator,
+                navigationAnimatedScopeDecorator,
+                rememberSaveableStateHolderNavEntryDecorator(),
+                rememberViewModelStoreNavEntryDecorator()
+            ),
+            entryProvider = koinEntryProvider(),
+            // Material shared-axis X: a short offset plus a crossfade instead of a full-width push
+            transitionSpec = {
+                (slideInHorizontally(motion.defaultSpatialSpec()) { it / 3 } + fadeIn(motion.defaultEffectsSpec())) togetherWith
+                        (slideOutHorizontally(motion.defaultSpatialSpec()) { -it / 3 } + fadeOut(motion.fastEffectsSpec()))
+            },
+            popTransitionSpec = {
+                (slideInHorizontally(motion.defaultSpatialSpec()) { -it / 3 } + fadeIn(motion.defaultEffectsSpec())) togetherWith
+                        (slideOutHorizontally(motion.defaultSpatialSpec()) { it / 3 } + fadeOut(motion.fastEffectsSpec()))
+            },
+            // While the back gesture is held the leaving page shrinks, so the gesture reads as a peek
+            predictivePopTransitionSpec = {
+                (slideInHorizontally(motion.defaultSpatialSpec()) { -it / 4 } + fadeIn(motion.defaultEffectsSpec())) togetherWith
+                        (scaleOut(motion.defaultSpatialSpec(), targetScale = 0.9f) + fadeOut(motion.defaultEffectsSpec()))
+            },
+            modifier = Modifier.fillMaxSize()
+        )
+    }
 }
 
 private class SharedElementNavDecorator<T : Any>(

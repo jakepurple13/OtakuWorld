@@ -24,6 +24,7 @@ import kotlinx.datetime.format.DateTimeFormat
 import org.koin.compose.koinInject
 
 val LocalNavHostPadding = staticCompositionLocalOf<PaddingValues> { error("") }
+val LocalNav3Actions = staticCompositionLocalOf<Navigation3Actions?> { null }
 val LocalNavActions = staticCompositionLocalOf<NavigationActions> { error("No NavController Found!") }
 val LocalItemDao = staticCompositionLocalOf<ItemDao> { error("nothing here") }
 val LocalBlurDao = staticCompositionLocalOf<BlurHashDao> { error("nothing here") }

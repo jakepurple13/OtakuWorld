@@ -14,14 +14,29 @@ import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.sharedcomponents.Navigator
 import net.thauvin.erik.urlencoder.UrlEncoderUtil
 
-class Navigation3Actions : NavigationActions, Navigator {
+/**
+ * Sees every push before it happens. Returning `true` means the interceptor handled the navigation
+ * and nothing is pushed.
+ */
+fun interface NavInterceptor {
+    fun intercept(from: Navigation3Actions, key: NavKey): Boolean
+}
+
+class Navigation3Actions(startKey: NavKey = Screen.RecentScreen) : NavigationActions, Navigator {
+
+    var interceptor: NavInterceptor? = null
 
     val navBackStack = TopLevelBackStack<NavKey>(
-        Screen.RecentScreen,
+        startKey,
         linkedMapOf(
-            Screen.RecentScreen to mutableStateListOf(Screen.RecentScreen),
+            startKey to mutableStateListOf(startKey),
         )
     )
+
+    private fun push(key: NavKey) {
+        if (interceptor?.intercept(this, key) == true) return
+        navBackStack.add(key)
+    }
 
     val backStack by derivedStateOf { navBackStack.backStack }
 
@@ -36,7 +51,7 @@ class Navigation3Actions : NavigationActions, Navigator {
         imageUrl: String,
         source: String,
     ) {
-        navBackStack.add(
+        push(
             Screen.DetailsScreen.Details(
                 title = title,
                 description = description,
@@ -48,7 +63,7 @@ class Navigation3Actions : NavigationActions, Navigator {
     }
 
     override fun details(model: KmpItemModel) {
-        navBackStack.add(
+        push(
             Screen.DetailsScreen.Details(
                 title = model.title.ifEmpty { "NA" },
                 description = model.description.ifEmpty { "NA" },
@@ -60,27 +75,27 @@ class Navigation3Actions : NavigationActions, Navigator {
     }
 
     override fun onboarding() {
-        navBackStack.add(Screen.OnboardingScreen)
+        push(Screen.OnboardingScreen)
     }
 
     override fun all() {
-        navBackStack.add(Screen.AllScreen)
+        push(Screen.AllScreen)
     }
 
     override fun scanQrCode() {
-        navBackStack.add(Screen.ScanQrCodeScreen)
+        push(Screen.ScanQrCodeScreen)
     }
 
     override fun webView(url: String) {
-        navBackStack.add(Screen.WebViewScreen(url))
+        push(Screen.WebViewScreen(url))
     }
 
     override fun incognito() {
-        navBackStack.add(Screen.IncognitoScreen)
+        push(Screen.IncognitoScreen)
     }
 
     override fun extensionList() {
-        navBackStack.add(Screen.ExtensionListScreen)
+        push(Screen.ExtensionListScreen)
     }
 
     override fun settings() {
@@ -88,107 +103,107 @@ class Navigation3Actions : NavigationActions, Navigator {
     }
 
     override fun globalSearch(searchText: String?) {
-        navBackStack.add(Screen.GlobalSearchScreen(searchText))
+        push(Screen.GlobalSearchScreen(searchText))
     }
 
     override fun sourceSearch(serviceName: String, query: String) {
-        navBackStack.add(Screen.SourceSearchScreen(serviceName, query))
+        push(Screen.SourceSearchScreen(serviceName, query))
     }
 
     override fun customList() {
-        navBackStack.add(Screen.CustomListScreen)
+        push(Screen.CustomListScreen)
     }
 
     override fun customList(customList: CustomList) {
-        navBackStack.add(Screen.CustomListScreen.CustomListItem(customList.item.uuid))
+        push(Screen.CustomListScreen.CustomListItem(customList.item.uuid))
     }
 
     override fun history() {
-        navBackStack.add(Screen.HistoryScreen)
+        push(Screen.HistoryScreen)
     }
 
     override fun favorites() {
-        navBackStack.add(Screen.FavoriteScreen)
+        push(Screen.FavoriteScreen)
     }
 
     override fun notifications() {
-        navBackStack.add(Screen.NotificationScreen)
+        push(Screen.NotificationScreen)
     }
 
     override fun debug() {
-        navBackStack.add(Screen.DebugScreen)
+        push(Screen.DebugScreen)
     }
 
     override fun downloadInstall() {
-        navBackStack.add(Screen.DownloadInstallScreen)
+        push(Screen.DownloadInstallScreen)
     }
 
     override fun order() {
-        navBackStack.add(Screen.OrderScreen)
+        push(Screen.OrderScreen)
     }
 
     override fun general() {
-        navBackStack.add(Screen.GeneralSettings)
+        push(Screen.GeneralSettings)
     }
 
     override fun moreInfo() {
-        navBackStack.add(Screen.MoreInfoSettings)
+        push(Screen.MoreInfoSettings)
     }
 
     override fun moreSettings() {
-        navBackStack.add(Screen.MoreSettings)
+        push(Screen.MoreSettings)
     }
 
     override fun accountInfo() {
-        navBackStack.add(Screen.AccountInfo)
+        push(Screen.AccountInfo)
     }
 
     override fun security() {
-        navBackStack.add(Screen.SecuritySettings)
+        push(Screen.SecuritySettings)
     }
 
     override fun prerelease() {
-        navBackStack.add(Screen.PrereleaseScreen)
+        push(Screen.PrereleaseScreen)
     }
 
     override fun notificationsSettings() {
-        navBackStack.add(Screen.NotificationsSettings)
+        push(Screen.NotificationsSettings)
     }
 
     override fun otherSettings() {
-        navBackStack.add(Screen.OtherSettings)
+        push(Screen.OtherSettings)
     }
 
     override fun workerInfo() {
-        navBackStack.add(Screen.WorkerInfoScreen)
+        push(Screen.WorkerInfoScreen)
     }
 
     override fun about() {
-        navBackStack.add(Screen.AboutScreen)
+        push(Screen.AboutScreen)
     }
 
     override fun bookmarks() {
-        navBackStack.add(Screen.BookmarkScreen)
+        push(Screen.BookmarkScreen)
     }
 
     override fun notes() {
-        navBackStack.add(Screen.NotesScreen)
+        push(Screen.NotesScreen)
     }
 
     override fun noteDetail(itemUrl: String) {
-        navBackStack.add(Screen.NotesScreen.Detail(itemUrl))
+        push(Screen.NotesScreen.Detail(itemUrl))
     }
 
     override fun dictionary() {
-        navBackStack.add(Screen.DictionaryScreen)
+        push(Screen.DictionaryScreen)
     }
 
     override fun dictionaryDetail(id: Long) {
-        navBackStack.add(Screen.DictionaryScreen.Detail(id))
+        push(Screen.DictionaryScreen.Detail(id))
     }
 
     override fun dictionaryForm(id: Long?) {
-        navBackStack.add(Screen.DictionaryScreen.Form(id))
+        push(Screen.DictionaryScreen.Form(id))
     }
 
     override fun library() = navigate(Screen.Settings.Library)
@@ -208,11 +223,11 @@ class Navigation3Actions : NavigationActions, Navigator {
     override fun developer() = navigate(Screen.Settings.Developer)
 
     override fun importList(uri: String) {
-        navBackStack.add(Screen.ImportListScreen(uri = uri))
+        push(Screen.ImportListScreen(uri = uri))
     }
 
     override fun importFullList(uri: String) {
-        navBackStack.add(Screen.ImportFullListScreen(uri = uri))
+        push(Screen.ImportFullListScreen(uri = uri))
     }
 
     override fun popBackStack() {
@@ -225,7 +240,7 @@ class Navigation3Actions : NavigationActions, Navigator {
 
     override fun <T : Any> navigate(nav: T) {
         when (nav) {
-            is NavKey -> navBackStack.add(nav)
+            is NavKey -> push(nav)
         }
     }
 
@@ -254,7 +269,7 @@ class Navigation3Actions : NavigationActions, Navigator {
                     navBackStack.backStack.removeFirstOrNull()
                 }
             }
-            //navBackStack.add(nav)
+            //push(nav)
         }
     }
 
