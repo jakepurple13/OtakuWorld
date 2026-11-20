@@ -12,6 +12,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
@@ -25,6 +26,14 @@ import kotlin.math.hypot
 import kotlin.math.max
 
 private const val SweepMillis = 700
+
+/**
+ * Starts a color sweep from a position in ROOT coordinates (e.g. `positionInRoot()` of a tapped node),
+ * to be called right before the theme changes. A step reads this so it works whether the
+ * [ColorSweepHost] wraps the step or the whole scaffold; the provider converts to host coordinates.
+ * `null` means no host is provided above the step.
+ */
+val LocalColorSweep = staticCompositionLocalOf<((Offset) -> Unit)?> { null }
 
 /**
  * Sweep state. [start] resets [progress] to 0 in the same snapshot that sets [origin], so the first
