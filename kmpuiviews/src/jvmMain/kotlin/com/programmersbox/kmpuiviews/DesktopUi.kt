@@ -25,7 +25,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -39,6 +38,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
@@ -62,7 +62,6 @@ import com.programmersbox.kmpextensionloader.SourceLoader
 import com.programmersbox.kmpmodels.ExampleService
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.di.kmpModule
-import com.programmersbox.kmpuiviews.presentation.HomeNav
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.quickactions.OpenOrigin
 import com.programmersbox.kmpuiviews.presentation.quickactions.QuickActionsController
@@ -83,17 +82,23 @@ import com.programmersbox.kmpuiviews.updates.UpdateLaunchDialog
 import com.programmersbox.kmpuiviews.updates.UpdatePrefs
 import com.programmersbox.kmpuiviews.updates.UpdaterEngine
 import com.programmersbox.kmpuiviews.utils.AppConfig
-import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.JvmAppLogo
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
+import com.programmersbox.kmpuiviews.tabs.BrowserWindow
+import com.programmersbox.kmpuiviews.tabs.TabStrip
+import com.programmersbox.kmpuiviews.tabs.TabsController
 import com.programmersbox.kmpuiviews.tabs.desktopTabsModule
+import com.programmersbox.kmpuiviews.tabs.perform
+import com.programmersbox.kmpuiviews.tabs.tabShortcut
 import com.programmersbox.kmpuiviews.utils.bindsPlatformGenericInfo
 import com.programmersbox.supabaseintegration.Res
 import com.programmersbox.supabaseintegration.supabase_logo_icon
 import dev.nucleusframework.application.NucleusApplicationScope
 import dev.nucleusframework.window.DecoratedWindow
 import dev.nucleusframework.window.NucleusDecoratedWindowTheme
+import dev.nucleusframework.window.TitleBarLayoutPolicy
+import dev.nucleusframework.window.TitleBarScope
 import dev.nucleusframework.window.material.MaterialTitleBar
 import dev.nucleusframework.window.material.rememberMaterialTitleBarStyle
 import dev.nucleusframework.window.material.rememberMaterialWindowStyle
@@ -314,25 +319,28 @@ private fun InternalDesktopUi(
                 backgroundWorkHandler.setupPeriodicCheckers()
             }
 
+            val tabsController = koinInject<TabsController>()
+            val mainWindow = tabsController.windows.first { it.isMain }
             OtakuDecoratedWindow(
                 title = title,
                 onCloseRequest = exitApplication,
                 showQuickActions = true,
+                titleBarContent = {
+                    TabStrip(
+                        window = mainWindow,
+                        controller = tabsController,
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                    )
+                },
+                onKeyEvent = { event ->
+                    tabShortcut(event, isMac = isMacOs)
+                        ?.let { tabsController.perform(it, mainWindow) } != null
+                },
             ) {
                 Box(modifier = Modifier.fillMaxSize()) {
                     //UrlOpenerScreen()
                     //ScanQrCode()
-                    val genericInfo = koinInject<KmpGenericInfo>()
-                    val customSettings = remember {
-                        ComposeSettingsDsl().apply(genericInfo.composeCustomPreferences())
-                    }
-                    val windowSize = calculateWindowSizeClass()
-                    HomeNav(
-                        genericInfo = genericInfo,
-                        windowSize = windowSize,
-                        bottomBarAdditions = {},
-                        customPreferences = customSettings,
-                    )
+                    BrowserWindow(window = mainWindow, controller = tabsController)
                     val updater = koinInject<DesktopUpdater>()
                     LaunchedEffect(Unit) { updater.checkOnLaunch() }
                     UpdateLaunchDialog(updater)
@@ -434,6 +442,10 @@ private fun OtakuDecoratedWindow(
     title: String,
     onCloseRequest: () -> Unit,
     showQuickActions: Boolean = false,
+    /** Replaces the centered title, filling the space between the start and end items. */
+    titleBarContent: (@Composable TitleBarScope.() -> Unit)? = null,
+    /** Runs after the window's own shortcut handlers; return true to consume the event. */
+    onKeyEvent: ((KeyEvent) -> Boolean)? = null,
     content: @Composable () -> Unit,
 ) {
     val quickActionsController = if (showQuickActions) koinInject<QuickActionsController>() else null
@@ -486,7 +498,7 @@ private fun OtakuDecoratedWindow(
                         true
                     }
 
-                    else -> false
+                    else -> onKeyEvent?.invoke(event) == true
                 }
             },
         ) {
@@ -500,7 +512,10 @@ private fun OtakuDecoratedWindow(
                     if (showQuickActions && isMacOs) QuickActionsMenuBar()
 
                     // Title bar must be a direct child of the window's layout (it is placed by layoutId).
-                    MaterialTitleBar(style = rememberMaterialTitleBarStyle(colorScheme)) {
+                    MaterialTitleBar(
+                        style = rememberMaterialTitleBarStyle(colorScheme),
+                        layoutPolicy = if (titleBarContent != null) TitleBarLayoutPolicy.FillCenter else TitleBarLayoutPolicy.Default,
+                    ) {
                         if (showQuickActions && quickActionsController != null) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -510,11 +525,15 @@ private fun OtakuDecoratedWindow(
                                 ShortcutsTitleBarButton(onClick = quickActionsController::openShortcuts)
                             }
                         }
-                        Text(
-                            text = title,
-                            style = MaterialTheme.typography.titleSmall,
-                            modifier = Modifier.align(Alignment.CenterHorizontally),
-                        )
+                        if (titleBarContent != null) {
+                            titleBarContent()
+                        } else {
+                            Text(
+                                text = title,
+                                style = MaterialTheme.typography.titleSmall,
+                                modifier = Modifier.align(Alignment.CenterHorizontally),
+                            )
+                        }
                     }
 
                     Surface(modifier = Modifier.fillMaxSize()) {

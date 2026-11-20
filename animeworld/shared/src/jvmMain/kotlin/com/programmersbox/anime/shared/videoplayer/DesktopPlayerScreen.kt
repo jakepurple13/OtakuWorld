@@ -96,7 +96,7 @@ import com.programmersbox.anime.shared.subtitles.SubtitleSettingsScreen
 import com.programmersbox.anime.shared.subtitles.SubtitleTrackItem
 import com.programmersbox.datastore.asState
 import com.programmersbox.kmpmodels.KmpSubtitle
-import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
@@ -528,7 +528,7 @@ private fun VideoFrame(frame: State<ImageBitmap?>, modifier: Modifier) {
 
 @Composable
 private fun PlayerErrorPanel(message: String, modifier: Modifier = Modifier) {
-    val navigationActions = koinInject<NavigationActions>()
+    val navigationActions = LocalNavActions.current
     Column(
         modifier
             .fillMaxSize()

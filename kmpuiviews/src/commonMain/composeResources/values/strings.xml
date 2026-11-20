@@ -878,4 +878,10 @@
     <string name="ai_settings_footer">These features only use AI on this device. Daily overview's summary engine is the one place that can use your AI Helper provider.</string>
     <string name="ai_settings_summary_on">On device · %1$d of %2$d features on</string>
     <string name="ai_settings_summary_off">Off</string>
+    <string name="tabs_home">Home</string>
+    <string name="tabs_new_tab">New tab</string>
+    <string name="tabs_close_tab">Close tab</string>
+    <string name="tabs_back">Back</string>
+    <string name="tabs_forward">Forward</string>
+    <string name="tabs_downloads">Downloads</string>
 </resources>

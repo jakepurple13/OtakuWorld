@@ -19,6 +19,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.ViewModelStoreProvider
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavEntryDecorator
@@ -46,6 +47,11 @@ fun Nav3(
     windowSize: WindowSizeClass,
     customPreferences: ComposeSettingsDsl,
     navigation3Actions: Navigation3Actions = koinInject(),
+    /**
+     * Owns the entries' ViewModelStores when set. The default provider clears every entry's store
+     * once this NavDisplay leaves composition; a provider held outside composition keeps them.
+     */
+    viewModelStoreProvider: ViewModelStoreProvider? = null,
     analytics: Analytics = koinInject(),
     crashReporter: CrashReporter = koinInject(),
 ) {
@@ -109,7 +115,11 @@ fun Nav3(
                 //sharedEntryInSceneNavEntryDecorator,
                 navigationAnimatedScopeDecorator,
                 rememberSaveableStateHolderNavEntryDecorator(),
-                rememberViewModelStoreNavEntryDecorator()
+                if (viewModelStoreProvider != null) {
+                    rememberViewModelStoreNavEntryDecorator(viewModelStoreProvider)
+                } else {
+                    rememberViewModelStoreNavEntryDecorator()
+                }
             ),
             entryProvider = koinEntryProvider(),
             // Material shared-axis X: a short offset plus a crossfade instead of a full-width push

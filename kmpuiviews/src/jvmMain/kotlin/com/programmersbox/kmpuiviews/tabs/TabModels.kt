@@ -8,6 +8,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.viewmodel.ViewModelStoreProvider
 import androidx.navigation3.runtime.NavKey
 import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 
@@ -33,6 +34,12 @@ class TabState(
     val notesOpen: MutableState<Boolean> = mutableStateOf(false)
     val playing: MutableState<Boolean> = mutableStateOf(false)
     val viewModelStoreOwner: ViewModelStoreOwner = TabViewModelStoreOwner()
+
+    /**
+     * Holds the tab's page ViewModelStores. It lives outside composition, so a parked tab keeps its
+     * ViewModels; clearing [viewModelStoreOwner] on close clears them.
+     */
+    val viewModelStoreProvider: ViewModelStoreProvider = ViewModelStoreProvider(parentOwner = viewModelStoreOwner)
 
     val current: NavKey get() = nav.backStack.last()
 }
