@@ -53,13 +53,17 @@ class QuitController(
 
 /**
  * The OS's deferred answer to a quit it asked for (macOS: logout, restart, shutdown, Dock or ⌘Q). Refusing it would
- * make macOS abort a logout ("<App> interrupted logout"), so the quit handler [hold]s the answer and the exit path
- * [release]s it once the app has exited. Quits the OS did not ask for (close button) hold nothing.
+ * make macOS abort a logout ("<App> interrupted logout"), so the quit handler [hold]s the answer and [releaseAfter]
+ * answers it once the app loop has ended. Answering exits the JVM at once (macOS: `System.exit(0)`), so it must never
+ * run while windows are still being disposed. Quits the OS did not ask for (close button) hold nothing.
  */
 class PendingQuitReply {
     private var performQuit: (() -> Unit)? = null
 
-    /** Keeps [performQuit] until [release]; a newer request replaces an older unanswered one. */
+    /**
+     * Keeps [performQuit] until [release]; a newer request replaces an older unanswered one. AppKit has only one
+     * pending terminate reply, so answering the newer one answers both; answering the older one here would exit now.
+     */
     @Synchronized
     fun hold(performQuit: () -> Unit) {
         this.performQuit = performQuit
@@ -69,5 +73,14 @@ class PendingQuitReply {
     fun release() {
         val reply = synchronized(this) { performQuit.also { performQuit = null } }
         reply?.invoke()
+    }
+
+    /**
+     * Runs [appLoop], which must block until the app has exited and its composition is disposed (all `onDispose`
+     * teardown done), then answers any held quit, including one that arrived while the app was already exiting.
+     */
+    inline fun releaseAfter(appLoop: () -> Unit) {
+        appLoop()
+        release()
     }
 }

@@ -136,7 +136,8 @@ fun MotionSettingsContent(
                 onClick = {
                     hoverJob?.cancel()
                     hoveredKey = null
-                    clickedKey = motion.key
+                    // Re-clicking the saved row pins nothing: the saved choice never changes to clear it.
+                    clickedKey = motion.key.takeIf { it != selected.key }
                     if (phase == MotionPhase.Launch) onLaunchKey(motion.key) else onQuitKey(motion.key)
                 },
                 content = { Text(motion.title) },

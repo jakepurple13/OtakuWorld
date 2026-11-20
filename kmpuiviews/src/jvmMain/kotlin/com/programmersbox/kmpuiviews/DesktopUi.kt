@@ -148,6 +148,7 @@ import org.koin.dsl.navigation3.navigation
 import org.koin.dsl.module
 import com.programmersbox.telemetry.noOpTelemetryModule
 import java.io.File
+import kotlin.system.exitProcess
 
 private class DesktopViewModelStoreOwner : ViewModelStoreOwner {
     override val viewModelStore: ViewModelStore = ViewModelStore()
@@ -173,29 +174,36 @@ fun desktopSetup(
     if (BackgroundWorkHandlerImpl.setupSyncCheckers(args)) return
     NativeSplash.start()
     val desktopViewModelStoreOwner = DesktopViewModelStoreOwner()
-    application {
-        CompositionLocalProvider(
-            LocalViewModelStoreOwner provides desktopViewModelStoreOwner
-        ) {
-            BaseDesktopUi(
-                title = name,
-                moduleBlock = {
-                    modules(
-                        module {
-                            single { appConfig() }
-                            single<UpdatePrefs> { DataStoreUpdatePrefs(get()) }
-                            single<UpdaterEngine> { NucleusUpdaterEngine(channel = name.lowercase()) }
-                            single { DesktopUpdater(get(), get(), CoroutineScope(Dispatchers.IO + SupervisorJob())) }
-                            single { jvmAppLogo() }
-                            navigation<MotionSettingsRoute> { MotionSettingsScreen() }
-                            genericInfo(this).bindsPlatformGenericInfo()
-                            moduleBlock()
-                        }
-                    )
-                }
-            )
+    val quitReply = PendingQuitReply()
+    // application() returns only after the composition is disposed, so every onDispose teardown has run before
+    // the held OS quit is answered (answering it exits the JVM on macOS).
+    quitReply.releaseAfter {
+        application(exitProcessOnExit = false) {
+            CompositionLocalProvider(
+                LocalViewModelStoreOwner provides desktopViewModelStoreOwner
+            ) {
+                BaseDesktopUi(
+                    title = name,
+                    quitReply = quitReply,
+                    moduleBlock = {
+                        modules(
+                            module {
+                                single { appConfig() }
+                                single<UpdatePrefs> { DataStoreUpdatePrefs(get()) }
+                                single<UpdaterEngine> { NucleusUpdaterEngine(channel = name.lowercase()) }
+                                single { DesktopUpdater(get(), get(), CoroutineScope(Dispatchers.IO + SupervisorJob())) }
+                                single { jvmAppLogo() }
+                                navigation<MotionSettingsRoute> { MotionSettingsScreen() }
+                                genericInfo(this).bindsPlatformGenericInfo()
+                                moduleBlock()
+                            }
+                        )
+                    }
+                )
+            }
         }
     }
+    exitProcess(0)
 }
 
 fun baseDesktopSetup(
@@ -241,6 +249,7 @@ fun baseDesktopSetup(
 @Composable
 fun ApplicationScope.BaseDesktopUi(
     title: String,
+    quitReply: PendingQuitReply,
     moduleBlock: KoinApplication.() -> Unit,
 ) {
     InternalDesktopUi(
@@ -254,6 +263,7 @@ fun ApplicationScope.BaseDesktopUi(
             )
         },
         exitApplication = ::exitApplication,
+        quitReply = quitReply,
         moduleBlock = moduleBlock
     )
 }
@@ -262,12 +272,14 @@ fun ApplicationScope.BaseDesktopUi(
 @Composable
 fun NucleusApplicationScope.BaseDesktopUi(
     title: String,
+    quitReply: PendingQuitReply,
     moduleBlock: KoinApplication.() -> Unit,
 ) {
     InternalDesktopUi(
         title = title,
         tray = {},
         exitApplication = ::exitApplication,
+        quitReply = quitReply,
         moduleBlock = moduleBlock
     )
 }
@@ -278,6 +290,8 @@ private fun InternalDesktopUi(
     title: String,
     tray: @Composable () -> Unit,
     exitApplication: () -> Unit,
+    // Held OS quit; the caller answers it with PendingQuitReply.releaseAfter once the app loop has ended.
+    quitReply: PendingQuitReply,
     moduleBlock: KoinApplication.() -> Unit,
 ) {
     KoinApplication(
@@ -375,7 +389,6 @@ private fun InternalDesktopUi(
             val picture = remember { WindowPicture() }
             var contentHeight by remember { mutableStateOf(Dp.Unspecified) }
             var contentColors by remember { mutableStateOf<ColorScheme?>(null) }
-            val quitReply = remember { PendingQuitReply() }
             val quitController = remember {
                 QuitController(
                     plan = {
@@ -397,18 +410,13 @@ private fun InternalDesktopUi(
                         }
                     },
                     launch = { launchRun },
-                    exit = {
-                        exitApplication()
-                        // Accept the OS quit (logout/restart/shutdown) only now that the app has exited.
-                        quitReply.release()
-                    },
+                    // The held OS quit is answered by the caller after the app loop ends, never here: answering exits the
+                    // JVM, and exitApplication() only schedules the disposal.
+                    exit = exitApplication,
                 )
             }
-            AppQuitHandler(quitReply) {
-                quitController.requestQuit()
-                // Already exited before this request (it was a no-op): answer the OS now.
-                if (quitController.state == QuitController.State.Exited) quitReply.release()
-            }
+            // A request arriving after exit is a no-op; its held answer is still sent once the app loop ends.
+            AppQuitHandler(quitReply, quitController::requestQuit)
             val quitInWindow = (quitController.state as? QuitController.State.Playing)
                 ?.takeIf { it.plan.host == QuitHost.InWindow }
                 ?.run

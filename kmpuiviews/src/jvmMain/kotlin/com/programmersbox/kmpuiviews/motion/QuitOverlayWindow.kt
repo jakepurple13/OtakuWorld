@@ -122,7 +122,8 @@ fun titleBarBand(windowHeight: Dp, contentHeight: Dp): Dp =
 
 /**
  * Routes the app's Quit (⌘Q, Dock, logout on macOS) to [onQuit] instead of exiting at once, where the platform supports
- * it. The OS's answer is deferred into [reply], never refused, so the exit path must call [PendingQuitReply.release].
+ * it. The OS's answer is deferred into [reply], never refused; the app loop's caller answers it with
+ * [PendingQuitReply.releaseAfter] once the composition is disposed.
  */
 @Composable
 fun AppQuitHandler(reply: PendingQuitReply, onQuit: () -> Unit) {

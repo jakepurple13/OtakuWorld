@@ -81,6 +81,18 @@ class MotionSettingsScreenTest {
         onNodeWithText("Previewing one").assertExists()
     }
 
+    @Test
+    fun reclickingSavedRowDoesNotPinPreview() = runComposeUiTest {
+        var launchKey by mutableStateOf("one")
+        setContent {
+            MaterialTheme { MotionSettingsContent(catalog, launchKey, "", {}, {}) }
+        }
+        onNodeWithText("One").performClick()
+        // The saved value changes elsewhere: the preview follows it.
+        launchKey = "two"
+        onNodeWithText("Previewing two").assertExists()
+    }
+
     private fun fake(k: String, t: String) = object : DesktopMotion {
         override val key = k
         override val title = t
