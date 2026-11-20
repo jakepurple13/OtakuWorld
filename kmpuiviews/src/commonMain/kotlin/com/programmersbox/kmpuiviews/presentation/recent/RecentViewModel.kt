@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.presentation.recent
 
 import androidx.compose.foundation.lazy.grid.LazyGridState
+import com.programmersbox.telemetry.events.OpenedFrom
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -178,13 +179,13 @@ class RecentViewModel(
         when (action) {
             is FavoriteAction.Add -> {
                 viewModelScope.launch {
-                    favoritesRepository.addFavorite(action.info.toDbModel())
+                    favoritesRepository.addFavorite(action.info.toDbModel(), from = OpenedFrom.RECENT)
                 }
             }
 
             is FavoriteAction.Remove -> {
                 viewModelScope.launch {
-                    favoritesRepository.removeFavorite(action.info.toDbModel())
+                    favoritesRepository.removeFavorite(action.info.toDbModel(), userAction = true)
                 }
             }
         }

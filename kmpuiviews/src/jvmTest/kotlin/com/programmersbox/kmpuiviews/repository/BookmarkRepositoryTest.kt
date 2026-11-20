@@ -1,6 +1,9 @@
 package com.programmersbox.kmpuiviews.repository
 
 import androidx.room3.Room
+import com.programmersbox.telemetry.events.ChapterBookmarked
+import com.programmersbox.telemetry.AnalyticsEvent
+import com.programmersbox.kmpuiviews.testing.FakeAnalytics
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.programmersbox.favoritesdatabase.BookmarkDatabase
 import com.programmersbox.favoritesdatabase.BookmarkedChapter
@@ -24,7 +27,10 @@ class BookmarkRepositoryTest {
     private fun repository(loggedIn: Boolean = false) = BookmarkRepository(
         dao = database.bookmarkDao(),
         authManager = FakeAuthManager(loggedIn = loggedIn),
+        analytics = analytics,
     )
+
+    private val analytics = FakeAnalytics()
 
     private fun bookmark(
         chapterUrl: String,
@@ -130,5 +136,11 @@ class BookmarkRepositoryTest {
         val all = repo.getAllBookmarksSync()
         assertEquals(1, all.size) // soft-deleted row still exists
         assertTrue(all[0].isDeleted)
+    }
+
+    @Test
+    fun `bookmark fires chapter_bookmarked with source`() = runTest {
+        repository().insertBookmark(bookmark("https://example.com/c1"))
+        assertEquals<List<AnalyticsEvent>>(listOf(ChapterBookmarked("ExampleService")), analytics.events)
     }
 }

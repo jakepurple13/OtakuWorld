@@ -709,7 +709,7 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.NewOptionsItems(
             ) { target ->
                 if (target != null) {
                     QuickActionCard(
-                        onClick = { scope.launch { favoritesRepository.removeFavorite(target) } },
+                        onClick = { scope.launch { favoritesRepository.removeFavorite(target, userAction = true) } },
                         icon = Icons.Default.Favorite,
                         title = "Favorite",
                         modifier = Modifier.fillMaxWidth()
@@ -725,7 +725,8 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.NewOptionsItems(
                                         url = optionsSheetValues.url,
                                         imageUrl = optionsSheetValues.imageUrl,
                                         source = optionsSheetValues.serviceName,
-                                    )
+                                    ),
+                                    from = OpenedFrom.LONG_PRESS,
                                 )
                             }
                         },

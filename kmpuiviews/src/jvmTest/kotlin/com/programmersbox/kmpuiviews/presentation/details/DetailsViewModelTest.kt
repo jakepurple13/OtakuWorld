@@ -29,6 +29,11 @@ import com.programmersbox.kmpuiviews.repository.BookmarkRepository
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.testing.FakeAiText
 import com.programmersbox.kmpuiviews.testing.FakeCrashReporter
+import com.programmersbox.kmpuiviews.testing.FakeAnalytics
+import com.programmersbox.telemetry.AnalyticsEvent
+import com.programmersbox.telemetry.events.FavoriteAdded
+import com.programmersbox.telemetry.events.ItemViewed
+import com.programmersbox.telemetry.events.OpenedFrom
 import com.programmersbox.kmpuiviews.testing.FakeAuthManager
 import com.programmersbox.kmpuiviews.testing.FakeKmpGenericInfo
 import com.programmersbox.kmpuiviews.testing.FakeTranslationHandler
@@ -60,6 +65,7 @@ import kotlin.test.assertTrue
 class DetailsViewModelTest {
 
     private val viewModelStore = ViewModelStore()
+    private val analytics = FakeAnalytics()
 
     private lateinit var itemDbFile: File
     private lateinit var itemDatabase: ItemDatabase
@@ -118,6 +124,7 @@ class DetailsViewModelTest {
             systemAlerter = SystemAlerter(),
             authManager = FakeAuthManager(),
             sourceRepository = sourceRepository,
+            analytics = analytics,
         ),
         translationHandler = translationHandler,
         exceptionDao = exceptionDatabase.exceptionDao(),
@@ -131,6 +138,7 @@ class DetailsViewModelTest {
         tldrCache = tldrCache,
         moodRepository = com.programmersbox.kmpuiviews.domain.moodtags.MoodRepository(itemDatabase.itemDao(), aiText),
         crashReporter = FakeCrashReporter(),
+        analytics = analytics,
     ).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -221,6 +229,24 @@ class DetailsViewModelTest {
 
         val state = vm.currentState as DetailState.Success
         assertEquals("Cached Title", state.info.title)
+    }
+
+    @Test
+    fun `item_viewed fires once with source, media type and origin`() = runTest {
+        val vm = viewModel(details = details().copy(from = OpenedFrom.RECENT))
+        awaitCondition { vm.currentState is DetailState.Success }
+
+        assertEquals<List<AnalyticsEvent>>(listOf(ItemViewed("ExampleService", "", OpenedFrom.RECENT)), analytics.events)
+    }
+
+    @Test
+    fun `favorite from details sends favorite_added with details origin`() = runTest {
+        val vm = viewModel()
+        awaitCondition { vm.currentState is DetailState.Success }
+        vm.favoriteAction((vm.currentState as DetailState.Success).action as DetailFavoriteAction.Add)
+        awaitCondition { vm.favoriteListener }
+
+        assertTrue(FavoriteAdded("ExampleService", OpenedFrom.DETAILS) in analytics.events, analytics.events.toString())
     }
 
     @Test

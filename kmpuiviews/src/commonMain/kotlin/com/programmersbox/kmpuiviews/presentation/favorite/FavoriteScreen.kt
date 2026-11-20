@@ -214,7 +214,7 @@ fun FavoriteScreen(
             headlineContent = { Text(stringResource(Res.string.removeFromFavorites)) },
             leadingContent = { Icon(Icons.Default.FavoriteBorder, null) },
             modifier = Modifier.clickable {
-                showDbModel?.let { scope.launch { favoritesRepository.removeFavorite(it) } }
+                showDbModel?.let { scope.launch { favoritesRepository.removeFavorite(it, userAction = true) } }
                 showDbModel = null
             }
         )
