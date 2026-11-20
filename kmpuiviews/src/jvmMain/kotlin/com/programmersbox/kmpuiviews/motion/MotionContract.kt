@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.motion
 
+import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,7 +10,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.toComposeImageBitmap
 
-/** Renders [motion] at [timeMillis] with a solid [appColor] app via ImageComposeScene (transparent background). */
+/*
+ * Test helpers. They live in jvmMain, not jvmTest, because the per-app motion tests
+ * ({manga,anime,novel}world:desktop jvmTest) check their motions against the same contract and can't see this
+ * module's test sources. Not used at runtime.
+ */
+
+/**
+ * Renders [motion] at [timeMillis] with a solid [appColor] app via ImageComposeScene (transparent background).
+ * For tests only, including the per-app modules' contract tests.
+ */
+@VisibleForTesting
 fun renderMotionFrame(
     motion: DesktopMotion,
     timeMillis: Int,
@@ -30,6 +41,11 @@ fun renderMotionFrame(
     }
 }
 
+/**
+ * The launch/quit contract every [DesktopMotion] must obey (launch ends on the app, quit starts on it and ends
+ * transparent), sampled at a few points. For tests only: kmpuiviews' own and the per-app modules' contract tests.
+ */
+@VisibleForTesting
 object MotionContract {
     private val appColor = Color.Red
 

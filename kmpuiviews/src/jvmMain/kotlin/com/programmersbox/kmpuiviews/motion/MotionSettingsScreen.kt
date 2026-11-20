@@ -22,6 +22,7 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -103,7 +104,10 @@ fun MotionSettingsContent(
 
     // Hovering a row previews it after a short delay; leaving reverts to the saved choice.
     var hoveredKey by remember { mutableStateOf<String?>(null) }
-    val previewed = options.firstOrNull { it.key == hoveredKey } ?: selected
+    // A clicked row stays previewed until the saved choice catches up, so the preview never flicks back meanwhile.
+    var clickedKey by remember(phase) { mutableStateOf<String?>(null) }
+    LaunchedEffect(selected.key) { if (clickedKey == selected.key) clickedKey = null }
+    val previewed = options.firstOrNull { it.key == (hoveredKey ?: clickedKey) } ?: selected
     val scope = rememberCoroutineScope()
     var hoverJob by remember { mutableStateOf<Job?>(null) }
 
@@ -132,6 +136,7 @@ fun MotionSettingsContent(
                 onClick = {
                     hoverJob?.cancel()
                     hoveredKey = null
+                    clickedKey = motion.key
                     if (phase == MotionPhase.Launch) onLaunchKey(motion.key) else onQuitKey(motion.key)
                 },
                 content = { Text(motion.title) },
