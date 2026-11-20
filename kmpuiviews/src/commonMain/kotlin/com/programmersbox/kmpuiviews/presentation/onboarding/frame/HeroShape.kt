@@ -100,9 +100,10 @@ fun HeroShape(
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
-            .testTag(OnboardingTags.Hero)
             .size(size)
             .scale(scale)
+            // Tagged after scale so its semantics bounds include the scale (rotation excluded).
+            .testTag(OnboardingTags.Hero)
             .rotate(rotation)
             .clip(MorphShape(morph, progress.value))
             .background(MaterialTheme.colorScheme.primaryContainer),

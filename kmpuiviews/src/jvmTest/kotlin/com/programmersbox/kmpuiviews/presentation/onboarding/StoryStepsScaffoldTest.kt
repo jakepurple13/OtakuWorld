@@ -43,6 +43,7 @@ import androidx.compose.ui.test.runComposeUiTest
 import com.programmersbox.kmpuiviews.presentation.onboarding.frame.StoryStepsScaffold
 import com.programmersbox.kmpuiviews.presentation.onboarding.motion.LocalReducedMotionOverride
 import com.programmersbox.kmpuiviews.presentation.onboarding.frame.heroInsetFor
+import com.programmersbox.kmpuiviews.presentation.onboarding.frame.heroSizeFor
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -101,6 +102,13 @@ class StoryStepsScaffoldTest {
         val hero = onNodeWithTag(OnboardingTags.Hero).fetchSemanticsNode().boundsInRoot
         val title = onNodeWithText("Title done").fetchSemanticsNode().boundsInRoot
         val eps = 0.5f
+        // Semantics bounds are clipped by the pager's clipToBounds, so a clipped hero comes out
+        // smaller than its full scaled size; require the full size * Done.scale.
+        val full = with(density) { heroSizeFor(expanded).toPx() } * HeroShape.Done.scale
+        assertTrue(
+            hero.width >= full - 1.5f && hero.height >= full - 1.5f,
+            "hero clipped: ${hero.width}x${hero.height} < $full (hero=$hero pane=$pane)",
+        )
         assertTrue(hero.left >= pane.left - eps && hero.top >= pane.top - eps, "hero clipped top/left: hero=$hero pane=$pane")
         assertTrue(hero.right <= pane.right + eps && hero.bottom <= pane.bottom + eps, "hero outside pane: hero=$hero pane=$pane")
         assertTrue(title.top >= hero.bottom - eps, "title overlaps hero: title=$title hero=$hero")
