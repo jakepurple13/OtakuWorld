@@ -5,10 +5,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.center
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.PointMode
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.scale
@@ -52,7 +52,7 @@ internal object ScreentoneFade : DesktopMotion {
 
     fun frame(time: Int) = ScreentoneFrame(
         grayscale = track(time, Keyframe(0, 0f), Keyframe(600, 1f)),
-        contrast = track(time, Keyframe(0, 1f), Keyframe(600, 1.3f)),
+        contrast = track(time, Keyframe(0, 1f), Keyframe(600, FULL_CONTRAST)),
         appAlpha = track(time, Keyframe(1300, 1f), Keyframe(1310, 0f)),
         toneRadius = track(time, Keyframe(0, 0f, MockupEasing.In), Keyframe(1250, 2f)),
         toneAlpha = track(time, Keyframe(1900, 1f, MockupEasing.In), Keyframe(2300, 0f)),
@@ -62,10 +62,12 @@ internal object ScreentoneFade : DesktopMotion {
 
     override fun Modifier.app(time: () -> Int): Modifier = this
         .graphicsLayer { alpha = frame(time()).appAlpha }
-        .drawWithContent {
-            val frame = frame(time())
-            drawInked(frame.grayscale, frame.contrast)
-        }
+        .inked(inkFilters) { frame(time()).grayscale }
+
+    /** App contrast at full grayscale; contrast shares grayscale's keyframes, so [inkFilters] covers both. */
+    private const val FULL_CONTRAST = 1.3f
+
+    private val inkFilters: Array<ColorFilter> by lazy { inkFilters(FULL_CONTRAST) }
 
     @Composable
     override fun BoxScope.InFront(time: () -> Int) {

@@ -6,11 +6,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
@@ -65,7 +65,7 @@ internal object TheEndPanel : DesktopMotion {
         appRotation = track(time, Keyframe(0, 0f, MockupEasing.InOut), Keyframe(800, -2f)),
         frameWidth = track(time, Keyframe(0, 0f, MockupEasing.InOut), Keyframe(800, 1.4f)),
         grayscale = track(time, Keyframe(0, 0f, MockupEasing.InOut), Keyframe(800, 1f)),
-        contrast = track(time, Keyframe(0, 1f, MockupEasing.InOut), Keyframe(800, 1.2f)),
+        contrast = track(time, Keyframe(0, 1f, MockupEasing.InOut), Keyframe(800, FULL_CONTRAST)),
         appAlpha = track(time, Keyframe(1700, 1f, MockupEasing.In), Keyframe(2200, 0f)),
         captionAlpha = track(time, Keyframe(850, 0f, MockupEasing.Back), Keyframe(1150, 1f), Keyframe(1700, 1f, MockupEasing.In), Keyframe(2200, 0f)),
         captionScale = track(time, Keyframe(850, .4f, MockupEasing.Back), Keyframe(1150, 1f)),
@@ -79,10 +79,12 @@ internal object TheEndPanel : DesktopMotion {
             rotationZ = frame.appRotation
             alpha = frame.appAlpha
         }
-        .drawWithContent {
-            val frame = frame(time())
-            drawInked(frame.grayscale, frame.contrast)
-        }
+        .inked(inkFilters) { frame(time()).grayscale }
+
+    /** App contrast at full grayscale; contrast shares grayscale's keyframes, so [inkFilters] covers both. */
+    private const val FULL_CONTRAST = 1.2f
+
+    private val inkFilters: Array<ColorFilter> by lazy { inkFilters(FULL_CONTRAST) }
 
     /** Paper, then the panel border just outside the app, transformed like the app so it hugs it. */
     @Composable

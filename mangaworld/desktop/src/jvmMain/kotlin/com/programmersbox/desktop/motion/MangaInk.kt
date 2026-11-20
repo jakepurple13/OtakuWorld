@@ -1,16 +1,18 @@
 package com.programmersbox.desktop.motion
 
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.Paint
-import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Density
+import kotlin.math.roundToInt
 
 /*
  * Pieces shared by the ink motions (Ink panels, Impact, Screentone fade, The End panel)
@@ -51,15 +53,33 @@ internal fun inkFilter(grayscale: Float, contrast: Float): ColorFilter {
     return ColorFilter.colorMatrix(ColorMatrix(row(r) + row(g) + row(b) + floatArrayOf(0f, 0f, 0f, 1f, 0f)))
 }
 
-/** Draws the content through [inkFilter]; skips the extra layer while the filter is still the identity. */
-internal fun ContentDrawScope.drawInked(grayscale: Float, contrast: Float) {
-    if (grayscale == 0f && contrast == 1f) {
-        drawContent()
-        return
-    }
-    drawIntoCanvas { canvas ->
-        canvas.saveLayer(Rect(Offset.Zero, size), Paint().apply { colorFilter = inkFilter(grayscale, contrast) })
-        drawContent()
-        canvas.restore()
+/** Steps from no ink to full ink in an [inkFilters] table; step 0 (the identity) is never drawn through a layer. */
+internal const val INK_STEPS = 30
+
+/**
+ * Every [inkFilter] step from none to full grayscale, for motions whose contrast rises with grayscale (same keyframes)
+ * from 1 to [fullContrast]. Immutable, so a motion builds it once (`by lazy`) and shares it across frames.
+ */
+internal fun inkFilters(fullContrast: Float): Array<ColorFilter> = Array(INK_STEPS + 1) {
+    val grayscale = it.toFloat() / INK_STEPS
+    inkFilter(grayscale, 1 + (fullContrast - 1) * grayscale)
+}
+
+/** Draws the content through [filters] at [grayscale]'s step; skips the extra layer at step 0. */
+internal fun Modifier.inked(filters: Array<ColorFilter>, grayscale: () -> Float): Modifier = drawWithCache {
+    val bounds = Rect(Offset.Zero, size)
+    val paint = Paint()
+    onDrawWithContent {
+        val step = (grayscale() * INK_STEPS).roundToInt().coerceIn(0, INK_STEPS)
+        if (step == 0) {
+            drawContent()
+        } else {
+            paint.colorFilter = filters[step]
+            drawIntoCanvas { canvas ->
+                canvas.saveLayer(bounds, paint)
+                drawContent()
+                canvas.restore()
+            }
+        }
     }
 }
