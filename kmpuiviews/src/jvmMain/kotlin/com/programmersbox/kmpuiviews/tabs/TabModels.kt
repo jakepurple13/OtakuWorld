@@ -18,8 +18,6 @@ value class TabId(val v: Long)
 @JvmInline
 value class WindowId(val v: Long)
 
-enum class TabOpenMode { Background, Foreground, NewWindow }
-
 class TabViewModelStoreOwner : ViewModelStoreOwner {
     override val viewModelStore = ViewModelStore()
 }

@@ -884,4 +884,9 @@
     <string name="tabs_back">Back</string>
     <string name="tabs_forward">Forward</string>
     <string name="tabs_downloads">Downloads</string>
+    <string name="tabs_open">Open</string>
+    <string name="tabs_open_in_new_tab">Open in new tab</string>
+    <string name="tabs_open_in_new_tab_and_switch">Open in new tab and switch</string>
+    <string name="tabs_open_in_new_window">Open in new window</string>
+    <string name="tabs_more">More…</string>
 </resources>

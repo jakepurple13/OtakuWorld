@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -14,6 +15,7 @@ import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.kmpuiviews.KmpGenericInfo
+import com.programmersbox.kmpuiviews.presentation.tabs.LocalTabActions
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.sharedcomponents.repository.ChangingSettingsRepository
 import kotlinx.coroutines.flow.filterIsInstance
@@ -52,24 +54,28 @@ fun BrowserWindow(
             Box(Modifier.weight(1f)) {
                 // Keyed so no remembered state leaks from one tab's composition into another's.
                 key(active.id.v) {
-                    if (active.pinned) {
-                        HomeTab(
-                            tab = active,
-                            controller = controller,
-                            stateHolder = stateHolder,
-                            genericInfo = genericInfo,
-                            windowSize = windowSize,
-                            customPreferences = customPreferences,
-                        )
-                    } else {
-                        TabContent(
-                            tab = active,
-                            stateHolder = stateHolder,
-                            genericInfo = genericInfo,
-                            windowSize = windowSize,
-                            customPreferences = customPreferences,
-                        )
+                    val tabActions = remember { DesktopTabActions(controller, active.id) }
+                    CompositionLocalProvider(LocalTabActions provides tabActions) {
+                        if (active.pinned) {
+                            HomeTab(
+                                tab = active,
+                                controller = controller,
+                                stateHolder = stateHolder,
+                                genericInfo = genericInfo,
+                                windowSize = windowSize,
+                                customPreferences = customPreferences,
+                            )
+                        } else {
+                            TabContent(
+                                tab = active,
+                                stateHolder = stateHolder,
+                                genericInfo = genericInfo,
+                                windowSize = windowSize,
+                                customPreferences = customPreferences,
+                            )
+                        }
                     }
+                    tabActions.Menu()
                 }
             }
         }

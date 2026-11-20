@@ -23,6 +23,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.programmersbox.kmpuiviews.presentation.tabs.tabTarget
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
@@ -80,6 +81,7 @@ fun M3CoverCard(
                 ComposableUtils.IMAGE_WIDTH,
                 ComposableUtils.IMAGE_HEIGHT
             )
+            .tabTarget(onOpen = onCardClick, onMore = onLongPress?.let { { it(ComponentState.Pressed) } })
             .bounceClick(.94f)
             .customSharedElement(sharedItemKey?.let(::OtakuImageElement))
             .clip(MaterialTheme.shapes.medium)
@@ -222,6 +224,7 @@ fun M3CoverCard(
                 ComposableUtils.IMAGE_WIDTH,
                 ComposableUtils.IMAGE_HEIGHT
             )
+            .tabTarget(onClick)
             .bounceClick(.94f)
             .zoomOverlay()
     ) {
