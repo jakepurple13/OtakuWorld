@@ -80,6 +80,21 @@ class TabShortcutsTest {
     }
 
     @Test
+    fun hiddenChromeDisablesEveryShortcut() {
+        listOf(
+            key(Key.T, meta = true),
+            key(Key.W, meta = true),
+            key(Key.T, meta = true, shift = true),
+            key(Key.One, meta = true),
+            key(Key.Tab, ctrl = true),
+            key(Key.LeftBracket, meta = true),
+        ).forEach { assertNull(tabShortcut(it, isMac = true, chromeVisible = false)) }
+        assertNull(tabShortcut(key(Key.T, ctrl = true), isMac = false, chromeVisible = false))
+        assertNull(tabShortcut(key(Key.DirectionLeft, alt = true), isMac = false, chromeVisible = false))
+        assertEquals(TabShortcut.NewTab, tabShortcut(key(Key.T, meta = true), isMac = true, chromeVisible = true))
+    }
+
+    @Test
     fun bareKeysReturnNull() {
         listOf(Key.Spacebar, Key.DirectionLeft, Key.DirectionRight, Key.F, Key.C, Key.Tab, Key.T, Key.W, Key.One)
             .forEach { k ->

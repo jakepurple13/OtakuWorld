@@ -83,6 +83,8 @@ import com.programmersbox.kmpuiviews.updates.UpdatePrefs
 import com.programmersbox.kmpuiviews.updates.UpdaterEngine
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.JvmAppLogo
+import com.programmersbox.sharedcomponents.repository.ChangingSettingsRepository
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.tabs.BrowserWindow
@@ -321,19 +323,29 @@ private fun InternalDesktopUi(
 
             val tabsController = koinInject<TabsController>()
             val mainWindow = tabsController.windows.first { it.isMain }
+            // Onboarding and immersive screens hide the nav bar; the tab chrome follows it, as HomeNav's rail did.
+            val showNavBar by koinInject<ChangingSettingsRepository>().showNavBar.collectAsStateWithLifecycle(true)
             OtakuDecoratedWindow(
                 title = title,
                 onCloseRequest = exitApplication,
                 showQuickActions = true,
                 titleBarContent = {
-                    TabStrip(
-                        window = mainWindow,
-                        controller = tabsController,
-                        modifier = Modifier.align(Alignment.CenterHorizontally),
-                    )
+                    if (showNavBar) {
+                        TabStrip(
+                            window = mainWindow,
+                            controller = tabsController,
+                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                        )
+                    } else {
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.titleSmall,
+                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                        )
+                    }
                 },
                 onKeyEvent = { event ->
-                    tabShortcut(event, isMac = isMacOs)
+                    tabShortcut(event, isMac = isMacOs, chromeVisible = showNavBar)
                         ?.let { tabsController.perform(it, mainWindow) } != null
                 },
             ) {

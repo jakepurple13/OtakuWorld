@@ -35,9 +35,12 @@ private val numberKeys = listOf(
  * - ⌘ (macOS) / Ctrl (others) + T, W, ⇧T, 1…9
  * - ⌃Tab / ⌃⇧Tab on every OS
  * - ⌘[ / ⌘] on macOS, Alt+← / Alt+→ elsewhere
+ *
+ * Returns null while [chromeVisible] is false (onboarding and immersive screens hide the nav bar),
+ * so tabs can't be opened, switched or closed from there.
  */
-fun tabShortcut(event: KeyEvent, isMac: Boolean): TabShortcut? {
-    if (event.type != KeyEventType.KeyDown) return null
+fun tabShortcut(event: KeyEvent, isMac: Boolean, chromeVisible: Boolean = true): TabShortcut? {
+    if (!chromeVisible || event.type != KeyEventType.KeyDown) return null
     val meta = event.isMetaPressed
     val ctrl = event.isCtrlPressed
     val shift = event.isShiftPressed

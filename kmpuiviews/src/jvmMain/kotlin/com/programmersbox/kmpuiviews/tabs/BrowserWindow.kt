@@ -7,12 +7,15 @@ import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSiz
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
+import com.programmersbox.sharedcomponents.repository.ChangingSettingsRepository
 import kotlinx.coroutines.flow.filterIsInstance
 import org.koin.compose.koinInject
 
@@ -26,7 +29,10 @@ fun BrowserWindow(
     window: BrowserWindowState,
     controller: TabsController,
     genericInfo: KmpGenericInfo = koinInject(),
+    changingSettingsRepository: ChangingSettingsRepository = koinInject(),
 ) {
+    // Onboarding and immersive screens hide the nav bar; the toolbar hides with it.
+    val showNavBar by changingSettingsRepository.showNavBar.collectAsStateWithLifecycle(true)
     val customPreferences = remember { ComposeSettingsDsl().apply(genericInfo.composeCustomPreferences()) }
     val windowSize = calculateWindowSizeClass()
     val stateHolder = rememberSaveableStateHolder()
@@ -41,7 +47,7 @@ fun BrowserWindow(
         val active = window.tabs.firstOrNull { it.id == window.activeId.value } ?: window.tabs.first()
 
         Column(Modifier.fillMaxSize()) {
-            TabToolbar(tab = active, controller = controller)
+            if (showNavBar) TabToolbar(tab = active, controller = controller)
 
             Box(Modifier.weight(1f)) {
                 // Keyed so no remembered state leaks from one tab's composition into another's.
