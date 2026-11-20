@@ -87,6 +87,7 @@ import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.JvmAppLogo
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
+import com.programmersbox.kmpuiviews.tabs.desktopTabsModule
 import com.programmersbox.kmpuiviews.utils.bindsPlatformGenericInfo
 import com.programmersbox.supabaseintegration.Res
 import com.programmersbox.supabaseintegration.supabase_logo_icon
@@ -251,7 +252,7 @@ private fun InternalDesktopUi(
                 printLogger(Level.DEBUG)
                 modules(
                     module {
-                        includes(kmpModule, noOpTelemetryModule(printToConsole = true))
+                        includes(kmpModule, noOpTelemetryModule(printToConsole = true), desktopTabsModule)
 
                         singleOf(::DataStoreHandling)
                         single {
@@ -362,7 +363,7 @@ fun InternalBaseDesktopUi(
                 printLogger(Level.DEBUG)
                 modules(
                     module {
-                        includes(kmpModule, noOpTelemetryModule(printToConsole = true))
+                        includes(kmpModule, noOpTelemetryModule(printToConsole = true), desktopTabsModule)
 
                         singleOf(::DataStoreHandling)
                         single {
