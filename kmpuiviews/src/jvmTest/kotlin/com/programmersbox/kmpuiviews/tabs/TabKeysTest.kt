@@ -59,6 +59,10 @@ class TabKeysTest {
             Screen.MoreSettings,
             Screen.NotificationsSettings,
             Screen.UpdateSourcesSettings,
+            Screen.ThemeSettings,
+            Screen.DetailsSettings,
+            Screen.SecuritySettings,
+            Screen.DailyOverview.Settings,
         ).forEach { assertEquals(TabKey.Settings, keys.keyOf(it), "$it") }
     }
 

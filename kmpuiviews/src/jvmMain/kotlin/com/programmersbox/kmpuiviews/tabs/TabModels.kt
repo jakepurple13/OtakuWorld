@@ -1,0 +1,60 @@
+package com.programmersbox.kmpuiviews.tabs
+
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.unit.Dp
+import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.ViewModelStoreOwner
+import androidx.navigation3.runtime.NavKey
+import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
+
+@JvmInline
+value class TabId(val v: Long)
+
+@JvmInline
+value class WindowId(val v: Long)
+
+enum class TabOpenMode { Background, Foreground, NewWindow }
+
+class TabViewModelStoreOwner : ViewModelStoreOwner {
+    override val viewModelStore = ViewModelStore()
+}
+
+class TabState(
+    val id: TabId,
+    val nav: Navigation3Actions,
+    val pinned: Boolean,
+) {
+    /** Pages popped by back, most recent last. */
+    val forward: SnapshotStateList<NavKey> = mutableStateListOf()
+    val notesOpen: MutableState<Boolean> = mutableStateOf(false)
+    val playing: MutableState<Boolean> = mutableStateOf(false)
+    val viewModelStoreOwner: ViewModelStoreOwner = TabViewModelStoreOwner()
+
+    val current: NavKey get() = nav.backStack.last()
+}
+
+data class WindowBounds(val x: Dp, val y: Dp, val width: Dp, val height: Dp)
+
+class BrowserWindowState(
+    val id: WindowId,
+    val isMain: Boolean,
+    first: TabState,
+    bounds: WindowBounds? = null,
+) {
+    val tabs: SnapshotStateList<TabState> = mutableStateListOf(first)
+    val activeId: MutableState<TabId> = mutableStateOf(first.id)
+    val bounds: MutableState<WindowBounds?> = mutableStateOf(bounds)
+}
+
+sealed interface TabEvent {
+    data class Opened(val tab: TabId, val window: WindowId, val mode: TabOpenMode, val origin: Rect?) : TabEvent
+    data class Flash(val tab: TabId) : TabEvent
+    data class Closed(val tab: TabId, val window: WindowId) : TabEvent
+    data class Moved(val tab: TabId, val from: WindowId, val to: WindowId) : TabEvent
+}
+
+data class TabPrefsSnapshot(val clickOpensNewTab: Boolean)

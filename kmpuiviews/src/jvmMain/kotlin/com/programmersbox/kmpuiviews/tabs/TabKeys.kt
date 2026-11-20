@@ -78,7 +78,11 @@ object CoreTabKeyProvider : TabKeyProvider {
         Screen.MoreInfoSettings,
         Screen.MoreSettings,
         Screen.NotificationsSettings,
-        Screen.UpdateSourcesSettings -> TabKey.Settings
+        Screen.UpdateSourcesSettings,
+        Screen.ThemeSettings,
+        Screen.DetailsSettings,
+        Screen.SecuritySettings,
+        Screen.DailyOverview.Settings -> TabKey.Settings
 
         is Screen.GlobalSearchScreen,
         is Screen.GlobalSearchScreen.Home -> TabKey.Search
