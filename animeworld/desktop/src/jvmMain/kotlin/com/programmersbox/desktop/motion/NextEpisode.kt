@@ -84,13 +84,12 @@ internal object NextEpisode : DesktopMotion {
         .drawWithCache {
             val bounds = Rect(Offset.Zero, size)
             val paint = Paint()
-            val filters = arrayOfNulls<ColorFilter>(STILL_STEPS + 1)
             onDrawWithContent {
                 val step = (frame(time()).still * STILL_STEPS).roundToInt().coerceIn(0, STILL_STEPS)
                 if (step == 0) {
                     drawContent()
                 } else {
-                    paint.colorFilter = filters[step] ?: stillFilter(step.toFloat() / STILL_STEPS).also { filters[step] = it }
+                    paint.colorFilter = stillFilters[step]
                     drawIntoCanvas { canvas ->
                         canvas.saveLayer(bounds, paint)
                         drawContent()
@@ -99,6 +98,9 @@ internal object NextEpisode : DesktopMotion {
                 }
             }
         }
+
+    /** Every still filter step, built once on first use; step 0 is never drawn through a layer. */
+    private val stillFilters: Array<ColorFilter> by lazy { Array(STILL_STEPS + 1) { stillFilter(it.toFloat() / STILL_STEPS) } }
 
     /** The banner, then black over everything. */
     @Composable

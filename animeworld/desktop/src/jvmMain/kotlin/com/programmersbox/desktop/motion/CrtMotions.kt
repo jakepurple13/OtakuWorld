@@ -10,6 +10,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.graphicsLayer
 import com.programmersbox.kmpuiviews.motion.DesktopMotion
 import com.programmersbox.kmpuiviews.motion.Keyframe
@@ -67,7 +68,8 @@ internal object CrtPowerOn : DesktopMotion {
         }
         .drawWithCache {
             val bounds = Rect(Offset.Zero, size)
-            onDrawWithContent { drawBrightened(bounds, frame(time()).brightness) }
+            val paint = Paint()
+            onDrawWithContent { drawBrightened(bounds, frame(time()).brightness, paint) }
         }
 
     @Composable
@@ -162,7 +164,8 @@ internal object CrtPowerOff : DesktopMotion {
         }
         .drawWithCache {
             val bounds = Rect(Offset.Zero, size)
-            onDrawWithContent { drawBrightened(bounds, frame(time()).brightness) }
+            val paint = Paint()
+            onDrawWithContent { drawBrightened(bounds, frame(time()).brightness, paint) }
         }
 
     @Composable

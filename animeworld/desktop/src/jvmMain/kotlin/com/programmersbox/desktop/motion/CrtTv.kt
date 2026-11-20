@@ -174,30 +174,31 @@ private val CrtNoise: ImageBitmap by lazy {
     SkiaImage.makeRaster(ImageInfo.makeN32(96, 96, ColorAlphaType.OPAQUE), pixels, 96 * 4).toComposeImageBitmap()
 }
 
-/** CSS `filter: brightness(x)` steps: 1/20 apart from 1 up to [MAX_BRIGHTNESS], made on first use and reused. */
+/** CSS `filter: brightness(x)` steps: 1/20 apart from 1 up to [MAX_BRIGHTNESS]. */
 private const val BRIGHTNESS_STEPS = 20
 private const val MAX_BRIGHTNESS = 8
-private val brightnessFilters = arrayOfNulls<ColorFilter>((MAX_BRIGHTNESS - 1) * BRIGHTNESS_STEPS + 1)
-private val brightnessPaint = Paint()
 
-/** `brightness(x)` as a colour matrix: RGB scaled by x (clamped by the layer), alpha unchanged. */
-private fun brightnessFilter(brightness: Float): ColorFilter {
-    val index = ((brightness - 1) * BRIGHTNESS_STEPS).roundToInt().coerceIn(0, brightnessFilters.lastIndex)
-    return brightnessFilters[index] ?: run {
+/** Every `brightness(x)` step as a colour matrix (RGB scaled by x, clamped by the layer; alpha unchanged), built once. */
+private val brightnessFilters: Array<ColorFilter> by lazy {
+    Array((MAX_BRIGHTNESS - 1) * BRIGHTNESS_STEPS + 1) { index ->
         val x = 1f + index.toFloat() / BRIGHTNESS_STEPS
         ColorFilter.colorMatrix(ColorMatrix().apply { setToScale(x, x, x, 1f) })
-    }.also { brightnessFilters[index] = it }
+    }
 }
 
-/** Draws the content through CSS `brightness([brightness])` into [bounds]; no extra layer at 1. */
-internal fun ContentDrawScope.drawBrightened(bounds: Rect, brightness: Float) {
+/**
+ * Draws the content through CSS `brightness([brightness])` into [bounds]; no extra layer at 1.
+ * [paint] is the caller's own, made once in its `drawWithCache`.
+ */
+internal fun ContentDrawScope.drawBrightened(bounds: Rect, brightness: Float, paint: Paint) {
     if (brightness <= 1f) {
         drawContent()
         return
     }
-    brightnessPaint.colorFilter = brightnessFilter(brightness)
+    val index = ((brightness - 1) * BRIGHTNESS_STEPS).roundToInt().coerceIn(0, brightnessFilters.lastIndex)
+    paint.colorFilter = brightnessFilters[index]
     drawIntoCanvas { canvas ->
-        canvas.saveLayer(bounds, brightnessPaint)
+        canvas.saveLayer(bounds, paint)
         drawContent()
         canvas.restore()
     }
