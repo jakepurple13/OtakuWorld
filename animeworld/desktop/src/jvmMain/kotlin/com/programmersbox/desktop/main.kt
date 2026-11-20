@@ -1,5 +1,10 @@
 package com.programmersbox.desktop
 
+import androidx.navigation3.runtime.NavKey
+import com.programmersbox.kmpuiviews.tabs.DownloadsDestination
+import com.programmersbox.kmpuiviews.tabs.TabKey
+import com.programmersbox.kmpuiviews.tabs.TabKeyProvider
+import com.programmersbox.kmpuiviews.tabs.TabLabel
 import com.programmersbox.kmpuiviews.utils.composables.transitions.rememberChapterRevealOrigin
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -75,6 +80,21 @@ fun main(args: Array<String>) {
         genericInfo = { singleOf(::GenericAnimeDesktop) },
         moduleBlock = {
             singleOf(::AnimeDesktopSettings)
+            single { DownloadsDestination(VideoViewerRoute) }
+            single {
+                object : TabKeyProvider {
+                    override fun keyOf(key: NavKey): TabKey? = when (key) {
+                        is VideoScreen -> TabKey.Chapter(key.episodeUrl ?: key.showPath)
+                        VideoViewerRoute -> TabKey.Downloads
+                        else -> null
+                    }
+
+                    override fun labelOf(key: NavKey): TabLabel? = when (key) {
+                        is VideoScreen -> TabLabel(key.showName, null, null)
+                        else -> null
+                    }
+                }
+            } bind TabKeyProvider::class
             single<ShortcutSection>(named("videoPlayerShortcuts")) { playerShortcutSection() }
             singleOf(::StorageHolder)
             single<SubtitleSettingsRepository> {

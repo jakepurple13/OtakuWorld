@@ -1,5 +1,13 @@
 package com.programmersbox.desktop
 
+import androidx.navigation3.runtime.NavKey
+import com.programmersbox.kmpuiviews.tabs.DownloadsDestination
+import com.programmersbox.kmpuiviews.tabs.TabKey
+import com.programmersbox.kmpuiviews.tabs.TabKeyProvider
+import com.programmersbox.kmpuiviews.tabs.TabLabel
+import com.programmersbox.manga.shared.downloads.DownloadRoute
+import com.programmersbox.manga.shared.reader.ReadViewModel
+import org.koin.dsl.bind
 import ca.gosyer.appdirs.AppDirs
 import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.kmpuiviews.BuildType
@@ -46,6 +54,21 @@ fun main(args: Array<String>) {
         },
         moduleBlock = {
             factoryOf(::DownloadedMediaHandler)
+            single { DownloadsDestination(DownloadRoute) }
+            single {
+                object : TabKeyProvider {
+                    override fun keyOf(key: NavKey): TabKey? = when (key) {
+                        is ReadViewModel.MangaReader -> key.mangaUrl?.let { TabKey.Chapter(it) }
+                        DownloadRoute -> TabKey.Downloads
+                        else -> null
+                    }
+
+                    override fun labelOf(key: NavKey): TabLabel? = when (key) {
+                        is ReadViewModel.MangaReader -> TabLabel(key.mangaTitle ?: "Reader", null, null)
+                        else -> null
+                    }
+                }
+            } bind TabKeyProvider::class
             single {
                 ExtensionWatcher(
                     extensionsDir = get<MangaDesktopSettings>()
