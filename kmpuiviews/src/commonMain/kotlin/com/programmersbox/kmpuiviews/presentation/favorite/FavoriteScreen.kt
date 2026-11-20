@@ -1,6 +1,8 @@
 package com.programmersbox.kmpuiviews.presentation.favorite
 
 import otakuworld.kmpuiviews.generated.resources.fav_searching_for
+import com.programmersbox.telemetry.events.FavoritesFiltered
+import com.programmersbox.telemetry.Analytics
 import otakuworld.kmpuiviews.generated.resources.fav_remove_keyword
 import otakuworld.kmpuiviews.generated.resources.fav_describe
 import com.programmersbox.kmpuiviews.presentation.components.ai.generatingBorder
@@ -133,6 +135,7 @@ fun FavoriteScreen(
     isHorizontal: Boolean = false,
     sourceRepository: SourceRepository = LocalSourcesRepository.current,
     favoritesRepository: FavoritesRepository = koinInject(),
+    analytics: Analytics = koinInject(),
     viewModel: FavoriteViewModel = koinViewModel(),
 ) {
     val navController = LocalNavActions.current
@@ -265,6 +268,7 @@ fun FavoriteScreen(
             onReset = viewModel::resetFilters,
             resultCount = viewModel.resultCount,
             onApply = {
+                analytics.log(FavoritesFiltered(viewModel.activeFilterCount, viewModel.sort.name.lowercase()))
                 showFilters = false
                 if (viewModel.activeFilterCount > 0) openLibrary = true
             },

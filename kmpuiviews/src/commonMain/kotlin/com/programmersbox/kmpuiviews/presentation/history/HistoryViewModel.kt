@@ -1,6 +1,9 @@
 package com.programmersbox.kmpuiviews.presentation.history
 
 import androidx.compose.runtime.derivedStateOf
+import com.programmersbox.telemetry.events.HistoryCleared
+import com.programmersbox.telemetry.NoOpAnalytics
+import com.programmersbox.telemetry.Analytics
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -51,7 +54,10 @@ sealed interface HistoryGroup {
 /** Items hidden from the list while the Undo snackbar is showing. */
 class PendingRemoval(val items: List<RecentModel>)
 
-class HistoryViewModel(private val dao: HistoryDao) : ViewModel() {
+class HistoryViewModel(
+    private val dao: HistoryDao,
+    private val analytics: Analytics = NoOpAnalytics,
+) : ViewModel() {
 
     val items = mutableStateListOf<RecentModel>()
 
@@ -162,6 +168,7 @@ class HistoryViewModel(private val dao: HistoryDao) : ViewModel() {
         viewModelScope.launch {
             delete(batch)
             pending.remove(batch)
+            analytics.log(HistoryCleared(HistoryCleared.ITEM))
         }
     }
 
@@ -171,6 +178,7 @@ class HistoryViewModel(private val dao: HistoryDao) : ViewModel() {
         viewModelScope.launch {
             withContext(Dispatchers.IO) { dao.deleteAllRecentHistory() }
             pending.clear()
+            analytics.log(HistoryCleared(HistoryCleared.ALL))
         }
     }
 

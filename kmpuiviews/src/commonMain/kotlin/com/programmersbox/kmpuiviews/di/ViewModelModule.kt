@@ -128,6 +128,7 @@ val viewModels: Module = module {
             navigationActions = get(),
             counts = get(),
             dailyOverviewEnabled = get<DailyOverviewSettings>().prefs.map { it.enabled },
+            analytics = get(),
         )
     }
 

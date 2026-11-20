@@ -1,6 +1,8 @@
 package com.programmersbox.kmpuiviews.presentation.favorite
 
 import com.programmersbox.kmpuiviews.domain.moodtags.MoodRepository
+import com.programmersbox.telemetry.events.FavoritesSearched
+import com.programmersbox.kmpuiviews.testing.FakeAnalytics
 import kotlinx.coroutines.CompletableDeferred
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
@@ -72,6 +74,8 @@ class FavoriteViewModelTest {
 
     private val moods by lazy { MoodRepository(database.itemDao(), FakeAiText(engine = null)) }
 
+    private val analytics = FakeAnalytics()
+
     private fun viewModel(ai: FakeAiText = FakeAiText(engine = null)) = FavoriteViewModel(
         sourceRepository = SourceRepository(),
         favoritesRepository = FavoritesRepository(
@@ -83,6 +87,7 @@ class FavoriteViewModelTest {
         searchRepository = FavoritesSearchRepository(database.itemDao(), notes.notesDao()),
         aiText = ai,
         moodRepository = moods,
+        analytics = analytics,
     ).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
 
     private suspend fun FavoriteViewModel.search(text: String) {
@@ -363,5 +368,15 @@ class FavoriteViewModelTest {
         moods.remove("u1", "cozy")
         awaitCondition { vm.resultCount == 2 }
         assertEquals(0, vm.activeFilterCount)
+    }
+
+    @Test
+    fun `favorites_searched fires for a query, never for an empty one`() = runTest {
+        val vm = viewModel()
+        vm.search("abc")
+        awaitCondition { analytics.events.any { it is FavoritesSearched } }
+        vm.search("")
+        assertTrue(analytics.events.all { it is FavoritesSearched }, analytics.events.toString())
+        assertEquals(1, analytics.events.size, analytics.events.toString())
     }
 }

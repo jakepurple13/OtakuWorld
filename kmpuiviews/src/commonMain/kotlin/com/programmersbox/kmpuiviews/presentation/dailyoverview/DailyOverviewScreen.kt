@@ -1,6 +1,9 @@
 package com.programmersbox.kmpuiviews.presentation.dailyoverview
 
 import androidx.compose.animation.BoundsTransform
+import com.programmersbox.telemetry.events.DailyOverviewOpened
+import com.programmersbox.telemetry.events.OpenedFrom
+import com.programmersbox.telemetry.Analytics
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.Animatable
@@ -147,8 +150,11 @@ private fun HideNavBarFromTransitionStart() {
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun DailyOverviewScreen(
+    from: String = OpenedFrom.OTHER,
     viewModel: DailyOverviewViewModel = koinViewModel(),
+    analytics: Analytics = koinInject(),
 ) {
+    LaunchedEffect(Unit) { analytics.log(DailyOverviewOpened(from)) }
     HideNavBarFromTransitionStart()
     val navActions = LocalNavActions.current
     val state by viewModel.uiState.collectAsStateWithLifecycle()

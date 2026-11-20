@@ -1,6 +1,9 @@
 package com.programmersbox.kmpuiviews.presentation.quickactions
 
 import androidx.compose.runtime.Composable
+import com.programmersbox.telemetry.events.QuickActionUsed
+import com.programmersbox.telemetry.AnalyticsEvent
+import com.programmersbox.kmpuiviews.testing.FakeAnalytics
 import com.programmersbox.telemetry.events.OpenedFrom
 import androidx.navigation3.runtime.NavKey
 import app.cash.turbine.test
@@ -231,8 +234,10 @@ class QuickActionsViewModelTest {
         Dispatchers.resetMain()
     }
 
+    private val analytics = FakeAnalytics()
+
     private fun vm(work: FakeWork = FakeWork().also { fakeWork = it }) =
-        QuickActionsViewModel(controller, work, fakeReports, fakeHandler, nav, counts, dailyOverviewEnabled)
+        QuickActionsViewModel(controller, work, fakeReports, fakeHandler, nav, counts, dailyOverviewEnabled, analytics)
 
     @Test
     fun runCheckStartsOnceAndCloses() = runTest {
@@ -601,5 +606,14 @@ class QuickActionsViewModelTest {
             assertEquals(ManualCheckState.Idle, state.checkState)
             assertEquals(0L, state.lastCheckedAt)
         }
+    }
+
+    @Test
+    fun runLogsActionAndSurface() = runTest {
+        val vm = vm()
+        controller.open(OpenOrigin.Bolt)
+        runCurrent()
+        vm.run(QuickAction.GlobalSearch)
+        assertEquals<List<AnalyticsEvent>>(listOf(QuickActionUsed("globalsearch", "bolt")), analytics.events)
     }
 }

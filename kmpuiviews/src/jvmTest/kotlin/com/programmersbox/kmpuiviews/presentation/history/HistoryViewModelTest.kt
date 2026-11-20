@@ -1,6 +1,9 @@
 package com.programmersbox.kmpuiviews.presentation.history
 
 import com.programmersbox.kmpuiviews.testing.clearAndJoin
+import com.programmersbox.telemetry.events.HistoryCleared
+import com.programmersbox.telemetry.AnalyticsEvent
+import com.programmersbox.kmpuiviews.testing.FakeAnalytics
 import androidx.lifecycle.ViewModelStore
 import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
@@ -61,7 +64,9 @@ class HistoryViewModelTest {
         timestamp = timestamp,
     )
 
-    private fun viewModel() = HistoryViewModel(dao = database.historyDao()).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
+    private val analytics = FakeAnalytics()
+
+    private fun viewModel() = HistoryViewModel(dao = database.historyDao(), analytics = analytics).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
 
     private suspend fun insert(vararg items: RecentModel) {
         items.forEach { database.historyDao().insertRecentlyViewed(it) }
@@ -245,5 +250,11 @@ class HistoryViewModelTest {
         assertEquals("3h", relativeTimeLabel((now - 3.hours).toEpochMilliseconds(), now, tz))
         assertEquals("2d", relativeTimeLabel((now - 2.days).toEpochMilliseconds(), now, tz))
         assertEquals("Oct 3", relativeTimeLabel((now - 27.days).toEpochMilliseconds(), now, tz))
+    }
+
+    @Test fun `clear all fires history_cleared all`() = runTest {
+        viewModel().clearAll()
+        awaitCondition { analytics.events.isNotEmpty() }
+        assertEquals<List<AnalyticsEvent>>(listOf(HistoryCleared(HistoryCleared.ALL)), analytics.events)
     }
 }

@@ -226,7 +226,7 @@ fun buildKmpGraph(): Module = module {
         )
     }
 
-    detailEntry<Screen.DailyOverview> { DailyOverviewScreen() }
+    detailEntry<Screen.DailyOverview> { DailyOverviewScreen(from = it.from) }
 
     detailEntry<Screen.DailyOverview.Settings> { DailyOverviewSettingsScreen() }
 

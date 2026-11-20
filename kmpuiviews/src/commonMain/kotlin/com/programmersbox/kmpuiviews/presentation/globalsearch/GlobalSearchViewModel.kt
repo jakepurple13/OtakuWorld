@@ -1,6 +1,10 @@
 package com.programmersbox.kmpuiviews.presentation.globalsearch
 
 import androidx.compose.foundation.text.input.TextFieldState
+import com.programmersbox.telemetry.events.Search
+import com.programmersbox.telemetry.Buckets
+import com.programmersbox.telemetry.NoOpAnalytics
+import com.programmersbox.telemetry.Analytics
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -39,6 +43,7 @@ class GlobalSearchViewModel(
     val dao: HistoryDao,
     private val exceptionDao: ExceptionDao,
     settings: NewSettingsHandling,
+    private val analytics: Analytics = NoOpAnalytics,
 ) : ViewModel() {
 
     private val languagesFlow = searchLanguagesState(sourceRepository, settings)
@@ -80,6 +85,13 @@ class GlobalSearchViewModel(
             //TODO: Add option to have live population or all at once
             searchFlow().collect()
             //searchAllFlow()
+            analytics.log(
+                Search(
+                    Search.GLOBAL,
+                    sourceCount = languagesFlow.first().sourcesToSearch().size,
+                    resultCount = Buckets.count(searchListPublisher.sumOf { it.data.size }),
+                )
+            )
             isRefreshing = false
             isSearching = false
         }
