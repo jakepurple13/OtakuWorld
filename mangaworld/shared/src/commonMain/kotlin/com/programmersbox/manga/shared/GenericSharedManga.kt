@@ -1,8 +1,6 @@
 package com.programmersbox.manga.shared
 
-import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingStepSpec
-import com.programmersbox.kmpuiviews.presentation.onboarding.HeroShape
-import androidx.compose.material.icons.filled.Check
+import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingAppConfig
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
@@ -59,7 +57,7 @@ import com.programmersbox.manga.shared.downloads.DownloadRoute
 import com.programmersbox.manga.shared.downloads.DownloadScreen
 import com.programmersbox.manga.shared.downloads.DownloadState
 import com.programmersbox.manga.shared.downloads.MangaDownloadManager
-import com.programmersbox.manga.shared.onboarding.ReaderOnboarding
+import com.programmersbox.manga.shared.onboarding.readerSetupStep
 import com.programmersbox.manga.shared.onboarding.SampleMangaPage
 import com.programmersbox.manga.shared.reader.ReadView
 import com.programmersbox.manga.shared.reader.ReadViewModel
@@ -346,14 +344,14 @@ abstract class GenericSharedManga(
 
     /** Onboarding page and tips; desktop adds these on top of its own preferences. */
     protected fun ComposeSettingsDsl.onboardingAndTips() {
+        onboardingConfig = OnboardingAppConfig(
+            genres = OnboardingAppConfig.Default.genres,
+            startLabel = "Start reading",
+            updateNoun = "chapter",
+            appStepTab = "Reader",
+        )
         onboardingSettings {
-            step(
-                OnboardingStepSpec(id = "app", title = "Reader", body = "", icon = Icons.Default.Check, shape = HeroShape.Hidden)
-            ) {
-                ReaderOnboarding(
-                    mangaSettingsHandling = mangaSettingsHandling,
-                )
-            }
+            readerSetupStep(mangaSettingsHandling)
         }
 
         tips {
