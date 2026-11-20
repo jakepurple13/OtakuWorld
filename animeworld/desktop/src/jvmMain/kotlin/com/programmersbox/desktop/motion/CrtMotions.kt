@@ -72,7 +72,7 @@ internal object CrtPowerOn : DesktopMotion {
 
     @Composable
     override fun BoxScope.Behind(time: () -> Int) {
-        Spacer(Modifier.matchParentSize().background(CrtRoom))
+        Spacer(Modifier.matchParentSize().background(AnimeRoom))
         Spacer(
             Modifier
                 .matchParentSize()
@@ -167,7 +167,7 @@ internal object CrtPowerOff : DesktopMotion {
 
     @Composable
     override fun BoxScope.Behind(time: () -> Int) {
-        Spacer(Modifier.matchParentSize().drawBehind { drawRect(CrtRoom, alpha = frame(time()).roomAlpha) })
+        Spacer(Modifier.matchParentSize().drawBehind { drawRect(AnimeRoom, alpha = frame(time()).roomAlpha) })
     }
 
     @Composable

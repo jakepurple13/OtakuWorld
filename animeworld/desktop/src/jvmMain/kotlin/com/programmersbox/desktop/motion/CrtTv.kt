@@ -35,9 +35,6 @@ import org.jetbrains.skia.Image as SkiaImage
  * (CSS `.room`, `.tv`, `.tv::after`, `.scr`, `.scan`, `.glow`).
  */
 
-/** `.room` background. */
-internal val CrtRoom = Color(0xFF06070A)
-
 /** `.tv` background: the screen while it is off. */
 private val CrtScreenOff = Color(0xFF0A0C10)
 
