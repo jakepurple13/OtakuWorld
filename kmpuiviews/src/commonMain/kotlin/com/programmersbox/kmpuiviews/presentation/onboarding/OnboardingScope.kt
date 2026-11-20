@@ -37,30 +37,33 @@ import androidx.compose.ui.unit.dp
 import com.programmersbox.kmpuiviews.utils.composables.modifiers.pagerStagger
 
 interface OnboardingScope {
-    fun item(content: @Composable () -> Unit)
+    fun step(spec: OnboardingStepSpec, content: @Composable () -> Unit)
 
     val size: Int
 
-    operator fun get(index: Int): @Composable () -> Unit
+    operator fun get(index: Int): OnboardingStepEntry
 }
 
 private class OnboardingScopeImpl(
     content: OnboardingScope.() -> Unit = {},
 ) : OnboardingScope {
-    val intervals: MutableIntervalList<@Composable () -> Unit> = MutableIntervalList()
+    val intervals: MutableIntervalList<OnboardingStepEntry> = MutableIntervalList()
 
     override val size: Int get() = intervals.size
 
-    override fun get(index: Int): @Composable (() -> Unit) = intervals[index].value
+    override fun get(index: Int): OnboardingStepEntry = intervals[index].value
 
     init {
         apply(content)
     }
 
-    override fun item(content: @Composable () -> Unit) {
-        intervals.addInterval(1, content)
+    override fun step(spec: OnboardingStepSpec, content: @Composable () -> Unit) {
+        intervals.addInterval(1, OnboardingStepEntry(spec, content))
     }
 }
+
+internal fun buildOnboardingScope(content: OnboardingScope.() -> Unit = {}): OnboardingScope =
+    OnboardingScopeImpl(content)
 
 @Composable
 fun rememberOnboardingScope(
@@ -103,7 +106,7 @@ fun Onboarding(
         verticalAlignment = verticalAlignment,
         pageContent = { page ->
             Box(Modifier.pagerStagger(state, page, index = 0)) {
-                stateHolder.SaveableStateProvider(page) { onboardingScope[page]() }
+                stateHolder.SaveableStateProvider(page) { onboardingScope[page].content() }
             }
         }
     )

@@ -1,5 +1,8 @@
 package com.programmersbox.manga.shared
 
+import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingStepSpec
+import com.programmersbox.kmpuiviews.presentation.onboarding.HeroShape
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
@@ -344,7 +347,9 @@ abstract class GenericSharedManga(
     /** Onboarding page and tips; desktop adds these on top of its own preferences. */
     protected fun ComposeSettingsDsl.onboardingAndTips() {
         onboardingSettings {
-            item {
+            step(
+                OnboardingStepSpec(id = "app", title = "Reader", body = "", icon = Icons.Default.Check, shape = HeroShape.Hidden)
+            ) {
                 ReaderOnboarding(
                     mangaSettingsHandling = mangaSettingsHandling,
                 )

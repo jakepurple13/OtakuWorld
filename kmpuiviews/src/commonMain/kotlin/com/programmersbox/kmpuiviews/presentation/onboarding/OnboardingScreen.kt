@@ -1,5 +1,7 @@
 package com.programmersbox.kmpuiviews.presentation.onboarding
 
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.Icons
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -56,25 +58,25 @@ fun OnboardingScreen(
     var practicingTip by remember { mutableStateOf(false) }
 
     val onboardingScope = rememberOnboardingScope {
-        item { WelcomeContent() }
+        step(tmpSpec("welcome", "Welcome")) { WelcomeContent() }
 
-        item { ThemeContent() }
+        step(tmpSpec("theme", "Theme")) { ThemeContent() }
 
-        item { SourcesContent() }
+        step(tmpSpec("sources", "Sources")) { SourcesContent() }
 
-        item {
+        step(tmpSpec("account", "Account")) {
             AccountContent(
                 navController = navController
             )
         }
 
-        item {
+        step(tmpSpec("general", "General")) {
             GeneralContent()
         }
 
         apply(customPreferences.onboardingSettings)
 
-        item {
+        step(tmpSpec("tips", "Tips")) {
             TipsContent(
                 onPracticeChange = { practicingTip = it },
                 header = {
@@ -87,7 +89,7 @@ fun OnboardingScreen(
         }
 
         //This should ALWAYS be last
-        item { FinishContent() }
+        step(tmpSpec("finish", "Finish")) { FinishContent() }
     }
 
     var hasSeenOnboarding by dataStoreHandling
@@ -180,3 +182,7 @@ fun OnboardingScreen(
         )
     }
 }
+
+// Temporary until the story-steps screen replaces this file.
+private fun tmpSpec(id: String, title: String) =
+    OnboardingStepSpec(id, title, "", Icons.Default.Check, HeroShape.Hidden)

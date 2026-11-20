@@ -1,5 +1,8 @@
 package com.programmersbox.desktop
 
+import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingStepSpec
+import com.programmersbox.kmpuiviews.presentation.onboarding.HeroShape
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DesktopMac
 import androidx.compose.material.icons.filled.VideoLibrary
@@ -167,7 +170,9 @@ open class GenericAnimeDesktop(
         playerSettings { DesktopPlayerSettings() }
 
         onboardingSettings {
-            item { DesktopPlayerOnboarding() }
+            step(
+                OnboardingStepSpec(id = "app", title = "Player", body = "", icon = Icons.Default.Check, shape = HeroShape.Hidden)
+            ) { DesktopPlayerOnboarding() }
         }
     }
 }

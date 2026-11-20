@@ -1,5 +1,8 @@
 package com.programmersbox.animeworld
 
+import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingStepSpec
+import com.programmersbox.kmpuiviews.presentation.onboarding.HeroShape
+import androidx.compose.material.icons.filled.Check
 import com.programmersbox.kmpuiviews.utils.composables.transitions.rememberChapterRevealOrigin
 import androidx.compose.foundation.layout.Box
 import com.programmersbox.kmpuiviews.utils.composables.transitions.ChapterOpenMotion
@@ -513,7 +516,9 @@ class GenericAnime(
         }
 
         onboardingSettings {
-            item {
+            step(
+                OnboardingStepSpec(id = "app", title = "Player", body = "", icon = Icons.Default.Check, shape = HeroShape.Hidden)
+            ) {
                 PlayerOnboarding(
                     animeDataStoreHandling = animeDataStoreHandling,
                     onSubtitlesClick = { navController.navigate(SubtitleSettingsRoute) },
