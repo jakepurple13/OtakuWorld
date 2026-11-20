@@ -36,9 +36,9 @@ class SetupRepository(
     fun setup(scope: CoroutineScope) {
         // The stored source at startup is not a choice; only later changes are
         dataStoreHandling.currentService.asFlow()
-            .filterNotNull()
             .distinctUntilChanged()
             .drop(1)
+            .filterNotNull()
             .onEach { analytics.log(SourceSelected(sourceNamer?.name(it) ?: it, genericInfo?.sourceType.orEmpty())) }
             .launchIn(scope)
 

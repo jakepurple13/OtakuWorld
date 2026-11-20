@@ -379,4 +379,14 @@ class FavoriteViewModelTest {
         assertTrue(analytics.events.all { it is FavoritesSearched }, analytics.events.toString())
         assertEquals(1, analytics.events.size, analytics.events.toString())
     }
+
+    @Test
+    fun `favorites_searched does not repeat when the data changes under the same query`() = runTest {
+        val vm = viewModel()
+        vm.search("abc")
+        awaitCondition { analytics.events.any { it is FavoritesSearched } }
+        database.itemDao().insertFavorite(DbModel("abc two", "", "https://x/2", "", "Src"))
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { kotlinx.coroutines.delay(500) }
+        assertEquals(1, analytics.events.count { it is FavoritesSearched }, analytics.events.toString())
+    }
 }

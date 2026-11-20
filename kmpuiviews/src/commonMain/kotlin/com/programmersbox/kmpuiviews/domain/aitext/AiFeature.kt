@@ -193,3 +193,19 @@ private fun rewriteInstruction(style: RewriteStyle) = when (style) {
 private fun listTitles(titles: List<String>) = titles.take(AiTextPrompts.MAX_LIST_TITLES).joinToString("\n")
 
 private fun listPrompt(prepared: String) = "Titles in the list:\n$prepared"
+
+/** Stable name for analytics; class names are renamed by R8 in release builds. */
+val AiFeature<*>.telemetryName: String
+    get() = when (this) {
+        AiFeature.Recap -> "recap"
+        AiFeature.Tldr -> "tldr"
+        AiFeature.Proofread -> "proofread"
+        is AiFeature.Rewrite -> "rewrite"
+        AiFeature.ListNames -> "list_names"
+        AiFeature.ListDescription -> "list_description"
+        AiFeature.TrySample -> "try_sample"
+        AiFeature.UpdateSummary -> "update_summary"
+        AiFeature.SearchKeywords -> "search_keywords"
+        AiFeature.MoodTags -> "mood_tags"
+        AiFeature.ExplainError -> "explain_error"
+    }

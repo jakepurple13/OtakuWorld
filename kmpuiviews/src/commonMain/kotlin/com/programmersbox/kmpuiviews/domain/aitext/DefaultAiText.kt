@@ -49,7 +49,7 @@ class DefaultAiText(
         }
 
     override fun <I> run(feature: AiFeature<I>, input: I): Flow<String> = flow {
-        val featureName = feature::class.simpleName?.lowercase() ?: "unknown"
+        val featureName = feature.telemetryName
         val started = TimeSource.Monotonic.markNow()
         fun log(engine: String, outcome: String) =
             analytics.log(AiTaskRun(featureName, engine, outcome, Buckets.durationMs(started.elapsedNow().inWholeMilliseconds)))

@@ -174,4 +174,16 @@ class SetupRepositoryTest {
 
         assertEquals<List<AnalyticsEvent>>(listOf(SourceSelected("Picked", "")), analytics.events)
     }
+
+    @Test fun `first source pick on a fresh install is logged`() = runTest {
+        database = createTestItemDatabase()
+        job = Job()
+        val dataStore = createTestDataStoreHandling()
+        setupRepository(dataStoreHandling = dataStore).setup(CoroutineScope(job))
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { kotlinx.coroutines.delay(300) }
+        dataStore.currentService.set("First")
+        awaitCondition { analytics.events.isNotEmpty() }
+
+        assertEquals<List<AnalyticsEvent>>(listOf(SourceSelected("First", "")), analytics.events)
+    }
 }

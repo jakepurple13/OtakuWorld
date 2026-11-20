@@ -344,4 +344,16 @@ class DefaultAiTextTest {
         runCatching { aiText(FakeEngine(SummaryEngineId.Gemma, EngineStatus.Unavailable)).run(AiFeature.Tldr, "text").toList() }
         assertEquals(AiTaskRun.UNAVAILABLE, (analytics.events.single() as AiTaskRun).outcome)
     }
+
+    @Test
+    fun `feature telemetry names are explicit, not class names`() {
+        val names = listOf(
+            AiFeature.Recap, AiFeature.Tldr, AiFeature.Proofread, AiFeature.ListNames, AiFeature.ListDescription,
+            AiFeature.TrySample, AiFeature.UpdateSummary, AiFeature.SearchKeywords, AiFeature.MoodTags, AiFeature.ExplainError,
+        ).map { it.telemetryName }
+        assertEquals(
+            listOf("recap", "tldr", "proofread", "list_names", "list_description", "try_sample", "update_summary", "search_keywords", "mood_tags", "explain_error"),
+            names,
+        )
+    }
 }

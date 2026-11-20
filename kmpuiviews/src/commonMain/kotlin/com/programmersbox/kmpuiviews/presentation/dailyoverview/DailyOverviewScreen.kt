@@ -154,7 +154,14 @@ fun DailyOverviewScreen(
     viewModel: DailyOverviewViewModel = koinViewModel(),
     analytics: Analytics = koinInject(),
 ) {
-    LaunchedEffect(Unit) { analytics.log(DailyOverviewOpened(from)) }
+    // Saved per back-stack entry, so returning from Settings or rotating does not log again
+    var openLogged by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        if (!openLogged) {
+            openLogged = true
+            analytics.log(DailyOverviewOpened(from))
+        }
+    }
     HideNavBarFromTransitionStart()
     val navActions = LocalNavActions.current
     val state by viewModel.uiState.collectAsStateWithLifecycle()

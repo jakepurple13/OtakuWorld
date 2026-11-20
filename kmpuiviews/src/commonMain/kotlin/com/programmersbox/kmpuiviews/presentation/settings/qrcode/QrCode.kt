@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.presentation.settings.qrcode
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.LaunchedEffect
 import com.programmersbox.telemetry.events.ItemShared
 import com.programmersbox.telemetry.Analytics
@@ -101,7 +102,13 @@ fun ShareViaQrCode(
     onClose: () -> Unit,
 ) {
     val analytics = koinInject<Analytics>()
-    LaunchedEffect(Unit) { analytics.log(ItemShared(ItemShared.QR)) }
+    var qrLogged by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        if (!qrLogged) {
+            qrLogged = true
+            analytics.log(ItemShared(ItemShared.QR))
+        }
+    }
     var includeLogo by rememberUseLogoInQrCode()
     var useCoverColors by rememberUseCoverColorsInQrCode()
     val swatchType by rememberSwatchType()

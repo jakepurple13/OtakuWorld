@@ -104,6 +104,8 @@ class FavoriteViewModel(
 
     var sort by mutableStateOf(FavoriteSort.TITLE)
 
+    private var lastLoggedSearch: String? = null
+
     var quickFilters by mutableStateOf<Set<QuickFilter>>(emptySet())
         private set
 
@@ -231,7 +233,11 @@ class FavoriteViewModel(
             .onEach { (query, hits) ->
                 searchHits = hits
                 searchQuery = query
-                if (query.isNotBlank()) analytics.log(FavoritesSearched(Buckets.count(hits.size)))
+                // Room re-emits on any table write; log a search once per new query, not per refresh
+                if (query.isNotBlank() && query != lastLoggedSearch) {
+                    lastLoggedSearch = query
+                    analytics.log(FavoritesSearched(Buckets.count(hits.size)))
+                }
             }
             .launchIn(viewModelScope)
     }
