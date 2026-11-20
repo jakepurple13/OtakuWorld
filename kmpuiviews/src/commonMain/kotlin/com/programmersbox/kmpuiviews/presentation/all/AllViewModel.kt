@@ -1,6 +1,10 @@
 package com.programmersbox.kmpuiviews.presentation.all
 
 import androidx.compose.runtime.getValue
+import com.programmersbox.telemetry.events.Search
+import com.programmersbox.telemetry.Buckets
+import com.programmersbox.telemetry.NoOpAnalytics
+import com.programmersbox.telemetry.Analytics
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -33,6 +37,7 @@ class AllViewModel(
     dao: ItemDao,
     private val currentSourceRepository: CurrentSourceRepository,
     favoritesRepository: FavoritesRepository,
+    private val analytics: Analytics = NoOpAnalytics,
 ) : ViewModel() {
 
     val observeNetwork = createConnectivity()
@@ -114,6 +119,7 @@ class AllViewModel(
             .onEach {
                 searchList = it
                 isSearching = false
+                analytics.log(Search(Search.SOURCE, sourceCount = 1, resultCount = Buckets.count(it.size)))
             }
             .onCompletion { if (it !is CancellationException) isSearching = false }
             .launchIn(viewModelScope)

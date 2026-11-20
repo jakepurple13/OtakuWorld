@@ -1,6 +1,11 @@
 package com.programmersbox.kmpuiviews.repository
 
 import androidx.room3.Room
+import com.programmersbox.favoritesdatabase.CustomListItem
+import com.programmersbox.telemetry.events.ListItemAdded
+import com.programmersbox.telemetry.events.ListCreated
+import com.programmersbox.telemetry.AnalyticsEvent
+import com.programmersbox.kmpuiviews.testing.FakeAnalytics
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.programmersbox.favoritesdatabase.ListDatabase
 import com.programmersbox.kmpuiviews.SystemAlerter
@@ -26,7 +31,10 @@ class ListRepositoryTest {
         listDao = database.listDao(),
         systemAlerter = SystemAlerter(),
         authManager = FakeAuthManager(loggedIn = loggedIn),
+        analytics = analytics,
     )
+
+    private val analytics = FakeAnalytics()
 
     @BeforeTest
     fun setUp() {
@@ -188,5 +196,16 @@ class ListRepositoryTest {
         val item = database.listDao().getCustomListItemByUuid(uuid)
         assertNotNull(item)
         assertFalse(item.useBiometric)
+    }
+
+    @Test
+    fun `create and add fire list events, createList does not`() = runTest {
+        val repo = repository()
+        repo.create("Mine")
+        val uuid = database.listDao().getAllListsSync().single().item.uuid
+        repo.addToList(uuid, "Secret", "d", "https://x/1", "", "Src")
+        repo.createList(CustomListItem(uuid = "imported", name = "Imported"))
+
+        assertEquals<List<AnalyticsEvent>>(listOf(ListCreated, ListItemAdded(listCount = 1)), analytics.events)
     }
 }

@@ -1,6 +1,12 @@
 package com.programmersbox.kmpuiviews.presentation.onboarding
 
 import androidx.compose.foundation.layout.Column
+import kotlinx.coroutines.flow.drop
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.LaunchedEffect
+import com.programmersbox.telemetry.events.OnboardingFinished
+import com.programmersbox.telemetry.events.OnboardingStep
+import com.programmersbox.telemetry.Analytics
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -96,6 +102,11 @@ fun OnboardingScreen(
 
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState { onboardingScope.size }
+    val analytics = koinInject<Analytics>()
+    LaunchedEffect(pagerState) {
+        // Reaching page n means page n - 1 was completed
+        snapshotFlow { pagerState.currentPage }.drop(1).collect { analytics.log(OnboardingStep(step = it)) }
+    }
 
     NormalOtakuScaffold(
         topBar = {
@@ -112,6 +123,7 @@ fun OnboardingScreen(
                                 confirmButton = {
                                     TextButton(
                                         onClick = {
+                                            analytics.log(OnboardingFinished(skipped = true, stepsSeen = pagerState.currentPage + 1))
                                             hasSeenOnboarding = true
                                             skipOnboarding = false
                                             navController.popBackStack()
@@ -156,6 +168,7 @@ fun OnboardingScreen(
                             if (pagerState.canScrollForward) {
                                 scope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) }
                             } else {
+                                analytics.log(OnboardingFinished(skipped = false, stepsSeen = onboardingScope.size))
                                 hasSeenOnboarding = true
                                 navController.popBackStack()
                             }

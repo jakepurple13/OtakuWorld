@@ -3,6 +3,7 @@
 package com.programmersbox.kmpuiviews.presentation.components
 
 import androidx.compose.animation.Crossfade
+import com.programmersbox.telemetry.events.OpenedFrom
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -287,7 +288,7 @@ fun optionsKmpSheet(
                 sheet = sheetState,
                 scope = scope,
                 optionsSheetValues = item,
-                onOpen = { navController.details(item.itemModel) },
+                onOpen = { navController.details(item.itemModel, OpenedFrom.LONG_PRESS) },
                 onGlobalSearch = { navController.globalSearch(it) },
                 onDismiss = { itemInfo.value = null },
             )
@@ -319,7 +320,7 @@ fun optionsKmpSheetList(
                 sheet = sheetState,
                 scope = scope,
                 optionsSheetValuesList = item,
-                onOpen = { navController.details(it.itemModel) },
+                onOpen = { navController.details(it.itemModel, OpenedFrom.LONG_PRESS) },
                 onGlobalSearch = { navController.globalSearch(it) },
                 onDismiss = { itemInfo.value = null },
                 utilities = utilities
@@ -708,7 +709,7 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.NewOptionsItems(
             ) { target ->
                 if (target != null) {
                     QuickActionCard(
-                        onClick = { scope.launch { favoritesRepository.removeFavorite(target) } },
+                        onClick = { scope.launch { favoritesRepository.removeFavorite(target, userAction = true) } },
                         icon = Icons.Default.Favorite,
                         title = "Favorite",
                         modifier = Modifier.fillMaxWidth()
@@ -724,7 +725,8 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.NewOptionsItems(
                                         url = optionsSheetValues.url,
                                         imageUrl = optionsSheetValues.imageUrl,
                                         source = optionsSheetValues.serviceName,
-                                    )
+                                    ),
+                                    from = OpenedFrom.LONG_PRESS,
                                 )
                             }
                         },

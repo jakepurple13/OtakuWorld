@@ -1,6 +1,11 @@
 package com.programmersbox.kmpuiviews.presentation.settings.qrcode
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.LaunchedEffect
+import com.programmersbox.telemetry.events.ItemShared
+import com.programmersbox.telemetry.Analytics
+import com.programmersbox.telemetry.events.OpenedFrom
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -96,6 +101,14 @@ fun ShareViaQrCode(
     apiService: String,
     onClose: () -> Unit,
 ) {
+    val analytics = koinInject<Analytics>()
+    var qrLogged by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        if (!qrLogged) {
+            qrLogged = true
+            analytics.log(ItemShared(ItemShared.QR))
+        }
+    }
     var includeLogo by rememberUseLogoInQrCode()
     var useCoverColors by rememberUseCoverColorsInQrCode()
     val swatchType by rememberSwatchType()
@@ -285,7 +298,7 @@ fun ScanQrCode() {
                                             ?.onEach { m ->
                                                 showLoadingDialog = false
                                                 navController.remove(Screen.ScanQrCodeScreen)
-                                                navController.details(m)
+                                                navController.details(m, OpenedFrom.DEEP_LINK)
                                             }
                                             ?.collect()
                                     }

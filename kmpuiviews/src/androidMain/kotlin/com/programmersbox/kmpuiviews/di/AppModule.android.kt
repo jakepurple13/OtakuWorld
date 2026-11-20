@@ -108,6 +108,7 @@ actual fun platformModule(): Module = module {
             cacheDir = File(androidContext().cacheDir, "models"),
             scope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
             verify = get<LocalModel>()::verify,
+            analytics = get(),
         )
     }
     single<ModelImports> { PlatformModelImports(get(), get()) }

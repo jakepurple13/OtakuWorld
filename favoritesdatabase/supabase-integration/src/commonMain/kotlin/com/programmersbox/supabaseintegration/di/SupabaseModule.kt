@@ -82,7 +82,8 @@ fun supabaseModule() = module {
             authManager = get(),
             connectivityMonitor = get(),
             fullSyncHandler = get(),
-            configFlow = getOrNull<SyncConfigRepository>()?.listenForChanges() ?: flowOf(SyncConfig())
+            configFlow = getOrNull<SyncConfigRepository>()?.listenForChanges() ?: flowOf(SyncConfig()),
+            analytics = get(),
         )
     }
     single<BackupManager> { BackupManagerImpl(get(), get(), get()) }

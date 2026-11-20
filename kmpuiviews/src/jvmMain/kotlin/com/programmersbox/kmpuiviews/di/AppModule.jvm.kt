@@ -109,6 +109,7 @@ actual fun platformModule(): Module = module {
             cacheDir = File(dataDir, "models-cache"),
             scope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
             verify = get<LocalModel>()::verify,
+            analytics = get(),
         )
     }
     single<ModelImports> { PlatformModelImports(get(), get()) }

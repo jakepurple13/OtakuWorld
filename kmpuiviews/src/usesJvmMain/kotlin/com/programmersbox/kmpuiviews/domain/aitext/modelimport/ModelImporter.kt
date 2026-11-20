@@ -1,6 +1,9 @@
 package com.programmersbox.kmpuiviews.domain.aitext.modelimport
 
 import kotlinx.coroutines.CancellationException
+import com.programmersbox.telemetry.events.AiModelInstalled
+import com.programmersbox.telemetry.NoOpAnalytics
+import com.programmersbox.telemetry.Analytics
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -34,6 +37,7 @@ class ModelImporter(
     /** Loads the model once and throws when it can't be used. */
     private val verify: suspend (File) -> Unit,
     private val usableSpace: (File) -> Long = { it.usableSpace },
+    private val analytics: Analytics = NoOpAnalytics,
 ) {
     private val _state = MutableStateFlow<ImportState>(ImportState.Idle)
     val state: StateFlow<ImportState> = _state.asStateFlow()
@@ -90,6 +94,7 @@ class ModelImporter(
                 }
                 Files.move(checking.toPath(), File(modelsDir, name).toPath(), StandardCopyOption.REPLACE_EXISTING)
                 if (replacing != null && replacing != name) remove(replacing)
+                analytics.log(AiModelInstalled(engine = "local", via = AiModelInstalled.IMPORT))
             } catch (e: CancellationException) {
                 throw e
             } catch (_: NotAModelException) {

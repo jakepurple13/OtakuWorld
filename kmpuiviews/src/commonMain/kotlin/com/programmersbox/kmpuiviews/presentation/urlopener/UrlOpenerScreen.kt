@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.presentation.urlopener
 
 import androidx.compose.foundation.clickable
+import com.programmersbox.telemetry.events.OpenedFrom
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -168,7 +169,7 @@ fun UrlOpenerScreen(
                 ) { Text("Save for later") }
 
                 Button(
-                    onClick = { viewModel.kmpItemModel?.let { navActions.details(it) } },
+                    onClick = { viewModel.kmpItemModel?.let { navActions.details(it, OpenedFrom.DEEP_LINK) } },
                     enabled = viewModel.kmpItemModel != null,
                     shapes = ButtonDefaults.shapes()
                 ) { Text("Open") }

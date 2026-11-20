@@ -1,6 +1,9 @@
 package com.programmersbox.kmpuiviews.backup
 
 import com.programmersbox.favoritesdatabase.CustomList
+import com.programmersbox.telemetry.events.BackupCreated
+import com.programmersbox.telemetry.AnalyticsEvent
+import com.programmersbox.kmpuiviews.testing.FakeAnalytics
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.CustomListItem
 import com.programmersbox.favoritesdatabase.ListDao
@@ -250,5 +253,23 @@ class BackupWizardViewModelTest {
         results.value = listOf(ItemResult("a", timeTaken = "2ms", success = true))
         awaitCondition { vm.state.value.step == BackupWizardStep.Complete }
         assertEquals("2ms", vm.state.value.results.single().timeTaken)
+    }
+
+    @Test
+    fun `complete backup logs backup_created once with overall success`() = runTest {
+        val analytics = FakeAnalytics()
+        val results = MutableStateFlow<List<ItemResult>>(emptyList())
+        val vm = BackupWizardViewModel<String>(
+            listOf(FakeUiInfo("a"), FakeUiInfo("b")),
+            resultsFlow = results,
+            startBackup = { _, _, _ -> },
+            analytics = analytics,
+        )
+        vm.goToReview()
+        vm.confirm("file.zip")
+        results.value = listOf(ItemResult("a", timeTaken = "1ms", success = true), ItemResult("b", timeTaken = "1ms", success = false))
+        awaitCondition { vm.state.value.step == BackupWizardStep.Complete }
+
+        assertEquals<List<AnalyticsEvent>>(listOf(BackupCreated(BackupCreated.FILE, success = false)), analytics.events)
     }
 }

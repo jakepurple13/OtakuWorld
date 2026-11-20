@@ -1,6 +1,10 @@
 package com.programmersbox.kmpuiviews.presentation.quickactions
 
 import androidx.lifecycle.ViewModel
+import com.programmersbox.telemetry.events.QuickActionUsed
+import com.programmersbox.telemetry.NoOpAnalytics
+import com.programmersbox.telemetry.Analytics
+import com.programmersbox.telemetry.events.OpenedFrom
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckReportStore
 import com.programmersbox.kmpuiviews.presentation.Screen
@@ -45,6 +49,7 @@ class QuickActionsViewModel(
     counts: QuickActionCounts,
     /** [com.programmersbox.kmpuiviews.domain.dailyoverview.DailyOverviewPrefs.enabled]. */
     dailyOverviewEnabled: Flow<Boolean>,
+    private val analytics: Analytics = NoOpAnalytics,
 ) : ViewModel() {
     /** Every surface (card, ⌘K, Actions menu) lists these; the Daily overview row leaves when the feature is off. */
     val visibleActions: StateFlow<List<QuickAction>> = dailyOverviewEnabled
@@ -115,6 +120,9 @@ class QuickActionsViewModel(
     )
 
     fun run(action: QuickAction) {
+        // Read before closeAll(); null means it came from the desktop Actions menu
+        val surface = controller.open.value?.name?.lowercase() ?: "menu"
+        analytics.log(QuickActionUsed(action.name.lowercase(), surface))
         controller.closeAll()
         when (action) {
             QuickAction.CheckForUpdates -> {
@@ -127,8 +135,8 @@ class QuickActionsViewModel(
             }
 
             // Already showing it: don't stack a second copy.
-            QuickAction.DailyOverview -> if (!navigationActions.isOnTop(Screen.DailyOverview)) {
-                navigationActions.navigate(Screen.DailyOverview)
+            QuickAction.DailyOverview -> if (!navigationActions.isOnTop(Screen.DailyOverview())) {
+                navigationActions.navigate(Screen.DailyOverview(OpenedFrom.QUICK_ACTION))
             }
             QuickAction.ScanQrCode -> navigationActions.scanQrCode()
             QuickAction.GlobalSearch -> navigationActions.globalSearch()

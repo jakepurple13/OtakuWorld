@@ -1,6 +1,9 @@
 package com.programmersbox.kmpuiviews.domain.moodtags
 
 import kotlinx.coroutines.sync.withLock
+import com.programmersbox.telemetry.events.MoodTagAdded
+import com.programmersbox.telemetry.NoOpAnalytics
+import com.programmersbox.telemetry.Analytics
 import kotlinx.coroutines.sync.Mutex
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.MoodTagRow
@@ -24,6 +27,7 @@ import kotlin.time.Clock
 class MoodRepository(
     private val dao: ItemDao,
     private val aiText: AiText,
+    private val analytics: Analytics = NoOpAnalytics,
 ) {
     private val serializer = ListSerializer(String.serializer())
 
@@ -44,8 +48,13 @@ class MoodRepository(
             .sortedBy { it.lowercase() }
     }
 
-    suspend fun toggle(url: String, mood: String) = update(url) { current ->
-        if (current.any { it.equals(mood, ignoreCase = true) }) current.without(mood) else current + mood
+    suspend fun toggle(url: String, mood: String) {
+        var added = false
+        update(url) { current ->
+            if (current.any { it.equals(mood, ignoreCase = true) }) current.without(mood)
+            else (current + mood).also { added = true }
+        }
+        if (added) analytics.log(MoodTagAdded(if (Moods.isBuiltIn(mood)) MoodTagAdded.PRESET else MoodTagAdded.CUSTOM))
     }
 
     suspend fun remove(url: String, mood: String) = update(url) { it.without(mood) }
@@ -58,6 +67,7 @@ class MoodRepository(
         val name = Moods.cleanCustom(raw) ?: return false
         val canonical = (Moods.builtIn + customMoods.first()).firstOrNull { it.equals(name, ignoreCase = true) } ?: name
         update(url) { current -> if (current.none { it.equals(canonical, ignoreCase = true) }) current + canonical else current }
+        analytics.log(MoodTagAdded(if (Moods.isBuiltIn(canonical)) MoodTagAdded.PRESET else MoodTagAdded.CUSTOM))
         return true
     }
 
@@ -81,6 +91,7 @@ class MoodRepository(
         if (picked.isEmpty()) return false
         // Read the moods again under the lock: the user may have edited them while the AI worked
         update(url) { current -> current + picked.filter { pick -> current.none { it.equals(pick, ignoreCase = true) } } }
+        analytics.log(MoodTagAdded(MoodTagAdded.AI))
         return true
     }
 
