@@ -4,6 +4,6 @@ import com.programmersbox.kmpuiviews.motion.DesktopMotionCatalog
 
 fun mangaMotionCatalog(): DesktopMotionCatalog = DesktopMotionCatalog(
     appName = "MangaWorld",
-    launch = listOf(SushiUnroll),
-    quit = listOf(SushiRollUp),
+    launch = listOf(SushiUnroll, InkPanels, Impact),
+    quit = listOf(SushiRollUp, ScreentoneFade, TheEndPanel),
 )

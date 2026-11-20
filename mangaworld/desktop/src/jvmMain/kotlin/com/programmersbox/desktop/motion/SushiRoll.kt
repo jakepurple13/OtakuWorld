@@ -111,15 +111,6 @@ private val CucumberSkin = Color(0xFF2F6B2A)
 private val StickLight = Color(0xFFD29E66)
 private val StickDark = Color(0xFFA8743F)
 
-/** 1cqw in pixels. */
-private val DrawScope.cqw get() = size.width / 100
-
-/**
- * Unit for vertical moves: 1cqw on the mockup's 16:10 stage (height = 62.5cqw), growing with taller
- * hosts so off-screen drops and lifts still clear the window.
- */
-private val DrawScope.verticalCqw get() = maxOf(cqw, size.height / 62.5f)
-
 /** Roll centre x before travel: `.rw` left 6cqw + half its 20cqw width. */
 private const val ROLL_X = 16f
 
