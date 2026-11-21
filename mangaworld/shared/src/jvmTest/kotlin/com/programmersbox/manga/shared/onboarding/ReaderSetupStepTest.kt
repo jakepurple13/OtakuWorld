@@ -49,13 +49,16 @@ class ReaderSetupStepTest {
         )
     }
 
-    private fun ComposeUiTest.show(handling: MangaNewSettingsHandling) = setContent {
+    private fun ComposeUiTest.show(
+        handling: MangaNewSettingsHandling,
+        loaders: List<ImageLoaderType> = workingImageLoaders,
+    ) = setContent {
         MaterialExpressiveTheme {
             CompositionLocalProvider(
                 LocalReducedMotionOverride provides true,
                 LocalWindowSizeClass provides WindowSizeClass.calculateFromSize(DpSize(400.dp, 3000.dp)),
             ) {
-                val scope = rememberOnboardingScope { readerSetupStep(handling) }
+                val scope = rememberOnboardingScope { readerSetupStep(handling, loaders) }
                 scope[0].content()
             }
         }
@@ -124,13 +127,19 @@ class ReaderSetupStepTest {
     }
 
     @Test
+    fun image_loader_hidden_with_single_working_loader() = runComposeUiTest {
+        show(handling(), listOf(ImageLoaderType.Kamel))
+        onNodeWithText("Image loader").assertDoesNotExist()
+        onNodeWithText("Kamel").assertDoesNotExist()
+        onNodeWithText("Telephoto and Panpf add pinch-to-zoom.").assertDoesNotExist()
+    }
+
+    @Test
     fun image_loader_options() = runComposeUiTest {
-        show(handling())
-        // Same filtering as the Settings screen: only loaders that work are offered.
-        listOf(ImageLoaderType.Kamel, ImageLoaderType.Glide, ImageLoaderType.Telephoto, ImageLoaderType.Panpf)
-            .forEach { type ->
-                val node = onNodeWithText(type.name)
-                if (type in workingImageLoaders) node.assertExists() else node.assertDoesNotExist()
-            }
+        val loaders = listOf(ImageLoaderType.Kamel, ImageLoaderType.Glide, ImageLoaderType.Telephoto, ImageLoaderType.Panpf)
+        show(handling(), loaders)
+        onNodeWithText("Image loader").assertExists()
+        loaders.forEach { onNodeWithText(it.name).assertExists() }
+        onNodeWithText("Telephoto and Panpf add pinch-to-zoom.").assertExists()
     }
 }

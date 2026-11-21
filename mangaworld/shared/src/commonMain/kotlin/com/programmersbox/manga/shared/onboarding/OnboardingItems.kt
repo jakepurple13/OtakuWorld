@@ -115,7 +115,9 @@ private val ReaderType.summaryLabel: String
     }
 
 /** Step 5 for MangaWorld: reader type, page gap, page number style, bar, gestures, insets and image loader. */
-fun OnboardingScope.readerSetupStep(handling: MangaNewSettingsHandling) {
+fun OnboardingScope.readerSetupStep(handling: MangaNewSettingsHandling) = readerSetupStep(handling, workingImageLoaders)
+
+internal fun OnboardingScope.readerSetupStep(handling: MangaNewSettingsHandling, imageLoaders: List<ImageLoaderType>) {
     val spec = OnboardingStepSpec(
         id = "app",
         title = "Set up the reader",
@@ -128,12 +130,16 @@ fun OnboardingScope.readerSetupStep(handling: MangaNewSettingsHandling) {
             type.summaryLabel
         },
     )
-    step(spec) { ReaderSetupContent(spec, handling) }
+    step(spec) { ReaderSetupContent(spec, handling, imageLoaders) }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ReaderSetupContent(spec: OnboardingStepSpec, handling: MangaNewSettingsHandling) {
+private fun ReaderSetupContent(
+    spec: OnboardingStepSpec,
+    handling: MangaNewSettingsHandling,
+    imageLoaders: List<ImageLoaderType>,
+) {
     val scope = rememberCoroutineScope()
     var readerType by handling.rememberReaderType()
     var style by handling.rememberPageIndicatorStyle()
@@ -252,24 +258,24 @@ private fun ReaderSetupContent(spec: OnboardingStepSpec, handling: MangaNewSetti
                 }
             }
 
-            // Same filtering as the Settings screen: loaders that do not work are not offered.
-            val savedLoader = if (imageLoader in workingImageLoaders) imageLoader else ImageLoaderType.Kamel
-            SectionLabel("Image loader")
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                workingImageLoaders.forEach { option ->
-                    FilterChip(
-                        selected = savedLoader == option,
-                        onClick = { imageLoader = option },
-                        label = { Text(option.name) },
-                        leadingIcon = { Icon(Icons.Default.Image, null, Modifier.size(18.dp)) },
-                    )
+            // Only offered when there is a real choice; same filtering as the Settings screen.
+            if (imageLoaders.size > 1) {
+                val savedLoader = if (imageLoader in imageLoaders) imageLoader else ImageLoaderType.Kamel
+                SectionLabel("Image loader")
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    imageLoaders.forEach { option ->
+                        FilterChip(
+                            selected = savedLoader == option,
+                            onClick = { imageLoader = option },
+                            label = { Text(option.name) },
+                            leadingIcon = { Icon(Icons.Default.Image, null, Modifier.size(18.dp)) },
+                        )
+                    }
                 }
-            }
-            if (ImageLoaderType.Telephoto in workingImageLoaders || ImageLoaderType.Panpf in workingImageLoaders) {
                 Text(
                     "Telephoto and Panpf add pinch-to-zoom.",
                     style = MaterialTheme.typography.bodySmall,
