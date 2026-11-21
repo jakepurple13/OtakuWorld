@@ -1,6 +1,12 @@
 package com.programmersbox.kmpuiviews.presentation.details
 
 import com.programmersbox.kmpuiviews.domain.moodtags.MoodRepository
+import com.programmersbox.telemetry.events.TranslationUsed
+import com.programmersbox.telemetry.events.ItemViewed
+import com.programmersbox.telemetry.NoOpAnalytics
+import com.programmersbox.telemetry.Analytics
+import com.programmersbox.kmpuiviews.telemetry.TelemetrySourceNamer
+import com.programmersbox.telemetry.events.OpenedFrom
 import androidx.compose.material3.ColorScheme
 import com.programmersbox.kmpuiviews.theme.SchemeInputs
 import androidx.compose.runtime.MutableState
@@ -94,7 +100,13 @@ class DetailsViewModel(
     private val tldrCache: TldrCache,
     moodRepository: MoodRepository,
     private val crashReporter: CrashReporter,
+    private val analytics: Analytics = NoOpAnalytics,
+    private val sourceNamer: TelemetrySourceNamer? = null,
 ) : ViewModel() {
+
+    private val openedFrom = details?.from ?: OpenedFrom.OTHER
+    private var viewLogged = false
+
 
     //private val details: Screen.DetailsScreen.Details? = handle.toRoute()
 
@@ -200,6 +212,11 @@ class DetailsViewModel(
             ?.map { it.getOrThrow() }
             ?.onEach { item ->
                 info = item
+                if (!viewLogged) {
+                    viewLogged = true
+                    val source = item.source.serviceName
+                    analytics.log(ItemViewed(sourceNamer?.name(source) ?: source, genericInfo.sourceType, openedFrom))
+                }
                 detailState = DetailState.Success(
                     info = item,
                     action = DetailFavoriteAction.Add(item)
@@ -374,6 +391,7 @@ class DetailsViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             progress.value = true
             description = translationHandler.translate(info!!.description)
+            analytics.log(TranslationUsed(TranslationUsed.DESCRIPTION))
             progress.value = false
         }
     }
@@ -393,7 +411,7 @@ class DetailsViewModel(
             val original = description
             _tldrTranslating.value = true
             val text = try {
-                translationHandler.translate(original)
+                translationHandler.translate(original).also { analytics.log(TranslationUsed(TranslationUsed.TLDR)) }
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {
@@ -490,7 +508,7 @@ class DetailsViewModel(
                 val db = action.info.toDbModel(action.info.chapters.size)
                 addRemoveFavoriteJob?.cancel()
                 addRemoveFavoriteJob = viewModelScope.launch(Dispatchers.IO) {
-                    favoritesRepository.addFavorite(db)
+                    favoritesRepository.addFavorite(db, from = OpenedFrom.DETAILS)
                 }
             }
 
@@ -498,7 +516,7 @@ class DetailsViewModel(
                 val db = action.info.toDbModel(action.info.chapters.size)
                 addRemoveFavoriteJob?.cancel()
                 addRemoveFavoriteJob = viewModelScope.launch(Dispatchers.IO) {
-                    favoritesRepository.removeFavorite(db)
+                    favoritesRepository.removeFavorite(db, userAction = true)
                 }
             }
         }

@@ -104,7 +104,7 @@ val appModule = module {
     single<AiSettings> { DataStoreAiSettings(get()) }
     singleOf(::UpdateSummaryCache)
     singleOf(::MoodRepository)
-    single<AiText> { DefaultAiText(getAll(), getOrNull(), get()) }
+    single<AiText> { DefaultAiText(getAll(), getOrNull(), get(), analytics = get()) }
     singleOf(::MediaUpdateChecker)
     singleOf(::DataStoreUpdateCheckReportStore) bind UpdateCheckReportStore::class
     singleOf(::SharedCoverBitmaps)

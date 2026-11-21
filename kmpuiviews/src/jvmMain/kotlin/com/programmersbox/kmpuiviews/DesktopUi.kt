@@ -45,7 +45,9 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.window.ApplicationScope
 import androidx.compose.ui.window.Tray
 import androidx.compose.ui.window.TrayState
+import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
+import androidx.compose.ui.window.rememberWindowState
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
@@ -62,6 +64,34 @@ import com.programmersbox.kmpextensionloader.SourceLoader
 import com.programmersbox.kmpmodels.ExampleService
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.di.kmpModule
+import com.programmersbox.kmpuiviews.motion.AppQuitHandler
+import com.programmersbox.kmpuiviews.motion.PendingQuitReply
+import com.programmersbox.kmpuiviews.motion.QuitController
+import com.programmersbox.kmpuiviews.motion.REDUCED_MOTION_REFRESH_MILLIS
+import com.programmersbox.kmpuiviews.motion.QuitHost
+import com.programmersbox.kmpuiviews.motion.QuitOverlay
+import com.programmersbox.kmpuiviews.motion.WindowPicture
+import com.programmersbox.kmpuiviews.motion.quitPlan
+import com.programmersbox.kmpuiviews.motion.recordInto
+import com.programmersbox.kmpuiviews.motion.refreshSystemReducesMotion
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.window.WindowPlacement
+import com.programmersbox.kmpuiviews.motion.DesktopMotionCatalog
+import com.programmersbox.kmpuiviews.motion.MotionConditions
+import com.programmersbox.kmpuiviews.motion.MotionHost
+import com.programmersbox.kmpuiviews.motion.MotionPhase
+import com.programmersbox.kmpuiviews.motion.MotionRun
+import com.programmersbox.kmpuiviews.motion.MotionSettingsRoute
+import com.programmersbox.kmpuiviews.motion.MotionSettingsScreen
+import com.programmersbox.kmpuiviews.motion.OffMotion
+import com.programmersbox.kmpuiviews.motion.OverlayPlatform
+import com.programmersbox.kmpuiviews.motion.Play
+import com.programmersbox.kmpuiviews.motion.launchMotion
+import com.programmersbox.kmpuiviews.motion.resolve
+import com.programmersbox.kmpuiviews.motion.skipMotionOnInput
+import com.programmersbox.kmpuiviews.motion.systemReducesMotion
 import com.programmersbox.kmpuiviews.presentation.HomeNav
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.quickactions.OpenOrigin
@@ -99,10 +129,13 @@ import dev.nucleusframework.window.material.rememberMaterialWindowStyle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.koin.compose.KoinApplication
+import org.koin.compose.getKoin
 import org.koin.compose.koinInject
 import org.koin.core.KoinApplication
 import org.koin.core.definition.KoinDefinition
@@ -111,9 +144,12 @@ import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.scope.Scope
 import org.koin.dsl.koinConfiguration
+import org.koin.dsl.navigation3.navigation
 import org.koin.dsl.module
 import com.programmersbox.telemetry.noOpTelemetryModule
+import com.programmersbox.kmpuiviews.telemetry.TelemetryController
 import java.io.File
+import kotlin.system.exitProcess
 
 private class DesktopViewModelStoreOwner : ViewModelStoreOwner {
     override val viewModelStore: ViewModelStore = ViewModelStore()
@@ -139,28 +175,36 @@ fun desktopSetup(
     if (BackgroundWorkHandlerImpl.setupSyncCheckers(args)) return
     NativeSplash.start()
     val desktopViewModelStoreOwner = DesktopViewModelStoreOwner()
-    application {
-        CompositionLocalProvider(
-            LocalViewModelStoreOwner provides desktopViewModelStoreOwner
-        ) {
-            BaseDesktopUi(
-                title = name,
-                moduleBlock = {
-                    modules(
-                        module {
-                            single { appConfig() }
-                            single<UpdatePrefs> { DataStoreUpdatePrefs(get()) }
-                            single<UpdaterEngine> { NucleusUpdaterEngine(channel = name.lowercase()) }
-                            single { DesktopUpdater(get(), get(), CoroutineScope(Dispatchers.IO + SupervisorJob())) }
-                            single { jvmAppLogo() }
-                            genericInfo(this).bindsPlatformGenericInfo()
-                            moduleBlock()
-                        }
-                    )
-                }
-            )
+    val quitReply = PendingQuitReply()
+    // application() returns only after the composition is disposed, so every onDispose teardown has run before
+    // the held OS quit is answered (answering it exits the JVM on macOS).
+    quitReply.releaseAfter {
+        application(exitProcessOnExit = false) {
+            CompositionLocalProvider(
+                LocalViewModelStoreOwner provides desktopViewModelStoreOwner
+            ) {
+                BaseDesktopUi(
+                    title = name,
+                    quitReply = quitReply,
+                    moduleBlock = {
+                        modules(
+                            module {
+                                single { appConfig() }
+                                single<UpdatePrefs> { DataStoreUpdatePrefs(get()) }
+                                single<UpdaterEngine> { NucleusUpdaterEngine(channel = name.lowercase()) }
+                                single { DesktopUpdater(get(), get(), CoroutineScope(Dispatchers.IO + SupervisorJob())) }
+                                single { jvmAppLogo() }
+                                navigation<MotionSettingsRoute> { MotionSettingsScreen() }
+                                genericInfo(this).bindsPlatformGenericInfo()
+                                moduleBlock()
+                            }
+                        )
+                    }
+                )
+            }
         }
     }
+    exitProcess(0)
 }
 
 fun baseDesktopSetup(
@@ -206,6 +250,7 @@ fun baseDesktopSetup(
 @Composable
 fun ApplicationScope.BaseDesktopUi(
     title: String,
+    quitReply: PendingQuitReply,
     moduleBlock: KoinApplication.() -> Unit,
 ) {
     InternalDesktopUi(
@@ -219,6 +264,7 @@ fun ApplicationScope.BaseDesktopUi(
             )
         },
         exitApplication = ::exitApplication,
+        quitReply = quitReply,
         moduleBlock = moduleBlock
     )
 }
@@ -227,12 +273,14 @@ fun ApplicationScope.BaseDesktopUi(
 @Composable
 fun NucleusApplicationScope.BaseDesktopUi(
     title: String,
+    quitReply: PendingQuitReply,
     moduleBlock: KoinApplication.() -> Unit,
 ) {
     InternalDesktopUi(
         title = title,
         tray = {},
         exitApplication = ::exitApplication,
+        quitReply = quitReply,
         moduleBlock = moduleBlock
     )
 }
@@ -243,6 +291,8 @@ private fun InternalDesktopUi(
     title: String,
     tray: @Composable () -> Unit,
     exitApplication: () -> Unit,
+    // Held OS quit; the caller answers it with PendingQuitReply.releaseAfter once the app loop has ended.
+    quitReply: PendingQuitReply,
     moduleBlock: KoinApplication.() -> Unit,
 ) {
     KoinApplication(
@@ -283,8 +333,10 @@ private fun InternalDesktopUi(
             val sourceRepository = koinInject<SourceRepository>()
             val setupRepository = koinInject<SetupRepository>()
             val extensionWatcher = koinInject<ExtensionWatcher>()
+            val telemetryController = koinInject<TelemetryController>()
             LaunchedEffect(Unit) {
                 setupRepository.setup(this)
+                telemetryController.start(this)
                 val exampleService = ExampleService.getSourceInformation()
                 extensionWatcher
                     .observeExtensionsDir()
@@ -313,31 +365,120 @@ private fun InternalDesktopUi(
                 backgroundWorkHandler.setupPeriodicCheckers()
             }
 
-            OtakuDecoratedWindow(
-                title = title,
-                onCloseRequest = exitApplication,
-                showQuickActions = true,
-            ) {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    //UrlOpenerScreen()
-                    //ScanQrCode()
-                    val genericInfo = koinInject<KmpGenericInfo>()
-                    val customSettings = remember {
-                        ComposeSettingsDsl().apply(genericInfo.composeCustomPreferences())
-                    }
-                    val windowSize = calculateWindowSizeClass()
-                    HomeNav(
-                        genericInfo = genericInfo,
-                        windowSize = windowSize,
-                        bottomBarAdditions = {},
-                        customPreferences = customSettings,
+            val windowState = rememberWindowState()
+            val settings = koinInject<MangaDesktopSettings>()
+            val koin = getKoin()
+            val catalog = remember { koin.getOrNull<DesktopMotionCatalog>() }
+            val launchRun = remember {
+                val key = runBlocking { settings.launchAnimation.get() }
+                val chosen = catalog?.resolve(MotionPhase.Launch, key) ?: OffMotion
+                MotionRun(
+                    launchMotion(
+                        chosen,
+                        // Off never reads the system setting (it runs a process); otherwise this first read blocks once.
+                        MotionConditions(chosen !== OffMotion && systemReducesMotion(), platform = OverlayPlatform.current()),
                     )
-                    val updater = koinInject<DesktopUpdater>()
-                    LaunchedEffect(Unit) { updater.checkOnLaunch() }
-                    UpdateLaunchDialog(updater)
-                    JustUpdatedSnackbar(updater)
+                )
+            }
+            // Keeps systemReducesMotion()'s cache fresh off the UI thread, so the quit read never runs a process.
+            LaunchedEffect(Unit) {
+                withContext(Dispatchers.IO) {
+                    while (true) {
+                        refreshSystemReducesMotion()
+                        delay(REDUCED_MOTION_REFRESH_MILLIS)
+                    }
                 }
             }
+            val picture = remember { WindowPicture() }
+            var contentHeight by remember { mutableStateOf(Dp.Unspecified) }
+            var contentColors by remember { mutableStateOf<ColorScheme?>(null) }
+            val quitController = remember {
+                QuitController(
+                    plan = {
+                        val key = runBlocking { settings.quitAnimation.get() }
+                        val chosen = catalog?.resolve(MotionPhase.Quit, key) ?: OffMotion
+                        val plan = quitPlan(
+                            chosen,
+                            MotionConditions(
+                                chosen !== OffMotion && systemReducesMotion(),
+                                fullscreen = windowState.placement == WindowPlacement.Fullscreen,
+                                minimized = windowState.isMinimized,
+                                platform = OverlayPlatform.current(),
+                            ),
+                        )
+                        // The overlay needs the window's real position.
+                        if (windowState.position.isSpecified) plan else {
+                            println("Quit motion: window position unspecified, playing in-window")
+                            plan.copy(host = QuitHost.InWindow)
+                        }
+                    },
+                    launch = { launchRun },
+                    // The held OS quit is answered by the caller after the app loop ends, never here: answering exits the
+                    // JVM, and exitApplication() only schedules the disposal.
+                    exit = exitApplication,
+                )
+            }
+            // A request arriving after exit is a no-op; its held answer is still sent once the app loop ends.
+            AppQuitHandler(quitReply, quitController::requestQuit)
+            val quitInWindow = (quitController.state as? QuitController.State.Playing)
+                ?.takeIf { it.plan.host == QuitHost.InWindow }
+                ?.run
+            OtakuDecoratedWindow(
+                title = title,
+                onCloseRequest = quitController::requestQuit,
+                state = windowState,
+                // Hidden once exiting too, so the content never shows unfaded before the window goes.
+                visible = !quitController.hideMainWindow && quitController.state != QuitController.State.Exited,
+                showQuickActions = true,
+                onAnyKey = { launchRun.skip() },
+            ) {
+                val colors = MaterialTheme.colorScheme
+                SideEffect { contentColors = colors }
+                launchRun.Play()
+                quitInWindow?.Play(onEnd = quitController::finished)
+                val activeRun = quitInWindow ?: launchRun
+                MotionHost(
+                    motion = if (activeRun.finished) OffMotion else activeRun.motion,
+                    time = { activeRun.timeMillis },
+                    modifier = Modifier.fillMaxSize().skipMotionOnInput(launchRun),
+                ) {
+                    val density = LocalDensity.current
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .recordInto(picture)
+                            .onSizeChanged { contentHeight = with(density) { it.height.toDp() } }
+                    ) {
+                        //UrlOpenerScreen()
+                        //ScanQrCode()
+                        val genericInfo = koinInject<KmpGenericInfo>()
+                        val customSettings = remember {
+                            ComposeSettingsDsl().apply(genericInfo.composeCustomPreferences())
+                        }
+                        val windowSize = calculateWindowSizeClass()
+                        HomeNav(
+                            genericInfo = genericInfo,
+                            windowSize = windowSize,
+                            bottomBarAdditions = {},
+                            customPreferences = customSettings,
+                        )
+                        val updater = koinInject<DesktopUpdater>()
+                        LaunchedEffect(Unit) { updater.checkOnLaunch() }
+                        UpdateLaunchDialog(updater)
+                        JustUpdatedSnackbar(updater)
+                    }
+                }
+            }
+
+            val chromeColors = contentColors ?: MaterialTheme.colorScheme
+            QuitOverlay(
+                controller = quitController,
+                picture = picture,
+                windowState = windowState,
+                contentHeight = { contentHeight },
+                titleBarColor = rememberMaterialTitleBarStyle(chromeColors).colors.background,
+                surfaceColor = chromeColors.surface,
+            )
 
             // Tray must come after Window: the Skiko graphics implementation is registered
             // when the window's ComposeContainer is created, and Tray converts its icon
@@ -432,7 +573,10 @@ fun BaseWindow(
 private fun OtakuDecoratedWindow(
     title: String,
     onCloseRequest: () -> Unit,
+    state: WindowState = rememberWindowState(),
+    visible: Boolean = true,
     showQuickActions: Boolean = false,
+    onAnyKey: () -> Unit = {},
     content: @Composable () -> Unit,
 ) {
     val quickActionsController = if (showQuickActions) koinInject<QuickActionsController>() else null
@@ -451,8 +595,11 @@ private fun OtakuDecoratedWindow(
     ) {
         DecoratedWindow(
             onCloseRequest = onCloseRequest,
+            state = state,
+            visible = visible,
             title = title,
             onPreviewKeyEvent = { event ->
+                if (event.type == KeyEventType.KeyDown) onAnyKey()
                 when {
                     quickActionsController == null -> false
                     !isMacOs && isQuickActionsShortcut(event, isMac = false) -> {

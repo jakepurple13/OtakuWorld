@@ -1,6 +1,9 @@
 package com.programmersbox.kmpuiviews.repository
 
 import com.programmersbox.favoritesdatabase.ItemDatabase
+import com.programmersbox.telemetry.events.SourceSelected
+import com.programmersbox.telemetry.AnalyticsEvent
+import com.programmersbox.kmpuiviews.testing.FakeAnalytics
 import com.programmersbox.kmpmodels.ExampleService
 import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpmodels.SourceRepository
@@ -53,7 +56,10 @@ class SetupRepositoryTest {
         dataStoreHandling = dataStoreHandling,
         appUpdateCheck = appUpdateCheck,
         currentSourceRepository = currentSourceRepository,
+        analytics = analytics,
     )
+
+    private val analytics = FakeAnalytics()
 
     @AfterTest
     fun tearDown() {
@@ -154,5 +160,30 @@ class SetupRepositoryTest {
         awaitCondition { currentSourceRepository.asFlow().value != null }
 
         assertTrue(currentSourceRepository.asFlow().value is ExampleService)
+    }
+
+    @Test fun `source_selected fires on a change, not for the stored source at startup`() = runTest {
+        database = createTestItemDatabase()
+        job = Job()
+        val dataStore = createTestDataStoreHandling()
+        dataStore.currentService.set("Stored")
+        setupRepository(dataStoreHandling = dataStore).setup(CoroutineScope(job))
+        awaitCondition { true }
+        dataStore.currentService.set("Picked")
+        awaitCondition { analytics.events.isNotEmpty() }
+
+        assertEquals<List<AnalyticsEvent>>(listOf(SourceSelected("Picked", "")), analytics.events)
+    }
+
+    @Test fun `first source pick on a fresh install is logged`() = runTest {
+        database = createTestItemDatabase()
+        job = Job()
+        val dataStore = createTestDataStoreHandling()
+        setupRepository(dataStoreHandling = dataStore).setup(CoroutineScope(job))
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { kotlinx.coroutines.delay(300) }
+        dataStore.currentService.set("First")
+        awaitCondition { analytics.events.isNotEmpty() }
+
+        assertEquals<List<AnalyticsEvent>>(listOf(SourceSelected("First", "")), analytics.events)
     }
 }

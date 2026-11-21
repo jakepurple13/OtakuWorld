@@ -65,6 +65,10 @@ kotlin {
             runtimeOnly("org.jetbrains.skiko:skiko-awt-runtime-${compose.desktop.currentOs.substringAfter("desktop-jvm-").substringBefore(':')}")
             implementation(desktopLibs.kotlinx.coroutines.swing)
         }
+
+        jvmTest.dependencies {
+            implementation(commonLibs.kotlin.test)
+        }
     }
 }
 

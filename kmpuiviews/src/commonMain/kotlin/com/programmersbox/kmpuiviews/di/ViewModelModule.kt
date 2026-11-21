@@ -77,6 +77,7 @@ val viewModels: Module = module {
             listDao = get(),
             resultsFlow = get<BackgroundWorkHandler>().backupResultsFlow(),
             startBackup = { file, keys, listIds -> get<BackgroundWorkHandler>().startBackup(file, keys, listIds) },
+            analytics = get(),
         )
     }
     viewModel {
@@ -86,6 +87,7 @@ val viewModels: Module = module {
             peekListContents = { file -> get<Backup>().peekListContents(file) },
             resultsFlow = get<BackgroundWorkHandler>().restoreResultsFlow(),
             startRestore = { file, keys, listIds -> get<BackgroundWorkHandler>().startRestore(file, keys, listIds) },
+            analytics = get(),
         )
     }
     viewModelOf(::SettingViewModel)
@@ -128,6 +130,7 @@ val viewModels: Module = module {
             navigationActions = get(),
             counts = get(),
             dailyOverviewEnabled = get<DailyOverviewSettings>().prefs.map { it.enabled },
+            analytics = get(),
         )
     }
 

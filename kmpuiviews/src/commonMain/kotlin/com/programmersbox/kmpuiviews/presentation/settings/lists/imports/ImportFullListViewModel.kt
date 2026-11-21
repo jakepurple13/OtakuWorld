@@ -1,6 +1,10 @@
 package com.programmersbox.kmpuiviews.presentation.settings.lists.imports
 
 import androidx.compose.runtime.getValue
+import com.programmersbox.telemetry.events.ListImported
+import com.programmersbox.telemetry.Buckets
+import com.programmersbox.telemetry.NoOpAnalytics
+import com.programmersbox.telemetry.Analytics
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -22,6 +26,7 @@ import kotlin.uuid.Uuid
 class ImportFullListViewModel(
     private val listRepository: ListRepository,
     savedStateHandle: SavedStateHandle,
+    private val analytics: Analytics = NoOpAnalytics,
 ) : ViewModel() {
 
     private val document = savedStateHandle
@@ -67,6 +72,7 @@ class ImportFullListViewModel(
             listRepository.createList(it.item.copy(uuid = newUUID))
             it.list.forEach { item -> listRepository.addItem(item.copy(uniqueId = Uuid.random().toString(), uuid = newUUID)) }
         }
+        analytics.log(ListImported(Buckets.count(importingList.sumOf { it.list.size }), ListImported.FULL))
     }
         .onSuccess { printLogs { "Read!" } }
         .onFailure { it.printStackTrace() }

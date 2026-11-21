@@ -2,6 +2,8 @@ package com.programmersbox.kmpuiviews.presentation.details
 
 
 import androidx.compose.foundation.layout.WindowInsets
+import com.programmersbox.telemetry.events.ItemShared
+import com.programmersbox.telemetry.Analytics
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.BottomAppBar
@@ -190,6 +192,7 @@ private fun DetailsScreenInternal(
     val handling = LocalSettingsHandling.current
     val navActions = LocalNavActions.current
     val qrCodeRepository = koinInject<QrCodeRepository>()
+    val shareAnalytics = koinInject<Analytics>()
     val historyDao = LocalHistoryDao.current
     val heatMapDao = koinInject<HeatMapDao>()
     val favoritesRepository: FavoritesRepository = koinInject()
@@ -355,6 +358,7 @@ private fun DetailsScreenInternal(
                                 },
                                 shareChapter = {
                                     scope.launch {
+                                        shareAnalytics.log(ItemShared(ItemShared.LINK))
                                         qrCodeRepository.shareUrl(
                                             url = it.url,
                                             title = it.name
@@ -569,6 +573,7 @@ private fun DetailLoading(
     uriHandler: UriHandler = LocalUriHandler.current,
 ) {
     val qrCodeRepository = koinInject<QrCodeRepository>()
+    val shareAnalytics = koinInject<Analytics>()
     val scope = rememberCoroutineScope()
     Scaffold(
         topBar = {
@@ -585,6 +590,7 @@ private fun DetailLoading(
                     IconButton(
                         onClick = {
                             scope.launch {
+                                shareAnalytics.log(ItemShared(ItemShared.LINK))
                                 qrCodeRepository.shareUrl(
                                     details.itemModel?.url.orEmpty(),
                                     details.itemModel?.title.orEmpty()
@@ -720,6 +726,7 @@ private fun DetailError(
     state: DetailState.Error,
 ) {
     val qrCodeRepository = koinInject<QrCodeRepository>()
+    val shareAnalytics = koinInject<Analytics>()
     val scope = rememberCoroutineScope()
     Scaffold(
         topBar = {
@@ -736,6 +743,7 @@ private fun DetailError(
                     IconButton(
                         onClick = {
                             scope.launch {
+                                shareAnalytics.log(ItemShared(ItemShared.LINK))
                                 qrCodeRepository.shareUrl(
                                     details.itemModel?.url.orEmpty(),
                                     details.itemModel?.title.orEmpty()

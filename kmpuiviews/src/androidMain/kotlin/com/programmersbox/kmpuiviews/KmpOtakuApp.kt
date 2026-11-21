@@ -54,6 +54,7 @@ import org.koin.core.context.startKoin
 import org.koin.core.logger.Level
 import org.koin.core.module.Module
 import org.koin.dsl.module
+import com.programmersbox.kmpuiviews.telemetry.TelemetryController
 import com.programmersbox.kmpuiviews.telemetry.koinCrashReporter
 import java.util.UUID
 
@@ -89,6 +90,8 @@ abstract class KmpOtakuApp : Application(), Configuration.Provider {
         NotificationGroups.setupNotificationGroups(this)
 
         koinSetup()
+
+        get<TelemetryController>().start(GlobalScope)
 
         GlobalScope.launch(Dispatchers.IO) { get<SourceLoader>().blockingLoad() }
 

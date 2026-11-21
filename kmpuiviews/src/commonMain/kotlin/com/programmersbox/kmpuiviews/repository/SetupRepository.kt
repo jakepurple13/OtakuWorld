@@ -1,6 +1,13 @@
 package com.programmersbox.kmpuiviews.repository
 
 import com.programmersbox.datastore.DataStoreHandling
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.filterNotNull
+import com.programmersbox.kmpuiviews.KmpGenericInfo
+import com.programmersbox.kmpuiviews.telemetry.TelemetrySourceNamer
+import com.programmersbox.telemetry.events.SourceSelected
+import com.programmersbox.telemetry.NoOpAnalytics
+import com.programmersbox.telemetry.Analytics
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.SourceOrder
 import com.programmersbox.kmpmodels.SourceRepository
@@ -22,8 +29,19 @@ class SetupRepository(
     private val dataStoreHandling: DataStoreHandling,
     private val appUpdateCheck: AppUpdateCheck,
     private val currentSourceRepository: CurrentSourceRepository,
+    private val analytics: Analytics = NoOpAnalytics,
+    private val sourceNamer: TelemetrySourceNamer? = null,
+    private val genericInfo: KmpGenericInfo? = null,
 ) {
     fun setup(scope: CoroutineScope) {
+        // The stored source at startup is not a choice; only later changes are
+        dataStoreHandling.currentService.asFlow()
+            .distinctUntilChanged()
+            .drop(1)
+            .filterNotNull()
+            .onEach { analytics.log(SourceSelected(sourceNamer?.name(it) ?: it, genericInfo?.sourceType.orEmpty())) }
+            .launchIn(scope)
+
         sourceRepository
             .sources
             .onEach {

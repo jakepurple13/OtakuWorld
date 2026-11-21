@@ -29,6 +29,9 @@ import com.programmersbox.kmpuiviews.testing.createTestDataStoreHandling
 import com.programmersbox.kmpuiviews.testing.createTestNewSettingsHandling
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.LocalWindowSizeClass
+import com.programmersbox.kmpuiviews.testing.FakeAnalytics
+import com.programmersbox.telemetry.events.OnboardingFinished
+import com.programmersbox.telemetry.events.OnboardingStep
 import kotlinx.coroutines.runBlocking
 import java.lang.reflect.Proxy
 import kotlin.test.Test
@@ -59,6 +62,8 @@ class OnboardingScreenTest {
     } as NavigationActions
 
     private val order = listOf("welcome", "look", "layout", "sources", "app", "sync", "updates", "tips", "done")
+
+    private val analytics = FakeAnalytics()
 
     private fun ComposeUiTest.show(): DataStoreHandling {
         val dataStore = createTestDataStoreHandling()
@@ -97,6 +102,7 @@ class OnboardingScreenTest {
                         catalogs = { emptyList() },
                         sync = { syncStep(nav, false, { { {} } }, { {} }, { false }) },
                         tips = emptyList(),
+                        analytics = analytics,
                     )
                 }
             }
@@ -140,6 +146,11 @@ class OnboardingScreenTest {
         onNodeWithTag(OnboardingTags.Next).performClick()
         waitUntil(timeoutMillis = 5_000) { runBlocking { dataStore.hasGoneThroughOnboarding.getOrNull() } == true }
         assertEquals(listOf("popBackStack"), calls)
+        assertEquals<Any>(OnboardingFinished(skipped = false, stepsSeen = order.size), analytics.events.last())
+        assertEquals(
+            (1 until order.size).map { OnboardingStep(step = it) },
+            analytics.events.filterIsInstance<OnboardingStep>(),
+        )
     }
 
     @Test
@@ -149,6 +160,7 @@ class OnboardingScreenTest {
         onNodeWithTag(OnboardingTags.SkipConfirm).performClick()
         waitUntil(timeoutMillis = 5_000) { runBlocking { dataStore.hasGoneThroughOnboarding.getOrNull() } == true }
         assertEquals(listOf("popBackStack"), calls)
+        assertEquals<List<Any>>(listOf(OnboardingFinished(skipped = true, stepsSeen = 1)), analytics.events)
     }
 
     @Test

@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.presentation.all
 
 import androidx.compose.animation.AnimatedVisibility
+import com.programmersbox.telemetry.events.OpenedFrom
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
@@ -200,7 +201,7 @@ fun AllScreen(
                         onLongPress = { item, c -> optionsSheet = item },
                         paddingValues = LocalNavHostPadding.current,
                         modifier = Modifier
-                    ) { scope.launch { biometric.openIfNotIncognito(it) } }
+                    ) { scope.launch { biometric.openIfNotIncognito(it, OpenedFrom.ALL) } }
                 }
             }
         }
@@ -279,7 +280,7 @@ fun AllScreen(
                     onLongPress = { item, c -> itemInfoChange(item) },
                     paddingValues = paddingValues,
                     modifier = Modifier
-                ) { scope.launch { biometric.openIfNotIncognito(it) } }
+                ) { scope.launch { biometric.openIfNotIncognito(it, OpenedFrom.ALL) } }
             }
             OtakuPullToRefreshDefaults.ScalingIndicator(
                 isRefreshing = isRefreshing,

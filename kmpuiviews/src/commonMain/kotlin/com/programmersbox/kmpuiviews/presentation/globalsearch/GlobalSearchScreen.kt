@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.presentation.globalsearch
 
 import androidx.compose.animation.AnimatedVisibility
+import com.programmersbox.telemetry.events.OpenedFrom
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -401,7 +402,7 @@ private fun Content(
                                     SearchCoverCard(
                                         model = m,
                                         onLongPress = { c -> onLongPress(m) }
-                                    ) { scope.launch { biometrics.openIfNotIncognito(m) } }
+                                    ) { scope.launch { biometrics.openIfNotIncognito(m, OpenedFrom.SEARCH) } }
                                 }
                             }
                         }

@@ -24,6 +24,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+            implementation(projects.telemetry)
             implementation(project.dependencies.platform(commonLibs.supabase.bom))
             implementation(commonLibs.compose.material3)
             implementation(commonLibs.supabase.postgrest)

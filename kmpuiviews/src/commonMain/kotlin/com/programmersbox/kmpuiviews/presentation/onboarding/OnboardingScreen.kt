@@ -6,6 +6,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +38,10 @@ import com.programmersbox.kmpuiviews.presentation.tips.Tip
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
+import com.programmersbox.telemetry.Analytics
+import com.programmersbox.telemetry.events.OnboardingFinished
+import com.programmersbox.telemetry.events.OnboardingStep
+import kotlinx.coroutines.flow.drop
 import org.koin.compose.koinInject
 
 /** Steps that get a summary row on Done, in this order ("app" only when the app contributes one). */
@@ -48,6 +54,7 @@ fun OnboardingScreen(
     dataStoreHandling: DataStoreHandling = koinInject(),
     appConfig: AppConfig = koinInject(),
     handling: NewSettingsHandling = koinInject(),
+    analytics: Analytics = koinInject(),
 ) {
     HideNavBarWhileOnScreen()
 
@@ -58,6 +65,7 @@ fun OnboardingScreen(
         appName = appConfig.appName,
         handling = handling,
         catalogs = { rememberOnboardingCatalogs() },
+        analytics = analytics,
     )
 }
 
@@ -72,6 +80,7 @@ internal fun OnboardingContent(
     catalogs: @Composable () -> List<CatalogInfo>,
     sync: OnboardingScope.() -> Unit = { syncStep(navController) },
     tips: List<Tip>? = null,
+    analytics: Analytics? = null,
 ) {
     val config = customPreferences.onboardingConfig
 
@@ -115,7 +124,19 @@ internal fun OnboardingContent(
 
     val pagerState = rememberPagerState { onboardingScope.size }
 
-    fun leave() {
+    LaunchedEffect(pagerState, analytics) {
+        if (analytics == null) return@LaunchedEffect
+        // Reaching page n means page n - 1 was completed
+        snapshotFlow { pagerState.currentPage }.drop(1).collect { analytics.log(OnboardingStep(step = it)) }
+    }
+
+    fun leave(skipped: Boolean) {
+        analytics?.log(
+            OnboardingFinished(
+                skipped = skipped,
+                stepsSeen = if (skipped) pagerState.currentPage + 1 else onboardingScope.size,
+            )
+        )
         hasSeenOnboarding = true
         navController.popBackStack()
     }
@@ -138,8 +159,8 @@ internal fun OnboardingContent(
                     scope = onboardingScope,
                     appName = appName,
                     startLabel = config.startLabel,
-                    onFinish = ::leave,
-                    onSkipConfirmed = ::leave,
+                    onFinish = { leave(skipped = false) },
+                    onSkipConfirmed = { leave(skipped = true) },
                     userScrollEnabled = !practicingTip,
                     pagerState = pagerState,
                 )

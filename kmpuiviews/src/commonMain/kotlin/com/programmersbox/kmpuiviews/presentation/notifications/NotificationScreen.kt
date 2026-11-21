@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.presentation.notifications
 
 import androidx.compose.animation.AnimatedContent
+import com.programmersbox.telemetry.events.OpenedFrom
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.kmpuiviews.presentation.components.ai.AiCard
 import otakuworld.kmpuiviews.generated.resources.ai_summary_label
@@ -258,7 +259,7 @@ fun NotificationScreen(
                     ?.onStart { showLoadingDialog = true }
                     ?.onEach {
                         showLoadingDialog = false
-                        navController.details(it)
+                        navController.details(it, OpenedFrom.NOTIFICATION)
                     }
                     ?.launchIn(scope) ?: onError(item)
             }
@@ -875,7 +876,7 @@ private fun notificationOptionsSheet(
             ?.onStart { onLoadingChange(true) }
             ?.onEach {
                 onLoadingChange(false)
-                navController.details(it)
+                navController.details(it, OpenedFrom.NOTIFICATION)
             }
             ?.launchIn(scope) ?: onError(i)
     }

@@ -1,6 +1,9 @@
 package com.programmersbox.kmpuiviews.presentation.notes
 
 import com.programmersbox.kmpuiviews.testing.FakeAuthManager
+import com.programmersbox.telemetry.events.NoteSaved
+import com.programmersbox.telemetry.AnalyticsEvent
+import com.programmersbox.kmpuiviews.testing.FakeAnalytics
 import com.programmersbox.kmpuiviews.testing.clearAndJoin
 import androidx.lifecycle.ViewModelStore
 import androidx.room3.Room
@@ -27,6 +30,7 @@ import kotlin.test.assertNull
 class DetailsNotesViewModelTest {
 
     private val viewModelStore = ViewModelStore()
+    private val analytics = FakeAnalytics()
     private lateinit var dbFile: File
     private lateinit var database: NotesDatabase
 
@@ -48,6 +52,7 @@ class DetailsNotesViewModelTest {
             notesDao = database.notesDao(),
             aiText = FakeAiText(engine = null),
             authManager = FakeAuthManager(),
+            analytics = analytics,
         ).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -195,5 +200,16 @@ class DetailsNotesViewModelTest {
         awaitCondition { vm.note.value == null }
 
         assertNull(vm.note.value)
+    }
+
+    @Test
+    fun `note_saved marks the first save as new`() = runTest {
+        val vm = viewModel()
+        vm.saveNote("first")
+        awaitCondition { analytics.events.size == 1 }
+        vm.saveNote("second")
+        awaitCondition { analytics.events.size == 2 }
+
+        assertEquals<List<AnalyticsEvent>>(listOf(NoteSaved(isNew = true), NoteSaved(isNew = false)), analytics.events)
     }
 }

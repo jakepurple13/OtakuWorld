@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -29,12 +30,15 @@ import androidx.navigation3.runtime.NavKey
 import ca.gosyer.appdirs.AppDirs
 import com.programmersbox.datastore.asState
 import com.programmersbox.kmpuiviews.MangaDesktopSettings
+import com.programmersbox.kmpuiviews.motion.DesktopMotionCatalog
+import com.programmersbox.kmpuiviews.motion.motionSettingsGroup
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.updates.updatesSettingsGroup
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.absolutePath
 import io.github.vinceglb.filekit.dialogs.compose.rememberDirectoryPickerLauncher
 import kotlinx.serialization.Serializable
+import org.koin.compose.getKoin
 import org.koin.compose.koinInject
 import java.awt.Desktop
 import java.io.File
@@ -49,6 +53,8 @@ private const val PLATFORM_SETTINGS_COUNT = 4
 fun JvmSettingsScreen() {
     val settings = koinInject<MangaDesktopSettings>()
     val appDirs = koinInject<AppDirs>()
+    val koin = getKoin()
+    val motionCatalog = remember(koin) { koin.getOrNull<DesktopMotionCatalog>() }
 
     val colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
 
@@ -147,6 +153,7 @@ fun JvmSettingsScreen() {
                 )
             }
 
+            motionSettingsGroup(motionCatalog)
             updatesSettingsGroup()
         }
     }

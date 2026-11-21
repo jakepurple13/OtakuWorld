@@ -1,6 +1,9 @@
 package com.programmersbox.kmpuiviews.presentation.notes
 
 import androidx.lifecycle.ViewModel
+import com.programmersbox.telemetry.events.NoteSaved
+import com.programmersbox.telemetry.NoOpAnalytics
+import com.programmersbox.telemetry.Analytics
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.NoteItem
 import com.programmersbox.favoritesdatabase.NotesDao
@@ -21,6 +24,7 @@ class DetailsNotesViewModel(
     private val notesDao: NotesDao,
     aiText: AiText,
     private val authManager: AuthManager,
+    private val analytics: Analytics = NoOpAnalytics,
 ) : ViewModel() {
 
     val ai = NoteAiAssistant(aiText, viewModelScope)
@@ -58,6 +62,7 @@ class DetailsNotesViewModel(
                     updatedAt = now,
                 )
             )
+            analytics.log(NoteSaved(isNew = current == null))
         }
     }
 

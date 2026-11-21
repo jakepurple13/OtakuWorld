@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.presentation.notifications
 
 import androidx.compose.animation.Crossfade
+import com.programmersbox.telemetry.events.OpenedFrom
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -201,7 +202,7 @@ fun CatchUpScreen(
                     ?.onStart { showLoadingDialog = true }
                     ?.onEach {
                         showLoadingDialog = false
-                        navController.details(it)
+                        navController.details(it, OpenedFrom.NOTIFICATION)
                     }
                     ?.launchIn(scope) ?: onError(item)
             }

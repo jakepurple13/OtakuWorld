@@ -18,6 +18,11 @@ import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckResult
 import com.programmersbox.kmpuiviews.domain.updatecheck.UpdatedItem
 import com.programmersbox.kmpuiviews.testing.FakeApiService
 import com.programmersbox.kmpuiviews.testing.FakeCrashReporter
+import com.programmersbox.kmpuiviews.telemetry.TelemetrySourceNamer
+import com.programmersbox.favoritesdatabase.IncognitoSource
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import com.programmersbox.kmpuiviews.testing.FakeExceptionDao
 import com.programmersbox.kmpuiviews.testing.FakeUpdateCheckReportStore
 import com.programmersbox.kmpuiviews.testing.createTestItemDatabase
@@ -57,6 +62,7 @@ class MediaUpdateCheckerTest {
     private fun checker(
         store: FakeUpdateCheckReportStore = FakeUpdateCheckReportStore(),
         crash: FakeCrashReporter = FakeCrashReporter(),
+        namer: TelemetrySourceNamer = TelemetrySourceNamer(sourceRepository, database.itemDao()),
     ): MediaUpdateChecker {
         return MediaUpdateChecker(
             dao = database.itemDao(),
@@ -73,7 +79,27 @@ class MediaUpdateCheckerTest {
             exceptionDao = FakeExceptionDao(),
             reportStore = store,
             crashReporter = crash,
+            sourceNamer = namer,
         )
+    }
+
+    @Test
+    fun `breadcrumbs never name an incognito source`() = runTest {
+        sourceRepository.register(
+            FakeApiService(serviceName = "Secret", recentUrls = listOf("ok"), onItemInfo = { infoModel(it.url, chapters = 2) }),
+        )
+        favorite("ok", source = "Secret")
+        database.itemDao().insertIncognitoSource(IncognitoSource("Secret", "Secret", isIncognito = true))
+        val namer = TelemetrySourceNamer(sourceRepository, database.itemDao()).also { it.start(backgroundScope) }
+        withContext(Dispatchers.Default.limitedParallelism(1)) {
+            withTimeout(10_000) { while (namer.name("Secret") != "incognito") delay(10) }
+        }
+        val crash = FakeCrashReporter()
+
+        checker(crash = crash, namer = namer).run()
+
+        assertTrue(crash.logs.any { "incognito" in it }, crash.logs.joinToString("\n"))
+        assertTrue(crash.logs.none { "Secret" in it }, crash.logs.joinToString("\n"))
     }
 
     @Test

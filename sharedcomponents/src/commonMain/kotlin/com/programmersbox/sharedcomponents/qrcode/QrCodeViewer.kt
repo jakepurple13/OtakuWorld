@@ -1,6 +1,8 @@
 package com.programmersbox.sharedcomponents.qrcode
 
 import androidx.compose.foundation.Image
+import com.programmersbox.telemetry.events.ItemShared
+import com.programmersbox.telemetry.Analytics
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -172,6 +174,7 @@ fun QrShareSheet(
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val qrCodeRepository = koinInject<QrCodeRepository>()
+    val analytics = koinInject<Analytics>()
 
     @Suppress("DEPRECATION")
     val clipboard = LocalClipboardManager.current
@@ -254,6 +257,7 @@ fun QrShareSheet(
                             primary = true,
                             busy = !canCapture,
                             onClick = {
+                                analytics.log(ItemShared(ItemShared.CARD))
                                 scope.launch {
                                     qrCodeRepository.shareImage(graphicsLayer.toImageBitmap(), title)
                                 }
@@ -266,6 +270,7 @@ fun QrShareSheet(
                             icon = Icons.Default.Download,
                             busy = !canCapture,
                             onClick = {
+                                analytics.log(ItemShared(ItemShared.SAVE))
                                 scope.launch {
                                     qrCodeRepository.saveImage(graphicsLayer.toImageBitmap(), title)
                                 }
@@ -289,7 +294,10 @@ fun QrShareSheet(
                         QrShareAction(
                             label = "Share link",
                             icon = Icons.Default.Link,
-                            onClick = { scope.launch { qrCodeRepository.shareUrl(url, title) } }
+                            onClick = {
+                                analytics.log(ItemShared(ItemShared.LINK))
+                                scope.launch { qrCodeRepository.shareUrl(url, title) }
+                            }
                         )
                     }
                 }

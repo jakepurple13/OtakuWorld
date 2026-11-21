@@ -41,9 +41,16 @@ MangaWorld、AnimeWorld 和 NovelWorld 可在 Android 和桌面端（Windows、m
 
 Firebase 同步和自定义服务器同步已不再使用。
 
+## 隐私与遥测
+
+Play 商店和 GitHub 发布版可以通过 Firebase 发送匿名使用统计和崩溃报告。标题、链接、搜索内容和笔记永远不会被发送，
+两者都可以在 设置 › 行为 › 隐私与安全 中关闭。`noFirebase` 版本和桌面应用不会发送任何数据。
+所有事件和字段见 [TELEMETRY.md](TELEMETRY.md)（英文）。
+
 ## 目 录
    * [扩展](#扩展)
    * [云同步](#云同步)
+   * [隐私与遥测](#隐私与遥测)
    * [截图](#截图)
       * [漫画世界](#漫画世界)
       * [动漫世界](#动漫世界)

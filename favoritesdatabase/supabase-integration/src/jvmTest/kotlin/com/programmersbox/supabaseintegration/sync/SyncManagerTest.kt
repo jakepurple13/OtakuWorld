@@ -1,6 +1,9 @@
 package com.programmersbox.supabaseintegration.sync
 
 import com.programmersbox.supabaseintegration.auth.AuthManager
+import com.programmersbox.telemetry.events.SyncFailed
+import com.programmersbox.telemetry.AnalyticsEvent
+import com.programmersbox.telemetry.Analytics
 import com.programmersbox.supabaseintegration.auth.AuthState
 import com.programmersbox.supabaseintegration.auth.SupabaseUser
 import dev.jordond.connectivity.Connectivity
@@ -38,6 +41,33 @@ class SyncManagerTest {
 
     @AfterTest
     fun tearDown() = manager.stop()
+
+    @Test
+    fun failedSyncLogsSyncFailedWithClassOnly() = runBlocking {
+        val events = mutableListOf<AnalyticsEvent>()
+        val analytics = object : Analytics {
+            override val isAvailable = true
+            override fun log(event: AnalyticsEvent) { events += event }
+            override fun screen(name: String) = Unit
+            override fun setUserProperty(name: String, value: String?) = Unit
+            override fun setEnabled(enabled: Boolean) = Unit
+        }
+        val failing = SyncManager(
+            syncEngine = object : SyncEngine by FakeSyncEngine() {
+                override suspend fun pushLocalChanges() = throw IllegalStateException("https://secret")
+            },
+            authManager = FakeAuthManager(AuthState.Authenticated(SupabaseUser(id = "u", email = null, phone = null, displayName = null))),
+            connectivityMonitor = object : ConnectivityMonitor {
+                override val isOnline: StateFlow<Connectivity.Status> = MutableStateFlow(Connectivity.Status.Connected(metered = false))
+            },
+            fullSyncHandler = FullSyncHandler(),
+            analytics = analytics,
+        )
+        failing.triggerSync()
+        failing.stop()
+
+        assertEquals(listOf<AnalyticsEvent>(SyncFailed("supabase", "IllegalStateException")), events)
+    }
 
     // Crashlytics b444464d058bf6dfbe183b1b71be7721: start() runs from a LaunchedEffect, so it is called again
     // whenever the activity is recreated. Each call added another collector, and the collectors raced to open
