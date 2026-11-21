@@ -15,6 +15,8 @@ class AppCleanupWorker(
     workerParams: WorkerParameters,
 ) : CoroutineWorker(context, workerParams) {
     override suspend fun doWork(): Result = trace("app_cleanup") {
+        // Literal name: class names are renamed by R8 in release builds
+        koinCrashReporter().setKey("last_worker", "AppCleanupWorker")
         koinCrashReporter().log("Starting App Cleanup")
         var count = 0
         runCatching {

@@ -1,6 +1,8 @@
 package com.programmersbox.kmpuiviews.presentation.globalsearch
 
 import androidx.compose.foundation.text.input.TextFieldState
+import com.programmersbox.telemetry.events.SourceError
+import com.programmersbox.kmpuiviews.telemetry.TelemetrySourceNamer
 import com.programmersbox.telemetry.events.Search
 import com.programmersbox.telemetry.Buckets
 import com.programmersbox.telemetry.NoOpAnalytics
@@ -44,6 +46,7 @@ class GlobalSearchViewModel(
     private val exceptionDao: ExceptionDao,
     settings: NewSettingsHandling,
     private val analytics: Analytics = NoOpAnalytics,
+    private val sourceNamer: TelemetrySourceNamer? = null,
 ) : ViewModel() {
 
     private val languagesFlow = searchLanguagesState(sourceRepository, settings)
@@ -105,7 +108,10 @@ class GlobalSearchViewModel(
                 a
                     .apiService
                     .searchSourceList(searchText.text.toString(), list = emptyList())
-                    .dispatchIoAndCatchList()
+                    .dispatchIoAndCatchList { e ->
+                        val s = a.apiService.serviceName
+                        analytics.log(SourceError(sourceNamer?.name(s) ?: s, SourceError.SEARCH, e::class.simpleName ?: "Exception"))
+                    }
                     .map { SearchModel(a.apiService.displayName, it, a.apiService.language, a.apiService.serviceName) }
                     .filter { it.data.isNotEmpty() }
                     .onEach {

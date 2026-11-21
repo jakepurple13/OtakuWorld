@@ -1,6 +1,11 @@
 package com.programmersbox.kmpuiviews.domain.dailyoverview
 
 import kotlinx.coroutines.CancellationException
+import kotlin.time.TimeSource
+import com.programmersbox.telemetry.events.AiTaskRun
+import com.programmersbox.telemetry.Buckets
+import com.programmersbox.telemetry.NoOpAnalytics
+import com.programmersbox.telemetry.Analytics
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.fold
 
@@ -37,6 +42,7 @@ suspend fun generateDailySummary(
     settings: DailyOverviewSettings,
     template: TemplateEngine,
     bypassCache: Boolean,
+    analytics: Analytics = NoOpAnalytics,
 ): DailySummary {
     if (!bypassCache) {
         settings.cachedFor(facts)?.let { return it }
@@ -50,13 +56,19 @@ suspend fun generateDailySummary(
     val engine = resolver.resolve(settings.prefs.first().effectiveEngine)
     if (!facts.needsEngine(engine)) return templateSummary()
 
+    val started = TimeSource.Monotonic.markNow()
+    fun logAi(outcome: String) = analytics.log(
+        AiTaskRun("daily_overview", engine.id.name.lowercase(), outcome, Buckets.durationMs(started.elapsedNow().inWholeMilliseconds))
+    )
     val text = try {
         engine.summarize(facts).fold("") { acc, chunk -> acc + chunk }
     } catch (e: CancellationException) {
         throw e
     } catch (_: Exception) {
+        logAi(AiTaskRun.ERROR)
         return templateSummary()
     }
+    logAi(AiTaskRun.SUCCESS)
     if (text.isBlank()) return templateSummary()
     return DailySummary(facts.date, engine.id, text).also { settings.cacheOrIgnore(it) }
 }

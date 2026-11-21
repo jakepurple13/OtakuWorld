@@ -1,6 +1,12 @@
 package com.programmersbox.kmpuiviews.di
 
 import android.content.Context
+import com.programmersbox.telemetry.events.ExtensionUninstalled
+import com.programmersbox.telemetry.events.ExtensionUpdated
+import com.programmersbox.telemetry.events.ExtensionInstalled
+import com.programmersbox.kmpextensionloader.ExtensionChange
+import com.programmersbox.kmpuiviews.telemetry.TelemetrySourceNamer
+import com.programmersbox.telemetry.Analytics
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.PlatformDataStoreHandling
 import com.programmersbox.datastore.SettingsSerializer
@@ -78,12 +84,24 @@ actual fun platformModule(): Module = module {
     }
 
     single {
+        val analytics = get<Analytics>()
+        val namer = get<TelemetrySourceNamer>()
         SourceLoader(
             application = get(),
             context = get(),
             sourceType = get<KmpGenericInfo>().sourceType,
             sourceRepository = get(),
             nativeCatalogs = get(),
+            onExtensionChange = { change, packageName, catalog ->
+                val name = namer.packageName(packageName)
+                analytics.log(
+                    when (change) {
+                        ExtensionChange.Installed -> ExtensionInstalled(name, catalog)
+                        ExtensionChange.Updated -> ExtensionUpdated(name)
+                        ExtensionChange.Removed -> ExtensionUninstalled(name)
+                    }
+                )
+            },
         )
     }
 

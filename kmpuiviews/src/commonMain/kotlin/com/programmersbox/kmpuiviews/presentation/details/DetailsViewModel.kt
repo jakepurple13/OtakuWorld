@@ -1,6 +1,8 @@
 package com.programmersbox.kmpuiviews.presentation.details
 
 import com.programmersbox.kmpuiviews.domain.moodtags.MoodRepository
+import com.programmersbox.telemetry.events.SourceError
+import com.programmersbox.telemetry.events.UpdateNotificationOpened
 import com.programmersbox.telemetry.events.TranslationUsed
 import com.programmersbox.telemetry.events.ItemViewed
 import com.programmersbox.telemetry.NoOpAnalytics
@@ -203,6 +205,9 @@ class DetailsViewModel(
             ?.dispatchIo()
             ?.catch {
                 crashReporter.recordException(it)
+                itemModel?.source?.serviceName?.let { s ->
+                    analytics.log(SourceError(sourceNamer?.name(s) ?: s, SourceError.INFO, it::class.simpleName ?: "Exception"))
+                }
                 exceptionDao.insertException(it)
                 it.printStackTrace()
                 emit(Result.failure(it))
@@ -216,6 +221,7 @@ class DetailsViewModel(
                     viewLogged = true
                     val source = item.source.serviceName
                     analytics.log(ItemViewed(sourceNamer?.name(source) ?: source, genericInfo.sourceType, openedFrom))
+                    if (openedFrom == OpenedFrom.UPDATE_NOTIFICATION) analytics.log(UpdateNotificationOpened(count = 1))
                 }
                 detailState = DetailState.Success(
                     info = item,

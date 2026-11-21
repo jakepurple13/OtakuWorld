@@ -29,6 +29,8 @@ class RestoreWorker(
 ) : CoroutineWorker(context, workerParams) {
 
     override suspend fun doWork(): Result {
+        // Literal name: class names are renamed by R8 in release builds
+        koinCrashReporter().setKey("last_worker", "RestoreWorker")
         val uri = inputData.getString("uri") ?: return Result.failure()
         val selectedKeys = inputData.getStringArray("selectedKeys")?.toSet() ?: return Result.failure()
         val selectedListIds = if (inputData.getBoolean("hasListFilter", false)) {

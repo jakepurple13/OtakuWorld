@@ -48,6 +48,8 @@ actual class SourceLoader(
     private val sourceRepository: SourceRepository,
     private val nativeCatalogs: NativeCatalogs = NativeCatalogs(emptyList()),
     private val modelMapper: ModelMapper = ModelMapper(application),
+    /** Told about extension installs, updates and removals: (action, packageName, catalog). */
+    private val onExtensionChange: (action: ExtensionChange, packageName: String, catalog: String) -> Unit = { _, _, _ -> },
 ) {
     private val extensionLoader = ExtensionLoader<Any, List<KmpSourceInformation>>(
         context,
@@ -106,6 +108,7 @@ actual class SourceLoader(
                 if (intent.action == Intent.ACTION_PACKAGE_REMOVED &&
                     sourceRepository.list.any { it.packageName == packageString }
                 ) {
+                    runCatching { onExtensionChange(ExtensionChange.Removed, packageString, catalogFor(packageString)) }
                     scope.launch { blockingLoad() }
                     return
                 }
@@ -127,6 +130,11 @@ actual class SourceLoader(
                 }.getOrDefault(false)
 
                 if (!isOtakuExtension) return
+                when (intent.action) {
+                    Intent.ACTION_PACKAGE_REPLACED -> ExtensionChange.Updated
+                    Intent.ACTION_PACKAGE_ADDED -> ExtensionChange.Installed
+                    else -> null
+                }?.let { change -> runCatching { onExtensionChange(change, packageString, catalogFor(packageString)) } }
                 scope.launch {
                     when (intent.action) {
                         Intent.ACTION_PACKAGE_REPLACED -> blockingLoad()
@@ -178,4 +186,9 @@ actual class SourceLoader(
             completedLoads = covered
         }
     }
+
+    private fun catalogFor(packageName: String): String =
+        nativeCatalogs.catalogs.firstOrNull { it.shouldReload(packageName) }?.name?.lowercase() ?: "otaku"
 }
+
+enum class ExtensionChange { Installed, Updated, Removed }

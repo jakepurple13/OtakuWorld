@@ -1,6 +1,9 @@
 package com.programmersbox.kmpuiviews.presentation.settings.updatesources
 
 import com.programmersbox.kmpuiviews.testing.clearAndJoin
+import com.programmersbox.telemetry.events.SourceUpdateSkipped
+import com.programmersbox.telemetry.AnalyticsEvent
+import com.programmersbox.kmpuiviews.testing.FakeAnalytics
 import androidx.lifecycle.ViewModelStore
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
@@ -65,6 +68,8 @@ class UpdateSourcesViewModelTest {
 
     private fun sourceRepository(sources: List<KmpSourceInformation>) = SourceRepository().apply { setSources(sources) }
 
+    private val analytics = FakeAnalytics()
+
     private fun viewModel(
         report: UpdateCheckReport? = null,
         sourceRepository: SourceRepository = sourceRepository("asura", "comick", "mangapark"),
@@ -72,6 +77,7 @@ class UpdateSourcesViewModelTest {
         itemDao = dao,
         sourceRepository = sourceRepository,
         reportStore = FakeUpdateCheckReportStore(report),
+        analytics = analytics,
     ).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
 
     private fun favorite(url: String, source: String, isDeleted: Boolean = false) = DbModel(
@@ -289,5 +295,14 @@ class UpdateSourcesViewModelTest {
         val rows = vm.rows.first { it != null }!!
 
         assertEquals(listOf("MangaDex" to 2), rows.map { it.name to it.languages })
+    }
+
+    @Test
+    fun `skipping logs one event per package, unskipping logs none`() = runTest {
+        val vm = viewModel()
+        vm.setSkipped(listOf("pkg.a", "pkg.b"), skipped = true)
+        vm.setSkipped(listOf("pkg.a"), skipped = false)
+
+        assertEquals<List<AnalyticsEvent>>(listOf(SourceUpdateSkipped("pkg.a"), SourceUpdateSkipped("pkg.b")), analytics.events)
     }
 }

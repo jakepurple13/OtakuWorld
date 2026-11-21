@@ -1,6 +1,7 @@
 package com.programmersbox.anime.shared.downloads
 
 import android.Manifest
+import com.programmersbox.kmpuiviews.telemetry.koinCrashReporter
 import com.programmersbox.telemetry.events.DownloadFinished
 import com.programmersbox.telemetry.Buckets
 import com.programmersbox.kmpuiviews.telemetry.koinAnalytics
@@ -91,6 +92,8 @@ class EpisodeDownloadWorker(
     }
 
     override suspend fun doWork(): Result {
+        // Literal name: class names are renamed by R8 in release builds
+        koinCrashReporter().setKey("last_worker", "EpisodeDownloadWorker")
         val request = request ?: return Result.failure().also { requestFile?.delete() }
         val startedAt = System.currentTimeMillis()
         fun logFinished(outcome: String) = runCatching {

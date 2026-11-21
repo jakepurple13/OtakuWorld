@@ -1,6 +1,9 @@
 package com.programmersbox.kmpuiviews.workers
 
 import android.app.Notification
+import com.programmersbox.kmpuiviews.telemetry.updateCheckTrigger
+import com.programmersbox.kmpuiviews.telemetry.updateCheckEvent
+import com.programmersbox.kmpuiviews.telemetry.koinAnalytics
 import com.programmersbox.kmpuiviews.telemetry.koinCrashReporter
 import android.content.Context
 import android.content.pm.ServiceInfo
@@ -54,6 +57,7 @@ class UpdateFlowWorker(
     }
 
     override suspend fun doWork(): Result = trace("update_checker") {
+        koinCrashReporter().setKey("last_worker", "UpdateChecker")
         try {
             update.cancelFinishedNotification()
             //update.sendRunningNotification(100, 0, getString(Res.string.startingCheck))
@@ -86,6 +90,8 @@ class UpdateFlowWorker(
             dataStoreHandling.updateCheckingEnd.set(System.currentTimeMillis())
             update.cancelProgressNotification()
             update.sendFinishedNotification(result.report)
+            updateCheckEvent(result.report, updateCheckTrigger(inputData.getBoolean(CHECK_ALL, false), retryFailed))
+                ?.let { runCatching { koinAnalytics().log(it) } }
         } catch (e: CancellationException) {
             // A cancelled run stores nothing, so there is nothing to report.
             withContext(NonCancellable) { dataStoreHandling.updateCheckingEnd.set(System.currentTimeMillis()) }

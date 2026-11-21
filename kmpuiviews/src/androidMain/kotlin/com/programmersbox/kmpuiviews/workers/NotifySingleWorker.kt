@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.workers
 
 import android.content.Context
+import com.programmersbox.kmpuiviews.telemetry.koinCrashReporter
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.programmersbox.favoritesdatabase.NotificationItem
@@ -14,6 +15,8 @@ class NotifySingleWorker(
     private val notificationScreenInterface: NotificationScreenInterface,
 ) : CoroutineWorker(context, workerParams) {
     override suspend fun doWork(): Result {
+        // Literal name: class names are renamed by R8 in release builds
+        koinCrashReporter().setKey("last_worker", "NotifySingleWorker")
         inputData.getString("notiData")
             ?.let { Json.decodeFromString<NotificationItem>(it) }
             ?.let { d -> notificationScreenInterface.notifyItem(d) }

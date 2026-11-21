@@ -53,7 +53,7 @@ actual interface PlatformGenericInfo : KmpGenericInfo {
                 url = url,
                 imageUrl = imageUrl,
                 source = source,
-                from = OpenedFrom.NOTIFICATION,
+                from = OpenedFrom.UPDATE_NOTIFICATION,
             )
         )
         .toUri()

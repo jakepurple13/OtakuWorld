@@ -1,6 +1,10 @@
 package com.programmersbox.kmpuiviews.presentation.settings.updatesources
 
 import androidx.lifecycle.ViewModel
+import com.programmersbox.kmpuiviews.telemetry.TelemetrySourceNamer
+import com.programmersbox.telemetry.events.SourceUpdateSkipped
+import com.programmersbox.telemetry.NoOpAnalytics
+import com.programmersbox.telemetry.Analytics
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.SkippedUpdateSource
@@ -76,6 +80,8 @@ class UpdateSourcesViewModel(
     private val itemDao: ItemDao,
     sourceRepository: SourceRepository,
     reportStore: UpdateCheckReportStore,
+    private val analytics: Analytics = NoOpAnalytics,
+    private val sourceNamer: TelemetrySourceNamer? = null,
 ) : ViewModel() {
 
     /** Null until the first load finishes. */
@@ -99,6 +105,7 @@ class UpdateSourcesViewModel(
     suspend fun setSkipped(packageNames: List<String>, skipped: Boolean) {
         if (skipped) {
             itemDao.insertSkippedUpdateSources(packageNames.map(::SkippedUpdateSource))
+            packageNames.forEach { analytics.log(SourceUpdateSkipped(sourceNamer?.packageName(it) ?: it)) }
         } else {
             itemDao.deleteSkippedUpdateSources(packageNames)
         }

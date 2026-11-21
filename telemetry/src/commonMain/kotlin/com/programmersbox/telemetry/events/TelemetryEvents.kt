@@ -14,6 +14,8 @@ object OpenedFrom {
     const val FAVORITES = "favorites"
     const val HISTORY = "history"
     const val NOTIFICATION = "notification"
+    /** The system notification for new chapters, as opposed to the in-app Notifications screen. */
+    const val UPDATE_NOTIFICATION = "update_notification"
     const val DEEP_LINK = "deep_link"
     const val QUICK_ACTION = "quick_action"
     const val DOWNLOADS = "downloads"
