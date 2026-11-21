@@ -39,6 +39,7 @@ import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
+import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.sharedItemKey
 import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.M3PlaceHolderCoverCard
@@ -62,6 +63,11 @@ abstract class GenericSharedNovel(
     override val sourceType: String get() = "novel"
 
     override fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit = {
+        novelPreferences()
+    }
+
+    /** Onboarding config and step, the text size setting, and tips; desktop adds these on top of its own preferences. */
+    protected fun ComposeSettingsDsl.novelPreferences() {
         onboardingConfig = OnboardingAppConfig(
             genres = listOf(
                 GenreCard("Fantasy", Icons.Default.AutoStories, 160f),
@@ -76,6 +82,11 @@ abstract class GenericSharedNovel(
         )
         onboardingSettings {
             readingComfortStep(novelTextSize)
+        }
+        generalSettings {
+            CategoryGroup {
+                item { NovelTextSizeSetting() }
+            }
         }
         tips(novelTips)
     }

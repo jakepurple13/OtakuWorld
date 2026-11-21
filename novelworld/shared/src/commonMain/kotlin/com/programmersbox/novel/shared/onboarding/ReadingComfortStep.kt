@@ -31,12 +31,11 @@ import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingStepSpec
 import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingTags
 import com.programmersbox.kmpuiviews.presentation.onboarding.frame.StepLayout
 import com.programmersbox.kmpuiviews.presentation.onboarding.motion.onboardingReducedMotion
+import com.programmersbox.novel.shared.NovelTextSizeRange
 import kotlin.math.roundToInt
 
 internal const val ReadingSampleTag = "onb_reading_sample"
 internal const val ReadingSizeTag = "onb_reading_size"
-
-internal val TextSizeRange = 12..24
 
 private const val SampleParagraph =
     "The ferry horn sounded twice before Mio looked up. Rain had followed her across the harbor, " +
@@ -54,7 +53,7 @@ fun OnboardingScope.readingComfortStep(textSize: DataStoreHandler<Int>) {
         summaryLabel = "Reader",
         summary = {
             val size by textSize.asState()
-            "${size}px text"
+            "${size}sp text"
         },
     )
     step(spec) { ReadingComfortContent(spec, textSize) }
@@ -65,7 +64,7 @@ private fun ReadingComfortContent(spec: OnboardingStepSpec, textSize: DataStoreH
     var saved by textSize.asState()
     // Last value while dragging; the setting is written once, on release.
     var draft by remember { mutableStateOf<Int?>(null) }
-    val shown = (draft ?: saved).coerceIn(TextSizeRange)
+    val shown = (draft ?: saved).coerceIn(NovelTextSizeRange)
     val reduced = onboardingReducedMotion()
     val animatedSize by animateFloatAsState(
         targetValue = shown.toFloat(),
@@ -98,13 +97,13 @@ private fun ReadingComfortContent(spec: OnboardingStepSpec, textSize: DataStoreH
             )
             Slider(
                 value = shown.toFloat(),
-                onValueChange = { draft = it.roundToInt().coerceIn(TextSizeRange) },
+                onValueChange = { draft = it.roundToInt().coerceIn(NovelTextSizeRange) },
                 onValueChangeFinished = {
                     draft?.let { saved = it }
                     draft = null
                 },
-                valueRange = TextSizeRange.first.toFloat()..TextSizeRange.last.toFloat(),
-                steps = TextSizeRange.last - TextSizeRange.first - 1,
+                valueRange = NovelTextSizeRange.first.toFloat()..NovelTextSizeRange.last.toFloat(),
+                steps = NovelTextSizeRange.last - NovelTextSizeRange.first - 1,
                 modifier = Modifier.testTag(ReadingSizeTag),
             )
         }
