@@ -1,6 +1,13 @@
 package com.programmersbox.manga.shared.reader
 
 import androidx.compose.runtime.derivedStateOf
+import com.programmersbox.kmpuiviews.telemetry.TelemetrySourceNamer
+import com.programmersbox.kmpuiviews.telemetry.ReadingSessionTracker
+import com.programmersbox.telemetry.events.SourceError
+import com.programmersbox.telemetry.events.OpenedFrom
+import com.programmersbox.telemetry.events.ChapterOpened
+import com.programmersbox.telemetry.NoOpAnalytics
+import com.programmersbox.telemetry.Analytics
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -59,7 +66,22 @@ class ReadViewModel(
     private val exceptionDao: ExceptionDao,
     private val mangaDownloadManager: MangaDownloadManager,
     private val bookmarkRepository: BookmarkRepository,
+    private val analytics: Analytics = NoOpAnalytics,
+    private val sourceNamer: TelemetrySourceNamer? = null,
 ) : ViewModel() {
+
+    private val readingSession = ReadingSessionTracker(mediaType = "manga")
+
+    /** Called by the reader as pages come into view, for the reading_session event. */
+    fun pageShown(page: Int, pagesInChapter: Int) = readingSession.pageShown(currentChapter, page, pagesInChapter)
+
+    private fun telemetrySource(): String = runCatching {
+        list.getOrNull(currentChapter)?.source?.serviceName?.let { sourceNamer?.name(it) ?: it }
+    }.getOrNull() ?: "downloaded"
+
+    private fun reportPagesError(e: Throwable) =
+        analytics.log(SourceError(telemetrySource(), SourceError.PAGES, e::class.simpleName ?: "Exception"))
+
 
     val headers = mutableStateMapOf<String, String>()
 
@@ -218,6 +240,13 @@ class ReadViewModel(
         } else {
             loadInitialChapter()
         }
+        analytics.log(
+            ChapterOpened(
+                source = telemetrySource(),
+                mediaType = "manga",
+                from = if (mangaReader.downloaded) OpenedFrom.DOWNLOADS else OpenedFrom.DETAILS,
+            )
+        )
 
         favoritesRepository
             .isFavorite(url = mangaUrl)
@@ -284,7 +313,7 @@ class ReadViewModel(
                     loadingChapters = loadingChapters + newChapter
                     pageItems.clear()
                 }
-                .catch { exceptionDao.insertException(it) }
+                .catch { reportPagesError(it); exceptionDao.insertException(it) }
                 .onEach { urls ->
                     pageItems.add(PageItem.ChapterTransition(newChapter + 1, newChapter))
                     pageItems.addAll(urls.mapIndexed { i, url -> PageItem.Page(url, newChapter, i, false) })
@@ -325,7 +354,7 @@ class ReadViewModel(
                 loadingChapters = loadingChapters + chapterIndex
                 pageItems.clear()
             }
-            .catch { exceptionDao.insertException(it) }
+            .catch { reportPagesError(it); exceptionDao.insertException(it) }
             .onEach { urls ->
                 pageItems.add(PageItem.ChapterTransition(chapterIndex + 1, chapterIndex))
                 pageItems.addAll(urls.mapIndexed { i, url -> PageItem.Page(url, chapterIndex, i, false) })
@@ -461,7 +490,7 @@ class ReadViewModel(
 
             list.getOrNull(chapterListIndex)?.let { chapterItem ->
                 chapterFlow(chapterItem)
-                    .catch { exceptionDao.insertException(it) }
+                    .catch { reportPagesError(it); exceptionDao.insertException(it) }
                     .onEach { urls ->
                         pageItems.addAll(urls.mapIndexed { i, url -> PageItem.Page(url, chapterListIndex, i, false) })
                         pageItems.add(PageItem.ChapterTransition(chapterListIndex, chapterListIndex - 1))
@@ -495,7 +524,7 @@ class ReadViewModel(
             downloadedChapterFlow(downloadedPaths[chapterListIndex]).firstOrNull()
         } else {
             chapterFlow(list[chapterListIndex])
-                .catch { exceptionDao.insertException(it) }
+                .catch { reportPagesError(it); exceptionDao.insertException(it) }
                 .firstOrNull()
         }.orEmpty()
 
@@ -558,6 +587,7 @@ class ReadViewModel(
 
     override fun onCleared() {
         super.onCleared()
+        analytics.log(readingSession.event())
         chapterHolder.chapterModel = null
         chapterHolder.chapters = null
         chapterHolder.downloadedChapterPaths = null

@@ -42,6 +42,8 @@ class DownloadAndInstallWorker(
 ) : CoroutineWorker(context, workerParams) {
 
     override suspend fun doWork(): Result {
+        // Literal name: class names are renamed by R8 in release builds
+        koinCrashReporter().setKey("last_worker", "DownloadAndInstallWorker")
         val url = inputData.getString("url") ?: return Result.failure()
 
         koinCrashReporter().log("Downloading and installing")
@@ -224,6 +226,8 @@ class DownloadWorker(
 ) : CoroutineWorker(context, workerParams) {
 
     override suspend fun doWork(): Result {
+        // Literal name: class names are renamed by R8 in release builds
+        koinCrashReporter().setKey("last_worker", "DownloadWorker")
         val url = inputData.getString("url") ?: return Result.failure()
 
         koinCrashReporter().log("Downloading and installing")
@@ -401,6 +405,8 @@ class InstallWorker(
 ) : CoroutineWorker(context, workerParams) {
 
     override suspend fun doWork(): Result {
+        // Literal name: class names are renamed by R8 in release builds
+        koinCrashReporter().setKey("last_worker", "InstallWorker")
         val urlString = inputData.getString("url") ?: return Result.failure()
         val url = File(applicationContext.cacheDir, "${urlString.toUri().lastPathSegment}.apk")
 

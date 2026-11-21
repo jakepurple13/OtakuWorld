@@ -1,6 +1,10 @@
 package com.programmersbox.manga.shared.downloads
 
 import android.Manifest
+import com.programmersbox.kmpuiviews.telemetry.koinCrashReporter
+import com.programmersbox.telemetry.events.DownloadFinished
+import com.programmersbox.telemetry.Buckets
+import com.programmersbox.kmpuiviews.telemetry.koinAnalytics
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
@@ -34,7 +38,13 @@ class DownloadChapterWorker(
     }
 
     override suspend fun doWork(): Result {
+        // Literal name: class names are renamed by R8 in release builds
+        koinCrashReporter().setKey("last_worker", "DownloadChapterWorker")
         println(tags)
+        val startedAt = System.currentTimeMillis()
+        fun logFinished(outcome: String) = runCatching {
+            koinAnalytics().log(DownloadFinished("manga", outcome, Buckets.durationMs(System.currentTimeMillis() - startedAt)))
+        }
         val mangaTitle = inputData.getString(KEY_MANGA_TITLE) ?: return Result.failure()
         val chapterName = inputData.getString(KEY_CHAPTER_NAME) ?: return Result.failure()
         val chapterUrl = inputData.getString(KEY_CHAPTER_URL) ?: return Result.failure()
@@ -126,9 +136,11 @@ class DownloadChapterWorker(
                     id = notifCompleteId,
                     notification = buildCompleteNotification(mangaTitle, chapterName),
                 )
+                logFinished(DownloadFinished.SUCCESS)
                 Result.success()
             } catch (e: CancellationException) {
                 notificationManager.cancel(notifId)
+                logFinished(DownloadFinished.CANCEL)
                 throw e
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -143,6 +155,7 @@ class DownloadChapterWorker(
                         notification = buildFailedNotification(chapterName, e.message ?: "Unknown error"),
                     )
                     destDir.deleteRecursively()
+                    logFinished(DownloadFinished.FAIL)
                     Result.failure(workDataOf(KEY_ERROR to (e.message ?: "Unknown error")))
                 }
             } finally {

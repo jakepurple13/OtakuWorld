@@ -1,6 +1,9 @@
 package com.programmersbox.manga.shared.reader
 
 import androidx.compose.animation.ExperimentalAnimationApi
+import org.koin.compose.koinInject
+import com.programmersbox.telemetry.events.ReaderSettingChanged
+import com.programmersbox.telemetry.Analytics
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -93,6 +96,8 @@ internal fun SettingsSheet(
 ) {
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val analytics = koinInject<Analytics>()
+    fun logSetting(key: String, value: Any) = analytics.log(ReaderSettingChanged(key, value.toString()))
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -121,6 +126,7 @@ internal fun SettingsSheet(
                 settingTitle = "Reader Padding Between Pages",
                 settingSummary = "Default is 4",
                 preferenceUpdate = { mangaSettingsHandling.pagePadding.updateSetting(it) },
+                onChangeFinished = { logSetting("page_padding", it) },
                 initialValue = runBlocking { mangaSettingsHandling.pagePadding.flow.firstOrNull() ?: 4 },
                 range = 0f..10f
             )
@@ -138,6 +144,7 @@ internal fun SettingsSheet(
                     format = { "${it.roundToInt()}%" },
                     onValueChangedFinished = {
                         scope.launch { mangaSettingsHandling.readerWidthFraction.updateSetting(widthPercent / 100) }
+                        logSetting("reader_width", widthPercent.roundToInt())
                     }
                 )
             }
@@ -146,7 +153,10 @@ internal fun SettingsSheet(
             var userGestureAllowed by mangaSettingsHandling.rememberUserGestureEnabled()
             SwitchSetting(
                 value = userGestureAllowed,
-                updateValue = { userGestureAllowed = it },
+                updateValue = {
+                    userGestureAllowed = it
+                    logSetting("user_gestures", it)
+                },
                 settingTitle = { Text("Allow User Gestures for Chapter List in Reader") },
                 settingIcon = { Icon(Icons.Default.Gesture, null, modifier = Modifier.fillMaxSize()) }
             )
@@ -154,7 +164,10 @@ internal fun SettingsSheet(
             var useFloatingBottomBar by mangaSettingsHandling.rememberUseFloatingReaderBottomBar()
             SwitchSetting(
                 value = useFloatingBottomBar,
-                updateValue = { useFloatingBottomBar = it },
+                updateValue = {
+                    useFloatingBottomBar = it
+                    logSetting("floating_bottom_bar", it)
+                },
                 settingTitle = { Text("Use a Floating Bottom Bar in Reader") },
                 settingIcon = { Icon(Icons.Default.BorderBottom, null, modifier = Modifier.fillMaxSize()) }
             )
@@ -180,6 +193,7 @@ internal fun SettingsSheet(
                                 },
                                 onClick = {
                                     readerTypeChange(it)
+                                    logSetting("reader_type", it.name.lowercase())
                                     showReaderTypeDropdown = false
                                 }
                             )
@@ -246,6 +260,7 @@ private fun SliderSetting(
     preferenceUpdate: suspend (Int) -> Unit,
     initialValue: Int,
     range: ClosedFloatingPointRange<Float>,
+    onChangeFinished: (Int) -> Unit = {},
 ) {
     var sliderValue by remember { mutableFloatStateOf(initialValue.toFloat()) }
 
@@ -258,6 +273,7 @@ private fun SliderSetting(
             sliderValue = it
             scope.launch { preferenceUpdate(sliderValue.toInt()) }
         },
+        onValueChangedFinished = { onChangeFinished(sliderValue.toInt()) },
         settingIcon = { Icon(settingIcon, null) }
     )
 }

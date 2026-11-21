@@ -7,6 +7,8 @@ import android.content.pm.PackageInstaller
 import android.os.Build
 import com.programmersbox.kmpextensionloader.SourceLoader
 import com.programmersbox.kmpuiviews.repository.InstallStatusRepository
+import com.programmersbox.kmpuiviews.telemetry.koinAnalytics
+import com.programmersbox.telemetry.events.ExtensionInstallFailed
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus
 import com.programmersbox.kmpuiviews.utils.InstallErrorReason
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -72,6 +74,8 @@ class PackageInstallReceiver : BroadcastReceiver(), KoinComponent {
     }
 
     private fun fail(sessionId: Int, reason: InstallErrorReason, intent: Intent) {
+        // Reason enum only; the installer message can name files and packages
+        runCatching { koinAnalytics().log(ExtensionInstallFailed(catalog = "apk", reason = reason.name.lowercase())) }
         val detail = when (reason) {
             InstallErrorReason.BLOCKED ->
                 intent.getStringExtra(PackageInstaller.EXTRA_OTHER_PACKAGE_NAME)?.let { "Blocked by $it" }

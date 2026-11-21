@@ -1,6 +1,9 @@
 package com.programmersbox.kmpuiviews.domain
 
 import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.telemetry.events.SourceError
+import com.programmersbox.telemetry.NoOpAnalytics
+import com.programmersbox.telemetry.Analytics
 import com.programmersbox.favoritesdatabase.ExceptionDao
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.NotificationItem
@@ -57,6 +60,7 @@ class MediaUpdateChecker(
     private val reportStore: UpdateCheckReportStore,
     private val crashReporter: CrashReporter,
     private val sourceNamer: TelemetrySourceNamer,
+    private val analytics: Analytics = NoOpAnalytics,
 ) {
 
     // Configurable network dispatcher based on the provided parallelism value
@@ -306,6 +310,7 @@ class MediaUpdateChecker(
         }.onFailure { e ->
             exceptionDao.insertException(e)
             crashReporter.log("update check: recent failed ${sourceNamer.name(sourceApiService.serviceName)} (${e::class.simpleName})")
+            analytics.log(SourceError(sourceNamer.name(sourceApiService.serviceName), SourceError.RECENT, e::class.simpleName ?: "Exception"))
             crashReporter.recordException(e)
         }
     }
@@ -353,6 +358,7 @@ class MediaUpdateChecker(
                     onFailure = { e ->
                         exceptionDao.insertException(e)
                         crashReporter.log("update check: item failed ${sourceNamer.name(model.source)} (${e::class.simpleName})")
+                        analytics.log(SourceError(sourceNamer.name(model.source), SourceError.INFO, e::class.simpleName ?: "Exception"))
                         crashReporter.recordException(e)
                         run.itemFinished(
                             sourceIndex = sourceIndex,

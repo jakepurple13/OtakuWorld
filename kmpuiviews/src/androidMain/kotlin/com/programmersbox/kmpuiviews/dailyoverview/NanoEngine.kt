@@ -1,6 +1,8 @@
 package com.programmersbox.kmpuiviews.dailyoverview
 
 import com.google.mlkit.genai.common.FeatureStatus
+import com.programmersbox.telemetry.events.AiModelInstalled
+import com.programmersbox.kmpuiviews.telemetry.koinAnalytics
 import com.google.mlkit.genai.prompt.Generation
 import com.google.mlkit.genai.prompt.GenerativeModel
 import com.programmersbox.kmpuiviews.domain.dailyoverview.DailyFacts
@@ -40,6 +42,7 @@ class NanoEngine : SummaryEngine {
         if (status == NanoFeatureStatus.Downloadable && downloadStarted.compareAndSet(false, true)) {
             scope.launch {
                 runCatching { model.download().collect() }
+                    .onSuccess { runCatching { koinAnalytics().log(AiModelInstalled(engine = "nano", via = AiModelInstalled.DOWNLOAD)) } }
                     .onFailure { downloadStarted.set(false) }
             }
         }

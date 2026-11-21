@@ -1,6 +1,8 @@
 package com.programmersbox.kmpuiviews.presentation.globalsearch
 
 import androidx.compose.runtime.derivedStateOf
+import com.programmersbox.telemetry.events.SourceError
+import com.programmersbox.kmpuiviews.telemetry.TelemetrySourceNamer
 import com.programmersbox.telemetry.events.Search
 import com.programmersbox.telemetry.Buckets
 import com.programmersbox.telemetry.NoOpAnalytics
@@ -32,6 +34,7 @@ class SourceSearchViewModel(
     sourceRepository: SourceRepository,
     private val exceptionDao: ExceptionDao,
     private val analytics: Analytics = NoOpAnalytics,
+    private val sourceNamer: TelemetrySourceNamer? = null,
 ) : ViewModel() {
 
     val query = handle.query
@@ -84,6 +87,7 @@ class SourceSearchViewModel(
                 throw e
             } catch (e: Exception) {
                 error = e
+                analytics.log(SourceError(sourceNamer?.name(s.serviceName) ?: s.serviceName, SourceError.SEARCH, e::class.simpleName ?: "Exception"))
                 exceptionDao.insertException(e)
             } finally {
                 isLoading = false

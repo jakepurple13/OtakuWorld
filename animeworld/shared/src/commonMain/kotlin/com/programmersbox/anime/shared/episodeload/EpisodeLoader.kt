@@ -1,6 +1,9 @@
 package com.programmersbox.anime.shared.episodeload
 
 import androidx.compose.runtime.getValue
+import com.programmersbox.telemetry.events.EpisodePlayRequested
+import com.programmersbox.telemetry.NoOpAnalytics
+import com.programmersbox.telemetry.Analytics
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.programmersbox.kmpmodels.KmpChapterModel
@@ -64,6 +67,9 @@ sealed interface EpisodeLoadDecision {
  */
 class EpisodeLoader(
     private val handoffScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+    /** Resolved when logging, so the owner can be built before Koin finishes. */
+    private val analytics: () -> Analytics = { NoOpAnalytics },
+    private val sourceName: (String) -> String = { it },
 ) {
     var state: EpisodeLoadState? by mutableStateOf(null)
         private set
@@ -200,7 +206,13 @@ class EpisodeLoader(
                 } catch (_: Exception) {
                     emptyList()
                 }
-                if (sources.isNotEmpty()) break
+                if (sources.isNotEmpty()) {
+                    if (action == EpisodeAction.Play) {
+                        // Telemetry must never break playback (some sources throw from serviceName)
+                        runCatching { analytics().log(EpisodePlayRequested(sourceName(model.source.serviceName), sources.size)) }
+                    }
+                    break
+                }
 
                 if (action == EpisodeAction.Download) {
                     release()

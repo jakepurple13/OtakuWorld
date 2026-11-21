@@ -1,6 +1,9 @@
 package com.programmersbox.animeworld
 
 import com.programmersbox.kmpuiviews.utils.composables.transitions.rememberChapterRevealOrigin
+import com.programmersbox.telemetry.events.DownloadStarted
+import com.programmersbox.kmpuiviews.telemetry.koinSourceName
+import com.programmersbox.kmpuiviews.telemetry.koinAnalytics
 import androidx.compose.foundation.layout.Box
 import com.programmersbox.kmpuiviews.utils.composables.transitions.ChapterOpenMotion
 import com.programmersbox.kmpuiviews.utils.composables.transitions.chapterOpenTransition
@@ -247,6 +250,7 @@ class GenericAnime(
             episodeLoader.finishHandoff()
         } else {
             storageHolder.storageModel = storage
+            storageHolder.sourceName = runCatching { model.source.serviceName }.getOrNull()
             storageHolder.showTitle = infoModel.title
             storageHolder.posterUrl = infoModel.imageUrl
             navController.navigate(
@@ -362,6 +366,7 @@ class GenericAnime(
     }
 
     override suspend fun enqueueResolved(storage: KmpStorage, model: KmpChapterModel, infoModel: KmpInfoModel) {
+        runCatching { koinAnalytics().log(DownloadStarted(koinSourceName(model.source.serviceName), "anime")) }
         enqueueEpisodeDownload(
             context,
             EpisodeDownloadRequest(
