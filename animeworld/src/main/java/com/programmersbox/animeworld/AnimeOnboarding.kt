@@ -1,7 +1,5 @@
 package com.programmersbox.animeworld
 
-import com.programmersbox.anime.shared.videoplayer.PlayerPreviewDefaults
-import com.programmersbox.anime.shared.videoplayer.PlayerStyleSheetSetting
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -13,17 +11,11 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
-import androidx.compose.material.icons.filled.BatteryAlert
 import androidx.compose.material.icons.filled.BrightnessMedium
-import androidx.compose.material.icons.filled.PersonalVideo
-import androidx.compose.material.icons.filled.Subtitles
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -32,90 +24,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.programmersbox.datastore.NewSettingsHandling
-import com.programmersbox.datastore.asState
-import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
-import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
-import com.programmersbox.kmpuiviews.presentation.components.settings.SliderSetting
-import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
 import com.programmersbox.kmpuiviews.presentation.tips.TipGesture
 import com.programmersbox.kmpuiviews.presentation.tips.TipsScope
-import kotlinx.coroutines.launch
-import org.koin.compose.koinInject
 import kotlin.math.roundToInt
-
-/** AnimeWorld's onboarding page: the player settings people usually want to set first. */
-@Composable
-fun PlayerOnboarding(
-    animeDataStoreHandling: AnimeDataStoreHandling,
-    onSubtitlesClick: () -> Unit,
-    settingsHandling: NewSettingsHandling = koinInject(),
-) {
-    val scope = rememberCoroutineScope()
-
-    Column(
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(bottom = 16.dp)
-            .verticalScroll(rememberScrollState())
-    ) {
-        ListItem(
-            headlineContent = { Text("Set up the player") },
-            supportingContent = { Text("There are more player settings in Settings.") },
-        )
-
-        CategoryGroup {
-            item { PlayerStyleSheetSetting(PlayerPreviewDefaults.Android) }
-
-            item {
-                val player by animeDataStoreHandling.useNewPlayer.asState()
-                SwitchSetting(
-                    settingTitle = { Text(stringResource(R.string.use_new_player)) },
-                    summaryValue = { Text(stringResource(R.string.use_new_player_description)) },
-                    settingIcon = { Icon(Icons.Default.PersonalVideo, null, modifier = Modifier.fillMaxSize()) },
-                    value = player,
-                    updateValue = { scope.launch { animeDataStoreHandling.useNewPlayer.set(it) } }
-                )
-            }
-
-            item {
-                PreferenceSetting(
-                    settingTitle = { Text(stringResource(R.string.subtitles)) },
-                    summaryValue = { Text("Size, color and outline") },
-                    settingIcon = { Icon(Icons.Default.Subtitles, null, modifier = Modifier.fillMaxSize()) },
-                    onClick = onSubtitlesClick,
-                )
-            }
-
-            item {
-                val batteryPercent = settingsHandling.batteryPercent
-                val saved by batteryPercent.rememberPreference()
-                var sliderValue by remember(saved) { mutableFloatStateOf(saved.toFloat()) }
-
-                SliderSetting(
-                    sliderValue = sliderValue,
-                    settingTitle = { Text("Battery alert") },
-                    settingSummary = { Text("Warn me when the battery drops below ${sliderValue.roundToInt()}%") },
-                    settingIcon = { Icon(Icons.Default.BatteryAlert, null) },
-                    range = 1f..100f,
-                    updateValue = { sliderValue = it },
-                    onValueChangedFinished = { scope.launch { batteryPercent.set(sliderValue.toInt()) } }
-                )
-            }
-        }
-    }
-}
 
 val animeTips: TipsScope.() -> Unit = {
     tip(
