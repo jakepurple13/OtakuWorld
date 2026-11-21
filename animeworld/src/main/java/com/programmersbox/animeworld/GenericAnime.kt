@@ -1,5 +1,13 @@
 package com.programmersbox.animeworld
 
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.LocalCafe
+import androidx.compose.material.icons.filled.RocketLaunch
+import androidx.compose.material.icons.filled.SportsMartialArts
+import com.programmersbox.anime.shared.onboarding.playerSetupStep
+import com.programmersbox.kmpuiviews.presentation.onboarding.GenreCard
+import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingAppConfig
 import com.programmersbox.kmpuiviews.utils.composables.transitions.rememberChapterRevealOrigin
 import com.programmersbox.telemetry.events.DownloadStarted
 import com.programmersbox.kmpuiviews.telemetry.koinSourceName
@@ -517,13 +525,20 @@ class GenericAnime(
             }
         }
 
+        onboardingConfig = OnboardingAppConfig(
+            genres = listOf(
+                GenreCard("Action", Icons.Default.SportsMartialArts, 20f),
+                GenreCard("Romance", Icons.Default.Favorite, 340f),
+                GenreCard("Sci-fi", Icons.Default.RocketLaunch, 200f),
+                GenreCard("Slice of life", Icons.Default.LocalCafe, 90f),
+                GenreCard("Fantasy", Icons.Default.AutoAwesome, 280f),
+            ),
+            startLabel = "Start watching",
+            updateNoun = "episode",
+            appStepTab = "Player",
+        )
         onboardingSettings {
-            item {
-                PlayerOnboarding(
-                    animeDataStoreHandling = animeDataStoreHandling,
-                    onSubtitlesClick = { navController.navigate(SubtitleSettingsRoute) },
-                )
-            }
+            playerSetupStep()
         }
 
         tips(animeTips)

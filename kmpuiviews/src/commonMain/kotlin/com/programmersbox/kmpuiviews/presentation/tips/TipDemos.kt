@@ -51,6 +51,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -63,6 +64,9 @@ import com.programmersbox.datastore.DetailsChapterSwipeBehavior
 import com.programmersbox.datastore.NewSettingsHandling
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
+
+/** False where the host already shows the demo's instruction (the onboarding Tips step's hint). */
+val LocalTipDemoShowsInstruction = staticCompositionLocalOf { true }
 
 /** Hold a sample cover until the options sheet slides up. */
 @Composable
@@ -79,7 +83,9 @@ fun HoldCoverDemo(onDone: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
             modifier = Modifier.fillMaxSize()
         ) {
-            Text("Press and hold the cover", style = MaterialTheme.typography.titleMedium)
+            if (LocalTipDemoShowsInstruction.current) {
+                Text("Press and hold the cover", style = MaterialTheme.typography.titleMedium)
+            }
 
             Surface(
                 shape = RoundedCornerShape(12.dp),

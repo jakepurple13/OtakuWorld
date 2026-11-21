@@ -1,20 +1,11 @@
 package com.programmersbox.kmpuiviews.presentation.onboarding
 
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.OverscrollEffect
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.TargetedFlingBehavior
 import androidx.compose.foundation.gestures.snapping.SnapPosition
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.layout.MutableIntervalList
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PageSize
@@ -22,45 +13,45 @@ import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberOverscrollEffect
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.programmersbox.kmpuiviews.presentation.onboarding.motion.onboardingReducedMotion
 import com.programmersbox.kmpuiviews.utils.composables.modifiers.pagerStagger
 
 interface OnboardingScope {
-    fun item(content: @Composable () -> Unit)
+    fun step(spec: OnboardingStepSpec, content: @Composable () -> Unit)
 
     val size: Int
 
-    operator fun get(index: Int): @Composable () -> Unit
+    operator fun get(index: Int): OnboardingStepEntry
 }
 
 private class OnboardingScopeImpl(
     content: OnboardingScope.() -> Unit = {},
 ) : OnboardingScope {
-    val intervals: MutableIntervalList<@Composable () -> Unit> = MutableIntervalList()
+    val intervals: MutableIntervalList<OnboardingStepEntry> = MutableIntervalList()
 
     override val size: Int get() = intervals.size
 
-    override fun get(index: Int): @Composable (() -> Unit) = intervals[index].value
+    override fun get(index: Int): OnboardingStepEntry = intervals[index].value
 
     init {
         apply(content)
     }
 
-    override fun item(content: @Composable () -> Unit) {
-        intervals.addInterval(1, content)
+    override fun step(spec: OnboardingStepSpec, content: @Composable () -> Unit) {
+        intervals.addInterval(1, OnboardingStepEntry(spec, content))
     }
 }
+
+internal fun buildOnboardingScope(content: OnboardingScope.() -> Unit = {}): OnboardingScope =
+    OnboardingScopeImpl(content)
 
 @Composable
 fun rememberOnboardingScope(
@@ -86,6 +77,7 @@ fun Onboarding(
     overscrollEffect: OverscrollEffect? = rememberOverscrollEffect(),
 ) {
     val stateHolder = rememberSaveableStateHolder()
+    val reduced = onboardingReducedMotion()
     HorizontalPager(
         state = state,
         modifier = modifier,
@@ -102,46 +94,9 @@ fun Onboarding(
         pageSpacing = pageSpacing,
         verticalAlignment = verticalAlignment,
         pageContent = { page ->
-            Box(Modifier.pagerStagger(state, page, index = 0)) {
-                stateHolder.SaveableStateProvider(page) { onboardingScope[page]() }
+            Box(if (reduced) Modifier else Modifier.pagerStagger(state, page, index = 0)) {
+                stateHolder.SaveableStateProvider(page) { onboardingScope[page].content() }
             }
         }
     )
-}
-
-@Composable
-fun OnboardingIndicator(
-    pagerState: PagerState,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-            .wrapContentHeight()
-            .fillMaxWidth()
-    ) {
-        repeat(pagerState.pageCount) { iteration ->
-            val color by animateColorAsState(
-                when {
-                    pagerState.currentPage == iteration -> MaterialTheme.colorScheme.primary
-                    pagerState.currentPage > iteration -> MaterialTheme.colorScheme.primaryContainer
-                    else -> MaterialTheme.colorScheme.surfaceVariant
-                },
-                MaterialTheme.motionScheme.fastEffectsSpec()
-            )
-            // The current page stretches into a pill so 8+ pages still fit.
-            val width by animateDpAsState(
-                if (pagerState.currentPage == iteration) 20.dp else 8.dp,
-                MaterialTheme.motionScheme.fastSpatialSpec(),
-            )
-
-            Box(
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .background(color)
-                    .size(width = width, height = 8.dp)
-            )
-        }
-    }
 }

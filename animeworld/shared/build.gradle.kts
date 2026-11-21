@@ -102,6 +102,7 @@ kotlin {
             implementation(commonLibs.kotlin.test)
             implementation(androidLibs.okhttpMockWebServer)
             implementation(commonLibs.cmp.ui.test)
+            implementation(commonLibs.material3.window.size)
         }
     }
 }

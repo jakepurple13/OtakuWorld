@@ -1,0 +1,1155 @@
+<title>OtakuWorld Story Steps</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: header band with screentone, tab strip, then per-proposal 2-col (live phone | notes), regroup table at the end. */
+:root{
+  --bg:#eef0f5; --surface:#ffffff; --ink:#14161f; --muted:#5b6072; --line:#d8dbe5;
+  --accent:#d63a5e; --accent-ink:#ffffff; --tone:rgba(20,22,31,.09);
+  --f-display:"Bricolage Grotesque","Inter",system-ui,sans-serif;
+  --f-body:"Inter",system-ui,-apple-system,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101219; --surface:#181b25; --ink:#eceef5; --muted:#9aa0b4; --line:#2a2e3c;
+  --accent:#ff6f8f; --accent-ink:#1a0b10; --tone:rgba(236,238,245,.07); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#101219; --surface:#181b25; --ink:#eceef5; --muted:#9aa0b4; --line:#2a2e3c;
+  --accent:#ff6f8f; --accent-ink:#1a0b10; --tone:rgba(236,238,245,.07); color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 64px}
+header.hero{position:relative;padding-block:28px 22px;border-bottom:1px solid var(--line);margin-bottom:22px}
+header.hero::before{content:"";position:absolute;inset:0 -40vw;z-index:-1;background-image:radial-gradient(var(--tone) 1.3px,transparent 1.4px);background-size:9px 9px;-webkit-mask-image:linear-gradient(to bottom,#000 10%,transparent);mask-image:linear-gradient(to bottom,#000 10%,transparent)}
+.eyebrow{font:600 12px/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+h1{font-family:var(--f-display);font-weight:800;font-size:clamp(30px,4.4vw,50px);line-height:1.04;letter-spacing:-.02em;margin:12px 0 12px;text-wrap:balance;max-width:20ch}
+.lede{color:var(--muted);max-width:64ch;margin:0}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 14px}
+.tab{appearance:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:14px;padding:10px 14px;font:600 14px var(--f-body);cursor:pointer;display:flex;gap:10px;align-items:center;text-align:left}
+.tab b{font:800 18px var(--f-display);width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:var(--bg)}
+.tab small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.tab[aria-selected="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.tab[aria-selected="true"] b{background:var(--accent);color:var(--accent-ink)}
+.tab:focus-visible,.appsw button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.appsw{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:22px;font-size:13px;color:var(--muted)}
+.appsw .grp{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;background:var(--surface)}
+.appsw button{border:0;background:none;color:var(--ink);font:500 13px var(--f-body);padding:6px 12px;border-radius:999px;cursor:pointer}
+.appsw button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.panel{display:grid;grid-template-columns:340px minmax(0,1fr);gap:44px;align-items:start}
+@media (max-width:860px){.panel{grid-template-columns:minmax(0,1fr)}.stagecol{justify-self:center}}
+.stagecol{position:sticky;top:16px;display:flex;flex-direction:column;align-items:center;gap:12px}
+@media (max-width:860px){.stagecol{position:static}}
+.phone-actions{display:flex;gap:8px}
+.ghost{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:7px 14px;font:500 13px var(--f-body);cursor:pointer}
+.notes{min-width:0}
+.notes h2{font-family:var(--f-display);font-weight:700;font-size:30px;letter-spacing:-.015em;margin:0 0 6px;line-height:1.1}
+.notes .pitch{font-size:17px;color:var(--ink);max-width:60ch;margin:0 0 18px}
+.notes h3{font:600 12px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:26px 0 10px}
+.flow{list-style:none;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:6px}
+.flow li{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:5px 10px;font-size:13px}
+.flow li.alt{border-style:dashed;color:var(--muted)}
+.mtable{width:100%;border-collapse:collapse;font-size:13.5px}
+.mwrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.mtable th,.mtable td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.mtable tr:last-child td{border-bottom:0}
+.mtable th{font:600 11px var(--f-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.mtable code,.notes code{font:500 12px var(--f-mono);background:var(--bg);padding:1px 5px;border-radius:5px;white-space:nowrap}
+.tradeoffs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:560px){.tradeoffs{grid-template-columns:1fr}}
+.tradeoffs div{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:14px}
+.tradeoffs b{display:block;font:600 12px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
+.tradeoffs .pro b{color:#2f9e6a}.tradeoffs .con b{color:var(--accent)}
+.tradeoffs ul{margin:0;padding-left:18px}
+section.regroup{margin-top:64px;border-top:1px solid var(--line);padding-top:28px}
+section.regroup h2{font-family:var(--f-display);font-size:30px;margin:0 0 6px;letter-spacing:-.015em}
+section.regroup p{color:var(--muted);max-width:66ch;margin:0 0 16px}
+.tag{display:inline-block;font:500 11px var(--f-mono);padding:1px 6px;border-radius:5px;border:1px solid var(--line);color:var(--muted);margin-left:4px}
+.tag.new{border-color:var(--accent);color:var(--accent)}
+
+/* ---------- Phone ---------- */
+.phone{width:320px;height:660px;border-radius:46px;padding:9px;background:#0d0e12;box-shadow:0 30px 60px -20px rgba(10,12,30,.45),inset 0 0 0 2px #2b2d36;flex:none}
+.screen{position:relative;height:100%;border-radius:38px;overflow:hidden;background:var(--ps);color:var(--pon);font:13px/1.4 var(--f-body);transition:background-color .45s,color .45s;isolation:isolate}
+:where(.screen *){transition:background-color .45s,color .45s,border-color .45s}
+.screen button{font:inherit;color:inherit}
+.screen button:focus-visible{outline:2px solid var(--pp);outline-offset:2px}
+.sb{height:30px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-weight:600;font-size:12px;flex:none}
+.sb .cam{width:10px;height:10px;border-radius:50%;background:#0d0e12;position:absolute;left:50%;top:10px;transform:translateX(-50%)}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ic.s{width:16px;height:16px}
+.reveal{position:absolute;border-radius:50%;pointer-events:none;z-index:50;width:20px;height:20px;margin:-10px 0 0 -10px}
+.toast{position:absolute;left:50%;bottom:90px;transform:translateX(-50%);background:var(--pon);color:var(--ps);padding:9px 14px;border-radius:12px;font-weight:500;z-index:60;white-space:nowrap;animation:toast 2.4s both}
+@keyframes toast{0%{opacity:0;transform:translate(-50%,16px) scale(.9)}12%,85%{opacity:1;transform:translate(-50%,0) scale(1)}100%{opacity:0;transform:translate(-50%,8px)}}
+canvas.confetti{position:absolute;inset:0;pointer-events:none;z-index:55}
+
+/* shared controls */
+.lbl{font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--pon2);margin:14px 0 6px;font-weight:600}
+.seg{position:relative;display:flex;background:var(--ps2);border-radius:999px;padding:3px}
+.seg button{flex:1;position:relative;z-index:1;background:none;border:0;padding:7px 2px;border-radius:999px;font-weight:500;font-size:12px;cursor:pointer;transition:color .3s}
+.seg button.on{color:var(--ponp)}
+.seg .thumb{position:absolute;top:3px;bottom:3px;left:0;width:0;border-radius:999px;background:var(--pp);transition:transform .5s cubic-bezier(.3,1.35,.5,1),width .5s cubic-bezier(.3,1.35,.5,1),background-color .45s}
+.swatches{display:flex;gap:8px;flex-wrap:wrap}
+.sw{width:34px;height:34px;border-radius:50%;border:0;padding:0;cursor:pointer;position:relative;background:conic-gradient(from 225deg,hsl(var(--h) 62% 44%) 0 50%,hsl(var(--h) 72% 82%) 0);transition:border-radius .45s cubic-bezier(.3,1.6,.5,1),transform .35s cubic-bezier(.3,1.6,.5,1)}
+.sw.dyn{background:conic-gradient(hsl(250 45% 60%),hsl(320 45% 70%),hsl(30 60% 70%),hsl(160 40% 55%),hsl(250 45% 60%))}
+.sw.on{border-radius:11px;transform:scale(1.08)}
+.sw svg{position:absolute;inset:7px;width:20px;height:20px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0;transform:scale(.3);transition:opacity .2s,transform .4s cubic-bezier(.3,1.8,.5,1)}
+.sw.on svg{opacity:1;transform:scale(1)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;background:var(--ps2);border-radius:16px;margin-top:8px}
+.row>span{min-width:0}
+.row small{display:block;color:var(--pon2);font-size:11px;line-height:1.3}
+.row .lead{display:flex;align-items:center;gap:10px}
+.row .lead .ic{color:var(--pp)}
+.tg{width:44px;height:26px;border-radius:13px;border:2px solid var(--pol);background:var(--ps3);position:relative;cursor:pointer;flex:none;padding:0;transition:background-color .3s,border-color .3s}
+.tg i{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--pol);transition:transform .4s cubic-bezier(.3,1.6,.5,1),width .2s,background-color .3s}
+.tg.on{background:var(--pp);border-color:var(--pp)}
+.tg.on i{transform:translateX(18px);background:var(--ponp)}
+.collapse{display:grid;grid-template-rows:1fr;transition:grid-template-rows .45s cubic-bezier(.3,1,.4,1),opacity .3s}
+.collapse>div{overflow:hidden;min-height:0}
+.collapse.off{grid-template-rows:0fr;opacity:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--pol);background:none;border-radius:10px;padding:6px 10px;font-size:12px;cursor:pointer;display:inline-flex;gap:4px;align-items:center;transition:background-color .3s,border-color .3s,padding .3s}
+.chip.on{background:var(--pc);color:var(--ponc);border-color:transparent;padding-left:7px}
+.chip .ic{width:13px;height:13px;stroke-width:3;width:0;opacity:0;transition:width .3s,opacity .3s}
+.chip.on .ic{width:13px;opacity:1}
+.gopts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.gopt{background:var(--ps2);border:2px solid transparent;border-radius:14px;padding:8px 6px;cursor:pointer;font-size:11px;font-weight:500}
+.gopt.on{border-color:var(--pp);background:var(--pc);color:var(--ponc)}
+.gi{display:grid;gap:2px;height:30px;margin:0 auto 6px;width:44px}
+.gi span{background:currentColor;opacity:.45;border-radius:2px}
+.btn{background:var(--pp);color:var(--ponp)!important;border:0;border-radius:999px;padding:11px 20px;font-weight:600!important;cursor:pointer;display:inline-flex;align-items:center;gap:6px;justify-content:center;transition:padding .45s cubic-bezier(.3,1.4,.5,1),background-color .45s,transform .2s}
+.btn:active{transform:scale(.96)}
+.btn.tonal{background:var(--pc);color:var(--ponc)!important}
+.btn.text{background:none;color:var(--pp)!important;padding:11px 10px}
+.btn.outline{background:none;border:1px solid var(--pol);color:var(--pp)!important}
+.btn[disabled]{opacity:.38;cursor:default}
+.ptg{border:1px solid var(--pol);background:none;border-radius:999px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--pp)!important;cursor:pointer;display:inline-flex;align-items:center;gap:4px;flex:none;transition:background-color .3s,color .3s}
+.ptg .y{display:none}.ptg.on .y{display:inline-flex;align-items:center;gap:4px}.ptg.on .n{display:none}
+.ptg.on{background:var(--pc);color:var(--ponc)!important;border-color:transparent}
+.ptg .ic{width:14px;height:14px;stroke-width:3}
+.lockic .shackle{transition:transform .45s cubic-bezier(.3,1.8,.5,1);transform:translateY(-3px)}
+.lockic.on .shackle{transform:none}
+.lockic.on{animation:lockpop .5s}
+@keyframes lockpop{40%{transform:scale(1.25) rotate(-8deg)}}
+.hint{color:var(--pon2);font-size:12px;margin:8px 0 0}
+.sum{list-style:none;padding:0;margin:8px 0 0;display:flex;flex-direction:column;gap:6px}
+.sum li{display:flex;gap:10px;align-items:center;background:var(--ps2);padding:9px 12px;border-radius:14px}
+.sum li .ic{color:var(--pp);stroke-width:3;width:16px;height:16px}
+.sum li span{color:var(--pon2);font-size:11px;display:block}
+
+/* covers */
+.cov{position:relative;aspect-ratio:2/3;border-radius:7px;overflow:hidden;transform-origin:0 0;background:radial-gradient(rgba(255,255,255,.22) 1px,transparent 1.2px) 0 0/5px 5px,linear-gradient(160deg,hsl(var(--ch) 62% 64%),hsl(calc(var(--ch) + 40) 55% 30%))}
+.cov b{position:absolute;left:5px;right:5px;bottom:5px;color:#fff;font:700 8px/1.1 var(--f-display);text-shadow:0 1px 2px rgba(0,0,0,.5)}
+
+/* mini app */
+.mini{position:relative;border-radius:16px;background:var(--ps);border:1px solid var(--pol);overflow:hidden;display:flex;flex-direction:column}
+.mini.sm{height:176px;margin-top:4px}
+.mini.lg{height:100%;border:0;border-radius:0}
+.mini-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;font:700 12px var(--f-display);flex:none}
+.mini.lg .mini-bar{padding:10px 16px;font-size:18px}
+.mini-icons{display:flex;gap:6px;color:var(--pp)}
+.mini-icons i{display:grid;place-items:center;transform:scale(0);opacity:0;transition:transform .45s cubic-bezier(.3,1.8,.5,1),opacity .2s}
+.mini-icons i.on{transform:scale(1);opacity:1}
+.mini-icons .ic{width:15px;height:15px}
+.mini-grid{display:grid;gap:5px;padding:0 10px;flex:1;overflow:hidden;align-content:start}
+.mini.lg .mini-grid{padding:0 16px;gap:8px}
+.mini-grid[data-cols="4"]{grid-template-columns:repeat(4,1fr)}
+.mini-grid[data-cols="3"]{grid-template-columns:repeat(3,1fr)}
+.mini-grid[data-cols="2"]{grid-template-columns:repeat(2,1fr)}
+.mini.sm .mini-grid[data-cols="2"]{grid-template-columns:repeat(2,1fr);padding:0 50px}
+.mini-nav{position:absolute;left:0;right:0;bottom:0;height:38px;display:flex;justify-content:space-around;align-items:center;background:var(--ps3);color:var(--pon2);transition:left .5s cubic-bezier(.3,1.3,.5,1),right .5s cubic-bezier(.3,1.3,.5,1),bottom .5s cubic-bezier(.3,1.3,.5,1),border-radius .5s,box-shadow .5s,background-color .45s}
+.mini.lg .mini-nav{height:54px}
+.mini-nav[data-floating="1"]{left:22px;right:22px;bottom:8px;border-radius:999px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.mini.lg .mini-nav[data-floating="1"]{left:34px;right:34px;bottom:14px}
+.mini-nav span{display:grid;place-items:center;width:30px;height:26px;border-radius:13px}
+.mini-nav span.cur{background:var(--pc);color:var(--ponc)}
+.mini-nav .mid{background:var(--pp);color:var(--ponp);border-radius:10px}
+.mini-nav .ic{width:15px;height:15px}
+.pop{animation:pop .5s cubic-bezier(.3,1.8,.5,1)}
+@keyframes pop{0%{transform:scale(.3) rotate(-30deg)}100%{transform:none}}
+.pulse::after{content:"";position:absolute;inset:-3px;border-radius:9px;border:2px solid var(--pp);animation:pulse 1.4s infinite}
+@keyframes pulse{0%{opacity:1;transform:scale(.95)}100%{opacity:0;transform:scale(1.15)}}
+
+/* reading previews */
+.rd{position:relative;height:122px;border-radius:14px;background:var(--ps2);overflow:hidden;perspective:520px;margin-top:10px}
+.strip{position:absolute;inset:0;display:flex;gap:6px;align-items:flex-start}
+.pg{flex:none;width:68px;height:98px;border-radius:4px;box-shadow:0 2px 6px rgba(0,0,0,.2);backface-visibility:hidden;position:relative;background:linear-gradient(#d4d5dc,#d4d5dc) 5px 5px/58px 38px no-repeat,linear-gradient(#bfc0c9,#bfc0c9) 5px 47px/27px 46px no-repeat,linear-gradient(#e0e1e7,#e0e1e7) 36px 47px/27px 46px no-repeat,#fbfbfc}
+.pg::after{content:attr(data-n);position:absolute;right:4px;bottom:1px;font:600 7px var(--f-mono);color:#777}
+.rd[data-r="List"] .strip{flex-direction:column;align-items:center;padding-top:12px;animation:rdList 3.6s infinite cubic-bezier(.6,0,.3,1)}
+.rd{--gap:6px}
+.rd .strip{gap:var(--gap)}
+@keyframes rdList{0%,20%{transform:translateY(0)}40%,60%{transform:translateY(calc(-98px - var(--gap)))}80%,100%{transform:translateY(calc(-196px - 2 * var(--gap)))}}
+.rd[data-r="Pager"] .strip{padding:12px 0 0 calc(50% - 34px);animation:rdPager 3.6s infinite cubic-bezier(.6,0,.3,1)}
+@keyframes rdPager{0%,22%{transform:translateX(0)}33%,55%{transform:translateX(calc(-68px - var(--gap)))}66%,88%{transform:translateX(calc(-136px - 2 * var(--gap)))}100%{transform:translateX(0)}}
+.rd[data-r="FlipPager"] .strip,.rd[data-r="CurlPager"] .strip{display:block}
+.rd[data-r="FlipPager"] .pg,.rd[data-r="CurlPager"] .pg{position:absolute;left:calc(50% - 34px);top:12px}
+.rd .p1{z-index:3}.rd .p2{z-index:2}.rd .p3{z-index:1}
+.rd[data-r="FlipPager"] .p1{transform-origin:left center;animation:rdFlip 2.8s infinite cubic-bezier(.5,0,.3,1)}
+@keyframes rdFlip{0%,25%{transform:rotateY(0)}70%,100%{transform:rotateY(-180deg)}}
+.rd[data-r="CurlPager"] .p1{animation:rdCurl 2.8s infinite cubic-bezier(.5,0,.3,1)}
+@keyframes rdCurl{0%,25%{clip-path:polygon(0 0,100% 0,100% 100%,100% 100%,0 100%)}50%{clip-path:polygon(0 0,100% 0,100% 30%,40% 100%,0 100%)}75%,100%{clip-path:polygon(0 0,0 0,0 0,0 100%,0 100%)}}
+.pl{position:relative;height:124px;border-radius:14px;overflow:hidden;margin-top:10px;background:radial-gradient(circle at 70% 35%,hsl(40 90% 70%) 0 9px,transparent 10px),linear-gradient(transparent 62%,hsl(260 35% 18%) 62%),linear-gradient(160deg,hsl(220 55% 42%),hsl(300 40% 30%))}
+.pl>div{position:absolute;display:flex;align-items:center;gap:6px;color:#fff;font-size:9px;font-weight:600;animation:chrome 4s infinite}
+.pl .t{top:0;left:0;right:0;height:22px;padding:0 8px}
+.pl .b{bottom:0;left:0;right:0;height:24px;padding:0 8px}
+.pl .b i{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.35);position:relative}
+.pl .b i::after{content:"";position:absolute;left:0;top:0;bottom:0;width:38%;background:#fff;border-radius:2px}
+.pl .m{left:50%;top:50%;width:30px;height:30px;margin:-15px;border-radius:50%;justify-content:center;background:rgba(0,0,0,.4)}
+.pl[data-s="Classic"] .t,.pl[data-s="Classic"] .b{background:rgba(0,0,0,.6)}
+.pl[data-s="Floating"] .t{left:8px;right:auto;top:6px;height:20px;border-radius:999px;background:rgba(20,20,30,.55);backdrop-filter:blur(6px)}
+.pl[data-s="Floating"] .b{left:10px;right:10px;bottom:6px;border-radius:12px;background:rgba(20,20,30,.55);backdrop-filter:blur(6px)}
+.pl[data-s="Floating"] .m{border-radius:10px}
+.pl[data-s="Theater"] .t{background:linear-gradient(rgba(0,0,0,.6),transparent);height:34px;align-items:flex-start;padding-top:5px}
+.pl[data-s="Theater"] .b{background:linear-gradient(transparent,rgba(0,0,0,.65));height:34px;align-items:flex-end;padding-bottom:7px}
+.pl[data-s="Theater"] .m{background:none}
+@keyframes chrome{0%,8%{opacity:0}18%,70%{opacity:1}82%,100%{opacity:0}}
+.nv{background:var(--ps2);border-radius:14px;padding:12px 14px;margin-top:10px;font-family:Georgia,"Times New Roman",serif;line-height:1.5;height:122px;overflow:hidden;transition:font-size .3s}
+input[type=range]{width:100%;accent-color:var(--pp)}
+.dialrow{display:flex;align-items:center;gap:14px;margin-top:4px}
+.dial{position:relative;width:96px;height:96px;flex:none}
+.dial svg{width:96px;height:96px;transform:rotate(-90deg)}
+.dial circle{fill:none;stroke-width:9;stroke-linecap:round}
+.dial .bgc{stroke:var(--ps3)}
+.dial .arc{stroke:var(--pp);stroke-dasharray:100;transition:stroke-dashoffset .5s cubic-bezier(.3,1.3,.5,1),stroke .45s}
+.dial b{position:absolute;inset:0;display:grid;place-items:center;font:800 22px var(--f-display)}
+.bellic{color:var(--pp);animation:ring 2.4s infinite;transform-origin:50% 10%}
+@keyframes ring{0%,70%,100%{transform:none}75%{transform:rotate(16deg)}80%{transform:rotate(-14deg)}85%{transform:rotate(9deg)}90%{transform:rotate(-5deg)}}
+.tipzone{position:relative;height:190px;border-radius:16px;background:var(--ps2);display:grid;place-items:center;margin-top:10px;overflow:hidden}
+.tipcard{position:relative;width:86px;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;transition:transform .3s}
+.tipcard .cov{transform-origin:center}
+.tipcard .cov b{font-size:10px}
+.tipcard.holding{transform:scale(.94)}
+.tipcard .ring{position:absolute;inset:-6px;border-radius:12px;border:3px solid var(--pp);clip-path:inset(0 100% 0 0);opacity:0}
+.tipcard.holding .ring{animation:hold .5s linear forwards;opacity:1}
+@keyframes hold{to{clip-path:inset(0 0 0 0)}}
+.qm{position:absolute;left:50%;top:50%;width:150px;margin-left:-75px;margin-top:-62px;background:var(--ps);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.3);padding:6px;display:flex;flex-direction:column;transform:scale(.4);opacity:0;pointer-events:none;transition:transform .45s cubic-bezier(.3,1.5,.5,1),opacity .2s;z-index:3}
+.tipzone.open .qm{transform:none;opacity:1;pointer-events:auto}
+.qm button{display:flex;gap:8px;align-items:center;border:0;background:none;padding:8px 10px;border-radius:10px;cursor:pointer;text-align:left;opacity:0;transform:translateY(6px);transition:opacity .25s,transform .35s}
+.tipzone.open .qm button{opacity:1;transform:none}
+.tipzone.open .qm button:nth-child(2){transition-delay:.05s}.tipzone.open .qm button:nth-child(3){transition-delay:.1s}
+.qm .ic{width:16px;height:16px;color:var(--pp)}
+.socket{display:flex;gap:6px;align-items:center;justify-content:center;height:70px;background:var(--ps2);border-radius:16px;margin-top:10px;position:relative;overflow:hidden}
+.ext{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font:800 13px var(--f-display);color:#fff;animation:plug 3.2s infinite cubic-bezier(.3,1.4,.5,1);animation-delay:calc(var(--k)*.18s);background:hsl(var(--eh) 55% 48%)}
+@keyframes plug{0%{transform:translateY(60px) scale(.6);opacity:0}25%,80%{transform:none;opacity:1}100%{transform:translateY(-10px);opacity:0}}
+.fan{position:relative;height:150px;margin:6px 0 4px}
+.fan .cov{position:absolute;width:78px;left:calc(50% - 39px);top:14px;transform-origin:50% 120%;animation:deal .8s cubic-bezier(.3,1.4,.5,1) both;animation-delay:calc(var(--k)*90ms + 120ms);box-shadow:0 8px 18px rgba(0,0,0,.25)}
+.fan .cov b{font-size:9px}
+@keyframes deal{from{transform:translateY(160px) rotate(0) scale(.8);opacity:0}to{transform:translateX(calc((var(--k) - 2) * 30px)) rotate(calc((var(--k) - 2) * 9deg));opacity:1}}
+.coming{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.coming span{background:var(--ps2);border-radius:10px;padding:5px 9px;font-size:12px;display:inline-flex;gap:5px;align-items:center}
+.coming .ic{width:14px;height:14px;color:var(--pp)}
+
+/* ---------- A: Story steps ---------- */
+.A{display:flex;flex-direction:column;height:100%}
+.a-top{display:flex;align-items:center;gap:10px;padding:4px 10px 0 18px;flex:none}
+.prog{flex:1;display:flex;gap:4px}
+.prog i{flex:1;height:4px;border-radius:2px;background:var(--ps3);overflow:hidden;position:relative;transition:flex .5s cubic-bezier(.3,1.3,.5,1)}
+.prog i.cur{flex:2.4}
+.prog i::after{content:"";position:absolute;inset:0;background:var(--pp);transform:scaleX(var(--f,0));transform-origin:left;transition:transform .5s cubic-bezier(.3,1,.4,1),background-color .45s}
+.a-stage{flex:1;position:relative;overflow:hidden}
+.a-blob{position:absolute;left:20px;top:14px;width:64px;height:64px;background:var(--pc);color:var(--ponc);display:grid;place-items:center;z-index:2;transition:border-radius .8s cubic-bezier(.3,1.4,.5,1),transform .8s cubic-bezier(.3,1.4,.5,1),background-color .45s}
+.a-blob .ic{width:28px;height:28px}
+.a-blob span{display:grid;place-items:center}
+.a-step{position:absolute;inset:0;padding:92px 20px 16px;overflow-y:auto;scrollbar-width:none}
+.a-step::-webkit-scrollbar{display:none}
+.a-step[data-id="welcome"]{padding-top:6px}
+.a-step h2{font:800 25px/1.08 var(--f-display);letter-spacing:-.02em;margin:0 0 6px;text-wrap:balance}
+.a-step p.body{margin:0 0 4px;color:var(--pon2)}
+.st{animation:stIn .55s cubic-bezier(.2,1.1,.4,1) both;animation-delay:calc(var(--i,0)*45ms)}
+@keyframes stIn{from{opacity:0;transform:translateX(calc(var(--dir,1)*36px))}to{opacity:1;transform:none}}
+.a-step.leave{animation:stOut .26s ease-in forwards;pointer-events:none}
+@keyframes stOut{to{opacity:0;transform:translateX(calc(var(--dir,1)*-40px)) scale(.97)}}
+.a-bottom{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 20px;flex:none}
+.a-bottom .btn span{display:inline-block;animation:lab .35s both}
+@keyframes lab{from{opacity:0;transform:translateY(8px)}}
+.skip{border:0;background:none;color:var(--pp);font-weight:600;cursor:pointer;padding:6px 8px}
+
+/* ---------- B: Live shelf ---------- */
+.B{display:flex;flex-direction:column;height:100%}
+.b-prev{position:relative;height:270px;flex:none;transition:height .7s cubic-bezier(.3,1.1,.4,1)}
+.b-prev.full{height:calc(100% - 30px)}
+.b-read{position:absolute;inset:0;z-index:4;background:var(--ps);padding:14px 16px;display:flex;flex-direction:column;justify-content:center;opacity:0;transform:scale(.92);pointer-events:none;transition:opacity .35s,transform .5s cubic-bezier(.3,1.3,.5,1)}
+.b-read.on{opacity:1;transform:none}
+.b-read .rd,.b-read .pl,.b-read .nv{height:200px;margin:0}
+.b-read .pg{width:96px;height:140px}
+.b-read .rd[data-r="Pager"] .strip{padding-left:calc(50% - 48px)}
+.b-read .rd[data-r="FlipPager"] .pg,.b-read .rd[data-r="CurlPager"] .pg{left:calc(50% - 48px);top:30px}
+.b-read .rd[data-r="Pager"] .strip,.b-read .rd[data-r="List"] .strip{padding-top:30px}
+.b-sheet{flex:1;min-height:0;background:var(--ps2);border-radius:26px 26px 0 0;display:flex;flex-direction:column;box-shadow:0 -8px 24px rgba(0,0,0,.12);transition:transform .6s cubic-bezier(.4,0,.2,1),background-color .45s;position:relative;z-index:5}
+.b-sheet.gone{transform:translateY(105%)}
+.b-sheet .grab{width:32px;height:4px;border-radius:2px;background:var(--pol);margin:8px auto 4px;flex:none}
+.b-tabs{display:flex;gap:4px;overflow-x:auto;padding:4px 14px 6px;scrollbar-width:none;flex:none}
+.b-tabs::-webkit-scrollbar{display:none}
+.b-tabs button{flex:none;border:0;background:var(--ps3);border-radius:999px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;display:flex;gap:4px;align-items:center;transition:background-color .3s,color .3s}
+.b-tabs button.cur{background:var(--pp);color:var(--ponp)}
+.b-tabs button.seen:not(.cur)::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--pp)}
+.b-body{flex:1;min-height:0;overflow-y:auto;padding:4px 16px 8px;scrollbar-width:none;position:relative}
+.b-body::-webkit-scrollbar{display:none}
+.b-body .lbl:first-of-type{margin-top:10px}
+.b-body h2{font:800 20px/1.1 var(--f-display);margin:4px 0 2px;letter-spacing:-.015em}
+.b-body p.body{color:var(--pon2);margin:0;font-size:12px}
+.b-foot{display:flex;justify-content:space-between;align-items:center;padding:6px 14px 18px;flex:none}
+.b-done{position:absolute;left:0;right:0;bottom:22px;display:flex;justify-content:center;z-index:8;opacity:0;transform:translateY(20px);pointer-events:none;transition:opacity .4s .4s,transform .5s .4s cubic-bezier(.3,1.4,.5,1)}
+.b-done.on{opacity:1;transform:none;pointer-events:auto}
+
+/* ---------- C: Quick start + checklist ---------- */
+.C{position:relative;height:calc(100% - 30px)}
+.c-view{position:absolute;inset:0;display:flex;flex-direction:column;padding:6px 18px 18px;transition:opacity .4s,transform .55s cubic-bezier(.3,1.1,.4,1)}
+.c-view.hide{opacity:0;transform:translateX(-30px);pointer-events:none}
+.c-view.right.hide{transform:translateX(30px)}
+.c-view h2{font:800 24px/1.08 var(--f-display);letter-spacing:-.02em;margin:8px 0 4px;text-wrap:balance}
+.c-view p.body{color:var(--pon2);margin:0 0 10px}
+.presets{display:flex;flex-direction:column;gap:9px;flex:1;min-height:0}
+.preset{display:flex;gap:12px;align-items:center;text-align:left;padding:10px;border-radius:20px;border:2px solid transparent;background:var(--ps2);cursor:pointer;position:relative;transition:border-color .3s,transform .3s,background-color .45s}
+.preset:active{transform:scale(.98)}
+.preset.on{border-color:var(--pp)}
+.preset .pv{width:62px;height:76px;border-radius:12px;flex:none;position:relative;overflow:hidden;padding:6px;display:grid;grid-template-columns:1fr 1fr;gap:3px;align-content:start}
+.preset .pv i{aspect-ratio:2/3;border-radius:3px}
+.preset .pv u{position:absolute;left:6px;right:6px;bottom:5px;height:9px;border-radius:5px}
+.preset b{font:700 15px var(--f-display);display:block}
+.preset small{color:var(--pon2);font-size:11.5px;line-height:1.3;display:block}
+.preset .ok{position:absolute;right:10px;top:10px;width:22px;height:22px;border-radius:50%;background:var(--pp);color:var(--ponp);display:grid;place-items:center;transform:scale(0);transition:transform .45s cubic-bezier(.3,1.8,.5,1)}
+.preset.on .ok{transform:scale(1)}
+.preset .ok .ic{width:13px;height:13px;stroke-width:3.5}
+.c-actions{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.hubhead{display:flex;gap:12px;align-items:center;margin:6px 0 10px}
+.ring{position:relative;width:54px;height:54px;flex:none}
+.ring svg{width:54px;height:54px;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:6;stroke-linecap:round}
+.ring .bgc{stroke:var(--ps3)}
+.ring .arc{stroke:var(--pp);stroke-dasharray:100;transition:stroke-dashoffset .8s cubic-bezier(.3,1.3,.5,1),stroke .45s}
+.ring b{position:absolute;inset:0;display:grid;place-items:center;font:800 15px var(--f-display)}
+.hubhead h2{margin:0;font-size:21px}
+.hubhead p{margin:0;color:var(--pon2);font-size:12px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1;min-height:0;align-content:start}
+.tile{position:relative;text-align:left;border:0;background:var(--ps2);border-radius:18px;padding:11px;cursor:pointer;display:flex;flex-direction:column;gap:6px;min-height:84px;transition:transform .35s cubic-bezier(.3,1.4,.5,1),background-color .45s,opacity .3s}
+.tile:active{transform:scale(.96)}
+.tile.wide{grid-column:span 2;min-height:0;flex-direction:row;align-items:center}
+.tile .ti{width:30px;height:30px;border-radius:10px;background:var(--pc);color:var(--ponc);display:grid;place-items:center;transition:border-radius .5s cubic-bezier(.3,1.5,.5,1),background-color .45s}
+.tile .ti .ic{width:17px;height:17px}
+.tile b{font-weight:600;font-size:13px;display:block}
+.tile small{color:var(--pon2);font-size:11px;line-height:1.25;display:block}
+.tile .chk{position:absolute;right:9px;top:9px;width:20px;height:20px;border-radius:50%;background:var(--pp);color:var(--ponp);display:grid;place-items:center;transform:scale(0) rotate(-90deg);transition:transform .5s cubic-bezier(.3,1.8,.5,1)}
+.tile .chk .ic{width:12px;height:12px;stroke-width:3.5}
+.tile.done .chk{transform:none}
+.tile.done .ti{border-radius:50%}
+.tile.out{transform:scale(.4);opacity:0}
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .35s;z-index:20}
+.scrim.on{opacity:1;pointer-events:auto}
+.c-sheet{position:absolute;left:0;right:0;bottom:0;max-height:84%;background:var(--ps);border-radius:26px 26px 0 0;z-index:21;transform:translateY(105%);transition:transform .5s cubic-bezier(.3,1.1,.4,1),background-color .45s;display:flex;flex-direction:column}
+.c-sheet.on{transform:none}
+.c-sheet .grab{width:32px;height:4px;border-radius:2px;background:var(--pol);margin:8px auto 2px;flex:none}
+.c-sheet .cs-body{overflow-y:auto;padding:4px 18px 8px;scrollbar-width:none;flex:1;min-height:0}
+.c-sheet .cs-body::-webkit-scrollbar{display:none}
+.c-sheet h3{font:800 19px var(--f-display);margin:6px 0 0;letter-spacing:-.01em}
+.c-sheet .cs-foot{padding:8px 18px 22px;display:flex;justify-content:flex-end;flex:none}
+.fin{align-items:center;justify-content:center;text-align:center}
+.bigchk{width:96px;height:96px;border-radius:32px;background:var(--pc);color:var(--ponc);display:grid;place-items:center;animation:bigin .7s cubic-bezier(.3,1.5,.5,1) both}
+@keyframes bigin{from{transform:scale(0) rotate(-60deg);border-radius:50%}}
+.bigchk svg{width:54px;height:54px;fill:none;stroke:currentColor;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
+.bigchk path{stroke-dasharray:30;stroke-dashoffset:30;animation:draw .5s .45s forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.fin .chips{justify-content:center;margin:12px 0 18px}
+.fin .chips span{background:var(--ps2);border-radius:10px;padding:5px 9px;font-size:11.5px;animation:stIn .5s both;animation-delay:calc(.6s + var(--i)*60ms);--dir:0}
+
+@media (prefers-reduced-motion: reduce){
+  .screen *,.screen *::before,.screen *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+.toc{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 30px}
+.toc a{font:500 13px var(--f-body);color:var(--ink);text-decoration:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px}
+.toc a:hover,.toc a:focus-visible{border-color:var(--accent);outline:none}
+.scr{display:grid;grid-template-columns:340px minmax(0,1fr);gap:44px;align-items:start;padding-block:36px;border-top:1px solid var(--line);scroll-margin-top:12px}
+.scr.glob{grid-template-columns:minmax(0,1fr)}
+@media (max-width:860px){.scr{grid-template-columns:minmax(0,1fr)}.scr .stagecol{justify-self:center}}
+.spec{min-width:0}
+.spec .num{font:600 12px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.spec h2{font-family:var(--f-display);font-weight:700;font-size:30px;letter-spacing:-.015em;margin:4px 0 8px;line-height:1.1}
+.spec .pitch{font-size:16px;max-width:64ch;margin:0 0 6px}
+.spec h3{font:600 12px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:22px 0 8px}
+.spec ul.on,.spec ul.oq{margin:0;padding-left:18px;max-width:68ch}
+.spec ul.on li,.spec ul.oq li{margin-bottom:4px}
+.spec ul.oq{list-style:none;padding:0}
+.spec ul.oq li{background:var(--surface);border:1px dashed var(--accent);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.spec .k{font:500 11px var(--f-mono);color:var(--muted);margin-left:4px}
+.spec code{font:500 12px var(--f-mono);background:var(--bg);padding:1px 5px;border-radius:5px}
+.spec .mtable code{white-space:normal}
+.fine{color:var(--muted);font-size:13.5px;margin:10px 0 0;max-width:68ch}
+.shapes{display:flex;flex-wrap:wrap;gap:14px}
+.shapes span{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12.5px;font-weight:600;width:72px;text-align:center}
+.shapes small{font:400 10.5px var(--f-mono);color:var(--muted)}
+.shapes i{width:44px;height:44px;background:var(--accent);opacity:.85;display:block}
+/* skip dialog */
+.dlg-scrim{position:absolute;inset:0;background:rgba(0,0,0,.45);z-index:40;opacity:0;pointer-events:none;transition:opacity .3s}
+.dlg-scrim.on{opacity:1;pointer-events:auto}
+.dlg{position:absolute;left:24px;right:24px;top:32%;max-width:340px;margin:0 auto;background:var(--ps2);color:var(--pon);border-radius:28px;padding:22px 22px 12px;z-index:41;transform-origin:92% -30%;transform:scale(.4);opacity:0;pointer-events:none;transition:transform .45s cubic-bezier(.3,1.3,.5,1),opacity .2s}
+.dlg.on{transform:none;opacity:1;pointer-events:auto}
+.dlg .di{width:40px;height:40px;border-radius:14px;background:var(--pc);color:var(--ponc);display:grid;place-items:center;margin:0 auto 12px}
+.dlg h3{font:800 20px var(--f-display);margin:0 0 8px;text-align:center;color:var(--pon);letter-spacing:-.01em;text-transform:none}
+.dlg p{margin:0 0 14px;color:var(--pon2);font-size:13px}
+.dlg .acts{display:flex;justify-content:flex-end;gap:4px}
+/* welcome cover options */
+.opts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:760px){.opts{grid-template-columns:minmax(0,1fr)}}
+.opt{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:var(--surface)}
+.optstage{background:var(--ps);color:var(--pon);padding:6px 10px 14px;position:relative;overflow:hidden}
+.optstage .fan{height:140px}
+.optstage .ttl{font:800 17px var(--f-display);text-align:center;margin-top:2px}
+.opt .cap{padding:10px 12px 12px;font-size:13.5px}
+.opt .cap b{display:block;font-size:14px;margin-bottom:2px}
+.opt .cap span{color:var(--muted)}
+.fan .card{position:absolute;width:78px;aspect-ratio:2/3;left:calc(50% - 39px);top:14px;border-radius:10px;transform-origin:50% 120%;animation:deal .8s cubic-bezier(.3,1.4,.5,1) both;animation-delay:calc(var(--k)*90ms + 120ms);box-shadow:0 8px 18px rgba(0,0,0,.2);display:grid;place-items:center;overflow:hidden}
+.card.abs i{display:block;width:42px;height:42px}
+.card.gen{display:flex;align-items:center;justify-content:center;flex-direction:column;color:#fff;font:700 10px var(--f-display);gap:6px;text-align:center}
+.card.gen .ic{width:26px;height:26px;stroke-width:2.2}
+/* tablet */
+.tabwrap{width:100%;overflow:hidden}
+.tablet{width:900px;height:580px;border-radius:34px;padding:12px;background:#0d0e12;box-shadow:0 30px 60px -20px rgba(10,12,30,.45),inset 0 0 0 2px #2b2d36;transform-origin:0 0}
+.tablet .screen{border-radius:24px}
+.wide .a-top{padding:6px 24px 0 48px}
+.wide .a-blob{left:48px;top:36px;width:104px;height:104px}
+.wide .a-blob .ic{width:44px;height:44px}
+.wide .a-step{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:48px;padding:36px 48px 16px;overflow:hidden}
+.wide .a-step[data-id="welcome"]{padding-top:36px}
+.wide .wl{padding-top:136px}
+.wide .a-step[data-id="welcome"] .wl{padding-top:60px}
+.wide .wl h2{font-size:38px}
+.wide .wl p.body{font-size:15px;max-width:34ch}
+.wide .wr{overflow-y:auto;scrollbar-width:none;padding:4px 4px 12px;align-self:stretch}
+.wide .wr::-webkit-scrollbar{display:none}
+.wide .wr .lbl:first-child{margin-top:4px}
+.wide .mini.sm{height:210px}
+.wide .fan{height:220px}
+.wide .fan .cov{width:110px;left:calc(50% - 55px);top:30px}
+.wide .a-bottom{padding:10px 32px 20px}
+/* full reader preview */
+.rvwrap{position:sticky;top:-2px;z-index:5;background:var(--ps);padding:4px 0 6px;margin:8px 0 2px}
+.wide .rvwrap{top:0}
+.rv{position:relative;height:178px;border-radius:16px;overflow:hidden;background:var(--ps2)}
+.rv .rd{position:absolute;inset:0;height:auto;margin:0;border-radius:0;background:transparent}
+.rv .rd[data-r="List"] .strip,.rv .rd[data-r="Pager"] .strip{padding-top:16px}
+.rv .rd[data-r="FlipPager"] .pg,.rv .rd[data-r="CurlPager"] .pg{top:16px}
+.rv-line{position:absolute;top:0;left:0;right:0;height:3px;z-index:4;background:linear-gradient(var(--pp),var(--pp)) 0 0/30% 100% no-repeat,var(--pol)}
+.rv[data-ps="Segments"] .rv-line{height:4px;top:3px;left:8px;right:8px;background:repeating-linear-gradient(90deg,transparent 0 10%,var(--ps2) 10% 11%),linear-gradient(var(--pp),var(--pp)) 0 0/30% 100% no-repeat,var(--pol);border-radius:2px}
+.pi{position:absolute;z-index:4;left:50%;bottom:46px;transform:translateX(-50%);font:600 10px var(--f-body);white-space:nowrap;transition:bottom .45s cubic-bezier(.3,1.3,.5,1),opacity .3s}
+.rv[data-fb="0"] .pi{bottom:42px}
+.rv[data-ps="Classic"] .pi{background:rgba(0,0,0,.6);color:#fff;padding:2px 7px;border-radius:6px}
+.rv[data-ps="Pill"] .pi{background:var(--pc);color:var(--ponc);padding:3px 11px;border-radius:999px;font-weight:700}
+.rv[data-ps="Morph"] .pi{background:var(--pp);color:var(--ponp);height:20px;min-width:20px;display:grid;place-items:center;border-radius:999px;animation:morphpill 2.4s infinite cubic-bezier(.3,1.4,.5,1)}
+@keyframes morphpill{0%,40%{padding:0 7px;border-radius:999px}55%,90%{padding:0 22px;border-radius:7px}}
+.rv[data-ps="Folio"] .pi{left:auto;right:14px;transform:none;font:italic 500 11px Georgia,serif;color:var(--pon2)}
+.rv[data-ps="Scrubber"] .pi{left:18px;right:18px;transform:none;height:4px;border-radius:2px;background:var(--pol)}
+.rv[data-ps="Scrubber"] .pi::after{content:"";position:absolute;left:30%;top:-4px;width:12px;height:12px;border-radius:50%;background:var(--pp)}
+.rv[data-ps="Rail"] .pi{left:auto;right:6px;top:18px;bottom:52px;transform:none;width:4px;border-radius:2px;background:var(--pol)}
+.rv[data-ps="Rail"] .pi::after{content:"";position:absolute;left:-2px;top:28%;width:8px;height:22px;border-radius:4px;background:var(--pp)}
+.rv[data-ps="Segments"] .pi,.rv[data-ps="LineOnly"] .pi{opacity:0}
+.rbar{position:absolute;left:0;right:0;bottom:0;height:34px;z-index:4;display:flex;justify-content:space-around;align-items:center;background:var(--ps3);color:var(--pon);transition:left .5s cubic-bezier(.3,1.3,.5,1),right .5s cubic-bezier(.3,1.3,.5,1),bottom .5s cubic-bezier(.3,1.3,.5,1),border-radius .5s,box-shadow .5s}
+.rv[data-fb="1"] .rbar{left:22px;right:22px;bottom:7px;border-radius:999px;box-shadow:0 6px 16px rgba(0,0,0,.25)}
+.rbar .pgs{font:700 10px var(--f-body);background:var(--pc);color:var(--ponc);padding:3px 8px;border-radius:999px;transition:opacity .3s,transform .4s cubic-bezier(.3,1.6,.5,1)}
+.rv[data-pb="0"] .rbar .pgs,.rv[data-fb="0"] .rbar .pgs{opacity:0;transform:scale(.4)}
+.rdrawer{position:absolute;top:0;bottom:0;left:0;width:46%;z-index:6;background:var(--ps);box-shadow:4px 0 16px rgba(0,0,0,.25);padding:10px;display:flex;flex-direction:column;gap:6px;font-size:10px;font-weight:600;transform:translateX(-105%)}
+.rdrawer .ic{color:var(--pp)}
+.rdrawer i{display:block;height:8px;border-radius:4px;background:var(--ps3)}
+.rdrawer.peek{animation:peek 1.6s cubic-bezier(.3,1.2,.4,1)}
+@keyframes peek{0%{transform:translateX(-105%)}25%,70%{transform:none}100%{transform:translateX(-105%)}}
+.rvwrap .pl{margin:0;height:150px}
+.pl[data-blur="0"] .t,.pl[data-blur="0"] .b{backdrop-filter:none!important}
+.pl[data-blur="0"][data-s="Floating"] .t,.pl[data-blur="0"][data-s="Floating"] .b{background:rgba(20,20,30,.92)}
+.subl{position:absolute;left:8px;right:8px;margin:0;text-align:center;z-index:2;transition:bottom .3s,opacity .3s;line-height:1.25}
+.subl span{padding:1px 5px;border-radius:3px;transition:font-size .2s}
+.sw.solid{box-shadow:inset 0 0 0 1px var(--pol)}
+.sw.solid svg{stroke:var(--pp)}
+/* sources explainer */
+.how{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.how li{list-style:none;display:flex;gap:10px;align-items:flex-start;padding:9px 11px;border-radius:14px;background:var(--ps2);transition:background-color .4s,transform .4s cubic-bezier(.3,1.4,.5,1)}
+.how li .n{width:24px;height:24px;border-radius:8px;flex:none;background:var(--ps3);display:grid;place-items:center;font:800 12px var(--f-display);transition:background-color .4s,color .4s,border-radius .5s cubic-bezier(.3,1.5,.5,1)}
+.how li small{display:block;color:var(--pon2);font-size:11px;line-height:1.3}
+.how li.cur{background:var(--pc);color:var(--ponc);transform:scale(1.02)}
+.how li.cur small{color:var(--ponc);opacity:.85}
+.how li.cur .n{background:var(--pp);color:var(--ponp);border-radius:50%}
+.how{padding:0;margin-bottom:0}
+.wherebox{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.wherebox .row{margin-top:0}
+.wherebox .badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px;background:var(--pc);color:var(--ponc);flex:none}
+</style>
+
+
+<div class="wrap">
+  <header class="hero">
+    <div class="eyebrow">OtakuWorld · Onboarding · Proposal A, screen by screen</div>
+    <h1>Story Steps, all nine screens</h1>
+    <p class="lede">Each phone below opens on its own step and is fully live: tap controls, use Back and Next, or press Replay to watch the entrance again. Under each phone is what's on the screen, the motion spec with its Compose API, and anything still open.</p>
+  </header>
+
+  <div class="appsw">Preview as
+    <span class="grp" role="group" aria-label="App">
+      <button data-app="manga" aria-pressed="true">MangaWorld</button>
+      <button data-app="anime" aria-pressed="false">AnimeWorld</button>
+      <button data-app="novel" aria-pressed="false">NovelWorld</button>
+    </span>
+  </div>
+
+  <nav class="toc" aria-label="Screens">
+    <a href="#global">Shell</a><a href="#tablet">Tablet</a><a href="#s-welcome">1 Welcome</a><a href="#s-look">2 Look</a><a href="#s-layout">3 Layout</a><a href="#s-sources">4 Sources</a><a href="#s-reading">5 Reader</a><a href="#s-sync">6 Sync</a><a href="#s-updates">7 Updates</a><a href="#s-tips">8 Tips</a><a href="#s-done">9 Done</a>
+  </nav>
+
+  <section class="scr glob" id="global">
+    <div class="spec">
+      <div class="num">Shell</div>
+      <h2>Shared frame</h2>
+      <p class="pitch">The top progress bar, the hero shape and the bottom buttons stay in place for the whole flow. Only the step content swaps.</p>
+      <h3>Pieces</h3>
+      <div class="mwrap"><table class="mtable">
+        <tr><th>Piece</th><th>Behavior</th><th>Compose</th></tr>
+        <tr><td>Progress</td><td>9 segments. The current one stretches 2.4× and fills; earlier ones stay filled.</td><td><code>Row</code> of <code>Box</code>es, <code>animateFloatAsState</code> for weight + fill, <code>fastSpatialSpec()</code></td></tr>
+        <tr><td>Hero shape</td><td>Morphs + rotates per step, icon pops in counter-rotated. Hidden on Welcome, grows in on Look.</td><td><code>Morph(MaterialShapes.A, MaterialShapes.B)</code>, progress <code>Animatable</code>, <code>defaultSpatialSpec()</code></td></tr>
+        <tr><td>Step content</td><td>Old step slides out 40dp + fades (260ms). New rows stagger in 45ms apart from the travel direction.</td><td><code>HorizontalPager</code> (swipe kept) + existing <code>Modifier.pagerStagger</code> per row</td></tr>
+        <tr><td>Back / Next</td><td>Next reads "Let's go" on Welcome, "Next" after that, and the app's start verb on Done. Its width animates.</td><td><code>Button</code> + <code>animateContentSize()</code>, label <code>AnimatedContent</code></td></tr>
+        <tr><td>Skip</td><td>Opens a "Skip setup?" dialog. It scales out from the Skip button over a scrim. "Skip" marks onboarding done and leaves; "Keep going" closes it. Hidden on Done.</td><td><code>AlertDialog</code> with an <code>icon</code>, as today; Skip sets <code>hasGoneThroughOnboarding</code> + <code>popBackStack()</code></td></tr>
+        <tr><td>System back</td><td>Goes to the previous step; on Welcome it leaves onboarding.</td><td><code>NavigationBackHandler</code> / predictive back tied to pager offset</td></tr>
+        <tr><td>Reduce motion</td><td>Shapes snap, no confetti, no stagger. Content still crossfades.</td><td>Check animator scale; swap specs for <code>snap()</code></td></tr>
+      </table></div>
+      <h3>Hero shapes</h3>
+      <div class="shapes">
+        <span><i style="border-radius:50%;transform:scale(.3)"></i>Welcome<small>hidden</small></span>
+        <span><i style="border-radius:30% 70% 70% 30% / 30% 30% 70% 70%;transform:rotate(-14deg)"></i>Look<small>Cookie9Sided</small></span>
+        <span><i style="border-radius:24%;transform:rotate(45deg)"></i>Layout<small>Diamond</small></span>
+        <span><i style="border-radius:50% 50% 20% 20%"></i>Sources<small>Arch</small></span>
+        <span><i style="border-radius:42% 58% 30% 70% / 60% 30% 70% 40%;transform:rotate(22deg)"></i>Reader<small>Clover4Leaf</small></span>
+        <span><i style="border-radius:50% 50% 50% 50% / 62% 62% 38% 38%"></i>Sync<small>Bun</small></span>
+        <span><i style="border-radius:36%;transform:rotate(-30deg)"></i>Updates<small>Sunny</small></span>
+        <span><i style="border-radius:50% 18% 50% 18%;transform:rotate(16deg)"></i>Tips<small>Flower</small></span>
+        <span><i style="border-radius:50%"></i>Done<small>Circle</small></span>
+      </div>
+      <p class="fine">The HTML uses rounded-corner approximations. The app would use the real <code>MaterialShapes</code> named under each one.</p>
+    </div>
+  </section>
+
+  <section class="scr glob" id="tablet">
+    <div class="spec">
+      <div class="num">Tablet &amp; desktop</div>
+      <h2>Two panes at Expanded width</h2>
+      <p class="pitch">Same steps, same motion. The hero, title and description sit on the left; the controls get the right side, so nothing scrolls on most steps. The progress bar spans the top. Desktop uses this layout inside the app window. Live: use Back and Next, or tap Skip.</p>
+      <div class="tabwrap"><div class="tablet" data-start="1" data-wide="1"><div class="screen"></div></div></div>
+      <div style="display:flex;gap:8px;margin-top:12px"><button class="ghost" data-replay>Replay step</button></div>
+      <h3>Rules</h3>
+      <div class="mwrap"><table class="mtable">
+        <tr><th>Width</th><th>Layout</th><th>Compose</th></tr>
+        <tr><td>Compact / Medium (&lt; 840dp)</td><td>Single column, as on the phones above</td><td rowspan="2"><code>currentWindowAdaptiveInfo().windowSizeClass</code>, then <code>Row</code> with two weighted panes inside each pager page</td></tr>
+        <tr><td>Expanded (≥ 840dp)</td><td>Left 45% hero + text, right 55% controls; hero 104dp; title one size up</td></tr>
+        <tr><td>Desktop window</td><td>Same as Expanded; controls get keyboard focus order; ← → keys change step</td><td><code>onPreviewKeyEvent</code> on the pager</td></tr>
+      </table></div>
+    </div>
+  </section>
+
+  <section class="scr" id="s-welcome">
+    <div class="stagecol"><div class="phone" data-start="0"><div class="screen"></div></div><button class="ghost" data-replay>Replay</button></div>
+    <div class="spec">
+      <div class="num">Step 1</div><h2>Welcome</h2>
+      <h3>On screen</h3>
+      <ul class="on"><li>"Welcome to {app}" + one line saying it takes about a minute and everything can change later</li><li>Five genre cards dealt into a fan</li><li>"Coming up" chips: Look, Layout, Sources, Reader/Player, Sync, Updates</li><li>Buttons: Back (disabled), "Let's go". Skip at top right.</li></ul>
+      <h3>Motion</h3>
+      <div class="mwrap"><table class="mtable">
+        <tr><th>Moment</th><th>Spec</th><th>Compose</th></tr>
+        <tr><td>Covers deal in</td><td>From 160dp below, rotate to ±9° steps, 90ms apart, overshoot</td><td><code>Animatable</code> per card, <code>spring(DampingRatioMediumBouncy, StiffnessLow)</code>, <code>graphicsLayer { translationX; rotationZ }</code></td></tr>
+        <tr><td>Chips</td><td>Stagger in after title, 45ms apart</td><td><code>pagerStagger</code></td></tr>
+      </table></div>
+      <h3>Decided</h3>
+      <p class="fine" style="margin:0">Genre cards: icon + genre name on gradient cards, five per app. MangaWorld: Action, Romance, Mystery, Comedy, Fantasy. AnimeWorld: Action, Romance, Sci-fi, Slice of life, Fantasy. NovelWorld: Fantasy, Romance, Mystery, Isekai, Adventure. No art assets needed.</p>
+    </div>
+  </section>
+
+  <section class="scr" id="s-look">
+    <div class="stagecol"><div class="phone" data-start="1"><div class="screen"></div></div><button class="ghost" data-replay>Replay</button></div>
+    <div class="spec">
+      <div class="num">Step 2</div><h2>Look</h2>
+      <h3>On screen</h3>
+      <ul class="on"><li>Theme: System / Light / Dark <span class="k">themeSetting</span></li><li>Color swatches: Dynamic, Blue, Red, Green, Yellow, Cyan, Magenta <span class="k">themeColor</span></li><li>AMOLED black, only shown when the theme is dark <span class="k">isAmoledMode</span></li><li>"More look options" opens a sheet with expressiveness, color-blind mode, cover-tinted details, and the Ugly / MyEyes colors</li></ul>
+      <h3>Motion</h3>
+      <div class="mwrap"><table class="mtable">
+        <tr><th>Moment</th><th>Spec</th><th>Compose</th></tr>
+        <tr><td>Color sweep</td><td>New theme grows out as a circle from the tapped swatch, 700ms</td><td><code>rememberGraphicsLayer()</code> snapshot of old frame, drawn over new theme with <code>clipPath</code> of a shrinking-hole circle</td></tr>
+        <tr><td>Swatch select</td><td>Circle becomes a rounded square, check pops</td><td><code>animateDpAsState</code> corner radius, <code>AnimatedVisibility(scaleIn(spring))</code></td></tr>
+        <tr><td>Theme pill</td><td>Selected thumb slides with a slight overshoot</td><td><code>SingleChoiceSegmentedButtonRow</code></td></tr>
+        <tr><td>AMOLED row</td><td>Expands open/closed when switching dark/light</td><td><code>AnimatedVisibility(expandVertically + fadeIn)</code></td></tr>
+      </table></div>
+    </div>
+  </section>
+
+  <section class="scr" id="s-layout">
+    <div class="stagecol"><div class="phone" data-start="2"><div class="screen"></div></div><button class="ghost" data-replay>Replay</button></div>
+    <div class="spec">
+      <div class="num">Step 3</div><h2>Layout</h2>
+      <h3>On screen</h3>
+      <ul class="on"><li>Mini live preview: top bar, cover grid, nav bar</li><li>Grid: Full adaptive / Adaptive / Fixed <span class="k">gridChoice</span></li><li>Floating navigation <span class="k">floatingNavigation</span></li><li>Middle button: Notifications / Lists / Favorites / Search <span class="k">middleNavigationAction</span></li></ul>
+      <h3>Motion</h3>
+      <div class="mwrap"><table class="mtable">
+        <tr><th>Moment</th><th>Spec</th><th>Compose</th></tr>
+        <tr><td>Grid reflow</td><td>Covers glide to new cells, 14ms stagger</td><td><code>LazyVerticalGrid</code> + <code>Modifier.animateItem()</code></td></tr>
+        <tr><td>Nav dock ↔ float</td><td>Insets and corner radius spring together</td><td><code>animateDpAsState</code> for padding + shape</td></tr>
+        <tr><td>Middle icon</td><td>Pops in with a small spin</td><td><code>AnimatedContent(scaleIn + rotate)</code></td></tr>
+      </table></div>
+      <p class="fine">"Multiple" for the middle button stays in Settings, since it needs two pickers.</p>
+    </div>
+  </section>
+
+  <section class="scr" id="s-sources">
+    <div class="stagecol"><div class="phone" data-start="3"><div class="screen"></div></div><button class="ghost" data-replay>Replay</button></div>
+    <div class="spec">
+      <div class="num">Step 4</div><h2>Sources</h2>
+      <h3>On screen</h3>
+      <ul class="on"><li>One line on what an extension is: it connects the app to a site with titles</li><li><b>How it works</b>, 3 steps that highlight in turn: Find (Settings › Sources &amp; Extensions › Get extensions), Install, Browse</li><li><b>Where extensions come from</b>, per app. All apps: OtakuWorld catalog (built in). MangaWorld: Mihon &amp; Tachiyomi repos. AnimeWorld: Aniyomi repos, CloudStream plugins. Custom repos only when the app has a custom bridge (<code>hasCustomBridge</code>).</li><li>Explain only: no buttons, no language picker. A closing line says extensions are added after setup from Settings › Sources &amp; Extensions. Language order stays in the Extensions screen.</li></ul>
+      <h3>Motion</h3>
+      <div class="mwrap"><table class="mtable">
+        <tr><th>Moment</th><th>Spec</th><th>Compose</th></tr>
+        <tr><td>How it works</td><td>Highlight moves 1 → 2 → 3 every 1.8s; current row fills tonal, number square becomes a circle</td><td><code>LaunchedEffect</code> loop with <code>delay</code>; <code>animateColorAsState</code> + <code>animateDpAsState</code> corner. Static when animations are off.</td></tr>
+      </table></div>
+      <h3>To confirm in code</h3>
+      <ul class="oq"><li>Which catalogs each app registers in Koin. The rows above come from the catalog classes in the repo. NovelWorld only shows the OtakuWorld catalog because I found nothing else for it.</li><li>The exact Android install prompt wording (step 2 copy is kept general).</li></ul>
+    </div>
+  </section>
+
+  <section class="scr" id="s-reading">
+    <div class="stagecol"><div class="phone" data-start="4"><div class="screen"></div></div><button class="ghost" data-replay>Replay</button></div>
+    <div class="spec">
+      <div class="num">Step 5</div><h2>Reader / Player / Text</h2>
+      <p class="pitch">Each app adds this step through <code>onboardingSettings</code>. Use the app switch above to see all three.</p>
+      <h3>On screen</h3>
+      <p class="fine" style="margin:0 0 4px">The preview sticks to the top while the settings scroll under it, so every change shows right away.</p>
+      <h3>MangaWorld reader</h3>
+      <div class="mwrap"><table class="mtable">
+        <tr><th>Setting</th><th>Control</th><th>Stored as</th><th>Preview reacts</th></tr>
+        <tr><td>Reader type</td><td>List / Pager / Flip / Curl</td><td><code>readerType</code></td><td>Pages scroll, slide, flip or curl</td></tr>
+        <tr><td>Space between pages</td><td>Slider 0–16dp, default 4</td><td><code>pagePadding</code></td><td>Gap between pages grows</td></tr>
+        <tr><td>Page number</td><td>8 chips: Classic, Rolling pill, Scrubber, Edge rail, Story segments, Printed folio, Morphing pill, Line only</td><td><code>pageIndicatorStyle</code></td><td>Indicator swaps; top line splits for Story segments</td></tr>
+        <tr><td>Floating bottom bar</td><td>Switch</td><td><code>useFloatingReaderBottomBar</code></td><td>Bar docks or floats</td></tr>
+        <tr><td>Pages button in the bar</td><td>Switch, only with floating bar</td><td><code>hidePageNumberInBar</code> (inverted)</td><td>"3 / 24" chip pops in/out</td></tr>
+        <tr><td>Swipe for chapter list</td><td>Switch</td><td><code>allowUserDrawerGesture</code></td><td>Chapter drawer peeks in when turned on</td></tr>
+        <tr><td>Include insets</td><td>Switch</td><td><code>includeInsetsForReader</code></td><td>—</td></tr>
+        <tr><td>Image loader</td><td>Kamel / Glide / Telephoto / Panpf</td><td><code>imageLoaderType</code></td><td>—</td></tr>
+      </table></div>
+      <p class="fine">Left out: reader page width (<code>readerWidthFraction</code>). It only matters on wide screens and is easier to set by dragging in the reader.</p>
+      <h3>AnimeWorld player</h3>
+      <div class="mwrap"><table class="mtable">
+        <tr><th>Setting</th><th>Control</th><th>Stored as</th><th>Preview reacts</th></tr>
+        <tr><td>Player style</td><td>Classic / Floating / Theater</td><td><code>video_player_style</code></td><td>Chrome changes shape</td></tr>
+        <tr><td>Blur player controls</td><td>Switch</td><td><code>video_player_blur</code></td><td>Floating bars go frosted or solid</td></tr>
+        <tr><td>Subtitles on automatically</td><td>Switch</td><td><code>SubtitleStyle</code></td><td>Subtitle line shows or hides</td></tr>
+        <tr><td>Preferred language</td><td>Chips, multi-select</td><td><code>SubtitleStyle</code></td><td>—</td></tr>
+        <tr><td>Size, font, color, edge, background, raise</td><td>Slider 50–200%, 4-way font, 6 colors, 4-way edge, slider 0–100%, slider 0–30</td><td><code>subtitle_style</code></td><td>Sample line restyles live</td></tr>
+        <tr><td>Use styles from subtitle file</td><td>Switch</td><td><code>SubtitleStyle</code></td><td>—</td></tr>
+        <tr><td>Skip signs and songs tracks</td><td>Switch</td><td><code>SubtitleStyle</code></td><td>—</td></tr>
+        <tr><td>Battery alert</td><td>Slider 5–50%, default 20</td><td><code>batteryPercent</code></td><td>—</td></tr>
+        <tr><td>Gestures</td><td>Info rows: drag for brightness/volume, double-tap to pause</td><td>not a setting</td><td>—</td></tr>
+      </table></div>
+      <p class="fine">Left out: "Use the new video player" and "Ignore SSL" (troubleshooting, not taste), and desktop-only Whisper subtitle generation (needs a model file first).</p>
+      <h3>NovelWorld</h3>
+      <p class="fine" style="margin:0">Text size slider with a live sample paragraph <span class="tag new">new</span>. Unchanged this round.</p>
+      <h3>Motion</h3>
+      <div class="mwrap"><table class="mtable">
+        <tr><th>Moment</th><th>Spec</th><th>Compose</th></tr>
+        <tr><td>Sticky preview</td><td>Stays pinned while settings scroll</td><td><code>LazyColumn</code> with the preview as <code>stickyHeader</code></td></tr>
+        <tr><td>Reader demo</td><td>3s loop in the chosen reader type; gap follows the padding slider</td><td><code>rememberInfiniteTransition</code>; reuse the real flip/curl modifiers at small size</td></tr>
+        <tr><td>Indicator swap</td><td>Crossfade + slide; morphing pill loops wide/narrow</td><td>Render the real <code>PageIndicators</code> composables in the preview</td></tr>
+        <tr><td>Bar dock ↔ float</td><td>Insets + corners spring together</td><td><code>animateDpAsState</code></td></tr>
+        <tr><td>Chapter drawer peek</td><td>Slides in, holds 0.7s, slides back</td><td><code>Animatable</code> offset, one shot on toggle</td></tr>
+        <tr><td>Player chrome + subtitles</td><td>Chrome fades on a loop; subtitle restyles instantly</td><td>Real <code>PlayerChrome</code> over a still frame; subtitle via the player's own text renderer</td></tr>
+      </table></div>
+    </div>
+  </section>
+
+  <section class="scr" id="s-sync">
+    <div class="stagecol"><div class="phone" data-start="5"><div class="screen"></div></div><button class="ghost" data-replay>Replay</button></div>
+    <div class="spec">
+      <div class="num">Step 6</div><h2>Sync &amp; privacy</h2>
+      <h3>On screen</h3>
+      <ul class="on"><li>Sync with Supabase: "Set up" opens <code>SupabaseRoutes</code>, then comes back here showing "On"</li><li>Restore from backup: file picker for .zip, then shows "Done" and a toast with the count</li><li>Biometric lock, Android only (hidden on desktop)</li></ul>
+      <h3>Motion</h3>
+      <div class="mwrap"><table class="mtable">
+        <tr><th>Moment</th><th>Spec</th><th>Compose</th></tr>
+        <tr><td>Button → "On" pill</td><td>Fills tonal, check slides in</td><td><code>AnimatedContent</code> on the button label</td></tr>
+        <tr><td>Lock icon</td><td>Shackle drops shut with a wobble when turned on</td><td>Two-part icon, <code>animateFloatAsState</code> on shackle offset + <code>spring</code> rotation</td></tr>
+      </table></div>
+    </div>
+  </section>
+
+  <section class="scr" id="s-updates">
+    <div class="stagecol"><div class="phone" data-start="6"><div class="screen"></div></div><button class="ghost" data-replay>Replay</button></div>
+    <div class="spec">
+      <div class="num">Step 7</div><h2>Updates</h2>
+      <h3>On screen</h3>
+      <ul class="on"><li>Check for updates master switch <span class="k">mediaCheckerSettings.shouldRun</span></li><li>When on: interval dial + slider, 1–24 hours <span class="k">interval</span></li><li>Network: Any network / Wi‑Fi only <span class="k">networkType</span></li><li>Only when charging, skip on low battery</li><li>When off: a short note that checks can be turned on in Settings</li></ul>
+      <h3>Motion</h3>
+      <div class="mwrap"><table class="mtable">
+        <tr><th>Moment</th><th>Spec</th><th>Compose</th></tr>
+        <tr><td>Master switch</td><td>Options fold up / unfold together; note crossfades in</td><td><code>AnimatedVisibility(expandVertically / shrinkVertically)</code></td></tr>
+        <tr><td>Dial</td><td>Arc springs to the new value; number updates</td><td><code>CircularProgressIndicator(progress = { animated })</code> or <code>CircularWavyProgressIndicator</code></td></tr>
+        <tr><td>Bell</td><td>Rings every 2.4s while checks are on</td><td><code>rememberInfiniteTransition</code> keyframes on <code>rotationZ</code></td></tr>
+      </table></div>
+      <p class="fine">"Notify on boot" stays in Settings; it's rarely changed.</p>
+    </div>
+  </section>
+
+  <section class="scr" id="s-tips">
+    <div class="stagecol"><div class="phone" data-start="7"><div class="screen"></div></div><button class="ghost" data-replay>Replay</button></div>
+    <div class="spec">
+      <div class="num">Step 8</div><h2>Tips</h2>
+      <h3>On screen</h3>
+      <ul class="on"><li>One cover to practice on: press and hold opens the quick menu (Favorite, Add to list, Share)</li><li>Hint text changes once done</li><li>All other tips stay in Settings › Discover › Tips &amp; Gestures</li></ul>
+      <h3>Motion</h3>
+      <div class="mwrap"><table class="mtable">
+        <tr><th>Moment</th><th>Spec</th><th>Compose</th></tr>
+        <tr><td>Hold</td><td>Card shrinks slightly, outline traces round it over 500ms</td><td><code>pointerInput { detectTapGestures(onPress) }</code> + <code>Animatable</code></td></tr>
+        <tr><td>Menu</td><td>Scales out from the card, items stagger 50ms</td><td><code>DropdownMenu</code> / <code>Popup</code> with <code>scaleIn(transformOrigin)</code></td></tr>
+      </table></div>
+      <p class="fine">Pager swipe stays off while practicing, the same as today's <code>practicingTip</code>.</p>
+    </div>
+  </section>
+
+  <section class="scr" id="s-done">
+    <div class="stagecol"><div class="phone" data-start="8"><div class="screen"></div></div><button class="ghost" data-replay>Replay</button></div>
+    <div class="spec">
+      <div class="num">Step 9</div><h2>Done</h2>
+      <h3>On screen</h3>
+      <ul class="on"><li>"You're all set" + reminder that Settings has everything</li><li>Summary of each group with what was picked</li><li>Main button: "Start reading" / "Start watching". Sets <code>hasGoneThroughOnboarding</code> and leaves.</li></ul>
+      <h3>Motion</h3>
+      <div class="mwrap"><table class="mtable">
+        <tr><th>Moment</th><th>Spec</th><th>Compose</th></tr>
+        <tr><td>Hero</td><td>Morphs to a circle, spins a full turn, grows 1.15× with a check</td><td>Same <code>Morph</code> + <code>rotationZ</code></td></tr>
+        <tr><td>Confetti</td><td>~90 pieces in theme colors, 1.9s, then gone</td><td><code>Canvas</code> + <code>withFrameNanos</code></td></tr>
+        <tr><td>Summary rows</td><td>Stagger in, 45ms apart</td><td><code>pagerStagger</code></td></tr>
+      </table></div>
+      <p class="fine">Tapping a summary row could jump back to that step. Not in the mockup yet.</p>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const sysDark = () => { const t = document.documentElement.dataset.theme; return t ? t === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches; };
+const ICONS = {
+  spark:'<path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/>',
+  chevl:'<path d="M15 6l-6 6 6 6"/>',
+  chevr:'<path d="M9 6l6 6-6 6"/>',
+  sword:'<path d="M14.5 4H20v5.5L9 20.5 3.5 15zM6 13l5 5M4 20l2.5-2.5"/>',
+  sub:'<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M7 13h4M13 13h4M7 16h7"/>',
+  speed:'<path d="M5 18a8 8 0 1 1 14 0M12 14l4-5"/>',
+  pip:'<rect x="3" y="5" width="18" height="14" rx="2"/><rect x="12" y="11" width="7" height="6" rx="1" fill="currentColor"/>',
+  skip:'<path d="M5 6l8 6-8 6zM15 6v12M19 6v12"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/>',
+  vol:'<path d="M4 9h4l5-4v14l-5-4H4zM17 9a4 4 0 0 1 0 6"/>',
+  tap:'<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="7" opacity=".5"/>',
+  palette:'<path d="M12 21a9 9 0 1 1 9-9c0 2.5-2 3.5-4 3.5h-2a2 2 0 0 0-1.5 3.3A1.4 1.4 0 0 1 12 21z"/><circle cx="7.5" cy="11" r="1.2" fill="currentColor"/><circle cx="11" cy="7" r="1.2" fill="currentColor"/><circle cx="16" cy="8.5" r="1.2" fill="currentColor"/>',
+  grid:'<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>',
+  plug:'<path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0zM12 17v4"/>',
+  book:'<path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5zM5 19.5A1.5 1.5 0 0 0 6.5 21H19"/>',
+  play:'<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9l5 3-5 3z" fill="currentColor"/>',
+  text:'<path d="M4 7V5h16v2M9 19h6M12 5v14"/>',
+  cloud:'<path d="M7 18a5 5 0 1 1 .9-9.9A6 6 0 0 1 19.4 10.5 3.8 3.8 0 0 1 18 18z"/>',
+  bell:'<path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4zM10 21h4"/>',
+  hand:'<path d="M9 11V5a1.5 1.5 0 0 1 3 0v5M12 10V4a1.5 1.5 0 0 1 3 0v6M15 10V6a1.5 1.5 0 0 1 3 0v7a7 7 0 0 1-7 7h-1a6 6 0 0 1-5-3l-2.5-4a1.5 1.5 0 0 1 2.5-1.6L9 14"/>',
+  check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path class="shackle" d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+  compass:'<circle cx="12" cy="12" r="8.5"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/>',
+  heart:'<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
+  list:'<path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/>',
+  search:'<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/>',
+  restore:'<path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1L3.5 8.5M3.5 3.5v5h5"/>',
+  share:'<circle cx="6" cy="12" r="2.5"/><circle cx="17" cy="6" r="2.5"/><circle cx="17" cy="18" r="2.5"/><path d="M8.2 10.8l6.6-3.6M8.2 13.2l6.6 3.6"/>',
+  wifi:'<path d="M3 9a13 13 0 0 1 18 0M6.5 12.5a8 8 0 0 1 11 0M10 16a3 3 0 0 1 4 0"/><circle cx="12" cy="19" r=".8" fill="currentColor"/>',
+  bolt:'<path d="M13 3L5 13h6l-1 8 8-10h-6z"/>',
+  battery:'<rect x="3" y="7" width="16" height="10" rx="2"/><path d="M21 10.5v3M6 10v4M9 10v4"/>',
+};
+const I = (n, c = 'ic') => `<svg viewBox="0 0 24 24" class="${c}" aria-hidden="true">${ICONS[n]}</svg>`;
+const HUES = {Dynamic:250, Blue:220, Red:4, Green:140, Yellow:46, Cyan:188, Magenta:312};
+const COVERS = [['Paper Moon Courier',12],['Iron Teahouse',200],['Seventh Lantern',45],['Hollow Comet',265],['Rain on Shiba St.',190],['Kitsune Ledger',25],['Glass Dragon Diner',330],['Night Bus 404',230],['Summer Static',150],['Velvet Ronin',350],['Moss & Circuit',110],['The Last Ferry',210],['Lantern Fox',30],['Cloud Archive',260],['Tin Star Cafe',170],['Low Tide Club',200]];
+const cover = (i, extra = '') => `<div class="cov" style="--ch:${COVERS[i][1]}" ${extra}><b>${COVERS[i][0]}</b></div>`;
+const APPS = {
+  manga:{name:'MangaWorld', icon:'book', read:'Set up the reader', readBody:'Pick how pages move. More options live in Settings › Reader.', upd:'chapter', go:'Start reading', tab:'Reader'},
+  anime:{name:'AnimeWorld', icon:'play', read:'Set up the player', readBody:'Pick the player look. More options live in Settings › Player.', upd:'episode', go:'Start watching', tab:'Player'},
+  novel:{name:'NovelWorld', icon:'text', read:'Reading comfort', readBody:'Set a text size you can read for hours.', upd:'chapter', go:'Start reading', tab:'Reader'},
+};
+let APP = 'manga';
+const fresh = () => ({mode:'system', color:'Dynamic', amoled:false, grid:'Adaptive', floatingNav:true, middle:'Notifications', langs:['English'], reader:'Pager', insets:true, pagePadding:4, pageStyle:'Classic', floatBar:true, pagesInBar:true, drawerGesture:true, loader:'Kamel', blur:true, subAuto:true, subLangs:['English'], subSize:100, subFont:'Default', subColor:'White', subEdge:'Outline', subBg:0, subRaise:6, subFile:false, subSkipSigns:true, player:'Floating', battery:20, novelSize:16, sync:false, restore:false, biometric:false, updatesOn:true, interval:1, network:'Connected', charging:false, lowBattery:true, tipDone:false, preset:null});
+const isDark = s => s.mode === 'dark' || (s.mode === 'system' && sysDark());
+function pal(s){
+  const h = HUES[s.color], d = isDark(s), sat = s.color === 'Dynamic' ? 30 : 64;
+  if (!d) return {ps:`hsl(${h} ${sat*.45}% 97%)`, ps2:`hsl(${h} ${sat*.5}% 92.5%)`, ps3:`hsl(${h} ${sat*.5}% 87%)`, pon:`hsl(${h} 25% 11%)`, pon2:`hsl(${h} 12% 38%)`, pp:`hsl(${h} ${sat}% ${s.color==='Yellow'?33:42}%)`, ponp:'#ffffff', pc:`hsl(${h} ${sat+12}% 86%)`, ponc:`hsl(${h} ${sat}% 18%)`, pol:`hsl(${h} 12% 74%)`};
+  const a = s.amoled;
+  return {ps:a?'#000000':`hsl(${h} 14% 9%)`, ps2:a?`hsl(${h} 12% 7%)`:`hsl(${h} 14% 14%)`, ps3:a?`hsl(${h} 12% 13%)`:`hsl(${h} 14% 20%)`, pon:`hsl(${h} 20% 92%)`, pon2:`hsl(${h} 10% 66%)`, pp:`hsl(${h} ${sat+10}% 74%)`, ponp:`hsl(${h} 60% 14%)`, pc:`hsl(${h} ${sat*.6}% 27%)`, ponc:`hsl(${h} 70% 90%)`, pol:`hsl(${h} 10% 32%)`};
+}
+const applyPal = (el, s) => { const p = pal(s); for (const k in p) el.style.setProperty('--' + k, p[k]); };
+function recolor(screen, s, x, y){
+  const r = screen.getBoundingClientRect();
+  const cx = x == null ? r.width/2 : x - r.left, cy = y == null ? r.height/2 : y - r.top;
+  applyPal(screen, s);
+  if (reduce) return;
+  const d = document.createElement('div');
+  d.className = 'reveal'; d.style.left = cx + 'px'; d.style.top = cy + 'px'; d.style.background = pal(s).pp;
+  screen.appendChild(d);
+  const scale = Math.hypot(Math.max(cx, r.width-cx), Math.max(cy, r.height-cy)) / 10 + 2;
+  d.animate([{transform:'scale(0)', opacity:.5},{transform:`scale(${scale})`, opacity:0}], {duration:700, easing:'cubic-bezier(.2,.8,.3,1)'}).onfinish = () => d.remove();
+}
+function toast(screen, msg){ const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; screen.appendChild(t); setTimeout(() => t.remove(), 2500); }
+function confetti(screen, s){
+  if (reduce) return;
+  const c = document.createElement('canvas'); c.className = 'confetti';
+  const W = screen.clientWidth, H = screen.clientHeight, dpr = devicePixelRatio || 1;
+  c.width = W*dpr; c.height = H*dpr; screen.appendChild(c);
+  const g = c.getContext('2d'); g.scale(dpr, dpr);
+  const p = pal(s), cols = [p.pp, p.pc, 'hsl(12 80% 62%)', 'hsl(45 90% 60%)', 'hsl(190 70% 55%)', 'hsl(312 60% 65%)'];
+  const parts = Array.from({length:90}, () => ({x:W/2, y:H*.38, vx:(Math.random()-.5)*9, vy:-Math.random()*9-3, r:Math.random()*6+3, a:Math.random()*6, va:(Math.random()-.5)*.4, c:cols[Math.floor(Math.random()*cols.length)], sq:Math.random()<.5}));
+  const t0 = performance.now();
+  (function f(t){
+    g.clearRect(0,0,W,H);
+    const k = (t - t0)/1900;
+    parts.forEach(q => { q.vy += .28; q.vx *= .99; q.x += q.vx; q.y += q.vy; q.a += q.va; g.save(); g.globalAlpha = Math.max(0, 1-k); g.translate(q.x,q.y); g.rotate(q.a); g.fillStyle = q.c; if (q.sq) g.fillRect(-q.r/2,-q.r/3,q.r,q.r*.66); else {g.beginPath(); g.arc(0,0,q.r/2,0,7); g.fill();} g.restore(); });
+    if (k < 1) requestAnimationFrame(f); else c.remove();
+  })(t0);
+}
+function flip(container, mutate){
+  const items = [...container.children], first = items.map(i => i.getBoundingClientRect());
+  mutate();
+  if (reduce) return;
+  items.forEach((it, i) => {
+    const l = it.getBoundingClientRect(); if (!l.width) return;
+    const dx = first[i].left - l.left, dy = first[i].top - l.top, sx = first[i].width / l.width, sy = first[i].height / l.height;
+    it.animate([{transform:`translate(${dx}px,${dy}px) scale(${sx},${sy})`},{transform:'none'}], {duration:520, easing:'cubic-bezier(.25,1.25,.4,1)', delay:i*14, fill:'backwards'});
+  });
+}
+const status = () => `<div class="sb"><span>9:41</span><span class="cam"></span><span style="display:flex;gap:4px">${I('wifi','ic s')}${I('battery','ic s')}</span></div>`;
+
+/* ----- text + visibility helpers ----- */
+const TEXT = {
+  look: s => `${s.color} · ${s.mode==='system'?'System':s.mode==='dark'?(s.amoled?'AMOLED':'Dark'):'Light'}`,
+  layout: s => `${({FullAdaptive:'Full adaptive',Adaptive:'Adaptive',Fixed:'Fixed'})[s.grid]} grid · ${s.floatingNav?'floating':'docked'} nav`,
+  sources: s => s.langs.join(', '),
+  reading: s => APP==='manga' ? `${({List:'List',Pager:'Pager',FlipPager:'Flip',CurlPager:'Curl'})[s.reader]} reader` : APP==='anime' ? `${s.player} player` : `${s.novelSize}px text`,
+  sync: s => [s.sync&&'Sync on', s.restore&&'Backup restored', s.biometric&&'Lock on'].filter(Boolean).join(' · ') || 'Nothing turned on',
+  updates: s => !s.updatesOn ? 'Update checks off' : `Every ${s.interval}h · ${s.network==='Connected'?'any network':'Wi‑Fi only'}`,
+  tips: s => s.tipDone ? 'Practiced' : '1 gesture to try',
+  interval: s => `${s.interval}h`,
+  battery: s => `Warn me below ${s.battery}%`,
+  novel: s => `${s.novelSize}px`,
+  tiphint: s => s.tipDone ? 'Nice. That menu works on every cover.' : 'Press and hold the cover.',
+};
+const SHOW = {dark: s => isDark(s), updatesOn: s => s.updatesOn, updatesOff: s => !s.updatesOn, floatBar: s => s.floatBar};
+TEXT.padding = s => `${s.pagePadding}dp`;
+TEXT.subSize = s => `${s.subSize}%`;
+TEXT.subBg = s => `${s.subBg}%`;
+TEXT.subRaise = s => `${s.subRaise}`;
+const SUBCOL = {White:'#ffffff', Yellow:'#ffe14d', Cyan:'#5ee6ff', Green:'#7dff8a', Pink:'#ff8ad8', Black:'#111111'};
+const SUBFONT = {Default:'Inter,system-ui,sans-serif', Bold:'Inter,system-ui,sans-serif', Serif:'Georgia,serif', Mono:'"JetBrains Mono",monospace'};
+const SUBEDGE = {None:'none', Outline:'-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000', Shadow:'2px 2px 3px rgba(0,0,0,.9)', Raised:'0 -1px 0 rgba(255,255,255,.4),0 2px 0 #000'};
+const PI_TEXT = {Classic:'3 / 24', Pill:'3 / 24', Scrubber:'', Rail:'', Segments:'', Folio:'— 3 —', Morph:'3', LineOnly:''};
+
+/* ----- control blocks (shared by all proposals) ----- */
+const seg = (key, opts) => `<div class="seg"><span class="thumb"></span>${opts.map(([v,l]) => `<button data-set="${key}:${v}">${l}</button>`).join('')}</div>`;
+const tgRow = (key, title, sub, icon) => `<div class="row"><span class="lead">${icon?I(icon):''}<span>${title}${sub?`<small>${sub}</small>`:''}</span></span><button class="tg" data-toggle="${key}" aria-label="${title}"><i></i></button></div>`;
+const C = {
+  look: () => `
+    <div class="lbl st">Theme</div>
+    <div class="st">${seg('mode', [['system','System'],['light','Light'],['dark','Dark']])}</div>
+    <div class="lbl st">Color</div>
+    <div class="swatches st">${Object.keys(HUES).map(c => `<button class="sw ${c==='Dynamic'?'dyn':''}" data-set="color:${c}" style="--h:${HUES[c]}" aria-label="${c}"><svg viewBox="0 0 24 24">${ICONS.check}</svg></button>`).join('')}</div>
+    <div class="collapse st" data-show="dark"><div>${tgRow('amoled','AMOLED black','Pure black backgrounds')}</div></div>
+    <div class="row st" style="opacity:.75"><span>More look options<small>Expressiveness, color-blind mode, cover-tinted details</small></span>${I('gear','ic s')}</div>`,
+  layout: () => `
+    <div class="lbl st">Grid</div>
+    <div class="gopts st">${[['FullAdaptive','Full adaptive',4],['Adaptive','Adaptive',3],['Fixed','Fixed',2]].map(([v,l,n]) => `<button class="gopt" data-set="grid:${v}"><div class="gi" style="grid-template-columns:repeat(${n},1fr)">${'<span></span>'.repeat(n*2)}</div>${l}</button>`).join('')}</div>
+    <div class="st">${tgRow('floatingNav','Floating navigation','A pill that floats above content')}</div>
+    <div class="lbl st">Middle button</div>
+    <div class="chips st">${[['Notifications','bell'],['Lists','list'],['Favorites','heart'],['Search','search']].map(([v]) => `<button class="chip" data-set="middle:${v}">${v}</button>`).join('')}</div>`,
+  sources: () => `
+    <div class="lbl st">How it works</div>
+    <ol class="how st">
+      <li class="cur"><span class="n">1</span><span><b>Find</b><small>Settings › Sources &amp; Extensions › Get extensions lists what's available.</small></span></li>
+      <li><span class="n">2</span><span><b>Install</b><small>Tap Install on one. Android may ask once to allow installs from this app.</small></span></li>
+      <li><span class="n">3</span><span><b>Browse</b><small>Its titles show up in Recent, All and Search. Switch sources from the source picker.</small></span></li>
+    </ol>
+    <div class="lbl st">Where extensions come from</div>
+    <div class="wherebox st">${({
+      manga:[['spark','OtakuWorld catalog','Built in, ready to browse','Built in'],['book','Mihon &amp; Tachiyomi repos','Most manga extensions work here',''],['plug','Custom repos','Paste a repo link','']],
+      anime:[['spark','OtakuWorld catalog','Built in, ready to browse','Built in'],['play','Aniyomi repos','Anime extensions',''],['cloud','CloudStream','.cs3 plugins',''],['plug','Custom repos','Paste a repo link','']],
+      novel:[['spark','OtakuWorld catalog','Built in, ready to browse','Built in']],
+    })[APP].map(([ic,t,s,b]) => `<div class="row"><span class="lead">${I(ic)}<span>${t}<small>${s}</small></span></span>${b?`<span class="badge">${b}</span>`:''}</div>`).join('')}</div>
+    <p class="hint st">You'll add extensions after setup, from Settings › Sources &amp; Extensions.</p>`,
+  readingPreview: () => APP==='manga'
+    ? `<div class="rd" data-rv><div class="strip"><div class="pg p1" data-n="1"></div><div class="pg p2" data-n="2"></div><div class="pg p3" data-n="3"></div></div></div>`
+    : APP==='anime'
+    ? `<div class="pl" data-pv><div class="t">Ep 4 · The Last Ferry</div><div class="m">${I('play','ic s')}</div><div class="b">8:12<i></i>23:40</div><p class="subl" data-subl><span>I'll wait for you at the last ferry.</span></p></div>`
+    : `<div class="nv" data-nv>The ferry horn sounded twice before Mio looked up. Rain had followed her across the harbor, tapping on the lantern glass, and the ledger in her lap was still open to the page with her grandmother's handwriting.</div>`,
+  reading: (withPreview = true) => APP==='manga' ? `
+    <div class="rvwrap st"><div class="rv" data-rview>
+      <div class="rv-line"></div>
+      <div class="rd" data-rv><div class="strip"><div class="pg p1" data-n="1"></div><div class="pg p2" data-n="2"></div><div class="pg p3" data-n="3"></div></div></div>
+      <div class="pi" data-pi></div>
+      <div class="rdrawer">${I('list','ic s')}<span>Chapters</span><i></i><i></i><i></i></div>
+      <div class="rbar" data-rbar><span>${I('chevl','ic s')}</span><span class="pgs">3 / 24</span><span>${I('list','ic s')}</span><span>${I('gear','ic s')}</span><span>${I('chevr','ic s')}</span></div>
+    </div></div>
+    <div class="lbl st">Reader type</div>
+    <div class="st">${seg('reader', [['List','List'],['Pager','Pager'],['FlipPager','Flip'],['CurlPager','Curl']])}</div>
+    <div class="lbl st">Space between pages · <span data-text="padding"></span></div>
+    <div class="st"><input type="range" min="0" max="16" step="1" data-range="pagePadding" aria-label="Space between pages"></div>
+    <div class="lbl st">Page number</div>
+    <div class="chips st">${[['Classic','Classic'],['Pill','Rolling pill'],['Scrubber','Scrubber'],['Rail','Edge rail'],['Segments','Story segments'],['Folio','Printed folio'],['Morph','Morphing pill'],['LineOnly','Line only']].map(([v,l]) => `<button class="chip" data-set="pageStyle:${v}">${l}</button>`).join('')}</div>
+    <div class="lbl st">Controls</div>
+    <div class="st">${tgRow('floatBar','Floating bottom bar','A pill instead of a full-width bar')}</div>
+    <div class="collapse st" data-show="floatBar"><div>${tgRow('pagesInBar','Pages button in the bar','Shows 3 / 24 and opens the page list')}</div></div>
+    <div class="st">${tgRow('drawerGesture','Swipe for chapter list','Swipe in from the edge to open it')}</div>
+    <div class="lbl st">Display</div>
+    <div class="st">${tgRow('insets','Include insets','Keep pages clear of the status and nav bars')}</div>
+    <div class="lbl st">Image loader</div>
+    <div class="st">${seg('loader', [['Kamel','Kamel'],['Glide','Glide'],['Telephoto','Telephoto'],['Panpf','Panpf']])}</div>
+    <p class="hint st">Telephoto and Panpf add pinch-to-zoom. Page width for wide screens is set in the reader.</p>`
+    : APP==='anime' ? `
+    <div class="rvwrap st">${C.readingPreview()}</div>
+    <div class="lbl st">Player style</div>
+    <div class="st">${seg('player', [['Classic','Classic'],['Floating','Floating'],['Theater','Theater']])}</div>
+    <div class="st">${tgRow('blur','Blur player controls','Frosted bars over the video')}</div>
+    <div class="lbl st">Subtitles</div>
+    <div class="st">${tgRow('subAuto','Turn on automatically','','sub')}</div>
+    <div class="row st" style="flex-wrap:wrap"><span>Preferred language</span><div class="chips">${['English','Japanese','Spanish','Portuguese'].map(l => `<button class="chip" data-set="subLangs:${l}">${I('check')}${l}</button>`).join('')}</div></div>
+    <div class="lbl st">Size · <span data-text="subSize"></span></div>
+    <div class="st"><input type="range" min="50" max="200" step="10" data-range="subSize" aria-label="Subtitle size"></div>
+    <div class="lbl st">Font</div>
+    <div class="st">${seg('subFont', [['Default','Default'],['Bold','Bold'],['Serif','Serif'],['Mono','Mono']])}</div>
+    <div class="lbl st">Color</div>
+    <div class="swatches st">${Object.entries(SUBCOL).map(([n,c]) => `<button class="sw solid" data-set="subColor:${n}" style="background:${c}" aria-label="${n}"><svg viewBox="0 0 24 24">${ICONS.check}</svg></button>`).join('')}</div>
+    <div class="lbl st">Edge</div>
+    <div class="st">${seg('subEdge', [['None','None'],['Outline','Outline'],['Shadow','Shadow'],['Raised','Raised']])}</div>
+    <div class="lbl st">Background · <span data-text="subBg"></span></div>
+    <div class="st"><input type="range" min="0" max="100" step="5" data-range="subBg" aria-label="Subtitle background"></div>
+    <div class="lbl st">Raise from bottom · <span data-text="subRaise"></span></div>
+    <div class="st"><input type="range" min="0" max="30" step="1" data-range="subRaise" aria-label="Subtitle raise"></div>
+    <div class="st">${tgRow('subFile','Use styles from subtitle file','Keeps the fansub look when there is one')}</div>
+    <div class="st">${tgRow('subSkipSigns','Skip signs and songs tracks','Picks the dialogue track first')}</div>
+    <div class="lbl st">Battery</div>
+    <div class="row st"><span class="lead">${I('battery')}<span>Battery alert<small data-text="battery"></small></span></span></div>
+    <div class="st" style="padding:4px 4px 0"><input type="range" min="5" max="50" step="5" data-range="battery" aria-label="Battery alert level"></div>
+    <div class="lbl st">Gestures</div>
+    <div class="row st"><span class="lead">${I('sun')}<span>Brightness and volume<small>Drag up or down on the left or right side</small></span></span></div>
+    <div class="row st"><span class="lead">${I('tap')}<span>Play and pause<small>Double-tap anywhere</small></span></span></div>`
+    : `
+    <div class="lbl st">Text size <span data-text="novel"></span></div>
+    <div class="st"><input type="range" min="12" max="24" step="1" data-range="novelSize" aria-label="Text size"></div>
+    ${withPreview ? `<div class="st">${C.readingPreview()}</div>` : ''}`,
+  sync: () => `
+    <div class="row st"><span class="lead">${I('cloud')}<span>Sync with Supabase<small>Favorites on every device</small></span></span><button class="ptg" data-toggle="sync"><span class="n">Set up</span><span class="y">${I('check')}On</span></button></div>
+    <div class="row st"><span class="lead">${I('restore')}<span>Restore from backup<small>Import a .zip backup</small></span></span><button class="ptg" data-toggle="restore"><span class="n">Choose</span><span class="y">${I('check')}Done</span></button></div>
+    <div class="row st"><span class="lead"><span class="lockic" data-lock>${I('lock')}</span><span>Biometric lock<small>Fingerprint, face or PIN for locked lists</small></span></span><button class="tg" data-toggle="biometric" aria-label="Biometric lock"><i></i></button></div>`,
+  updates: () => `
+    <div class="st">${tgRow('updatesOn','Check for updates',`Look for new ${APPS[APP].upd}s in the background`,'bell')}</div>
+    <div class="collapse st" data-show="updatesOn"><div>
+    <div class="dialrow" style="margin-top:12px"><div class="dial"><svg viewBox="0 0 40 40"><circle class="bgc" cx="20" cy="20" r="15" pathLength="100"/><circle class="arc" cx="20" cy="20" r="15" pathLength="100"/></svg><b data-text="interval"></b></div>
+      <div style="flex:1;min-width:0"><span class="bellic" style="display:inline-block">${I('bell')}</span><div style="font-size:12px;color:var(--pon2)">Check favorites every</div><input type="range" min="1" max="24" step="1" data-range="interval" aria-label="Check interval in hours"></div></div>
+    <div class="lbl">Network</div>
+    ${seg('network', [['Connected','Any network'],['Unmetered','Wi‑Fi only']])}
+    ${tgRow('charging','Only when charging','','bolt')}
+    ${tgRow('lowBattery',"Skip on low battery",'','battery')}
+    </div></div>
+    <div class="collapse st off" data-show="updatesOff"><div><p class="hint">You can still pull to refresh on Notifications. Turn checks on anytime in Settings › Notifications.</p></div></div>`,
+  tips: () => `
+    <div class="tipzone st" data-tipzone><div class="tipcard" data-hold>${cover(3)}<span class="ring"></span></div>
+      <div class="qm"><button>${I('heart')}Favorite</button><button>${I('list')}Add to list</button><button>${I('share')}Share</button></div></div>
+    <p class="hint st" data-text="tiphint"></p>`,
+  summary: () => `<ul class="sum">${[['Look','look'],['Layout','layout'],[APPS[APP].tab,'reading'],['Sync & privacy','sync'],['Updates','updates']].map(([l,k]) => `<li class="st">${I('check')}<div>${l}<span data-text="${k}"></span></div></li>`).join('')}</ul>`,
+};
+const mini = size => `<div class="mini ${size}" data-mini>
+  <div class="mini-bar"><span>${APPS[APP].name}</span><span class="mini-icons"><i data-b="sync">${I('cloud')}</i><i data-b="lock">${I('lock')}</i><i data-b="bell">${I('bell')}</i></span></div>
+  <div class="mini-grid" data-cols="3">${COVERS.map((c,i) => cover(i)).join('')}</div>
+  <div class="mini-nav" data-floating="1"><span class="cur">${I('clock')}</span><span>${I('compass')}</span><span class="mid" data-mid></span><span>${I('gear')}</span></div>
+</div>`;
+const MID = {Notifications:'bell', Lists:'list', Favorites:'heart', Search:'search'};
+const COLS = {FullAdaptive:'4', Adaptive:'3', Fixed:'2'};
+function updateMini(root, s, k){
+  root.querySelectorAll('[data-mini]').forEach(m => {
+    const g = m.querySelector('.mini-grid');
+    if (g.dataset.cols !== COLS[s.grid]) { if (k === 'grid') flip(g, () => g.dataset.cols = COLS[s.grid]); else g.dataset.cols = COLS[s.grid]; }
+    m.querySelector('.mini-nav').dataset.floating = s.floatingNav ? '1' : '0';
+    const mid = m.querySelector('[data-mid]');
+    if (mid.dataset.v !== s.middle) { mid.dataset.v = s.middle; mid.innerHTML = I(MID[s.middle]); if (k === 'middle') { mid.classList.remove('pop'); void mid.offsetWidth; mid.classList.add('pop'); } }
+    m.querySelector('[data-b=sync]').classList.toggle('on', s.sync);
+    m.querySelector('[data-b=lock]').classList.toggle('on', s.biometric);
+    if (k === 'interval' || k === 'network' || k === 'updatesOn') m.dataset.bell = '1';
+    m.querySelector('[data-b=bell]').classList.toggle('on', s.updatesOn && m.dataset.bell === '1');
+  });
+}
+function syncUI(root, s){
+  root.querySelectorAll('[data-set]').forEach(b => { const [k,v] = b.dataset.set.split(':'); const cur = s[k]; const on = Array.isArray(cur) ? cur.includes(v) : String(cur) === v; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+  root.querySelectorAll('[data-toggle]').forEach(b => { const on = !!s[b.dataset.toggle]; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+  root.querySelectorAll('[data-range]').forEach(i => { if (document.activeElement !== i) i.value = s[i.dataset.range]; });
+  root.querySelectorAll('[data-text]').forEach(t => t.textContent = TEXT[t.dataset.text](s));
+  root.querySelectorAll('[data-show]').forEach(e => e.classList.toggle('off', !SHOW[e.dataset.show](s)));
+  root.querySelectorAll('.seg').forEach(sg => { const on = sg.querySelector('button.on'), th = sg.querySelector('.thumb'); if (on && th && on.offsetWidth) { th.style.width = on.offsetWidth + 'px'; th.style.transform = `translateX(${on.offsetLeft - 3}px)`; th.style.left = '3px'; } });
+  root.querySelectorAll('.dial .arc').forEach(a => a.style.strokeDashoffset = 100 - (s.interval/24)*100);
+  root.querySelectorAll('[data-rv]').forEach(r => r.dataset.r = s.reader);
+  root.querySelectorAll('[data-rview]').forEach(v => {
+    v.style.setProperty('--gap', (s.pagePadding * 1.5) + 'px');
+    v.dataset.ps = s.pageStyle; v.dataset.fb = s.floatBar ? '1' : '0'; v.dataset.pb = s.pagesInBar ? '1' : '0';
+    const pi = v.querySelector('[data-pi]'); if (pi.textContent !== PI_TEXT[s.pageStyle]) pi.textContent = PI_TEXT[s.pageStyle];
+  });
+  root.querySelectorAll('[data-pv]').forEach(r => { r.dataset.s = s.player; r.dataset.blur = s.blur ? '1' : '0'; });
+  root.querySelectorAll('[data-subl]').forEach(p => {
+    const sp = p.firstElementChild;
+    p.style.bottom = (28 + s.subRaise) + 'px'; p.style.opacity = s.subAuto ? 1 : 0;
+    sp.style.fontSize = (10 * s.subSize / 100) + 'px'; sp.style.fontFamily = SUBFONT[s.subFont]; sp.style.fontWeight = s.subFont === 'Bold' ? 800 : 500;
+    sp.style.color = SUBCOL[s.subColor]; sp.style.textShadow = SUBEDGE[s.subEdge]; sp.style.background = `rgba(0,0,0,${s.subBg / 100})`;
+  });
+  root.querySelectorAll('[data-nv]').forEach(r => r.style.fontSize = s.novelSize + 'px');
+  root.querySelectorAll('[data-lock]').forEach(l => l.classList.toggle('on', s.biometric));
+  root.querySelectorAll('[data-preset]').forEach(p => p.classList.toggle('on', s.preset === p.dataset.preset));
+}
+function stagger(el){ el.querySelectorAll('.st').forEach((e,i) => e.style.setProperty('--i', i)); }
+
+/* generic wiring: every proposal gets the same input handling */
+function wire(P){
+  const sc = P.screen;
+  sc.addEventListener('click', e => {
+    const t = e.target.closest('[data-set],[data-toggle],[data-act]'); if (!t || !sc.contains(t)) return;
+    const s = P.st; let k = null;
+    if (t.dataset.set) {
+      const [kk, v] = t.dataset.set.split(':'); k = kk;
+      if (Array.isArray(s[k])) { const i = s[k].indexOf(v); if (i >= 0) { if (s[k].length > 1) s[k].splice(i,1); } else s[k].push(v); }
+      else s[k] = v;
+      if (k === 'mode' || k === 'color') recolor(sc, s, e.clientX, e.clientY);
+    } else if (t.dataset.toggle) {
+      k = t.dataset.toggle; s[k] = !s[k];
+      if (k === 'amoled') recolor(sc, s, e.clientX, e.clientY);
+      if (k === 'restore' && s.restore) toast(sc, 'Restored 214 favorites');
+    } else if (t.dataset.act) { P.act(t.dataset.act, t, e); return; }
+    P.update(k);
+  });
+  sc.addEventListener('input', e => { const i = e.target.closest('[data-range]'); if (!i) return; P.st[i.dataset.range] = +i.value; P.update(i.dataset.range); });
+  let timer = null;
+  sc.addEventListener('pointerdown', e => {
+    const zone = e.target.closest('[data-tipzone]');
+    if (zone && zone.classList.contains('open') && !e.target.closest('.qm')) { zone.classList.remove('open'); return; }
+    const h = e.target.closest('[data-hold]'); if (!h) return;
+    e.preventDefault(); h.classList.add('holding');
+    timer = setTimeout(() => { h.classList.remove('holding'); h.closest('[data-tipzone]').classList.add('open'); P.st.tipDone = true; P.update('tipDone'); }, 500);
+  });
+  const cancel = () => { clearTimeout(timer); sc.querySelectorAll('.holding').forEach(h => h.classList.remove('holding')); };
+  sc.addEventListener('pointerup', cancel); sc.addEventListener('pointerleave', cancel);
+  sc.addEventListener('contextmenu', e => { if (e.target.closest('[data-hold]')) e.preventDefault(); });
+}
+
+const GENRES = {
+  manga:[['Action','sword',12],['Romance','heart',340],['Mystery','search',250],['Comedy','spark',45],['Fantasy','compass',160]],
+  anime:[['Action','sword',12],['Romance','heart',340],['Sci-fi','bolt',200],['Slice of life','sun',45],['Fantasy','compass',160]],
+  novel:[['Fantasy','compass',160],['Romance','heart',340],['Mystery','search',250],['Isekai','spark',280],['Adventure','sword',20]],
+};
+/* ================= A: Story Steps (one instance per phone) ================= */
+function makeA(screen, start, wide){
+const A = { screen };
+if (wide) screen.classList.add('wide');
+A.steps = () => {
+  const ap = APPS[APP];
+  return [
+    {id:'welcome', shape:'50%', rot:0, sc:0, icon:'spark', title:`Welcome to ${ap.name}`, body:'Your library, set up your way. About a minute, and you can change all of it later.', ctl:() => `<div class="fan">${GENRES[APP].map(([n,ic,h],k) => `<div class="card gen" style="--k:${k};background:linear-gradient(160deg,hsl(${h} 60% 58%),hsl(${h+30} 55% 34%))">${I(ic)}${n}</div>`).join('')}</div><div class="lbl st">Coming up</div><div class="coming st">${[['palette','Look'],['grid','Layout'],['plug','Sources'],[ap.icon, ap.tab],['cloud','Sync'],['bell','Updates']].map(([i,l]) => `<span>${I(i)}${l}</span>`).join('')}</div>`},
+    {id:'look', shape:'30% 70% 70% 30% / 30% 30% 70% 70%', rot:-14, sc:1, icon:'palette', title:'Make it yours', body:'Pick a theme. Every change shows up right away.', ctl:C.look},
+    {id:'layout', shape:'24%', rot:45, sc:1, icon:'grid', title:'Arrange your shelf', body:'How covers fill the screen and where navigation sits.', ctl:() => `<div class="st">${mini('sm')}</div>` + C.layout()},
+    {id:'sources', shape:'50% 50% 20% 20%', rot:0, sc:1, icon:'plug', title:'Plug in sources', body:`${ap.name} doesn't come with any titles. Extensions connect it to sites that have them, and you choose which to add.`, ctl:C.sources},
+    {id:'reading', shape:'42% 58% 30% 70% / 60% 30% 70% 40%', rot:22, sc:1, icon:ap.icon, title:ap.read, body:ap.readBody, ctl:() => C.reading(true)},
+    {id:'sync', shape:'50% 50% 50% 50% / 62% 62% 38% 38%', rot:0, sc:1, icon:'cloud', title:'Keep it safe', body:'Bring your data with you and lock what is private.', ctl:C.sync},
+    {id:'updates', shape:'36%', rot:-30, sc:1, icon:'bell', title:`Never miss a ${ap.upd}`, body:'Choose how often to check your favorites for new ones.', ctl:C.updates},
+    {id:'tips', shape:'50% 18% 50% 18%', rot:16, sc:1, icon:'hand', title:'Hidden gestures', body:'Some actions sit behind a long press.', ctl:C.tips},
+    {id:'done', shape:'50%', rot:360, sc:1.15, icon:'check', title:"You're all set", body:'Here is what you picked. Change any of it in Settings.', ctl:C.summary},
+  ];
+};
+A.build = () => {
+  A.st = fresh(); A.i = start;
+  applyPal(A.screen, A.st);
+  A.screen.innerHTML = `${status()}<div class="A" style="height:calc(100% - 30px)">
+    <div class="a-top"><div class="prog"></div><button class="skip" data-act="skip">Skip</button></div>
+    <div class="a-stage"><div class="a-blob"><span></span></div></div>
+    <div class="a-bottom"><button class="btn text" data-act="back">Back</button><button class="btn" data-act="next"><span>Next</span></button></div></div>
+    <div class="dlg-scrim" data-act="skipcancel"></div>
+    <div class="dlg" role="dialog" aria-label="Skip setup?"><div class="di">${I('spark')}</div><h3>Skip setup?</h3><p>${APPS[APP].name} will start with default settings. You can run setup again from Settings › About › View Onboarding Again.</p>
+      <div class="acts"><button class="btn text" data-act="skipcancel">Keep going</button><button class="btn text" data-act="skipconfirm">Skip</button></div></div>`;
+  A.go(start, true);
+};
+A.replay = () => { A.i = A.i; A.go(A.i, false, true); };
+A.go = (n, first, replay) => {
+  const steps = A.steps(); if (n < 0 || n >= steps.length) return;
+  const dir = n >= A.i ? 1 : -1; A.i = n;
+  const stage = A.screen.querySelector('.a-stage'), step = steps[n];
+  stage.querySelectorAll('.a-step').forEach(o => { o.style.setProperty('--dir', dir); o.classList.add('leave'); setTimeout(() => o.remove(), 270); });
+  const el = document.createElement('div'); el.className = 'a-step'; el.dataset.id = step.id; el.style.setProperty('--dir', dir);
+  el.innerHTML = wide
+    ? `<div class="wl"><h2 class="st">${step.title}</h2><p class="body st">${step.body}</p></div><div class="wr">${step.ctl()}</div>`
+    : `<h2 class="st">${step.title}</h2><p class="body st">${step.body}</p>${step.ctl()}`;
+  stagger(el); stage.appendChild(el);
+  const blob = stage.querySelector('.a-blob');
+  if (replay && !reduce) {
+    const prev = steps[Math.max(0, n - 1)];
+    blob.style.transition = 'none'; blob.style.borderRadius = prev.shape; blob.style.transform = `rotate(${prev.rot}deg) scale(${prev.sc})`;
+    void blob.offsetWidth; blob.style.transition = '';
+  }
+  blob.style.borderRadius = step.shape; blob.style.transform = `rotate(${step.rot}deg) scale(${step.sc})`;
+  blob.firstElementChild.innerHTML = I(step.icon); blob.firstElementChild.style.transform = `rotate(${-step.rot}deg)`;
+  if (!reduce && !first) blob.firstElementChild.animate([{transform:`rotate(${-step.rot}deg) scale(.2)`, opacity:0},{transform:`rotate(${-step.rot}deg) scale(1)`, opacity:1}], {duration:450, easing:'cubic-bezier(.3,1.6,.5,1)'});
+  A.screen.querySelector('.prog').innerHTML = steps.map((s,i) => `<i class="${i===n?'cur':''}" style="--f:${i<=n?1:0}"></i>`).join('');
+  const last = n === steps.length - 1;
+  A.screen.querySelector('[data-act=back]').disabled = n === 0;
+  A.screen.querySelector('[data-act=skip]').style.visibility = last ? 'hidden' : 'visible';
+  const nb = A.screen.querySelector('[data-act=next]');
+  nb.innerHTML = `<span>${last ? APPS[APP].go : n === 0 ? "Let's go" : 'Next'}</span>`;
+  nb.style.padding = last ? '11px 30px' : '11px 22px';
+  requestAnimationFrame(() => { syncUI(el, A.st); updateMini(el, A.st); });
+  if (step.id === 'done' && !first) setTimeout(() => confetti(A.screen, A.st), 250);
+};
+A.update = k => {
+  syncUI(A.screen.querySelector('.a-step:not(.leave)'), A.st); updateMini(A.screen, A.st, k);
+  if (k === 'drawerGesture' && A.st.drawerGesture) A.screen.querySelectorAll('.rdrawer').forEach(d => { d.classList.remove('peek'); void d.offsetWidth; d.classList.add('peek'); });
+};
+A.act = (a, t) => {
+  if (a === 'next') { if (A.i === A.steps().length - 1) toast(A.screen, `Opens ${APPS[APP].name} home`); else A.go(A.i + 1); }
+  if (a === 'back') A.go(A.i - 1);
+  const dlg = on => { A.screen.querySelector('.dlg').classList.toggle('on', on); A.screen.querySelector('.dlg-scrim').classList.toggle('on', on); };
+  if (a === 'skip') dlg(true);
+  if (a === 'skipcancel') dlg(false);
+  if (a === 'skipconfirm') { dlg(false); toast(A.screen, `Setup skipped · opens ${APPS[APP].name}`); }
+  if (a === 'browse') toast(A.screen, 'Opens the extension list');
+};
+wire(A);
+return A;
+}
+
+/* ================= page chrome ================= */
+const phones = [...document.querySelectorAll('[data-start]')].map(ph => {
+  const a = makeA(ph.querySelector('.screen'), +ph.dataset.start, ph.dataset.wide === '1');
+  const btn = ph.closest('section').querySelector('[data-replay]');
+  btn.addEventListener('click', () => a.replay());
+  return a;
+});
+function renderOpts(){
+  const st = fresh();
+  document.querySelectorAll('[data-opt]').forEach(o => {
+    applyPal(o, st);
+    const v = o.dataset.opt; let cards = [];
+    if (v === 'ill') cards = [0,3,6,1,8].map((ci,k) => `<div class="cov" style="--ch:${COVERS[ci][1]};--k:${k}"><b>${COVERS[ci][0]}</b></div>`);
+    if (v === 'abs') {
+      const shapes = ['50%','30% 70% 70% 30% / 30% 30% 70% 70%','24%','50% 50% 20% 20%','50% 18% 50% 18%'];
+      const bg = ['var(--pp)','var(--pc)','var(--ps3)','var(--pc)','var(--pp)'], fg = ['var(--pc)','var(--pp)','var(--pp)','var(--ponc)','var(--ponp)'];
+      cards = shapes.map((s,k) => `<div class="card abs" style="--k:${k};background:${bg[k]}"><i style="border-radius:${s};background:${fg[k]}"></i></div>`);
+    }
+    if (v === 'gen') cards = [['Action','bolt',12],['Romance','heart',340],['Mystery','search',250],['Comedy','spark',45],['Fantasy','compass',160]].map(([n,ic,h],k) => `<div class="card gen" style="--k:${k};background:linear-gradient(160deg,hsl(${h} 60% 58%),hsl(${h+30} 55% 34%))">${I(ic)}${n}</div>`);
+    o.innerHTML = `<div class="fan">${cards.join('')}</div><div class="ttl">Welcome to ${APPS[APP].name}</div>`;
+  });
+}
+document.querySelector('[data-replay-opts]')?.addEventListener('click', renderOpts);
+function fitTablets(){ document.querySelectorAll('.tabwrap').forEach(w => { const t = w.firstElementChild, s = Math.min(1, w.clientWidth / 900); t.style.transform = `scale(${s})`; w.style.height = (580 * s) + 'px'; }); }
+addEventListener('resize', fitTablets); fitTablets();
+if (!reduce) setInterval(() => document.querySelectorAll('.how').forEach(h => { const li = [...h.children], i = li.findIndex(x => x.classList.contains('cur')); li.forEach(x => x.classList.remove('cur')); li[(i + 1) % li.length].classList.add('cur'); }), 1800);
+const buildAll = () => { phones.forEach(p => p.build()); renderOpts(); };
+buildAll();
+document.querySelectorAll('[data-app]').forEach(b => b.addEventListener('click', () => {
+  APP = b.dataset.app;
+  document.querySelectorAll('[data-app]').forEach(x => x.setAttribute('aria-pressed', x === b));
+  buildAll();
+}));
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => phones.forEach(p => applyPal(p.screen, p.st)));
+})();
+</script>

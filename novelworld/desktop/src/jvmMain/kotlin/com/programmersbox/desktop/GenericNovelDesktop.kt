@@ -12,7 +12,6 @@ import com.programmersbox.kmpuiviews.PlatformGenericInfo
 import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
-import com.programmersbox.novel.shared.novelTips
 import com.programmersbox.novel.shared.ChapterHolder
 import com.programmersbox.novel.shared.GenericSharedNovel
 
@@ -41,6 +40,6 @@ class GenericNovelDesktop(
             )
         }
 
-        tips(novelTips)
+        novelPreferences()
     }
 }
