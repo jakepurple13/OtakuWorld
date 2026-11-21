@@ -9,7 +9,11 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.BrokenImage
+import androidx.compose.material.icons.filled.Explore
+import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -42,6 +46,9 @@ import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
+import com.programmersbox.kmpuiviews.presentation.onboarding.GenreCard
+import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingAppConfig
+import com.programmersbox.novel.shared.onboarding.readingComfortStep
 import com.programmersbox.novel.shared.reader.NovelReadView
 import com.programmersbox.novel.shared.reader.ReadViewModel
 import org.koin.compose.koinInject
@@ -55,6 +62,21 @@ abstract class GenericSharedNovel(
     override val sourceType: String get() = "novel"
 
     override fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit = {
+        onboardingConfig = OnboardingAppConfig(
+            genres = listOf(
+                GenreCard("Fantasy", Icons.Default.AutoStories, 160f),
+                GenreCard("Romance", Icons.Default.Favorite, 340f),
+                GenreCard("Mystery", Icons.Default.Search, 260f),
+                GenreCard("Isekai", Icons.Default.Public, 200f),
+                GenreCard("Adventure", Icons.Default.Explore, 30f),
+            ),
+            startLabel = "Start reading",
+            updateNoun = "chapter",
+            appStepTab = "Reader",
+        )
+        onboardingSettings {
+            readingComfortStep(novelTextSize)
+        }
         tips(novelTips)
     }
 

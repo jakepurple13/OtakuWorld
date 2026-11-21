@@ -65,6 +65,9 @@ import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.programmersbox.datastore.asState
+import com.programmersbox.novel.shared.novelTextSize
 import com.programmersbox.kmpuiviews.presentation.components.OtakuPullToRefreshBox
 import com.programmersbox.kmpuiviews.presentation.components.blurkind.rememberBlurKindState
 import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKind
@@ -117,6 +120,7 @@ private fun NovelReadViewContent(
 
     val settings = LocalSettingsHandling.current
 
+    val bodyTextSize by novelTextSize.asState()
     val showBlur by settings.rememberShowBlur()
     val isAmoledMode by settings.rememberIsAmoledMode()
 
@@ -304,6 +308,9 @@ private fun NovelReadViewContent(
                             //FIXME: Fix this
                             Text(
                                 pageText,//AnnotatedString.fromHtml(viewModel.pageList),
+                                fontSize = bodyTextSize.sp,
+                                // 1.5x keeps the default 24sp line height at the default 16sp size
+                                lineHeight = (bodyTextSize * 1.5f).sp,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(4.dp)

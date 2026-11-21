@@ -42,5 +42,11 @@ kotlin {
             implementation(compose.desktop.currentOs)
             implementation(desktopLibs.kotlinx.coroutines.swing)
         }
+
+        jvmTest.dependencies {
+            implementation(commonLibs.kotlin.test)
+            implementation(commonLibs.cmp.ui.test)
+            implementation(commonLibs.material3.window.size)
+        }
     }
 }
