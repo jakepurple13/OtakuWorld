@@ -1,6 +1,8 @@
 package com.programmersbox.novel.shared.reader
 
 import com.programmersbox.kmpuiviews.theme.SeedColorTheme
+import kotlinx.coroutines.flow.first
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -292,11 +294,21 @@ private fun NovelReadViewContent(
                         // the outgoing page is not current in the same pass, so it stays frozen
                         val livePageText = viewModel.pageList
                         if (chapter == viewModel.currentChapter) pageText = livePageText
+                        val chapterScroll = rememberScrollState()
+                        if (chapter == viewModel.currentChapter) {
+                            LaunchedEffect(chapter) { viewModel.chapterShown(chapter) }
+                            // Reaching the bottom of a chapter with text counts as reaching the end
+                            LaunchedEffect(chapter, chapterScroll) {
+                                snapshotFlow { pageText.isNotEmpty() && chapterScroll.maxValue > 0 && !chapterScroll.canScrollForward }
+                                    .first { it }
+                                viewModel.chapterEndReached()
+                            }
+                        }
                         Column(
                             verticalArrangement = Arrangement.spacedBy(4.dp),
                             modifier = Modifier
                                 .padding(horizontal = 4.dp)
-                                .verticalScroll(rememberScrollState())
+                                .verticalScroll(chapterScroll)
                                 .fillMaxSize()
                         ) {
                             ChapterRecapBar(viewModel, chapter)

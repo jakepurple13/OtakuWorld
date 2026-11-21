@@ -1,6 +1,13 @@
 package com.programmersbox.novel.shared.reader
 
 import androidx.compose.runtime.derivedStateOf
+import com.programmersbox.kmpuiviews.telemetry.TelemetrySourceNamer
+import com.programmersbox.kmpuiviews.telemetry.ReadingSessionTracker
+import com.programmersbox.telemetry.events.ReaderSettingChanged
+import com.programmersbox.telemetry.events.OpenedFrom
+import com.programmersbox.telemetry.events.ChapterOpened
+import com.programmersbox.telemetry.NoOpAnalytics
+import com.programmersbox.telemetry.Analytics
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
@@ -55,7 +62,18 @@ class ReadViewModel(
     private val favoritesRepository: FavoritesRepository,
     aiText: AiText,
     private val dataStoreHandling: DataStoreHandling,
+    private val analytics: Analytics = NoOpAnalytics,
+    private val sourceNamer: TelemetrySourceNamer? = null,
 ) : ViewModel() {
+
+    private val readingSession = ReadingSessionTracker(mediaType = "novel")
+
+    /** A chapter came into view; novels count chapters as pages. */
+    fun chapterShown(chapter: Int) = readingSession.pageShown(chapter, page = 0, pagesInChapter = Int.MAX_VALUE)
+
+    /** The user scrolled to the bottom of the current chapter. */
+    fun chapterEndReached() = readingSession.endReached()
+
 
     val recaps = ChapterRecaps(aiText, viewModelScope)
     /** Null until the stored value loads, so the bar never animates from a guessed default. */
@@ -64,6 +82,7 @@ class ReadViewModel(
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     fun setRecapEnabled(enabled: Boolean) {
+        analytics.log(ReaderSettingChanged("chapter_recap", enabled.toString()))
         viewModelScope.launch { dataStoreHandling.novelChapterRecap.set(enabled) }
     }
 
@@ -170,6 +189,14 @@ class ReadViewModel(
         currentChapter = list.indexOfFirst { l -> l.url == url }.coerceIn(0, list.lastIndex.coerceAtLeast(0))
 
         loadPages(modelPath)
+        val source = list.getOrNull(currentChapter)?.source?.serviceName
+        analytics.log(
+            ChapterOpened(
+                source = source?.let { sourceNamer?.name(it) ?: it } ?: "downloaded",
+                mediaType = "novel",
+                from = if (novelReader.downloaded) OpenedFrom.DOWNLOADS else OpenedFrom.DETAILS,
+            )
+        )
 
         favoritesRepository
             .isFavorite(url = mangaUrl)
@@ -241,6 +268,7 @@ class ReadViewModel(
 
     override fun onCleared() {
         super.onCleared()
+        analytics.log(readingSession.event())
         chapterHolder.chapterModel = null
         chapterHolder.chapters = null
     }
