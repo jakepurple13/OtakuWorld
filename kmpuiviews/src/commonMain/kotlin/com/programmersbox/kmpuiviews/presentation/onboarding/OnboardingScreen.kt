@@ -124,8 +124,8 @@ internal fun OnboardingContent(
     // so the frozen frame covers everything. Steps pass ROOT coordinates; convert to host coordinates.
     var hostCoords by remember { mutableStateOf<LayoutCoordinates?>(null) }
     ColorSweepHost { sweepFrom ->
-        val sweepFromRoot: (Offset) -> Unit = remember(sweepFrom) {
-            { root -> sweepFrom(root - (hostCoords?.positionInRoot() ?: Offset.Zero)) }
+        val sweepFromRoot: (Offset, () -> Unit) -> Unit = remember(sweepFrom) {
+            { root, apply -> sweepFrom(root - (hostCoords?.positionInRoot() ?: Offset.Zero), apply) }
         }
         Surface(
             color = MaterialTheme.colorScheme.background,

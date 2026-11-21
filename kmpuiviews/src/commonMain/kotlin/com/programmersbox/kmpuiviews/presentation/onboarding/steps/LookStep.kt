@@ -14,6 +14,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -55,10 +57,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.materialkolor.material3.rememberDynamicColorScheme
 import com.programmersbox.datastore.NewSettingsHandling
@@ -72,7 +74,6 @@ import com.programmersbox.kmpuiviews.presentation.onboarding.HeroShape
 import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingScope
 import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingStepSpec
 import com.programmersbox.kmpuiviews.presentation.onboarding.frame.StepLayout
-import com.programmersbox.kmpuiviews.presentation.onboarding.motion.ColorSweepHost
 import com.programmersbox.kmpuiviews.presentation.onboarding.motion.LocalColorSweep
 import com.programmersbox.kmpuiviews.presentation.onboarding.motion.onboardingReducedMotion
 import com.programmersbox.kmpuiviews.presentation.settings.general.ColorBlindTypeSettings
@@ -116,21 +117,8 @@ fun OnboardingScope.lookStep(handling: NewSettingsHandling) {
         },
     )
     step(spec) {
-        // Uses a host a parent provides (Task 10 may lift it to the scaffold); otherwise wraps the step itself.
-        val outerSweep = LocalColorSweep.current
         Box(Modifier.fillMaxSize().testTag(OnboardingTags.step(spec.id))) {
-            if (outerSweep != null) {
-                LookContent(spec, handling, outerSweep)
-            } else {
-                var hostCoords by remember { mutableStateOf<LayoutCoordinates?>(null) }
-                ColorSweepHost { sweepFrom ->
-                    Box(Modifier.fillMaxSize().onGloballyPositioned { hostCoords = it }) {
-                        LookContent(spec, handling) { root ->
-                            sweepFrom(root - (hostCoords?.positionInRoot() ?: Offset.Zero))
-                        }
-                    }
-                }
-            }
+            LookContent(spec, handling, LocalColorSweep.current)
         }
     }
 }
@@ -147,7 +135,7 @@ private fun isDark(mode: SystemThemeMode): Boolean = when (mode) {
 private fun LookContent(
     spec: OnboardingStepSpec,
     handling: NewSettingsHandling,
-    sweepFromRoot: (Offset) -> Unit,
+    sweepFromRoot: ((Offset, () -> Unit) -> Unit)?,
 ) {
     var mode by handling.rememberSystemThemeMode()
     var themeColor by handling.rememberThemeColor()
@@ -175,8 +163,7 @@ private fun LookContent(
         }
 
         SwatchRow(handling, MainSwatches, themeColor, dark, isAmoled) { color, root ->
-            sweepFromRoot(root)
-            themeColor = color
+            if (sweepFromRoot != null) sweepFromRoot(root) { themeColor = color } else themeColor = color
         }
 
         AnimatedVisibility(
@@ -255,7 +242,7 @@ private fun SwatchRow(
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().selectableGroup(),
     ) {
         colors.forEach { color ->
             val scheme = when (color) {
@@ -284,7 +271,10 @@ private fun Swatch(
     val corner = if (reduced) target else animatedCorner
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.clip(RoundedCornerShape(12.dp)).clickable { onPick(color, center) },
+        // Radio semantics so screen readers announce the selection; the label Text below is merged in as the name.
+        modifier = Modifier
+            .clip(RoundedCornerShape(12.dp))
+            .selectable(selected = selected, role = Role.RadioButton) { onPick(color, center) },
     ) {
         Box(
             contentAlignment = Alignment.Center,

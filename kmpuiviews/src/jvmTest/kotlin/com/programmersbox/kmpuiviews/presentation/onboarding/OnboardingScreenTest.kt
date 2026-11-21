@@ -45,9 +45,17 @@ class OnboardingScreenTest {
     private val nav: NavigationActions = Proxy.newProxyInstance(
         NavigationActions::class.java.classLoader,
         arrayOf(NavigationActions::class.java),
-    ) { _, method, _ ->
-        calls += method.name
-        null
+    ) { proxy, method, args ->
+        when (method.name) {
+            // Compose compares parameters on recomposition; a null from equals would crash.
+            "equals" -> proxy === args?.firstOrNull()
+            "hashCode" -> System.identityHashCode(proxy)
+            "toString" -> "FakeNavigationActions"
+            else -> {
+                calls += method.name
+                null
+            }
+        }
     } as NavigationActions
 
     private val order = listOf("welcome", "look", "layout", "sources", "app", "sync", "updates", "tips", "done")
