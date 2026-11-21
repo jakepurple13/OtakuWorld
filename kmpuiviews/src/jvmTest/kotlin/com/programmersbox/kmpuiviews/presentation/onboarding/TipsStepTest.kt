@@ -12,7 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.down
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -26,6 +28,7 @@ import com.programmersbox.kmpuiviews.presentation.onboarding.steps.tipsStep
 import com.programmersbox.kmpuiviews.presentation.tips.Tip
 import com.programmersbox.kmpuiviews.presentation.tips.TipGesture
 import com.programmersbox.kmpuiviews.presentation.tips.buildTips
+import com.programmersbox.kmpuiviews.presentation.tips.sharedTips
 import com.programmersbox.kmpuiviews.utils.LocalWindowSizeClass
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -68,6 +71,12 @@ class TipsStepTest {
         onNodeWithTag("swipeDemo").assertDoesNotExist()
         onNodeWithText("Press and hold the cover.").assertExists()
         onNodeWithText("More in Settings › Discover › Tips & Gestures").assertExists()
+    }
+
+    @Test
+    fun shared_hold_demo_instruction_shown_once() = runComposeUiTest {
+        show(list = sharedTips)
+        onAllNodesWithText("Press and hold the cover", substring = true).assertCountEquals(1)
     }
 
     @Test

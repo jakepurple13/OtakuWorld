@@ -24,6 +24,7 @@ import kotlin.random.Random
 
 private const val ParticleCount = 90
 private const val DurationNanos = 1_900_000_000L
+/** dp/s²; particle speeds are dp/s and sizes dp, scaled to px by density when drawn. */
 private const val Gravity = 900f
 
 private class Particle(
@@ -84,10 +85,11 @@ fun ConfettiBurst(
         val t = elapsed.longValue / 1_000_000_000f
         val alpha = (1f - ((elapsed.longValue.toFloat() / DurationNanos - 0.6f) / 0.4f)).coerceIn(0f, 1f)
         val origin = Offset(this.size.width / 2f, this.size.height * 0.25f)
+        val d = density
         particles.forEach { p ->
-            val pos = Offset(origin.x + p.vx * t, origin.y + p.vy * t + 0.5f * Gravity * t * t)
+            val pos = Offset(origin.x + p.vx * d * t, origin.y + (p.vy * t + 0.5f * Gravity * t * t) * d)
             rotate(p.spin * t, pos) {
-                drawRect(p.color.copy(alpha = alpha), topLeft = pos, size = Size(p.size, p.size * 0.6f))
+                drawRect(p.color.copy(alpha = alpha), topLeft = pos, size = Size(p.size * d, p.size * 0.6f * d))
             }
         }
     }

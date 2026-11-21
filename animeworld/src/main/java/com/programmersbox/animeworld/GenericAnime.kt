@@ -8,7 +8,6 @@ import androidx.compose.material.icons.filled.SportsMartialArts
 import com.programmersbox.anime.shared.onboarding.playerSetupStep
 import com.programmersbox.kmpuiviews.presentation.onboarding.GenreCard
 import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingAppConfig
-import androidx.compose.material.icons.filled.Check
 import com.programmersbox.kmpuiviews.utils.composables.transitions.rememberChapterRevealOrigin
 import androidx.compose.foundation.layout.Box
 import com.programmersbox.kmpuiviews.utils.composables.transitions.ChapterOpenMotion

@@ -20,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
@@ -37,6 +38,7 @@ import com.programmersbox.kmpuiviews.presentation.tips.TipGesture
 import com.programmersbox.kmpuiviews.presentation.tips.buildTips
 import com.programmersbox.kmpuiviews.presentation.tips.sharedTips
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
+import com.programmersbox.kmpuiviews.presentation.tips.LocalTipDemoShowsInstruction
 import org.koin.compose.koinInject
 
 /**
@@ -83,7 +85,12 @@ fun OnboardingScope.tipsStep(
                                     }
                                 }
                             },
-                    ) { demo { done = true } }
+                    ) {
+                        // The hint below carries the instruction, so the demo drops its own heading.
+                        CompositionLocalProvider(LocalTipDemoShowsInstruction provides false) {
+                            demo { done = true }
+                        }
+                    }
 
                     val hint = if (done) "Nice. That menu works on every cover." else "Press and hold the cover."
                     if (reduced) {

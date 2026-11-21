@@ -11,6 +11,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
@@ -175,7 +176,11 @@ private fun IntervalRow(
     var slider by remember(hours) { mutableFloatStateOf(hours.toFloat()) }
     val progress by animateFloatAsState(
         targetValue = slider / 24f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+        animationSpec = if (onboardingReducedMotion()) {
+            snap()
+        } else {
+            spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow)
+        },
     )
     Row(
         verticalAlignment = Alignment.CenterVertically,
