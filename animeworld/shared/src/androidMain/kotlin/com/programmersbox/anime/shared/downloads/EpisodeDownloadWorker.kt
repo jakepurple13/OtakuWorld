@@ -1,6 +1,9 @@
 package com.programmersbox.anime.shared.downloads
 
 import android.Manifest
+import com.programmersbox.telemetry.events.DownloadFinished
+import com.programmersbox.telemetry.Buckets
+import com.programmersbox.kmpuiviews.telemetry.koinAnalytics
 import android.annotation.SuppressLint
 import android.app.Notification
 import android.content.Context
@@ -89,6 +92,10 @@ class EpisodeDownloadWorker(
 
     override suspend fun doWork(): Result {
         val request = request ?: return Result.failure().also { requestFile?.delete() }
+        val startedAt = System.currentTimeMillis()
+        fun logFinished(outcome: String) = runCatching {
+            koinAnalytics().log(DownloadFinished("anime", outcome, Buckets.durationMs(System.currentTimeMillis() - startedAt)))
+        }
         val foregroundFailure = runCatching { setForeground(getForegroundInfo()) }.exceptionOrNull()
         if (foregroundFailure is CancellationException) throw foregroundFailure
         if (foregroundFailure != null) {
@@ -149,10 +156,13 @@ class EpisodeDownloadWorker(
                 resultNotification(request.title, "Download complete").setTimeoutAfter(5000).build(),
             )
             succeeded = true
+            logFinished(DownloadFinished.SUCCESS)
             Result.success(workDataOf("file" to file.absolutePath))
         } catch (e: CancellationException) {
+            logFinished(DownloadFinished.CANCEL)
             throw e
         } catch (t: Throwable) {
+            logFinished(DownloadFinished.FAIL)
             Log.e(TAG, "Episode download failed: ${request.title}", t)
             val message = t.message ?: t::class.java.simpleName
             failureMessage = message

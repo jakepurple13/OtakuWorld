@@ -1,6 +1,8 @@
 package com.programmersbox.kmpuiviews.telemetry
 
+import com.programmersbox.telemetry.Analytics
 import com.programmersbox.telemetry.CrashReporter
+import com.programmersbox.telemetry.NoOpAnalytics
 import com.programmersbox.telemetry.NoOpCrashReporter
 import org.koin.mp.KoinPlatform
 
@@ -10,3 +12,11 @@ import org.koin.mp.KoinPlatform
  */
 fun koinCrashReporter(): CrashReporter =
     KoinPlatform.getKoinOrNull()?.getOrNull<CrashReporter>() ?: NoOpCrashReporter
+
+/** The Koin [Analytics] for code with no injection scope; [NoOpAnalytics] when Koin is not started. */
+fun koinAnalytics(): Analytics =
+    KoinPlatform.getKoinOrNull()?.getOrNull<Analytics>() ?: NoOpAnalytics
+
+/** A source name telemetry may send (see [TelemetrySourceNamer]); the raw name when Koin has no namer. */
+fun koinSourceName(serviceName: String): String =
+    KoinPlatform.getKoinOrNull()?.getOrNull<TelemetrySourceNamer>()?.name(serviceName) ?: serviceName

@@ -1,6 +1,9 @@
 package com.programmersbox.kmpuiviews.presentation.dictionary
 
 import androidx.lifecycle.ViewModel
+import com.programmersbox.telemetry.events.DictionaryLookup
+import com.programmersbox.telemetry.NoOpAnalytics
+import com.programmersbox.telemetry.Analytics
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.DictionaryEntry
 import com.programmersbox.kmpuiviews.presentation.Screen
@@ -16,6 +19,7 @@ import kotlinx.coroutines.launch
 class DictionaryFormViewModel(
     form: Screen.DictionaryScreen.Form,
     private val repository: DictionaryRepository,
+    private val analytics: Analytics = NoOpAnalytics,
 ) : ViewModel() {
 
     val entry: StateFlow<DictionaryEntry?> = (form.id?.let { repository.getById(it) } ?: flowOf(null))
@@ -52,5 +56,6 @@ class DictionaryFormViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             repository.save(toSave)
         }
+        if (existing == null) analytics.log(DictionaryLookup(DictionaryLookup.ADD))
     }
 }

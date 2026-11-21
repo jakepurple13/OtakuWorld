@@ -1,6 +1,9 @@
 package com.programmersbox.kmpuiviews.presentation.dictionary
 
 import com.programmersbox.kmpuiviews.testing.clearAndJoin
+import com.programmersbox.telemetry.events.DictionaryLookup
+import com.programmersbox.telemetry.AnalyticsEvent
+import com.programmersbox.kmpuiviews.testing.FakeAnalytics
 import androidx.lifecycle.ViewModelStore
 import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
@@ -42,7 +45,9 @@ class DictionaryFormViewModelTest {
         }
     }
 
-    private fun viewModel(id: Long?) = DictionaryFormViewModel(Screen.DictionaryScreen.Form(id), repository)
+    private val analytics = FakeAnalytics()
+
+    private fun viewModel(id: Long?) = DictionaryFormViewModel(Screen.DictionaryScreen.Form(id), repository, analytics)
         .also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -121,5 +126,16 @@ class DictionaryFormViewModelTest {
 
         awaitCondition { vm.entry.value?.term == "Sensei-updated" }
         assertEquals(12345L, vm.entry.value?.dateAdded)
+    }
+
+    @Test fun `saving a new entry logs an add, editing does not`() = runTest {
+        viewModel(null).save("Neko", null, null, null, null, null)
+        val id = repository.save(DictionaryEntry(term = "Sensei"))
+        val edit = viewModel(id)
+        val __sub = backgroundScope.launch { edit.entry.collect {} }
+        awaitCondition { edit.entry.value != null }
+        edit.save("Sensei!", null, null, null, null, null)
+
+        assertEquals<List<AnalyticsEvent>>(listOf(DictionaryLookup(DictionaryLookup.ADD)), analytics.events)
     }
 }

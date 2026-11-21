@@ -1,6 +1,12 @@
 package com.programmersbox.anime.shared.videoplayer
 
 import androidx.compose.runtime.setValue
+import com.programmersbox.telemetry.CrashReporter
+import kotlin.time.TimeSource
+import com.programmersbox.telemetry.events.PlaybackError
+import com.programmersbox.telemetry.events.PlaybackStarted
+import com.programmersbox.telemetry.Buckets
+import com.programmersbox.telemetry.Analytics
 import androidx.compose.runtime.getValue
 import com.programmersbox.kmpuiviews.theme.SeedColorTheme
 import com.programmersbox.datastore.asState
@@ -228,6 +234,14 @@ private fun VideoPlayerContent(videoScreen: VideoScreen) {
     val ignoreSslEnabled by remember { context.ignoreSsl }.collectAsStateWithLifecycle(null)
     val blur = rememberPlayerBlur(useBlur == true)
     val playerStyle by videoPlayerStyle.asState()
+    val analytics = koinInject<Analytics>()
+    val playerOpenedAt = remember { TimeSource.Monotonic.markNow() }
+    var playbackLogged by rememberSaveable { mutableStateOf(false) }
+    val crashReporter = koinInject<CrashReporter>()
+    LaunchedEffect(playerStyle) {
+        crashReporter.setKey("player_style", playerStyle.name.lowercase())
+        analytics.setUserProperty("player_style", playerStyle.name.lowercase())
+    }
 
     val castController = koinInject<CastController>()
     val notifier = koinInject<InAppNotifier>()
@@ -316,7 +330,20 @@ private fun VideoPlayerContent(videoScreen: VideoScreen) {
                     modifier = Modifier.playerBlurSource(blur, playerStyle)
                 )
             }
-            viewModel.exoPlayer?.let { BufferingOverlay(it, storageHolder.posterUrl) }
+            viewModel.exoPlayer?.let {
+                BufferingOverlay(it, storageHolder.posterUrl) {
+                    if (!playbackLogged) {
+                        playbackLogged = true
+                        analytics.log(
+                            PlaybackStarted(
+                                playerStyle = playerStyle.name.lowercase(),
+                                casting = false,
+                                ttff = Buckets.durationMs(playerOpenedAt.elapsedNow().inWholeMilliseconds),
+                            )
+                        )
+                    }
+                }
+            }
             var draggingProgress: DraggingProgress? by remember { mutableStateOf(null) }
             MediaControlGestures(
                 modifier = Modifier.fillMaxSize(),
@@ -401,7 +428,7 @@ private fun VideoPlayerContent(videoScreen: VideoScreen) {
 
 /** Poster + percent while the player buffers; the poster stays until the first frame renders. */
 @Composable
-private fun BufferingOverlay(exoPlayer: ExoPlayer, posterUrl: String?) {
+private fun BufferingOverlay(exoPlayer: ExoPlayer, posterUrl: String?, onFirstFrame: () -> Unit = {}) {
     var buffering by remember(exoPlayer) { mutableStateOf(exoPlayer.playbackState == Player.STATE_BUFFERING) }
     var firstFrame by remember(exoPlayer) { mutableStateOf(false) }
     var percent by remember(exoPlayer) { mutableStateOf(0) }
@@ -413,6 +440,7 @@ private fun BufferingOverlay(exoPlayer: ExoPlayer, posterUrl: String?) {
             }
 
             override fun onRenderedFirstFrame() {
+                if (!firstFrame) onFirstFrame()
                 firstFrame = true
             }
         }
@@ -449,6 +477,8 @@ fun VideoPlayer(
     val context = LocalContext.current
     val activity = LocalActivity.current
     val notifier = koinInject<InAppNotifier>()
+    val errorAnalytics = koinInject<Analytics>()
+    val errorStorage = koinInject<StorageHolder>()
 
     val exoPlayer = remember {
         // Kept in the ViewModel across the forced rotation, so the stream is only prepared once.
@@ -487,6 +517,8 @@ fun VideoPlayer(
         val listener = object : Player.Listener {
             override fun onPlayerError(error: PlaybackException) {
                 super.onPlayerError(error)
+                // Stream host label (not a URL) and the ExoPlayer error code, never the message
+                errorAnalytics.log(PlaybackError(errorStorage.storageModel?.source ?: "unknown", error.errorCodeName))
                 notifier.error("Playback failed", error.message)
                 navController.popBackStack()
             }
