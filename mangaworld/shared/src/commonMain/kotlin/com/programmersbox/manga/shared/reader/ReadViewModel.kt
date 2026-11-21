@@ -75,8 +75,9 @@ class ReadViewModel(
     /** Called by the reader as pages come into view, for the reading_session event. */
     fun pageShown(page: Int, pagesInChapter: Int) = readingSession.pageShown(currentChapter, page, pagesInChapter)
 
-    private fun telemetrySource(): String =
-        list.getOrNull(currentChapter)?.source?.serviceName?.let { sourceNamer?.name(it) ?: it } ?: "downloaded"
+    private fun telemetrySource(): String = runCatching {
+        list.getOrNull(currentChapter)?.source?.serviceName?.let { sourceNamer?.name(it) ?: it }
+    }.getOrNull() ?: "downloaded"
 
     private fun reportPagesError(e: Throwable) =
         analytics.log(SourceError(telemetrySource(), SourceError.PAGES, e::class.simpleName ?: "Exception"))

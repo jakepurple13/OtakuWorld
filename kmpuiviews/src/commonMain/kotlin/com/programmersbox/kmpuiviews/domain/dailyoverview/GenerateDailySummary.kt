@@ -68,7 +68,7 @@ suspend fun generateDailySummary(
         logAi(AiTaskRun.ERROR)
         return templateSummary()
     }
-    logAi(AiTaskRun.SUCCESS)
+    logAi(if (text.isBlank()) AiTaskRun.ERROR else AiTaskRun.SUCCESS)
     if (text.isBlank()) return templateSummary()
     return DailySummary(facts.date, engine.id, text).also { settings.cacheOrIgnore(it) }
 }

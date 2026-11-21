@@ -1,6 +1,7 @@
 package com.programmersbox.anime.shared.videoplayer
 
 import androidx.compose.runtime.setValue
+import com.programmersbox.kmpuiviews.telemetry.koinSourceName
 import com.programmersbox.telemetry.CrashReporter
 import kotlin.time.TimeSource
 import com.programmersbox.telemetry.events.PlaybackError
@@ -517,8 +518,10 @@ fun VideoPlayer(
         val listener = object : Player.Listener {
             override fun onPlayerError(error: PlaybackException) {
                 super.onPlayerError(error)
-                // Stream host label (not a URL) and the ExoPlayer error code, never the message
-                errorAnalytics.log(PlaybackError(errorStorage.storageModel?.source ?: "unknown", error.errorCodeName))
+                // The episode's source (incognito-safe) and the ExoPlayer error code, never the message
+                runCatching {
+                    errorAnalytics.log(PlaybackError(errorStorage.sourceName?.let(::koinSourceName) ?: "unknown", error.errorCodeName))
+                }
                 notifier.error("Playback failed", error.message)
                 navController.popBackStack()
             }

@@ -250,6 +250,7 @@ class GenericAnime(
             episodeLoader.finishHandoff()
         } else {
             storageHolder.storageModel = storage
+            storageHolder.sourceName = runCatching { model.source.serviceName }.getOrNull()
             storageHolder.showTitle = infoModel.title
             storageHolder.posterUrl = infoModel.imageUrl
             navController.navigate(

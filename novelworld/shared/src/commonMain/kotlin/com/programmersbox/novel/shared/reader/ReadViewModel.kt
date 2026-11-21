@@ -189,7 +189,7 @@ class ReadViewModel(
         currentChapter = list.indexOfFirst { l -> l.url == url }.coerceIn(0, list.lastIndex.coerceAtLeast(0))
 
         loadPages(modelPath)
-        val source = list.getOrNull(currentChapter)?.source?.serviceName
+        val source = runCatching { list.getOrNull(currentChapter)?.source?.serviceName }.getOrNull()
         analytics.log(
             ChapterOpened(
                 source = source?.let { sourceNamer?.name(it) ?: it } ?: "downloaded",

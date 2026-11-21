@@ -125,10 +125,8 @@ internal fun SettingsSheet(
                 settingIcon = Icons.Default.FormatLineSpacing,
                 settingTitle = "Reader Padding Between Pages",
                 settingSummary = "Default is 4",
-                preferenceUpdate = {
-                    mangaSettingsHandling.pagePadding.updateSetting(it)
-                    logSetting("page_padding", it)
-                },
+                preferenceUpdate = { mangaSettingsHandling.pagePadding.updateSetting(it) },
+                onChangeFinished = { logSetting("page_padding", it) },
                 initialValue = runBlocking { mangaSettingsHandling.pagePadding.flow.firstOrNull() ?: 4 },
                 range = 0f..10f
             )
@@ -262,6 +260,7 @@ private fun SliderSetting(
     preferenceUpdate: suspend (Int) -> Unit,
     initialValue: Int,
     range: ClosedFloatingPointRange<Float>,
+    onChangeFinished: (Int) -> Unit = {},
 ) {
     var sliderValue by remember { mutableFloatStateOf(initialValue.toFloat()) }
 
@@ -274,6 +273,7 @@ private fun SliderSetting(
             sliderValue = it
             scope.launch { preferenceUpdate(sliderValue.toInt()) }
         },
+        onValueChangedFinished = { onChangeFinished(sliderValue.toInt()) },
         settingIcon = { Icon(settingIcon, null) }
     )
 }

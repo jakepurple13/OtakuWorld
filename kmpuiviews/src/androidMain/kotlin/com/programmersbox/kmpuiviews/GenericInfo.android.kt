@@ -44,7 +44,12 @@ actual interface PlatformGenericInfo : KmpGenericInfo {
         } ?: "$deepLinkUri${Screen.DetailsScreen.route}".toUri()
     }
 
-    fun deepLinkDetailsUri(url: String, imageUrl: String, source: String): Uri = deepLinks
+    fun deepLinkDetailsUri(
+        url: String,
+        imageUrl: String,
+        source: String,
+        from: String = OpenedFrom.UPDATE_NOTIFICATION,
+    ): Uri = deepLinks
         .details
         .createUri(
             Screen.DetailsScreen.Details(
@@ -53,7 +58,7 @@ actual interface PlatformGenericInfo : KmpGenericInfo {
                 url = url,
                 imageUrl = imageUrl,
                 source = source,
-                from = OpenedFrom.UPDATE_NOTIFICATION,
+                from = from,
             )
         )
         .toUri()

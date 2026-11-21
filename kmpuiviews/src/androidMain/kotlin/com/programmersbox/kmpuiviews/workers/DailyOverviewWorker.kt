@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.workers
 
 import android.Manifest
+import com.programmersbox.telemetry.events.OpenedFrom
 import com.programmersbox.kmpuiviews.telemetry.koinAnalytics
 import com.programmersbox.kmpuiviews.telemetry.koinCrashReporter
 import android.annotation.SuppressLint
@@ -92,7 +93,12 @@ class DailyOverviewWorker(
                     pendingActionIntent { context ->
                         info.deepLink(
                             context,
-                            info.deepLinkDetailsUri(url = lastTitle.url, imageUrl = lastTitle.imageUrl, source = lastTitle.source),
+                            info.deepLinkDetailsUri(
+                                url = lastTitle.url,
+                                imageUrl = lastTitle.imageUrl,
+                                source = lastTitle.source,
+                                from = OpenedFrom.NOTIFICATION,
+                            ),
                             NOTIFICATION_ID,
                         )
                     }
