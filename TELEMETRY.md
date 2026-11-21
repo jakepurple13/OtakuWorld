@@ -46,7 +46,8 @@ Counts and durations are rounded into ranges before they are sent:
 ## Usage analytics events
 
 `media_type` is `manga`, `anime` or `novel`. `from` is where the screen was opened from: `details`,
-`search`, `recent`, `all`, `favorites`, `history`, `notification`, `deep_link`, `quick_action`,
+`search`, `recent`, `all`, `favorites`, `history`, `notification` (the in-app Notifications screen),
+`update_notification` (the new-chapter system notification), `deep_link`, `quick_action`,
 `downloads`, `long_press`, `lists` or `other`.
 
 | Event | Sent when | Parameters |
@@ -83,8 +84,8 @@ Counts and durations are rounded into ranges before they are sent:
 | `update_notification_opened` | You tap a new-chapter notification | `count` |
 | `catch_up_used` | You act on a catch-up card | `action` (`read`/`skip`/`delete`/`remind`) |
 | `notification_dismissed` | You swipe away an update notification | none |
-| `extension_installed` | An extension is installed | `package`, `catalog` |
-| `extension_install_failed` | An extension install fails | `catalog`, `reason` |
+| `extension_installed` | An extension is installed | `package`, `catalog` (`otaku`, or the catalog that owns it, e.g. `mihon`) |
+| `extension_install_failed` | An extension install fails | `catalog` (`apk`), `reason` (`blocked`/`conflict`/`incompatible`/`invalid`/`storage`/`generic`) |
 | `extension_uninstalled` | An extension is removed | `package` |
 | `extension_updated` | An extension is updated | `package` |
 | `source_update_skipped` | You skip a source in update checks | `package` |
