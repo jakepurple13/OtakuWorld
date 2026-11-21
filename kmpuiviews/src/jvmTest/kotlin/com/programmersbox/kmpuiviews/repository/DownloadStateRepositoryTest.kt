@@ -1,6 +1,8 @@
 package com.programmersbox.kmpuiviews.repository
 
 import com.programmersbox.kmpextensionloader.ApkExtensionStore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import com.programmersbox.kmpextensionloader.ApkInstallException
 import com.programmersbox.kmpextensionloader.ApkInstallFailure
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus
@@ -171,6 +173,18 @@ class DownloadStateRepositoryTest {
         r.cancelDownload(r.downloadList.first().single().id)
         assertEquals(DownloadAndInstallStatus.Cancelled, r.terminal().status)
         assertEquals(0, reloads)
+    }
+
+    @Test
+    fun tempFileIsGoneWhenInstalledIsReported() = runBlocking {
+        val r = repo()
+        // Unconfined: the collector runs inside the status update, so it sees the folder at that exact moment
+        val emptyWhenInstalled = async(Dispatchers.Unconfined) {
+            r.downloadList.first { l -> l.lastOrNull()?.status is DownloadAndInstallStatus.Installed }
+            tempDir.listFiles().orEmpty().isEmpty()
+        }
+        r.start()
+        assertTrue(withTimeout(10_000) { emptyWhenInstalled.await() })
     }
 
     @Test

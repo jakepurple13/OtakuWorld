@@ -437,6 +437,10 @@ class DetailsViewModel(
     }
 
     fun hideTldr() {
+        // The background cache write can still be pending when the summary finishes; keep the result
+        val finished = tldrTask.state.value as? AiTextState.Done
+        val url = tldrUrl
+        if (finished != null && url != null && tldrCache[url] == null) tldrCache[url] = TldrEntry(finished, _tldrTranslated.value)
         tldrJob?.cancel()
         tldrJob = null
         tldrTask.reset()

@@ -73,6 +73,8 @@ class DownloadStateRepository(
                     val store = stores.firstOrNull { it.accepts(file) }
                         ?: throw ApkInstallException(ApkInstallFailure.INVALID, "Not a supported extension")
                     store.install(file)
+                    // Remove the temp APK before reporting Installed; the finally block runs after observers see it
+                    file.delete()
                     reload()
                     installed = true
                     setStatus(id, DownloadAndInstallStatus.Installed)
