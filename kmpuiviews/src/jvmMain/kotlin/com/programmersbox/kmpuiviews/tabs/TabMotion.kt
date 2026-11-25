@@ -37,6 +37,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.programmersbox.kmpuiviews.motion.REDUCED_MOTION_REFRESH_MILLIS
+import com.programmersbox.kmpuiviews.motion.systemReducesMotion
 import org.koin.compose.koinInject
 import kotlin.math.roundToInt
 
@@ -63,11 +65,28 @@ private class FlyGhost(val tab: TabId, val origin: Rect, val url: String) {
 class TabMotionState(
     /** The debug `TAB_MOTION_SCALE`; see [tabMotionScale]. */
     val scale: Float = tabMotionScale(System.getProperty("otaku.tabMotionDebug"), System.getenv("TAB_MOTION_SCALE")),
-    reduced: Boolean = false,
+    mode: TabMotionMode = TabMotionMode.System,
 ) {
-    var reduced: Boolean by mutableStateOf(reduced)
+    /** The "Tab animations" setting. */
+    var mode: TabMotionMode by mutableStateOf(mode)
+
+    /** The OS reduce-motion setting, kept current by [followSystemReducedMotion]. */
+    internal var systemReduces: Boolean by mutableStateOf(false)
+
+    val level: TabMotionLevel get() = tabMotionLevel(mode, systemReduces)
+
+    /** True under Reduced and Off: no flights, grows or glides, only crossfades or instant changes. */
+    val reduced: Boolean get() = level != TabMotionLevel.Full
+
+    /** Where the strip is; changed by [switchLayout]. */
+    var position: TabPosition by mutableStateOf(TabPosition.Top)
         private set
-    private var loaded = false
+
+    /** The position change in progress, if any. */
+    internal var layoutSwitch: LayoutSwitch? by mutableStateOf(null)
+
+    /** Each tab's chip (top) or row (side) in window coordinates, from the strip that shows it now. */
+    val chipBounds = HashMap<TabId, Rect>()
 
     /** Icon bounds in window coordinates, by tab. Read when a motion starts and as it runs. */
     val slotBounds = HashMap<TabId, Rect>()
@@ -82,9 +101,9 @@ class TabMotionState(
     /** True the first time [id] is seen: the strip animates only tabs it has not shown before. */
     fun markSeen(id: TabId): Boolean = seen.add(id)
 
-    fun ms(motion: TabMotion) = tabMotionMs(motion, scale, reduced)
+    fun ms(motion: TabMotion) = tabMotionMs(motion, scale, level)
 
-    fun easing(motion: TabMotion) = tabMotionEasing(motion, reduced)
+    fun easing(motion: TabMotion) = tabMotionEasing(motion, level)
 
     fun <T> fade(motion: TabMotion) = tween<T>(ms(motion), easing = easing(motion))
 
@@ -111,12 +130,39 @@ class TabMotionState(
         }
     }
 
-    /** Reads the OS reduce-motion setting once, off the main thread. */
-    suspend fun loadReduced() {
-        if (loaded) return
-        loaded = true
-        reduced = withContext(Dispatchers.IO) { reducedMotion() }
+    /** Keeps [systemReduces] current. [systemReducesMotion] is cached, and the app refreshes it off the main thread. */
+    suspend fun followSystemReducedMotion() {
+        while (true) {
+            systemReduces = withContext(Dispatchers.IO) { systemReducesMotion() }
+            delay(REDUCED_MOTION_REFRESH_MILLIS)
+        }
     }
+
+    /**
+     * Moves the strip to [to]. With [animate] and Full motion every tab glides from its bounds now to its new
+     * bounds; Reduced fades the new strip in; Off, or the saved value on launch, just moves it.
+     */
+    fun switchLayout(to: TabPosition, animate: Boolean) {
+        if (to == position) return
+        layoutSwitch = if (animate && level != TabMotionLevel.Off) LayoutSwitch(HashMap(chipBounds)) else null
+        chipBounds.clear()
+        position = to
+    }
+
+    /** A strip chip's alpha: hidden under its gliding ghost, or fading in under Reduced. */
+    fun chipAlpha(tab: TabId): Float {
+        val switch = layoutSwitch ?: return 1f
+        return when {
+            reduced -> switch.t.value
+            tab in switch.from -> 0f
+            else -> 1f
+        }
+    }
+}
+
+/** A tab position change: [from] holds each tab's bounds before it, [t] runs 0..1 (linear time). */
+internal class LayoutSwitch(val from: Map<TabId, Rect>) {
+    val t = Animatable(0f)
 }
 
 /**
@@ -139,7 +185,17 @@ fun TabMotionLayer(
     fun imageOf(tab: TabId) = controller.windows.firstNotNullOfOrNull { w -> w.tabs.firstOrNull { it.id == tab } }
         ?.let { keys.labelOf(it.current).imageUrl }
 
-    LaunchedEffect(Unit) { motion.loadReduced() }
+    LaunchedEffect(Unit) { motion.followSystemReducedMotion() }
+
+    // On the UI thread, so the switch reads the chip bounds the strip last wrote.
+    LaunchedEffect(Unit) { tabPositionPref.asFlow().collect { motion.switchLayout(it, animate = true) } }
+
+    val layoutSwitch = motion.layoutSwitch
+    LaunchedEffect(layoutSwitch) {
+        layoutSwitch ?: return@LaunchedEffect
+        layoutSwitch.t.animateTo(1f, tween(motion.ms(TabMotion.Layout), easing = LinearEasing))
+        if (motion.layoutSwitch === layoutSwitch) motion.layoutSwitch = null
+    }
 
     LaunchedEffect(controller, window.id) {
         controller.events
@@ -215,6 +271,49 @@ fun TabMotionLayer(
                 )
             }
         }
+
+        // Tab position change: each tab glides from where it was to its slot in the new strip, which stays hidden
+        // (TabMotionState.chipAlpha) until the glide ends. The target is read every frame, so it follows the side
+        // column as it slides in.
+        if (layoutSwitch != null && !motion.reduced) {
+            val easing = motion.easing(TabMotion.Layout)
+            val side = motion.position == TabPosition.Side
+            val style = rememberTabIconStyle(keys)
+            window.tabs.toList().forEach { tab ->
+                val from = layoutSwitch.from[tab.id] ?: return@forEach
+                key(tab.id) {
+                    TabFace(
+                        tab = tab,
+                        label = keys.labelOf(tab.current),
+                        selected = tab.id == window.activeId.value,
+                        side = side,
+                        style = style,
+                        modifier = Modifier
+                            .placeAt(
+                                rect = {
+                                    val to = motion.chipBounds[tab.id] ?: from
+                                    lerp(from, to, easing.transform(layoutSwitch.t.value))
+                                },
+                                layerOrigin = { layerOrigin },
+                            )
+                            // A tab the new strip does not show (scrolled out) fades where it was.
+                            .graphicsLayer { alpha = if (tab.id in motion.chipBounds) 1f else 1f - layoutSwitch.t.value },
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** Places the element at [rect] (window coordinates), so it can leave the layer's own bounds. */
+private fun Modifier.placeAt(rect: () -> Rect, layerOrigin: () -> Offset): Modifier = layout { measurable, _ ->
+    val r = rect()
+    val w = r.width.roundToInt().coerceAtLeast(0)
+    val h = r.height.roundToInt().coerceAtLeast(0)
+    val placeable = measurable.measure(Constraints.fixed(w, h))
+    layout(0, 0) {
+        val o = layerOrigin()
+        placeable.place((r.left - o.x).roundToInt(), (r.top - o.y).roundToInt())
     }
 }
 
@@ -244,16 +343,7 @@ private fun Cover(
         onLoading = { Box(Modifier.fillMaxSize().background(placeholder)) },
         onFailure = { Box(Modifier.fillMaxSize().background(placeholder)) },
         modifier = Modifier
-            .layout { measurable, _ ->
-                val r = rect()
-                val w = r.width.roundToInt().coerceAtLeast(0)
-                val h = r.height.roundToInt().coerceAtLeast(0)
-                val placeable = measurable.measure(Constraints.fixed(w, h))
-                layout(0, 0) {
-                    val o = layerOrigin()
-                    placeable.place((r.left - o.x).roundToInt(), (r.top - o.y).roundToInt())
-                }
-            }
+            .placeAt(rect, layerOrigin)
             .graphicsLayer {
                 this.alpha = alpha()
                 shape = RoundedCornerShape(radius().dp)

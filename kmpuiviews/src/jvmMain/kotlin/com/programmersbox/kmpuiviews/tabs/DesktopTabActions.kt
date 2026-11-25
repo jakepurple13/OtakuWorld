@@ -115,7 +115,7 @@ class DesktopTabActions(
                                 longPressMillis = viewConfiguration.longPressTimeoutMillis,
                             )
                             if (click) {
-                                controller.arm(tabId, mode, bounds.rect)
+                                controller.armClick(tabId, mode, bounds.rect)
                                 // Clickables ignore the middle button, so open here.
                                 if (button == PointerButton.Tertiary) currentOpen()
                             }

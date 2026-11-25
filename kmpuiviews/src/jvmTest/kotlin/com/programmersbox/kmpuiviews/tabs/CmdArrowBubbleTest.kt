@@ -22,6 +22,7 @@ import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.runComposeUiTest
 import androidx.compose.ui.unit.dp
+import com.programmersbox.kmpuiviews.presentation.quickactions.isMacOs
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -62,8 +63,11 @@ class CmdArrowBubbleTest {
         runOnIdle { plainRequester.requestFocus() }
         press("plain")
         assertEquals(1, seen.value, "focused non-text node")
-        runOnIdle { fieldRequester.requestFocus() }
-        press("field")
-        assertEquals(1, seen.value, "focused text field consumes it")
+        // Only the macOS key map gives Cmd+Left to the text field; CI runs on Linux.
+        if (isMacOs) {
+            runOnIdle { fieldRequester.requestFocus() }
+            press("field")
+            assertEquals(1, seen.value, "focused text field consumes it")
+        }
     }
 }

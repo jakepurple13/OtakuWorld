@@ -25,6 +25,7 @@ import androidx.navigation3.runtime.NavKey
 import ca.gosyer.appdirs.AppDirs
 import com.programmersbox.kmpuiviews.motion.DesktopMotionCatalog
 import com.programmersbox.kmpuiviews.motion.motionSettingsGroup
+import com.programmersbox.kmpuiviews.tabs.tabsSettingsGroup
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.updates.updatesSettingsGroup
 import kotlinx.serialization.Serializable
@@ -79,6 +80,7 @@ fun JvmSettingsScreen() {
                 )
             }
 
+            tabsSettingsGroup()
             motionSettingsGroup(motionCatalog)
             updatesSettingsGroup()
         }

@@ -120,6 +120,9 @@ import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.tabs.BrowserWindow
 import com.programmersbox.kmpuiviews.tabs.TabMotionLayer
+import com.programmersbox.kmpuiviews.tabs.TabPosition
+import com.programmersbox.kmpuiviews.tabs.TabsSettingsPage
+import com.programmersbox.kmpuiviews.tabs.TabsSettingsRoute
 import com.programmersbox.kmpuiviews.tabs.TabStrip
 import com.programmersbox.kmpuiviews.tabs.TabsController
 import com.programmersbox.kmpuiviews.tabs.desktopTabsModule
@@ -205,6 +208,7 @@ fun desktopSetup(
                                 single { DesktopUpdater(get(), get(), CoroutineScope(Dispatchers.IO + SupervisorJob())) }
                                 single { jvmAppLogo() }
                                 navigation<MotionSettingsRoute> { MotionSettingsScreen() }
+                                navigation<TabsSettingsRoute> { TabsSettingsPage() }
                                 genericInfo(this).bindsPlatformGenericInfo()
                                 moduleBlock()
                             }
@@ -447,7 +451,8 @@ private fun InternalDesktopUi(
                 showQuickActions = true,
                 onAnyKey = { launchRun.skip() },
                 titleBarContent = {
-                    if (showNavBar) {
+                    // On the side, the tabs live in BrowserWindow's column and the title bar shows the title.
+                    if (showNavBar && tabsController.motion.position == TabPosition.Top) {
                         TabStrip(
                             window = mainWindow,
                             controller = tabsController,

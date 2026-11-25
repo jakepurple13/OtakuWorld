@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Tab
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation3.runtime.NavKey
+import com.programmersbox.kmpuiviews.motion.MotionSettingsRoute
 import com.programmersbox.kmpuiviews.presentation.Screen
 import net.thauvin.erik.urlencoder.UrlEncoderUtil
 
@@ -82,7 +83,9 @@ object CoreTabKeyProvider : TabKeyProvider {
         Screen.ThemeSettings,
         Screen.DetailsSettings,
         Screen.SecuritySettings,
-        Screen.DailyOverview.Settings -> TabKey.Settings
+        Screen.DailyOverview.Settings,
+        MotionSettingsRoute,
+        TabsSettingsRoute -> TabKey.Settings
 
         is Screen.GlobalSearchScreen,
         is Screen.GlobalSearchScreen.Home -> TabKey.Search

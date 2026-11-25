@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
+import com.programmersbox.kmpuiviews.presentation.quickactions.isMacOs
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -68,8 +69,11 @@ class PopupArrowTest {
                 keyUp(Key.MetaLeft)
             }
             assertEquals(previewSeen, preview.value, "$name: main preview calls")
-            assertEquals(0, bubble.value, "$name: key not left over for the window")
-            assertEquals(androidx.compose.ui.text.TextRange(0), state.selection, "$name: caret moved")
+            // Cmd+Left moves the caret only with the macOS key map; CI runs on Linux, where the field ignores it.
+            if (isMacOs) {
+                assertEquals(0, bubble.value, "$name: key not left over for the window")
+                assertEquals(androidx.compose.ui.text.TextRange(0), state.selection, "$name: caret moved")
+            }
         }
 
     @Test

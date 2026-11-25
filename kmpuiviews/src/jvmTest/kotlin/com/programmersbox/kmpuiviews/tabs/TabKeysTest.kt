@@ -1,6 +1,10 @@
 package com.programmersbox.kmpuiviews.tabs
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.navigation3.runtime.NavKey
+import com.programmersbox.kmpuiviews.motion.MotionSettingsRoute
 import com.programmersbox.kmpuiviews.presentation.Screen
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -63,7 +67,20 @@ class TabKeysTest {
             Screen.DetailsSettings,
             Screen.SecuritySettings,
             Screen.DailyOverview.Settings,
+            MotionSettingsRoute,
+            TabsSettingsRoute,
         ).forEach { assertEquals(TabKey.Settings, keys.keyOf(it), "$it") }
+    }
+
+    @Test
+    fun plainIconsFollowTheKey() {
+        val book = Icons.AutoMirrored.Filled.MenuBook
+        assertEquals(book, plainTabIcon(TabKey.Title("u", "s"), videoChapters = false))
+        assertEquals(book, plainTabIcon(TabKey.Title("u", "s"), videoChapters = true))
+        assertEquals(book, plainTabIcon(TabKey.Chapter("u"), videoChapters = false))
+        assertEquals(Icons.Default.PlayArrow, plainTabIcon(TabKey.Chapter("u"), videoChapters = true))
+        assertNull(plainTabIcon(TabKey.Settings, videoChapters = true))
+        assertNull(plainTabIcon(null, videoChapters = false))
     }
 
     @Test

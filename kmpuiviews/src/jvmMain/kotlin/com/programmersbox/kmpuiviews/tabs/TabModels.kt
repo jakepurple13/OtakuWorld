@@ -62,4 +62,10 @@ sealed interface TabEvent {
     data class Moved(val tab: TabId, val from: WindowId, val to: WindowId) : TabEvent
 }
 
-data class TabPrefsSnapshot(val clickOpensNewTab: Boolean)
+data class TabPrefsSnapshot(
+    val clickOpensNewTab: Boolean,
+    val modClick: ModClick = ModClick.Background,
+    val newPlace: NewTabPlace = NewTabPlace.NextToCurrent,
+    val afterClose: AfterClose = AfterClose.Right,
+    val closedKept: Int = 25,
+)

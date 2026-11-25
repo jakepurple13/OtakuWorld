@@ -64,6 +64,7 @@ fun main(args: Array<String>) {
                     override fun keyOf(key: NavKey): TabKey? = when (key) {
                         is ReadViewModel.MangaReader -> key.mangaUrl?.let { TabKey.Chapter(it) }
                         DownloadRoute -> TabKey.Downloads
+                        PlatformSettings -> TabKey.Settings
                         else -> null
                     }
 

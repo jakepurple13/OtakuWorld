@@ -47,6 +47,7 @@ fun main(args: Array<String>) {
                 object : TabKeyProvider {
                     override fun keyOf(key: NavKey): TabKey? = when (key) {
                         is ReadViewModel.NovelReader -> key.novelUrl?.let { TabKey.Chapter(it) }
+                        PlatformSettings -> TabKey.Settings
                         else -> null
                     }
 

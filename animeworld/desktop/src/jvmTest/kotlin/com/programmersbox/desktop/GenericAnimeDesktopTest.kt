@@ -38,11 +38,9 @@ class GenericAnimeDesktopTest {
     }
 
     private class TestInfo(
-        navigated: MutableList<Any>,
         holder: StorageHolder,
     ) : GenericAnimeDesktop(
         appConfig = AppConfig("test", BuildType.NoFirebase, false),
-        navigationActions = nav(navigated),
         episodeDownloads = EpisodeDownloadQueue { _, _, _, _ -> error("enqueueDownload is overridden") },
         storageHolder = holder,
         trayState = TrayState(),
@@ -61,7 +59,7 @@ class GenericAnimeDesktopTest {
 
     private val navigated = mutableListOf<Any>()
     private val holder = StorageHolder()
-    private val info = TestInfo(navigated, holder)
+    private val info = TestInfo(holder)
 
     @AfterTest
     fun reset() {

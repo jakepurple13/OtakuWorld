@@ -64,7 +64,10 @@ class TabsController(
     /** Per window, the last background tab opened in a row from the active tab. */
     private val backgroundRun = mutableMapOf<WindowId, TabId>()
 
-    /** Back stacks of closed tabs, most recent last. Session only. */
+    /** Per window, its tabs in the order they were last activated, most recent last. For [AfterClose.LastUsed]. */
+    private val usedOrder = mutableMapOf<WindowId, MutableList<TabId>>()
+
+    /** Back stacks of closed tabs, most recent last, at most [TabPrefsSnapshot.closedKept]. Session only. */
     private val closed = ArrayDeque<List<NavKey>>()
 
     /** How many windows compose each tab's content right now. */
@@ -81,6 +84,7 @@ class TabsController(
 
     init {
         homeNav.interceptor = this
+        windows.first().let { touch(it.id, it.activeId.value) }
     }
 
     override fun intercept(from: Navigation3Actions, key: NavKey): Boolean {
@@ -137,14 +141,19 @@ class TabsController(
         }
 
         val window = findTab(from)?.let { windowOf(it.id) } ?: window(focusedWindow)!!
-        val after = backgroundRun[window.id]?.takeIf { id -> window.tabs.any { it.id == id } }
-            ?: window.activeId.value
-        window.tabs.add(window.tabs.indexOfFirst { it.id == after } + 1, tab)
+        val atEnd = prefs.newPlace == NewTabPlace.AtEnd
+        if (atEnd) {
+            window.tabs.add(tab)
+        } else {
+            val after = backgroundRun[window.id]?.takeIf { id -> window.tabs.any { it.id == id } }
+                ?: window.activeId.value
+            window.tabs.add(window.tabs.indexOfFirst { it.id == after } + 1, tab)
+        }
 
         if (mode == TabOpenMode.Foreground) {
             activate(tab.id)
             backgroundRun.remove(window.id)
-        } else {
+        } else if (!atEnd) {
             backgroundRun[window.id] = tab.id
         }
         emit(TabEvent.Opened(tab.id, window.id, mode, origin))
@@ -158,6 +167,7 @@ class TabsController(
             window.activeId.value = tab
             backgroundRun.remove(window.id)
         }
+        touch(window.id, tab)
         focusedWindow = window.id
     }
 
@@ -171,6 +181,7 @@ class TabsController(
         snapshots.remove(tab)
         if (handoffOwner == tab) handoffOwner = null
         closed.addLast(state.nav.backStack.toList())
+        while (closed.size > prefs.closedKept) closed.removeFirst()
         // Content still on screen (a crossfade frame) keeps its store until it leaves composition.
         if ((contentCount[tab] ?: 0) > 0) closing[tab] = state else clearStore(state)
         emit(TabEvent.Closed(tab, window.id))
@@ -235,6 +246,20 @@ class TabsController(
         arms[tab] = Arm(mode, origin, now())
     }
 
+    /**
+     * [arm] for a ⌘/Ctrl or middle click. With [ModClick.Foreground], ⌘-click (and middle-click, which follows it)
+     * opens in the foreground and ⌘⇧-click in the background.
+     */
+    fun armClick(tab: TabId, mode: TabOpenMode, origin: Rect?) {
+        val swapped = when {
+            prefs.modClick == ModClick.Background -> mode
+            mode == TabOpenMode.Background -> TabOpenMode.Foreground
+            mode == TabOpenMode.Foreground -> TabOpenMode.Background
+            else -> mode
+        }
+        arm(tab, swapped, origin)
+    }
+
     fun move(tab: TabId, to: WindowId, index: Int) {
         val state = findTab(tab) ?: return
         if (state.pinned) return
@@ -287,8 +312,31 @@ class TabsController(
     private fun newWindow(tab: TabState, bounds: WindowBounds): BrowserWindowState {
         val window = BrowserWindowState(WindowId(nextId++), isMain = false, first = tab, bounds = bounds)
         windows.add(window)
+        touch(window.id, tab.id)
         focusedWindow = window.id
         return window
+    }
+
+    /** Records [tab] as [window]'s most recently activated tab. */
+    private fun touch(window: WindowId, tab: TabId) {
+        val order = usedOrder.getOrPut(window) { mutableListOf() }
+        order.remove(tab)
+        order.add(tab)
+    }
+
+    /** The tab to activate after the active tab at [index] left [window] (already removed from its tabs). */
+    private fun nextActive(window: BrowserWindowState, index: Int): TabState {
+        val tabs = window.tabs
+        val right = tabs.getOrNull(index)
+        val leftOf = tabs.getOrNull(index - 1)
+        return when (prefs.afterClose) {
+            AfterClose.Right -> right ?: leftOf!!
+            AfterClose.Left -> leftOf ?: right!!
+            AfterClose.LastUsed -> usedOrder[window.id].orEmpty()
+                .asReversed()
+                .firstNotNullOfOrNull { id -> tabs.firstOrNull { it.id == id } }
+                ?: right ?: leftOf!!
+        }
     }
 
     /** Switches to [tab], which already shows [key]'s identity. Single-instance tabs also navigate to [key]. */
@@ -301,18 +349,23 @@ class TabsController(
         emit(TabEvent.Flash(tab.id))
     }
 
-    /** Removes [tab] from [window], activating its right neighbor (else left) and closing an emptied torn-out window. */
+    /**
+     * Removes [tab] from [window], activating the neighbor [TabPrefsSnapshot.afterClose] picks and closing an
+     * emptied torn-out window.
+     */
     private fun detach(tab: TabState, window: BrowserWindowState) {
         val index = window.tabs.indexOf(tab)
         window.tabs.removeAt(index)
+        usedOrder[window.id]?.remove(tab.id)
         if (backgroundRun[window.id] == tab.id) backgroundRun.remove(window.id)
 
         if (window.tabs.isEmpty()) {
             windows.remove(window)
             backgroundRun.remove(window.id)
+            usedOrder.remove(window.id)
             if (focusedWindow == window.id) focusedWindow = windows.first { it.isMain }.id
         } else if (window.activeId.value == tab.id) {
-            activate(window.tabs[index.coerceAtMost(window.tabs.lastIndex)].id)
+            activate(nextActive(window, index).id)
         }
     }
 

@@ -531,4 +531,119 @@ class TabsControllerTest {
         assertEquals(a, controller.windowOf(a).activeId.value)
         assertEquals(emptyList(), events)
     }
+
+    @Test
+    fun modClickForegroundSwapsArmModes() = eventsTest { events ->
+        // Default: ⌘-click (Background) stays in the background.
+        controller.armClick(homeId, TabOpenMode.Background, null)
+        home.navigate(title("A"))
+        assertEquals(homeId, main.activeId.value)
+
+        controller.prefs = controller.prefs.copy(modClick = ModClick.Foreground)
+        controller.armClick(homeId, TabOpenMode.Background, null)
+        home.navigate(title("B"))
+        assertEquals(title("B"), tab(main.activeId.value).current)
+
+        controller.activate(homeId)
+        controller.armClick(homeId, TabOpenMode.Foreground, null)
+        home.navigate(title("C"))
+        assertEquals(homeId, main.activeId.value)
+
+        // The right-click menu's explicit choice is never swapped.
+        controller.arm(homeId, TabOpenMode.Background, null)
+        home.navigate(title("D"))
+        assertEquals(homeId, main.activeId.value)
+        assertEquals(
+            listOf(TabOpenMode.Background, TabOpenMode.Foreground, TabOpenMode.Background, TabOpenMode.Background),
+            events.filterIsInstance<TabEvent.Opened>().map { it.mode },
+        )
+    }
+
+    @Test
+    fun atEndAppendsNewTabs() = eventsTest {
+        val a = controller.open(title("A"), TabOpenMode.Foreground, homeId)
+        val b = controller.open(title("B"), TabOpenMode.Foreground, a)
+        controller.activate(homeId)
+        controller.prefs = controller.prefs.copy(newPlace = NewTabPlace.AtEnd)
+
+        val c = controller.open(title("C"), TabOpenMode.Background, homeId)
+        val d = controller.open(title("D"), TabOpenMode.Foreground, homeId)
+
+        assertEquals(listOf(homeId, a, b, c, d), main.tabs.map { it.id })
+        assertEquals(d, main.activeId.value)
+    }
+
+    @Test
+    fun afterCloseRightIsTheDefaultAndFallsBackLeft() = eventsTest {
+        val a = controller.open(title("A"), TabOpenMode.Foreground, homeId)
+        val b = controller.open(title("B"), TabOpenMode.Foreground, a)
+        val c = controller.open(title("C"), TabOpenMode.Foreground, b)
+
+        controller.activate(b)
+        controller.close(b)
+        assertEquals(c, main.activeId.value)
+
+        controller.close(c)
+        assertEquals(a, main.activeId.value)
+    }
+
+    @Test
+    fun afterCloseLeftPrefersLeft() = eventsTest {
+        controller.prefs = controller.prefs.copy(afterClose = AfterClose.Left)
+        val a = controller.open(title("A"), TabOpenMode.Foreground, homeId)
+        val b = controller.open(title("B"), TabOpenMode.Foreground, a)
+        val c = controller.open(title("C"), TabOpenMode.Foreground, b)
+
+        controller.activate(b)
+        controller.close(b)
+        assertEquals(a, main.activeId.value)
+
+        controller.close(a)
+        assertEquals(homeId, main.activeId.value)
+
+        // Nothing to the left: falls back to the right.
+        val w2 = controller.tearOut(c, WindowBounds(0.dp, 0.dp, 800.dp, 600.dp))
+        val d = controller.open(title("D"), TabOpenMode.Foreground, c)
+        controller.move(d, w2, 0)
+        assertEquals(listOf(d, c), controller.windowOf(c).tabs.map { it.id })
+        controller.close(d)
+        assertEquals(c, controller.windowOf(c).activeId.value)
+    }
+
+    @Test
+    fun afterCloseLastUsedPicksMostRecentlyActive() = eventsTest {
+        controller.prefs = controller.prefs.copy(afterClose = AfterClose.LastUsed)
+        val a = controller.open(title("A"), TabOpenMode.Foreground, homeId)
+        val b = controller.open(title("B"), TabOpenMode.Foreground, a)
+        val c = controller.open(title("C"), TabOpenMode.Foreground, b)
+        val d = controller.open(title("D"), TabOpenMode.Foreground, c)
+
+        controller.activate(a)
+        controller.activate(d)
+        controller.activate(b)
+        controller.close(b)
+        assertEquals(d, main.activeId.value)
+
+        // A tab closed in the background drops out of the order too.
+        controller.close(a)
+        controller.close(d)
+        assertEquals(c, main.activeId.value)
+
+        // Closing a background tab keeps the active one.
+        val e = controller.open(title("E"), TabOpenMode.Background, c)
+        controller.close(e)
+        assertEquals(c, main.activeId.value)
+    }
+
+    @Test
+    fun closedStackCappedAtSetting() = eventsTest {
+        controller.prefs = controller.prefs.copy(closedKept = 10)
+        val ids = (1..12).map { controller.open(title("T$it"), TabOpenMode.Background, homeId) }
+        ids.forEach { controller.close(it) }
+
+        val reopened = generateSequence { controller.reopenClosed(main.id) }.toList()
+
+        assertEquals(10, reopened.size)
+        assertEquals((3..12).reversed().map { title("T$it") }, reopened.map { tab(it).current })
+    }
 }

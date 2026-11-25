@@ -5,6 +5,7 @@ import com.programmersbox.kmpuiviews.tabs.TabHandoff
 import androidx.navigation3.runtime.NavKey
 import com.programmersbox.kmpuiviews.tabs.DownloadsDestination
 import com.programmersbox.kmpuiviews.tabs.TabKey
+import com.programmersbox.kmpuiviews.tabs.MiniPlayerSupported
 import com.programmersbox.kmpuiviews.tabs.TabKeyProvider
 import com.programmersbox.kmpuiviews.tabs.TabLabel
 import com.programmersbox.kmpuiviews.utils.composables.transitions.rememberChapterRevealOrigin
@@ -84,11 +85,15 @@ fun main(args: Array<String>) {
         moduleBlock = {
             singleOf(::AnimeDesktopSettings)
             single { DownloadsDestination(VideoViewerRoute) }
+            single { MiniPlayerSupported(true) }
             single {
                 object : TabKeyProvider {
                     override fun keyOf(key: NavKey): TabKey? = when (key) {
                         is VideoScreen -> TabKey.Chapter(key.episodeUrl ?: key.showPath)
                         VideoViewerRoute -> TabKey.Downloads
+                        PlatformSettings,
+                        SubtitleSettingsRoute,
+                        LibraryFoldersRoute -> TabKey.Settings
                         else -> null
                     }
 

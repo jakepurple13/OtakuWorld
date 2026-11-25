@@ -41,12 +41,27 @@ class TabMotionStateTest {
     }
 
     @Test
-    fun reducedMotionDoesNothing() {
-        val motion = TabMotionState(scale = 1f, reduced = true)
-        motion.record(opened(TabOpenMode.Foreground))
-        motion.record(opened(TabOpenMode.Background))
-        assertFalse(motion.hasGrow(tab))
-        assertTrue(motion.flying.isEmpty())
+    fun reducedOrOffMotionDoesNothing() {
+        listOf(TabMotionMode.Reduced, TabMotionMode.Off).forEach { mode ->
+            val motion = TabMotionState(scale = 1f, mode = mode)
+            motion.record(opened(TabOpenMode.Foreground))
+            motion.record(opened(TabOpenMode.Background))
+            assertFalse(motion.hasGrow(tab), "$mode")
+            assertTrue(motion.flying.isEmpty(), "$mode")
+        }
+    }
+
+    @Test
+    fun systemModeFollowsTheOsSetting() {
+        val motion = TabMotionState(scale = 1f)
+        assertEquals(TabMotionLevel.Full, motion.level)
+        motion.systemReduces = true
+        assertEquals(TabMotionLevel.Reduced, motion.level)
+        assertEquals(150, motion.ms(TabMotion.Grow))
+        motion.mode = TabMotionMode.Full
+        assertEquals(TabMotionLevel.Full, motion.level)
+        motion.mode = TabMotionMode.Off
+        assertEquals(0, motion.ms(TabMotion.Grow))
     }
 
     @Test
