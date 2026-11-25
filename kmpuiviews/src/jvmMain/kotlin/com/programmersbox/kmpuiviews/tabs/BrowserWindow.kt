@@ -19,11 +19,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.kmpuiviews.KmpGenericInfo
+import com.programmersbox.kmpuiviews.presentation.quickactions.isMacOs
+import com.programmersbox.kmpuiviews.presentation.tabs.LocalSearchFocusRequest
 import com.programmersbox.kmpuiviews.presentation.tabs.LocalTabActions
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.sharedcomponents.repository.ChangingSettingsRepository
@@ -57,7 +61,16 @@ fun BrowserWindow(
     DesktopAppEffects(windowSize = windowSize, genericInfo = genericInfo) {
         val active = window.tabs.firstOrNull { it.id == window.activeId.value } ?: window.tabs.first()
 
-        Column(Modifier.fillMaxSize()) {
+        Column(
+            Modifier
+                .fillMaxSize()
+                .onFocusChanged { controller.contentHasFocus = it.hasFocus }
+                // Reached only when no focused text field used the key: ⌘← / ⌘→ back and forward.
+                .onKeyEvent { event ->
+                    tabShortcut(event, isMac = isMacOs, chromeVisible = showNavBar)
+                        ?.let { controller.perform(it, window) } != null
+                }
+        ) {
             if (showNavBar) TabToolbar(tab = active, controller = controller)
 
             Box(Modifier.weight(1f).onGloballyPositioned { controller.motion.contentBounds[window.id] = it.boundsInWindow() }) {
@@ -87,7 +100,10 @@ fun BrowserWindow(
                     }
                     val tabActions = remember { DesktopTabActions(controller, tab.id) }
                     val grow = remember { motion.takeGrow(tab.id) }
-                    CompositionLocalProvider(LocalTabActions provides tabActions) {
+                    CompositionLocalProvider(
+                        LocalTabActions provides tabActions,
+                        LocalSearchFocusRequest provides controller.searchFocus,
+                    ) {
                         Box(
                             with(tabActions) {
                                 Modifier.fillMaxSize()

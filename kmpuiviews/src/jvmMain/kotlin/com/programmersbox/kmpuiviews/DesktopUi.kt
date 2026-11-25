@@ -462,8 +462,14 @@ private fun InternalDesktopUi(
                     }
                 },
                 onKeyEvent = { event ->
-                    tabShortcut(event, isMac = isMacOs, chromeVisible = showNavBar)
-                        ?.let { tabsController.perform(it, mainWindow) } != null
+                    // With focus inside the content, ⌘← / ⌘→ are left to the content (a text field uses them to move
+                    // the caret) and handled when they bubble up to BrowserWindow.
+                    tabShortcut(
+                        event,
+                        isMac = isMacOs,
+                        chromeVisible = showNavBar,
+                        textFieldFocused = tabsController.contentHasFocus,
+                    )?.let { tabsController.perform(it, mainWindow) } != null
                 },
                 overlay = {
                     TabMotionLayer(

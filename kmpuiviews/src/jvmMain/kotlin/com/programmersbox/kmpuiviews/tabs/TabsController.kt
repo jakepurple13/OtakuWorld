@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
 import com.programmersbox.kmpuiviews.presentation.navactions.NavInterceptor
 import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
+import com.programmersbox.kmpuiviews.presentation.tabs.SearchFocusRequest
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -43,6 +44,15 @@ class TabsController(
 
     private val _events = MutableSharedFlow<TabEvent>(extraBufferCapacity = 64)
     val events: SharedFlow<TabEvent> = _events.asSharedFlow()
+
+    /** Raised by the search shortcut, consumed by the global search screen. */
+    val searchFocus = SearchFocusRequest()
+
+    /**
+     * True while something inside a window's content has focus. ⌘← / ⌘→ then wait for the content to refuse them
+     * (a focused text field uses them to move the caret) instead of being taken at the window level.
+     */
+    var contentHasFocus = false
 
     /** Shared state for the open, close, switch and flash motion. */
     val motion = TabMotionState()

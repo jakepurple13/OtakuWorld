@@ -511,6 +511,7 @@
     <string name="shortcuts_title">Keyboard shortcuts</string>
     <string name="shortcuts_subtitle">Shortcuts for %1$s</string>
     <string name="shortcuts_anywhere">Anywhere</string>
+    <string name="shortcuts_tabs">Tabs and windows</string>
     <string name="shortcuts_in_quick_actions">In Quick actions</string>
     <string name="shortcuts_quick_actions">Quick actions</string>
     <string name="shortcuts_global_search">Global search</string>

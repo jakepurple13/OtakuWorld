@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.programmersbox.kmpuiviews.presentation.quickactions.QuickActionsController
 import com.programmersbox.kmpuiviews.presentation.quickactions.isMacOs
+import com.programmersbox.kmpuiviews.tabs.tabShortcutCaps
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.getKoin
@@ -54,6 +55,7 @@ import otakuworld.kmpuiviews.generated.resources.shortcuts_move
 import otakuworld.kmpuiviews.generated.resources.shortcuts_quick_actions
 import otakuworld.kmpuiviews.generated.resources.shortcuts_run
 import otakuworld.kmpuiviews.generated.resources.shortcuts_subtitle
+import otakuworld.kmpuiviews.generated.resources.shortcuts_tabs
 import otakuworld.kmpuiviews.generated.resources.shortcuts_title
 
 /** Hosts [ShortcutsDialog] driven by [QuickActionsController.shortcutsOpen]; app sections come from Koin. */
@@ -74,10 +76,14 @@ internal fun ShortcutsDialogHost(controller: QuickActionsController) {
             close = stringResource(Res.string.shortcuts_close_action),
         ),
     )
+    val tabSection = ShortcutSection(
+        title = stringResource(Res.string.shortcuts_tabs),
+        entries = tabShortcutCaps(isMacOs).map { (label, keys) -> ShortcutEntry(keys, label) },
+    )
     AnimatedVisibility(visible = open, enter = fadeIn(), exit = fadeOut()) {
         ShortcutsDialog(
             appName = koinInject<AppConfig>().appName,
-            sections = builtIn + appSections,
+            sections = builtIn + tabSection + appSections,
             onDismiss = controller::closeShortcuts,
         )
     }
