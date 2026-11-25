@@ -1,6 +1,8 @@
 package com.programmersbox.kmpuiviews.presentation.notifications
 
 import androidx.compose.animation.Crossfade
+import com.programmersbox.telemetry.events.CatchUpUsed
+import com.programmersbox.telemetry.events.OpenedFrom
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -201,7 +203,7 @@ fun CatchUpScreen(
                     ?.onStart { showLoadingDialog = true }
                     ?.onEach {
                         showLoadingDialog = false
-                        navController.details(it)
+                        navController.details(it, OpenedFrom.NOTIFICATION)
                     }
                     ?.launchIn(scope) ?: onError(item)
             }
@@ -242,16 +244,16 @@ fun CatchUpScreen(
         onSwipeDeletesChange = { catchUpSwipeDeletes = it },
         confirmDeletes = state?.confirmDeletes ?: true,
         onStopConfirmingDeletes = vm::stopConfirmingCatchUpDeletes,
-        onSkip = { vm.advanceCatchUp() },
+        onSkip = { vm.advanceCatchUp(CatchUpUsed.SKIP) },
         onDelete = { item ->
             deleteWithUndo(listOf(item))
-            vm.advanceCatchUp()
+            vm.advanceCatchUp(CatchUpUsed.DELETE)
         },
         onRead = { item ->
-            vm.advanceCatchUp()
+            vm.advanceCatchUp(CatchUpUsed.READ)
             openItem(item)
         },
-        onReminded = { vm.advanceCatchUp() },
+        onReminded = { vm.advanceCatchUp(CatchUpUsed.REMIND) },
     )
 }
 

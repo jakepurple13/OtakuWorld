@@ -1,6 +1,9 @@
 package com.programmersbox.kmpuiviews.presentation.notifications
 
 import androidx.compose.runtime.derivedStateOf
+import com.programmersbox.telemetry.events.CatchUpUsed
+import com.programmersbox.telemetry.NoOpAnalytics
+import com.programmersbox.telemetry.Analytics
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -23,6 +26,7 @@ import kotlinx.coroutines.withContext
 class CatchUpViewModel(
     private val db: ItemDao,
     private val notificationRepository: NotificationRepository,
+    private val analytics: Analytics = NoOpAnalytics,
 ) : ViewModel() {
 
     val items = mutableStateListOf<NotificationItem>()
@@ -96,7 +100,9 @@ class CatchUpViewModel(
         }
     }
 
-    fun advanceCatchUp() {
+    /** [action] is what the user did with the card (CatchUpUsed constants), for analytics. */
+    fun advanceCatchUp(action: String) {
+        analytics.log(CatchUpUsed(action))
         catchUp = catchUp?.let { it.copy(index = it.index + 1) }
     }
 

@@ -24,6 +24,8 @@ class AppCheckWorker(
 ) : CoroutineWorker(context, workerParams) {
 
     override suspend fun doWork(): Result {
+        // Literal name: class names are renamed by R8 in release builds
+        koinCrashReporter().setKey("last_worker", "AppCheckWorker")
         return try {
             val f = withTimeoutOrNull(60000) { AppUpdate.getUpdate()?.updateRealVersion.orEmpty() }
             koinCrashReporter().log("Current Version: $f")

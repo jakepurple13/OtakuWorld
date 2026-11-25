@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.workers
 
 import android.content.Context
+import com.programmersbox.kmpuiviews.telemetry.koinCrashReporter
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
@@ -15,6 +16,8 @@ class LocalToCloudSyncWorker(
 ) : CoroutineWorker(appContext, params) {
     private val dispatchers = Dispatchers.IO.limitedParallelism(5)
     override suspend fun doWork(): Result {
+        // Literal name: class names are renamed by R8 in release builds
+        koinCrashReporter().setKey("last_worker", "LocalToCloudSyncWorker")
         return coroutineScope {
             runCatching {
                 val allShows = dao.getAllFavoritesSync()
@@ -38,6 +41,8 @@ class CloudToLocalSyncWorker(
     private val dao: ItemDao,
 ) : CoroutineWorker(appContext, params) {
     override suspend fun doWork(): Result {
+        // Literal name: class names are renamed by R8 in release builds
+        koinCrashReporter().setKey("last_worker", "CloudToLocalSyncWorker")
         return runCatching {
             val allShows = dao.getAllFavoritesSync()
             /*val newShows = cloudShows

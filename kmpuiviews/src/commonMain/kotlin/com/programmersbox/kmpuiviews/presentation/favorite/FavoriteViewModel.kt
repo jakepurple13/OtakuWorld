@@ -1,6 +1,11 @@
 package com.programmersbox.kmpuiviews.presentation.favorite
 
 import com.programmersbox.kmpuiviews.domain.moodtags.MoodRepository
+import com.programmersbox.telemetry.events.DescribeSearch
+import com.programmersbox.telemetry.events.FavoritesSearched
+import com.programmersbox.telemetry.Buckets
+import com.programmersbox.telemetry.NoOpAnalytics
+import com.programmersbox.telemetry.Analytics
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.derivedStateOf
@@ -62,6 +67,7 @@ class FavoriteViewModel(
     searchRepository: FavoritesSearchRepository,
     private val aiText: AiText,
     moodRepository: MoodRepository,
+    private val analytics: Analytics = NoOpAnalytics,
 ) : ViewModel() {
 
     private var favorites by mutableStateOf<List<DbModel>>(emptyList())
@@ -97,6 +103,8 @@ class FavoriteViewModel(
     }
 
     var sort by mutableStateOf(FavoriteSort.TITLE)
+
+    private var lastLoggedSearch: String? = null
 
     var quickFilters by mutableStateOf<Set<QuickFilter>>(emptySet())
         private set
@@ -225,6 +233,11 @@ class FavoriteViewModel(
             .onEach { (query, hits) ->
                 searchHits = hits
                 searchQuery = query
+                // Room re-emits on any table write; log a search once per new query, not per refresh
+                if (query.isNotBlank() && query != lastLoggedSearch) {
+                    lastLoggedSearch = query
+                    analytics.log(FavoritesSearched(Buckets.count(hits.size)))
+                }
             }
             .launchIn(viewModelScope)
     }
@@ -244,9 +257,13 @@ class FavoriteViewModel(
                     describedText = query
                     keywords = found
                 }
+                analytics.log(
+                    DescribeSearch(if (found.isEmpty()) DescribeSearch.EMPTY else DescribeSearch.SUCCESS, Buckets.count(found.size))
+                )
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {
+                analytics.log(DescribeSearch(DescribeSearch.ERROR, Buckets.count(0)))
                 // Keep the normal word search
             } finally {
                 if (describingText == query) describing = false

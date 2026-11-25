@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.presentation.globalsearch
 
 import androidx.compose.animation.AnimatedVisibility
+import com.programmersbox.telemetry.events.OpenedFrom
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -151,7 +152,7 @@ fun SourceSearchScreen(
                         model = model,
                         onLongPress = { optionsSheet = model },
                         modifier = Modifier.animateItem(),
-                    ) { scope.launch { biometric.openIfNotIncognito(model) } }
+                    ) { scope.launch { biometric.openIfNotIncognito(model, OpenedFrom.SEARCH) } }
                 }
             }
 

@@ -1,6 +1,12 @@
 package com.programmersbox.kmpuiviews.presentation.globalsearch
 
 import androidx.compose.runtime.derivedStateOf
+import com.programmersbox.telemetry.events.SourceError
+import com.programmersbox.kmpuiviews.telemetry.TelemetrySourceNamer
+import com.programmersbox.telemetry.events.Search
+import com.programmersbox.telemetry.Buckets
+import com.programmersbox.telemetry.NoOpAnalytics
+import com.programmersbox.telemetry.Analytics
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -27,6 +33,8 @@ class SourceSearchViewModel(
     handle: Screen.SourceSearchScreen,
     sourceRepository: SourceRepository,
     private val exceptionDao: ExceptionDao,
+    private val analytics: Analytics = NoOpAnalytics,
+    private val sourceNamer: TelemetrySourceNamer? = null,
 ) : ViewModel() {
 
     val query = handle.query
@@ -73,10 +81,13 @@ class SourceSearchViewModel(
                     .filter { loadedUrls.add(it.url) }
                 if (newItems.isEmpty()) endReached = true
                 else pages += SearchPage(next, newItems)
+                // First page only: later pages are scrolling, not a new search
+                if (next == 1) analytics.log(Search(Search.SOURCE, sourceCount = 1, resultCount = Buckets.count(newItems.size)))
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 error = e
+                analytics.log(SourceError(sourceNamer?.name(s.serviceName) ?: s.serviceName, SourceError.SEARCH, e::class.simpleName ?: "Exception"))
                 exceptionDao.insertException(e)
             } finally {
                 isLoading = false

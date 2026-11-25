@@ -1,6 +1,10 @@
 package com.programmersbox.kmpuiviews.repository
 
 import com.programmersbox.favoritesdatabase.BookmarkDao
+import com.programmersbox.kmpuiviews.telemetry.TelemetrySourceNamer
+import com.programmersbox.telemetry.events.ChapterBookmarked
+import com.programmersbox.telemetry.NoOpAnalytics
+import com.programmersbox.telemetry.Analytics
 import com.programmersbox.favoritesdatabase.BookmarkedChapter
 import com.programmersbox.supabaseintegration.auth.AuthManager
 import kotlinx.coroutines.flow.Flow
@@ -9,6 +13,8 @@ import kotlin.time.Clock
 class BookmarkRepository(
     private val dao: BookmarkDao,
     private val authManager: AuthManager,
+    private val analytics: Analytics = NoOpAnalytics,
+    private val sourceNamer: TelemetrySourceNamer? = null,
 ) {
 
     fun getAllBookmarks(): Flow<List<BookmarkedChapter>> = dao.getAllBookmarks()
@@ -27,6 +33,7 @@ class BookmarkRepository(
 
     suspend fun insertBookmark(bookmark: BookmarkedChapter) =
         dao.insertBookmark(bookmark)
+            .also { analytics.log(ChapterBookmarked(sourceNamer?.name(bookmark.source) ?: bookmark.source)) }
 
     suspend fun deleteBookmark(chapterUrl: String) {
         if (authManager.isLoggedIn())

@@ -1,6 +1,8 @@
 package com.programmersbox.kmpuiviews.workers
 
 import android.Manifest
+import com.programmersbox.telemetry.events.OpenedFrom
+import com.programmersbox.kmpuiviews.telemetry.koinAnalytics
 import com.programmersbox.kmpuiviews.telemetry.koinCrashReporter
 import android.annotation.SuppressLint
 import android.app.Notification
@@ -45,6 +47,8 @@ class DailyOverviewWorker(
 ) : CoroutineWorker(context, workerParams) {
 
     override suspend fun doWork(): Result {
+        // Literal name: class names are renamed by R8 in release builds
+        koinCrashReporter().setKey("last_worker", "DailyOverviewWorker")
         return try {
             val prefs = settings.prefs.first()
             if (!prefs.enabled || !prefs.notify) return Result.success()
@@ -58,6 +62,7 @@ class DailyOverviewWorker(
                 settings = settings,
                 template = template,
                 bypassCache = false,
+                analytics = koinAnalytics(),
             )
             if (!canPost()) return Result.success()
 
@@ -88,7 +93,12 @@ class DailyOverviewWorker(
                     pendingActionIntent { context ->
                         info.deepLink(
                             context,
-                            info.deepLinkDetailsUri(url = lastTitle.url, imageUrl = lastTitle.imageUrl, source = lastTitle.source),
+                            info.deepLinkDetailsUri(
+                                url = lastTitle.url,
+                                imageUrl = lastTitle.imageUrl,
+                                source = lastTitle.source,
+                                from = OpenedFrom.NOTIFICATION,
+                            ),
                             NOTIFICATION_ID,
                         )
                     }

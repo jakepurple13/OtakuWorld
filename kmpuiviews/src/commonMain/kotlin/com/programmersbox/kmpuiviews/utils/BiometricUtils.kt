@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.utils
 
 import androidx.compose.runtime.Composable
+import com.programmersbox.telemetry.events.OpenedFrom
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -151,16 +152,16 @@ class BiometricOpen(
     private val navigationActions: NavigationActions,
     private val itemDao: ItemDao,
 ) {
-    suspend fun openIfNotIncognito(kmpItemModel: KmpItemModel) {
+    suspend fun openIfNotIncognito(kmpItemModel: KmpItemModel, from: String = OpenedFrom.OTHER) {
         if (itemDao.doesIncognitoSourceExistSync(kmpItemModel.url)) {
             biometricPrompting.authenticate(
-                onAuthenticationSucceeded = { navigationActions.details(kmpItemModel) },
+                onAuthenticationSucceeded = { navigationActions.details(kmpItemModel, from) },
                 title = "Authenticate to view ${kmpItemModel.title}",
                 subtitle = "Authenticate to view media",
                 negativeButtonText = "Cancel"
             )
         } else {
-            navigationActions.details(kmpItemModel)
+            navigationActions.details(kmpItemModel, from)
         }
     }
 

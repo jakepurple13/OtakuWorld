@@ -1,6 +1,10 @@
 package com.programmersbox.anime.shared
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import com.programmersbox.telemetry.events.OpenedFrom
+import com.programmersbox.telemetry.events.ChapterOpened
+import com.programmersbox.kmpuiviews.telemetry.koinSourceName
+import com.programmersbox.kmpuiviews.telemetry.koinAnalytics
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -64,7 +68,7 @@ abstract class GenericSharedAnime(
             }
         }
 
-    val episodeLoader = EpisodeLoader()
+    val episodeLoader = EpisodeLoader(analytics = ::koinAnalytics, sourceName = ::koinSourceName)
 
     override suspend fun chapterOnClick(
         model: KmpChapterModel,
@@ -73,6 +77,7 @@ abstract class GenericSharedAnime(
         navController: NavigationActions,
         seedColor: Int?,
     ) {
+        runCatching { koinAnalytics().log(ChapterOpened(koinSourceName(model.source.serviceName), "anime", OpenedFrom.DETAILS)) }
         episodeLoader.load(
             action = EpisodeAction.Play,
             model = model,

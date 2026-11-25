@@ -1,18 +1,15 @@
 package com.programmersbox.anime.shared.videoplayer
 
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BlurOn
 import androidx.compose.material.icons.filled.Subtitles
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -52,23 +49,5 @@ fun DesktopPlayerSettings() {
                 )
             }
         }
-    }
-}
-
-/** Desktop's onboarding page for the player. */
-@Composable
-fun DesktopPlayerOnboarding() {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(bottom = 16.dp)
-            .verticalScroll(rememberScrollState())
-    ) {
-        ListItem(
-            headlineContent = { Text("Set up the player") },
-            supportingContent = { Text("There are more player settings in Settings.") },
-        )
-        DesktopPlayerSettings()
     }
 }

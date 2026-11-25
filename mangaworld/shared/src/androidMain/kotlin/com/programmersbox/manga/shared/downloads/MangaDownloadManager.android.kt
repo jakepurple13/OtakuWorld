@@ -1,6 +1,9 @@
 package com.programmersbox.manga.shared.downloads
 
 import android.content.Context
+import com.programmersbox.telemetry.events.DownloadStarted
+import com.programmersbox.kmpuiviews.telemetry.koinSourceName
+import com.programmersbox.kmpuiviews.telemetry.koinAnalytics
 import android.os.Environment
 import android.os.FileObserver
 import androidx.work.Constraints
@@ -137,6 +140,7 @@ actual class MangaDownloadManager(
             val storages = chapter.getChapterInfo().firstOrNull() ?: return@launch
             val urls = storages.mapNotNull { it.link }
             if (urls.isEmpty()) return@launch
+            runCatching { koinAnalytics().log(DownloadStarted(koinSourceName(chapter.source.serviceName), "manga")) }
             val headers = storages
                 .flatMap { it.headers.entries }
                 .associate { it.key to it.value }

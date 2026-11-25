@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews
 
 import android.annotation.SuppressLint
+import com.programmersbox.telemetry.events.OpenedFrom
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -43,7 +44,12 @@ actual interface PlatformGenericInfo : KmpGenericInfo {
         } ?: "$deepLinkUri${Screen.DetailsScreen.route}".toUri()
     }
 
-    fun deepLinkDetailsUri(url: String, imageUrl: String, source: String): Uri = deepLinks
+    fun deepLinkDetailsUri(
+        url: String,
+        imageUrl: String,
+        source: String,
+        from: String = OpenedFrom.UPDATE_NOTIFICATION,
+    ): Uri = deepLinks
         .details
         .createUri(
             Screen.DetailsScreen.Details(
@@ -51,7 +57,8 @@ actual interface PlatformGenericInfo : KmpGenericInfo {
                 description = "description",
                 url = url,
                 imageUrl = imageUrl,
-                source = source
+                source = source,
+                from = from,
             )
         )
         .toUri()
@@ -82,7 +89,7 @@ actual interface PlatformGenericInfo : KmpGenericInfo {
 
     fun deepLinkDailyOverviewUri(): Uri = deepLinks
         .dailyOverview
-        .createUri(Screen.DailyOverview)
+        .createUri(Screen.DailyOverview(OpenedFrom.NOTIFICATION))
         .toUri()
 
     fun <T : FragmentActivity> deepLinkSetup(

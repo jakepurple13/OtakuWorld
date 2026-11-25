@@ -1,6 +1,11 @@
 package com.programmersbox.kmpuiviews.presentation.recent
 
 import androidx.compose.foundation.lazy.grid.LazyGridState
+import com.programmersbox.telemetry.events.SourceError
+import com.programmersbox.kmpuiviews.telemetry.TelemetrySourceNamer
+import com.programmersbox.telemetry.NoOpAnalytics
+import com.programmersbox.telemetry.Analytics
+import com.programmersbox.telemetry.events.OpenedFrom
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -57,6 +62,8 @@ class RecentViewModel(
     private val exceptionDao: ExceptionDao,
     private val notifier: InAppNotifier,
     private val crashReporter: CrashReporter,
+    private val analytics: Analytics = NoOpAnalytics,
+    private val sourceNamer: TelemetrySourceNamer? = null,
 ) : ViewModel() {
 
     var isRefreshing by mutableStateOf(false)
@@ -155,6 +162,9 @@ class RecentViewModel(
             ?.dispatchIo()
             ?.catch {
                 lastLoadFailed = true
+                currentSource?.serviceName?.let { s ->
+                    analytics.log(SourceError(sourceNamer?.name(s) ?: s, SourceError.RECENT, it::class.simpleName ?: "Exception"))
+                }
                 it.printStackTrace()
                 exceptionDao.insertException(it)
                 withContext(Dispatchers.Main) {
@@ -178,13 +188,13 @@ class RecentViewModel(
         when (action) {
             is FavoriteAction.Add -> {
                 viewModelScope.launch {
-                    favoritesRepository.addFavorite(action.info.toDbModel())
+                    favoritesRepository.addFavorite(action.info.toDbModel(), from = OpenedFrom.RECENT)
                 }
             }
 
             is FavoriteAction.Remove -> {
                 viewModelScope.launch {
-                    favoritesRepository.removeFavorite(action.info.toDbModel())
+                    favoritesRepository.removeFavorite(action.info.toDbModel(), userAction = true)
                 }
             }
         }

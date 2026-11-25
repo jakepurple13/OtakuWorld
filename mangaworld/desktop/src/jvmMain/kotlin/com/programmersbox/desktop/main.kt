@@ -13,6 +13,7 @@ import com.programmersbox.manga.shared.reader.ReadViewModel
 import org.koin.dsl.bind
 import ca.gosyer.appdirs.AppDirs
 import com.programmersbox.datastore.createProtobuf
+import com.programmersbox.desktop.motion.mangaMotionCatalog
 import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.ExtensionWatcher
 import com.programmersbox.kmpuiviews.MangaDesktopSettings
@@ -115,6 +116,7 @@ fun main(args: Array<String>) {
             }
 
             single<ShortcutSection>(named("mangaReaderShortcuts")) { readerShortcutSection() }
+            single { mangaMotionCatalog() }
 
             navigation<PlatformSettings> { JvmSettingsScreen() }
 

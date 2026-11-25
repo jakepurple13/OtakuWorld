@@ -18,10 +18,13 @@ class DeepLinkRoute<T : Any>(
     // The complete pattern for the matcher (e.g., "myapp://details/{id}")
     val fullPattern: String = "$schemeAndHost$routePattern"
 
+    private val encoder = Json { encodeDefaults = true }
+
     fun toMatcher(): UriDeepLinkMatcher<T> = UriDeepLinkMatcher(fullPattern.toUri(), serializer)
 
     fun createUri(route: T): String {
-        val jsonMap = Json.encodeToJsonElement(serializer, route).jsonObject
+        // Defaults must be encoded too, or their {placeholders} stay in the uri
+        val jsonMap = encoder.encodeToJsonElement(serializer, route).jsonObject
 
         var uri = fullPattern
         jsonMap.forEach { (key, element) ->

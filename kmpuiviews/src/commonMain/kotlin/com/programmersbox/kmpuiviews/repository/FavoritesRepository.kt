@@ -6,6 +6,12 @@ import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.SystemAlerter
 import com.programmersbox.supabaseintegration.auth.AuthManager
+import com.programmersbox.kmpuiviews.telemetry.TelemetrySourceNamer
+import com.programmersbox.telemetry.Analytics
+import com.programmersbox.telemetry.NoOpAnalytics
+import com.programmersbox.telemetry.events.FavoriteAdded
+import com.programmersbox.telemetry.events.FavoriteRemoved
+import com.programmersbox.telemetry.events.UpdateCheckToggled
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
@@ -16,7 +22,11 @@ class FavoritesRepository(
     private val authManager: AuthManager,
     private val sourceRepository: SourceRepository,
     private val clock: Clock = Clock.System,
+    private val analytics: Analytics = NoOpAnalytics,
+    private val sourceNamer: TelemetrySourceNamer? = null,
 ) {
+    private fun telemetryName(source: String) = sourceNamer?.name(source) ?: source
+
     /**
      * [source] is an item url or a [com.programmersbox.kmpmodels.KmpApiService.serviceName].
      * Source rows are keyed by package name, so a service name is resolved to its package first.
@@ -27,8 +37,10 @@ class FavoritesRepository(
         return dao.getIncognitoSourceSync(packageName)?.isIncognito == true
     }
 
-    suspend fun addFavorite(db: DbModel) {
+    /** [from] is set only for user actions (OpenedFrom); restores and reader auto-saves pass null and send nothing. */
+    suspend fun addFavorite(db: DbModel, from: String? = null) {
         if (isIncognito(db.source)) return
+        if (from != null) analytics.log(FavoriteAdded(telemetryName(db.source), from))
         coroutineScope {
             launch {
                 dao.insertFavorite(
@@ -39,8 +51,9 @@ class FavoritesRepository(
         }
     }
 
-    suspend fun removeFavorite(db: DbModel) {
+    suspend fun removeFavorite(db: DbModel, userAction: Boolean = false) {
         if (isIncognito(db.source)) return
+        if (userAction) analytics.log(FavoriteRemoved(telemetryName(db.source)))
         coroutineScope {
             launch {
                 if (authManager.isLoggedIn()) {
@@ -80,6 +93,7 @@ class FavoritesRepository(
     }
 
     suspend fun toggleNotify(db: DbModel) {
+        analytics.log(UpdateCheckToggled(enabled = db.shouldCheckForUpdate))
         coroutineScope {
             launch {
                 dao.updateFavoriteItem(

@@ -1,6 +1,9 @@
 package com.programmersbox.anime.shared.episodeload
 
 import androidx.compose.runtime.snapshotFlow
+import com.programmersbox.telemetry.events.EpisodePlayRequested
+import com.programmersbox.telemetry.AnalyticsEvent
+import com.programmersbox.telemetry.Analytics
 import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
@@ -59,11 +62,12 @@ class EpisodeLoaderTest {
         val failures = mutableListOf<Pair<KmpStorage?, Throwable?>>()
         val steps = mutableListOf<EpisodeLoadStep>()
         lateinit var loader: EpisodeLoader
+        val events = mutableListOf<AnalyticsEvent>()
 
         init {
             // snapshotFlow can miss steps that change within one dispatch, so also capture at resolve time.
             source.onResolve = { loader.state?.step?.let(steps::add) }
-            loader = EpisodeLoader(handoffScope)
+            loader = EpisodeLoader(handoffScope, analytics = { RecordingAnalytics(events) })
         }
 
         suspend fun load(action: EpisodeAction, chapter: KmpChapterModel = chapter(), info: KmpInfoModel = info()) =
@@ -512,5 +516,32 @@ class EpisodeLoaderTest {
         assertEquals(1, h.resolved.size)
         h.loader.finishHandoff()
         assertNull(h.loader.state)
+    }
+
+    @Test
+    fun playLogsRequestWithSourceCount() = runTest {
+        val h = harness(FakeSource(listOf(storage("720p"), storage("1080p"), storage("480p"))))
+        // Logged as soon as the sources are known, before the source sheet asks for a pick
+        val job = startLoad(h, EpisodeAction.Play)
+        runCurrent()
+        assertEquals(1, h.events.count { it is EpisodePlayRequested }, h.events.toString())
+        assertEquals(3, (h.events.first { it is EpisodePlayRequested } as EpisodePlayRequested).linkCount)
+        job.cancel()
+    }
+
+    @Test
+    fun downloadDoesNotLogPlayRequest() = runTest {
+        val h = harness(FakeSource(listOf(storage("720p"))))
+        h.load(EpisodeAction.Download, h.chapter())
+        advanceUntilIdle()
+        assertTrue(h.events.none { it is EpisodePlayRequested })
+    }
+
+    private class RecordingAnalytics(private val events: MutableList<AnalyticsEvent>) : Analytics {
+        override val isAvailable = true
+        override fun log(event: AnalyticsEvent) { events += event }
+        override fun screen(name: String) = Unit
+        override fun setUserProperty(name: String, value: String?) = Unit
+        override fun setEnabled(enabled: Boolean) = Unit
     }
 }

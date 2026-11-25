@@ -1,6 +1,8 @@
 package com.programmersbox.kmpuiviews.receivers
 
 import android.app.NotificationManager
+import com.programmersbox.telemetry.events.NotificationDismissed
+import com.programmersbox.kmpuiviews.telemetry.koinAnalytics
 import com.programmersbox.kmpuiviews.telemetry.koinCrashReporter
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -20,6 +22,7 @@ class SwipeAwayReceiver : BroadcastReceiver(), KoinComponent {
         val url = intent?.getStringExtra("url")
         val id = intent?.getIntExtra("id", -1)
         printLogs { url }
+        runCatching { koinAnalytics().log(NotificationDismissed) }
         goAsync {
             runCatching {
                 url?.let { dao.updateNotification(it, false) }

@@ -29,6 +29,11 @@ import com.programmersbox.kmpuiviews.repository.BookmarkRepository
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.testing.FakeAiText
 import com.programmersbox.kmpuiviews.testing.FakeCrashReporter
+import com.programmersbox.kmpuiviews.testing.FakeAnalytics
+import com.programmersbox.telemetry.AnalyticsEvent
+import com.programmersbox.telemetry.events.FavoriteAdded
+import com.programmersbox.telemetry.events.ItemViewed
+import com.programmersbox.telemetry.events.OpenedFrom
 import com.programmersbox.kmpuiviews.testing.FakeAuthManager
 import com.programmersbox.kmpuiviews.testing.FakeKmpGenericInfo
 import com.programmersbox.kmpuiviews.testing.FakeTranslationHandler
@@ -37,7 +42,9 @@ import com.programmersbox.kmpuiviews.utils.ImageModifier
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.SharedCoverBitmaps
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.SharedItemKey
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -60,6 +67,7 @@ import kotlin.test.assertTrue
 class DetailsViewModelTest {
 
     private val viewModelStore = ViewModelStore()
+    private val analytics = FakeAnalytics()
 
     private lateinit var itemDbFile: File
     private lateinit var itemDatabase: ItemDatabase
@@ -78,10 +86,22 @@ class DetailsViewModelTest {
     // The ViewModel observes several Room-generated Flows, which emit on Room's own
     // (real, non-test-controlled) dispatcher. A test-dispatcher virtual-clock advance
     // doesn't drive those emissions, so wait for them with real time instead.
+    // One thread plays the UI thread, as in the app: the ViewModel writes snapshot state on Main and the
+    // test reads it on Main. Reading derivedStateOf (currentState) on another thread while Main writes its
+    // inputs can cache a stale value that never recomputes.
+    @OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class)
+    private val mainThread = newSingleThreadContext("details-test-main")
+
+    // Polls on Main with real time: Room emits on its own dispatcher, outside runTest's virtual clock.
+    // The app sends a snapshot apply notification every frame, so each poll sends one too.
     private suspend fun awaitCondition(condition: suspend () -> Boolean) {
-        withContext(Dispatchers.Default.limitedParallelism(1)) {
+        withContext(Dispatchers.Main) {
             withTimeout(5_000) {
-                while (!condition()) delay(10)
+                while (true) {
+                    Snapshot.sendApplyNotifications()
+                    if (condition()) break
+                    delay(10)
+                }
             }
         }
     }
@@ -118,6 +138,7 @@ class DetailsViewModelTest {
             systemAlerter = SystemAlerter(),
             authManager = FakeAuthManager(),
             sourceRepository = sourceRepository,
+            analytics = analytics,
         ),
         translationHandler = translationHandler,
         exceptionDao = exceptionDatabase.exceptionDao(),
@@ -131,12 +152,13 @@ class DetailsViewModelTest {
         tldrCache = tldrCache,
         moodRepository = com.programmersbox.kmpuiviews.domain.moodtags.MoodRepository(itemDatabase.itemDao(), aiText),
         crashReporter = FakeCrashReporter(),
+        analytics = analytics,
     ).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @BeforeTest
     fun setUp() {
-        Dispatchers.setMain(Dispatchers.Default)
+        Dispatchers.setMain(mainThread)
 
         sourceRepository.setSources(listOf(ExampleService.getSourceInformation()))
 
@@ -166,6 +188,7 @@ class DetailsViewModelTest {
     fun tearDown() {
         viewModelStore.clearAndJoin()
         Dispatchers.resetMain()
+        mainThread.close()
         runBlocking { Cached.cache.cleanUp() }
         itemDatabase.close()
         itemDbFile.delete()
@@ -221,6 +244,24 @@ class DetailsViewModelTest {
 
         val state = vm.currentState as DetailState.Success
         assertEquals("Cached Title", state.info.title)
+    }
+
+    @Test
+    fun `item_viewed fires once with source, media type and origin`() = runTest {
+        val vm = viewModel(details = details().copy(from = OpenedFrom.RECENT))
+        awaitCondition { vm.currentState is DetailState.Success }
+
+        assertEquals<List<AnalyticsEvent>>(listOf(ItemViewed("ExampleService", "", OpenedFrom.RECENT)), analytics.events)
+    }
+
+    @Test
+    fun `favorite from details sends favorite_added with details origin`() = runTest {
+        val vm = viewModel()
+        awaitCondition { vm.currentState is DetailState.Success }
+        vm.favoriteAction((vm.currentState as DetailState.Success).action as DetailFavoriteAction.Add)
+        awaitCondition { vm.favoriteListener }
+
+        assertTrue(FavoriteAdded("ExampleService", OpenedFrom.DETAILS) in analytics.events, analytics.events.toString())
     }
 
     @Test
@@ -513,6 +554,26 @@ class DetailsViewModelTest {
         awaitCondition { vm.tldr.value is AiTextState.Done }
 
         assertEquals(1, ai.tldrCalls.size)
+    }
+
+    @Test
+    fun `hiding right after the summary finishes still caches it`() = runTest {
+        // Hide can land before the background cache write; the result must not be lost either way
+        repeat(25) {
+            val ai = FakeAiText()
+            val cache = TldrCache()
+            val vm = viewModel(aiText = ai, tldrCache = cache)
+            awaitCondition { vm.currentState is DetailState.Success }
+            setDescription(vm, "a".repeat(500))
+
+            vm.showTldr()
+            awaitCondition { vm.tldr.value is AiTextState.Done }
+            vm.hideTldr()
+            vm.showTldr()
+            awaitCondition { vm.tldr.value is AiTextState.Done }
+
+            assertEquals(1, ai.tldrCalls.size, "iteration $it")
+        }
     }
 
     @Test

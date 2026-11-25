@@ -1,5 +1,13 @@
 package com.programmersbox.desktop
 
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.LocalCafe
+import androidx.compose.material.icons.filled.RocketLaunch
+import androidx.compose.material.icons.filled.SportsMartialArts
+import com.programmersbox.anime.shared.onboarding.playerSetupStep
+import com.programmersbox.kmpuiviews.presentation.onboarding.GenreCard
+import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingAppConfig
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DesktopMac
 import androidx.compose.material.icons.filled.VideoLibrary
@@ -20,7 +28,6 @@ import com.programmersbox.anime.shared.videoexport.VideoExportRoute
 import com.programmersbox.anime.shared.videoexport.VideoExportScreen
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRoute
 import com.programmersbox.anime.shared.subtitles.SubtitleSettingsScreen
-import com.programmersbox.anime.shared.videoplayer.DesktopPlayerOnboarding
 import com.programmersbox.anime.shared.videoplayer.DesktopPlayerSettings
 import com.programmersbox.anime.shared.videoplayer.VideoPlayerUi
 import com.programmersbox.anime.shared.videos.FreeUpSpaceRoute
@@ -166,8 +173,20 @@ open class GenericAnimeDesktop(
 
         playerSettings { DesktopPlayerSettings() }
 
+        onboardingConfig = OnboardingAppConfig(
+            genres = listOf(
+                GenreCard("Action", Icons.Default.SportsMartialArts, 20f),
+                GenreCard("Romance", Icons.Default.Favorite, 340f),
+                GenreCard("Sci-fi", Icons.Default.RocketLaunch, 200f),
+                GenreCard("Slice of life", Icons.Default.LocalCafe, 90f),
+                GenreCard("Fantasy", Icons.Default.AutoAwesome, 280f),
+            ),
+            startLabel = "Start watching",
+            updateNoun = "episode",
+            appStepTab = "Player",
+        )
         onboardingSettings {
-            item { DesktopPlayerOnboarding() }
+            playerSetupStep()
         }
     }
 }

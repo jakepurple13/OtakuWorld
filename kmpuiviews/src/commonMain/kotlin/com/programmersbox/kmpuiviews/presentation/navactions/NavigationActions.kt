@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.presentation.navactions
 
 import androidx.compose.runtime.Composable
+import com.programmersbox.telemetry.events.OpenedFrom
 import androidx.navigation3.runtime.NavKey
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.kmpmodels.KmpItemModel
@@ -15,9 +16,10 @@ interface NavigationActions {
         url: String,
         imageUrl: String,
         source: String,
+        from: String = OpenedFrom.OTHER,
     )
 
-    fun details(model: KmpItemModel)
+    fun details(model: KmpItemModel, from: String = OpenedFrom.OTHER)
 
     fun onboarding()
     fun all()

@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.presentation.settings.lists
 
 import androidx.compose.animation.AnimatedVisibility
+import com.programmersbox.telemetry.events.OpenedFrom
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.animateDp
@@ -347,7 +348,7 @@ fun OtakuCustomListScreen(
                 ?.onStart { showLoadingDialog = true }
                 ?.onEach { item ->
                     showLoadingDialog = false
-                    navController.details(item)
+                    navController.details(item, OpenedFrom.LISTS)
                 }
                 ?.onCompletion { showLoadingDialog = false }
                 ?.launchIn(scope)
@@ -818,7 +819,7 @@ private fun CustomItemVertical(
                         ?.onStart { showLoadingDialog(true) }
                         ?.onEach {
                             showLoadingDialog(false)
-                            navController.details(it)
+                            navController.details(it, OpenedFrom.LISTS)
                         }
                         ?.onCompletion { showLoadingDialog(false) }
                         ?.launchIn(scope) ?: onError()
@@ -897,7 +898,7 @@ private fun CustomItemVertical(
                                 ?.onStart { showLoadingDialog(true) }
                                 ?.onEach {
                                     showLoadingDialog(false)
-                                    navController.details(it)
+                                    navController.details(it, OpenedFrom.LISTS)
                                 }
                                 ?.onCompletion { showLoadingDialog(false) }
                                 ?.launchIn(scope) ?: error("Nothing")

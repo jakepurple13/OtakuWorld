@@ -1,6 +1,12 @@
 package com.programmersbox.kmpuiviews.presentation.all
 
 import androidx.compose.runtime.getValue
+import com.programmersbox.telemetry.events.SourceError
+import com.programmersbox.kmpuiviews.telemetry.TelemetrySourceNamer
+import com.programmersbox.telemetry.events.Search
+import com.programmersbox.telemetry.Buckets
+import com.programmersbox.telemetry.NoOpAnalytics
+import com.programmersbox.telemetry.Analytics
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -33,6 +39,8 @@ class AllViewModel(
     dao: ItemDao,
     private val currentSourceRepository: CurrentSourceRepository,
     favoritesRepository: FavoritesRepository,
+    private val analytics: Analytics = NoOpAnalytics,
+    private val sourceNamer: TelemetrySourceNamer? = null,
 ) : ViewModel() {
 
     val observeNetwork = createConnectivity()
@@ -93,7 +101,11 @@ class AllViewModel(
         loadJob?.cancel()
         loadJob = sources
             .getListFlow(count)
-            .dispatchIoAndCatchList { lastLoadFailed = true }
+            .dispatchIoAndCatchList { e ->
+                lastLoadFailed = true
+                val s = sources.serviceName
+                analytics.log(SourceError(sourceNamer?.name(s) ?: s, SourceError.ALL, e::class.simpleName ?: "Exception"))
+            }
             .onStart {
                 lastLoadFailed = false
                 isRefreshing = true
@@ -114,6 +126,7 @@ class AllViewModel(
             .onEach {
                 searchList = it
                 isSearching = false
+                analytics.log(Search(Search.SOURCE, sourceCount = 1, resultCount = Buckets.count(it.size)))
             }
             .onCompletion { if (it !is CancellationException) isSearching = false }
             .launchIn(viewModelScope)

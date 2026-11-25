@@ -31,6 +31,8 @@ class SourceUpdateChecker(
 ) : CoroutineWorker(context, workerParams) {
     private val notificationManager by lazy { context.getSystemService<NotificationManager>() }
     override suspend fun doWork(): Result {
+        // Literal name: class names are renamed by R8 in release builds
+        koinCrashReporter().setKey("last_worker", "SourceUpdateChecker")
         return try {
             val packageManager = applicationContext.packageManager
             if (sourceRepository.list.isEmpty()) {

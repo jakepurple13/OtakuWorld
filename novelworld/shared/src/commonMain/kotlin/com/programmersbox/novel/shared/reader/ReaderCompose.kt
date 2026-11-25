@@ -1,6 +1,8 @@
 package com.programmersbox.novel.shared.reader
 
 import com.programmersbox.kmpuiviews.theme.SeedColorTheme
+import kotlinx.coroutines.flow.first
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -65,6 +67,9 @@ import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.programmersbox.datastore.asState
+import com.programmersbox.novel.shared.novelTextSize
 import com.programmersbox.kmpuiviews.presentation.components.OtakuPullToRefreshBox
 import com.programmersbox.kmpuiviews.presentation.components.blurkind.rememberBlurKindState
 import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKind
@@ -117,6 +122,7 @@ private fun NovelReadViewContent(
 
     val settings = LocalSettingsHandling.current
 
+    val bodyTextSize by novelTextSize.asState()
     val showBlur by settings.rememberShowBlur()
     val isAmoledMode by settings.rememberIsAmoledMode()
 
@@ -292,11 +298,21 @@ private fun NovelReadViewContent(
                         // the outgoing page is not current in the same pass, so it stays frozen
                         val livePageText = viewModel.pageList
                         if (chapter == viewModel.currentChapter) pageText = livePageText
+                        val chapterScroll = rememberScrollState()
+                        if (chapter == viewModel.currentChapter) {
+                            LaunchedEffect(chapter) { viewModel.chapterShown(chapter) }
+                            // Reaching the bottom of a chapter with text counts as reaching the end
+                            LaunchedEffect(chapter, chapterScroll) {
+                                snapshotFlow { pageText.isNotEmpty() && chapterScroll.maxValue > 0 && !chapterScroll.canScrollForward }
+                                    .first { it }
+                                viewModel.chapterEndReached()
+                            }
+                        }
                         Column(
                             verticalArrangement = Arrangement.spacedBy(4.dp),
                             modifier = Modifier
                                 .padding(horizontal = 4.dp)
-                                .verticalScroll(rememberScrollState())
+                                .verticalScroll(chapterScroll)
                                 .fillMaxSize()
                         ) {
                             ChapterRecapBar(viewModel, chapter)
@@ -304,6 +320,9 @@ private fun NovelReadViewContent(
                             //FIXME: Fix this
                             Text(
                                 pageText,//AnnotatedString.fromHtml(viewModel.pageList),
+                                fontSize = bodyTextSize.sp,
+                                // 1.5x keeps the default 24sp line height at the default 16sp size
+                                lineHeight = (bodyTextSize * 1.5f).sp,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(4.dp)

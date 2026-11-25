@@ -1,6 +1,11 @@
 package com.programmersbox.kmpuiviews.presentation.dailyoverview
 
 import androidx.lifecycle.ViewModel
+import kotlin.time.TimeSource
+import com.programmersbox.telemetry.events.AiTaskRun
+import com.programmersbox.telemetry.Buckets
+import com.programmersbox.telemetry.NoOpAnalytics
+import com.programmersbox.telemetry.Analytics
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.kmpuiviews.domain.dailyoverview.DailyFacts
 import com.programmersbox.kmpuiviews.domain.dailyoverview.DailyFactsBuilder
@@ -55,6 +60,7 @@ class DailyOverviewViewModel(
     private val resolver: EngineResolver,
     private val settings: DailyOverviewSettings,
     private val template: TemplateEngine,
+    private val analytics: Analytics = NoOpAnalytics,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(
         DailyOverviewUiState(facts = null, summary = SummaryState.Loading, needsSetup = false)
@@ -101,6 +107,10 @@ class DailyOverviewViewModel(
             val label = engine.label()
             val destination = engine.destination()
             var text = ""
+            val started = TimeSource.Monotonic.markNow()
+            fun logAi(outcome: String) = analytics.log(
+                AiTaskRun("daily_overview", engine.id.name.lowercase(), outcome, Buckets.durationMs(started.elapsedNow().inWholeMilliseconds))
+            )
             try {
                 engine.summarize(facts)
                     .scan("") { acc, chunk -> acc + chunk }
@@ -115,12 +125,14 @@ class DailyOverviewViewModel(
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {
+                logAi(AiTaskRun.ERROR)
                 publishTemplate(facts)
                 return@launch
             }
             if (text.isBlank()) {
                 publishTemplate(facts)
             } else {
+                logAi(AiTaskRun.SUCCESS)
                 settings.cacheOrIgnore(DailySummary(facts.date, engine.id, text))
                 publishDone(text, engine)
             }

@@ -1,6 +1,9 @@
 package com.programmersbox.kmpuiviews.presentation.dictionary
 
 import com.programmersbox.kmpuiviews.testing.clearAndJoin
+import com.programmersbox.telemetry.events.DictionaryLookup
+import com.programmersbox.telemetry.AnalyticsEvent
+import com.programmersbox.kmpuiviews.testing.FakeAnalytics
 import androidx.lifecycle.ViewModelStore
 import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
@@ -39,7 +42,9 @@ class DictionaryDetailViewModelTest {
         }
     }
 
-    private fun viewModel(id: Long) = DictionaryDetailViewModel(id, repository)
+    private val analytics = FakeAnalytics()
+
+    private fun viewModel(id: Long) = DictionaryDetailViewModel(id, repository, analytics)
         .also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -83,5 +88,10 @@ class DictionaryDetailViewModelTest {
 
         awaitCondition { vm.entry.value == null }
         assertNull(vm.entry.value)
+    }
+
+    @Test fun `opening an entry logs a lookup`() = runTest {
+        viewModel(1L)
+        assertEquals<List<AnalyticsEvent>>(listOf(DictionaryLookup(DictionaryLookup.LOOKUP)), analytics.events)
     }
 }

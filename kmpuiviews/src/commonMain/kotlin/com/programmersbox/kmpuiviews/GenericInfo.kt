@@ -137,9 +137,6 @@ interface KmpGenericInfo {
     fun DialogSetups() = Unit
 
     @Composable
-    fun AccountContent() = Unit
-
-    @Composable
     fun AccountSettings() = Unit
 
     @Composable

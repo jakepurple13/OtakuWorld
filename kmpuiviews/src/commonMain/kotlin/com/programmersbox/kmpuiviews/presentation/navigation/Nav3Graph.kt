@@ -123,12 +123,10 @@ fun buildKmpGraph(): Module = module {
     }
 
     navigation<Screen.OnboardingScreen> {
-        val genericInfo: KmpGenericInfo = koinInject()
         val customPreferences = koinInject<ComposeSettingsDsl>()
         OnboardingScreen(
             navController = LocalNavActions.current,
             customPreferences = customPreferences,
-            accountContent = genericInfo::AccountContent
         )
     }
 
@@ -226,7 +224,7 @@ fun buildKmpGraph(): Module = module {
         )
     }
 
-    detailEntry<Screen.DailyOverview> { DailyOverviewScreen() }
+    detailEntry<Screen.DailyOverview> { DailyOverviewScreen(from = it.from) }
 
     detailEntry<Screen.DailyOverview.Settings> { DailyOverviewSettingsScreen() }
 

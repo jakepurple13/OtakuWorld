@@ -250,6 +250,16 @@ class MangaDesktopSettings(
         key = stringPreferencesKey("skippedUpdateVersion"),
         defaultValue = ""
     )
+
+    val launchAnimation = DataStoreHandler(
+        key = stringPreferencesKey("launchAnimation"),
+        defaultValue = ""
+    )
+
+    val quitAnimation = DataStoreHandler(
+        key = stringPreferencesKey("quitAnimation"),
+        defaultValue = ""
+    )
 }
 
 actual val hasTranslationSettingsPage: Boolean = true

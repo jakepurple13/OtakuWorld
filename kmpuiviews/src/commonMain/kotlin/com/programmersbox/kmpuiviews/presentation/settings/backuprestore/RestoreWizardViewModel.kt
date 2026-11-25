@@ -1,6 +1,9 @@
 package com.programmersbox.kmpuiviews.presentation.settings.backuprestore
 
 import androidx.lifecycle.ViewModel
+import com.programmersbox.telemetry.events.RestoreFinished
+import com.programmersbox.telemetry.NoOpAnalytics
+import com.programmersbox.telemetry.Analytics
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.sharedcomponents.backup.BackupDataSummary
@@ -34,6 +37,7 @@ class RestoreWizardViewModel<F>(
     private val peekListContents: suspend (F) -> List<CustomList> = { emptyList() },
     private val resultsFlow: Flow<List<ItemResult>> = emptyFlow(),
     private val startRestore: (F, Set<String>, Set<String>?) -> Unit,
+    private val analytics: Analytics = NoOpAnalytics,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(RestoreWizardUiState<F>())
@@ -137,6 +141,7 @@ class RestoreWizardViewModel<F>(
                 _state.update { it.copy(results = results) }
                 if (results.map { r -> r.key }.toSet() == keys) {
                     _state.update { it.copy(step = RestoreWizardStep.Complete) }
+                    analytics.log(RestoreFinished(success = results.all { r -> r.success }, categories = results.size))
                 }
             }
         }

@@ -1,182 +1,170 @@
 package com.programmersbox.kmpuiviews.presentation.onboarding
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.plus
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import com.programmersbox.datastore.DataStoreHandling
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.asState
-import com.programmersbox.kmpuiviews.presentation.components.NormalOtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
-import com.programmersbox.kmpuiviews.presentation.onboarding.composables.AccountContent
-import com.programmersbox.kmpuiviews.presentation.onboarding.composables.FinishContent
-import com.programmersbox.kmpuiviews.presentation.onboarding.composables.GeneralContent
-import com.programmersbox.kmpuiviews.presentation.onboarding.composables.SourcesContent
-import com.programmersbox.kmpuiviews.presentation.onboarding.composables.ThemeContent
-import com.programmersbox.kmpuiviews.presentation.onboarding.composables.WelcomeContent
-import com.programmersbox.kmpuiviews.presentation.tips.TipsContent
+import com.programmersbox.kmpuiviews.presentation.onboarding.frame.StoryStepsScaffold
+import com.programmersbox.kmpuiviews.presentation.onboarding.motion.ColorSweepHost
+import com.programmersbox.kmpuiviews.presentation.onboarding.motion.LocalColorSweep
+import com.programmersbox.kmpuiviews.presentation.onboarding.steps.CatalogInfo
+import com.programmersbox.kmpuiviews.presentation.onboarding.steps.doneStep
+import com.programmersbox.kmpuiviews.presentation.onboarding.steps.layoutStep
+import com.programmersbox.kmpuiviews.presentation.onboarding.steps.lookStep
+import com.programmersbox.kmpuiviews.presentation.onboarding.steps.rememberOnboardingCatalogs
+import com.programmersbox.kmpuiviews.presentation.onboarding.steps.sourcesStep
+import com.programmersbox.kmpuiviews.presentation.onboarding.steps.syncStep
+import com.programmersbox.kmpuiviews.presentation.onboarding.steps.tipsStep
+import com.programmersbox.kmpuiviews.presentation.onboarding.steps.updatesStep
+import com.programmersbox.kmpuiviews.presentation.onboarding.steps.welcomeStep
+import com.programmersbox.kmpuiviews.presentation.tips.Tip
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
-import kotlinx.coroutines.launch
+import com.programmersbox.telemetry.Analytics
+import com.programmersbox.telemetry.events.OnboardingFinished
+import com.programmersbox.telemetry.events.OnboardingStep
+import kotlinx.coroutines.flow.drop
 import org.koin.compose.koinInject
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+/** Steps that get a summary row on Done, in this order ("app" only when the app contributes one). */
+private val SummaryIds = listOf("look", "layout", "app", "sync", "updates")
+
 @Composable
 fun OnboardingScreen(
     navController: NavigationActions,
     customPreferences: ComposeSettingsDsl,
-    accountContent: @Composable () -> Unit,
     dataStoreHandling: DataStoreHandling = koinInject(),
     appConfig: AppConfig = koinInject(),
+    handling: NewSettingsHandling = koinInject(),
+    analytics: Analytics = koinInject(),
 ) {
     HideNavBarWhileOnScreen()
 
-    // While a tip's practice view is open, the pager stops swiping so the demo gets the gestures.
+    OnboardingContent(
+        navController = navController,
+        customPreferences = customPreferences,
+        dataStoreHandling = dataStoreHandling,
+        appName = appConfig.appName,
+        handling = handling,
+        catalogs = { rememberOnboardingCatalogs() },
+        analytics = analytics,
+    )
+}
+
+/** The story-steps flow without Koin-only pieces, so tests can supply the catalogs, sync step and tips. */
+@Composable
+internal fun OnboardingContent(
+    navController: NavigationActions,
+    customPreferences: ComposeSettingsDsl,
+    dataStoreHandling: DataStoreHandling,
+    appName: String,
+    handling: NewSettingsHandling,
+    catalogs: @Composable () -> List<CatalogInfo>,
+    sync: OnboardingScope.() -> Unit = { syncStep(navController) },
+    tips: List<Tip>? = null,
+    analytics: Analytics? = null,
+) {
+    val config = customPreferences.onboardingConfig
+
+    // While a tip's practice view is held, the pager stops swiping so the demo gets the gestures.
     var practicingTip by remember { mutableStateOf(false) }
 
     val onboardingScope = rememberOnboardingScope {
-        item { WelcomeContent() }
-
-        item { ThemeContent() }
-
-        item { SourcesContent() }
-
-        item {
-            AccountContent(
-                navController = navController
-            )
+        // Built once and re-added below, so Welcome's "Coming up" chips and Done's summaries read the same specs.
+        val middle = buildOnboardingScope {
+            lookStep(handling)
+            layoutStep(handling, appName = appName)
+            sourcesStep(appName, catalogs)
+            apply(customPreferences.onboardingSettings)
+            sync()
+            updatesStep(handling, config.updateNoun)
         }
+        val specs = (0 until middle.size).map { middle[it].spec }
+        val chipLabels = mapOf(
+            "look" to "Look",
+            "layout" to "Layout",
+            "sources" to "Sources",
+            "app" to config.appStepTab,
+            "sync" to "Sync",
+            "updates" to "Updates",
+        )
 
-        item {
-            GeneralContent()
-        }
-
-        apply(customPreferences.onboardingSettings)
-
-        item {
-            TipsContent(
-                onPracticeChange = { practicingTip = it },
-                header = {
-                    ListItem(
-                        headlineContent = { Text("Tips & gestures") },
-                        supportingContent = { Text("Some actions are hidden behind a press or a swipe. Tap Try to practice one.") },
-                    )
-                }
-            )
-        }
-
+        welcomeStep(
+            appName = appName,
+            config = config,
+            comingUp = specs.mapNotNull { spec -> chipLabels[spec.id]?.let { spec.icon to it } },
+        )
+        repeat(middle.size) { step(middle[it].spec, middle[it].content) }
+        tipsStep(onPracticeChange = { practicingTip = it }, tips = tips)
         //This should ALWAYS be last
-        item { FinishContent() }
+        doneStep(SummaryIds.mapNotNull { id -> specs.firstOrNull { it.id == id } })
     }
 
     var hasSeenOnboarding by dataStoreHandling
         .hasGoneThroughOnboarding
         .asState()
 
-    val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState { onboardingScope.size }
 
-    NormalOtakuScaffold(
-        topBar = {
-            Column {
-                TopAppBar(
-                    title = { Text("Welcome!") },
-                    subtitle = { Text(appConfig.appName) },
-                    actions = {
-                        var skipOnboarding by remember { mutableStateOf(false) }
+    LaunchedEffect(pagerState, analytics) {
+        if (analytics == null) return@LaunchedEffect
+        // Reaching page n means page n - 1 was completed
+        snapshotFlow { pagerState.currentPage }.drop(1).collect { analytics.log(OnboardingStep(step = it)) }
+    }
 
-                        if (skipOnboarding) {
-                            AlertDialog(
-                                onDismissRequest = { skipOnboarding = false },
-                                confirmButton = {
-                                    TextButton(
-                                        onClick = {
-                                            hasSeenOnboarding = true
-                                            skipOnboarding = false
-                                            navController.popBackStack()
-                                        }
-                                    ) { Text("Confirm") }
-                                },
-                                dismissButton = {
-                                    TextButton(
-                                        onClick = { skipOnboarding = false }
-                                    ) { Text("Dismiss") }
-                                },
-                                title = { Text("Skip Onboarding?") },
-                                text = { Text("Are you sure you want to skip onboarding?") }
-                            )
-                        }
-
-                        TextButton(
-                            onClick = { skipOnboarding = true }
-                        ) { Text("Skip") }
-                    }
-                )
-                HorizontalDivider()
-            }
-        },
-        bottomBar = {
-            BottomAppBar(
-                actions = {
-                    TextButton(
-                        onClick = {
-                            if (pagerState.canScrollBackward) {
-                                scope.launch { pagerState.animateScrollToPage(pagerState.currentPage - 1) }
-                            }
-                        },
-                        enabled = pagerState.canScrollBackward
-                    ) { Text("Back") }
-
-                    OnboardingIndicator(pagerState)
-                },
-                floatingActionButton = {
-                    FloatingActionButton(
-                        onClick = {
-                            if (pagerState.canScrollForward) {
-                                scope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) }
-                            } else {
-                                hasSeenOnboarding = true
-                                navController.popBackStack()
-                            }
-                        }
-                    ) {
-                        if (pagerState.canScrollForward) {
-                            Text("Next", modifier = Modifier.padding(horizontal = 16.dp))
-                        } else {
-                            Text("Get started", modifier = Modifier.padding(horizontal = 16.dp))
-                        }
-                    }
-                }
+    fun leave(skipped: Boolean) {
+        analytics?.log(
+            OnboardingFinished(
+                skipped = skipped,
+                stepsSeen = if (skipped) pagerState.currentPage + 1 else onboardingScope.size,
             )
-        }
-    ) { padding ->
-        Onboarding(
-            onboardingScope = onboardingScope,
-            state = pagerState,
-            contentPadding = padding + PaddingValues(vertical = 4.dp),
-            userScrollEnabled = !practicingTip,
-            modifier = Modifier.fillMaxSize()
         )
+        hasSeenOnboarding = true
+        navController.popBackStack()
+    }
+
+    // The sweep host wraps the whole frame (progress, hero, buttons) and the Surface paints the background,
+    // so the frozen frame covers everything. Steps pass ROOT coordinates; convert to host coordinates.
+    var hostCoords by remember { mutableStateOf<LayoutCoordinates?>(null) }
+    ColorSweepHost { sweepFrom ->
+        val sweepFromRoot: (Offset, () -> Unit) -> Unit = remember(sweepFrom) {
+            { root, apply -> sweepFrom(root - (hostCoords?.positionInRoot() ?: Offset.Zero), apply) }
+        }
+        Surface(
+            color = MaterialTheme.colorScheme.background,
+            modifier = Modifier
+                .fillMaxSize()
+                .onGloballyPositioned { hostCoords = it },
+        ) {
+            CompositionLocalProvider(LocalColorSweep provides sweepFromRoot) {
+                StoryStepsScaffold(
+                    scope = onboardingScope,
+                    appName = appName,
+                    startLabel = config.startLabel,
+                    onFinish = { leave(skipped = false) },
+                    onSkipConfirmed = { leave(skipped = true) },
+                    userScrollEnabled = !practicingTip,
+                    pagerState = pagerState,
+                )
+            }
+        }
     }
 }

@@ -1,6 +1,10 @@
 package com.programmersbox.kmpuiviews.repository
 
 import com.programmersbox.favoritesdatabase.CustomList
+import com.programmersbox.telemetry.events.ListCreated
+import com.programmersbox.telemetry.events.ListItemAdded
+import com.programmersbox.telemetry.NoOpAnalytics
+import com.programmersbox.telemetry.Analytics
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.CustomListItem
 import com.programmersbox.favoritesdatabase.ListDao
@@ -15,6 +19,7 @@ class ListRepository(
     private val listDao: ListDao,
     private val systemAlerter: SystemAlerter,
     private val authManager: AuthManager,
+    private val analytics: Analytics = NoOpAnalytics,
 ) {
     fun getAllLists(): Flow<List<CustomList>> = listDao.getAllLists()
 
@@ -32,11 +37,13 @@ class ListRepository(
     suspend fun addToList(uuid: String, title: String, description: String, url: String, imageUrl: String, source: String): Boolean {
         return listDao.addToList(uuid, title, description, url, imageUrl, source)
             .also { systemAlerter.alertListChange() }
+            .also { added -> if (added) analytics.log(ListItemAdded(listCount = 1)) }
     }
 
     suspend fun create(name: String) {
         listDao.create(name)
         systemAlerter.alertListChange()
+        analytics.log(ListCreated)
     }
 
     suspend fun updateFullList(item: CustomListItem) {

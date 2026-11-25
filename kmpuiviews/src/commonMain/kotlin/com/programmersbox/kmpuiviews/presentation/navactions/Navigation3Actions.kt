@@ -50,6 +50,7 @@ class Navigation3Actions(startKey: NavKey = Screen.RecentScreen) : NavigationAct
         url: String,
         imageUrl: String,
         source: String,
+        from: String,
     ) {
         push(
             Screen.DetailsScreen.Details(
@@ -57,19 +58,21 @@ class Navigation3Actions(startKey: NavKey = Screen.RecentScreen) : NavigationAct
                 description = description,
                 url = UrlEncoderUtil.encode(url),
                 imageUrl = UrlEncoderUtil.encode(imageUrl),
-                source = source
+                source = source,
+                from = from,
             )
         )
     }
 
-    override fun details(model: KmpItemModel) {
+    override fun details(model: KmpItemModel, from: String) {
         push(
             Screen.DetailsScreen.Details(
                 title = model.title.ifEmpty { "NA" },
                 description = model.description.ifEmpty { "NA" },
                 url = model.url.let { UrlEncoderUtil.encode(it) },
                 imageUrl = model.imageUrl.let { UrlEncoderUtil.encode(it) },
-                source = model.source.serviceName
+                source = model.source.serviceName,
+                from = from,
             )
         )
     }
@@ -244,7 +247,8 @@ class Navigation3Actions(startKey: NavKey = Screen.RecentScreen) : NavigationAct
         }
     }
 
-    override fun isOnTop(key: NavKey): Boolean = navBackStack.backStack.lastOrNull() == key
+    // Same destination type on top; route fields like `from` do not make it a different screen
+    override fun isOnTop(key: NavKey): Boolean = navBackStack.backStack.lastOrNull()?.let { it::class == key::class } == true
 
     override fun onboardingToRecent() {
         navBackStack.removeTopLevel(Screen.OnboardingScreen)

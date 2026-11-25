@@ -28,6 +28,7 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(libs.kotlinStLib)
+                implementation(projects.telemetry)
                 implementation(commonLibs.compose.material3)
                 implementation(commonLibs.material.icons.extended)
                 implementation(commonLibs.runtime)

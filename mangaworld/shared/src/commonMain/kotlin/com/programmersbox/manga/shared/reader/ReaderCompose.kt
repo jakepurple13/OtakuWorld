@@ -1,6 +1,7 @@
 package com.programmersbox.manga.shared.reader
 
 import kotlinx.coroutines.flow.first
+import com.programmersbox.telemetry.CrashReporter
 import androidx.compose.ui.layout.onPlaced
 import com.programmersbox.kmpuiviews.theme.SeedColorTheme
 import androidx.compose.animation.AnimatedVisibility
@@ -201,12 +202,19 @@ private fun ReadViewContent(
     }
     val pagesInCurrentChapter by remember { derivedStateOf { loadedPagesInCurrentChapter.coerceAtLeast(1) } }
 
+    // Feeds the reading_session event; the ViewModel sends it when the reader closes
+    LaunchedEffect(currentPage, viewModel.currentChapter, loadedPagesInCurrentChapter) {
+        viewModel.pageShown(currentPage, loadedPagesInCurrentChapter)
+    }
+
     val paddingPage by mangaSettingsHandling.pagePadding
         .flow
         .collectAsStateWithLifecycle(initialValue = 4)
 
     val savedImageLoaderType by mangaSettingsHandling.rememberImageLoaderType()
     val imageLoaderType = savedImageLoaderType.orWorkingLoader()
+    val crashReporter = koinInject<CrashReporter>()
+    LaunchedEffect(imageLoaderType) { crashReporter.setKey("image_loader", imageLoaderType.toString()) }
 
     val isWidthAdjustable = isReaderWidthAdjustable
     val savedWidthFraction by mangaSettingsHandling.readerWidthFraction.flow.collectAsStateWithLifecycle(1f)

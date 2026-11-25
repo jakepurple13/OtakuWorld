@@ -1,6 +1,8 @@
 package com.programmersbox.kmpuiviews.domain.aitext
 
 import com.programmersbox.kmpuiviews.domain.dailyoverview.DailyFacts
+import com.programmersbox.telemetry.events.AiTaskRun
+import com.programmersbox.kmpuiviews.testing.FakeAnalytics
 import com.programmersbox.kmpuiviews.domain.dailyoverview.EngineStatus
 import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngine
 import com.programmersbox.kmpuiviews.domain.dailyoverview.SummaryEngineId
@@ -64,8 +66,18 @@ class DefaultAiTextTest {
 
     private val order = listOf(SummaryEngineId.Nano, SummaryEngineId.Gemma)
 
+    private val analytics = FakeAnalytics()
+
     private fun aiText(vararg engines: SummaryEngine, tools: NanoTools? = null) =
-        DefaultAiText(listOf<SummaryEngine>(TemplateEngine()) + engines, tools, order = order)
+        DefaultAiText(listOf<SummaryEngine>(TemplateEngine()) + engines, tools, order = order, analytics = analytics)
+
+    private class FailingEngine(override val id: SummaryEngineId) : SummaryEngine {
+        override val onDevice = true
+        override suspend fun label() = id.name
+        override suspend fun status() = EngineStatus.Ready
+        override fun summarize(facts: DailyFacts): Flow<String> = flowOf()
+        override fun generate(system: String, user: String): Flow<String> = flow { error("secret prompt https://x") }
+    }
 
     @Test
     fun `nano ready uses nano`() = runTest {
@@ -310,5 +322,38 @@ class DefaultAiTextTest {
     fun `recap stays available with the reader switch off`() = runTest {
         val ai = gated(InMemoryAiSettings(disabled = setOf(AiToggle.ChapterRecap)), FakeEngine(SummaryEngineId.Nano))
         assertEquals("Nano", ai.engineFor(AiFeature.Recap)?.label)
+    }
+
+    @Test
+    fun `ai_task logs success with feature and engine`() = runTest {
+        aiText(FakeEngine(SummaryEngineId.Gemma)).run(AiFeature.Tldr, "text").toList()
+        val event = analytics.events.single() as AiTaskRun
+        assertEquals(listOf("tldr", "gemma", AiTaskRun.SUCCESS), listOf(event.feature, event.engine, event.outcome))
+    }
+
+    @Test
+    fun `ai_task logs error without the message`() = runTest {
+        runCatching { aiText(FailingEngine(SummaryEngineId.Gemma)).run(AiFeature.Tldr, "text").toList() }
+        val event = analytics.events.single() as AiTaskRun
+        assertEquals(AiTaskRun.ERROR, event.outcome)
+        assertTrue(event.params.values.none { "secret" in it.toString() })
+    }
+
+    @Test
+    fun `ai_task logs unavailable when no engine is ready`() = runTest {
+        runCatching { aiText(FakeEngine(SummaryEngineId.Gemma, EngineStatus.Unavailable)).run(AiFeature.Tldr, "text").toList() }
+        assertEquals(AiTaskRun.UNAVAILABLE, (analytics.events.single() as AiTaskRun).outcome)
+    }
+
+    @Test
+    fun `feature telemetry names are explicit, not class names`() {
+        val names = listOf(
+            AiFeature.Recap, AiFeature.Tldr, AiFeature.Proofread, AiFeature.ListNames, AiFeature.ListDescription,
+            AiFeature.TrySample, AiFeature.UpdateSummary, AiFeature.SearchKeywords, AiFeature.MoodTags, AiFeature.ExplainError,
+        ).map { it.telemetryName }
+        assertEquals(
+            listOf("recap", "tldr", "proofread", "list_names", "list_description", "try_sample", "update_summary", "search_keywords", "mood_tags", "explain_error"),
+            names,
+        )
     }
 }

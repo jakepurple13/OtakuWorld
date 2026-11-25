@@ -17,6 +17,7 @@ import com.programmersbox.kmpuiviews.MangaDesktopSettings
 import com.programmersbox.kmpuiviews.desktopSetup
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.JvmAppLogo
+import com.programmersbox.desktop.motion.novelMotionCatalog
 import com.programmersbox.novel.shared.novelSharedModule
 import dev.nucleusframework.systeminfo.SystemInfo
 import org.koin.core.module.dsl.singleOf
@@ -76,6 +77,8 @@ fun main(args: Array<String>) {
                         .asFlow()
                 )
             }
+
+            single { novelMotionCatalog() }
 
             navigation<PlatformSettings> { JvmSettingsScreen() }
 

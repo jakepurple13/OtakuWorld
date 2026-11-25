@@ -35,5 +35,7 @@ fun PrivacySecurityScreen() {
                 onClick = navActions::incognito,
             )
         }
+
+        UsageAndCrashSection()
     }
 }

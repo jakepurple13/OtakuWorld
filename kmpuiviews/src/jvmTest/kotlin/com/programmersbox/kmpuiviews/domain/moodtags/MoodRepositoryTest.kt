@@ -1,6 +1,9 @@
 package com.programmersbox.kmpuiviews.domain.moodtags
 
 import kotlinx.coroutines.withContext
+import com.programmersbox.telemetry.events.MoodTagAdded
+import com.programmersbox.telemetry.AnalyticsEvent
+import com.programmersbox.kmpuiviews.testing.FakeAnalytics
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.async
 import kotlinx.coroutines.Dispatchers
@@ -25,7 +28,9 @@ import kotlin.test.assertTrue
 class MoodRepositoryTest {
     private lateinit var database: ItemDatabase
 
-    private fun repo(ai: FakeAiText = FakeAiText()) = MoodRepository(database.itemDao(), ai)
+    private val analytics = FakeAnalytics()
+
+    private fun repo(ai: FakeAiText = FakeAiText()) = MoodRepository(database.itemDao(), ai, analytics)
 
     private suspend fun favorite(url: String) =
         database.itemDao().insertFavorite(DbModel("Title $url", "Description", url, "", "Source"))
@@ -123,5 +128,19 @@ class MoodRepositoryTest {
         repo.create("fav", "comfort read")
         repo.create("gone", "rainy day read")
         assertEquals(listOf("comfort read"), repo.customMoods.first())
+    }
+
+    @Test
+    fun `mood events fire on add only with the right kind`() = runTest {
+        favorite("u")
+        val repo = repo()
+        repo.toggle("u", Moods.builtIn.first())
+        repo.toggle("u", Moods.builtIn.first())
+        repo.create("u", "Cozy rain")
+
+        assertEquals<List<AnalyticsEvent>>(
+            listOf(MoodTagAdded(MoodTagAdded.PRESET), MoodTagAdded(MoodTagAdded.CUSTOM)),
+            analytics.events,
+        )
     }
 }
