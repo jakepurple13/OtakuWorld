@@ -476,6 +476,39 @@ behavior). Mockup: https://claude.ai/artifact/Jk77Ve8PEkPRSSKBSD7ue8
   - reduced motion turned on gives crossfades only.
 - [ ] **Step 2: Commit.** `feat(desktop-tabs): tab open, close, switch and flash motion`
 
+### Task 7b: Browser shortcut extras and the shortcuts dialog
+
+Added 2026-11-25 at the user's request ("normal browser shortcuts"). The spec's Keyboard table is the source of truth.
+
+**Files:**
+- Modify: `TabShortcuts.kt`, `BrowserWindow.kt` (dispatch), `kmpuiviews/src/jvmMain/.../presentation/shortcuts/` (the
+  shortcuts dialog lists the tab shortcuts)
+- Test: `TabShortcutsTest.kt`
+
+**Interfaces:**
+- Consumes: `tabShortcut(event, isMac, chromeVisible)` and `TabShortcut` from Task 5.
+- Produces: new `TabShortcut` members:
+  - `LastTab`
+  - `FocusSearch`
+  - `NewWindow` and `CloseWindow`: parsed now, and Task 13 wires their actions; until then they are no-ops.
+- Changes: `SwitchTo(n)` now covers only n in 1..8; ⌘9 / Ctrl+9 maps to `LastTab`.
+- Also produces: `fun tabShortcutCaps(isMac: Boolean): List<Pair<String, List<String>>>`, the label and key caps shown
+  in the shortcuts dialog.
+- Behavior:
+  - Next and previous wrap around.
+  - ⌘← / ⌘→ back/forward is skipped while a text field has focus (pass a `textFieldFocused: Boolean` into
+    `tabShortcut`).
+  - `FocusSearch` opens or switches to the Search tab and requests focus on its query field. Use a
+    `FocusRequester` exposed through a `LocalSearchFocus`-style hook on desktop, or the simplest equivalent.
+
+- [ ] **Step 1: Write failing tests.** Cover every row of the spec table for macOS and Windows/Linux, plus:
+  `nineIsLastTab`, `nextWrapsAround` (pure index helper), `cmdArrowIgnoredWhileTyping`, `ctrlF4ClosesOnWindows`,
+  `bareKeysStillNull`.
+- [ ] **Step 2: Run them.** Expected: FAIL.
+- [ ] **Step 3: Implement.** Also list the shortcuts in the dialog.
+- [ ] **Step 4: Run them.** Expected: PASS. Then launch the three desktop apps for about 90 s each and grep the logs.
+- [ ] **Step 5: Commit.** `feat(desktop-tabs): browser shortcut set and shortcuts dialog entries`
+
 ### Task 8: Side layout, animated layout change, Tabs settings page
 
 **Files:**

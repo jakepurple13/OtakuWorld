@@ -216,9 +216,29 @@ is no longer installed open their page's normal error/empty state, with no crash
 
 ### Keyboard (desktop)
 
-⌘/Ctrl+T new tab, ⌘/Ctrl+W close tab (closes the window if it is the last tab of a torn-out window; ignored on Home),
-⌘⇧/Ctrl⇧+T reopen closed, ⌘/Ctrl+1…9 switch to tab N, ⌃Tab / ⌃⇧Tab next/previous, ⌘[ / ⌘] back/forward (Alt+←/→ on
-Windows/Linux). The existing global-search shortcut opens or switches to the Search tab.
+The shortcuts match normal browsers (the user asked for "normal browser shortcuts", 2026-11-25). ⌘ is used on macOS
+and Ctrl on Windows/Linux.
+
+| Action | macOS | Windows / Linux |
+|---|---|---|
+| New tab (new-tab page) | ⌘T | Ctrl+T |
+| Close tab (ignored on Home; the last tab of a torn-out window closes that window) | ⌘W | Ctrl+W, Ctrl+F4 |
+| Reopen closed tab | ⌘⇧T | Ctrl+Shift+T |
+| Next tab | ⌃Tab, ⌘⌥→, ⌘⇧], ⌃PageDown | Ctrl+Tab, Ctrl+PageDown |
+| Previous tab | ⌃⇧Tab, ⌘⌥←, ⌘⇧[, ⌃PageUp | Ctrl+Shift+Tab, Ctrl+PageUp |
+| Go to tab 1–8 | ⌘1…⌘8 | Ctrl+1…Ctrl+8 |
+| Go to last tab | ⌘9 | Ctrl+9 |
+| Back / forward | ⌘[ / ⌘], ⌘← / ⌘→ | Alt+← / Alt+→ |
+| Search tab (the "address bar"): open or switch to it and focus its field | ⌘L | Ctrl+L |
+| New window (opens a new-tab page, no Home tab) | ⌘N | Ctrl+N |
+| Close window (torn-out windows only; ignored on the main window) | ⌘⇧W | Ctrl+Shift+W |
+
+- Next and previous tab wrap around at the ends.
+- The existing global-search shortcut also opens or switches to the Search tab.
+- Every tab shortcut needs a modifier, so reader and player bare keys keep working.
+- ⌘← / ⌘→ only act as back/forward when no text field has focus.
+- All of these appear in the existing shortcuts dialog (⌘/).
+- Reload (⌘R / F5) is not included, because pages have no generic reload hook.
 
 ## Order of work (suggested)
 
