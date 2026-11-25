@@ -63,6 +63,24 @@ import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.navigation3.navigation
 import java.io.File
 
+/**
+ * AnimeWorld's tab identities. Library folders and subtitle settings are left unkeyed: the Downloads tab opens them,
+ * and they must stay in that tab so Back returns to Downloads.
+ */
+internal object AnimeTabKeyProvider : TabKeyProvider {
+    override fun keyOf(key: NavKey): TabKey? = when (key) {
+        is VideoScreen -> TabKey.Chapter(key.episodeUrl ?: key.showPath)
+        VideoViewerRoute -> TabKey.Downloads
+        PlatformSettings -> TabKey.Settings
+        else -> null
+    }
+
+    override fun labelOf(key: NavKey): TabLabel? = when (key) {
+        is VideoScreen -> TabLabel(key.showName, null, null)
+        else -> null
+    }
+}
+
 fun main(args: Array<String>) {
     stopToolProcessesOnExit()
     desktopSetup(
@@ -86,23 +104,7 @@ fun main(args: Array<String>) {
             singleOf(::AnimeDesktopSettings)
             single { DownloadsDestination(VideoViewerRoute) }
             single { MiniPlayerSupported(true) }
-            single {
-                object : TabKeyProvider {
-                    override fun keyOf(key: NavKey): TabKey? = when (key) {
-                        is VideoScreen -> TabKey.Chapter(key.episodeUrl ?: key.showPath)
-                        VideoViewerRoute -> TabKey.Downloads
-                        PlatformSettings,
-                        SubtitleSettingsRoute,
-                        LibraryFoldersRoute -> TabKey.Settings
-                        else -> null
-                    }
-
-                    override fun labelOf(key: NavKey): TabLabel? = when (key) {
-                        is VideoScreen -> TabLabel(key.showName, null, null)
-                        else -> null
-                    }
-                }
-            } bind TabKeyProvider::class
+            single { AnimeTabKeyProvider } bind TabKeyProvider::class
             single { animeMotionCatalog() }
             single<ShortcutSection>(named("videoPlayerShortcuts")) { playerShortcutSection() }
             singleOf(::StorageHolder)
