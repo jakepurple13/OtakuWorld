@@ -13,6 +13,7 @@ import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSiz
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -65,19 +66,25 @@ fun BrowserWindow(
                 AnimatedContent(
                     targetState = active,
                     transitionSpec = {
-                        val grows = motion.hasGrow(targetState.id)
-                        // A closed tab is gone: drop it at once. A grow shows the old page until the cover has covered it.
-                        val enter = if (grows) EnterTransition.None else fadeIn(motion.fade(TabMotion.Switch))
-                        val exit = when {
-                            initialState !in window.tabs -> ExitTransition.None
-                            grows -> fadeOut(motion.fade(TabMotion.Grow))
-                            else -> fadeOut(motion.fade(TabMotion.Switch))
-                        }
-                        (enter togetherWith exit).using(null)
+                        if (initialState !in window.tabs) {
+                            // Closed, or moved to another window: leave at once, in no window twice.
+                            EnterTransition.None togetherWith ExitTransition.None
+                        } else {
+                            val grows = motion.hasGrow(targetState.id)
+                            // A grow shows the old page until the cover has covered it.
+                            val enter = if (grows) EnterTransition.None else fadeIn(motion.fade(TabMotion.Switch))
+                            val exit = fadeOut(motion.fade(if (grows) TabMotion.Grow else TabMotion.Switch))
+                            enter togetherWith exit
+                        }.using(null)
                     },
                     contentKey = { it.id.v },
                     modifier = Modifier.fillMaxSize(),
                 ) { tab ->
+                    // A closed tab's ViewModelStore is cleared only after its content has left composition.
+                    DisposableEffect(tab.id) {
+                        controller.attachContent(tab.id)
+                        onDispose { controller.detachContent(tab.id) }
+                    }
                     val tabActions = remember { DesktopTabActions(controller, tab.id) }
                     val grow = remember { motion.takeGrow(tab.id) }
                     CompositionLocalProvider(LocalTabActions provides tabActions) {

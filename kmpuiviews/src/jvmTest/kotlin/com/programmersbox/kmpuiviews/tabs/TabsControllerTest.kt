@@ -307,6 +307,26 @@ class TabsControllerTest {
     }
 
     @Test
+    fun closedTabKeepsItsStoreUntilItsContentLeavesComposition() {
+        val a = controller.open(title("A"), TabOpenMode.Background, homeId)
+        val vm = object : ViewModel() {
+            var cleared = false
+            override fun onCleared() {
+                cleared = true
+            }
+        }
+        tab(a).viewModelStoreOwner.viewModelStore.put("vm", vm)
+        val state = tab(a)
+        controller.attachContent(a)
+
+        controller.close(a)
+        assertFalse(vm.cleared)
+        controller.detachContent(a)
+        assertTrue(vm.cleared)
+        assertTrue(state.viewModelStoreOwner.viewModelStore.keys().isEmpty())
+    }
+
+    @Test
     fun closedStackReopensMostRecentFirst() = eventsTest { events ->
         val a = controller.open(title("A"), TabOpenMode.Background, homeId)
         val b = controller.open(title("B"), TabOpenMode.Background, homeId)

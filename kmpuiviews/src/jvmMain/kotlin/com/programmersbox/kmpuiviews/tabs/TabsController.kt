@@ -57,6 +57,12 @@ class TabsController(
     /** Back stacks of closed tabs, most recent last. Session only. */
     private val closed = ArrayDeque<List<NavKey>>()
 
+    /** How many windows compose each tab's content right now. */
+    private val contentCount = mutableMapOf<TabId, Int>()
+
+    /** Closed tabs whose content is still composed; their stores are cleared on the last [detachContent]. */
+    private val closing = mutableMapOf<TabId, TabState>()
+
     /** Per tab, what [handoffs] held for it, saved when it was opened or last left. */
     private val snapshots = mutableMapOf<TabId, List<Any?>>()
 
@@ -155,11 +161,25 @@ class TabsController(
         snapshots.remove(tab)
         if (handoffOwner == tab) handoffOwner = null
         closed.addLast(state.nav.backStack.toList())
-        // Readers null the handoff holders when cleared; the tab that owns them keeps its state.
-        val held = captureHandoffs()
-        state.viewModelStoreOwner.viewModelStore.clear()
-        restoreHandoffs(held)
+        // Content still on screen (a crossfade frame) keeps its store until it leaves composition.
+        if ((contentCount[tab] ?: 0) > 0) closing[tab] = state else clearStore(state)
         emit(TabEvent.Closed(tab, window.id))
+    }
+
+    /** A window's content for [tab] entered composition. Pair with [detachContent]. */
+    fun attachContent(tab: TabId) {
+        contentCount[tab] = (contentCount[tab] ?: 0) + 1
+    }
+
+    /** That content left composition; a closed tab's ViewModels are cleared once none is left. */
+    fun detachContent(tab: TabId) {
+        val left = (contentCount[tab] ?: 1) - 1
+        if (left > 0) {
+            contentCount[tab] = left
+            return
+        }
+        contentCount.remove(tab)
+        closing.remove(tab)?.let(::clearStore)
     }
 
     fun reopenClosed(window: WindowId): TabId? {
@@ -234,6 +254,13 @@ class TabsController(
 
     fun windowOf(tab: TabId): BrowserWindowState =
         windows.first { window -> window.tabs.any { it.id == tab } }
+
+    /** Readers null the handoff holders when cleared; the tab that owns them keeps its state. */
+    private fun clearStore(state: TabState) {
+        val held = captureHandoffs()
+        state.viewModelStoreOwner.viewModelStore.clear()
+        restoreHandoffs(held)
+    }
 
     private fun allTabs() = windows.flatMap { it.tabs }
 
