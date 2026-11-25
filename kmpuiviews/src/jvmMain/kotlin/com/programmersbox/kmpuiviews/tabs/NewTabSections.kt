@@ -132,7 +132,7 @@ internal fun NewTabContinue(items: List<RecentModel>, modifier: Modifier) {
 @Composable
 internal fun NewTabUpdates(items: List<NotificationItem>, modifier: Modifier) {
     val navActions = LocalNavActions.current
-    Section("New chapters in favorites", modifier) {
+    Section("Favorites with new chapters", modifier) {
         if (items.isEmpty()) {
             EmptyLine("No new chapters")
         } else {
@@ -157,7 +157,7 @@ internal fun NewTabUpdates(items: List<NotificationItem>, modifier: Modifier) {
     }
 }
 
-/** The controller's closed stack, newest first; a click reopens that tab next to this one. */
+/** The controller's closed stack, newest first; a click reopens that tab in place of this new tab page. */
 @Composable
 internal fun NewTabClosed(
     modifier: Modifier,
@@ -179,7 +179,7 @@ internal fun NewTabClosed(
                         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                         modifier = Modifier.clickable {
                             val window = tabId?.let { controller.windowOf(it) } ?: controller.windows.first()
-                            controller.reopenClosed(window.id, entry)
+                            controller.reopenClosed(window.id, entry, replacing = tabId)
                         },
                     )
                 }

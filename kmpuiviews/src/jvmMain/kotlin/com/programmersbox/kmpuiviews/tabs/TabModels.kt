@@ -72,3 +72,6 @@ data class TabPrefsSnapshot(
 
 /** A closed tab: its back stack and what the [TabHandoff]s held for it. */
 class ClosedTab(val stack: List<NavKey>, internal val handoffs: List<Any?>?)
+
+/** A new tab page nothing has navigated from yet. */
+val TabState.isUntouchedNewTab: Boolean get() = current == NewTabRoute && nav.backStack.size == 1

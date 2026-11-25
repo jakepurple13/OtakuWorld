@@ -103,19 +103,26 @@ class TabsController(
         }
 
         val tk = keys.keyOf(key)
+        // An untouched new tab page gives way: it becomes the page, or closes when the page is already open.
+        val replacesNewTab = fromTab.isUntouchedNewTab
         if (tk != null) {
             val existing = allTabs().firstOrNull { it !== fromTab && keys.keyOf(it.current) == tk }
             if (existing != null) {
                 reuse(existing, key, activate = true)
+                if (replacesNewTab) {
+                    discard(fromTab)
+                    // Closing it activated a neighbor in its own window; the reused tab keeps focus.
+                    activate(existing.id)
+                }
                 return true
             }
-            if (tk.isSingleInstanceFamily && keys.keyOf(fromTab.current) != tk) {
+            if (tk.isSingleInstanceFamily && keys.keyOf(fromTab.current) != tk && !replacesNewTab) {
                 open(key, TabOpenMode.Foreground, fromTab.id)
                 return true
             }
         }
 
-        if (prefs.clickOpensNewTab && tk is TabKey.Title) {
+        if (prefs.clickOpensNewTab && tk is TabKey.Title && !replacesNewTab) {
             open(key, TabOpenMode.Foreground, fromTab.id)
             return true
         }
@@ -179,6 +186,14 @@ class TabsController(
     fun close(tab: TabId) {
         val state = findTab(tab) ?: return
         if (state.pinned) return
+        remove(state, record = true)
+    }
+
+    /** Closes an untouched new tab page that gave way to another tab. It is not worth reopening, so it is not recorded. */
+    private fun discard(state: TabState) = remove(state, record = false)
+
+    private fun remove(state: TabState, record: Boolean) {
+        val tab = state.id
         val window = windowOf(tab)
 
         // Its chapter, so a reopened reader reads it again.
@@ -187,8 +202,10 @@ class TabsController(
         arms.remove(tab)
         snapshots.remove(tab)
         if (handoffOwner == tab) handoffOwner = null
-        closed.add(ClosedTab(state.nav.backStack.toList(), held))
-        while (closed.size > prefs.closedKept) closed.removeFirst()
+        if (record) {
+            closed.add(ClosedTab(state.nav.backStack.toList(), held))
+            while (closed.size > prefs.closedKept) closed.removeFirst()
+        }
         // Content still on screen (a crossfade frame) keeps its store until it leaves composition.
         if ((contentCount[tab] ?: 0) > 0) closing[tab] = state else clearStore(state)
         emit(TabEvent.Closed(tab, window.id))
@@ -210,9 +227,13 @@ class TabsController(
         closing.remove(tab)?.let(::clearStore)
     }
 
-    /** Reopens [entry] (default: the most recently closed tab) next to [window]'s active tab. */
-    fun reopenClosed(window: WindowId, entry: ClosedTab? = null): TabId? {
+    /**
+     * Reopens [entry] (default: the most recently closed tab) next to [window]'s active tab. When [replacing] is an
+     * untouched new tab page (the one the entry was picked from), the reopened tab takes its place and it closes.
+     */
+    fun reopenClosed(window: WindowId, entry: ClosedTab? = null, replacing: TabId? = null): TabId? {
         val target = window(window) ?: return null
+        val newTabPage = replacing?.let(::findTab)?.takeIf { it.isUntouchedNewTab }
         val closedTab = if (entry != null) entry.takeIf { closed.remove(it) } else closed.removeLastOrNull()
         if (closedTab == null) return null
         val stack = closedTab.stack
@@ -221,6 +242,10 @@ class TabsController(
         if (existing != null) {
             activate(existing.id)
             emit(TabEvent.Flash(existing.id))
+            newTabPage?.let {
+                discard(it)
+                activate(existing.id)
+            }
             return existing.id
         }
 
@@ -228,9 +253,12 @@ class TabsController(
         stack.drop(1).forEach { tab.nav.navBackStack.add(it) }
         closedTab.handoffs?.let { snapshots[tab.id] = it }
 
-        target.tabs.add(target.tabs.indexOfFirst { it.id == target.activeId.value } + 1, tab)
+        val newTabIndex = newTabPage?.let { page -> target.tabs.indexOfFirst { it.id == page.id } } ?: -1
+        val index = if (newTabIndex >= 0) newTabIndex else target.tabs.indexOfFirst { it.id == target.activeId.value } + 1
+        target.tabs.add(index, tab)
         activate(tab.id)
         emit(TabEvent.Opened(tab.id, target.id, TabOpenMode.Foreground, null))
+        newTabPage?.let(::discard)
         return tab.id
     }
 

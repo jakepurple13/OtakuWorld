@@ -682,4 +682,89 @@ class TabsControllerTest {
         assertEquals(b, main.activeId.value)
         assertEquals(listOf("C", "A").map { title(it) }, controller.recentlyClosed.map { it.stack.last() })
     }
+
+    @Test
+    fun newTabPageGivesWayToAnExistingTab() = eventsTest { events ->
+        val search = controller.open(Screen.GlobalSearchScreen(), TabOpenMode.Foreground, homeId)
+        val newTab = controller.open(NewTabRoute, TabOpenMode.Foreground, search)
+        assertEquals(listOf(homeId, search, newTab), main.tabs.map { it.id })
+        events.clear()
+
+        tab(newTab).nav.globalSearch("one piece")
+
+        assertEquals(listOf(homeId, search), main.tabs.map { it.id })
+        assertEquals(search, main.activeId.value)
+        assertEquals(Screen.GlobalSearchScreen("one piece"), tab(search).current)
+        assertEquals(listOf<TabEvent>(TabEvent.Flash(search), TabEvent.Closed(newTab, main.id)), events)
+        assertTrue(controller.recentlyClosed.isEmpty())
+    }
+
+    @Test
+    fun newTabPageBecomesASingleInstancePageWithNoTabYet() = eventsTest { events ->
+        val newTab = controller.open(NewTabRoute, TabOpenMode.Foreground, homeId)
+        events.clear()
+
+        tab(newTab).nav.customList()
+
+        assertEquals(listOf(homeId, newTab), main.tabs.map { it.id })
+        assertEquals(newTab, main.activeId.value)
+        assertEquals(listOf<NavKey>(NewTabRoute, Screen.CustomListScreen), tab(newTab).nav.backStack.toList())
+        assertEquals(emptyList(), events)
+    }
+
+    @Test
+    fun aNewTabPageThatNavigatedKeepsTheUsualRules() = eventsTest { events ->
+        val newTab = controller.open(NewTabRoute, TabOpenMode.Foreground, homeId)
+        tab(newTab).nav.navigate(Screen.HistoryScreen)
+        events.clear()
+
+        tab(newTab).nav.navigate(Screen.Settings)
+
+        val settings = main.tabs.last().id
+        assertEquals(listOf(homeId, newTab, settings), main.tabs.map { it.id })
+        assertEquals(Screen.Settings, tab(settings).current)
+        assertEquals(Screen.HistoryScreen, tab(newTab).current)
+        assertEquals(listOf<TabEvent>(TabEvent.Opened(settings, main.id, TabOpenMode.Foreground, null)), events)
+    }
+
+    @Test
+    fun reopeningFromTheNewTabPageTakesItsPlace() = eventsTest { events ->
+        val a = controller.open(title("A"), TabOpenMode.Foreground, homeId)
+        controller.close(a)
+        val x = controller.open(title("X"), TabOpenMode.Foreground, homeId)
+        val newTab = controller.open(NewTabRoute, TabOpenMode.Foreground, x)
+        val y = controller.open(title("Y"), TabOpenMode.Background, newTab)
+        assertEquals(listOf(homeId, x, newTab, y), main.tabs.map { it.id })
+        events.clear()
+
+        val reopened = controller.reopenClosed(main.id, controller.recentlyClosed.single(), replacing = newTab)!!
+
+        assertEquals(listOf(homeId, x, reopened, y), main.tabs.map { it.id })
+        assertEquals(title("A"), tab(reopened).current)
+        assertEquals(reopened, main.activeId.value)
+        assertEquals(
+            listOf<TabEvent>(
+                TabEvent.Opened(reopened, main.id, TabOpenMode.Foreground, null),
+                TabEvent.Closed(newTab, main.id),
+            ),
+            events,
+        )
+        assertTrue(controller.recentlyClosed.isEmpty())
+    }
+
+    @Test
+    fun reopeningAnOpenTitleFromTheNewTabPageSwitchesAndCloses() = eventsTest { events ->
+        val a = controller.open(title("A"), TabOpenMode.Foreground, homeId)
+        controller.close(a)
+        val again = controller.open(title("A"), TabOpenMode.Foreground, homeId)
+        val newTab = controller.open(NewTabRoute, TabOpenMode.Foreground, again)
+        events.clear()
+
+        assertEquals(again, controller.reopenClosed(main.id, controller.recentlyClosed.single(), replacing = newTab))
+
+        assertEquals(listOf(homeId, again), main.tabs.map { it.id })
+        assertEquals(again, main.activeId.value)
+        assertEquals(listOf<TabEvent>(TabEvent.Flash(again), TabEvent.Closed(newTab, main.id)), events)
+        assertTrue(controller.recentlyClosed.isEmpty())
+    }
 }
