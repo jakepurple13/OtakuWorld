@@ -53,8 +53,32 @@ behavior). Mockup: https://claude.ai/artifact/Jk77Ve8PEkPRSSKBSD7ue8
 - Prefs (DataStore keys):
   - `desktop_tab_position`: `Top` | `Side`, default `Top`
   - `desktop_tab_click_opens`: `SameTab` | `NewTab`, default `SameTab`
-  - `desktop_tabs_restore`: boolean, default `true`
+  - `desktop_tabs_restore`: boolean, default `true`. Superseded by `desktop_tabs_on_launch`; Task 8 migrates it.
   - `desktop_tabs_mini_player`: boolean, default `true`
+  - Added 2026-11-25. Spec "Settings" is the source of truth for copy and behavior. Each key lists its owning task:
+    - `desktop_tab_mod_click`: `Background` | `Foreground`, default `Background` (Task 8)
+    - `desktop_tab_new_place`: `NextToCurrent` | `AtEnd`, default `NextToCurrent` (Task 8)
+    - `desktop_tab_after_close`: `Right` | `Left` | `LastUsed`, default `Right` (Task 8)
+    - `desktop_tab_show_covers`: boolean, default `true` (Task 8)
+    - `desktop_tab_motion`: `System` | `Full` | `Reduced` | `Off`, default `System` (Task 8)
+    - `desktop_new_tab_shows`: `Page` | `Recent` | `Continue` | `Blank`, default `Page` (Task 9)
+    - `desktop_new_tab_sections`: ordered list of `Search,Continue,Updates,Closed,Links`, each with an on flag; the
+      default is the first four on and `Links` off; stored as a string like `Search:1,Continue:1,Updates:1,Closed:1,Links:0`
+      (Task 9)
+    - `desktop_new_tab_continue_count`: 4 | 8 | 12, default 4 (Task 9)
+    - `desktop_new_tab_background`: `Plain` | `LastCover`, default `Plain` (Task 9)
+    - `desktop_new_tab_focus_search`: boolean, default `true` (Task 9)
+    - `desktop_tabs_on_launch`: `Restore` | `Home` | `NewTab`, default `Restore`; migrated from `desktop_tabs_restore`
+      (Task 8 adds it, Task 12 uses it)
+    - `desktop_tabs_closed_kept`: 10 | 25 | 50, default 25 (Task 8)
+    - `desktop_tabs_confirm_quit`: boolean, default `true` (Task 13)
+    - `desktop_tabs_sleep_after`: `Never` | `M15` | `H1` | `H4`, default `Never` (Task 12b)
+    - `desktop_mini_player_corner`: `TopLeft` | `TopRight` | `BottomLeft` | `BottomRight`, default `BottomRight`
+      (Task 11)
+    - `desktop_mini_player_pause_unfocused`: boolean, default `false` (Task 11)
+    - `desktop_tabs_tear_out`: boolean, default `true` (Task 13)
+  - The settings page (Task 8) shows every row. A row whose behavior lands in a later task is still shown and saved;
+    its owning task wires the behavior.
 - Closing the main window quits the app. A torn-out window has no Home tab, and closing its last tab closes it.
 - Keyboard:
   - ⌘/Ctrl+T new tab, ⌘/Ctrl+W close tab (ignored on Home), ⌘⇧/Ctrl⇧+T reopen closed tab.
@@ -509,30 +533,74 @@ Added 2026-11-25 at the user's request ("normal browser shortcuts"). The spec's 
 - [ ] **Step 4: Run them.** Expected: PASS. Then launch the three desktop apps for about 90 s each and grep the logs.
 - [ ] **Step 5: Commit.** `feat(desktop-tabs): browser shortcut set and shortcuts dialog entries`
 
-### Task 8: Side layout, animated layout change, Tabs settings page
+### Task 8: Side layout, animated layout change, Tabs & browsing settings page
 
 **Files:**
 - Create: `TabsSettings.kt`
-- Modify: `BrowserWindow.kt`, `TabStrip.kt`, and each desktop app's `PlatformSettings.kt` (add the Tabs entry)
+- Modify:
+  - `TabPrefs.kt`: the new prefs and the `desktop_tabs_restore` → `desktop_tabs_on_launch` migration.
+  - `TabsController.kt`: mod-click swap, placement, after-close and the closed-stack cap.
+  - `BrowserWindow.kt`, `TabStrip.kt`, `TabMotion.kt`/`TabMotionSpecs.kt`.
+  - Each desktop app's `PlatformSettings.kt`: add the "Tabs & browsing" row that opens the subpage.
+  - Fix carried from Task 6: `composeCustomPreferences` settings entries must navigate with `LocalNavActions`, not
+    the Koin singleton. Otherwise they jump from the Settings tab to Home.
+- Test: `TabPrefsTest.kt`, `TabsControllerTest.kt`, `TabMotionSpecsTest.kt`
 
 **Interfaces:**
-- Consumes: `tabPositionPref`, `tabClickOpensPref`, `tabsRestorePref`, `tabsMiniPlayerPref`.
-- Produces: `@Composable fun TabsSettingsPage()`. It holds the four controls with the copy from the spec's Settings
-  section, and the mini player row only shows in AnimeWorld (`DownloadsDestination`-style Koin flag
-  `MiniPlayerSupported(true)` registered only by AnimeWorld).
-- Behavior:
+- Consumes: all prefs from Global Constraints.
+- Produces:
+  - `@Composable fun TabsSettingsPage()`: every row from the spec's Settings section, in its order and groups, with
+    its copy.
+    - AnimeWorld-only rows show only when Koin has `MiniPlayerSupported(true)`, which only AnimeWorld registers.
+    - Dependent rows hide as the spec says: sections only for New tab page, and so on.
+    - The page is reached from a "Tabs & browsing" row in Desktop Settings.
+  - `fun migrateOnLaunch(oldRestore: Boolean?): OnLaunch`: `true`/`null` → `Restore`, `false` → `Home`.
+  - Controller behavior added to `TabsController` (pure, tested):
+    - `modClick = Foreground` swaps what ⌘-click and ⌘⇧-click arm. Middle-click follows ⌘-click.
+    - `newPlace = AtEnd` appends new tabs at the end of the window, so the background run no longer applies.
+    - `afterClose`:
+      - `Right`: right, else left.
+      - `Left`: left, else right.
+      - `LastUsed`: the most recently activated tab that is still open in that window. Track an activation order
+        per window.
+    - The closed stack is capped at `closedKept` (drop the oldest).
+  - Strip: `showCovers = false` uses a plain icon (book for Title/Chapter, play for anime chapter keys).
+  - `tabMotionMode` (`System`/`Full`/`Reduced`/`Off`) feeds the motion layer:
+    - `System` uses `reducedMotion()`.
+    - `Reduced` uses the 150 ms crossfades.
+    - `Off` uses duration 0 everywhere.
+- Layout behavior:
   - Top: the strip is in the title bar.
   - Side: a 200 dp column left of the content, with tabs as full rows and "+ New tab" at the bottom.
-  - Changing the pref animates every tab from its old bounds to its new bounds (450 ms) using
+  - Changing the position animates every tab from its old bounds to its new bounds (450 ms) using
     `LookaheadScope` + `Modifier.animateBounds` keyed by tab id. The side column's width animates 0 ↔ 200 dp and the
-    content slides with it.
+    content slides with it. Under `Reduced`/`Off`, the switch crossfades or happens instantly.
 
-- [ ] **Step 1: Hand check.**
-  - Switch Top ↔ Side from Settings → Tabs with 6 tabs open. Each tab glides to its slot, nothing jumps, and the
-    content keeps its scroll position.
-  - The setting persists across a restart.
-  - "Opens a new tab" makes plain cover clicks open foreground tabs.
-- [ ] **Step 2: Commit.** `feat(desktop-tabs): side tabs, animated layout switch, Tabs settings`
+- [ ] **Step 1: Write failing tests:**
+  - `migrateOnLaunchMapsOldBoolean`
+  - Enum fallbacks for every new enum pref.
+  - `sectionsPrefRoundTrips` (parse/format of `Search:1,...`, unknown entries dropped, missing ones appended with the
+    default flag)
+  - `modClickForegroundSwapsArmModes`
+  - `atEndAppendsNewTabs`
+  - `afterCloseLeftPrefersLeft`
+  - `afterCloseLastUsedPicksMostRecentlyActive`
+  - `closedStackCappedAtSetting`
+  - `motionOffZeroesDurations`
+  - `motionReducedUsesCrossfade`
+- [ ] **Step 2: Run them.** Expected: FAIL.
+- [ ] **Step 3: Implement.**
+- [ ] **Step 4: Run them.** Expected: PASS. Launch the three desktop apps for about 90 s each and grep the logs.
+- [ ] **Step 5: Hand check (pending for the user).**
+  - With 6 tabs open, switch Top ↔ Side from Settings → Desktop Settings → Tabs & browsing. Each tab glides to its
+    slot, nothing jumps, and the content keeps its scroll position.
+  - Every setting persists across a restart.
+  - "New tab" makes plain cover clicks open foreground tabs.
+  - Swapped ⌘-click works.
+  - The after-close choices land on the right tab.
+  - Covers off shows plain icons.
+  - App-specific settings entries stay in the Settings tab.
+- [ ] **Step 6: Commit.** `feat(desktop-tabs): side tabs, animated layout switch, Tabs & browsing settings`
 
 ### Task 9: Single-instance pages, toolbar buttons, new-tab page
 
@@ -552,7 +620,22 @@ Added 2026-11-25 at the user's request ("normal browser shortcuts"). The spec's 
 - Toolbar buttons call `navActions.globalSearch()`, `customList()`, `navigate(downloadsKey)` and `settings()`. The
   interceptor turns these into open-or-switch.
 
-- [ ] **Step 1: Write the failing test** above and run it. Expected: FAIL.
+- **Settings (added 2026-11-25), from the spec's "New tab page" group:**
+  - `desktop_new_tab_shows` decides what `NewTabRoute` renders:
+    - `Page`: the sections below, in the saved order.
+    - `Recent`: today's Recent screen.
+    - `Continue`: only Continue reading.
+    - `Blank`: an empty page with the app logo.
+  - Sections come from `desktop_new_tab_sections`: Search, Continue reading, Favorites with new chapters, Recently
+    closed, Quick links (Lists, Downloads (only when a destination exists), Settings, History).
+  - The Continue reading count comes from `desktop_new_tab_continue_count`.
+  - The background comes from `desktop_new_tab_background`. `LastCover` is the last-read cover, blurred, at 35 %
+    opacity behind the page.
+  - With `desktop_new_tab_focus_search`, the search field requests focus on first show.
+  - The new-tab page's content decision is a pure function `newTabContent(shows, sections): List<NewTabSection>`.
+    Test it.
+- [ ] **Step 1: Write the failing tests** above, plus `newTabContent` tests for every `shows` value, the section order
+  and the off sections. Run them. Expected: FAIL.
 - [ ] **Step 2: Implement.**
 - [ ] **Step 3: Run it.** Expected: PASS.
 - [ ] **Step 4: Hand check.** Each toolbar button opens its tab once and then switches to it. Search from Details
@@ -605,7 +688,13 @@ Added 2026-11-25 at the user's request ("normal browser shortcuts"). The spec's 
   - It registers a `MiniPlayerSource` adapter with `LocalTabId.current` when non-null.
   - `onCleared` closes the player and the proxy.
 
-- [ ] **Step 1: Write failing tests** with a fake source:
+- **Settings (added 2026-11-25):**
+  - `desktop_mini_player_corner` places the mini player (16 dp inset).
+  - Dragging it moves it for the session only.
+  - With `desktop_mini_player_pause_unfocused`, the app losing focus pauses the mini player, and it doesn't resume on
+    its own.
+- [ ] **Step 1: Write failing tests** with a fake source (add `cornerPlacementMath` and
+  `pauseOnFocusLossPausesOnlyWhenEnabled`):
   - `leavingPlayingTabShowsMini`
   - `leavingWithPrefOffPauses`
   - `secondPlayingTabTakesOverAndPausesFirst`
@@ -642,13 +731,15 @@ Added 2026-11-25 at the user's request ("normal browser shortcuts"). The spec's 
   - `fun TabsController.restore(session: TabSession, decode: (JsonElement) -> NavKey?)`:
     - restores tabs, dropping any whose stack decodes to nothing and keeping the decodable prefix of a stack;
     - the Home tab restores only its current top-level stack;
-    - skipped when `tabsRestorePref` is false.
+    - driven by `desktop_tabs_on_launch` (added by Task 8): `Restore` restores, `Home` starts with Home only,
+      `NewTab` starts with Home plus one active new-tab page.
 
 - [ ] **Step 1: Write failing tests:**
   - `roundTripRestoresWindowsTabsStacksAndActive`
   - `restoreSkipsUnknownKeys`
   - `restoreCorruptFileStartsFresh`
-  - `restoreOffStartsWithHomeOnly`
+  - `onLaunchHomeStartsWithHomeOnly`
+  - `onLaunchNewTabStartsWithNewTabPage`
   - `missingBoundsUsesDefaultWindowSize`
 - [ ] **Step 2: Run them.** Expected: FAIL.
 - [ ] **Step 3: Implement.**
@@ -657,6 +748,38 @@ Added 2026-11-25 at the user's request ("normal browser shortcuts"). The spec's 
   - Quit with 2 windows and 6 tabs, then relaunch: the same layout comes back, and only the active tabs load.
   - Uninstall a source, relaunch: its tab shows the page's own error, with no crash.
 - [ ] **Step 6: Commit.** `feat(desktop-tabs): restore tabs on launch`
+
+### Task 12b: Put unused tabs to sleep
+
+Added 2026-11-25. Spec "Memory" is the source of truth.
+
+**Files:**
+- Create: `TabSleep.kt`
+- Modify: `TabsController.kt` (last-shown time per tab), `TabModels.kt` (`sleeping` state), `TabStrip.kt` (dimmed
+  sleeping tabs at 60 % alpha)
+- Test: `TabSleepTest.kt`
+
+**Interfaces:**
+- Produces: `fun TabsController.sleepIdleTabs(now: Long, after: Long?)`, called every 60 s by a desktop coroutine.
+  - A tab is put to sleep when it is not the active tab of any window, not playing or in the mini player, not pinned,
+    and `now - lastShown >= after`.
+  - Sleeping clears the tab's `ViewModelStoreProvider` and its `SaveableStateHolder` entry, and sets
+    `sleeping = true`.
+  - The back stack, label and handoff snapshot are kept.
+  - Activating a sleeping tab clears the flag. Its content composes fresh, restoring the handoff first as usual.
+
+- [ ] **Step 1: Write failing tests:**
+  - `neverDoesNothing`
+  - `idleBackgroundTabSleeps`
+  - `activeTabNeverSleeps` (any window)
+  - `playingTabNeverSleeps`
+  - `homeNeverSleeps`
+  - `sleepClearsViewModels` (real ViewModel `onCleared`)
+  - `wakingKeepsBackStackAndSnapshot`
+- [ ] **Step 2: Run them.** Expected: FAIL.
+- [ ] **Step 3: Implement.**
+- [ ] **Step 4: Run them.** Expected: PASS. Launch the three apps for about 90 s each and grep the logs.
+- [ ] **Step 5: Commit.** `feat(desktop-tabs): put unused tabs to sleep`
 
 ### Task 13: Tear-out windows and moving tabs between windows
 
@@ -687,6 +810,12 @@ Added 2026-11-25 at the user's request ("normal browser shortcuts"). The spec's 
   - The strip shows a drop indicator while dragging, and a dashed preview rect follows the pointer once a drop would
     tear out.
 
+- **Settings (added 2026-11-25):**
+  - `desktop_tabs_tear_out = false`: dragging only reorders, and "Open in new window" and ⌘N are hidden or disabled.
+  - `desktop_tabs_confirm_quit`: closing the main window with 3 or more tabs open (all windows, Home counts) asks
+    first. The dialog has Quit, Cancel and "Don't ask again" (which turns the setting off). Add the pure
+    `shouldConfirmQuit(tabCount, enabled)` and test it.
+  - Wire the ⌘N / ⌘⇧W actions parsed in Task 7b.
 - [ ] **Step 1: Write failing tests** for `dropTarget` (inside the strip, below it, over another strip, side layout
   thresholds) plus the three controller tests above.
 - [ ] **Step 2: Run them.** Expected: FAIL.

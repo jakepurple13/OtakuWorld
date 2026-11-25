@@ -200,13 +200,67 @@ in a side panel inside the tab. The open/closed state is per tab.
 
 ### Settings (desktop only)
 
-A "Tabs" page with:
-- Clicking a title opens: this tab | a new tab
-- Tab position: across the top | down the side
-- Reopen tabs on launch (default on)
-- Mini player when leaving a playing tab (AnimeWorld, default on)
+This is a new subpage, **Desktop Settings → Tabs & browsing**, reached from a row in each app's Desktop Settings. The
+user approved every setting in the mockup on 2026-11-25 (https://claude.ai/artifact/NH2rrZJnP5RLyivnYgB4NF). Groups,
+in order:
 
-Stored in desktop-only preferences. Android settings are unchanged.
+**Tabs**
+- **Tab position:** Top | Side (default Top). Changing it animates the tabs into the new layout.
+- **Clicking a title opens:** This tab | New tab (default This tab).
+- **⌘/Ctrl-click opens:** In background | And switch to it (default In background). With the second choice, ⌘-click
+  opens a foreground tab and ⌘⇧-click opens a background one. Middle-click follows the ⌘-click choice.
+- **Place new tabs:** Next to current | At the end (default Next to current). Next to current is today's rule: right
+  of the active tab, after any run of background tabs.
+- **After closing a tab, go to:** Tab on the right | Tab on the left | Last used (default Tab on the right). Right
+  falls back to left at the end, and left falls back to right at the start. Last used is the most recently active tab
+  that is still open in that window.
+- **Show covers on tabs:** on/off (default on). Off shows a plain icon (book for titles and chapters, play for
+  episodes).
+
+**New tab page**
+- **A new tab shows:** New tab page | Recent (like Home) | Continue reading only | Blank page (default New tab page).
+- **New tab page sections:** each can be turned on or off and moved up or down. Defaults, in order: Search box (on),
+  Continue reading (on), Favorites with new chapters (on), Recently closed (on), Quick links to Lists, Downloads,
+  Settings and History (off). Only shown when "A new tab shows" is New tab page.
+- **Continue reading shows:** 4 | 8 | 12 titles (default 4). Hidden for Recent and Blank.
+- **Background:** Plain | Last-read cover (default Plain); the last-read cover is shown as a soft blur. Hidden for
+  Recent.
+- **Put the cursor in search:** on/off (default on). Only for New tab page.
+
+**Startup**
+- **When the app opens:** Reopen my tabs | Home only | New tab page (default Reopen my tabs). This replaces the earlier
+  "Reopen tabs on launch" switch. The old value migrates: on → Reopen my tabs, off → Home only.
+- **Remember recently closed:** 10 | 25 | 50 (default 25). This caps the stack that ⌘⇧T and Recently closed use.
+- **Ask before quitting with several tabs open:** on/off (default on). Closing the main window asks first when 3 or
+  more tabs are open across all windows (Home counts). The dialog has Quit, Cancel, and a "Don't ask again" checkbox
+  that turns this setting off.
+
+**Memory**
+- **Put unused tabs to sleep:** Never | After 15 minutes | After 1 hour | After 4 hours (default Never).
+  - A sleeping tab drops its ViewModels and saved UI state, but keeps its back stack, label and handoff snapshot.
+  - It reloads when it is next shown.
+  - A tab never sleeps while it is the active tab of any window, while it is playing (including in the mini player),
+    or while it is pinned (Home).
+  - Sleeping tabs show slightly dimmed in the strip.
+
+**Playback (AnimeWorld only)**
+- **Mini player when leaving a playing tab:** on/off (default on).
+- **Mini player corner:** Top left | Top right | Bottom left | Bottom right (default Bottom right). The mini player can
+  also be dragged while it plays; dragging moves it for this session only and doesn't change the setting.
+- **Pause when the window loses focus:** on/off (default off). Pauses the mini player when the app loses focus, and
+  does not resume automatically.
+
+**Windows & motion**
+- **Drag tabs out into windows:** on/off (default on). Off means dragging only reorders, and "Open in new window" and
+  ⌘N are hidden or disabled.
+- **Tab animations:** System | Full | Reduced | Off (default System).
+  - System follows the OS reduce-motion setting.
+  - Reduced turns every tab animation into the 150 ms crossfade.
+  - Off makes tab changes instant.
+  - This setting covers tab and window motion only, not app-wide motion.
+- **Keyboard shortcuts:** a row that opens the existing shortcuts list.
+
+All of these are stored in desktop-only preferences. Android settings are unchanged.
 
 ### Restore
 
