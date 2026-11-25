@@ -118,27 +118,46 @@ fun tabShortcut(
 /** [index] moved by [delta] within [size] tabs, wrapping around both ends. */
 fun wrappedTabIndex(index: Int, delta: Int, size: Int): Int = (index + delta).mod(size)
 
-/** Label and key caps of every tab shortcut, for the shortcuts dialog. */
+/**
+ * Label and key caps of every tab shortcut, for the shortcuts dialog. An action with alternate bindings appears
+ * once per binding. Kept in step with [tabShortcut] by a test that checks both directions.
+ */
 fun tabShortcutCaps(isMac: Boolean): List<Pair<String, List<String>>> {
     val mod = if (isMac) "⌘" else "Ctrl"
     val shift = if (isMac) "⇧" else "Shift"
     val ctrl = if (isMac) "⌃" else "Ctrl"
-    val back = if (isMac) listOf(mod, "[") else listOf("Alt", "←")
-    val forward = if (isMac) listOf(mod, "]") else listOf("Alt", "→")
-    return listOf(
-        "New tab" to listOf(mod, "T"),
-        "Close tab" to listOf(mod, "W"),
-        "Reopen closed tab" to listOf(mod, shift, "T"),
-        "Next tab" to listOf(ctrl, "Tab"),
-        "Previous tab" to listOf(ctrl, shift, "Tab"),
-        "Go to tab 1–8" to listOf(mod, "1–8"),
-        "Go to last tab" to listOf(mod, "9"),
-        "Back" to back,
-        "Forward" to forward,
-        "Search" to listOf(mod, "L"),
-        "New window" to listOf(mod, "N"),
-        "Close window" to listOf(mod, shift, "W"),
-    )
+    return buildList {
+        add("New tab" to listOf(mod, "T"))
+        add("Close tab" to listOf(mod, "W"))
+        if (!isMac) add("Close tab" to listOf("Ctrl", "F4"))
+        add("Reopen closed tab" to listOf(mod, shift, "T"))
+        add("Next tab" to listOf(ctrl, "Tab"))
+        add("Next tab" to listOf(ctrl, "PageDown"))
+        if (isMac) {
+            add("Next tab" to listOf("⌘", "⌥", "→"))
+            add("Next tab" to listOf("⌘", "⇧", "]"))
+        }
+        add("Previous tab" to listOf(ctrl, shift, "Tab"))
+        add("Previous tab" to listOf(ctrl, "PageUp"))
+        if (isMac) {
+            add("Previous tab" to listOf("⌘", "⌥", "←"))
+            add("Previous tab" to listOf("⌘", "⇧", "["))
+        }
+        add("Go to tab 1–8" to listOf(mod, "1–8"))
+        add("Go to last tab" to listOf(mod, "9"))
+        if (isMac) {
+            add("Back" to listOf("⌘", "["))
+            add("Back" to listOf("⌘", "←"))
+            add("Forward" to listOf("⌘", "]"))
+            add("Forward" to listOf("⌘", "→"))
+        } else {
+            add("Back" to listOf("Alt", "←"))
+            add("Forward" to listOf("Alt", "→"))
+        }
+        add("Search" to listOf(mod, "L"))
+        add("New window" to listOf(mod, "N"))
+        add("Close window" to listOf(mod, shift, "W"))
+    }
 }
 
 /** Runs [shortcut] on [window]'s active tab. */

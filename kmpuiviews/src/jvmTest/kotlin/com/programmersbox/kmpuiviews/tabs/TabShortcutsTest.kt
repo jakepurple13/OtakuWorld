@@ -230,15 +230,65 @@ class TabShortcutsTest {
         assertEquals(window.tabs[1].id, window.activeId.value)
     }
 
+    private val capKeys = mapOf(
+        Key.T to "T", Key.W to "W", Key.L to "L", Key.N to "N", Key.Tab to "Tab",
+        Key.PageUp to "PageUp", Key.PageDown to "PageDown", Key.F4 to "F4",
+        Key.LeftBracket to "[", Key.RightBracket to "]", Key.DirectionLeft to "←", Key.DirectionRight to "→",
+        Key.One to "1–8", Key.Two to "1–8", Key.Three to "1–8", Key.Four to "1–8", Key.Five to "1–8",
+        Key.Six to "1–8", Key.Seven to "1–8", Key.Eight to "1–8", Key.Nine to "9",
+    )
+
+    private fun capSet(isMac: Boolean, k: Key, meta: Boolean, ctrl: Boolean, shift: Boolean, alt: Boolean): Set<String> =
+        buildSet {
+            if (meta) add("⌘")
+            if (ctrl) add(if (isMac) "⌃" else "Ctrl")
+            if (alt) add(if (isMac) "⌥" else "Alt")
+            if (shift) add(if (isMac) "⇧" else "Shift")
+            add(capKeys.getValue(k))
+        }
+
     @Test
-    fun capsListsEveryShortcutPerPlatform() {
-        val mac = tabShortcutCaps(isMac = true).toMap()
-        assertEquals(listOf("⌘", "T"), mac["New tab"])
-        assertEquals(listOf("⌘", "9"), mac["Go to last tab"])
-        assertEquals(listOf("⌘", "⇧", "W"), mac["Close window"])
-        val win = tabShortcutCaps(isMac = false).toMap()
-        assertEquals(listOf("Ctrl", "T"), win["New tab"])
-        assertEquals(listOf("Ctrl", "Shift", "W"), win["Close window"])
-        assertEquals(listOf("Alt", "←"), win["Back"])
+    fun capsAndParserAgreeBothWays() {
+        for (isMac in listOf(true, false)) {
+            val listed = tabShortcutCaps(isMac).map { it.second.toSet() }.toSet()
+            val accepted = mutableSetOf<Set<String>>()
+            for (k in capKeys.keys) for (bits in 0 until 16) {
+                val meta = bits and 1 != 0
+                val ctrl = bits and 2 != 0
+                val shift = bits and 4 != 0
+                val alt = bits and 8 != 0
+                if (tabShortcut(key(k, meta, ctrl, shift, alt), isMac) != null) {
+                    accepted += capSet(isMac, k, meta, ctrl, shift, alt)
+                }
+            }
+            assertEquals(listed, accepted, "isMac=$isMac")
+        }
+    }
+
+    @Test
+    fun capsListsEveryBindingOfTheSpecTable() {
+        val mac = tabShortcutCaps(isMac = true).groupBy({ it.first }, { it.second })
+        assertEquals(listOf(listOf("⌘", "T")), mac["New tab"])
+        assertEquals(listOf(listOf("⌘", "W")), mac["Close tab"])
+        assertEquals(
+            listOf(listOf("⌃", "Tab"), listOf("⌃", "PageDown"), listOf("⌘", "⌥", "→"), listOf("⌘", "⇧", "]")),
+            mac["Next tab"],
+        )
+        assertEquals(
+            listOf(listOf("⌃", "⇧", "Tab"), listOf("⌃", "PageUp"), listOf("⌘", "⌥", "←"), listOf("⌘", "⇧", "[")),
+            mac["Previous tab"],
+        )
+        assertEquals(listOf(listOf("⌘", "["), listOf("⌘", "←")), mac["Back"])
+        assertEquals(listOf(listOf("⌘", "]"), listOf("⌘", "→")), mac["Forward"])
+        assertEquals(listOf(listOf("⌘", "9")), mac["Go to last tab"])
+        assertEquals(listOf(listOf("⌘", "⇧", "W")), mac["Close window"])
+
+        val win = tabShortcutCaps(isMac = false).groupBy({ it.first }, { it.second })
+        assertEquals(listOf(listOf("Ctrl", "W"), listOf("Ctrl", "F4")), win["Close tab"])
+        assertEquals(listOf(listOf("Ctrl", "Tab"), listOf("Ctrl", "PageDown")), win["Next tab"])
+        assertEquals(listOf(listOf("Ctrl", "Shift", "Tab"), listOf("Ctrl", "PageUp")), win["Previous tab"])
+        assertEquals(listOf(listOf("Alt", "←")), win["Back"])
+        assertEquals(listOf(listOf("Alt", "→")), win["Forward"])
+        assertEquals(listOf(listOf("Ctrl", "Shift", "W")), win["Close window"])
     }
 }
