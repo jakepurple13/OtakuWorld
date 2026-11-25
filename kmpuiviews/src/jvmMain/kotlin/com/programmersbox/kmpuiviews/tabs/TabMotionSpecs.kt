@@ -53,6 +53,10 @@ fun tabMotionEasing(motion: TabMotion, reduced: Boolean): Easing =
         TabMotion.Flash, TabMotion.SlotOpen -> StandardEasing
     }
 
+/** The scale applies only when the JVM property `otaku.tabMotionDebug` is "true"; otherwise it is 1. */
+fun tabMotionScale(debugFlag: String?, raw: String?): Float =
+    if (debugFlag == "true") parseMotionScale(raw) else 1f
+
 /** Reads `TAB_MOTION_SCALE`: a positive number, else 1. */
 fun parseMotionScale(raw: String?): Float =
     raw?.trim()?.toFloatOrNull()?.takeIf { it > 0f } ?: 1f

@@ -55,23 +55,17 @@ private class FlyGhost(val tab: TabId, val origin: Rect, val url: String) {
     val t = Animatable(0f)
 }
 
-/** Per-window motion state. */
-class WindowMotion {
-    private var entered = false
-
-    /** True from the second call on: the window's first tab just appears; later ones crossfade in. */
-    fun enter(): Boolean = entered.also { entered = true }
-}
-
 /**
  * Shared motion state for [TabsController]'s windows. The controller calls [record] synchronously
  * when it emits an event, so state the next composition needs (a pending grow, a hidden tab icon)
  * is ready before that composition.
  */
-class TabMotionState {
-    val scale: Float = parseMotionScale(System.getenv("TAB_MOTION_SCALE"))
-
-    var reduced: Boolean by mutableStateOf(false)
+class TabMotionState(
+    /** The debug `TAB_MOTION_SCALE`; see [tabMotionScale]. */
+    val scale: Float = tabMotionScale(System.getProperty("otaku.tabMotionDebug"), System.getenv("TAB_MOTION_SCALE")),
+    reduced: Boolean = false,
+) {
+    var reduced: Boolean by mutableStateOf(reduced)
         private set
     private var loaded = false
 
@@ -81,9 +75,9 @@ class TabMotionState {
     internal val flying = mutableStateSetOf<TabId>()
     internal val flashes: SnapshotStateMap<TabId, Int> = mutableStateMapOf()
     private val seen = HashSet<TabId>()
-    private val windows = HashMap<WindowId, WindowMotion>()
 
-    fun window(id: WindowId) = windows.getOrPut(id) { WindowMotion() }
+    /** Each window's content area in window coordinates, set by the window. */
+    val contentBounds = HashMap<WindowId, Rect>()
 
     /** True the first time [id] is seen: the strip animates only tabs it has not shown before. */
     fun markSeen(id: TabId): Boolean = seen.add(id)
@@ -92,9 +86,14 @@ class TabMotionState {
 
     fun easing(motion: TabMotion) = tabMotionEasing(motion, reduced)
 
+    fun <T> fade(motion: TabMotion) = tween<T>(ms(motion), easing = easing(motion))
+
     fun flash(tab: TabId) {
         flashes[tab] = (flashes[tab] ?: 0) + 1
     }
+
+    /** Whether [tab] has a grow that no content has taken yet. */
+    internal fun hasGrow(tab: TabId): Boolean = grows.any { it.tab == tab && !it.taken }
 
     internal fun takeGrow(tab: TabId): GrowGhost? =
         grows.firstOrNull { it.tab == tab && !it.taken }?.also { it.taken = true }

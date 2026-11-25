@@ -36,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent
@@ -88,6 +89,7 @@ import androidx.compose.runtime.collectAsState
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.tabs.BrowserWindow
+import com.programmersbox.kmpuiviews.tabs.TabMotionLayer
 import com.programmersbox.kmpuiviews.tabs.TabStrip
 import com.programmersbox.kmpuiviews.tabs.TabsController
 import com.programmersbox.kmpuiviews.tabs.desktopTabsModule
@@ -349,6 +351,14 @@ private fun InternalDesktopUi(
                     tabShortcut(event, isMac = isMacOs, chromeVisible = showNavBar)
                         ?.let { tabsController.perform(it, mainWindow) } != null
                 },
+                overlay = {
+                    TabMotionLayer(
+                        controller = tabsController,
+                        window = mainWindow,
+                        tabSlotBounds = { tabsController.motion.slotBounds[it] },
+                        contentBounds = { tabsController.motion.contentBounds[mainWindow.id] ?: Rect.Zero },
+                    )
+                },
             ) {
                 Box(modifier = Modifier.fillMaxSize()) {
                     //UrlOpenerScreen()
@@ -459,6 +469,8 @@ private fun OtakuDecoratedWindow(
     titleBarContent: (@Composable TitleBarScope.() -> Unit)? = null,
     /** Runs after the window's own shortcut handlers; return true to consume the event. */
     onKeyEvent: ((KeyEvent) -> Boolean)? = null,
+    /** Drawn over the title bar and the content, outside the content surface's clip. */
+    overlay: (@Composable () -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
     val quickActionsController = if (showQuickActions) koinInject<QuickActionsController>() else null
@@ -549,17 +561,21 @@ private fun OtakuDecoratedWindow(
                         }
                     }
 
-                    Surface(modifier = Modifier.fillMaxSize()) {
-                        CompositionLocalProvider(
-                            LocalNavHostPadding provides PaddingValues()
-                        ) {
-                            Box(modifier = Modifier.fillMaxSize()) {
-                                content()
-                                if (showQuickActions && quickActionsController != null) {
-                                    ShortcutsDialogHost(quickActionsController)
+                    // One child for the window's layout: the Surface clips to its bounds, the overlay does not.
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        Surface(modifier = Modifier.fillMaxSize()) {
+                            CompositionLocalProvider(
+                                LocalNavHostPadding provides PaddingValues()
+                            ) {
+                                Box(modifier = Modifier.fillMaxSize()) {
+                                    content()
+                                    if (showQuickActions && quickActionsController != null) {
+                                        ShortcutsDialogHost(quickActionsController)
+                                    }
                                 }
                             }
                         }
+                        overlay?.invoke()
                     }
                 }
             }
