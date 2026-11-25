@@ -25,6 +25,8 @@ class TabsController(
     prefs: TabPrefsSnapshot,
     private val now: () -> Long = System::currentTimeMillis,
     private val handoffs: List<TabHandoff> = emptyList(),
+    /** The app's Downloads page, or null when it has none; the toolbar hides its button then. */
+    val downloadsKey: NavKey? = null,
 ) : NavInterceptor {
 
     var prefs: TabPrefsSnapshot by mutableStateOf(prefs)
@@ -67,8 +69,11 @@ class TabsController(
     /** Per window, its tabs in the order they were last activated, most recent last. For [AfterClose.LastUsed]. */
     private val usedOrder = mutableMapOf<WindowId, MutableList<TabId>>()
 
-    /** Back stacks of closed tabs, most recent last, at most [TabPrefsSnapshot.closedKept]. Session only. */
-    private val closed = ArrayDeque<List<NavKey>>()
+    /** Closed tabs, most recent last, at most [TabPrefsSnapshot.closedKept]. Session only. */
+    private val closed = mutableStateListOf<ClosedTab>()
+
+    /** Closed tabs, most recent first, for the new tab page. */
+    val recentlyClosed: List<ClosedTab> get() = closed.asReversed()
 
     /** How many windows compose each tab's content right now. */
     private val contentCount = mutableMapOf<TabId, Int>()
@@ -176,11 +181,13 @@ class TabsController(
         if (state.pinned) return
         val window = windowOf(tab)
 
+        // Its chapter, so a reopened reader reads it again.
+        val held = if (handoffs.isEmpty()) null else if (handoffOwner == tab) captureHandoffs() else snapshots[tab]
         detach(state, window)
         arms.remove(tab)
         snapshots.remove(tab)
         if (handoffOwner == tab) handoffOwner = null
-        closed.addLast(state.nav.backStack.toList())
+        closed.add(ClosedTab(state.nav.backStack.toList(), held))
         while (closed.size > prefs.closedKept) closed.removeFirst()
         // Content still on screen (a crossfade frame) keeps its store until it leaves composition.
         if ((contentCount[tab] ?: 0) > 0) closing[tab] = state else clearStore(state)
@@ -203,9 +210,12 @@ class TabsController(
         closing.remove(tab)?.let(::clearStore)
     }
 
-    fun reopenClosed(window: WindowId): TabId? {
+    /** Reopens [entry] (default: the most recently closed tab) next to [window]'s active tab. */
+    fun reopenClosed(window: WindowId, entry: ClosedTab? = null): TabId? {
         val target = window(window) ?: return null
-        val stack = closed.removeLastOrNull() ?: return null
+        val closedTab = if (entry != null) entry.takeIf { closed.remove(it) } else closed.removeLastOrNull()
+        if (closedTab == null) return null
+        val stack = closedTab.stack
         val tk = keys.keyOf(stack.last())
         val existing = tk?.let { allTabs().firstOrNull { tab -> keys.keyOf(tab.current) == tk } }
         if (existing != null) {
@@ -216,6 +226,7 @@ class TabsController(
 
         val tab = newTab(stack.first())
         stack.drop(1).forEach { tab.nav.navBackStack.add(it) }
+        closedTab.handoffs?.let { snapshots[tab.id] = it }
 
         target.tabs.add(target.tabs.indexOfFirst { it.id == target.activeId.value } + 1, tab)
         activate(tab.id)

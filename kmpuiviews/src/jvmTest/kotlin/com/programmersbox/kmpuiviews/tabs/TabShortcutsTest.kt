@@ -129,6 +129,15 @@ class TabShortcutsTest {
     }
 
     @Test
+    fun newTabOpensTheNewTabPage() {
+        controller.perform(TabShortcut.NewTab, window)
+        controller.perform(TabShortcut.NewTab, window)
+
+        assertEquals(listOf(Screen.RecentScreen, NewTabRoute, NewTabRoute), window.tabs.map { it.current })
+        assertEquals(window.tabs.last().id, window.activeId.value)
+    }
+
+    @Test
     fun closeIgnoresHomeAndReopenRestores() {
         controller.perform(TabShortcut.CloseTab, window)
         assertEquals(listOf(home), window.tabs.map { it.id })

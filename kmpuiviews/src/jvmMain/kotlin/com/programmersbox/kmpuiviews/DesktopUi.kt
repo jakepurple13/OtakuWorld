@@ -122,6 +122,8 @@ import com.programmersbox.kmpuiviews.tabs.BrowserWindow
 import com.programmersbox.kmpuiviews.tabs.TabMotionLayer
 import com.programmersbox.kmpuiviews.tabs.TabPosition
 import com.programmersbox.kmpuiviews.tabs.TabsSettingsPage
+import com.programmersbox.kmpuiviews.tabs.NewTabPage
+import com.programmersbox.kmpuiviews.tabs.NewTabRoute
 import com.programmersbox.kmpuiviews.tabs.TabsSettingsRoute
 import com.programmersbox.kmpuiviews.tabs.TabStrip
 import com.programmersbox.kmpuiviews.tabs.TabsController
@@ -209,6 +211,7 @@ fun desktopSetup(
                                 single { jvmAppLogo() }
                                 navigation<MotionSettingsRoute> { MotionSettingsScreen() }
                                 navigation<TabsSettingsRoute> { TabsSettingsPage() }
+                                navigation<NewTabRoute> { NewTabPage() }
                                 genericInfo(this).bindsPlatformGenericInfo()
                                 moduleBlock()
                             }

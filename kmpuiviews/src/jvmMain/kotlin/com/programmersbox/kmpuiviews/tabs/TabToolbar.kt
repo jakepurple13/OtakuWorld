@@ -49,9 +49,9 @@ fun TabToolbar(
     controller: TabsController,
     keys: TabKeys = koinInject(),
     appConfig: AppConfig = koinInject(),
-    downloads: DownloadsDestination = koinInject(),
 ) {
-    val open = { key: NavKey -> controller.open(key, TabOpenMode.Foreground, tab.id) }
+    // Through the tab's own navigation, so the interceptor opens each page's tab once and then switches to it.
+    val nav = tab.nav
 
     Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
         Column {
@@ -83,21 +83,22 @@ fun TabToolbar(
                         .padding(horizontal = 8.dp),
                 )
 
-                IconButton(onClick = { open(Screen.GlobalSearchScreen()) }) {
+                IconButton(onClick = { nav.globalSearch(null) }) {
                     Icon(Icons.Default.Search, stringResource(Res.string.global_search))
                 }
 
-                IconButton(onClick = { open(Screen.CustomListScreen) }) {
+                IconButton(onClick = { nav.customList() }) {
                     Icon(Icons.AutoMirrored.Default.List, stringResource(Res.string.custom_lists_title))
                 }
 
-                downloads.key?.let { key ->
-                    IconButton(onClick = { open(key) }) {
+                controller.downloadsKey?.let { key ->
+                    IconButton(onClick = { nav.navigate(key) }) {
                         Icon(Icons.Default.Download, stringResource(Res.string.tabs_downloads))
                     }
                 }
 
-                IconButton(onClick = { open(Screen.Settings) }) {
+                // Not nav.settings(): that switches top-level destinations and skips the interceptor.
+                IconButton(onClick = { nav.navigate(Screen.Settings) }) {
                     BadgedBox(badge = { if (updateCheck()) Badge { Text("") } }) {
                         Icon(Icons.Default.Settings, stringResource(Res.string.settings))
                     }

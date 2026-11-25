@@ -69,3 +69,6 @@ data class TabPrefsSnapshot(
     val afterClose: AfterClose = AfterClose.Right,
     val closedKept: Int = 25,
 )
+
+/** A closed tab: its back stack and what the [TabHandoff]s held for it. */
+class ClosedTab(val stack: List<NavKey>, internal val handoffs: List<Any?>?)

@@ -110,6 +110,8 @@ object CoreTabKeyProvider : TabKeyProvider {
             icon = null,
         )
 
+        NewTabRoute -> TabLabel(text = "New tab", imageUrl = null, icon = Icons.Default.Tab)
+
         else -> null
     }
 }

@@ -151,4 +151,44 @@ class TabHandoffTest {
         plain.activate(id)
         assertNull(holder.chapter)
     }
+
+    @Test
+    fun reopenedTabGetsItsOwnChapterBack() {
+        val one = clickChapter("1", TabOpenMode.Background)
+        val two = clickChapter("2", TabOpenMode.Background)
+        controller.activate(one)
+        readerOpened(one)
+        controller.activate(two)
+        readerOpened(two)
+
+        // Close the active reader, then the parked one.
+        controller.close(two)
+        controller.close(one)
+        holder.chapter = "home"
+
+        val reopenedOne = controller.reopenClosed(main.id)!!
+        assertEquals(reader("1"), main.tabs.first { it.id == reopenedOne }.current)
+        assertEquals("1", holder.chapter)
+
+        val reopenedTwo = controller.reopenClosed(main.id)!!
+        assertEquals("2", holder.chapter)
+
+        controller.activate(reopenedOne)
+        assertEquals("1", holder.chapter)
+        controller.activate(reopenedTwo)
+        assertEquals("2", holder.chapter)
+    }
+
+    @Test
+    fun reopeningAChosenEntryRestoresThatEntrysChapter() {
+        val one = clickChapter("1", TabOpenMode.Background)
+        val two = clickChapter("2", TabOpenMode.Background)
+        controller.close(one)
+        controller.close(two)
+
+        val entry = controller.recentlyClosed.first { it.stack.last() == reader("1") }
+        controller.reopenClosed(main.id, entry)
+
+        assertEquals("1", holder.chapter)
+    }
 }

@@ -165,8 +165,7 @@ fun TabsController.perform(shortcut: TabShortcut, window: BrowserWindowState) {
     val active = window.activeId.value
     val index = window.tabs.indexOfFirst { it.id == active }
     when (shortcut) {
-        // Placeholder new-tab page until the real one exists.
-        TabShortcut.NewTab -> open(Screen.RecentScreen, TabOpenMode.Foreground, active)
+        TabShortcut.NewTab -> open(NewTabRoute, TabOpenMode.Foreground, active)
         TabShortcut.CloseTab -> close(active)
         TabShortcut.ReopenClosed -> reopenClosed(window.id)
         is TabShortcut.SwitchTo -> window.tabs.getOrNull(shortcut.n - 1)?.let { activate(it.id) }

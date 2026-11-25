@@ -52,6 +52,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -169,6 +170,8 @@ fun GlobalSearchScreen(
                     searchBarState.animateToExpanded()
                 }
             }
+            // A request still pending when this screen leaves must not expand a later, unrelated visit.
+            DisposableEffect(searchFocus) { onDispose { searchFocus?.consume() } }
             DynamicSearchBar(
                 textFieldState = viewModel.searchText,
                 searchBarState = searchBarState,

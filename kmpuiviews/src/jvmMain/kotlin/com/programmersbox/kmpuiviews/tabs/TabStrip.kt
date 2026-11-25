@@ -24,7 +24,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.programmersbox.kmpuiviews.presentation.Screen
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import otakuworld.kmpuiviews.generated.resources.Res
@@ -33,9 +32,8 @@ import otakuworld.kmpuiviews.generated.resources.tabs_new_tab
 /** Width of the side tab column. */
 val SideTabsWidth = 200.dp
 
-// Placeholder new-tab page until the real one exists.
 private fun TabsController.openNewTab(window: BrowserWindowState) {
-    open(Screen.RecentScreen, TabOpenMode.Foreground, window.activeId.value)
+    open(NewTabRoute, TabOpenMode.Foreground, window.activeId.value)
 }
 
 /** The window's tabs, for the title bar. Click activates, middle-click closes, "+" opens a new tab. */

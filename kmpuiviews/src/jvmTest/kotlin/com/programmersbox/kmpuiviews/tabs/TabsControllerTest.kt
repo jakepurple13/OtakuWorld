@@ -646,4 +646,40 @@ class TabsControllerTest {
         assertEquals(10, reopened.size)
         assertEquals((3..12).reversed().map { title("T$it") }, reopened.map { tab(it).current })
     }
+
+    @Test
+    fun toolbarDownloadsHiddenWhenNoDestination() {
+        assertNull(controller.downloadsKey)
+
+        val withDownloads = TabsController(
+            homeNav = Navigation3Actions(Screen.RecentScreen),
+            keys = TabKeys(listOf(CoreTabKeyProvider)),
+            prefs = TabPrefsSnapshot(clickOpensNewTab = false),
+            downloadsKey = Screen.HistoryScreen,
+        )
+        assertEquals(Screen.HistoryScreen, withDownloads.downloadsKey)
+    }
+
+    @Test
+    fun newTabRouteIsNeverDeduped() {
+        val one = controller.open(NewTabRoute, TabOpenMode.Foreground, homeId)
+        val two = controller.open(NewTabRoute, TabOpenMode.Foreground, one)
+
+        assertTrue(one != two)
+        assertEquals(listOf<NavKey>(Screen.RecentScreen, NewTabRoute, NewTabRoute), main.currents())
+    }
+
+    @Test
+    fun recentlyClosedListsMostRecentFirstAndReopensTheChosenEntry() {
+        val ids = listOf("A", "B", "C").map { controller.open(title(it), TabOpenMode.Background, homeId) }
+        ids.forEach { controller.close(it) }
+
+        assertEquals(listOf("C", "B", "A").map { title(it) }, controller.recentlyClosed.map { it.stack.last() })
+
+        val b = controller.reopenClosed(main.id, controller.recentlyClosed[1])!!
+
+        assertEquals(title("B"), tab(b).current)
+        assertEquals(b, main.activeId.value)
+        assertEquals(listOf("C", "A").map { title(it) }, controller.recentlyClosed.map { it.stack.last() })
+    }
 }

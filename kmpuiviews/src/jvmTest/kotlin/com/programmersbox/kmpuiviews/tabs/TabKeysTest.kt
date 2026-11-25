@@ -145,4 +145,10 @@ class TabKeysTest {
         assertEquals("RecentScreen", label.text)
         assertNull(label.imageUrl)
     }
+
+    @Test
+    fun newTabRouteHasLabelButNoKey() {
+        assertNull(keys.keyOf(NewTabRoute))
+        assertEquals("New tab", keys.labelOf(NewTabRoute).text)
+    }
 }

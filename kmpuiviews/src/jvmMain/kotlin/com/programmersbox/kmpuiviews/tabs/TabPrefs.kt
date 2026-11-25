@@ -243,6 +243,7 @@ internal val desktopTabsModule: Module = module {
             keys = get(),
             prefs = TabPrefsSnapshot(clickOpensNewTab = false),
             handoffs = getAll(),
+            downloadsKey = getOrNull<DownloadsDestination>()?.key,
         ).also { controller ->
             val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
             scope.launch { migrateTabsOnLaunch() }
