@@ -161,6 +161,10 @@ class DesktopPlayer(
         return { if (wasPlaying) api { player.controls().setPause(false) } }
     }
 
+    fun pause() = api { player.controls().setPause(true) }
+
+    fun resume() = api { player.controls().setPause(false) }
+
     fun seekTo(ms: Long) = api {
         val duration = _state.value.durationMs
         val target = if (duration > 0) ms.coerceIn(0, duration) else ms.coerceAtLeast(0)

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PlayArrow
@@ -109,6 +110,13 @@ internal fun TabFace(
                 overflow = TextOverflow.Ellipsis,
                 modifier = if (side) Modifier.weight(1f) else Modifier.widthIn(max = 160.dp),
             )
+            if (tab.playing.value) {
+                Icon(
+                    Icons.AutoMirrored.Filled.VolumeUp,
+                    contentDescription = "Playing",
+                    modifier = Modifier.size(14.dp),
+                )
+            }
             trailing()
         }
     }

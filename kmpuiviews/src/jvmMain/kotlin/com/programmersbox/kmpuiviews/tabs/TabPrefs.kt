@@ -271,4 +271,11 @@ internal val desktopTabsModule: Module = module {
                 .launchIn(scope)
         }
     }
+    single {
+        MiniPlayerRegistry(get()).also { registry ->
+            val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+            tabsMiniPlayerPref.asFlow().onEach { registry.enabled = it }.launchIn(scope)
+            miniPlayerPauseUnfocusedPref.asFlow().onEach { registry.pauseUnfocused = it }.launchIn(scope)
+        }
+    }
 }

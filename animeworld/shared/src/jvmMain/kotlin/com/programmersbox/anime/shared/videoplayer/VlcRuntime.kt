@@ -28,7 +28,7 @@ object VlcRuntime {
         "--quiet",
     )
 
-    private val result: Result<MediaPlayerFactory> by lazy { runCatching { load() } }
+    private val result = lazy { runCatching { load() } }
 
     /** Absolute path of the lib dir libVLC was loaded from, or null if it has not loaded. */
     @Volatile
@@ -41,7 +41,10 @@ object VlcRuntime {
         private set
 
     /** Loads libVLC from `<resourcesDir>/vlc` only. Idempotent: later calls return the same result. */
-    fun factory(): Result<MediaPlayerFactory> = result
+    fun factory(): Result<MediaPlayerFactory> = result.value
+
+    /** [factory]'s result if it has loaded already, else null; never loads. */
+    fun loadedFactory(): Result<MediaPlayerFactory>? = if (result.isInitialized()) result.value else null
 
     private fun load(): MediaPlayerFactory {
         val resourcesDir = System.getProperty(RESOURCES_DIR_PROPERTY)

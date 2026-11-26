@@ -119,6 +119,7 @@ import androidx.compose.runtime.collectAsState
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.tabs.BrowserWindow
+import com.programmersbox.kmpuiviews.tabs.MiniPlayerOverlay
 import com.programmersbox.kmpuiviews.tabs.TabMotionLayer
 import com.programmersbox.kmpuiviews.tabs.TabPosition
 import com.programmersbox.kmpuiviews.tabs.TabsSettingsPage
@@ -490,6 +491,7 @@ private fun InternalDesktopUi(
                         tabSlotBounds = { tabsController.motion.slotBounds[it] },
                         contentBounds = { tabsController.motion.contentBounds[mainWindow.id] ?: Rect.Zero },
                     )
+                    MiniPlayerOverlay(registry = koinInject(), window = mainWindow)
                 },
             ) {
                 val colors = MaterialTheme.colorScheme

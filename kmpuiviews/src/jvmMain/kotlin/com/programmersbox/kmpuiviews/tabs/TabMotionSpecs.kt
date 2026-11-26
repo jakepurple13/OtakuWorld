@@ -27,6 +27,9 @@ enum class TabMotion {
 
     /** Tabs gliding between the top strip and the side column when the tab position changes. */
     Layout,
+
+    /** A playing tab's video shrinking into the mini player, or growing back when its tab returns. */
+    MiniPlayer,
 }
 
 /** How much tab motion plays, from [TabMotionMode] and the OS setting; see [tabMotionLevel]. */
@@ -62,6 +65,7 @@ fun tabMotionMs(motion: TabMotion, scale: Float, level: TabMotionLevel): Int {
             TabMotion.Flash -> 300
             TabMotion.SlotOpen -> 220
             TabMotion.Layout -> 450
+            TabMotion.MiniPlayer -> 380
         }
     }
     return (base * scale).roundToInt()
@@ -69,7 +73,7 @@ fun tabMotionMs(motion: TabMotion, scale: Float, level: TabMotionLevel): Int {
 
 fun tabMotionEasing(motion: TabMotion, level: TabMotionLevel): Easing =
     if (level != TabMotionLevel.Full) LinearEasing else when (motion) {
-        TabMotion.Background, TabMotion.Grow, TabMotion.Layout -> EmphasizedDecelerate
+        TabMotion.Background, TabMotion.Grow, TabMotion.Layout, TabMotion.MiniPlayer -> EmphasizedDecelerate
         TabMotion.Switch -> LinearEasing
         TabMotion.Close -> EmphasizedAccelerate
         TabMotion.Flash, TabMotion.SlotOpen -> StandardEasing

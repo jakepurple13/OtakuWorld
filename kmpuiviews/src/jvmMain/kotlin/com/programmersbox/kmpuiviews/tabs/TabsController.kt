@@ -87,6 +87,8 @@ class TabsController(
     /** The tab whose state [handoffs] hold now. */
     private var handoffOwner: TabId? = windows.first().activeId.value
 
+    private val listeners = mutableListOf<(TabEvent?) -> Unit>()
+
     init {
         homeNav.interceptor = this
         windows.first().let { touch(it.id, it.activeId.value) }
@@ -181,6 +183,15 @@ class TabsController(
         }
         touch(window.id, tab)
         focusedWindow = window.id
+        listeners.forEach { it(null) }
+    }
+
+    /**
+     * Called synchronously after every [activate] (with null) and every event. Mid-operation (a move's detach), a
+     * tab may briefly be in no window; the event that ends the operation follows.
+     */
+    fun addListener(listener: (TabEvent?) -> Unit) {
+        listeners += listener
     }
 
     fun close(tab: TabId) {
@@ -424,6 +435,7 @@ class TabsController(
 
     private fun emit(event: TabEvent) {
         motion.record(event)
+        listeners.forEach { it(event) }
         _events.tryEmit(event)
     }
 
