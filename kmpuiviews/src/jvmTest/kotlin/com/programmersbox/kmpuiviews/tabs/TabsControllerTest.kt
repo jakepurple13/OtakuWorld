@@ -466,6 +466,21 @@ class TabsControllerTest {
     }
 
     @Test
+    fun mergingATornTabBackLeavesItsWindowEmptyAndSafeToDraw() = eventsTest { _ ->
+        val a = controller.open(title("A"), TabOpenMode.Foreground, homeId)
+        val w2 = controller.tearOut(a, WindowBounds(0.dp, 0.dp, 800.dp, 600.dp))
+        // The torn window's own composition still holds this state until the app composition drops the window.
+        val torn = controller.windows.first { it.id == w2 }
+
+        controller.move(a, main.id, 1)
+
+        assertTrue(controller.windows.none { it.id == w2 })
+        assertEquals(emptyList(), torn.tabs.toList())
+        assertNull(activeTabOf(torn))
+        assertEquals(a, activeTabOf(main)?.id)
+    }
+
+    @Test
     fun tearOutCreatesWindowWithoutHome() = eventsTest { events ->
         val a = controller.open(title("A"), TabOpenMode.Foreground, homeId)
         val bounds = WindowBounds(10.dp, 20.dp, 800.dp, 600.dp)

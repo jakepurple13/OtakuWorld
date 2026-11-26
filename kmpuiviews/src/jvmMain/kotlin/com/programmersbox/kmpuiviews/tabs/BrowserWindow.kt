@@ -87,7 +87,9 @@ fun BrowserWindow(
     if (window.isMain) DesktopAppOnce(genericInfo)
 
     DesktopWindowEffects(windowSize = windowSize, hostsOverlays = controller.focusedWindow == window.id) {
-        val active = window.tabs.firstOrNull { it.id == window.activeId.value } ?: window.tabs.first()
+        // A torn-out window has its own composition, which can recompose once more after its last tab moved or closed
+        // and before the app composition removes the window. Draw nothing for that frame.
+        val active = activeTabOf(window) ?: return@DesktopWindowEffects
 
         val motion = controller.motion
         val side = showChrome && motion.position == TabPosition.Side
@@ -203,3 +205,7 @@ internal fun bringToFront(window: java.awt.Window) {
     window.toFront()
     window.requestFocus()
 }
+
+/** The tab [window] shows: its active tab, else its first, or null once it has no tabs left. */
+internal fun activeTabOf(window: BrowserWindowState): TabState? =
+    window.tabs.firstOrNull { it.id == window.activeId.value } ?: window.tabs.firstOrNull()

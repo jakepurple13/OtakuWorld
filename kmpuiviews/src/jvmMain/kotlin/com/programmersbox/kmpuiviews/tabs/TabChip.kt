@@ -194,30 +194,7 @@ internal fun TabChip(
                     )
                 }
             }
-            .pointerInput(tab.id) {
-                awaitPointerEventScope {
-                    while (true) {
-                        val event = awaitPointerEvent()
-                        val change = event.changes.firstOrNull() ?: continue
-                        when {
-                            // Middle-click closes on press, like a browser.
-                            event.type == PointerEventType.Press && event.buttons.isTertiaryPressed -> {
-                                change.consume()
-                                if (!tab.pinned) onClose()
-                            }
-
-                            event.type == PointerEventType.Press && event.buttons.isPrimaryPressed -> {
-                                // Activate on release so the close button can consume its own click.
-                                var up = awaitPointerEvent()
-                                while (up.type != PointerEventType.Release) up = awaitPointerEvent()
-                                if (up.changes.none { it.isConsumed }) {
-                                    onActivate()
-                                }
-                            }
-                        }
-                    }
-                }
-            },
+            .tabChipPointer(tab.pinned, onActivate, onClose),
         // The icon waits for the cover that is flying into it.
         iconModifier = Modifier
             .onGloballyPositioned { if (motion.position == position) motion.slotBounds[tab.id] = it.boundsInWindow() }
@@ -259,3 +236,37 @@ private fun TabIcon(tab: TabState, label: TabLabel, style: TabIconStyle) {
         label.icon != null -> Icon(label.icon, null, iconModifier)
     }
 }
+
+/**
+ * A tab chip's clicks: middle-click closes on press, primary click activates on release (unless the close button or a
+ * tab drag consumed the release).
+ *
+ * The press is consumed so the title bar around the strip treats it as a click on a control. Nucleus's macOS title
+ * bar starts a native window drag on the first move after an unconsumed press, which would swallow the tab drag.
+ */
+internal fun Modifier.tabChipPointer(pinned: Boolean, onActivate: () -> Unit, onClose: () -> Unit): Modifier =
+    pointerInput(pinned) {
+        awaitPointerEventScope {
+            while (true) {
+                val event = awaitPointerEvent()
+                val change = event.changes.firstOrNull() ?: continue
+                when {
+                    // Middle-click closes on press, like a browser.
+                    event.type == PointerEventType.Press && event.buttons.isTertiaryPressed -> {
+                        change.consume()
+                        if (!pinned) onClose()
+                    }
+
+                    event.type == PointerEventType.Press && event.buttons.isPrimaryPressed -> {
+                        change.consume()
+                        // Activate on release so the close button can consume its own click.
+                        var up = awaitPointerEvent()
+                        while (up.type != PointerEventType.Release) up = awaitPointerEvent()
+                        if (up.changes.none { it.isConsumed }) {
+                            onActivate()
+                        }
+                    }
+                }
+            }
+        }
+    }
