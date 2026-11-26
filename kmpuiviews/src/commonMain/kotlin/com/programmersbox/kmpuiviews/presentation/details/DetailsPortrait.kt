@@ -133,6 +133,7 @@ fun DetailsView(
 
     val scope = rememberCoroutineScope()
     var fabMenuExpanded by remember { mutableStateOf(false) }
+    val notesPanelToggle = LocalNotesPanelToggle.current
     var showNoteSheet by remember { mutableStateOf(false) }
 
     //val bottomAppBarScrollBehavior = LocalBottomAppBarScrollBehavior.current
@@ -236,7 +237,7 @@ fun DetailsView(
                                         if (result) notifier.success(message) else notifier.info(message)
                                     }
                                 },
-                                onNoteClick = { showNoteSheet = true },
+                                onNoteClick = { notesPanelToggle?.invoke() ?: run { showNoteSheet = true } },
                             )
                         },
                         scrollBehavior = scrollBehavior,

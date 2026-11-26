@@ -162,6 +162,7 @@ fun BrowserWindow(
                                         genericInfo = genericInfo,
                                         windowSize = windowSize,
                                         customPreferences = customPreferences,
+                                        motion = motion,
                                     )
                                 }
                             }

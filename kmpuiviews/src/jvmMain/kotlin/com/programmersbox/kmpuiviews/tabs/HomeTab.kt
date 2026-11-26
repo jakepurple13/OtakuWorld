@@ -93,6 +93,7 @@ fun HomeTab(
                 genericInfo = genericInfo,
                 windowSize = windowSize,
                 customPreferences = customPreferences,
+                motion = controller.motion,
             )
         }
     }
