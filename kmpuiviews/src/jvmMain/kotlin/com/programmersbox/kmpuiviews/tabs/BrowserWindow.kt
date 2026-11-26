@@ -42,7 +42,6 @@ import com.programmersbox.kmpuiviews.presentation.tabs.LocalSearchFocusRequest
 import com.programmersbox.kmpuiviews.presentation.tabs.LocalTabActions
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.sharedcomponents.repository.ChangingSettingsRepository
-import kotlinx.coroutines.flow.filterIsInstance
 import org.koin.compose.koinInject
 
 /**
@@ -65,9 +64,14 @@ fun BrowserWindow(
     val stateHolder = rememberSaveableStateHolder()
 
     LaunchedEffect(controller) {
-        controller.events
-            .filterIsInstance<TabEvent.Closed>()
-            .collect { stateHolder.removeState(it.tab.v) }
+        controller.events.collect { event ->
+            when (event) {
+                is TabEvent.Closed -> stateHolder.removeState(event.tab.v)
+                // A sleeping tab forgets its saved UI state; it lives in the holder of the window it slept in.
+                is TabEvent.Slept -> if (event.window == window.id) stateHolder.removeState(event.tab.v)
+                else -> Unit
+            }
+        }
     }
 
     DesktopAppEffects(windowSize = windowSize, genericInfo = genericInfo) {

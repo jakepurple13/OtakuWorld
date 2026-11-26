@@ -12,6 +12,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import ca.gosyer.appdirs.AppDirs
 import com.programmersbox.datastore.DataStoreHandling
@@ -287,6 +288,10 @@ internal val desktopTabsModule: Module = module {
             tabMotionPref.asFlow()
                 .onEach { controller.motion.mode = it }
                 .launchIn(scope)
+            // On the UI thread, like everything else that changes tabs.
+            CoroutineScope(Dispatchers.Main + SupervisorJob()).launch {
+                controller.runSleepChecks(tabsSleepAfterPref.asFlow(), System::currentTimeMillis)
+            }
         }
     }
     single {

@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.tabs
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -58,6 +59,9 @@ import otakuworld.kmpuiviews.generated.resources.tabs_home
 import kotlin.math.roundToInt
 
 private val TabShape = RoundedCornerShape(8.dp)
+
+/** How opaque a sleeping tab draws in the strip. */
+private const val SleepingTabAlpha = 0.6f
 
 /** The plain icon shown when covers are off: a book for titles and chapters, a play icon for episodes. */
 fun plainTabIcon(key: TabKey?, videoChapters: Boolean): ImageVector? = when (key) {
@@ -151,6 +155,11 @@ internal fun TabChip(
             ring.animateTo(0f, tween(motion.ms(TabMotion.Flash), easing = motion.easing(TabMotion.Flash)))
         }
     }
+    // A sleeping tab shows dimmed.
+    val sleepAlpha by animateFloatAsState(
+        targetValue = if (tab.sleeping.value) SleepingTabAlpha else 1f,
+        animationSpec = motion.fade(TabMotion.Switch),
+    )
     val accent = MaterialTheme.colorScheme.primary
     val position = if (side) TabPosition.Side else TabPosition.Top
     TabFace(
@@ -173,7 +182,7 @@ internal fun TabChip(
                 val h = if (side) (placeable.height * f).roundToInt() else placeable.height
                 layout(w, h) { placeable.placeRelative(0, 0) }
             }
-            .graphicsLayer { alpha = (if (motion.reduced) open.value else 1f) * motion.chipAlpha(tab.id) }
+            .graphicsLayer { alpha = (if (motion.reduced) open.value else 1f) * motion.chipAlpha(tab.id) * sleepAlpha }
             .drawWithContent {
                 drawContent()
                 if (ring.value > 0f) {

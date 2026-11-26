@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.ViewModelStoreProvider
 import androidx.navigation3.runtime.NavKey
 import com.programmersbox.kmpuiviews.presentation.navactions.NavInterceptor
 import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
@@ -80,6 +81,15 @@ class TabsController(
 
     /** Closed tabs whose content is still composed; their stores are cleared on the last [detachContent]. */
     private val closing = mutableMapOf<TabId, TabState>()
+
+    /** Sleeping tabs whose content is still composed; their stores are cleared on the last [detachContent]. */
+    private val sleepPending = mutableMapOf<TabId, TabState>()
+
+    /** Per tab, when it was opened or last stopped being its window's active tab. */
+    private val lastShown = mutableMapOf<TabId, Long>()
+
+    /** Each returns true for a tab that must stay awake, such as one in the mini player. */
+    internal val sleepGuards = mutableListOf<(TabId) -> Boolean>()
 
     /** Per tab, what [handoffs] held for it, saved when it was opened or last left. */
     private val snapshots = mutableMapOf<TabId, List<Any?>>()
@@ -177,7 +187,9 @@ class TabsController(
     fun activate(tab: TabId) {
         val window = findTab(tab)?.let { windowOf(it.id) } ?: return
         switchHandoffs(tab)
+        wake(window.tabs.first { it.id == tab })
         if (window.activeId.value != tab) {
+            lastShown[window.activeId.value] = now()
             window.activeId.value = tab
             backgroundRun.remove(window.id)
         }
@@ -212,6 +224,8 @@ class TabsController(
         detach(state, window)
         arms.remove(tab)
         snapshots.remove(tab)
+        lastShown.remove(tab)
+        sleepPending.remove(tab)
         if (handoffOwner == tab) handoffOwner = null
         if (record) {
             closed.add(ClosedTab(state.nav.backStack.toList(), held))
@@ -236,6 +250,20 @@ class TabsController(
         }
         contentCount.remove(tab)
         closing.remove(tab)?.let(::clearStore)
+        sleepPending.remove(tab)?.let(::dropViewModels)
+    }
+
+    /** When [tab] was opened or last left, or null for a tab this controller does not know. */
+    internal fun lastShownAt(tab: TabId): Long? = lastShown[tab]
+
+    /**
+     * Puts [state], a parked tab of [window], to sleep: its ViewModels are cleared (once no content shows it) and
+     * [window] drops its saved UI state on [TabEvent.Slept]. Its back stack and handoff snapshot stay.
+     */
+    internal fun sleep(state: TabState, window: BrowserWindowState) {
+        state.sleeping.value = true
+        if ((contentCount[state.id] ?: 0) > 0) sleepPending[state.id] = state else dropViewModels(state)
+        emit(TabEvent.Slept(state.id, window.id))
     }
 
     /**
@@ -355,6 +383,18 @@ class TabsController(
         restoreHandoffs(held)
     }
 
+    /** Clears [state]'s ViewModels and gives it a new page store provider bound to its (now empty) store. */
+    private fun dropViewModels(state: TabState) {
+        clearStore(state)
+        state.viewModelStoreProvider = ViewModelStoreProvider(parentOwner = state.viewModelStoreOwner)
+    }
+
+    /** [state] is being shown: it is awake, and a clear still waiting for its old content is dropped. */
+    private fun wake(state: TabState) {
+        state.sleeping.value = false
+        sleepPending.remove(state.id)
+    }
+
     private fun allTabs() = windows.flatMap { it.tabs }
 
     private fun findTab(tab: TabId) = allTabs().firstOrNull { it.id == tab }
@@ -365,11 +405,12 @@ class TabsController(
         id = TabId(nextId++),
         nav = Navigation3Actions(startKey = key).also { it.interceptor = this },
         pinned = false,
-    )
+    ).also { lastShown[it.id] = now() }
 
     private fun newWindow(tab: TabState, bounds: WindowBounds): BrowserWindowState {
         val window = BrowserWindowState(WindowId(nextId++), isMain = false, first = tab, bounds = bounds)
         windows.add(window)
+        wake(tab)
         touch(window.id, tab.id)
         focusedWindow = window.id
         return window

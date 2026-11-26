@@ -32,13 +32,18 @@ class TabState(
     val forward: SnapshotStateList<NavKey> = mutableStateListOf()
     val notesOpen: MutableState<Boolean> = mutableStateOf(false)
     val playing: MutableState<Boolean> = mutableStateOf(false)
+
+    /** Asleep: its ViewModels and saved UI state are gone, and it reloads when next shown. */
+    val sleeping: MutableState<Boolean> = mutableStateOf(false)
     val viewModelStoreOwner: ViewModelStoreOwner = TabViewModelStoreOwner()
 
     /**
      * Holds the tab's page ViewModelStores. It lives outside composition, so a parked tab keeps its
-     * ViewModels; clearing [viewModelStoreOwner] on close clears them.
+     * ViewModels; clearing [viewModelStoreOwner] on close clears them. Sleeping replaces it: the old one
+     * keeps its cleared state holder, which is no longer in [viewModelStoreOwner]'s store.
      */
-    val viewModelStoreProvider: ViewModelStoreProvider = ViewModelStoreProvider(parentOwner = viewModelStoreOwner)
+    var viewModelStoreProvider: ViewModelStoreProvider = ViewModelStoreProvider(parentOwner = viewModelStoreOwner)
+        internal set
 
     val current: NavKey get() = nav.backStack.last()
 }
@@ -67,6 +72,7 @@ sealed interface TabEvent {
     data class Flash(val tab: TabId) : TabEvent
     data class Closed(val tab: TabId, val window: WindowId) : TabEvent
     data class Moved(val tab: TabId, val from: WindowId, val to: WindowId) : TabEvent
+    data class Slept(val tab: TabId, val window: WindowId) : TabEvent
 }
 
 data class TabPrefsSnapshot(

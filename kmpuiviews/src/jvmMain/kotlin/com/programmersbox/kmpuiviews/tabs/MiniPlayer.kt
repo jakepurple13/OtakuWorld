@@ -79,6 +79,8 @@ class MiniPlayerRegistry(
     private val focusedWindows = mutableSetOf<WindowId>()
 
     init {
+        // Its sources' ViewModels live in the tab's store: sleeping the tab would close the player.
+        controller.sleepGuards += { tab -> isPlaying(tab) || _showing.value == tab }
         controller.addListener { event ->
             if (event is TabEvent.Closed) entries[event.tab]?.let { stopAndForget(event.tab, it) }
             reconcile()
