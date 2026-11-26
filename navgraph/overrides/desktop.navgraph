@@ -2,3 +2,13 @@
 
 # motionSettingsGroup() rows render inside each desktop app's Desktop Settings screen.
 file MotionSettingsGroup.kt -> PlatformSettings
+
+# Desktop Settings opens from a composeCustomPreferences navigationItem row on the Settings screen.
+edge Settings -> PlatformSettings : GenericMangaDesktop composeCustomPreferences navigationItem
+
+# tabsSettingsGroup() renders inside each desktop app's Desktop Settings screen.
+file TabsSettings.kt -> PlatformSettings
+
+# The new-tab page opens from the tab strip's "+" and the new-tab shortcut, not from a screen.
+entry @TabStrip "Tab strip"
+edge @TabStrip -> NewTabRoute : TabStrip.kt "+", TabShortcuts.kt ⌘T
