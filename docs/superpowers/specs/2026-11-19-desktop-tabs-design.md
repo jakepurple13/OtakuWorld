@@ -1,7 +1,7 @@
 # Desktop Tabs — Design
 
 Date: 2026-11-19
-Status: Draft, awaiting approval
+Status: Approved 2026-11-19; implemented on worktree-new-windows
 Mockup (approved direction): https://claude.ai/artifact/Jk77Ve8PEkPRSSKBSD7ue8
 Earlier, superseded windows mockup: https://claude.ai/artifact/XUDsYV2T67NNXiPh9CUy7P
 
