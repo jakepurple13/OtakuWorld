@@ -1,0 +1,263 @@
+package com.programmersbox.kmpuiviews.tabs
+
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
+import androidx.navigation3.runtime.NavKey
+import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import java.io.File
+import java.nio.file.Files
+import kotlin.test.AfterTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+
+class TabSessionTest {
+
+    private val dir: File = Files.createTempDirectory("tab-session").toFile()
+    private val file = File(dir, "tabs-session.json")
+    private val store = TabSessionStore(file, navKeyJson(listOf(CoreNavKeySerializers)))
+
+    @AfterTest
+    fun cleanUp() {
+        dir.deleteRecursively()
+    }
+
+    private fun newController() = TabsController(
+        homeNav = Navigation3Actions(Screen.RecentScreen),
+        keys = TabKeys(listOf(CoreTabKeyProvider)),
+        prefs = TabPrefsSnapshot(clickOpensNewTab = false),
+    )
+
+    private fun title(name: String) = Screen.DetailsScreen.Details(
+        title = name,
+        description = "d",
+        url = "url-$name",
+        imageUrl = "img-$name",
+        source = "src",
+    )
+
+    private val TabsController.main get() = windows.first { it.isMain }
+    private val BrowserWindowState.active get() = tabs.first { it.id == activeId.value }
+    private fun BrowserWindowState.stacks(): List<List<NavKey>> = tabs.map { it.nav.backStack.toList() }
+
+    private fun unknownKey(): JsonElement = buildJsonObject { put("type", JsonPrimitive("com.example.GoneRoute")) }
+
+    private fun encoded(key: NavKey): JsonElement = assertNotNull(store.encode(key))
+
+    /** A session with Home plus one title tab in the main window, and a torn-out window with one tab. */
+    private fun sampleSession() = TabSession(
+        windows = listOf(
+            WindowSession(
+                bounds = WindowBounds(10.dp, 20.dp, 900.dp, 700.dp),
+                isMain = true,
+                activeIndex = 1,
+                tabs = listOf(
+                    TabSessionEntry(pinned = true, backStack = listOf(encoded(Screen.RecentScreen))),
+                    TabSessionEntry(pinned = false, backStack = listOf(encoded(title("A")))),
+                ),
+            ),
+            WindowSession(
+                bounds = WindowBounds(300.dp, 200.dp, 640.dp, 480.dp),
+                isMain = false,
+                activeIndex = 0,
+                tabs = listOf(TabSessionEntry(pinned = false, backStack = listOf(encoded(title("B"))))),
+            ),
+        )
+    )
+
+    @Test
+    fun roundTripRestoresWindowsTabsStacksAndActive() {
+        val before = newController()
+        val homeId = before.main.tabs.first().id
+        // Home: a title opened in place on top of Recent.
+        before.main.tabs.first().nav.navigate(title("H"))
+        val a = before.open(title("A"), TabOpenMode.Foreground, homeId)
+        before.main.tabs.first { it.id == a }.nav.navBackStack.add(Screen.WebViewScreen("https://a"))
+        val b = before.open(title("B"), TabOpenMode.Background, homeId)
+        val c = before.open(title("C"), TabOpenMode.NewWindow, homeId)
+        val torn = before.windowOf(c)
+        torn.tabs.first().nav.navBackStack.add(Screen.WebViewScreen("https://c"))
+        torn.bounds.value = WindowBounds(300.dp, 200.dp, 640.dp, 480.dp)
+        before.main.bounds.value = WindowBounds(10.dp, 20.dp, 900.dp, 700.dp)
+        before.activate(b)
+
+        assertTrue(store.save(before))
+        val session = assertNotNull(store.load())
+
+        val after = newController()
+        after.startSession(OnLaunch.Restore, onboardingDone = true, session = session, decode = store::decode)
+
+        assertEquals(2, after.windows.size)
+        assertEquals(before.main.stacks(), after.main.stacks())
+        assertEquals(listOf(true, false, false), after.main.tabs.map { it.pinned })
+        assertEquals(title("B"), after.main.active.current)
+        assertEquals(WindowBounds(10.dp, 20.dp, 900.dp, 700.dp), after.main.bounds.value)
+
+        val restoredTorn = after.windows.first { !it.isMain }
+        assertEquals(torn.stacks(), restoredTorn.stacks())
+        assertEquals(WindowBounds(300.dp, 200.dp, 640.dp, 480.dp), restoredTorn.bounds.value)
+        assertEquals(after.main.id, after.focusedWindow)
+        // Restored tabs still route through the controller.
+        assertEquals(after, after.main.active.nav.interceptor)
+    }
+
+    @Test
+    fun homeRestoresOnlyItsCurrentTopLevelStack() {
+        val before = newController()
+        val home = before.main.tabs.first().nav
+        home.navigate(title("H"))
+        home.settings()
+        home.navigate(Screen.GeneralSettings)
+
+        store.save(before)
+        val after = newController()
+        after.startSession(OnLaunch.Restore, onboardingDone = true, session = store.load(), decode = store::decode)
+
+        assertEquals(
+            listOf<NavKey>(Screen.RecentScreen, Screen.Settings, Screen.GeneralSettings),
+            after.main.tabs.first().nav.backStack.toList(),
+        )
+    }
+
+    @Test
+    fun restoreSkipsUnknownKeys() {
+        val session = TabSession(
+            windows = listOf(
+                WindowSession(
+                    bounds = null,
+                    isMain = true,
+                    activeIndex = 1,
+                    tabs = listOf(
+                        TabSessionEntry(pinned = true, backStack = listOf(encoded(Screen.RecentScreen))),
+                        // Its only page is gone: the tab is dropped, and it was the active one.
+                        TabSessionEntry(pinned = false, backStack = listOf(unknownKey())),
+                        // Keeps the decodable prefix.
+                        TabSessionEntry(
+                            pinned = false,
+                            backStack = listOf(encoded(title("A")), unknownKey(), encoded(Screen.WebViewScreen("x"))),
+                        ),
+                        // Garbage that is not even an object.
+                        TabSessionEntry(pinned = false, backStack = listOf(JsonPrimitive(42))),
+                    ),
+                ),
+                WindowSession(
+                    bounds = null,
+                    isMain = false,
+                    activeIndex = 0,
+                    tabs = listOf(TabSessionEntry(pinned = false, backStack = listOf(unknownKey()))),
+                ),
+            )
+        )
+
+        val after = newController()
+        after.startSession(OnLaunch.Restore, onboardingDone = true, session = session, decode = store::decode)
+
+        assertEquals(1, after.windows.size)
+        assertEquals(
+            listOf(listOf<NavKey>(Screen.RecentScreen), listOf<NavKey>(title("A"))),
+            after.main.stacks(),
+        )
+        assertTrue(after.main.active.pinned)
+    }
+
+    @Test
+    fun restoreCorruptFileStartsFresh() {
+        assertNull(store.load())
+
+        file.writeText("")
+        assertNull(store.load())
+
+        file.writeText("{\"windows\": [ {\"isMain\": tr")
+        assertNull(store.load())
+
+        file.writeText("[1, 2, 3]")
+        val session = store.load()
+        assertNull(session)
+
+        val after = newController()
+        after.startSession(OnLaunch.Restore, onboardingDone = true, session = session, decode = store::decode)
+        assertEquals(listOf(listOf<NavKey>(Screen.RecentScreen)), after.main.stacks())
+        assertEquals(1, after.windows.size)
+    }
+
+    @Test
+    fun onLaunchHomeStartsWithHomeOnly() {
+        val after = newController()
+        after.startSession(OnLaunch.Home, onboardingDone = true, session = sampleSession(), decode = store::decode)
+
+        assertEquals(1, after.windows.size)
+        assertEquals(listOf(listOf<NavKey>(Screen.RecentScreen)), after.main.stacks())
+        assertTrue(after.main.active.pinned)
+    }
+
+    @Test
+    fun onLaunchNewTabStartsWithNewTabPage() {
+        val after = newController()
+        after.startSession(OnLaunch.NewTab, onboardingDone = true, session = sampleSession(), decode = store::decode)
+
+        assertEquals(1, after.windows.size)
+        assertEquals(
+            listOf(listOf<NavKey>(Screen.RecentScreen), listOf<NavKey>(NewTabRoute)),
+            after.main.stacks(),
+        )
+        assertEquals(NewTabRoute, after.main.active.current)
+        assertTrue(after.main.active.isUntouchedNewTab)
+    }
+
+    @Test
+    fun onboardingPendingRestoresHomeOnly() {
+        for (onLaunch in OnLaunch.entries) {
+            val after = newController()
+            after.startSession(onLaunch, onboardingDone = false, session = sampleSession(), decode = store::decode)
+
+            assertEquals(1, after.windows.size, "$onLaunch")
+            assertEquals(listOf(listOf<NavKey>(Screen.RecentScreen)), after.main.stacks(), "$onLaunch")
+            assertTrue(after.main.active.pinned, "$onLaunch")
+        }
+    }
+
+    @Test
+    fun missingBoundsUsesDefaultWindowSize() {
+        val session = sampleSession().let { s ->
+            s.copy(windows = s.windows.map { it.copy(bounds = null) })
+        }
+        val after = newController()
+        after.startSession(OnLaunch.Restore, onboardingDone = true, session = session, decode = store::decode)
+
+        assertNull(after.main.bounds.value)
+        assertEquals(DefaultMainWindowSize, initialWindowSize(after.main.bounds.value))
+        assertEquals(DpSize(900.dp, 700.dp), initialWindowSize(WindowBounds(10.dp, 20.dp, 900.dp, 700.dp)))
+        assertEquals(TabsController.DefaultWindowBounds, after.windows.first { !it.isMain }.bounds.value)
+    }
+
+    @Test
+    fun saveIsAtomic() {
+        val good = sampleSession()
+        assertTrue(store.write(good))
+
+        // A crash mid-write left a partial temp file behind: the good session still loads, and the next save works.
+        val temp = File(dir, "tabs-session.json.tmp")
+        temp.writeText("{\"windows\": [")
+        assertEquals(good, store.load())
+
+        // A write that fails part way (here the temp path cannot be written) never touches the good session.
+        temp.delete()
+        temp.mkdirs()
+        File(temp, "child").writeText("x")
+        assertFalse(store.write(TabSession(emptyList())))
+        assertEquals(good, store.load())
+
+        temp.deleteRecursively()
+        val next = good.copy(windows = good.windows.take(1))
+        assertTrue(store.write(next))
+        assertEquals(next, store.load())
+        assertFalse(temp.exists())
+    }
+}

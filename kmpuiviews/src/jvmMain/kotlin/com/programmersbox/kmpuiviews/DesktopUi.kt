@@ -128,6 +128,9 @@ import com.programmersbox.kmpuiviews.tabs.NewTabRoute
 import com.programmersbox.kmpuiviews.tabs.TabsSettingsRoute
 import com.programmersbox.kmpuiviews.tabs.TabStrip
 import com.programmersbox.kmpuiviews.tabs.TabsController
+import com.programmersbox.kmpuiviews.tabs.TabSessionEffects
+import com.programmersbox.kmpuiviews.tabs.TabSessionStore
+import com.programmersbox.kmpuiviews.tabs.rememberMainWindowState
 import com.programmersbox.kmpuiviews.tabs.desktopTabsModule
 import com.programmersbox.kmpuiviews.tabs.perform
 import com.programmersbox.kmpuiviews.tabs.tabShortcut
@@ -223,7 +226,8 @@ fun desktopSetup(
                 )
             }
         }
-        // Dispose has queued the Notes panel's last write; give it a moment before the quit is answered
+        // Dispose has queued the Notes panel's last write and the tab session's last save; give them a moment before
+        // the quit is answered
         runBlocking { withTimeoutOrNull(1_000) { PendingWrites.App.awaitAll() } }
     }
     exitProcess(0)
@@ -387,7 +391,11 @@ private fun InternalDesktopUi(
                 backgroundWorkHandler.setupPeriodicCheckers()
             }
 
-            val windowState = rememberWindowState()
+            // Created at Koin start, which also restored the last session (tabs and the main window's bounds).
+            val tabsController = koinInject<TabsController>()
+            val mainWindow = tabsController.windows.first { it.isMain }
+            val windowState = rememberMainWindowState(mainWindow)
+            TabSessionEffects(tabsController, koinInject<TabSessionStore>(), mainWindow, windowState)
             val settings = koinInject<MangaDesktopSettings>()
             val koin = getKoin()
             val catalog = remember { koin.getOrNull<DesktopMotionCatalog>() }
@@ -411,8 +419,6 @@ private fun InternalDesktopUi(
                     }
                 }
             }
-            val tabsController = koinInject<TabsController>()
-            val mainWindow = tabsController.windows.first { it.isMain }
             // Onboarding and immersive screens hide the nav bar; the tab chrome follows it, as HomeNav's rail did.
             // Plain collectAsState: this runs outside the Window, where there is no LocalLifecycleOwner.
             val showNavBar by koinInject<ChangingSettingsRepository>().showNavBar.collectAsState(true)

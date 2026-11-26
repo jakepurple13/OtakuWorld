@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.ViewModelStoreProvider
 import androidx.navigation3.runtime.NavKey
 import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
+import kotlinx.serialization.Serializable
 
 @JvmInline
 value class TabId(val v: Long)
@@ -42,7 +43,13 @@ class TabState(
     val current: NavKey get() = nav.backStack.last()
 }
 
-data class WindowBounds(val x: Dp, val y: Dp, val width: Dp, val height: Dp)
+@Serializable
+data class WindowBounds(
+    @Serializable(with = DpSerializer::class) val x: Dp,
+    @Serializable(with = DpSerializer::class) val y: Dp,
+    @Serializable(with = DpSerializer::class) val width: Dp,
+    @Serializable(with = DpSerializer::class) val height: Dp,
+)
 
 class BrowserWindowState(
     val id: WindowId,

@@ -5,6 +5,12 @@ import com.programmersbox.manga.shared.ChapterHolder
 import com.programmersbox.kmpuiviews.tabs.TabHandoff
 import androidx.navigation3.runtime.NavKey
 import com.programmersbox.kmpuiviews.tabs.DownloadsDestination
+import com.programmersbox.kmpuiviews.tabs.NavKeySerializers
+import com.programmersbox.manga.shared.settings.ImageLoaderSettingsRoute
+import com.programmersbox.manga.shared.settings.ReaderSettingsScreen
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
+import kotlinx.serialization.modules.subclass
 import com.programmersbox.kmpuiviews.tabs.TabKey
 import com.programmersbox.kmpuiviews.tabs.TabKeyProvider
 import com.programmersbox.kmpuiviews.tabs.TabLabel
@@ -59,6 +65,20 @@ fun main(args: Array<String>) {
         moduleBlock = {
             factoryOf(::DownloadedMediaHandler)
             single { DownloadsDestination(DownloadRoute) }
+            // Every page this app adds, so saved tabs showing them restore on the next launch.
+            single(named("mangaNavKeys")) {
+                NavKeySerializers(
+                    SerializersModule {
+                        polymorphic(NavKey::class) {
+                            subclass(ReadViewModel.MangaReader::class)
+                            subclass(DownloadRoute::class)
+                            subclass(ImageLoaderSettingsRoute::class)
+                            subclass(ReaderSettingsScreen::class)
+                            subclass(PlatformSettings::class)
+                        }
+                    }
+                )
+            }
             single {
                 object : TabKeyProvider {
                     override fun keyOf(key: NavKey): TabKey? = when (key) {

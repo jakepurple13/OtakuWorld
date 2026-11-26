@@ -4,6 +4,10 @@ import com.programmersbox.kmpmodels.KmpStorage
 import com.programmersbox.kmpuiviews.tabs.TabHandoff
 import androidx.navigation3.runtime.NavKey
 import com.programmersbox.kmpuiviews.tabs.DownloadsDestination
+import com.programmersbox.kmpuiviews.tabs.NavKeySerializers
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
+import kotlinx.serialization.modules.subclass
 import com.programmersbox.kmpuiviews.tabs.TabKey
 import com.programmersbox.kmpuiviews.tabs.MiniPlayerSupported
 import com.programmersbox.kmpuiviews.tabs.TabKeyProvider
@@ -103,6 +107,22 @@ fun main(args: Array<String>) {
         moduleBlock = {
             singleOf(::AnimeDesktopSettings)
             single { DownloadsDestination(VideoViewerRoute) }
+            // Every page this app adds, so saved tabs showing them restore on the next launch.
+            single(named("animeNavKeys")) {
+                NavKeySerializers(
+                    SerializersModule {
+                        polymorphic(NavKey::class) {
+                            subclass(VideoScreen::class)
+                            subclass(VideoViewerRoute::class)
+                            subclass(FreeUpSpaceRoute::class)
+                            subclass(LibraryFoldersRoute::class)
+                            subclass(VideoExportRoute::class)
+                            subclass(SubtitleSettingsRoute::class)
+                            subclass(PlatformSettings::class)
+                        }
+                    }
+                )
+            }
             single { MiniPlayerSupported(true) }
             single { AnimeTabKeyProvider } bind TabKeyProvider::class
             single { animeMotionCatalog() }

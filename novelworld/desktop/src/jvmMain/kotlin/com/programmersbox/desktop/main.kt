@@ -5,6 +5,11 @@ import com.programmersbox.novel.shared.ChapterHolder
 import com.programmersbox.kmpuiviews.tabs.TabHandoff
 import androidx.navigation3.runtime.NavKey
 import com.programmersbox.kmpuiviews.tabs.DownloadsDestination
+import com.programmersbox.kmpuiviews.tabs.NavKeySerializers
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
+import kotlinx.serialization.modules.subclass
+import org.koin.core.qualifier.named
 import com.programmersbox.kmpuiviews.tabs.TabKey
 import com.programmersbox.kmpuiviews.tabs.TabKeyProvider
 import com.programmersbox.kmpuiviews.tabs.TabLabel
@@ -43,6 +48,17 @@ fun main(args: Array<String>) {
         },
         moduleBlock = {
             single { DownloadsDestination(null) }
+            // Every page this app adds, so saved tabs showing them restore on the next launch.
+            single(named("novelNavKeys")) {
+                NavKeySerializers(
+                    SerializersModule {
+                        polymorphic(NavKey::class) {
+                            subclass(ReadViewModel.NovelReader::class)
+                            subclass(PlatformSettings::class)
+                        }
+                    }
+                )
+            }
             single {
                 object : TabKeyProvider {
                     override fun keyOf(key: NavKey): TabKey? = when (key) {

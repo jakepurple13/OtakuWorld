@@ -340,6 +340,14 @@ class TabsController(
     fun windowOf(tab: TabId): BrowserWindowState =
         windows.first { window -> window.tabs.any { it.id == tab } }
 
+    /** A tab for a restored session showing [stack]. Nothing composes or loads until it is first shown. */
+    internal fun restoredTab(stack: List<NavKey>): TabState = newTab(stack.first()).also { tab ->
+        stack.drop(1).forEach { tab.nav.navBackStack.add(it) }
+    }
+
+    /** A restored torn-out window holding [first]. */
+    internal fun restoredWindow(first: TabState, bounds: WindowBounds): BrowserWindowState = newWindow(first, bounds)
+
     /** Readers null the handoff holders when cleared; the tab that owns them keeps its state. */
     private fun clearStore(state: TabState) {
         val held = captureHandoffs()

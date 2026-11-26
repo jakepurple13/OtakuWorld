@@ -12,9 +12,12 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import ca.gosyer.appdirs.AppDirs
+import com.programmersbox.datastore.DataStoreHandling
+import java.io.File
 import org.koin.core.module.Module
+import org.koin.core.qualifier.named
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
@@ -237,6 +240,8 @@ data class MiniPlayerSupported(val supported: Boolean)
 internal val desktopTabsModule: Module = module {
     single { CoreTabKeyProvider } bind TabKeyProvider::class
     single { TabKeys(getAll()) }
+    single(named("coreNavKeys")) { CoreNavKeySerializers }
+    single { TabSessionStore(File(get<AppDirs>().getUserDataDir(), "tabs-session.json"), navKeyJson(getAll())) }
     single(createdAtStart = true) {
         TabsController(
             homeNav = get<Navigation3Actions>(),
@@ -246,7 +251,13 @@ internal val desktopTabsModule: Module = module {
             downloadsKey = getOrNull<DownloadsDestination>()?.key,
         ).also { controller ->
             val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
-            scope.launch { migrateTabsOnLaunch() }
+            // Before the first frame, so the restored tabs and the main window's bounds are there when it opens.
+            val (onLaunch, onboardingDone) = runBlocking {
+                migrateTabsOnLaunch()
+                tabsOnLaunchPref.get() to (get<DataStoreHandling>().hasGoneThroughOnboarding.get() == true)
+            }
+            val store = get<TabSessionStore>()
+            controller.startSession(onLaunch, onboardingDone, store.load(), store::decode)
             // The saved position before the first frame, so a Side layout does not open as Top and glide over.
             controller.motion.switchLayout(runBlocking { tabPositionPref.get() }, animate = false)
             combine(
