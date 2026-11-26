@@ -120,7 +120,9 @@ fun main(args: Array<String>) {
                             subclass(SubtitleSettingsRoute::class)
                             subclass(PlatformSettings::class)
                         }
-                    }
+                    },
+                    // A stream needs the resolved link and headers its click handed over; a download plays its file.
+                    restorable = { it !is VideoScreen || it.downloadOrStream },
                 )
             }
             single { MiniPlayerSupported(true) }

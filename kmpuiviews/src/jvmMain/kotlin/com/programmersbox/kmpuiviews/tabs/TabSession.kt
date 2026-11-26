@@ -46,8 +46,11 @@ data class TabSessionEntry(val pinned: Boolean, val backStack: List<JsonElement>
 /**
  * The NavKeys a module can show, registered under `polymorphic(NavKey::class)`. kmpuiviews registers [Screen] and its
  * desktop pages ([CoreNavKeySerializers]); each app registers its own as a Koin single.
+ *
+ * [restorable] is false for a key that would come back wrong after a relaunch (a streamed reader or player needs the
+ * chapter its click handed over). The saved stack is cut before it, so a reader opened from Details returns as Details.
  */
-class NavKeySerializers(val module: SerializersModule)
+class NavKeySerializers(val module: SerializersModule, val restorable: (NavKey) -> Boolean = { true })
 
 @OptIn(ExperimentalSerializationApi::class)
 val CoreNavKeySerializers = NavKeySerializers(
@@ -68,29 +71,47 @@ fun navKeyJson(serializers: List<NavKeySerializers>): Json = Json {
     serializersModule = SerializersModule { serializers.forEach { include(it.module) } }
 }
 
+/** A key is restorable when every module allows it. */
+fun List<NavKeySerializers>.restorable(): (NavKey) -> Boolean = { key -> all { it.restorable(key) } }
+
 /** The main window's size before it was ever saved; Compose's own default window size. */
 val DefaultMainWindowSize = DpSize(800.dp, 600.dp)
 
 fun initialWindowSize(bounds: WindowBounds?): DpSize =
     bounds?.let { DpSize(it.width, it.height) } ?: DefaultMainWindowSize
 
-/** Reads and writes [file]. A write goes to a temp file that is then renamed over it, so a crash can't corrupt it. */
-class TabSessionStore(private val file: File, private val json: Json) {
+/**
+ * Reads and writes [file]. A write goes to a temp file that is then renamed over it, so a crash can't corrupt it.
+ * Writes are serialized, so two can never share the temp file.
+ */
+class TabSessionStore(
+    private val file: File,
+    private val json: Json,
+    private val restorable: (NavKey) -> Boolean = { true },
+) {
 
     private val navKey = PolymorphicSerializer(NavKey::class)
     private val temp = File(file.parentFile, "${file.name}.tmp")
+    private val warned = mutableSetOf<String>()
 
-    /** Null for a key no module registered. */
+    /** Null for a key no module registered, or one that isn't [restorable]. */
     fun encode(key: NavKey): JsonElement? = try {
-        json.encodeToJsonElement(navKey, key)
+        if (restorable(key)) json.encodeToJsonElement(navKey, key) else null
     } catch (e: Exception) {
-        log.fine("Not saving ${key::class.qualifiedName}: ${e.message}")
+        val name = key::class.qualifiedName ?: key::class.toString()
+        // Once per class: the session is rebuilt on every change.
+        if (synchronized(warned) { warned.add(name) }) {
+            log.warning("Not saving $name, no module registered it for tab restore: ${e.message}")
+        }
         null
     }
 
-    /** Null for a key that no longer decodes (its page was removed or renamed, or its module isn't loaded). */
+    /**
+     * Null for a key that no longer decodes (its page was removed or renamed, or its module isn't loaded), or one that
+     * isn't [restorable] (a file saved before it was marked so).
+     */
     fun decode(element: JsonElement): NavKey? = try {
-        json.decodeFromJsonElement(navKey, element)
+        json.decodeFromJsonElement(navKey, element).takeIf(restorable)
     } catch (e: Exception) {
         log.info("Skipping a saved page that no longer decodes: ${e.message}")
         null
@@ -110,6 +131,7 @@ class TabSessionStore(private val file: File, private val json: Json) {
     fun save(controller: TabsController): Boolean = write(controller.toSession(::encode))
 
     /** False when the write failed; the previous session is then left as it was. */
+    @Synchronized
     fun write(session: TabSession): Boolean = try {
         file.parentFile?.mkdirs()
         temp.writeText(json.encodeToString(TabSession.serializer(), session))
@@ -121,6 +143,7 @@ class TabSessionStore(private val file: File, private val json: Json) {
         true
     } catch (e: Exception) {
         log.log(Level.WARNING, "Tab session not saved", e)
+        if (temp.isFile) temp.delete()
         false
     }
 

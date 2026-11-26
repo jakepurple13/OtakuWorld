@@ -241,7 +241,14 @@ internal val desktopTabsModule: Module = module {
     single { CoreTabKeyProvider } bind TabKeyProvider::class
     single { TabKeys(getAll()) }
     single(named("coreNavKeys")) { CoreNavKeySerializers }
-    single { TabSessionStore(File(get<AppDirs>().getUserDataDir(), "tabs-session.json"), navKeyJson(getAll())) }
+    single {
+        val serializers = getAll<NavKeySerializers>()
+        TabSessionStore(
+            File(get<AppDirs>().getUserDataDir(), "tabs-session.json"),
+            navKeyJson(serializers),
+            serializers.restorable(),
+        )
+    }
     single(createdAtStart = true) {
         TabsController(
             homeNav = get<Navigation3Actions>(),

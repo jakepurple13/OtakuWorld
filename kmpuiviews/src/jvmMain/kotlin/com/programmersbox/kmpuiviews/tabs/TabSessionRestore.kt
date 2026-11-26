@@ -3,10 +3,8 @@ package com.programmersbox.kmpuiviews.tabs
 import androidx.compose.runtime.snapshotFlow
 import androidx.navigation3.runtime.NavKey
 import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonElement
 
 /** How long tab, stack and window changes settle before the session is written. */
@@ -92,12 +90,15 @@ fun TabsController.restore(session: TabSession, decode: (JsonElement) -> NavKey?
     activate((mainActive ?: home).id)
 }
 
-/** Writes the session [TAB_SESSION_SAVE_DEBOUNCE_MS] after tabs, stacks or windows stop changing. Runs until cancelled. */
+/**
+ * Queues the session on [writes] [TAB_SESSION_SAVE_DEBOUNCE_MS] after tabs, stacks or windows stop changing. Runs until
+ * cancelled. The quit save goes on the same queue, so it always lands after any autosave, and quit waits for both.
+ */
 @OptIn(FlowPreview::class)
-suspend fun TabSessionStore.autosave(controller: TabsController) {
+suspend fun TabSessionStore.autosave(controller: TabsController, writes: PendingWrites = PendingWrites.App) {
     snapshotFlow { controller.toSession(::encode) }
         .debounce(TAB_SESSION_SAVE_DEBOUNCE_MS)
-        .collect { session -> withContext(Dispatchers.IO) { write(session) } }
+        .collect { session -> writes.launch { write(session) } }
 }
 
 /** The keys up to the first one [convert] can't handle. */

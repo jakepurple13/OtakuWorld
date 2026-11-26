@@ -76,7 +76,9 @@ fun main(args: Array<String>) {
                             subclass(ReaderSettingsScreen::class)
                             subclass(PlatformSettings::class)
                         }
-                    }
+                    },
+                    // A streamed chapter needs the chapter list its click handed over; a download reads its file.
+                    restorable = { it !is ReadViewModel.MangaReader || it.downloaded },
                 )
             }
             single {

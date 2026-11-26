@@ -56,7 +56,9 @@ fun main(args: Array<String>) {
                             subclass(ReadViewModel.NovelReader::class)
                             subclass(PlatformSettings::class)
                         }
-                    }
+                    },
+                    // A streamed chapter needs the chapter its click handed over; a download reads its folder.
+                    restorable = { it !is ReadViewModel.NovelReader || it.downloaded },
                 )
             }
             single {

@@ -5,6 +5,13 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
+import kotlinx.serialization.modules.subclass
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -17,6 +24,15 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+
+/** Stands in for an app's reader key, which lives outside kmpuiviews. */
+@Serializable
+private data class FakeReader(val downloaded: Boolean, val url: String = "chapter") : NavKey
+
+private val FakeReaderSerializers = NavKeySerializers(
+    SerializersModule { polymorphic(NavKey::class) { subclass(FakeReader::class) } },
+    restorable = { it !is FakeReader || it.downloaded },
+)
 
 class TabSessionTest {
 
@@ -235,6 +251,74 @@ class TabSessionTest {
         assertEquals(DefaultMainWindowSize, initialWindowSize(after.main.bounds.value))
         assertEquals(DpSize(900.dp, 700.dp), initialWindowSize(WindowBounds(10.dp, 20.dp, 900.dp, 700.dp)))
         assertEquals(TabsController.DefaultWindowBounds, after.windows.first { !it.isMain }.bounds.value)
+    }
+
+    @Test
+    fun queuedWritesLeaveTheNewestSessionLast() = runBlocking {
+        val older = sampleSession()
+        val newer = older.copy(windows = older.windows.take(1))
+        val writes = PendingWrites(CoroutineScope(Dispatchers.IO))
+        // An autosave in flight, then the quit save, on the same queue.
+        writes.launch { store.write(older) }
+        writes.launch { store.write(newer) }
+        writes.awaitAll()
+        assertEquals(newer, store.load())
+    }
+
+    @Test
+    fun concurrentWritesNeverLeaveAHalfWrittenSession() {
+        val sessions = List(8) { i ->
+            sampleSession().let { s -> s.copy(windows = s.windows.map { it.copy(activeIndex = i) }) }
+        }
+        val failed = java.util.concurrent.atomic.AtomicInteger()
+        val threads = sessions.map { session ->
+            Thread { repeat(25) { if (!store.write(session)) failed.incrementAndGet() } }
+        }
+        threads.forEach(Thread::start)
+        threads.forEach(Thread::join)
+
+        // Sharing the temp file, one write's rename takes another's file (or a half-written one) away.
+        assertEquals(0, failed.get())
+        assertTrue(store.load() in sessions)
+        assertFalse(File(dir, "tabs-session.json.tmp").exists())
+    }
+
+    @Test
+    fun streamedReadersAreCutFromTheSavedStack() {
+        val readerStore = TabSessionStore(
+            file,
+            navKeyJson(listOf(CoreNavKeySerializers, FakeReaderSerializers)),
+            listOf(CoreNavKeySerializers, FakeReaderSerializers).restorable(),
+        )
+        val before = newController()
+        val homeId = before.main.tabs.first().id
+        // Details, then a streamed reader opened from it: comes back as Details.
+        val fromDetails = before.open(title("A"), TabOpenMode.Foreground, homeId)
+        before.main.tabs.first { it.id == fromDetails }.nav.navBackStack.add(FakeReader(downloaded = false))
+        // Only a streamed reader: dropped.
+        before.open(FakeReader(downloaded = false, url = "only"), TabOpenMode.Background, homeId)
+        // A downloaded reader reads its file: kept.
+        before.open(FakeReader(downloaded = true, url = "file"), TabOpenMode.Background, homeId)
+
+        assertTrue(readerStore.save(before))
+        val after = newController()
+        after.startSession(OnLaunch.Restore, onboardingDone = true, session = readerStore.load(), decode = readerStore::decode)
+
+        assertEquals(
+            setOf(
+                listOf<NavKey>(Screen.RecentScreen),
+                listOf<NavKey>(title("A")),
+                listOf<NavKey>(FakeReader(downloaded = true, url = "file")),
+            ),
+            after.main.stacks().toSet(),
+        )
+        assertEquals(3, after.main.tabs.size)
+
+        // A file saved before the key was marked unrestorable still can't bring it back.
+        val permissive = TabSessionStore(file, navKeyJson(listOf(CoreNavKeySerializers, FakeReaderSerializers)))
+        val streamed = assertNotNull(permissive.encode(FakeReader(downloaded = false)))
+        assertNull(readerStore.decode(streamed))
+        assertEquals(FakeReader(downloaded = true), readerStore.decode(assertNotNull(permissive.encode(FakeReader(downloaded = true)))))
     }
 
     @Test
