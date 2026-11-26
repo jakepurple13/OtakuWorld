@@ -96,6 +96,7 @@ import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuTitle
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.customSharedElement
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.rememberCoverHandoff
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.sharedItemKey
+import com.programmersbox.kmpuiviews.presentation.tabs.tabTarget
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
@@ -476,19 +477,21 @@ fun SearchCoverCard(
     onClick: () -> Unit = {},
 ) {
     val coverHandoff = rememberCoverHandoff(model.sharedItemKey())
+    val onCardClick = {
+        coverHandoff.handOff()
+        onClick()
+    }
     ElevatedCard(
         modifier = modifier
             .size(
                 ComposableUtils.IMAGE_WIDTH,
                 ComposableUtils.IMAGE_HEIGHT
             )
+            .tabTarget(onOpen = onCardClick, onMore = { onLongPress(ComponentState.Pressed) })
             .clip(CardDefaults.shape)
             .combineClickableWithIndication(
                 onLongPress = onLongPress,
-                onClick = {
-                    coverHandoff.handOff()
-                    onClick()
-                }
+                onClick = onCardClick
             )
     ) {
         Box(

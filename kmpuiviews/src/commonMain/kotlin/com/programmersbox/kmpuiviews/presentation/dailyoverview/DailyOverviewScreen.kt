@@ -71,6 +71,7 @@ import com.programmersbox.kmpuiviews.presentation.dailyoverview.components.HourG
 import com.programmersbox.kmpuiviews.presentation.dailyoverview.components.StatTiles
 import com.programmersbox.kmpuiviews.presentation.dailyoverview.components.SummaryCard
 import com.programmersbox.kmpuiviews.presentation.dailyoverview.components.peakHourLabel
+import com.programmersbox.kmpuiviews.presentation.tabs.tabTarget
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
@@ -460,7 +461,7 @@ private fun OverviewRow(
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surfaceContainer)
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .then(if (onClick != null) Modifier.tabTarget(onClick).clickable(onClick = onClick) else Modifier)
             .padding(8.dp)
     ) {
         cover()

@@ -116,6 +116,7 @@ import com.programmersbox.kmpuiviews.presentation.components.placeholder.Placeho
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
 import com.programmersbox.kmpuiviews.presentation.components.revealRestored
+import com.programmersbox.kmpuiviews.presentation.tabs.tabTarget
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuImageElement
@@ -754,6 +755,8 @@ fun HistoryItem(
             colors = ListItemDefaults.colors(containerColor = container),
             modifier = Modifier
                 .semantics { selected = isSelected }
+                // Selection mode clicks toggle selection, so there is nothing to open in a tab
+                .then(if (selectionMode) Modifier else Modifier.tabTarget(onOpen = onClick, onMore = onInfo))
                 .combinedClickable(
                     onClick = onClick,
                     onLongClick = {

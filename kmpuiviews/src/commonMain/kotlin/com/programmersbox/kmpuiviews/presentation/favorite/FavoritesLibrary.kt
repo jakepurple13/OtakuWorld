@@ -63,6 +63,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.programmersbox.kmpuiviews.presentation.tabs.tabTarget
 import com.programmersbox.kmpuiviews.repository.MatchField
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.CoverHandoff
@@ -405,6 +406,10 @@ private fun LibraryList(
                 }
                 items(section.groups, key = { it.title }) { group ->
                     val handoff = rememberCoverHandoff(group.navKey)
+                    val open = {
+                        handoff.handOff()
+                        onGroupClick(group)
+                    }
                     LibraryRow(
                         group = group,
                         isSearching = isSearching,
@@ -414,11 +419,9 @@ private fun LibraryList(
                         handoff = handoff,
                         modifier = Modifier
                             .animateItem()
+                            .tabTarget(onOpen = open, onMore = { onGroupLongPress(group) })
                             .combinedClickable(
-                                onClick = {
-                                    handoff.handOff()
-                                    onGroupClick(group)
-                                },
+                                onClick = open,
                                 onLongClick = { onGroupLongPress(group) },
                             ),
                     )
@@ -550,6 +553,10 @@ private fun LibraryGrid(
             }
             items(section.groups, key = { it.title }) { group ->
                 val handoff = rememberCoverHandoff(group.navKey)
+                val open = {
+                    handoff.handOff()
+                    onGroupClick(group)
+                }
                 GridTile(
                     group = group,
                     isSearching = isSearching,
@@ -559,11 +566,9 @@ private fun LibraryGrid(
                     handoff = handoff,
                     modifier = Modifier
                         .animateItem()
+                        .tabTarget(onOpen = open, onMore = { onGroupLongPress(group) })
                         .combinedClickable(
-                            onClick = {
-                                handoff.handOff()
-                                onGroupClick(group)
-                            },
+                            onClick = open,
                             onLongClick = { onGroupLongPress(group) },
                         ),
                 )

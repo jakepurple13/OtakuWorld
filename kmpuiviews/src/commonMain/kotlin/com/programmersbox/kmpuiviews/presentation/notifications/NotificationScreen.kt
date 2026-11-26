@@ -124,6 +124,7 @@ import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.presentation.components.optionsSheet
 import com.programmersbox.kmpuiviews.presentation.components.revealRestored
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
+import com.programmersbox.kmpuiviews.presentation.tabs.tabTarget
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
 import com.programmersbox.kmpuiviews.utils.Cached
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
@@ -681,6 +682,8 @@ private fun NotificationRow(
                     .fillMaxWidth()
                     .background(container)
                     .semantics { selected = isSelected }
+                    // Selection mode clicks toggle selection, so there is nothing to open in a tab
+                    .then(if (selectionMode) Modifier else Modifier.tabTarget(onOpen = onClick, onMore = onMore))
                     .combinedClickable(
                         onClick = onClick,
                         onLongClick = {

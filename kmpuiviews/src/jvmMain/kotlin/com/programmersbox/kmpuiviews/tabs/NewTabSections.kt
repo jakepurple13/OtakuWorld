@@ -46,6 +46,7 @@ import com.programmersbox.favoritesdatabase.RecentModel
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
+import com.programmersbox.kmpuiviews.presentation.tabs.tabTarget
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import org.koin.compose.koinInject
 
@@ -138,16 +139,18 @@ internal fun NewTabUpdates(items: List<NotificationItem>, modifier: Modifier) {
         } else {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items.forEach { item ->
+                    val open = {
+                        navActions.details(
+                            title = item.notiTitle,
+                            description = item.summaryText,
+                            url = item.url,
+                            imageUrl = item.imageUrl.orEmpty(),
+                            source = item.source,
+                        )
+                    }
                     AssistChip(
-                        onClick = {
-                            navActions.details(
-                                title = item.notiTitle,
-                                description = item.summaryText,
-                                url = item.url,
-                                imageUrl = item.imageUrl.orEmpty(),
-                                source = item.source,
-                            )
-                        },
+                        onClick = open,
+                        modifier = Modifier.tabTarget(open),
                         label = { Text(item.notiTitle, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                         leadingIcon = { Icon(Icons.Default.NewReleases, null) },
                     )
