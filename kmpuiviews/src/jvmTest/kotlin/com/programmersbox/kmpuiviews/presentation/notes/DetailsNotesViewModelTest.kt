@@ -110,6 +110,22 @@ class DetailsNotesViewModelTest {
         assertEquals("https://example.com/1", vm.note.value?.itemUrl)
     }
 
+    @Test fun `panel save from an empty state creates the note under the decoded details url`() = runTest {
+        val key = com.programmersbox.kmpuiviews.presentation.Screen.DetailsScreen.Details(
+            "Panel Title", "d", "https%3A%2F%2Fx.com%2Fa%3Fb%3D1", "i", "src"
+        )
+        val url = com.programmersbox.kmpuiviews.tabs.notesItemUrl(key)!!
+        val vm = viewModel(itemUrl = url, itemTitle = key.title)
+        val __sub = backgroundScope.launch { vm.note.collect {} }
+        assertNull(vm.note.value)
+        vm.saveNote("first note")
+        awaitCondition { vm.note.value != null }
+
+        assertEquals("https://x.com/a?b=1", vm.note.value?.itemUrl)
+        assertEquals("Panel Title", vm.note.value?.itemTitle)
+        assertEquals("first note", vm.note.value?.content)
+    }
+
     @Test fun `saveNote updates existing note content`() = runTest {
         val dao = database.notesDao()
         dao.upsertNote(
