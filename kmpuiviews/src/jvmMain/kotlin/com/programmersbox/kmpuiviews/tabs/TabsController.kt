@@ -16,6 +16,9 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
+/** Asks [window] to come to the front. Compared by identity: each request is a new one. */
+class RaiseRequest(val window: WindowId)
+
 /**
  * Owns every desktop window and tab. Each tab's [Navigation3Actions] routes its pushes through
  * [intercept], which keeps one tab per title and sends single-instance pages to their own tab.
@@ -43,6 +46,14 @@ class TabsController(
     )
 
     var focusedWindow: WindowId by mutableStateOf(windows.first().id)
+        private set
+
+    /**
+     * The latest user- or navigation-initiated activation's window. That window, when the OS has it behind another
+     * or minimized, brings itself to the front; a new request each time, so the same window can be raised again.
+     * A neighbor taking over after a close or move ([activate] without focus) never sets it.
+     */
+    var raiseRequest: RaiseRequest? by mutableStateOf(null)
         private set
 
     private val _events = MutableSharedFlow<TabEvent>(extraBufferCapacity = 64)
@@ -95,6 +106,9 @@ class TabsController(
     private var handoffOwner: TabId? = windows.first().activeId.value
 
     private val listeners = mutableListOf<(TabEvent?) -> Unit>()
+
+    /** Per tab, the pages a session restore put on its stack that have not been shown yet. See [takeRestored]. */
+    private val restoredKeys = mutableMapOf<TabId, MutableSet<NavKey>>()
 
     init {
         homeNav.interceptor = this
@@ -197,7 +211,10 @@ class TabsController(
             backgroundRun.remove(window.id)
         }
         touch(window.id, tab)
-        if (focus) focusedWindow = window.id
+        if (focus) {
+            focusedWindow = window.id
+            raiseRequest = RaiseRequest(window.id)
+        }
         listeners.forEach { it(null) }
     }
 
@@ -229,6 +246,7 @@ class TabsController(
         snapshots.remove(tab)
         lastShown.remove(tab)
         sleepPending.remove(tab)
+        restoredKeys.remove(tab)
         if (handoffOwner == tab) handoffOwner = null
         if (record) {
             closed.add(ClosedTab(state.nav.backStack.toList(), held))
@@ -381,6 +399,23 @@ class TabsController(
     /** A tab for a restored session showing [stack]. Nothing composes or loads until it is first shown. */
     internal fun restoredTab(stack: List<NavKey>): TabState = newTab(stack.first()).also { tab ->
         stack.drop(1).forEach { tab.nav.navBackStack.add(it) }
+        markRestored(tab.id, stack)
+    }
+
+    /** [stack]'s pages in [tab] came from a session restore. */
+    internal fun markRestored(tab: TabId, stack: List<NavKey>) {
+        restoredKeys.getOrPut(tab) { mutableSetOf() }.addAll(stack)
+    }
+
+    /**
+     * True once, the first time [tab] shows [key] after a session restore put it there; false for a page opened any
+     * other way. A player uses it to open a restored video paused.
+     */
+    fun takeRestored(tab: TabId, key: NavKey): Boolean {
+        val keys = restoredKeys[tab] ?: return false
+        val taken = keys.remove(key)
+        if (keys.isEmpty()) restoredKeys.remove(tab)
+        return taken
     }
 
     /** A restored torn-out window holding [first]. */

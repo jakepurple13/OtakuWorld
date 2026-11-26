@@ -9,6 +9,7 @@ import androidx.compose.ui.input.key.isMetaPressed
 import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
+import androidx.navigation3.runtime.NavKey
 import com.programmersbox.kmpuiviews.presentation.Screen
 
 sealed interface TabShortcut {
@@ -30,6 +31,16 @@ sealed interface TabShortcut {
     data object CloseWindow : TabShortcut
 }
 
+/**
+ * Whether a window shows its tab chrome (strip, toolbar, "+") and takes tab shortcuts, given its active tab's current
+ * page. Only onboarding hides them; readers, players and other immersive pages keep them.
+ */
+fun tabChromeVisible(activeKey: NavKey?): Boolean = activeKey != Screen.OnboardingScreen
+
+/** [tabChromeVisible] for this window's active tab. */
+val BrowserWindowState.chromeVisible: Boolean
+    get() = tabChromeVisible(tabs.firstOrNull { it.id == activeId.value }?.current)
+
 private val numberKeys = listOf(
     Key.One, Key.Two, Key.Three, Key.Four, Key.Five, Key.Six, Key.Seven, Key.Eight,
 )
@@ -44,8 +55,8 @@ private val numberKeys = listOf(
  *
  * ⌘← / ⌘→ are skipped while [textFieldFocused], where they move the caret.
  *
- * Returns null while [chromeVisible] is false (onboarding and immersive screens hide the nav bar),
- * so tabs can't be opened, switched or closed from there.
+ * Returns null while [chromeVisible] is false (onboarding, see [tabChromeVisible]), so tabs can't be
+ * opened, switched or closed from there.
  */
 fun tabShortcut(
     event: KeyEvent,

@@ -186,6 +186,40 @@ class TabWindowsTest {
     }
 
     @Test
+    fun crossWindowActivationRaisesItsWindowButBackgroundCloseDoesNot() {
+        val a = controller.open(title("A"), TabOpenMode.Foreground, homeId)
+        val b = controller.open(title("B"), TabOpenMode.Foreground, a)
+        val torn = controller.tearOut(a, bounds)
+        controller.move(b, torn, 1)
+        controller.activate(homeId)
+        controller.focus(main.id)
+        val beforeClose = controller.raiseRequest
+        assertEquals(main.id, beforeClose?.window)
+
+        // A close in the torn window activates its neighbor there without asking it forward.
+        controller.close(b)
+        assertTrue(controller.raiseRequest === beforeClose)
+
+        // Navigating to a title open in the torn window reuses that tab and asks its window forward.
+        main.tabs.first { it.id == homeId }.nav.details(
+            title = "A", description = "d", url = "url-A", imageUrl = "img-A", source = "src",
+        )
+        assertEquals(torn, controller.focusedWindow)
+        val request = controller.raiseRequest
+        assertEquals(torn, request?.window)
+
+        // Only the request's window raises, and only while the OS has another window focused.
+        assertTrue(shouldRaise(request, torn, osFocused = false))
+        assertFalse(shouldRaise(request, torn, osFocused = true))
+        assertFalse(shouldRaise(request, main.id, osFocused = false))
+        assertFalse(shouldRaise(null, torn, osFocused = false))
+
+        // Activating the same window again is a new request, so it raises again after the user left it.
+        controller.activate(a)
+        assertFalse(controller.raiseRequest === request)
+    }
+
+    @Test
     fun closedWindowForgetsItsUiState() {
         val a = controller.open(title("A"), TabOpenMode.Foreground, homeId)
         val torn = controller.tearOut(a, bounds)

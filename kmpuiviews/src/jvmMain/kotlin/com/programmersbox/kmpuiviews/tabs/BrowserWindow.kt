@@ -36,13 +36,11 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.presentation.quickactions.isMacOs
 import com.programmersbox.kmpuiviews.presentation.tabs.LocalSearchFocusRequest
 import com.programmersbox.kmpuiviews.presentation.tabs.LocalTabActions
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
-import com.programmersbox.sharedcomponents.repository.ChangingSettingsRepository
 import org.koin.compose.koinInject
 
 /**
@@ -56,10 +54,9 @@ fun BrowserWindow(
     window: BrowserWindowState,
     controller: TabsController,
     genericInfo: KmpGenericInfo = koinInject(),
-    changingSettingsRepository: ChangingSettingsRepository = koinInject(),
 ) {
-    // Onboarding and immersive screens hide the nav bar; the toolbar hides with it.
-    val showNavBar by changingSettingsRepository.showNavBar.collectAsStateWithLifecycle(true)
+    // Onboarding hides the tab chrome and shortcuts; readers and players keep them.
+    val showChrome = window.chromeVisible
     val customPreferences = remember { ComposeSettingsDsl().apply(genericInfo.composeCustomPreferences()) }
     val windowSize = calculateWindowSizeClass()
     val stateHolder = rememberSaveableStateHolder()
@@ -79,13 +76,21 @@ fun BrowserWindow(
     val windowFocused = LocalWindowInfo.current.isWindowFocused
     LaunchedEffect(windowFocused) { if (windowFocused) controller.focus(window.id) }
 
+    // A tab activated from another window (a reused tab, a moved one) brings this window forward, so it and the
+    // overlays that follow the focused window (⌘K, banners, the shortcuts dialog) are not left behind another.
+    val awtWindow = LocalAwtWindow.current
+    val raise = controller.raiseRequest
+    LaunchedEffect(raise) {
+        if (shouldRaise(raise, window.id, windowFocused)) awtWindow?.let(::bringToFront)
+    }
+
     if (window.isMain) DesktopAppOnce(genericInfo)
 
     DesktopWindowEffects(windowSize = windowSize, hostsOverlays = controller.focusedWindow == window.id) {
         val active = window.tabs.firstOrNull { it.id == window.activeId.value } ?: window.tabs.first()
 
         val motion = controller.motion
-        val side = showNavBar && motion.position == TabPosition.Side
+        val side = showChrome && motion.position == TabPosition.Side
         // The column slides open and the content with it; Reduced and Off switch at once (the tabs crossfade).
         val sideWidth by animateDpAsState(
             targetValue = if (side) SideTabsWidth else 0.dp,
@@ -98,7 +103,7 @@ fun BrowserWindow(
                 .onFocusChanged { controller.ui.contentHasFocus[window.id] = it.hasFocus }
                 // Reached only when no focused text field used the key: ⌘← / ⌘→ back and forward.
                 .onKeyEvent { event ->
-                    tabShortcut(event, isMac = isMacOs, chromeVisible = showNavBar)
+                    tabShortcut(event, isMac = isMacOs, chromeVisible = showChrome)
                         ?.let { controller.perform(it, window) } != null
                 }
         ) {
@@ -118,7 +123,7 @@ fun BrowserWindow(
                 VerticalDivider()
             }
             Column(Modifier.weight(1f).fillMaxHeight()) {
-                if (showNavBar) TabToolbar(tab = active, controller = controller)
+                if (showChrome) TabToolbar(tab = active, controller = controller)
 
                 Box(Modifier.weight(1f).onGloballyPositioned { controller.motion.contentBounds[window.id] = it.boundsInWindow() }) {
                     // Both tabs compose for the length of a switch; each keeps its own saveable-state and ViewModel keys.
@@ -184,4 +189,17 @@ fun BrowserWindow(
             }
         }
     }
+}
+
+/** Whether the window [self] brings itself forward for [request]: it is the request's window, and not OS-focused. */
+internal fun shouldRaise(request: RaiseRequest?, self: WindowId, osFocused: Boolean): Boolean =
+    request != null && request.window == self && !osFocused
+
+/** Un-minimizes [window] and brings it to the front with focus. */
+internal fun bringToFront(window: java.awt.Window) {
+    if (window is java.awt.Frame && window.extendedState and java.awt.Frame.ICONIFIED != 0) {
+        window.extendedState = window.extendedState and java.awt.Frame.ICONIFIED.inv()
+    }
+    window.toFront()
+    window.requestFocus()
 }

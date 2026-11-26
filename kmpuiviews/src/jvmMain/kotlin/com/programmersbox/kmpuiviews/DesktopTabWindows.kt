@@ -41,6 +41,7 @@ import com.programmersbox.kmpuiviews.tabs.TabsController
 import com.programmersbox.kmpuiviews.tabs.TearOutOverlay
 import com.programmersbox.kmpuiviews.tabs.TearOutStyle
 import com.programmersbox.kmpuiviews.tabs.TrackWindowBounds
+import com.programmersbox.kmpuiviews.tabs.chromeVisible
 import com.programmersbox.kmpuiviews.tabs.closeWindow
 import com.programmersbox.kmpuiviews.tabs.lift
 import com.programmersbox.kmpuiviews.tabs.perform
@@ -58,11 +59,10 @@ private const val OverlayGraceMs = 1_000L
 internal fun TitleBarScope.WindowTitleBar(
     window: BrowserWindowState,
     controller: TabsController,
-    showNavBar: Boolean,
     title: String,
 ) {
-    // On the side, the tabs live in BrowserWindow's column and the title bar shows the title.
-    if (showNavBar && controller.motion.position == TabPosition.Top) {
+    // On the side, the tabs live in BrowserWindow's column and the title bar shows the title. Onboarding hides them.
+    if (window.chromeVisible && controller.motion.position == TabPosition.Top) {
         TabStrip(
             window = window,
             controller = controller,
@@ -81,11 +81,11 @@ internal fun TitleBarScope.WindowTitleBar(
  * A window's tab shortcuts at the window level. With focus inside the content, ⌘← / ⌘→ are left to the content (a
  * text field uses them to move the caret) and handled when they bubble up to BrowserWindow.
  */
-internal fun windowTabShortcut(event: KeyEvent, window: BrowserWindowState, controller: TabsController, showNavBar: Boolean): Boolean =
+internal fun windowTabShortcut(event: KeyEvent, window: BrowserWindowState, controller: TabsController): Boolean =
     tabShortcut(
         event,
         isMac = isMacOs,
-        chromeVisible = showNavBar,
+        chromeVisible = window.chromeVisible,
         textFieldFocused = controller.ui.contentHasFocus[window.id] == true,
     )?.let { controller.perform(it, window) } != null
 
@@ -105,9 +105,9 @@ internal fun WindowOverlays(window: BrowserWindowState, controller: TabsControll
 
 /** Every torn-out window. The main window is drawn by the app shell. */
 @Composable
-internal fun TornOutWindows(controller: TabsController, showNavBar: Boolean, appColors: ColorScheme?) {
+internal fun TornOutWindows(controller: TabsController, appColors: ColorScheme?) {
     controller.windows.filter { !it.isMain }.forEach { window ->
-        key(window.id.v) { TornOutWindow(window, controller, showNavBar, appColors) }
+        key(window.id.v) { TornOutWindow(window, controller, appColors) }
     }
 }
 
@@ -119,7 +119,6 @@ internal fun TornOutWindows(controller: TabsController, showNavBar: Boolean, app
 private fun TornOutWindow(
     window: BrowserWindowState,
     controller: TabsController,
-    showNavBar: Boolean,
     // The app theme, read from the main window: this runs outside any window, where MaterialTheme is the default.
     appColors: ColorScheme?,
     keys: TabKeys = koinInject(),
@@ -166,8 +165,8 @@ private fun TornOutWindow(
         visible = run?.shown ?: true,
         showQuickActions = true,
         hostsOverlays = controller.focusedWindow == window.id,
-        titleBarContent = { WindowTitleBar(window, controller, showNavBar, title) },
-        onKeyEvent = { windowTabShortcut(it, window, controller, showNavBar) },
+        titleBarContent = { WindowTitleBar(window, controller, title) },
+        onKeyEvent = { windowTabShortcut(it, window, controller) },
         overlay = { WindowOverlays(window, controller) },
     ) {
         if (run != null && run.style == TearOutStyle.Overlay && run.shown) {

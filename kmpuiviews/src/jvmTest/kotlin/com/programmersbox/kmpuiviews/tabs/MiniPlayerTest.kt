@@ -130,6 +130,24 @@ class MiniPlayerTest {
     }
 
     @Test
+    fun playingThePausedMiniPlayerPausesTheForegroundTab() {
+        val (a, first) = play("a")
+        // Opening b leaves a in the mini player; b playing pauses it.
+        val (b, second) = play("b")
+        assertEquals(a, registry.showing.value)
+        assertFalse(first.playing.value)
+        assertTrue(second.playing.value)
+
+        // The mini player's play button.
+        first.resume()
+
+        assertEquals(a, registry.showing.value)
+        assertTrue(first.playing.value)
+        assertFalse(second.playing.value)
+        assertEquals(b, main.activeId.value)
+    }
+
+    @Test
     fun parkedTabThatStartsPlayingGoesToTheMiniPlayer() {
         val (a, source) = play("a")
         source.pause()

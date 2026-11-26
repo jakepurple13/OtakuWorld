@@ -74,7 +74,10 @@ fun TabsController.restore(
             val stack = entry.backStack.decodablePrefix(decode)
             when {
                 stack.isEmpty() -> null
-                entry.pinned && saved.isMain -> home.also { it.nav.restoreTopLevelStack(stack) }
+                entry.pinned && saved.isMain -> home.also {
+                    it.nav.restoreTopLevelStack(stack)
+                    markRestored(it.id, stack)
+                }
                 entry.pinned -> null
                 else -> restoredTab(stack)
             }

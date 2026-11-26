@@ -248,6 +248,56 @@ class TabSessionTest {
     }
 
     @Test
+    fun restoredPagesAreTakenOnceAndOpenedPagesNever() {
+        val after = newController()
+        after.startSession(OnLaunch.Restore, onboardingDone = true, session = sampleSession(), decode = store::decode)
+        val restoredA = after.main.tabs.first { it.current == title("A") }
+        val torn = after.windows.first { !it.isMain }.tabs.first()
+        val home = after.main.tabs.first { it.pinned }
+
+        // A restored player opens paused, once; showing it again (a reopened player) plays as usual.
+        assertTrue(after.takeRestored(restoredA.id, title("A")))
+        assertFalse(after.takeRestored(restoredA.id, title("A")))
+        assertTrue(after.takeRestored(torn.id, title("B")))
+        assertTrue(after.takeRestored(home.id, Screen.RecentScreen))
+        // Not the page it restored, or a tab opened after launch.
+        assertFalse(after.takeRestored(restoredA.id, title("B")))
+        val opened = after.open(title("C"), TabOpenMode.Foreground, home.id)
+        assertFalse(after.takeRestored(opened, title("C")))
+    }
+
+    @Test
+    fun sessionFileCarriesItsVersion() {
+        assertTrue(store.write(sampleSession()))
+        assertTrue("\"version\":1" in file.readText().replace(" ", ""))
+        assertEquals(1, assertNotNull(store.load()).version)
+    }
+
+    @Test
+    fun sessionWithoutVersionLoadsAsVersionOne() {
+        assertTrue(store.write(sampleSession()))
+        val old = file.readText().replace(",\"version\":1", "").replace("\"version\":1,", "")
+        assertFalse("version" in old)
+        file.writeText(old)
+
+        val loaded = assertNotNull(store.load())
+        assertEquals(1, loaded.version)
+        assertEquals(2, loaded.windows.size)
+    }
+
+    @Test
+    fun sessionFromANewerVersionStartsFresh() {
+        assertTrue(store.write(sampleSession().copy(version = TabSession.CURRENT_VERSION + 1)))
+
+        val session = store.load()
+        assertNull(session)
+        val after = newController()
+        after.startSession(OnLaunch.Restore, onboardingDone = true, session = session, decode = store::decode)
+        assertEquals(listOf(listOf<NavKey>(Screen.RecentScreen)), after.main.stacks())
+        assertEquals(1, after.windows.size)
+    }
+
+    @Test
     fun restoreCorruptFileStartsFresh() {
         assertNull(store.load())
 

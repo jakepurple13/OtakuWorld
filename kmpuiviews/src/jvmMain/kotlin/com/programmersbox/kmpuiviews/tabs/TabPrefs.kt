@@ -261,7 +261,6 @@ internal val desktopTabsModule: Module = module {
             handoffs = getAll(),
             downloadsKey = getOrNull<DownloadsDestination>()?.key,
         ).also { controller ->
-            val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
             // Before the first frame, so the restored tabs and the main window's bounds are there when it opens.
             val (onLaunch, onboardingDone) = runBlocking {
                 migrateTabsOnLaunch()
@@ -269,9 +268,11 @@ internal val desktopTabsModule: Module = module {
             }
             val store = get<TabSessionStore>()
             controller.startSession(onLaunch, onboardingDone, store.load(), store::decode)
+            // Home opens on onboarding from the first frame, so the tab chrome it hides never flashes in.
+            if (!onboardingDone) get<Navigation3Actions>().toOnboarding()
             // The saved position before the first frame, so a Side layout does not open as Top and glide over.
             controller.motion.switchLayout(runBlocking { tabPositionPref.get() }, animate = false)
-            combine(
+            val prefs = combine(
                 combine(
                     tabClickOpensPref.asFlow(),
                     tabModClickPref.asFlow(),
@@ -289,13 +290,12 @@ internal val desktopTabsModule: Module = module {
                 },
                 tabsTearOutPref.asFlow(),
             ) { snapshot, tearOut -> snapshot.copy(tearOut = tearOut) }
-                .onEach { controller.prefs = it }
-                .launchIn(scope)
+            // On the UI thread, like everything else that changes tabs: prefs and motion are snapshot state.
+            val main = CoroutineScope(Dispatchers.Main + SupervisorJob())
+            prefs.onEach { controller.prefs = it }.launchIn(main)
             tabMotionPref.asFlow()
                 .onEach { controller.motion.mode = it }
-                .launchIn(scope)
-            // On the UI thread, like everything else that changes tabs.
-            val main = CoroutineScope(Dispatchers.Main + SupervisorJob())
+                .launchIn(main)
             main.launch { controller.runSleepChecks(tabsSleepAfterPref.asFlow(), System::currentTimeMillis) }
             // Once per app, whatever the number of windows.
             main.launch { controller.motion.followSystemReducedMotion() }

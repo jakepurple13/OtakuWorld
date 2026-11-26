@@ -6,6 +6,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
 import com.programmersbox.kmpuiviews.motion.MotionSettingsRoute
 import com.programmersbox.kmpuiviews.presentation.Screen
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.PolymorphicSerializer
@@ -26,9 +27,20 @@ import java.nio.file.StandardCopyOption
 import java.util.logging.Level
 import java.util.logging.Logger
 
-/** Every window and tab, saved on change and on quit, restored on the next launch. */
+/**
+ * Every window and tab, saved on change and on quit, restored on the next launch. [version] is the file format; a file
+ * without one is version 1, and one newer than [CURRENT_VERSION] (written by a later app) is not loaded.
+ */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
-data class TabSession(val windows: List<WindowSession>)
+data class TabSession(
+    val windows: List<WindowSession>,
+    @EncodeDefault val version: Int = CURRENT_VERSION,
+) {
+    companion object {
+        const val CURRENT_VERSION = 1
+    }
+}
 
 /** [bounds] is null when the window never reported a floating position (the default size is used then). */
 @Serializable
@@ -117,12 +129,17 @@ class TabSessionStore(
         null
     }
 
-    /** Null for a missing, empty or corrupt file. */
+    /** Null for a missing, empty or corrupt file, or one from a newer format version. */
     fun load(): TabSession? = try {
         file.takeIf { it.isFile }
             ?.readText()
             ?.takeIf { it.isNotBlank() }
             ?.let { json.decodeFromString(TabSession.serializer(), it) }
+            ?.takeIf { session ->
+                (session.version <= TabSession.CURRENT_VERSION).also { known ->
+                    if (!known) log.warning("Tab session is version ${session.version}, newer than ${TabSession.CURRENT_VERSION}; starting fresh")
+                }
+            }
     } catch (e: Exception) {
         log.log(Level.WARNING, "Tab session unreadable, starting fresh", e)
         null

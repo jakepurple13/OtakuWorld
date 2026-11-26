@@ -1,6 +1,8 @@
 package com.programmersbox.kmpuiviews
 
 import androidx.compose.foundation.layout.Box
+import java.awt.Desktop
+import java.util.logging.Logger
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Row
@@ -114,7 +116,6 @@ import com.programmersbox.kmpuiviews.updates.UpdatePrefs
 import com.programmersbox.kmpuiviews.updates.UpdaterEngine
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.JvmAppLogo
-import com.programmersbox.sharedcomponents.repository.ChangingSettingsRepository
 import androidx.compose.runtime.collectAsState
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
@@ -177,6 +178,23 @@ private class DesktopViewModelStoreOwner : ViewModelStoreOwner {
 /** Puts the Actions menu in the macOS menu bar. Must run before any window is created. */
 private fun useScreenMenuBarOnMac() {
     if (isMacOs) System.setProperty("apple.laf.useScreenMenuBar", "true")
+}
+
+/** Where a quit request came from, for the quit log line. */
+private enum class QuitSource(val label: String) {
+    WindowClose("main window close"),
+    OsQuit("OS quit (⌘Q, Dock or app menu)"),
+}
+
+private val quitLog: Logger = Logger.getLogger("com.programmersbox.kmpuiviews.Quit")
+
+/** Brings the whole app to the foreground where the OS allows it (macOS); elsewhere does nothing. */
+private fun requestAppForeground() {
+    runCatching {
+        if (!Desktop.isDesktopSupported()) return
+        val desktop = Desktop.getDesktop()
+        if (desktop.isSupported(Desktop.Action.APP_REQUEST_FOREGROUND)) desktop.requestForeground(true)
+    }
 }
 
 fun desktopSetup(
@@ -417,9 +435,6 @@ private fun InternalDesktopUi(
                     }
                 }
             }
-            // Onboarding and immersive screens hide the nav bar; the tab chrome follows it, as HomeNav's rail did.
-            // Plain collectAsState: this runs outside the Window, where there is no LocalLifecycleOwner.
-            val showNavBar by koinInject<ChangingSettingsRepository>().showNavBar.collectAsState(true)
             val picture = remember { WindowPicture() }
             var contentHeight by remember { mutableStateOf(Dp.Unspecified) }
             var contentColors by remember { mutableStateOf<ColorScheme?>(null) }
@@ -455,7 +470,9 @@ private fun InternalDesktopUi(
             var askingQuit by remember { mutableStateOf(false) }
             // Bumped by every quit request while the dialog is up, so each one brings it back to the front.
             var askAgain by remember { mutableIntStateOf(0) }
-            val requestQuit: () -> Unit = {
+            val requestQuit: (QuitSource) -> Unit = { source ->
+                // Permanent: tells a real quit request apart from the process being killed (which logs nothing).
+                quitLog.info("Quit requested from ${source.label}")
                 when {
                     askingQuit -> askAgain++
                     quitController.state == QuitController.State.Idle &&
@@ -464,22 +481,22 @@ private fun InternalDesktopUi(
                 }
             }
             // A request arriving after exit is a no-op; its held answer is still sent once the app loop ends.
-            AppQuitHandler(quitReply, requestQuit)
+            AppQuitHandler(quitReply) { requestQuit(QuitSource.OsQuit) }
             val quitInWindow = (quitController.state as? QuitController.State.Playing)
                 ?.takeIf { it.plan.host == QuitHost.InWindow }
                 ?.run
             OtakuDecoratedWindow(
                 title = title,
                 // The main window's close button quits the app, closing every window.
-                onCloseRequest = requestQuit,
+                onCloseRequest = { requestQuit(QuitSource.WindowClose) },
                 state = windowState,
                 // Hidden once exiting too, so the content never shows unfaded before the window goes.
                 visible = !quitController.hideMainWindow && quitController.state != QuitController.State.Exited,
                 showQuickActions = true,
                 hostsOverlays = tabsController.focusedWindow == mainWindow.id,
                 onAnyKey = { launchRun.skip() },
-                titleBarContent = { WindowTitleBar(mainWindow, tabsController, showNavBar, title) },
-                onKeyEvent = { windowTabShortcut(it, mainWindow, tabsController, showNavBar) },
+                titleBarContent = { WindowTitleBar(mainWindow, tabsController, title) },
+                onKeyEvent = { windowTabShortcut(it, mainWindow, tabsController) },
                 overlay = { WindowOverlays(mainWindow, tabsController) },
             ) {
                 if (askingQuit) {
@@ -487,6 +504,8 @@ private fun InternalDesktopUi(
                     // window, or with the main window minimized or behind others, never waits on a hidden prompt.
                     val awtWindow = LocalAwtWindow.current
                     LaunchedEffect(askAgain) {
+                        // A Dock quit leaves the app in the background on macOS, where toFront() alone can't activate it.
+                        requestAppForeground()
                         windowState.isMinimized = false
                         awtWindow?.toFront()
                         awtWindow?.requestFocus()
@@ -535,7 +554,7 @@ private fun InternalDesktopUi(
             }
 
             // Gone once quitting: the app's exit closes every window.
-            if (quitController.state != QuitController.State.Exited) TornOutWindows(tabsController, showNavBar, appColors = contentColors)
+            if (quitController.state != QuitController.State.Exited) TornOutWindows(tabsController, appColors = contentColors)
 
             val chromeColors = contentColors ?: MaterialTheme.colorScheme
             QuitOverlay(

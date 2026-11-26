@@ -161,7 +161,7 @@ class MiniPlayerRegistry(
     /**
      * Only one video is audible. On screen, a tab that starts playing pauses the mini player (which stays, paused).
      * Parked, it was left while opening or buffering, or something resumed it: it goes to the mini player as if it
-     * were left now, or pauses.
+     * were left now, or pauses. The mini player itself starting (its play button) pauses any tab playing on screen.
      */
     private fun startedPlaying(tab: TabId) {
         val entry = entries[tab] ?: return
@@ -170,6 +170,9 @@ class MiniPlayerRegistry(
             _showing.value?.takeIf { it != tab }?.let { entries[it]?.source?.pause() }
         } else if (_showing.value != tab) {
             left(tab, entry)
+        } else {
+            entries.filter { (other, e) -> other != tab && e.source.playing.value && isOnScreen(other) == true }
+                .forEach { (_, e) -> e.source.pause() }
         }
     }
 

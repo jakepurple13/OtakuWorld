@@ -8,7 +8,10 @@ import androidx.compose.ui.input.key.KeyEventType
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import kotlin.test.Test
+import androidx.navigation3.runtime.NavKey
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlin.test.assertNull
 
 @OptIn(InternalComposeUiApi::class, ExperimentalComposeUiApi::class)
@@ -92,6 +95,47 @@ class TabShortcutsTest {
         assertNull(tabShortcut(key(Key.T, ctrl = true), isMac = false, chromeVisible = false))
         assertNull(tabShortcut(key(Key.DirectionLeft, alt = true), isMac = false, chromeVisible = false))
         assertEquals(TabShortcut.NewTab, tabShortcut(key(Key.T, meta = true), isMac = true, chromeVisible = true))
+    }
+
+    /** Stands in for the manga/novel readers and the anime player, which live in the app modules. */
+    private data object ImmersiveReaderKey : NavKey
+
+    @Test
+    fun onlyOnboardingHidesTabChrome() {
+        // Onboarding hides the strip, toolbar and shortcuts.
+        assertFalse(tabChromeVisible(Screen.OnboardingScreen))
+        // Readers, players and other pages that hide the nav bar keep them.
+        assertTrue(tabChromeVisible(ImmersiveReaderKey))
+        assertTrue(tabChromeVisible(Screen.WebViewScreen("https://example.com")))
+        // Home on any other page shows them.
+        assertTrue(tabChromeVisible(Screen.RecentScreen))
+        assertTrue(tabChromeVisible(Screen.Settings))
+        assertTrue(tabChromeVisible(null))
+    }
+
+    @Test
+    fun windowChromeFollowsItsActiveTab() {
+        val home = Navigation3Actions(Screen.RecentScreen)
+        val controller = TabsController(
+            homeNav = home,
+            keys = TabKeys(listOf(CoreTabKeyProvider)),
+            prefs = TabPrefsSnapshot(clickOpensNewTab = false),
+        )
+        val main = controller.windows.first()
+        assertTrue(main.chromeVisible)
+
+        home.toOnboarding()
+        assertFalse(main.chromeVisible)
+        assertNull(tabShortcut(key(Key.T, meta = true), isMac = true, chromeVisible = main.chromeVisible))
+
+        home.onboardingToRecent()
+        assertTrue(main.chromeVisible)
+
+        // A reader in the active tab keeps the chrome and the shortcuts.
+        val reader = controller.open(ImmersiveReaderKey, TabOpenMode.Foreground, main.tabs.first().id)
+        assertEquals(reader, main.activeId.value)
+        assertTrue(main.chromeVisible)
+        assertEquals(TabShortcut.NewTab, tabShortcut(key(Key.T, meta = true), isMac = true, chromeVisible = main.chromeVisible))
     }
 
     @Test
