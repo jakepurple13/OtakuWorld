@@ -45,9 +45,10 @@ class DetailsNotesViewModel(
      * The write behind [saveNote], without [viewModelScope]: a caller that must outlive this ViewModel
      * (the desktop Notes panel, whose store is cleared when its tab closes) runs it in its own scope.
      */
-    suspend fun persist(content: String) {
+    suspend fun persist(content: String, allowDelete: Boolean = true) {
         if (content.isBlank()) {
-            notesDao.removeNote(itemUrl, softDelete = authManager.isLoggedIn())
+            // A mid-edit save must not delete: the next keystroke would then rebuild the note without its sync ids
+            if (allowDelete) notesDao.removeNote(itemUrl, softDelete = authManager.isLoggedIn())
             return
         }
         val current = notesDao.getNote(itemUrl).first()
