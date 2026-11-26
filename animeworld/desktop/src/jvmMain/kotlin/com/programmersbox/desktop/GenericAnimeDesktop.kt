@@ -12,8 +12,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DesktopMac
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.window.Notification
 import androidx.compose.ui.window.TrayState
@@ -40,6 +38,7 @@ import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpStorage
 import com.programmersbox.kmpuiviews.PlatformGenericInfo
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
+import com.programmersbox.kmpuiviews.tabs.navigationItem
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.domain.AppUpdate
@@ -51,7 +50,6 @@ import kotlinx.coroutines.withContext
 
 open class GenericAnimeDesktop(
     appConfig: AppConfig,
-    private val navigationActions: NavigationActions,
     private val episodeDownloads: EpisodeDownloadQueue,
     private val storageHolder: StorageHolder,
     private val trayState: TrayState,
@@ -159,16 +157,8 @@ open class GenericAnimeDesktop(
     @OptIn(ExperimentalMaterial3ExpressiveApi::class)
     override fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit = {
         viewSettings {
-            segmentedListItem(
-                content = { Text("Videos") },
-                leadingContent = { Icon(Icons.Default.VideoLibrary, null) },
-                onClick = { navigationActions.navigate(VideoViewerRoute) }
-            )
-            segmentedListItem(
-                content = { Text("Platform Settings") },
-                leadingContent = { Icon(Icons.Default.DesktopMac, null) },
-                onClick = { navigationActions.navigate(PlatformSettings) }
-            )
+            navigationItem(VideoViewerRoute, Icons.Default.VideoLibrary, "Videos")
+            navigationItem(PlatformSettings, Icons.Default.DesktopMac, "Platform Settings")
         }
 
         playerSettings { DesktopPlayerSettings() }

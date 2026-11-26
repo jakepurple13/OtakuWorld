@@ -1,6 +1,8 @@
 package com.programmersbox.kmpuiviews
 
 import androidx.compose.foundation.layout.Box
+import java.awt.Desktop
+import java.util.logging.Logger
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Row
@@ -25,7 +27,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -33,12 +34,14 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
@@ -92,7 +95,6 @@ import com.programmersbox.kmpuiviews.motion.launchMotion
 import com.programmersbox.kmpuiviews.motion.resolve
 import com.programmersbox.kmpuiviews.motion.skipMotionOnInput
 import com.programmersbox.kmpuiviews.motion.systemReducesMotion
-import com.programmersbox.kmpuiviews.presentation.HomeNav
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.quickactions.OpenOrigin
 import com.programmersbox.kmpuiviews.presentation.quickactions.QuickActionsController
@@ -113,16 +115,32 @@ import com.programmersbox.kmpuiviews.updates.UpdateLaunchDialog
 import com.programmersbox.kmpuiviews.updates.UpdatePrefs
 import com.programmersbox.kmpuiviews.updates.UpdaterEngine
 import com.programmersbox.kmpuiviews.utils.AppConfig
-import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.JvmAppLogo
+import androidx.compose.runtime.collectAsState
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
+import com.programmersbox.kmpuiviews.tabs.BrowserWindow
+import com.programmersbox.kmpuiviews.tabs.LocalAwtWindow
+import com.programmersbox.kmpuiviews.tabs.shouldConfirmQuit
+import com.programmersbox.kmpuiviews.tabs.tabCount
+import com.programmersbox.kmpuiviews.tabs.tabsConfirmQuitPref
+import com.programmersbox.kmpuiviews.tabs.TabsSettingsPage
+import com.programmersbox.kmpuiviews.tabs.NewTabPage
+import com.programmersbox.kmpuiviews.tabs.NewTabRoute
+import com.programmersbox.kmpuiviews.tabs.TabsSettingsRoute
+import com.programmersbox.kmpuiviews.tabs.TabsController
+import com.programmersbox.kmpuiviews.tabs.TabSessionEffects
+import com.programmersbox.kmpuiviews.tabs.TabSessionStore
+import com.programmersbox.kmpuiviews.tabs.rememberMainWindowState
+import com.programmersbox.kmpuiviews.tabs.desktopTabsModule
 import com.programmersbox.kmpuiviews.utils.bindsPlatformGenericInfo
 import com.programmersbox.supabaseintegration.Res
 import com.programmersbox.supabaseintegration.supabase_logo_icon
 import dev.nucleusframework.application.NucleusApplicationScope
 import dev.nucleusframework.window.DecoratedWindow
 import dev.nucleusframework.window.NucleusDecoratedWindowTheme
+import dev.nucleusframework.window.TitleBarLayoutPolicy
+import dev.nucleusframework.window.TitleBarScope
 import dev.nucleusframework.window.material.MaterialTitleBar
 import dev.nucleusframework.window.material.rememberMaterialTitleBarStyle
 import dev.nucleusframework.window.material.rememberMaterialWindowStyle
@@ -130,9 +148,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
+import com.programmersbox.kmpuiviews.tabs.PendingWrites
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.koin.compose.KoinApplication
 import org.koin.compose.getKoin
@@ -158,6 +178,23 @@ private class DesktopViewModelStoreOwner : ViewModelStoreOwner {
 /** Puts the Actions menu in the macOS menu bar. Must run before any window is created. */
 private fun useScreenMenuBarOnMac() {
     if (isMacOs) System.setProperty("apple.laf.useScreenMenuBar", "true")
+}
+
+/** Where a quit request came from, for the quit log line. */
+private enum class QuitSource(val label: String) {
+    WindowClose("main window close"),
+    OsQuit("OS quit (⌘Q, Dock or app menu)"),
+}
+
+private val quitLog: Logger = Logger.getLogger("com.programmersbox.kmpuiviews.Quit")
+
+/** Brings the whole app to the foreground where the OS allows it (macOS); elsewhere does nothing. */
+private fun requestAppForeground() {
+    runCatching {
+        if (!Desktop.isDesktopSupported()) return
+        val desktop = Desktop.getDesktop()
+        if (desktop.isSupported(Desktop.Action.APP_REQUEST_FOREGROUND)) desktop.requestForeground(true)
+    }
 }
 
 fun desktopSetup(
@@ -195,6 +232,8 @@ fun desktopSetup(
                                 single { DesktopUpdater(get(), get(), CoroutineScope(Dispatchers.IO + SupervisorJob())) }
                                 single { jvmAppLogo() }
                                 navigation<MotionSettingsRoute> { MotionSettingsScreen() }
+                                navigation<TabsSettingsRoute> { TabsSettingsPage() }
+                                navigation<NewTabRoute> { NewTabPage() }
                                 genericInfo(this).bindsPlatformGenericInfo()
                                 moduleBlock()
                             }
@@ -203,6 +242,9 @@ fun desktopSetup(
                 )
             }
         }
+        // Dispose has queued the Notes panel's last write and the tab session's last save; give them a moment before
+        // the quit is answered
+        runBlocking { withTimeoutOrNull(1_000) { PendingWrites.App.awaitAll() } }
     }
     exitProcess(0)
 }
@@ -301,7 +343,7 @@ private fun InternalDesktopUi(
                 printLogger(Level.DEBUG)
                 modules(
                     module {
-                        includes(kmpModule, noOpTelemetryModule(printToConsole = true))
+                        includes(kmpModule, noOpTelemetryModule(printToConsole = true), desktopTabsModule)
 
                         singleOf(::DataStoreHandling)
                         single {
@@ -365,7 +407,11 @@ private fun InternalDesktopUi(
                 backgroundWorkHandler.setupPeriodicCheckers()
             }
 
-            val windowState = rememberWindowState()
+            // Created at Koin start, which also restored the last session (tabs and the main window's bounds).
+            val tabsController = koinInject<TabsController>()
+            val mainWindow = tabsController.windows.first { it.isMain }
+            val windowState = rememberMainWindowState(mainWindow)
+            TabSessionEffects(tabsController, koinInject<TabSessionStore>(), mainWindow, windowState)
             val settings = koinInject<MangaDesktopSettings>()
             val koin = getKoin()
             val catalog = remember { koin.getOrNull<DesktopMotionCatalog>() }
@@ -418,20 +464,67 @@ private fun InternalDesktopUi(
                     exit = exitApplication,
                 )
             }
+            // "Ask before quitting with several tabs open": window close and ⌘Q both come through here.
+            // Plain collectAsState: this runs outside the Window, where there is no LocalLifecycleOwner.
+            val confirmQuit by remember { tabsConfirmQuitPref.asFlow() }.collectAsState(true)
+            var askingQuit by remember { mutableStateOf(false) }
+            // Bumped by every quit request while the dialog is up, so each one brings it back to the front.
+            var askAgain by remember { mutableIntStateOf(0) }
+            val requestQuit: (QuitSource) -> Unit = { source ->
+                // Permanent: tells a real quit request apart from the process being killed (which logs nothing).
+                quitLog.info("Quit requested from ${source.label}")
+                when {
+                    askingQuit -> askAgain++
+                    quitController.state == QuitController.State.Idle &&
+                        shouldConfirmQuit(tabsController.tabCount, confirmQuit) -> askingQuit = true
+                    else -> quitController.requestQuit()
+                }
+            }
             // A request arriving after exit is a no-op; its held answer is still sent once the app loop ends.
-            AppQuitHandler(quitReply, quitController::requestQuit)
+            AppQuitHandler(quitReply) { requestQuit(QuitSource.OsQuit) }
             val quitInWindow = (quitController.state as? QuitController.State.Playing)
                 ?.takeIf { it.plan.host == QuitHost.InWindow }
                 ?.run
             OtakuDecoratedWindow(
                 title = title,
-                onCloseRequest = quitController::requestQuit,
+                // The main window's close button quits the app, closing every window.
+                onCloseRequest = { requestQuit(QuitSource.WindowClose) },
                 state = windowState,
                 // Hidden once exiting too, so the content never shows unfaded before the window goes.
                 visible = !quitController.hideMainWindow && quitController.state != QuitController.State.Exited,
                 showQuickActions = true,
+                hostsOverlays = tabsController.focusedWindow == mainWindow.id,
                 onAnyKey = { launchRun.skip() },
+                titleBarContent = { WindowTitleBar(mainWindow, tabsController, title) },
+                onKeyEvent = { windowTabShortcut(it, mainWindow, tabsController) },
+                overlay = { WindowOverlays(mainWindow, tabsController) },
             ) {
+                if (askingQuit) {
+                    // The dialog lives in the main window: un-minimize it and bring it forward, so ⌘Q from a torn-out
+                    // window, or with the main window minimized or behind others, never waits on a hidden prompt.
+                    val awtWindow = LocalAwtWindow.current
+                    LaunchedEffect(askAgain) {
+                        // A Dock quit leaves the app in the background on macOS, where toFront() alone can't activate it.
+                        requestAppForeground()
+                        windowState.isMinimized = false
+                        awtWindow?.toFront()
+                        awtWindow?.requestFocus()
+                    }
+                    ConfirmQuitDialog(
+                        tabCount = tabsController.tabCount,
+                        onQuit = { dontAskAgain ->
+                            askingQuit = false
+                            // On the queue quit waits for, so exiting at once can't drop it.
+                            if (dontAskAgain) PendingWrites.App.launch { tabsConfirmQuitPref.set(false) }
+                            quitController.requestQuit()
+                        },
+                        onCancel = {
+                            askingQuit = false
+                            // An OS quit (⌘Q, Dock) waits for an answer; without one macOS refuses later quits.
+                            quitReply.cancel()
+                        },
+                    )
+                }
                 val colors = MaterialTheme.colorScheme
                 SideEffect { contentColors = colors }
                 launchRun.Play()
@@ -451,17 +544,7 @@ private fun InternalDesktopUi(
                     ) {
                         //UrlOpenerScreen()
                         //ScanQrCode()
-                        val genericInfo = koinInject<KmpGenericInfo>()
-                        val customSettings = remember {
-                            ComposeSettingsDsl().apply(genericInfo.composeCustomPreferences())
-                        }
-                        val windowSize = calculateWindowSizeClass()
-                        HomeNav(
-                            genericInfo = genericInfo,
-                            windowSize = windowSize,
-                            bottomBarAdditions = {},
-                            customPreferences = customSettings,
-                        )
+                        BrowserWindow(window = mainWindow, controller = tabsController)
                         val updater = koinInject<DesktopUpdater>()
                         LaunchedEffect(Unit) { updater.checkOnLaunch() }
                         UpdateLaunchDialog(updater)
@@ -469,6 +552,9 @@ private fun InternalDesktopUi(
                     }
                 }
             }
+
+            // Gone once quitting: the app's exit closes every window.
+            if (quitController.state != QuitController.State.Exited) TornOutWindows(tabsController, appColors = contentColors)
 
             val chromeColors = contentColors ?: MaterialTheme.colorScheme
             QuitOverlay(
@@ -503,7 +589,7 @@ fun InternalBaseDesktopUi(
                 printLogger(Level.DEBUG)
                 modules(
                     module {
-                        includes(kmpModule, noOpTelemetryModule(printToConsole = true))
+                        includes(kmpModule, noOpTelemetryModule(printToConsole = true), desktopTabsModule)
 
                         singleOf(::DataStoreHandling)
                         single {
@@ -570,12 +656,20 @@ fun BaseWindow(
  * with the title bar colored from the app's Material theme.
  */
 @Composable
-private fun OtakuDecoratedWindow(
+internal fun OtakuDecoratedWindow(
     title: String,
     onCloseRequest: () -> Unit,
     state: WindowState = rememberWindowState(),
     visible: Boolean = true,
     showQuickActions: Boolean = false,
+    /** Whether this window shows the shortcuts dialog. With several windows, only the focused one does. */
+    hostsOverlays: Boolean = showQuickActions,
+    /** Replaces the centered title, filling the space between the start and end items. */
+    titleBarContent: (@Composable TitleBarScope.() -> Unit)? = null,
+    /** Runs after the window's own shortcut handlers; return true to consume the event. */
+    onKeyEvent: ((KeyEvent) -> Boolean)? = null,
+    /** Drawn over the title bar and the content, outside the content surface's clip. */
+    overlay: (@Composable () -> Unit)? = null,
     onAnyKey: () -> Unit = {},
     content: @Composable () -> Unit,
 ) {
@@ -632,47 +726,60 @@ private fun OtakuDecoratedWindow(
                         true
                     }
 
-                    else -> false
+                    else -> onKeyEvent?.invoke(event) == true
                 }
             },
         ) {
             KmpLocalCompositionSetup {
-                OtakuMaterialTheme(
-                    settingsHandling = koinInject(),
-                ) {
-                    val colorScheme = MaterialTheme.colorScheme
-                    SideEffect { appColorScheme = colorScheme }
+                CompositionLocalProvider(LocalAwtWindow provides window) {
+                    OtakuMaterialTheme(
+                        settingsHandling = koinInject(),
+                    ) {
+                        val colorScheme = MaterialTheme.colorScheme
+                        SideEffect { appColorScheme = colorScheme }
 
-                    if (showQuickActions && isMacOs) QuickActionsMenuBar()
+                        if (showQuickActions && isMacOs) QuickActionsMenuBar()
 
-                    // Title bar must be a direct child of the window's layout (it is placed by layoutId).
-                    MaterialTitleBar(style = rememberMaterialTitleBarStyle(colorScheme)) {
-                        if (showQuickActions && quickActionsController != null) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.align(Alignment.Start),
-                            ) {
-                                if (!isMacOs) QuickActionsTitleBarMenu()
-                                ShortcutsTitleBarButton(onClick = quickActionsController::openShortcuts)
-                            }
-                        }
-                        Text(
-                            text = title,
-                            style = MaterialTheme.typography.titleSmall,
-                            modifier = Modifier.align(Alignment.CenterHorizontally),
-                        )
-                    }
-
-                    Surface(modifier = Modifier.fillMaxSize()) {
-                        CompositionLocalProvider(
-                            LocalNavHostPadding provides PaddingValues()
+                        // Title bar must be a direct child of the window's layout (it is placed by layoutId).
+                        MaterialTitleBar(
+                            style = rememberMaterialTitleBarStyle(colorScheme),
+                            layoutPolicy = if (titleBarContent != null) TitleBarLayoutPolicy.FillCenter else TitleBarLayoutPolicy.Default,
                         ) {
-                            Box(modifier = Modifier.fillMaxSize()) {
-                                content()
-                                if (showQuickActions && quickActionsController != null) {
-                                    ShortcutsDialogHost(quickActionsController)
+                            if (showQuickActions && quickActionsController != null) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.align(Alignment.Start),
+                                ) {
+                                    if (!isMacOs) QuickActionsTitleBarMenu()
+                                    ShortcutsTitleBarButton(onClick = quickActionsController::openShortcuts)
                                 }
                             }
+                            if (titleBarContent != null) {
+                                titleBarContent()
+                            } else {
+                                Text(
+                                    text = title,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                                )
+                            }
+                        }
+
+                        // One child for the window's layout: the Surface clips to its bounds, the overlay does not.
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            Surface(modifier = Modifier.fillMaxSize()) {
+                                CompositionLocalProvider(
+                                    LocalNavHostPadding provides PaddingValues()
+                                ) {
+                                    Box(modifier = Modifier.fillMaxSize()) {
+                                        content()
+                                        if (hostsOverlays && quickActionsController != null) {
+                                            ShortcutsDialogHost(quickActionsController)
+                                        }
+                                    }
+                                }
+                            }
+                            overlay?.invoke()
                         }
                     }
                 }

@@ -19,6 +19,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.ViewModelStoreProvider
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavEntryDecorator
@@ -31,6 +32,7 @@ import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import com.programmersbox.kmpuiviews.presentation.navigation.scenestrategy.BottomSheetSceneStrategy
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
+import com.programmersbox.kmpuiviews.utils.LocalNav3Actions
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalNavigationAnimatedScope
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalSharedElementScope
 import com.programmersbox.telemetry.Analytics
@@ -45,8 +47,18 @@ fun Nav3(
     windowSize: WindowSizeClass,
     customPreferences: ComposeSettingsDsl,
     navigation3Actions: Navigation3Actions = koinInject(),
+    /**
+     * Owns the entries' ViewModelStores when set. The default provider clears every entry's store
+     * once this NavDisplay leaves composition; a provider held outside composition keeps them.
+     */
+    viewModelStoreProvider: ViewModelStoreProvider? = null,
     analytics: Analytics = koinInject(),
     crashReporter: CrashReporter = koinInject(),
+    /**
+     * Shown for a key with no registered entry instead of throwing, when set. Null (the default, and Android) keeps
+     * the entry provider's own behavior.
+     */
+    unknownKeyEntry: ((NavKey) -> NavEntry<NavKey>)? = null,
 ) {
     val backStack = navigation3Actions.backStack
     LaunchedEffect(Unit) {
@@ -94,38 +106,47 @@ fun Nav3(
 
     val motion = MaterialTheme.motionScheme
 
-    NavDisplay(
-        backStack = backStack,
-        //onBack = { backStack.removeLastOrNull() },
-        sceneStrategies = listOf(
-            rememberListDetailSceneStrategy<NavKey>(),
-            DialogSceneStrategy(),
-            BottomSheetSceneStrategy()
-        ),
-        onBack = { navigation3Actions.popBackStack() },
-        entryDecorators = listOf(
-            //sharedEntryInSceneNavEntryDecorator,
-            navigationAnimatedScopeDecorator,
-            rememberSaveableStateHolderNavEntryDecorator(),
-            rememberViewModelStoreNavEntryDecorator()
-        ),
-        entryProvider = koinEntryProvider(),
-        // Material shared-axis X: a short offset plus a crossfade instead of a full-width push
-        transitionSpec = {
-            (slideInHorizontally(motion.defaultSpatialSpec()) { it / 3 } + fadeIn(motion.defaultEffectsSpec())) togetherWith
-                    (slideOutHorizontally(motion.defaultSpatialSpec()) { -it / 3 } + fadeOut(motion.fastEffectsSpec()))
-        },
-        popTransitionSpec = {
-            (slideInHorizontally(motion.defaultSpatialSpec()) { -it / 3 } + fadeIn(motion.defaultEffectsSpec())) togetherWith
-                    (slideOutHorizontally(motion.defaultSpatialSpec()) { it / 3 } + fadeOut(motion.fastEffectsSpec()))
-        },
-        // While the back gesture is held the leaving page shrinks, so the gesture reads as a peek
-        predictivePopTransitionSpec = {
-            (slideInHorizontally(motion.defaultSpatialSpec()) { -it / 4 } + fadeIn(motion.defaultEffectsSpec())) togetherWith
-                    (scaleOut(motion.defaultSpatialSpec(), targetScale = 0.9f) + fadeOut(motion.defaultEffectsSpec()))
-        },
-        modifier = Modifier.fillMaxSize()
-    )
+    CompositionLocalProvider(LocalNav3Actions provides navigation3Actions) {
+        NavDisplay(
+            backStack = backStack,
+            //onBack = { backStack.removeLastOrNull() },
+            sceneStrategies = listOf(
+                rememberListDetailSceneStrategy<NavKey>(),
+                DialogSceneStrategy(),
+                BottomSheetSceneStrategy()
+            ),
+            onBack = { navigation3Actions.popBackStack() },
+            entryDecorators = listOf(
+                //sharedEntryInSceneNavEntryDecorator,
+                navigationAnimatedScopeDecorator,
+                rememberSaveableStateHolderNavEntryDecorator(),
+                if (viewModelStoreProvider != null) {
+                    rememberViewModelStoreNavEntryDecorator(viewModelStoreProvider)
+                } else {
+                    rememberViewModelStoreNavEntryDecorator()
+                }
+            ),
+            entryProvider = koinEntryProvider<NavKey>().let { provider ->
+                if (unknownKeyEntry == null) provider
+                else { key -> try { provider(key) } catch (e: IllegalStateException) { unknownKeyEntry(key) } }
+            },
+            // Material shared-axis X: a short offset plus a crossfade instead of a full-width push
+            transitionSpec = {
+                (slideInHorizontally(motion.defaultSpatialSpec()) { it / 3 } + fadeIn(motion.defaultEffectsSpec())) togetherWith
+                        (slideOutHorizontally(motion.defaultSpatialSpec()) { -it / 3 } + fadeOut(motion.fastEffectsSpec()))
+            },
+            popTransitionSpec = {
+                (slideInHorizontally(motion.defaultSpatialSpec()) { -it / 3 } + fadeIn(motion.defaultEffectsSpec())) togetherWith
+                        (slideOutHorizontally(motion.defaultSpatialSpec()) { it / 3 } + fadeOut(motion.fastEffectsSpec()))
+            },
+            // While the back gesture is held the leaving page shrinks, so the gesture reads as a peek
+            predictivePopTransitionSpec = {
+                (slideInHorizontally(motion.defaultSpatialSpec()) { -it / 4 } + fadeIn(motion.defaultEffectsSpec())) togetherWith
+                        (scaleOut(motion.defaultSpatialSpec(), targetScale = 0.9f) + fadeOut(motion.defaultEffectsSpec()))
+            },
+            modifier = Modifier.fillMaxSize()
+        )
+    }
 }
 
 private class SharedElementNavDecorator<T : Any>(

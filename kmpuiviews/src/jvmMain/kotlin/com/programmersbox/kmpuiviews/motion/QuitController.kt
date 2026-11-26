@@ -59,6 +59,7 @@ class QuitController(
  */
 class PendingQuitReply {
     private var performQuit: (() -> Unit)? = null
+    private var cancelQuit: (() -> Unit)? = null
 
     /**
      * Keeps [performQuit] until [release]; a newer request replaces an older unanswered one. AppKit has only one
@@ -66,13 +67,34 @@ class PendingQuitReply {
      */
     @Synchronized
     fun hold(performQuit: () -> Unit) {
+        hold(performQuit, cancelQuit = {})
+    }
+
+    /** [hold], also keeping [cancelQuit] for [cancel]. */
+    @Synchronized
+    fun hold(performQuit: () -> Unit, cancelQuit: () -> Unit) {
         this.performQuit = performQuit
+        this.cancelQuit = cancelQuit
     }
 
     /** Calls the held answer once, if any. */
     fun release() {
-        val reply = synchronized(this) { performQuit.also { performQuit = null } }
+        val reply = synchronized(this) { performQuit.also { clear() } }
         reply?.invoke()
+    }
+
+    /**
+     * Answers the held quit with "cancel", once, if any: the user chose to stay (the confirm-quit dialog). Without it
+     * macOS waits for an answer that never comes and refuses later quits.
+     */
+    fun cancel() {
+        val reply = synchronized(this) { cancelQuit.also { clear() } }
+        reply?.invoke()
+    }
+
+    private fun clear() {
+        performQuit = null
+        cancelQuit = null
     }
 
     /**

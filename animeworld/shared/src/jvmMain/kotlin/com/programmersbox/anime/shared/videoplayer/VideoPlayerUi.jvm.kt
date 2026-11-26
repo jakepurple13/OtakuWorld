@@ -22,6 +22,11 @@ import com.programmersbox.anime.shared.VideoScreen
 import com.programmersbox.anime.shared.downloads.OfflineSubtitles
 import com.programmersbox.kmpmodels.KmpSubtitle
 import com.programmersbox.kmpuiviews.KmpGenericInfo
+import com.programmersbox.kmpuiviews.tabs.LocalTabId
+import com.programmersbox.kmpuiviews.tabs.MiniPlayerRegistry
+import com.programmersbox.kmpuiviews.tabs.TabId
+import com.programmersbox.kmpuiviews.tabs.TabsController
+import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.koin.compose.koinInject
@@ -37,7 +42,8 @@ actual fun VideoPlayerUi(videoScreen: VideoScreen) {
 private fun VideoPlayerContent(videoScreen: VideoScreen) {
     val storageHolder = koinInject<StorageHolder>()
     // The first load scans libVLC's plugins, so keep it off the UI thread.
-    val factory by produceState<Result<MediaPlayerFactory>?>(null) {
+    // Already loaded when a parked tab returns, so it goes straight back to its player.
+    val factory by produceState(VlcRuntime.loadedFactory()) {
         value = withContext(Dispatchers.IO) { VlcRuntime.factory() }
     }
     // DesktopPlayerScreen ends the loading overlay's hand-off; without libVLC it never shows, so end it here.
@@ -71,6 +77,20 @@ private fun VideoPlayerContent(videoScreen: VideoScreen) {
 
 @Composable
 private fun PlayerHost(factory: MediaPlayerFactory, videoScreen: VideoScreen, source: PlayerSource, subtitles: List<KmpSubtitle>, streamHeaders: Map<String, String>) {
+    val tab = LocalTabId.current
+    val player = if (tab == null) rememberScreenPlayer(factory, source) else rememberTabPlayer(tab, factory, source, videoScreen)
+    DesktopPlayerScreen(
+        player,
+        title = videoScreen.showName,
+        externalSubtitles = subtitles,
+        referer = videoScreen.referer,
+        streamHeaders = streamHeaders,
+    )
+}
+
+/** Outside the tab shell: the player lives as long as the screen. */
+@Composable
+private fun rememberScreenPlayer(factory: MediaPlayerFactory, source: PlayerSource): DesktopPlayer {
     val proxy = remember(source) { LocalStreamProxy() }
     val player = remember(factory, source) { DesktopPlayer(factory, proxy) }
     DisposableEffect(player) {
@@ -80,13 +100,23 @@ private fun PlayerHost(factory: MediaPlayerFactory, videoScreen: VideoScreen, so
             proxy.close()
         }
     }
-    DesktopPlayerScreen(
-        player,
-        title = videoScreen.showName,
-        externalSubtitles = subtitles,
-        referer = videoScreen.referer,
-        streamHeaders = streamHeaders,
-    )
+    return player
+}
+
+/**
+ * In a tab: the player lives in the tab's ViewModel store, one per episode, so it keeps playing (in the mini
+ * player) while the tab is parked. It is registered while this screen is composed and unregistered when cleared.
+ */
+@Composable
+private fun rememberTabPlayer(tab: TabId, factory: MediaPlayerFactory, source: PlayerSource, videoScreen: VideoScreen): DesktopPlayer {
+    val tabs = koinInject<TabsController>()
+    // Asked only when the holder is created: a restored tab's video opens paused, one opened any other way plays.
+    val holder = viewModel(key = "player:$videoScreen") {
+        PlayerHolderViewModel(factory, source, videoScreen.showName, startPaused = tabs.takeRestored(tab, videoScreen))
+    }
+    val registry = koinInject<MiniPlayerRegistry>()
+    LaunchedEffect(holder, tab) { holder.attach(tab, registry) }
+    return holder.player
 }
 
 /** A download's sidecar files, else the subtitles the source returned. */

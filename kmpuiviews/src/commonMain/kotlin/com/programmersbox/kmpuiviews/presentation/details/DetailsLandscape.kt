@@ -140,6 +140,7 @@ fun DetailsViewLandscape(
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
     var showLists by remember { mutableStateOf(false) }
+    val notesPanelToggle = LocalNotesPanelToggle.current
     var showNoteSheet by remember { mutableStateOf(false) }
 
     val selection = detailsActions.selection
@@ -222,7 +223,7 @@ fun DetailsViewLandscape(
                                         if (result) notifier.success(message) else notifier.info(message)
                                     }
                                 },
-                                onNoteClick = { showNoteSheet = true },
+                                onNoteClick = { notesPanelToggle?.invoke() ?: run { showNoteSheet = true } },
                             )
                         }
                     )

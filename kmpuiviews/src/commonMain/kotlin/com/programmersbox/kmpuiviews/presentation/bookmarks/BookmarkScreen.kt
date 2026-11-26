@@ -57,6 +57,7 @@ import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuTitle
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.SharedItemKey
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.customSharedElement
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
+import com.programmersbox.kmpuiviews.presentation.tabs.tabTarget
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.CustomKamelImage
 import org.koin.compose.viewmodel.koinViewModel
@@ -306,7 +307,9 @@ private fun BookmarkedChapterRow(
         colors = ListItemDefaults.colors(
             containerColor = Color.Transparent,
         ),
-        modifier = modifier.padding(start = 16.dp),
+        modifier = modifier
+            .padding(start = 16.dp)
+            .tabTarget(onOpen = onClick),
     )
 }
 

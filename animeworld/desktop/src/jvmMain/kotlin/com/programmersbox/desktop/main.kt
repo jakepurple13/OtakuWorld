@@ -1,5 +1,17 @@
 package com.programmersbox.desktop
 
+import com.programmersbox.kmpmodels.KmpStorage
+import com.programmersbox.kmpuiviews.tabs.TabHandoff
+import androidx.navigation3.runtime.NavKey
+import com.programmersbox.kmpuiviews.tabs.DownloadsDestination
+import com.programmersbox.kmpuiviews.tabs.NavKeySerializers
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
+import kotlinx.serialization.modules.subclass
+import com.programmersbox.kmpuiviews.tabs.TabKey
+import com.programmersbox.kmpuiviews.tabs.MiniPlayerSupported
+import com.programmersbox.kmpuiviews.tabs.TabKeyProvider
+import com.programmersbox.kmpuiviews.tabs.TabLabel
 import com.programmersbox.kmpuiviews.utils.composables.transitions.rememberChapterRevealOrigin
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -55,6 +67,24 @@ import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.navigation3.navigation
 import java.io.File
 
+/**
+ * AnimeWorld's tab identities. Library folders and subtitle settings are left unkeyed: the Downloads tab opens them,
+ * and they must stay in that tab so Back returns to Downloads.
+ */
+internal object AnimeTabKeyProvider : TabKeyProvider {
+    override fun keyOf(key: NavKey): TabKey? = when (key) {
+        is VideoScreen -> TabKey.Chapter(key.episodeUrl ?: key.showPath)
+        VideoViewerRoute -> TabKey.Downloads
+        PlatformSettings -> TabKey.Settings
+        else -> null
+    }
+
+    override fun labelOf(key: NavKey): TabLabel? = when (key) {
+        is VideoScreen -> TabLabel(key.showName, null, null)
+        else -> null
+    }
+}
+
 fun main(args: Array<String>) {
     stopToolProcessesOnExit()
     desktopSetup(
@@ -76,9 +106,45 @@ fun main(args: Array<String>) {
         genericInfo = { singleOf(::GenericAnimeDesktop) },
         moduleBlock = {
             singleOf(::AnimeDesktopSettings)
+            single { DownloadsDestination(VideoViewerRoute) }
+            // Every page this app adds, so saved tabs showing them restore on the next launch.
+            single(named("animeNavKeys")) {
+                NavKeySerializers(
+                    SerializersModule {
+                        polymorphic(NavKey::class) {
+                            subclass(VideoScreen::class)
+                            subclass(VideoViewerRoute::class)
+                            subclass(FreeUpSpaceRoute::class)
+                            subclass(LibraryFoldersRoute::class)
+                            subclass(VideoExportRoute::class)
+                            subclass(SubtitleSettingsRoute::class)
+                            subclass(PlatformSettings::class)
+                        }
+                    },
+                    // A stream needs the resolved link and headers its click handed over; a download plays its file.
+                    restorable = { it !is VideoScreen || it.downloadOrStream },
+                )
+            }
+            single { MiniPlayerSupported(true) }
+            single { AnimeTabKeyProvider } bind TabKeyProvider::class
             single { animeMotionCatalog() }
             single<ShortcutSection>(named("videoPlayerShortcuts")) { playerShortcutSection() }
             singleOf(::StorageHolder)
+            // Each player tab keeps the stream its click handed over.
+            single {
+                val holder = get<StorageHolder>()
+                object : TabHandoff {
+                    override fun capture(): Any? = Triple(holder.storageModel, holder.showTitle, holder.posterUrl)
+
+                    override fun restore(state: Any?) {
+                        @Suppress("UNCHECKED_CAST")
+                        val (storage, title, poster) = state as Triple<KmpStorage?, String?, String?>
+                        holder.storageModel = storage
+                        holder.showTitle = title
+                        holder.posterUrl = poster
+                    }
+                }
+            } bind TabHandoff::class
             single<SubtitleSettingsRepository> {
                 JvmSubtitleSettingsRepository(File(get<AppDirs>().getUserDataDir(), "subtitle_style.json"))
             }

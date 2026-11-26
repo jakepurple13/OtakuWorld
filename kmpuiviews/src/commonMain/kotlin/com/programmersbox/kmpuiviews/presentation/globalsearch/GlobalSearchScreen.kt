@@ -52,6 +52,8 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -88,11 +90,13 @@ import com.programmersbox.kmpuiviews.presentation.components.placeholder.Placeho
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
 import com.programmersbox.kmpuiviews.presentation.components.plus
+import com.programmersbox.kmpuiviews.presentation.tabs.LocalSearchFocusRequest
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuImageElement
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuTitleElement
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.customSharedElement
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.rememberCoverHandoff
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.sharedItemKey
+import com.programmersbox.kmpuiviews.presentation.tabs.tabTarget
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
@@ -158,6 +162,17 @@ fun GlobalSearchScreen(
             fun closeSearchBar() {
                 scope.launch { searchBarState.animateToCollapsed() }
             }
+
+            // Desktop "address bar" shortcut: expanding the bar focuses its field.
+            val searchFocus = LocalSearchFocusRequest.current
+            LaunchedEffect(searchFocus?.pending) {
+                if (searchFocus?.pending == true) {
+                    searchFocus.consume()
+                    searchBarState.animateToExpanded()
+                }
+            }
+            // A request still pending when this screen leaves must not expand a later, unrelated visit.
+            DisposableEffect(searchFocus) { onDispose { searchFocus?.consume() } }
             DynamicSearchBar(
                 textFieldState = viewModel.searchText,
                 searchBarState = searchBarState,
@@ -462,19 +477,21 @@ fun SearchCoverCard(
     onClick: () -> Unit = {},
 ) {
     val coverHandoff = rememberCoverHandoff(model.sharedItemKey())
+    val onCardClick = {
+        coverHandoff.handOff()
+        onClick()
+    }
     ElevatedCard(
         modifier = modifier
             .size(
                 ComposableUtils.IMAGE_WIDTH,
                 ComposableUtils.IMAGE_HEIGHT
             )
+            .tabTarget(onOpen = onCardClick, onMore = { onLongPress(ComponentState.Pressed) })
             .clip(CardDefaults.shape)
             .combineClickableWithIndication(
                 onLongPress = onLongPress,
-                onClick = {
-                    coverHandoff.handOff()
-                    onClick()
-                }
+                onClick = onCardClick
             )
     ) {
         Box(

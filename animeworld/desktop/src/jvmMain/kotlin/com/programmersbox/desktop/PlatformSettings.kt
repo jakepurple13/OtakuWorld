@@ -34,6 +34,7 @@ import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.datastore.asState
 import com.programmersbox.kmpuiviews.motion.DesktopMotionCatalog
 import com.programmersbox.kmpuiviews.motion.motionSettingsGroup
+import com.programmersbox.kmpuiviews.tabs.tabsSettingsGroup
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.updates.updatesSettingsGroup
 import io.github.vinceglb.filekit.PlatformFile
@@ -128,6 +129,7 @@ fun JvmSettingsScreen() {
                 )
             }
 
+            tabsSettingsGroup()
             motionSettingsGroup(motionCatalog)
             updatesSettingsGroup()
         }

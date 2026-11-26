@@ -14,6 +14,7 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.runtime.Composable
 import org.koin.compose.koinInject
 import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
+import com.programmersbox.kmpuiviews.utils.LocalNav3Actions
 import androidx.navigation3.runtime.NavKey
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -99,7 +100,7 @@ internal fun chapterOpenTarget(state: EnterExitState, hasEntered: Boolean, cover
 @Composable
 fun Modifier.chapterOpenTransition(origin: Offset?, key: NavKey): Modifier {
     val transition = LocalNavAnimatedContentScope.current.transition
-    val backStack = koinInject<Navigation3Actions>().backStack
+    val backStack = (LocalNav3Actions.current ?: koinInject<Navigation3Actions>()).backStack
     var hasEntered by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(transition.currentState, transition.targetState) {
         if (transition.currentState == EnterExitState.Visible && transition.targetState == EnterExitState.Visible) hasEntered = true

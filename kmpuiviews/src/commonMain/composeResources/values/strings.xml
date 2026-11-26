@@ -511,6 +511,7 @@
     <string name="shortcuts_title">Keyboard shortcuts</string>
     <string name="shortcuts_subtitle">Shortcuts for %1$s</string>
     <string name="shortcuts_anywhere">Anywhere</string>
+    <string name="shortcuts_tabs">Tabs and windows</string>
     <string name="shortcuts_in_quick_actions">In Quick actions</string>
     <string name="shortcuts_quick_actions">Quick actions</string>
     <string name="shortcuts_global_search">Global search</string>
@@ -869,6 +870,17 @@
     <string name="ai_settings_footer">These features only use AI on this device. Daily overview's summary engine is the one place that can use your AI Helper provider.</string>
     <string name="ai_settings_summary_on">On device · %1$d of %2$d features on</string>
     <string name="ai_settings_summary_off">Off</string>
+    <string name="tabs_home">Home</string>
+    <string name="tabs_new_tab">New tab</string>
+    <string name="tabs_close_tab">Close tab</string>
+    <string name="tabs_back">Back</string>
+    <string name="tabs_forward">Forward</string>
+    <string name="tabs_downloads">Downloads</string>
+    <string name="tabs_open">Open</string>
+    <string name="tabs_open_in_new_tab">Open in new tab</string>
+    <string name="tabs_open_in_new_tab_and_switch">Open in new tab and switch</string>
+    <string name="tabs_open_in_new_window">Open in new window</string>
+    <string name="tabs_more">More…</string>
     <string name="telemetry_section">Usage &amp; crash data</string>
     <string name="telemetry_analytics">Share usage analytics</string>
     <string name="telemetry_analytics_desc">Which features get used.</string>

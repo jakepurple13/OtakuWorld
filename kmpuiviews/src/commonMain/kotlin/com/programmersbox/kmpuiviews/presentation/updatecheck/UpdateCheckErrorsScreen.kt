@@ -78,6 +78,7 @@ import com.programmersbox.kmpuiviews.domain.updatecheck.UpdateCheckReport
 import com.programmersbox.kmpuiviews.domain.updatecheck.failureMessage
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.presentation.tabs.tabTarget
 import com.programmersbox.kmpuiviews.utils.DateTimeFormatItem
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
@@ -507,7 +508,7 @@ private fun FailureRow(
                 }
             }
         }
-        IconButton(onClick = onOpen) {
+        IconButton(onClick = onOpen, modifier = Modifier.tabTarget(onOpen)) {
             Icon(
                 Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = stringResource(Res.string.uc_open_details)

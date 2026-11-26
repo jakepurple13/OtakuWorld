@@ -93,6 +93,7 @@ import com.programmersbox.kmpuiviews.presentation.components.LoadingDialog
 import com.programmersbox.kmpuiviews.presentation.components.SourceNotInstalledModal
 import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
+import com.programmersbox.kmpuiviews.presentation.tabs.tabTarget
 import com.programmersbox.kmpuiviews.utils.Cached
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
@@ -658,7 +659,9 @@ private fun CatchUpCard(
     ElevatedCard(
         shape = MaterialTheme.shapes.extraLarge,
         onClick = onClick,
-        modifier = modifier.aspectRatio(2f / 3f, matchHeightConstraintsFirst = true)
+        modifier = modifier
+            .tabTarget(onOpen = onClick)
+            .aspectRatio(2f / 3f, matchHeightConstraintsFirst = true)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             GradientImage(

@@ -122,8 +122,9 @@ fun titleBarBand(windowHeight: Dp, contentHeight: Dp): Dp =
 
 /**
  * Routes the app's Quit (⌘Q, Dock, logout on macOS) to [onQuit] instead of exiting at once, where the platform supports
- * it. The OS's answer is deferred into [reply], never refused; the app loop's caller answers it with
- * [PendingQuitReply.releaseAfter] once the composition is disposed.
+ * it. The OS's answer is deferred into [reply]; the app loop's caller answers it with
+ * [PendingQuitReply.releaseAfter] once the composition is disposed. It is refused ([PendingQuitReply.cancel]) only
+ * when the user cancels the confirm-quit dialog.
  */
 @Composable
 fun AppQuitHandler(reply: PendingQuitReply, onQuit: () -> Unit) {
@@ -134,7 +135,7 @@ fun AppQuitHandler(reply: PendingQuitReply, onQuit: () -> Unit) {
             ?.let { Desktop.getDesktop() }
             ?.takeIf { it.isSupported(Desktop.Action.APP_QUIT_HANDLER) }
         desktop?.setQuitHandler { _, response ->
-            reply.hold(response::performQuit)
+            reply.hold(response::performQuit, response::cancelQuit)
             quit()
         }
         onDispose { desktop?.setQuitHandler(null) }

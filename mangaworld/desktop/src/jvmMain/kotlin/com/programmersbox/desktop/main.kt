@@ -1,5 +1,22 @@
 package com.programmersbox.desktop
 
+import com.programmersbox.kmpmodels.KmpChapterModel
+import com.programmersbox.manga.shared.ChapterHolder
+import com.programmersbox.kmpuiviews.tabs.TabHandoff
+import androidx.navigation3.runtime.NavKey
+import com.programmersbox.kmpuiviews.tabs.DownloadsDestination
+import com.programmersbox.kmpuiviews.tabs.NavKeySerializers
+import com.programmersbox.manga.shared.settings.ImageLoaderSettingsRoute
+import com.programmersbox.manga.shared.settings.ReaderSettingsScreen
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
+import kotlinx.serialization.modules.subclass
+import com.programmersbox.kmpuiviews.tabs.TabKey
+import com.programmersbox.kmpuiviews.tabs.TabKeyProvider
+import com.programmersbox.kmpuiviews.tabs.TabLabel
+import com.programmersbox.manga.shared.downloads.DownloadRoute
+import com.programmersbox.manga.shared.reader.ReadViewModel
+import org.koin.dsl.bind
 import ca.gosyer.appdirs.AppDirs
 import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.desktop.motion.mangaMotionCatalog
@@ -47,6 +64,54 @@ fun main(args: Array<String>) {
         },
         moduleBlock = {
             factoryOf(::DownloadedMediaHandler)
+            single { DownloadsDestination(DownloadRoute) }
+            // Every page this app adds, so saved tabs showing them restore on the next launch.
+            single(named("mangaNavKeys")) {
+                NavKeySerializers(
+                    SerializersModule {
+                        polymorphic(NavKey::class) {
+                            subclass(ReadViewModel.MangaReader::class)
+                            subclass(DownloadRoute::class)
+                            subclass(ImageLoaderSettingsRoute::class)
+                            subclass(ReaderSettingsScreen::class)
+                            subclass(PlatformSettings::class)
+                        }
+                    },
+                    // A streamed chapter needs the chapter list its click handed over; a download reads its file.
+                    restorable = { it !is ReadViewModel.MangaReader || it.downloaded },
+                )
+            }
+            single {
+                object : TabKeyProvider {
+                    override fun keyOf(key: NavKey): TabKey? = when (key) {
+                        is ReadViewModel.MangaReader -> key.mangaUrl?.let { TabKey.Chapter(it) }
+                        DownloadRoute -> TabKey.Downloads
+                        PlatformSettings -> TabKey.Settings
+                        else -> null
+                    }
+
+                    override fun labelOf(key: NavKey): TabLabel? = when (key) {
+                        is ReadViewModel.MangaReader -> TabLabel(key.mangaTitle ?: "Reader", null, null)
+                        else -> null
+                    }
+                }
+            } bind TabKeyProvider::class
+            // Each reader tab keeps the chapter its click handed over.
+            single {
+                val holder = get<ChapterHolder>()
+                object : TabHandoff {
+                    override fun capture(): Any? = Triple(holder.chapterModel, holder.chapters, holder.downloadedChapterPaths)
+
+                    override fun restore(state: Any?) {
+                        @Suppress("UNCHECKED_CAST")
+                        val (model, chapters, paths) =
+                            state as Triple<KmpChapterModel?, List<KmpChapterModel>?, List<String>?>
+                        holder.chapterModel = model
+                        holder.chapters = chapters
+                        holder.downloadedChapterPaths = paths
+                    }
+                }
+            } bind TabHandoff::class
             single {
                 ExtensionWatcher(
                     extensionsDir = get<MangaDesktopSettings>()

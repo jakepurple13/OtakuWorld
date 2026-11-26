@@ -43,6 +43,7 @@ import otakuworld.kmpuiviews.generated.resources.fav_stat_sources
 import otakuworld.kmpuiviews.generated.resources.fav_stat_titles
 import otakuworld.kmpuiviews.generated.resources.fav_titles_count
 import otakuworld.kmpuiviews.generated.resources.fav_updates_off_row
+import com.programmersbox.kmpuiviews.presentation.tabs.tabTarget
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuTitleElement
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.customSharedElement
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.rememberCoverHandoff
@@ -100,6 +101,10 @@ internal fun FavoritesOverview(
                 ) {
                     items(overview.recent, key = { it.title }) { group ->
                         val handoff = rememberCoverHandoff(group.navKey)
+                        val open = {
+                            handoff.handOff()
+                            onGroupClick(group)
+                        }
                         FavoriteCover(
                             group = group,
                             shape = RoundedCornerShape(16.dp),
@@ -107,11 +112,9 @@ internal fun FavoritesOverview(
                             modifier = Modifier
                                 .animateItem()
                                 .size(118.dp, 177.dp)
+                                .tabTarget(onOpen = open, onMore = { onGroupLongPress(group) })
                                 .combinedClickable(
-                                    onClick = {
-                                        handoff.handOff()
-                                        onGroupClick(group)
-                                    },
+                                    onClick = open,
                                     onLongClick = { onGroupLongPress(group) },
                                 ),
                         ) {
@@ -149,6 +152,7 @@ internal fun FavoritesOverview(
                             modifier = Modifier
                                 .animateItem()
                                 .size(84.dp, 126.dp)
+                                .tabTarget(onOpen = { onGroupClick(group) }, onMore = { onGroupLongPress(group) })
                                 .combinedClickable(
                                     onClick = { onGroupClick(group) },
                                     onLongClick = { onGroupLongPress(group) },

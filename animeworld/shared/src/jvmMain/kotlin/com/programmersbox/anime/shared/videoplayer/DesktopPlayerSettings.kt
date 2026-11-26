@@ -19,13 +19,12 @@ import com.programmersbox.datastore.asState
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
-import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
-import org.koin.compose.koinInject
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 
 /** Desktop's Player group on the Play Settings screen: style picker with live preview, subtitles, blur. */
 @Composable
 fun DesktopPlayerSettings() {
-    val navigationActions = koinInject<NavigationActions>()
+    val navigationActions = LocalNavActions.current
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         CategoryGroup {
             item { PlayerStyleInlinePicker(PlayerPreviewDefaults.Desktop) }

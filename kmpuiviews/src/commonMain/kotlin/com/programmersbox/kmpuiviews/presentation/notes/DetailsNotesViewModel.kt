@@ -38,32 +38,39 @@ class DetailsNotesViewModel(
         )
 
     fun saveNote(content: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            if (content.isBlank()) {
-                notesDao.removeNote(itemUrl, softDelete = authManager.isLoggedIn())
-                return@launch
-            }
-            val current = notesDao.getNote(itemUrl).first()
-            if (current?.content == content) return@launch
-            val now = Clock.System.now().toEpochMilliseconds()
-            notesDao.upsertNote(
-                // Keep sync fields (supabaseId, createdAt) of an existing note
-                current?.copy(
-                    content = content,
-                    timestamp = now,
-                    updatedAt = now,
-                    isDeleted = false,
-                    isDirty = true,
-                ) ?: NoteItem(
-                    itemUrl = itemUrl,
-                    itemTitle = itemTitle,
-                    content = content,
-                    timestamp = now,
-                    updatedAt = now,
-                )
-            )
-            analytics.log(NoteSaved(isNew = current == null))
+        viewModelScope.launch(Dispatchers.IO) { persist(content) }
+    }
+
+    /**
+     * The write behind [saveNote], without [viewModelScope]: a caller that must outlive this ViewModel
+     * (the desktop Notes panel, whose store is cleared when its tab closes) runs it in its own scope.
+     */
+    suspend fun persist(content: String, allowDelete: Boolean = true) {
+        if (content.isBlank()) {
+            // A mid-edit save must not delete: the next keystroke would then rebuild the note without its sync ids
+            if (allowDelete) notesDao.removeNote(itemUrl, softDelete = authManager.isLoggedIn())
+            return
         }
+        val current = notesDao.getNote(itemUrl).first()
+        if (current?.content == content) return
+        val now = Clock.System.now().toEpochMilliseconds()
+        notesDao.upsertNote(
+            // Keep sync fields (supabaseId, createdAt) of an existing note
+            current?.copy(
+                content = content,
+                timestamp = now,
+                updatedAt = now,
+                isDeleted = false,
+                isDirty = true,
+            ) ?: NoteItem(
+                itemUrl = itemUrl,
+                itemTitle = itemTitle,
+                content = content,
+                timestamp = now,
+                updatedAt = now,
+            )
+        )
+        analytics.log(NoteSaved(isNew = current == null))
     }
 
     fun deleteNote() {

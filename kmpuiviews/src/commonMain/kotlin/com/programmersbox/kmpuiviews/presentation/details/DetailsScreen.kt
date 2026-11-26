@@ -129,6 +129,7 @@ import com.programmersbox.kmpuiviews.ChapterDownloadUiState
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.notes.DetailsNotesViewModel
+import com.programmersbox.kmpuiviews.presentation.tabs.tabTarget
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.repository.ListRepository
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
@@ -909,6 +910,8 @@ fun ChapterItem(
         modifier = modifier
             .fillMaxWidth()
             .trackRevealTap(revealTap)
+            // Selection mode clicks toggle selection, so there is nothing to open in a tab
+            .then(if (selectionMode) Modifier else Modifier.tabTarget(::openChapter))
     ) {
         ListItem(
             onClick = { if (selectionMode) onToggleSelection() else openChapter() },

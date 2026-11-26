@@ -71,4 +71,10 @@ class QuitControllerTest {
         assertEquals(0, older); assertEquals(1, replies)
     }
     @Test fun releaseWithoutHoldIsNoOp() { PendingQuitReply().release() }
+    @Test fun cancelAnswersHeldQuitWithCancelOnce() {
+        var cancels = 0
+        reply.hold({ replies++ }, { cancels++ })
+        reply.cancel(); reply.cancel(); reply.release()
+        assertEquals(1, cancels); assertEquals(0, replies)
+    }
 }
