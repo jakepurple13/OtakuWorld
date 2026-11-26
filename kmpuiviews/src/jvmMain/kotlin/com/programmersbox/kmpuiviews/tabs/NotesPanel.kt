@@ -20,7 +20,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.key
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.requiredWidth
@@ -108,18 +109,31 @@ fun NotesPanelSlot(tab: TabState, motion: TabMotionState) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotesPanel(itemUrl: String, itemTitle: String = "", onClose: () -> Unit = {}) {
+    // Everything below is per title: a title switch starts from a clean field, ViewModel and saver
+    key(itemUrl) {
+        NotesPanelBody(itemUrl, itemTitle, onClose)
+    }
+}
+
+/**
+ * Typing is saved 500 ms after the last keystroke and when the panel leaves composition. The writes run in
+ * [PendingWrites.App], not in the ViewModel's scope, because closing the tab clears the ViewModel in the same
+ * pass that disposes this panel.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun NotesPanelBody(itemUrl: String, itemTitle: String, onClose: () -> Unit) {
     val vm: DetailsNotesViewModel = koinViewModel(key = "notes-panel:$itemUrl") { parametersOf(itemUrl, itemTitle) }
     val note by vm.note.collectAsStateWithLifecycle()
-    var text by rememberSaveable { mutableStateOf("") }
-    // Only typed text is saved, so a note that has not loaded yet is never overwritten by an empty field
-    var edited by rememberSaveable { mutableStateOf(false) }
+    var draft by remember { mutableStateOf(NoteDraft()) }
     var showDelete by remember { mutableStateOf(false) }
+    val debounceScope = rememberCoroutineScope()
+    val saver = remember(vm) { NoteDraftSaver(debounceScope, PendingWrites.App, vm::persist) }
 
-    LaunchedEffect(note) {
-        if (!edited) text = note?.content.orEmpty()
-    }
-    DisposableEffect(Unit) {
-        onDispose { if (edited) vm.saveNote(text) }
+    // Reads the database again after each change, so a sync pull or an edit elsewhere shows up
+    LaunchedEffect(note) { draft = draft.onNote(note?.content) }
+    DisposableEffect(saver) {
+        onDispose { saver.flush() }
     }
 
     if (showDelete) {
@@ -130,8 +144,8 @@ fun NotesPanel(itemUrl: String, itemTitle: String = "", onClose: () -> Unit = {}
             confirmButton = {
                 TextButton(onClick = {
                     showDelete = false
-                    edited = false
-                    text = ""
+                    saver.cancel()
+                    draft = NoteDraft()
                     vm.deleteNote()
                 }) { Text("Delete") }
             },
@@ -148,7 +162,7 @@ fun NotesPanel(itemUrl: String, itemTitle: String = "", onClose: () -> Unit = {}
                     IconButton(onClick = onClose) { Icon(Icons.Default.Close, contentDescription = "Close") }
                 },
                 actions = {
-                    NoteAiMenuButton(vm.ai, text)
+                    NoteAiMenuButton(vm.ai, draft.text)
                     if (note != null) {
                         IconButton(onClick = { showDelete = true }) {
                             Icon(Icons.Default.Delete, contentDescription = "Delete note")
@@ -159,8 +173,11 @@ fun NotesPanel(itemUrl: String, itemTitle: String = "", onClose: () -> Unit = {}
         },
     ) { padding ->
         AiNoteField(
-            value = text,
-            onValueChange = { text = it; edited = true },
+            value = draft.text,
+            onValueChange = {
+                draft = draft.typed(it)
+                saver.edit(it)
+            },
             ai = vm.ai,
             placeholder = "Write a note…",
             modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 16.dp).padding(bottom = 24.dp),

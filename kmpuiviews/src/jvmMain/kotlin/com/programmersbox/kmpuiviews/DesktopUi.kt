@@ -145,6 +145,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
+import com.programmersbox.kmpuiviews.tabs.PendingWrites
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.runBlocking
@@ -220,6 +223,8 @@ fun desktopSetup(
                 )
             }
         }
+        // Dispose has queued the Notes panel's last write; give it a moment before the quit is answered
+        runBlocking { withTimeoutOrNull(1_000) { PendingWrites.App.awaitAll() } }
     }
     exitProcess(0)
 }
