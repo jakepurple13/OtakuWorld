@@ -21,9 +21,11 @@ internal class PlayerHolderViewModel(
     factory: MediaPlayerFactory,
     source: PlayerSource,
     title: String,
+    /** A video brought back by a session restore opens paused; it plays when the user presses play. */
+    startPaused: Boolean = false,
 ) : ViewModel() {
     private val proxy = LocalStreamProxy()
-    val player = DesktopPlayer(factory, proxy).apply { open(source) }
+    val player = DesktopPlayer(factory, proxy).apply { open(source, startPaused = startPaused) }
 
     private var registered: Pair<TabId, MiniPlayerRegistry>? = null
 

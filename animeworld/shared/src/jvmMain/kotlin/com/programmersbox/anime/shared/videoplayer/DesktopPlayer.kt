@@ -99,6 +99,10 @@ class DesktopPlayer(
     @Volatile
     private var sawFrame = false
 
+    /** Opened with start-paused and not yet paused: libVLC then pauses without a "playing" event to end buffering. */
+    @Volatile
+    private var openingPaused = false
+
     /** Size of the picture without decoder padding, from libVLC once the video output exists. */
     @Volatile
     private var videoSize: Dimension? = null
@@ -110,10 +114,12 @@ class DesktopPlayer(
         events().addMediaPlayerEventListener(Events())
     }
 
-    fun open(source: PlayerSource, startMs: Long = 0) = api {
+    /** Opens [source] and plays it; with [startPaused] it opens on its first frame, paused, until play is pressed. */
+    fun open(source: PlayerSource, startMs: Long = 0, startPaused: Boolean = false) = api {
         val gen = generation.incrementAndGet()
         this.source = source
         sawFrame = false
+        openingPaused = startPaused
         videoSize = null
         _spuTracks.value = emptyList()
         _state.value = _state.value.let { PlayerState(positionMs = startMs, buffering = true, volume = it.volume, muted = it.muted, rate = it.rate) }
@@ -132,10 +138,7 @@ class DesktopPlayer(
                 return@api fail(gen, "Can't play this link: ${e.message}")
             }
         }
-        // Download sidecars (`<name>.<n>.<lang>.vtt`) are drawn by Compose, so libVLC must not autoload them. As
-        // slaves they would also break MPEG-TS: their ES make libVLC select program 0, the TS program is never
-        // selected, and the input ends without a frame.
-        val options = listOfNotNull(":no-sub-autodetect-file", startMs.takeIf { it > 0 }?.let { ":start-time=${it / 1000.0}" })
+        val options = playOptions(startMs, startPaused)
         if (!player.media().play(mrl, *options.toTypedArray())) fail(gen, "The player couldn't open this video.")
     }
 
@@ -301,6 +304,7 @@ class DesktopPlayer(
 
         override fun playing(mediaPlayer: MediaPlayer) {
             if (closed.get()) return
+            openingPaused = false
             _state.update { it.copy(playing = true, buffering = false) }
             mediaPlayer.later {
                 // The audio output only exists once playing, so a volume set earlier is applied now.
@@ -312,7 +316,10 @@ class DesktopPlayer(
         }
 
         override fun paused(mediaPlayer: MediaPlayer) {
-            if (!closed.get()) _state.update { it.copy(playing = false) }
+            if (closed.get()) return
+            val opened = openingPaused
+            openingPaused = false
+            _state.update { if (opened) it.copy(playing = false, buffering = false) else it.copy(playing = false) }
         }
 
         override fun stopped(mediaPlayer: MediaPlayer) {
@@ -418,6 +425,17 @@ class DesktopPlayer(
         }
     }
 }
+
+/**
+ * libVLC media options for [DesktopPlayer.open]. Download sidecars (`<name>.<n>.<lang>.vtt`) are drawn by Compose, so
+ * libVLC must not autoload them. As slaves they would also break MPEG-TS: their ES make libVLC select program 0, the
+ * TS program is never selected, and the input ends without a frame. [startPaused] opens on the first frame, paused.
+ */
+internal fun playOptions(startMs: Long, startPaused: Boolean): List<String> = listOfNotNull(
+    ":no-sub-autodetect-file",
+    startMs.takeIf { it > 0 }?.let { ":start-time=${it / 1000.0}" },
+    ":start-paused".takeIf { startPaused },
+)
 
 /**
  * Copies BGRA frames into one of [count] reused Skia bitmaps and returns that bitmap as an [ImageBitmap].

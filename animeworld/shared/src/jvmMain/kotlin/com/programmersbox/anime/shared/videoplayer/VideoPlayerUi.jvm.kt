@@ -25,6 +25,7 @@ import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.tabs.LocalTabId
 import com.programmersbox.kmpuiviews.tabs.MiniPlayerRegistry
 import com.programmersbox.kmpuiviews.tabs.TabId
+import com.programmersbox.kmpuiviews.tabs.TabsController
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -108,7 +109,11 @@ private fun rememberScreenPlayer(factory: MediaPlayerFactory, source: PlayerSour
  */
 @Composable
 private fun rememberTabPlayer(tab: TabId, factory: MediaPlayerFactory, source: PlayerSource, videoScreen: VideoScreen): DesktopPlayer {
-    val holder = viewModel(key = "player:$videoScreen") { PlayerHolderViewModel(factory, source, videoScreen.showName) }
+    val tabs = koinInject<TabsController>()
+    // Asked only when the holder is created: a restored tab's video opens paused, one opened any other way plays.
+    val holder = viewModel(key = "player:$videoScreen") {
+        PlayerHolderViewModel(factory, source, videoScreen.showName, startPaused = tabs.takeRestored(tab, videoScreen))
+    }
     val registry = koinInject<MiniPlayerRegistry>()
     LaunchedEffect(holder, tab) { holder.attach(tab, registry) }
     return holder.player
