@@ -107,12 +107,80 @@ class MiniPlayerTest {
         // Opening b in the foreground leaves a.
         val (b, second) = play("b")
         assertEquals(a, registry.showing.value)
+        // b playing in the foreground pauses a; it stays in the mini player.
+        assertFalse(first.playing.value)
 
         controller.activate(homeId)
 
         assertEquals(b, registry.showing.value)
         assertFalse(first.playing.value)
         assertTrue(second.playing.value)
+    }
+
+    @Test
+    fun resumingAForegroundTabPausesTheMiniPlayer() {
+        val (_, first) = play("a")
+        val (_, second) = play("b", FakeSource("b").apply { playing.value = false })
+        assertTrue(first.playing.value)
+
+        second.resume()
+
+        assertFalse(first.playing.value)
+        assertTrue(second.playing.value)
+    }
+
+    @Test
+    fun parkedTabThatStartsPlayingGoesToTheMiniPlayer() {
+        val (a, source) = play("a")
+        source.pause()
+        controller.activate(homeId)
+        assertNull(registry.showing.value)
+
+        // Opening or buffering finished, or a dialog's resume ran, after the tab was parked.
+        source.resume()
+
+        assertEquals(a, registry.showing.value)
+        assertTrue(source.playing.value)
+    }
+
+    @Test
+    fun parkedTabThatStartsPlayingWithPrefOffIsPaused() {
+        registry.enabled = false
+        val (_, source) = play("a")
+        source.pause()
+        controller.activate(homeId)
+
+        source.resume()
+
+        assertNull(registry.showing.value)
+        assertFalse(source.playing.value)
+    }
+
+    @Test
+    fun twoParkedTabsStartingLeavesOnlyTheNewestAudible() {
+        val (_, first) = play("a")
+        first.pause()
+        val (b, second) = play("b")
+        second.pause()
+        controller.activate(homeId)
+
+        first.resume()
+        second.resume()
+
+        assertEquals(b, registry.showing.value)
+        assertFalse(first.playing.value)
+        assertTrue(second.playing.value)
+    }
+
+    @Test
+    fun turningThePrefOffPausesAndHidesTheMiniPlayer() {
+        val (_, source) = play("a")
+        controller.activate(homeId)
+
+        registry.enabled = false
+
+        assertNull(registry.showing.value)
+        assertFalse(source.playing.value)
     }
 
     @Test

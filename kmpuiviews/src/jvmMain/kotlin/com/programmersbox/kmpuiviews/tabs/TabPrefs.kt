@@ -273,7 +273,8 @@ internal val desktopTabsModule: Module = module {
     }
     single {
         MiniPlayerRegistry(get()).also { registry ->
-            val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+            // On the UI thread: turning the mini player off pauses and hides it.
+            val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
             tabsMiniPlayerPref.asFlow().onEach { registry.enabled = it }.launchIn(scope)
             miniPlayerPauseUnfocusedPref.asFlow().onEach { registry.pauseUnfocused = it }.launchIn(scope)
         }

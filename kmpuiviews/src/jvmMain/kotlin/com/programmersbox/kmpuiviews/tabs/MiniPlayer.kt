@@ -41,15 +41,26 @@ class MiniPlayerRegistry(
     internal val controller: TabsController,
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob()),
 ) {
-    /** "Mini player when leaving a playing tab"; off pauses the video instead. */
-    @Volatile
+    /**
+     * "Mini player when leaving a playing tab"; off pauses the video instead. Turning it off pauses and hides the
+     * mini player. Set it on the UI thread.
+     */
     var enabled: Boolean = true
+        set(value) {
+            field = value
+            if (!value) _showing.value?.let { tab ->
+                entries[tab]?.source?.pause()
+                _showing.value = null
+            }
+        }
 
     /** "Pause when the window loses focus": the app losing focus pauses the mini player, which stays paused. */
     @Volatile
     var pauseUnfocused: Boolean = false
 
-    private class Entry(val source: MiniPlayerSource, val job: Job, var onScreen: Boolean)
+    private class Entry(val source: MiniPlayerSource, var onScreen: Boolean) {
+        var job: Job? = null
+    }
 
     private val entries = mutableMapOf<TabId, Entry>()
 
@@ -79,13 +90,20 @@ class MiniPlayerRegistry(
         entries.remove(tab)?.job?.cancel()
         val state = tabState(tab) ?: return
         state.playing.value = source.playing.value
-        val job = scope.launch { source.playing.collect { state.playing.value = it } }
-        entries[tab] = Entry(source, job, onScreen = isOnScreen(tab) ?: true)
+        // In the map before collecting: the first value may arrive at once.
+        val entry = Entry(source, onScreen = isOnScreen(tab) ?: true)
+        entries[tab] = entry
+        entry.job = scope.launch {
+            source.playing.collect {
+                state.playing.value = it
+                if (it) startedPlaying(tab)
+            }
+        }
     }
 
     fun unregister(tab: TabId) {
         val entry = entries.remove(tab) ?: return
-        entry.job.cancel()
+        entry.job?.cancel()
         tabState(tab)?.playing?.value = false
         if (_showing.value == tab) _showing.value = null
     }
@@ -135,6 +153,21 @@ class MiniPlayerRegistry(
             } else {
                 left(tab, entry)
             }
+        }
+    }
+
+    /**
+     * Only one video is audible. On screen, a tab that starts playing pauses the mini player (which stays, paused).
+     * Parked, it was left while opening or buffering, or something resumed it: it goes to the mini player as if it
+     * were left now, or pauses.
+     */
+    private fun startedPlaying(tab: TabId) {
+        val entry = entries[tab] ?: return
+        val onScreen = isOnScreen(tab) ?: return
+        if (onScreen) {
+            _showing.value?.takeIf { it != tab }?.let { entries[it]?.source?.pause() }
+        } else if (_showing.value != tab) {
+            left(tab, entry)
         }
     }
 
