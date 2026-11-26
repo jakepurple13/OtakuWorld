@@ -254,6 +254,31 @@ class TabsControllerTest {
     }
 
     @Test
+    fun modClickArmThenTabNavigationOpensBackgroundTab() = eventsTest { events ->
+        val a = controller.open(title("A"), TabOpenMode.Foreground, homeId)
+        events.clear()
+        // A window-level ⌘-click arms without an origin; an element's target re-arms the same mode with its bounds.
+        controller.armClick(a, TabOpenMode.Background, null)
+        val origin = Rect(0f, 0f, 10f, 10f)
+        controller.armClick(a, TabOpenMode.Background, origin)
+
+        // The element's own click navigates through the tab's nav a moment later (a chooser pick, a load).
+        time += 3_000
+        tab(a).nav.details(title = "B", description = "d", url = "url-B", imageUrl = "img-B", source = "src")
+
+        val b = main.tabs.last().id
+        assertEquals(listOf(homeId, a, b), main.tabs.map { it.id })
+        assertEquals(a, main.activeId.value)
+        assertEquals(title("A"), tab(a).current)
+        assertEquals(listOf<TabEvent>(TabEvent.Opened(b, main.id, TabOpenMode.Background, origin)), events)
+
+        // One arm, one tab: the next plain navigation stays in A.
+        tab(a).nav.navigate(title("C"))
+        assertEquals(title("C"), tab(a).current)
+        assertEquals(3, main.tabs.size)
+    }
+
+    @Test
     fun armExpiresAfterTenSeconds() = eventsTest { events ->
         controller.arm(homeId, TabOpenMode.Background, null)
         time += 10_001

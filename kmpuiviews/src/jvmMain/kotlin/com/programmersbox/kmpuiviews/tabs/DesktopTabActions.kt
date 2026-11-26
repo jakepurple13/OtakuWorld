@@ -59,6 +59,10 @@ fun modeFor(isMac: Boolean, meta: Boolean, ctrl: Boolean, shift: Boolean, button
         else -> null
     }
 
+/** The mode a window-level press asks for: [modeFor] for the primary button only. Middle-click needs [TabActions.target]. */
+fun windowClickMode(isMac: Boolean, meta: Boolean, ctrl: Boolean, shift: Boolean, button: PointerButton): TabOpenMode? =
+    if (button == PointerButton.Primary) modeFor(isMac, meta, ctrl, shift, button) else null
+
 /**
  * [TabActions] for one tab. Modifier-clicks arm [controller] so the element's own click opens a new tab;
  * right-click opens [Menu], which the tab shell composes once per tab.
@@ -124,6 +128,49 @@ class DesktopTabActions(
                     }
                 }
             }
+    }
+
+    /**
+     * Arms this tab on a ⌘/Ctrl primary click anywhere inside it, so every element's own click opens a new tab,
+     * not only those with [target]. A [target] element arms again on the same release, which only adds its
+     * bounds as the origin. A release that nothing consumed ran no click, so it drops the arm.
+     */
+    @OptIn(ExperimentalComposeUiApi::class)
+    fun Modifier.armOnModClick(): Modifier = pointerInput(Unit) {
+        awaitPointerEventScope {
+            while (true) {
+                val event = awaitPointerEvent(PointerEventPass.Initial)
+                if (event.type != PointerEventType.Press) continue
+                val button = event.button ?: continue
+                val mods = event.keyboardModifiers
+                val mode = windowClickMode(isMac, mods.isMetaPressed, mods.isCtrlPressed, mods.isShiftPressed, button)
+                    ?: continue
+                val down = event.changes.first()
+                var moved = false
+                while (true) {
+                    val change = awaitPointerEvent(PointerEventPass.Initial).changes
+                        .firstOrNull { it.id == down.id } ?: break
+                    if ((change.position - down.position).getDistance() > viewConfiguration.touchSlop) moved = true
+                    if (change.pressed) continue
+                    val inside = change.position.x in 0f..size.width.toFloat() &&
+                        change.position.y in 0f..size.height.toFloat()
+                    val click = isTabClick(
+                        consumed = change.isConsumed,
+                        inside = inside,
+                        movedPastSlop = moved,
+                        heldMillis = change.uptimeMillis - down.uptimeMillis,
+                        longPressMillis = viewConfiguration.longPressTimeoutMillis,
+                    )
+                    if (click) {
+                        controller.armClick(tabId, mode, null)
+                        // Clickables consume the release in the Main pass, before this Final pass.
+                        val released = awaitPointerEvent(PointerEventPass.Final).changes.firstOrNull { it.id == down.id }
+                        if (released == null || !released.isConsumed) controller.disarm(tabId)
+                    }
+                    break
+                }
+            }
+        }
     }
 
     /**

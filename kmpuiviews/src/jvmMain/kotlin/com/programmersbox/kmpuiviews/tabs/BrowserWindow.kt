@@ -162,6 +162,7 @@ fun BrowserWindow(
                                     Modifier.fillMaxSize()
                                         .graphicsLayer { alpha = grow?.contentAlpha ?: 1f }
                                         .disarmOnPress()
+                                        .armOnModClick()
                                 }
                             ) {
                                 if (tab.pinned) {

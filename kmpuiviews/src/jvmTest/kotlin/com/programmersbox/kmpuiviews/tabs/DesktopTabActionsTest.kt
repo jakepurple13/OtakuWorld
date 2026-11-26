@@ -57,6 +57,16 @@ class DesktopTabActionsTest {
         assertNull(mode(isMac = true, meta = true, button = PointerButton.Secondary))
     }
 
+    @Test
+    fun windowClickArmsOnlyForModifierPrimaryClicks() {
+        assertEquals(TabOpenMode.Background, windowClickMode(true, meta = true, ctrl = false, shift = false, button = PointerButton.Primary))
+        assertEquals(TabOpenMode.Foreground, windowClickMode(false, meta = false, ctrl = true, shift = true, button = PointerButton.Primary))
+        assertNull(windowClickMode(true, meta = false, ctrl = false, shift = false, button = PointerButton.Primary))
+        // Middle and right clicks need the element's own target: clickables ignore them.
+        assertNull(windowClickMode(true, meta = false, ctrl = false, shift = false, button = PointerButton.Tertiary))
+        assertNull(windowClickMode(true, meta = true, ctrl = false, shift = false, button = PointerButton.Secondary))
+    }
+
     private fun click(
         consumed: Boolean = false,
         inside: Boolean = true,
