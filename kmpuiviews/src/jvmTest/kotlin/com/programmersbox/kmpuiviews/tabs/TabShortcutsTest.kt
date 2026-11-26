@@ -218,12 +218,12 @@ class TabShortcutsTest {
     }
 
     @Test
-    fun windowActionsAreNoOpsUntilTask13() {
+    fun newWindowOpensAWindowAndCloseWindowSparesTheMainOne() {
         val before = window.tabs.map { it.id }
         controller.perform(TabShortcut.NewWindow, window)
         controller.perform(TabShortcut.CloseWindow, window)
         assertEquals(before, window.tabs.map { it.id })
-        assertEquals(1, controller.windows.size)
+        assertEquals(2, controller.windows.size)
     }
 
     @Test

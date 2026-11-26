@@ -100,7 +100,7 @@ class TabMotionStateTest {
 
     @Test
     fun growAlphasFollowTheSpec() {
-        val ghost = GrowGhost(tab, origin)
+        val ghost = GrowGhost(tab, WindowId(0), origin)
         assertEquals(0f, ghost.contentAlpha)
         assertEquals(1f, ghost.coverAlpha)
     }

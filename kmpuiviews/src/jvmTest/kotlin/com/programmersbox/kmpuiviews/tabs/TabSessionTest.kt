@@ -108,7 +108,7 @@ class TabSessionTest {
         val session = assertNotNull(store.load())
 
         val after = newController()
-        after.startSession(OnLaunch.Restore, onboardingDone = true, session = session, decode = store::decode)
+        after.startSession(OnLaunch.Restore, onboardingDone = true, session = session, decode = store::decode, onScreen = { true })
 
         assertEquals(2, after.windows.size)
         assertEquals(before.main.stacks(), after.main.stacks())
@@ -122,6 +122,26 @@ class TabSessionTest {
         assertEquals(after.main.id, after.focusedWindow)
         // Restored tabs still route through the controller.
         assertEquals(after, after.main.active.nav.interceptor)
+    }
+
+    @Test
+    fun restoredTornWindowOffScreenGetsDefaultBounds() {
+        val offScreen = WindowBounds(300.dp, 200.dp, 640.dp, 480.dp)
+        val session = sampleSession().let { s ->
+            s.copy(windows = s.windows.map { if (it.isMain) it else it.copy(bounds = offScreen) })
+        }
+        val after = newController()
+        after.startSession(
+            OnLaunch.Restore,
+            onboardingDone = true,
+            session = session,
+            decode = store::decode,
+            onScreen = { it != offScreen },
+        )
+
+        assertEquals(TabsController.DefaultWindowBounds, after.windows.first { !it.isMain }.bounds.value)
+        // The main window's bounds are checked when its window opens (rememberMainWindowState).
+        assertEquals(WindowBounds(10.dp, 20.dp, 900.dp, 700.dp), after.main.bounds.value)
     }
 
     @Test

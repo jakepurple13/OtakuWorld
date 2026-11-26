@@ -767,4 +767,60 @@ class TabsControllerTest {
         assertEquals(listOf<TabEvent>(TabEvent.Flash(again), TabEvent.Closed(newTab, main.id)), events)
         assertTrue(controller.recentlyClosed.isEmpty())
     }
+
+    @Test
+    fun dropOnOwnStripReorders() = eventsTest { events ->
+        val a = controller.open(title("A"), TabOpenMode.Foreground, homeId)
+        val b = controller.open(title("B"), TabOpenMode.Foreground, a)
+        val c = controller.open(title("C"), TabOpenMode.Foreground, b)
+        controller.activate(a)
+        events.clear()
+
+        // Insertion index 4 is after C (the slots count A's own).
+        controller.drop(a, DropTarget.Reorder(main.id, 4))
+        assertEquals(listOf(homeId, b, c, a), main.tabs.map { it.id })
+        controller.drop(c, DropTarget.Reorder(main.id, 1))
+        assertEquals(listOf(homeId, c, b, a), main.tabs.map { it.id })
+
+        assertEquals(1, controller.windows.size)
+        assertEquals(c, main.activeId.value)
+        assertEquals(emptyList(), events)
+    }
+
+    @Test
+    fun dropIndexNeverBeforeHome() = eventsTest {
+        val a = controller.open(title("A"), TabOpenMode.Foreground, homeId)
+        val b = controller.open(title("B"), TabOpenMode.Foreground, a)
+        val w2 = controller.tearOut(b, WindowBounds(0.dp, 0.dp, 800.dp, 600.dp))
+
+        controller.drop(a, DropTarget.Reorder(main.id, 0))
+        assertEquals(listOf(homeId, a), main.tabs.map { it.id })
+
+        controller.drop(b, DropTarget.MoveTo(main.id, 0))
+        assertEquals(listOf(homeId, b, a), main.tabs.map { it.id })
+        assertEquals(listOf(main.id), controller.windows.map { it.id })
+        assertFalse(w2 in controller.windows.map { it.id })
+
+        // Home itself never moves.
+        controller.drop(homeId, DropTarget.Reorder(main.id, 3))
+        assertEquals(listOf(homeId, b, a), main.tabs.map { it.id })
+    }
+
+    @Test
+    fun tearOutFromSingleTabWindowJustMovesWindow() = eventsTest { events ->
+        val a = controller.open(title("A"), TabOpenMode.Foreground, homeId)
+        val w2 = controller.tearOut(a, WindowBounds(0.dp, 0.dp, 800.dp, 600.dp))
+        controller.focus(main.id)
+        events.clear()
+
+        val moved = WindowBounds(400.dp, 300.dp, 800.dp, 600.dp)
+        assertEquals(w2, controller.tearOut(a, moved))
+
+        assertEquals(listOf(main.id, w2), controller.windows.map { it.id })
+        val second = controller.windows.first { it.id == w2 }
+        assertEquals(listOf(a), second.tabs.map { it.id })
+        assertEquals(moved, second.bounds.value)
+        assertEquals(w2, controller.focusedWindow)
+        assertEquals(emptyList(), events)
+    }
 }

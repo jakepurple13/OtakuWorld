@@ -22,37 +22,47 @@ import com.programmersbox.supabaseintegration.sync.SyncManager
 import org.koin.compose.koinInject
 
 /**
- * What `HomeNav` ran once, for the desktop tab shell: setup, sync, the app's dialogs, the
- * window-size and shared-element locals, the quick-actions overlay and in-app banners.
+ * What `HomeNav` ran once, for the desktop tab shell. Composed by the main window only, so it runs once per app
+ * however many windows are open: setup, sync and the app's dialogs.
+ */
+@Composable
+fun DesktopAppOnce(genericInfo: KmpGenericInfo = koinInject()) {
+    InitialSetup()
+
+    val supabaseSync = koinInject<SyncManager>()
+    LaunchedEffect(Unit) { supabaseSync.start() }
+
+    genericInfo.DialogSetups()
+}
+
+/**
+ * One window's share of what `HomeNav` provided: the window-size and shared-element locals, and, in the window that
+ * [hostsOverlays] (the focused one), the quick-actions overlay and in-app banners, so they show once, where the user
+ * is.
  *
  * The app theme comes from the window (`OtakuDecoratedWindow`). AMOLED and blur only styled
  * `HomeNav`'s bottom bar, which desktop never showed.
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun DesktopAppEffects(
+fun DesktopWindowEffects(
     windowSize: WindowSizeClass,
-    genericInfo: KmpGenericInfo = koinInject(),
+    hostsOverlays: Boolean,
     content: @Composable SharedTransitionScope.() -> Unit,
 ) {
     CompositionLocalProvider(LocalWindowSizeClass provides windowSize) {
-        InitialSetup()
-
-        val supabaseSync = koinInject<SyncManager>()
-        LaunchedEffect(Unit) { supabaseSync.start() }
-
-        genericInfo.DialogSetups()
-
         SharedTransitionLayout {
             CompositionLocalProvider(LocalSharedElementScope provides this) {
                 Box(Modifier.fillMaxSize()) {
                     content()
 
-                    CompositionLocalProvider(LocalNavHostPadding provides PaddingValues()) {
-                        QuickActionsOverlay()
-                    }
+                    if (hostsOverlays) {
+                        CompositionLocalProvider(LocalNavHostPadding provides PaddingValues()) {
+                            QuickActionsOverlay()
+                        }
 
-                    InAppBannerHost()
+                        InAppBannerHost()
+                    }
                 }
             }
         }

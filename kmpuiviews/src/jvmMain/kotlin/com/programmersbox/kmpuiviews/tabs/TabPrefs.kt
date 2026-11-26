@@ -269,29 +269,35 @@ internal val desktopTabsModule: Module = module {
             // The saved position before the first frame, so a Side layout does not open as Top and glide over.
             controller.motion.switchLayout(runBlocking { tabPositionPref.get() }, animate = false)
             combine(
-                tabClickOpensPref.asFlow(),
-                tabModClickPref.asFlow(),
-                tabNewPlacePref.asFlow(),
-                tabAfterClosePref.asFlow(),
-                tabsClosedKeptPref.asFlow(),
-            ) { clickOpens, modClick, newPlace, afterClose, closedKept ->
-                TabPrefsSnapshot(
-                    clickOpensNewTab = clickOpens == ClickOpens.NewTab,
-                    modClick = modClick,
-                    newPlace = newPlace,
-                    afterClose = afterClose,
-                    closedKept = closedKept,
-                )
-            }
+                combine(
+                    tabClickOpensPref.asFlow(),
+                    tabModClickPref.asFlow(),
+                    tabNewPlacePref.asFlow(),
+                    tabAfterClosePref.asFlow(),
+                    tabsClosedKeptPref.asFlow(),
+                ) { clickOpens, modClick, newPlace, afterClose, closedKept ->
+                    TabPrefsSnapshot(
+                        clickOpensNewTab = clickOpens == ClickOpens.NewTab,
+                        modClick = modClick,
+                        newPlace = newPlace,
+                        afterClose = afterClose,
+                        closedKept = closedKept,
+                    )
+                },
+                tabsTearOutPref.asFlow(),
+            ) { snapshot, tearOut -> snapshot.copy(tearOut = tearOut) }
                 .onEach { controller.prefs = it }
                 .launchIn(scope)
             tabMotionPref.asFlow()
                 .onEach { controller.motion.mode = it }
                 .launchIn(scope)
             // On the UI thread, like everything else that changes tabs.
-            CoroutineScope(Dispatchers.Main + SupervisorJob()).launch {
-                controller.runSleepChecks(tabsSleepAfterPref.asFlow(), System::currentTimeMillis)
-            }
+            val main = CoroutineScope(Dispatchers.Main + SupervisorJob())
+            main.launch { controller.runSleepChecks(tabsSleepAfterPref.asFlow(), System::currentTimeMillis) }
+            // Once per app, whatever the number of windows.
+            main.launch { controller.motion.followSystemReducedMotion() }
+            // On the UI thread, so the switch reads the chip bounds the strips last wrote.
+            main.launch { tabPositionPref.asFlow().collect { controller.motion.switchLayout(it, animate = true) } }
         }
     }
     single {

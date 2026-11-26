@@ -22,6 +22,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
@@ -35,6 +38,18 @@ val SideTabsWidth = 200.dp
 private fun TabsController.openNewTab(window: BrowserWindowState) {
     open(NewTabRoute, TabOpenMode.Foreground, window.activeId.value)
 }
+
+/** Records this strip's bounds as [window]'s, for drops. */
+private fun Modifier.stripOf(window: BrowserWindowState, controller: TabsController): Modifier =
+    onGloballyPositioned { controller.ui.stripBounds[window.id] = it.boundsInWindow() }
+
+/** A strip tab that can be dragged; it dims while it is the one being dragged. */
+@Composable
+private fun Modifier.draggedFrom(tab: TabState, window: BrowserWindowState, controller: TabsController): Modifier =
+    graphicsLayer { alpha = if (controller.ui.drag?.tab == tab.id) DraggedTabAlpha else 1f }
+        .tabDragSource(tab, window, controller)
+
+private const val DraggedTabAlpha = 0.5f
 
 /** The window's tabs, for the title bar. Click activates, middle-click closes, "+" opens a new tab. */
 @Composable
@@ -50,7 +65,7 @@ fun TabStrip(
     val style = rememberTabIconStyle(keys)
     val closeSpec = tween<IntOffset>(motion.ms(TabMotion.Close), easing = motion.easing(TabMotion.Close))
     val closeFade = tween<Float>(motion.ms(TabMotion.Close), easing = motion.easing(TabMotion.Close))
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier) {
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier.stripOf(window, controller)) {
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -66,7 +81,9 @@ fun TabStrip(
                     motion = motion,
                     onActivate = { controller.activate(tab.id) },
                     onClose = { controller.close(tab.id) },
-                    modifier = Modifier.animateItem(fadeInSpec = null, placementSpec = closeSpec, fadeOutSpec = closeFade),
+                    modifier = Modifier
+                        .animateItem(fadeInSpec = null, placementSpec = closeSpec, fadeOutSpec = closeFade)
+                        .draggedFrom(tab, window, controller),
                 )
             }
         }
@@ -90,7 +107,7 @@ fun SideTabColumn(
     val style = rememberTabIconStyle(keys)
     val closeSpec = tween<IntOffset>(motion.ms(TabMotion.Close), easing = motion.easing(TabMotion.Close))
     val closeFade = tween<Float>(motion.ms(TabMotion.Close), easing = motion.easing(TabMotion.Close))
-    Surface(color = MaterialTheme.colorScheme.surfaceContainer, modifier = modifier) {
+    Surface(color = MaterialTheme.colorScheme.surfaceContainer, modifier = modifier.stripOf(window, controller)) {
         Column(Modifier.fillMaxSize().padding(6.dp)) {
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(2.dp),
@@ -108,6 +125,7 @@ fun SideTabColumn(
                         onClose = { controller.close(tab.id) },
                         modifier = Modifier
                             .animateItem(fadeInSpec = null, placementSpec = closeSpec, fadeOutSpec = closeFade)
+                            .draggedFrom(tab, window, controller)
                             .fillMaxWidth(),
                     )
                 }

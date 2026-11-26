@@ -51,14 +51,11 @@ class TabsController(
     /** Raised by the search shortcut, consumed by the global search screen. */
     val searchFocus = SearchFocusRequest()
 
-    /**
-     * True while something inside a window's content has focus. ⌘← / ⌘→ then wait for the content to refuse them
-     * (a focused text field uses them to move the caret) instead of being taken at the window level.
-     */
-    var contentHasFocus = false
-
     /** Shared state for the open, close, switch and flash motion. */
     val motion = TabMotionState()
+
+    /** Per-window UI state: content focus, the tab being dragged, strip geometry, tear-out motion. */
+    val ui = TabWindowsUi()
 
     private class Arm(val mode: TabOpenMode, val origin: Rect?, val at: Long)
 
@@ -147,7 +144,9 @@ class TabsController(
         return false
     }
 
-    fun open(key: NavKey, mode: TabOpenMode, from: TabId, origin: Rect? = null): TabId {
+    fun open(key: NavKey, requested: TabOpenMode, from: TabId, origin: Rect? = null): TabId {
+        // With "Drag tabs out into windows" off, nothing opens a window.
+        val mode = if (requested == TabOpenMode.NewWindow && !prefs.tearOut) TabOpenMode.Foreground else requested
         val tk = keys.keyOf(key)
         val existing = tk?.let { allTabs().firstOrNull { tab -> keys.keyOf(tab.current) == tk } }
         if (existing != null) {
@@ -184,7 +183,11 @@ class TabsController(
         return tab.id
     }
 
-    fun activate(tab: TabId) {
+    /**
+     * Makes [tab] its window's active tab. With [focus] (a user's activation) its window also becomes the focused
+     * window; a neighbor taking over after a close or move in another window must not take focus from this one.
+     */
+    fun activate(tab: TabId, focus: Boolean = true) {
         val window = findTab(tab)?.let { windowOf(it.id) } ?: return
         switchHandoffs(tab)
         wake(window.tabs.first { it.id == tab })
@@ -194,7 +197,7 @@ class TabsController(
             backgroundRun.remove(window.id)
         }
         touch(window.id, tab)
-        focusedWindow = window.id
+        if (focus) focusedWindow = window.id
         listeners.forEach { it(null) }
     }
 
@@ -345,15 +348,22 @@ class TabsController(
         val source = windowOf(tab)
 
         detach(state, source)
-        target.tabs.add(index.coerceIn(0, target.tabs.size), state)
+        // Never before a pinned tab (Home).
+        target.tabs.add(index.coerceIn(target.tabs.count { it.pinned }, target.tabs.size), state)
         activate(tab)
         emit(TabEvent.Moved(tab, source.id, target.id))
     }
 
+    /** Moves [tab] into a new window at [bounds]. The only tab of a torn-out window just moves that window there. */
     fun tearOut(tab: TabId, bounds: WindowBounds): WindowId {
         val state = findTab(tab) ?: error("No tab $tab")
         val source = windowOf(tab)
         if (state.pinned) return source.id
+        if (!source.isMain && source.tabs.size == 1) {
+            source.bounds.value = bounds
+            focusedWindow = source.id
+            return source.id
+        }
 
         detach(state, source)
         val window = newWindow(state, bounds)
@@ -462,9 +472,12 @@ class TabsController(
             windows.remove(window)
             backgroundRun.remove(window.id)
             usedOrder.remove(window.id)
+            ui.forget(window.id)
+            motion.forgetWindow(window.id)
             if (focusedWindow == window.id) focusedWindow = windows.first { it.isMain }.id
         } else if (window.activeId.value == tab.id) {
-            activate(nextActive(window, index).id)
+            // Not a user's activation: a close or move here must not take focus from another window.
+            activate(nextActive(window, index).id, focus = false)
         }
     }
 

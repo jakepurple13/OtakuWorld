@@ -169,10 +169,13 @@ class DesktopTabActions(
                         text = { Text(stringResource(Res.string.tabs_open_in_new_tab_and_switch)) },
                         onClick = { pick(TabOpenMode.Foreground) },
                     )
-                    DropdownMenuItem(
-                        text = { Text(stringResource(Res.string.tabs_open_in_new_window)) },
-                        onClick = { pick(TabOpenMode.NewWindow) },
-                    )
+                    // Hidden with "Drag tabs out into windows" off.
+                    if (controller.prefs.tearOut) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(Res.string.tabs_open_in_new_window)) },
+                            onClick = { pick(TabOpenMode.NewWindow) },
+                        )
+                    }
                     request.onMore?.let { onMore ->
                         DropdownMenuItem(
                             text = { Text(stringResource(Res.string.tabs_more)) },

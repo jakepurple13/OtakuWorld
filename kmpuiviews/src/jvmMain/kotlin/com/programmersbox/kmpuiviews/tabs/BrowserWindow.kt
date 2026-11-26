@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.layout.boundsInWindow
@@ -74,7 +75,13 @@ fun BrowserWindow(
         }
     }
 
-    DesktopAppEffects(windowSize = windowSize, genericInfo = genericInfo) {
+    // The OS focus decides which window shortcuts, quick actions and the focused-tab navigation act on.
+    val windowFocused = LocalWindowInfo.current.isWindowFocused
+    LaunchedEffect(windowFocused) { if (windowFocused) controller.focus(window.id) }
+
+    if (window.isMain) DesktopAppOnce(genericInfo)
+
+    DesktopWindowEffects(windowSize = windowSize, hostsOverlays = controller.focusedWindow == window.id) {
         val active = window.tabs.firstOrNull { it.id == window.activeId.value } ?: window.tabs.first()
 
         val motion = controller.motion
@@ -88,7 +95,7 @@ fun BrowserWindow(
         Row(
             Modifier
                 .fillMaxSize()
-                .onFocusChanged { controller.contentHasFocus = it.hasFocus }
+                .onFocusChanged { controller.ui.contentHasFocus[window.id] = it.hasFocus }
                 // Reached only when no focused text field used the key: ⌘← / ⌘→ back and forward.
                 .onKeyEvent { event ->
                     tabShortcut(event, isMac = isMacOs, chromeVisible = showNavBar)

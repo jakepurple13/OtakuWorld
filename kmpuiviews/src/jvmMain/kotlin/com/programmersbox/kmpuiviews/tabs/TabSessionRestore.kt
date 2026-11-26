@@ -40,12 +40,13 @@ fun TabsController.startSession(
     onboardingDone: Boolean,
     session: TabSession?,
     decode: (JsonElement) -> NavKey?,
+    onScreen: (WindowBounds) -> Boolean = ::isOnScreen,
 ) {
     val main = windows.first { it.isMain }
     session?.windows?.firstOrNull { it.isMain }?.bounds?.let { main.bounds.value = it }
     if (!onboardingDone) return
     when (onLaunch) {
-        OnLaunch.Restore -> session?.let { restore(it, decode) }
+        OnLaunch.Restore -> session?.let { restore(it, decode, onScreen) }
         OnLaunch.Home -> Unit
         OnLaunch.NewTab -> {
             val page = restoredTab(listOf(NewTabRoute))
@@ -59,7 +60,11 @@ fun TabsController.startSession(
  * Restores [session]'s tabs and torn-out windows. Each stack keeps its decodable prefix; a tab with none is dropped,
  * and a torn-out window with no tabs left is not recreated. Restored tabs stay parked until first shown.
  */
-fun TabsController.restore(session: TabSession, decode: (JsonElement) -> NavKey?) {
+fun TabsController.restore(
+    session: TabSession,
+    decode: (JsonElement) -> NavKey?,
+    onScreen: (WindowBounds) -> Boolean = ::isOnScreen,
+) {
     val main = windows.first { it.isMain }
     val home = main.tabs.first { it.pinned }
     var mainActive: TabState? = null
@@ -81,7 +86,9 @@ fun TabsController.restore(session: TabSession, decode: (JsonElement) -> NavKey?
             tabs.filter { it !== home }.forEach { main.tabs.add(it) }
             mainActive = active ?: home
         } else if (tabs.isNotEmpty()) {
-            val window = restoredWindow(tabs.first(), saved.bounds ?: TabsController.DefaultWindowBounds)
+            // The same check the main window gets: off-screen (a screen since unplugged) opens at the default spot.
+            val bounds = saved.bounds?.takeIf(onScreen) ?: TabsController.DefaultWindowBounds
+            val window = restoredWindow(tabs.first(), bounds)
             tabs.drop(1).forEach { window.tabs.add(it) }
             activate((active ?: tabs.first()).id)
         }

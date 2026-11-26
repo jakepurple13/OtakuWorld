@@ -32,11 +32,12 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent
@@ -119,21 +120,19 @@ import androidx.compose.runtime.collectAsState
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.tabs.BrowserWindow
-import com.programmersbox.kmpuiviews.tabs.MiniPlayerOverlay
-import com.programmersbox.kmpuiviews.tabs.TabMotionLayer
-import com.programmersbox.kmpuiviews.tabs.TabPosition
+import com.programmersbox.kmpuiviews.tabs.LocalAwtWindow
+import com.programmersbox.kmpuiviews.tabs.shouldConfirmQuit
+import com.programmersbox.kmpuiviews.tabs.tabCount
+import com.programmersbox.kmpuiviews.tabs.tabsConfirmQuitPref
 import com.programmersbox.kmpuiviews.tabs.TabsSettingsPage
 import com.programmersbox.kmpuiviews.tabs.NewTabPage
 import com.programmersbox.kmpuiviews.tabs.NewTabRoute
 import com.programmersbox.kmpuiviews.tabs.TabsSettingsRoute
-import com.programmersbox.kmpuiviews.tabs.TabStrip
 import com.programmersbox.kmpuiviews.tabs.TabsController
 import com.programmersbox.kmpuiviews.tabs.TabSessionEffects
 import com.programmersbox.kmpuiviews.tabs.TabSessionStore
 import com.programmersbox.kmpuiviews.tabs.rememberMainWindowState
 import com.programmersbox.kmpuiviews.tabs.desktopTabsModule
-import com.programmersbox.kmpuiviews.tabs.perform
-import com.programmersbox.kmpuiviews.tabs.tabShortcut
 import com.programmersbox.kmpuiviews.utils.bindsPlatformGenericInfo
 import com.programmersbox.supabaseintegration.Res
 import com.programmersbox.supabaseintegration.supabase_logo_icon
@@ -451,55 +450,53 @@ private fun InternalDesktopUi(
                     exit = exitApplication,
                 )
             }
+            // "Ask before quitting with several tabs open": window close and ⌘Q both come through here.
+            // Plain collectAsState: this runs outside the Window, where there is no LocalLifecycleOwner.
+            val confirmQuit by remember { tabsConfirmQuitPref.asFlow() }.collectAsState(true)
+            val prefScope = rememberCoroutineScope()
+            var askingQuit by remember { mutableStateOf(false) }
+            val requestQuit: () -> Unit = {
+                when {
+                    askingQuit -> Unit
+                    quitController.state == QuitController.State.Idle &&
+                        shouldConfirmQuit(tabsController.tabCount, confirmQuit) -> askingQuit = true
+                    else -> quitController.requestQuit()
+                }
+            }
             // A request arriving after exit is a no-op; its held answer is still sent once the app loop ends.
-            AppQuitHandler(quitReply, quitController::requestQuit)
+            AppQuitHandler(quitReply, requestQuit)
             val quitInWindow = (quitController.state as? QuitController.State.Playing)
                 ?.takeIf { it.plan.host == QuitHost.InWindow }
                 ?.run
             OtakuDecoratedWindow(
                 title = title,
-                onCloseRequest = quitController::requestQuit,
+                // The main window's close button quits the app, closing every window.
+                onCloseRequest = requestQuit,
                 state = windowState,
                 // Hidden once exiting too, so the content never shows unfaded before the window goes.
                 visible = !quitController.hideMainWindow && quitController.state != QuitController.State.Exited,
                 showQuickActions = true,
+                hostsOverlays = tabsController.focusedWindow == mainWindow.id,
                 onAnyKey = { launchRun.skip() },
-                titleBarContent = {
-                    // On the side, the tabs live in BrowserWindow's column and the title bar shows the title.
-                    if (showNavBar && tabsController.motion.position == TabPosition.Top) {
-                        TabStrip(
-                            window = mainWindow,
-                            controller = tabsController,
-                            modifier = Modifier.align(Alignment.CenterHorizontally),
-                        )
-                    } else {
-                        Text(
-                            text = title,
-                            style = MaterialTheme.typography.titleSmall,
-                            modifier = Modifier.align(Alignment.CenterHorizontally),
-                        )
-                    }
-                },
-                onKeyEvent = { event ->
-                    // With focus inside the content, ⌘← / ⌘→ are left to the content (a text field uses them to move
-                    // the caret) and handled when they bubble up to BrowserWindow.
-                    tabShortcut(
-                        event,
-                        isMac = isMacOs,
-                        chromeVisible = showNavBar,
-                        textFieldFocused = tabsController.contentHasFocus,
-                    )?.let { tabsController.perform(it, mainWindow) } != null
-                },
-                overlay = {
-                    TabMotionLayer(
-                        controller = tabsController,
-                        window = mainWindow,
-                        tabSlotBounds = { tabsController.motion.slotBounds[it] },
-                        contentBounds = { tabsController.motion.contentBounds[mainWindow.id] ?: Rect.Zero },
-                    )
-                    MiniPlayerOverlay(registry = koinInject(), window = mainWindow)
-                },
+                titleBarContent = { WindowTitleBar(mainWindow, tabsController, showNavBar, title) },
+                onKeyEvent = { windowTabShortcut(it, mainWindow, tabsController, showNavBar) },
+                overlay = { WindowOverlays(mainWindow, tabsController) },
             ) {
+                if (askingQuit) {
+                    ConfirmQuitDialog(
+                        tabCount = tabsController.tabCount,
+                        onQuit = { dontAskAgain ->
+                            askingQuit = false
+                            if (dontAskAgain) prefScope.launch { tabsConfirmQuitPref.set(false) }
+                            quitController.requestQuit()
+                        },
+                        onCancel = {
+                            askingQuit = false
+                            // An OS quit (⌘Q, Dock) waits for an answer; without one macOS refuses later quits.
+                            quitReply.cancel()
+                        },
+                    )
+                }
                 val colors = MaterialTheme.colorScheme
                 SideEffect { contentColors = colors }
                 launchRun.Play()
@@ -527,6 +524,9 @@ private fun InternalDesktopUi(
                     }
                 }
             }
+
+            // Gone once quitting: the app's exit closes every window.
+            if (quitController.state != QuitController.State.Exited) TornOutWindows(tabsController, showNavBar)
 
             val chromeColors = contentColors ?: MaterialTheme.colorScheme
             QuitOverlay(
@@ -628,12 +628,14 @@ fun BaseWindow(
  * with the title bar colored from the app's Material theme.
  */
 @Composable
-private fun OtakuDecoratedWindow(
+internal fun OtakuDecoratedWindow(
     title: String,
     onCloseRequest: () -> Unit,
     state: WindowState = rememberWindowState(),
     visible: Boolean = true,
     showQuickActions: Boolean = false,
+    /** Whether this window shows the shortcuts dialog. With several windows, only the focused one does. */
+    hostsOverlays: Boolean = showQuickActions,
     /** Replaces the centered title, filling the space between the start and end items. */
     titleBarContent: (@Composable TitleBarScope.() -> Unit)? = null,
     /** Runs after the window's own shortcut handlers; return true to consume the event. */
@@ -701,54 +703,56 @@ private fun OtakuDecoratedWindow(
             },
         ) {
             KmpLocalCompositionSetup {
-                OtakuMaterialTheme(
-                    settingsHandling = koinInject(),
-                ) {
-                    val colorScheme = MaterialTheme.colorScheme
-                    SideEffect { appColorScheme = colorScheme }
-
-                    if (showQuickActions && isMacOs) QuickActionsMenuBar()
-
-                    // Title bar must be a direct child of the window's layout (it is placed by layoutId).
-                    MaterialTitleBar(
-                        style = rememberMaterialTitleBarStyle(colorScheme),
-                        layoutPolicy = if (titleBarContent != null) TitleBarLayoutPolicy.FillCenter else TitleBarLayoutPolicy.Default,
+                CompositionLocalProvider(LocalAwtWindow provides window) {
+                    OtakuMaterialTheme(
+                        settingsHandling = koinInject(),
                     ) {
-                        if (showQuickActions && quickActionsController != null) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.align(Alignment.Start),
-                            ) {
-                                if (!isMacOs) QuickActionsTitleBarMenu()
-                                ShortcutsTitleBarButton(onClick = quickActionsController::openShortcuts)
+                        val colorScheme = MaterialTheme.colorScheme
+                        SideEffect { appColorScheme = colorScheme }
+
+                        if (showQuickActions && isMacOs) QuickActionsMenuBar()
+
+                        // Title bar must be a direct child of the window's layout (it is placed by layoutId).
+                        MaterialTitleBar(
+                            style = rememberMaterialTitleBarStyle(colorScheme),
+                            layoutPolicy = if (titleBarContent != null) TitleBarLayoutPolicy.FillCenter else TitleBarLayoutPolicy.Default,
+                        ) {
+                            if (showQuickActions && quickActionsController != null) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.align(Alignment.Start),
+                                ) {
+                                    if (!isMacOs) QuickActionsTitleBarMenu()
+                                    ShortcutsTitleBarButton(onClick = quickActionsController::openShortcuts)
+                                }
+                            }
+                            if (titleBarContent != null) {
+                                titleBarContent()
+                            } else {
+                                Text(
+                                    text = title,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                                )
                             }
                         }
-                        if (titleBarContent != null) {
-                            titleBarContent()
-                        } else {
-                            Text(
-                                text = title,
-                                style = MaterialTheme.typography.titleSmall,
-                                modifier = Modifier.align(Alignment.CenterHorizontally),
-                            )
-                        }
-                    }
 
-                    // One child for the window's layout: the Surface clips to its bounds, the overlay does not.
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        Surface(modifier = Modifier.fillMaxSize()) {
-                            CompositionLocalProvider(
-                                LocalNavHostPadding provides PaddingValues()
-                            ) {
-                                Box(modifier = Modifier.fillMaxSize()) {
-                                    content()
-                                    if (showQuickActions && quickActionsController != null) {
-                                        ShortcutsDialogHost(quickActionsController)
+                        // One child for the window's layout: the Surface clips to its bounds, the overlay does not.
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            Surface(modifier = Modifier.fillMaxSize()) {
+                                CompositionLocalProvider(
+                                    LocalNavHostPadding provides PaddingValues()
+                                ) {
+                                    Box(modifier = Modifier.fillMaxSize()) {
+                                        content()
+                                        if (hostsOverlays && quickActionsController != null) {
+                                            ShortcutsDialogHost(quickActionsController)
+                                        }
                                     }
                                 }
                             }
+                            overlay?.invoke()
                         }
-                        overlay?.invoke()
                     }
                 }
             }

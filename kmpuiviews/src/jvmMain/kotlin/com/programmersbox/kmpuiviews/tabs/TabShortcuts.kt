@@ -178,7 +178,9 @@ fun TabsController.perform(shortcut: TabShortcut, window: BrowserWindowState) {
             open(Screen.GlobalSearchScreen(), TabOpenMode.Foreground, active)
             searchFocus.request()
         }
-        // wired in Task 13
-        TabShortcut.NewWindow, TabShortcut.CloseWindow -> Unit
+        // Ignored with "Drag tabs out into windows" off.
+        TabShortcut.NewWindow -> openNewWindow()
+        // Torn-out windows only; ignored on the main window.
+        TabShortcut.CloseWindow -> closeWindow(window.id)
     }
 }

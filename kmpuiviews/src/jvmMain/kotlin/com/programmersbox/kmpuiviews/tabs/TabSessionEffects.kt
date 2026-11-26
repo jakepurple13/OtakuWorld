@@ -28,14 +28,7 @@ fun rememberMainWindowState(window: BrowserWindowState): WindowState {
  */
 @Composable
 fun TabSessionEffects(controller: TabsController, store: TabSessionStore, window: BrowserWindowState, windowState: WindowState) {
-    LaunchedEffect(window, windowState) {
-        snapshotFlow { Triple(windowState.placement, windowState.position, windowState.size) }
-            .collect { (placement, position, size) ->
-                if (placement == WindowPlacement.Floating && position.isSpecified) {
-                    window.bounds.value = WindowBounds(position.x, position.y, size.width, size.height)
-                }
-            }
-    }
+    TrackWindowBounds(window, windowState)
     LaunchedEffect(controller, store) { store.autosave(controller) }
     DisposableEffect(controller, store) {
         onDispose {
@@ -45,8 +38,21 @@ fun TabSessionEffects(controller: TabsController, store: TabSessionStore, window
     }
 }
 
+/** Keeps [window]'s bounds in step with [windowState], floating only, so a fullscreen size is never saved. */
+@Composable
+fun TrackWindowBounds(window: BrowserWindowState, windowState: WindowState) {
+    LaunchedEffect(window, windowState) {
+        snapshotFlow { Triple(windowState.placement, windowState.position, windowState.size) }
+            .collect { (placement, position, size) ->
+                if (placement == WindowPlacement.Floating && position.isSpecified) {
+                    window.bounds.value = WindowBounds(position.x, position.y, size.width, size.height)
+                }
+            }
+    }
+}
+
 /** Whether some of [bounds]' title bar is on a connected screen. AWT and Compose window positions are both in dp. */
-private fun isOnScreen(bounds: WindowBounds): Boolean {
+internal fun isOnScreen(bounds: WindowBounds): Boolean {
     if (GraphicsEnvironment.isHeadless()) return false
     val titleBar = Rectangle(bounds.x.value.toInt(), bounds.y.value.toInt(), bounds.width.value.toInt(), 40)
     return GraphicsEnvironment.getLocalGraphicsEnvironment().screenDevices

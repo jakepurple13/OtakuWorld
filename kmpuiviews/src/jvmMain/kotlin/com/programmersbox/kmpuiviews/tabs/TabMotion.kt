@@ -42,8 +42,11 @@ import com.programmersbox.kmpuiviews.motion.systemReducesMotion
 import org.koin.compose.koinInject
 import kotlin.math.roundToInt
 
-/** A foreground tab's cover growing from where it was clicked. [t] is linear time 0..1; the content fades in from 40 %. */
-class GrowGhost(val tab: TabId, val origin: Rect) {
+/**
+ * A foreground tab's cover growing from where it was clicked, in [window]. [t] is linear time 0..1; the content fades
+ * in from 40 %.
+ */
+class GrowGhost(val tab: TabId, val window: WindowId, val origin: Rect) {
     val t = Animatable(0f)
     internal var taken = false
 
@@ -121,7 +124,7 @@ class TabMotionState(
         when (event) {
             is TabEvent.Opened -> when {
                 reduced || event.origin == null -> Unit
-                event.mode == TabOpenMode.Foreground -> grows.add(GrowGhost(event.tab, event.origin))
+                event.mode == TabOpenMode.Foreground -> grows.add(GrowGhost(event.tab, event.window, event.origin))
                 event.mode == TabOpenMode.Background -> flying.add(event.tab)
             }
 
@@ -130,7 +133,16 @@ class TabMotionState(
         }
     }
 
-    /** Keeps [systemReduces] current. [systemReducesMotion] is cached, and the app refreshes it off the main thread. */
+    /** A window closed: drops its content bounds and any grow still waiting in it. */
+    internal fun forgetWindow(window: WindowId) {
+        contentBounds.remove(window)
+        grows.removeAll { it.window == window }
+    }
+
+    /**
+     * Keeps [systemReduces] current. [systemReducesMotion] is cached, and the app refreshes it off the main thread.
+     * Run once per app (the tabs module starts it), not per window.
+     */
     suspend fun followSystemReducedMotion() {
         while (true) {
             systemReduces = withContext(Dispatchers.IO) { systemReducesMotion() }
@@ -185,11 +197,6 @@ fun TabMotionLayer(
     fun imageOf(tab: TabId) = controller.windows.firstNotNullOfOrNull { w -> w.tabs.firstOrNull { it.id == tab } }
         ?.let { keys.labelOf(it.current).imageUrl }
 
-    LaunchedEffect(Unit) { motion.followSystemReducedMotion() }
-
-    // On the UI thread, so the switch reads the chip bounds the strip last wrote.
-    LaunchedEffect(Unit) { tabPositionPref.asFlow().collect { motion.switchLayout(it, animate = true) } }
-
     val layoutSwitch = motion.layoutSwitch
     LaunchedEffect(layoutSwitch) {
         layoutSwitch ?: return@LaunchedEffect
@@ -221,7 +228,7 @@ fun TabMotionLayer(
             .fillMaxSize()
             .onGloballyPositioned { layerOrigin = it.positionInWindow() },
     ) {
-        motion.grows.toList().forEach { ghost ->
+        motion.grows.filter { it.window == window.id }.forEach { ghost ->
             key(ghost) {
                 LaunchedEffect(Unit) {
                     ghost.t.animateTo(1f, tween(motion.ms(TabMotion.Grow), easing = LinearEasing))

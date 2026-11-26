@@ -81,6 +81,8 @@ data class TabPrefsSnapshot(
     val newPlace: NewTabPlace = NewTabPlace.NextToCurrent,
     val afterClose: AfterClose = AfterClose.Right,
     val closedKept: Int = 25,
+    /** "Drag tabs out into windows". Off: dragging only reorders, and nothing opens a new window. */
+    val tearOut: Boolean = true,
 )
 
 /** A closed tab: its back stack and what the [TabHandoff]s held for it. */
