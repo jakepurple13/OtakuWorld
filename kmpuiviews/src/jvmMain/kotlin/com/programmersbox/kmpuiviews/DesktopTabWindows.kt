@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -104,9 +105,9 @@ internal fun WindowOverlays(window: BrowserWindowState, controller: TabsControll
 
 /** Every torn-out window. The main window is drawn by the app shell. */
 @Composable
-internal fun TornOutWindows(controller: TabsController, showNavBar: Boolean) {
+internal fun TornOutWindows(controller: TabsController, showNavBar: Boolean, appColors: ColorScheme?) {
     controller.windows.filter { !it.isMain }.forEach { window ->
-        key(window.id.v) { TornOutWindow(window, controller, showNavBar) }
+        key(window.id.v) { TornOutWindow(window, controller, showNavBar, appColors) }
     }
 }
 
@@ -119,6 +120,8 @@ private fun TornOutWindow(
     window: BrowserWindowState,
     controller: TabsController,
     showNavBar: Boolean,
+    // The app theme, read from the main window: this runs outside any window, where MaterialTheme is the default.
+    appColors: ColorScheme?,
     keys: TabKeys = koinInject(),
 ) {
     val bounds = window.bounds.value ?: TabsController.DefaultWindowBounds
@@ -148,7 +151,7 @@ private fun TornOutWindow(
         TearOutOverlay(
             from = run.from,
             to = bounds,
-            color = MaterialTheme.colorScheme.surface,
+            color = (appColors ?: MaterialTheme.colorScheme).surface,
             durationMs = controller.motion.ms(TabMotion.TearOut),
             onDone = { run.shown = true },
         )
@@ -167,7 +170,6 @@ private fun TornOutWindow(
         onKeyEvent = { windowTabShortcut(it, window, controller, showNavBar) },
         overlay = { WindowOverlays(window, controller) },
     ) {
-        LaunchedEffect(Unit) { println("Tabs: torn-out window ${window.id.v} open with ${window.tabs.size} tab(s)") }
         if (run != null && run.style == TearOutStyle.Overlay && run.shown) {
             // The window has drawn its first frame once the next one starts; then the overlay can go.
             LaunchedEffect(run) {

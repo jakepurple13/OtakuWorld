@@ -244,10 +244,13 @@ internal val desktopTabsModule: Module = module {
     single(named("coreNavKeys")) { CoreNavKeySerializers }
     single {
         val serializers = getAll<NavKeySerializers>()
+        val restorable = serializers.restorable()
+        // Created by the TabsController at Koin start, after every module (and its navigation entries) is loaded.
+        val routes = NavKeyRoutes(getAll())
         TabSessionStore(
             File(get<AppDirs>().getUserDataDir(), "tabs-session.json"),
             navKeyJson(serializers),
-            serializers.restorable(),
+            { key -> restorable(key) && routes.routable(key) },
         )
     }
     single(createdAtStart = true) {

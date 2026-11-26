@@ -3,6 +3,7 @@ package com.programmersbox.kmpuiviews.tabs
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
+import org.koin.core.annotation.KoinExperimentalAPI
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import kotlinx.coroutines.CoroutineScope
@@ -122,6 +123,49 @@ class TabSessionTest {
         assertEquals(after.main.id, after.focusedWindow)
         // Restored tabs still route through the controller.
         assertEquals(after, after.main.active.nav.interceptor)
+    }
+
+    @OptIn(KoinExperimentalAPI::class)
+    @Test
+    fun restoreDropsKeysWithNoPage() {
+        // Only Recent, Details and Favorites have pages; Settings' top-level key has none in a tab.
+        val routes = NavKeyRoutes(
+            listOf(
+                { entry<Screen.RecentScreen> {} },
+                { entry<Screen.DetailsScreen.Details> {} },
+                { entry<Screen.FavoriteScreen> {} },
+            )
+        )
+        val routed = TabSessionStore(file, navKeyJson(listOf(CoreNavKeySerializers)), routes::routable)
+        assertTrue(routes.routable(title("A")))
+        assertFalse(routes.routable(Screen.SettingsScreen))
+
+        val session = TabSession(
+            windows = listOf(
+                WindowSession(
+                    bounds = null,
+                    isMain = true,
+                    activeIndex = 1,
+                    tabs = listOf(
+                        TabSessionEntry(pinned = true, backStack = listOf(encoded(Screen.RecentScreen))),
+                        TabSessionEntry(pinned = false, backStack = listOf(encoded(title("A")), encoded(Screen.SettingsScreen))),
+                        TabSessionEntry(pinned = false, backStack = listOf(encoded(Screen.SettingsScreen))),
+                    ),
+                ),
+                WindowSession(
+                    bounds = null,
+                    isMain = false,
+                    activeIndex = 0,
+                    tabs = listOf(TabSessionEntry(pinned = false, backStack = listOf(encoded(Screen.SettingsScreen)))),
+                ),
+            )
+        )
+        val after = newController()
+        after.startSession(OnLaunch.Restore, onboardingDone = true, session = session, decode = routed::decode)
+
+        // The stack stops before the page-less key, a tab left empty is dropped, and so is a window left empty.
+        assertEquals(1, after.windows.size)
+        assertEquals(listOf(listOf<NavKey>(Screen.RecentScreen), listOf<NavKey>(title("A"))), after.main.stacks())
     }
 
     @Test

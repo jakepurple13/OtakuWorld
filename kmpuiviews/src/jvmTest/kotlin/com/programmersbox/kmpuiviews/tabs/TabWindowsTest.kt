@@ -112,6 +112,12 @@ class TabWindowsTest {
     }
 
     @Test
+    fun shortcutsListHidesNewWindowWhenTearOutIsOff() {
+        assertTrue(tabShortcutCaps(isMac = true).any { it.first == "New window" })
+        assertFalse(tabShortcutCaps(isMac = true, tearOut = false).any { it.first == "New window" })
+    }
+
+    @Test
     fun newWindowShortcutOpensNewTabPageWithoutHome() {
         controller.perform(TabShortcut.NewWindow, main)
 

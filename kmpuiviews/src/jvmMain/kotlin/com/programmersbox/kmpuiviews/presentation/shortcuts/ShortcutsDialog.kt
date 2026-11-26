@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.programmersbox.kmpuiviews.presentation.quickactions.QuickActionsController
 import com.programmersbox.kmpuiviews.presentation.quickactions.isMacOs
+import com.programmersbox.kmpuiviews.tabs.TabsController
 import com.programmersbox.kmpuiviews.tabs.tabShortcutCaps
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import org.jetbrains.compose.resources.stringResource
@@ -78,7 +79,7 @@ internal fun ShortcutsDialogHost(controller: QuickActionsController) {
     )
     val tabSection = ShortcutSection(
         title = stringResource(Res.string.shortcuts_tabs),
-        entries = tabShortcutCaps(isMacOs).map { (label, keys) -> ShortcutEntry(keys, label) },
+        entries = tabShortcutCaps(isMacOs, tearOut = getKoin().getOrNull<TabsController>()?.prefs?.tearOut ?: true).map { (label, keys) -> ShortcutEntry(keys, label) },
     )
     AnimatedVisibility(visible = open, enter = fadeIn(), exit = fadeOut()) {
         ShortcutsDialog(

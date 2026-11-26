@@ -32,8 +32,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import kotlinx.coroutines.launch
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -453,11 +452,12 @@ private fun InternalDesktopUi(
             // "Ask before quitting with several tabs open": window close and ⌘Q both come through here.
             // Plain collectAsState: this runs outside the Window, where there is no LocalLifecycleOwner.
             val confirmQuit by remember { tabsConfirmQuitPref.asFlow() }.collectAsState(true)
-            val prefScope = rememberCoroutineScope()
             var askingQuit by remember { mutableStateOf(false) }
+            // Bumped by every quit request while the dialog is up, so each one brings it back to the front.
+            var askAgain by remember { mutableIntStateOf(0) }
             val requestQuit: () -> Unit = {
                 when {
-                    askingQuit -> Unit
+                    askingQuit -> askAgain++
                     quitController.state == QuitController.State.Idle &&
                         shouldConfirmQuit(tabsController.tabCount, confirmQuit) -> askingQuit = true
                     else -> quitController.requestQuit()
@@ -483,11 +483,20 @@ private fun InternalDesktopUi(
                 overlay = { WindowOverlays(mainWindow, tabsController) },
             ) {
                 if (askingQuit) {
+                    // The dialog lives in the main window: un-minimize it and bring it forward, so ⌘Q from a torn-out
+                    // window, or with the main window minimized or behind others, never waits on a hidden prompt.
+                    val awtWindow = LocalAwtWindow.current
+                    LaunchedEffect(askAgain) {
+                        windowState.isMinimized = false
+                        awtWindow?.toFront()
+                        awtWindow?.requestFocus()
+                    }
                     ConfirmQuitDialog(
                         tabCount = tabsController.tabCount,
                         onQuit = { dontAskAgain ->
                             askingQuit = false
-                            if (dontAskAgain) prefScope.launch { tabsConfirmQuitPref.set(false) }
+                            // On the queue quit waits for, so exiting at once can't drop it.
+                            if (dontAskAgain) PendingWrites.App.launch { tabsConfirmQuitPref.set(false) }
                             quitController.requestQuit()
                         },
                         onCancel = {
@@ -526,7 +535,7 @@ private fun InternalDesktopUi(
             }
 
             // Gone once quitting: the app's exit closes every window.
-            if (quitController.state != QuitController.State.Exited) TornOutWindows(tabsController, showNavBar)
+            if (quitController.state != QuitController.State.Exited) TornOutWindows(tabsController, showNavBar, appColors = contentColors)
 
             val chromeColors = contentColors ?: MaterialTheme.colorScheme
             QuitOverlay(

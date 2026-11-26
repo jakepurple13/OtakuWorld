@@ -122,7 +122,7 @@ fun wrappedTabIndex(index: Int, delta: Int, size: Int): Int = (index + delta).mo
  * Label and key caps of every tab shortcut, for the shortcuts dialog. An action with alternate bindings appears
  * once per binding. Kept in step with [tabShortcut] by a test that checks both directions.
  */
-fun tabShortcutCaps(isMac: Boolean): List<Pair<String, List<String>>> {
+fun tabShortcutCaps(isMac: Boolean, tearOut: Boolean = true): List<Pair<String, List<String>>> {
     val mod = if (isMac) "⌘" else "Ctrl"
     val shift = if (isMac) "⇧" else "Shift"
     val ctrl = if (isMac) "⌃" else "Ctrl"
@@ -155,7 +155,8 @@ fun tabShortcutCaps(isMac: Boolean): List<Pair<String, List<String>>> {
             add("Forward" to listOf("Alt", "→"))
         }
         add("Search" to listOf(mod, "L"))
-        add("New window" to listOf(mod, "N"))
+        // Hidden with "Drag tabs out into windows" off, where ⌘N does nothing.
+        if (tearOut) add("New window" to listOf(mod, "N"))
         add("Close window" to listOf(mod, shift, "W"))
     }
 }

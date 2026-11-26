@@ -54,6 +54,11 @@ fun Nav3(
     viewModelStoreProvider: ViewModelStoreProvider? = null,
     analytics: Analytics = koinInject(),
     crashReporter: CrashReporter = koinInject(),
+    /**
+     * Shown for a key with no registered entry instead of throwing, when set. Null (the default, and Android) keeps
+     * the entry provider's own behavior.
+     */
+    unknownKeyEntry: ((NavKey) -> NavEntry<NavKey>)? = null,
 ) {
     val backStack = navigation3Actions.backStack
     LaunchedEffect(Unit) {
@@ -121,7 +126,10 @@ fun Nav3(
                     rememberViewModelStoreNavEntryDecorator()
                 }
             ),
-            entryProvider = koinEntryProvider(),
+            entryProvider = koinEntryProvider<NavKey>().let { provider ->
+                if (unknownKeyEntry == null) provider
+                else { key -> try { provider(key) } catch (e: IllegalStateException) { unknownKeyEntry(key) } }
+            },
             // Material shared-axis X: a short offset plus a crossfade instead of a full-width push
             transitionSpec = {
                 (slideInHorizontally(motion.defaultSpatialSpec()) { it / 3 } + fadeIn(motion.defaultEffectsSpec())) togetherWith

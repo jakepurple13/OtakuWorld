@@ -49,6 +49,7 @@ fun TabContent(
                             customPreferences = customPreferences,
                             navigation3Actions = tab.nav,
                             viewModelStoreProvider = tab.viewModelStoreProvider,
+                            unknownKeyEntry = ::pageUnavailableEntry,
                         )
                     }
                 }
