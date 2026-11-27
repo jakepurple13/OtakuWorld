@@ -105,7 +105,7 @@ fun BrowserWindow(
                 .onFocusChanged { controller.ui.contentHasFocus[window.id] = it.hasFocus }
                 // Reached only when no focused text field used the key: ⌘← / ⌘→ back and forward.
                 .onKeyEvent { event ->
-                    tabShortcut(event, isMac = isMacOs, chromeVisible = showChrome)
+                    tabShortcut(event, isMac = isMacOs, chromeVisible = showChrome, canStopRefresh = window.canStopRefresh)
                         ?.let { controller.perform(it, window) } != null
                 }
         ) {

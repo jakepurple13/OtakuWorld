@@ -36,3 +36,7 @@ fun TabsController.stopRefresh(id: TabId) {
 
 private fun TabsController.registryOf(id: TabId): TabRefreshRegistry? =
     windows.firstNotNullOfOrNull { window -> window.tabs.firstOrNull { it.id == id } }?.refresh
+
+/** Whether Esc would stop a reload in this window's active tab. */
+val BrowserWindowState.canStopRefresh: Boolean
+    get() = tabs.firstOrNull { it.id == activeId.value }?.refresh?.canStop == true
