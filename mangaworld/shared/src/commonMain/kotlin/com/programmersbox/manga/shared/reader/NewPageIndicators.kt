@@ -128,6 +128,7 @@ internal fun WavyProgressLine(
             amplitude = { amplitude },
             color = color,
             trackColor = Color.Gray.copy(alpha = .35f),
+            stopSize = 0.dp,
             modifier = Modifier.fillMaxWidth()
         )
     }
