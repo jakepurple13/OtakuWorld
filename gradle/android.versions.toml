@@ -1,5 +1,5 @@
 [versions]
-apksig = "9.5.1"
+apksig = "9.5.3"
 accompanist = "0.37.3"
 activity = "1.13.0"
 arcore = "1.0.0"
@@ -9,11 +9,11 @@ mlkitGenaiSummarization = "1.0.0-beta1"
 mlkitGenaiProofreading = "1.0.0-beta1"
 mlkitGenaiRewriting = "1.0.0-beta1"
 benchmark-macro-junit4 = "1.5.0"
-biometricVersion = "1.4.0-beta01"
+biometricVersion = "1.4.0-rc01"
 cloudstreamCryptography = "0.6.0"
-composeBomVersion = "2026.11.00"
+composeBomVersion = "2026.11.01"
 composeCollapsable = "0.4.0"
-composeXr = "1.0.0-beta02"
+composeXr = "1.0.0-rc01"
 core = "1.7.0"
 corePerformance = "1.0.0"
 coroutinesVersion = "1.11.0"
@@ -21,11 +21,11 @@ dragselect = "3.3.0"
 espresso-core = "3.7.0"
 firebaseBom = "34.19.0"
 glance = "1.3.0-alpha02"
-glideVersion = "5.0.9"
+glideVersion = "5.0.10"
 junit = "1.3.0"
 landscapist = "2.13.2"
 latestAboutLibsRelease = "14.2.1"
-lifecycle = "2.11.0"
+lifecycle = "2.11.1"
 lottieCompose = "6.7.1"
 media3Version = "1.11.1"
 okhttpVersion = "5.5.1"
@@ -163,7 +163,7 @@ playServices = "com.google.android.gms:play-services-auth:21.6.0"
 
 # Glide
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glideVersion" }
-glideCompose = "com.github.bumptech.glide:compose:1.0.0-beta10"
+glideCompose = "com.github.bumptech.glide:compose:1.0.0-beta11"
 glideCompiler = { module = "com.github.bumptech.glide:ksp", version.ref = "glideVersion" }
 glideRecyclerview = { module = "com.github.bumptech.glide:recyclerview-integration", version.ref = "glideVersion" }
 
@@ -271,7 +271,7 @@ workRuntimeKtx = { module = "androidx.work:work-runtime-ktx", version.ref = "wor
 androidx-arcore = { module = "androidx.xr.arcore:arcore", version.ref = "arcore" }
 androidx-compose-xr = { module = "androidx.xr.compose:compose", version.ref = "composeXr" }
 androidx-scenecore = { module = "androidx.xr.scenecore:scenecore", version.ref = "scenecore" }
-androidx-xr-material3 = { module = "androidx.xr.compose.material3:material3", version = "1.0.0-alpha17" }
+androidx-xr-material3 = { module = "androidx.xr.compose.material3:material3", version = "1.0.0-alpha18" }
 
 # Zipline
 ziplineLoader = { module = "app.cash.zipline:zipline-loader", version.ref = "ziplineVersion" }
@@ -287,7 +287,7 @@ cloudstreamCryptographyProvider = { module = "dev.whyoleg.cryptography:cryptogra
 # Not strict: koog (kmpuiviews:koogintegration) needs jackson 2.21.x. Upstream pins 2.13.1 strictly only
 # for API <= 25 devices; our minSdk is 28.
 cloudstreamJackson = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version = { require = "2.13.1" } }
-cloudstreamKotlinxIo = "org.jetbrains.kotlinx:kotlinx-io-core:0.9.1"
+cloudstreamKotlinxIo = "org.jetbrains.kotlinx:kotlinx-io-core:0.9.3"
 cloudstreamKsoup = "com.fleeksoft.ksoup:ksoup:0.2.6"
 cloudstreamNiceHttp = "com.github.Blatzar:NiceHttp:0.4.18"
 cloudstreamRhino = { module = "org.mozilla:rhino", version = { strictly = "1.8.1" } }
