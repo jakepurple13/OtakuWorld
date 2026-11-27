@@ -48,6 +48,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.runtime.State
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layout
@@ -247,16 +252,36 @@ private fun PagePill(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val alpha by animateFloatAsState(if (active) 1f else .45f, MaterialTheme.motionScheme.defaultEffectsSpec())
+    val alpha by animateFloatAsState(if (active) 1f else .7f, MaterialTheme.motionScheme.defaultEffectsSpec())
+    val scale by animateFloatAsState(if (active) 1f else .9f, MaterialTheme.motionScheme.defaultSpatialSpec())
+    val shown = animatePageProgress(page, pages)
+    val fill = MaterialTheme.colorScheme.primary.copy(alpha = .26f)
     Surface(
         onClick = onClick,
         shape = CircleShape,
         color = IndicatorContainer,
-        modifier = modifier.graphicsLayer { this.alpha = alpha }
+        modifier = modifier.graphicsLayer {
+            this.alpha = alpha
+            scaleX = scale
+            scaleY = scale
+        }
     ) {
-        PageCount(page, pages, Modifier.padding(horizontal = 12.dp, vertical = 6.dp))
+        PageCount(
+            page = page,
+            pages = pages,
+            modifier = Modifier
+                .drawBehind { drawRect(fill, size = size.copy(width = size.width * shown.value)) }
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        )
     }
 }
+
+/** [page] / [pages] as a fraction, springing like the top progress line. */
+@Composable
+private fun animatePageProgress(page: Int, pages: Int): State<Float> = animateFloatAsState(
+    targetValue = if (pages <= 0) 0f else (page.toFloat() / pages).coerceIn(0f, 1f),
+    animationSpec = spring(dampingRatio = 0.6f, stiffness = Spring.StiffnessMediumLow)
+)
 
 /** Slider over the chapter's pages. Dragging shows the target page in a bubble; releasing jumps there. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -473,7 +498,9 @@ private fun MorphingPageIndicator(
     onJumpToPage: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val alpha by animateFloatAsState(if (active) 1f else .5f, MaterialTheme.motionScheme.defaultEffectsSpec())
+    val alpha by animateFloatAsState(if (active) 1f else .7f, MaterialTheme.motionScheme.defaultEffectsSpec())
+    val shown = animatePageProgress(index + 1, pages)
+    val primary = MaterialTheme.colorScheme.primary
     val sizeSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntSize>()
     val fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
     val fadeOutSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
@@ -488,13 +515,22 @@ private fun MorphingPageIndicator(
             if (isExpanded) {
                 PageScrubber(index = index, pages = pages, onJumpToPage = onJumpToPage)
             } else {
+                // Count with a 2dp progress bar drawn in the 5dp below it
                 PageCount(
                     page = index + 1,
                     pages = pages,
                     modifier = Modifier
                         .clip(CircleShape)
                         .clickable(onClick = onOpenPages)
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                        .padding(horizontal = 16.dp, vertical = 7.dp)
+                        .drawBehind {
+                            val bar = 2.dp.toPx()
+                            val top = size.height - bar
+                            val radius = CornerRadius(bar / 2)
+                            drawRoundRect(Color.White.copy(alpha = .18f), Offset(0f, top), Size(size.width, bar), radius)
+                            drawRoundRect(primary, Offset(0f, top), Size(size.width * shown.value, bar), radius)
+                        }
+                        .padding(bottom = 5.dp)
                 )
             }
         }
