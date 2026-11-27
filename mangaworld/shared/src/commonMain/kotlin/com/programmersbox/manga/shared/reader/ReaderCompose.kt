@@ -24,6 +24,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import io.kamel.image.KamelImage
+import io.kamel.image.asyncPainterResource
+import io.ktor.client.request.header
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -805,6 +808,27 @@ private fun ReadViewContent(
                     bottomPadding = p.calculateBottomPadding().animate().value,
                     onOpenPages = { showBottomSheet = true },
                     onJumpToPage = ::jumpToPage,
+                    pageThumbnail = { i ->
+                        val url = remember(i, viewModel.currentChapter) {
+                            viewModel.pageItems
+                                .filterIsInstance<PageItem.Page>()
+                                .filter { it.chapterListIndex == viewModel.currentChapter }
+                                .getOrNull(i)
+                                ?.url
+                        }
+                        if (url != null) {
+                            KamelImage(
+                                resource = {
+                                    asyncPainterResource(url) {
+                                        requestBuilder { viewModel.headers.forEach { (k, v) -> header(k, v) } }
+                                    }
+                                },
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                    },
                 )
 
                 ChapterBanner(

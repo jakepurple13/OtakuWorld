@@ -1,6 +1,9 @@
 package com.programmersbox.manga.shared.reader
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.animation.scaleIn
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.animateColorAsState
@@ -87,6 +90,8 @@ internal val PageIndicatorStyle.label: String
  * per page) plus the chosen [style]'s overlay. Tapping an indicator calls [onOpenPages]; the scrubber and the
  * rail jump with [onJumpToPage] (0-based, within the chapter).
  *
+ * [pageThumbnail] draws a page (0-based) for the scrubber's drag bubble.
+ *
  * [topPadding] and [bottomPadding] are the space the reader's bars take while [showItems] is true.
  */
 @Composable
@@ -101,6 +106,7 @@ internal fun PageIndicatorOverlay(
     onOpenPages: () -> Unit,
     onJumpToPage: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    pageThumbnail: @Composable (index: Int) -> Unit = {},
 ) {
     val page = displayPage(currentPage, pages)
     val index = page - 1
@@ -161,7 +167,7 @@ internal fun PageIndicatorOverlay(
                     .padding(horizontal = 16.dp)
             ) {
                 UnclippedPill {
-                    PageScrubber(index = index, pages = pages, onJumpToPage = onJumpToPage)
+                    PageScrubber(index = index, pages = pages, onJumpToPage = onJumpToPage, pageThumbnail = pageThumbnail)
                 }
             }
 
@@ -194,6 +200,7 @@ internal fun PageIndicatorOverlay(
                 active = active,
                 onOpenPages = onOpenPages,
                 onJumpToPage = onJumpToPage,
+                pageThumbnail = pageThumbnail,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .then(aboveBars)
@@ -283,13 +290,17 @@ private fun animatePageProgress(page: Int, pages: Int): State<Float> = animateFl
     animationSpec = spring(dampingRatio = 0.6f, stiffness = Spring.StiffnessMediumLow)
 )
 
-/** Slider over the chapter's pages. Dragging shows the target page in a bubble; releasing jumps there. */
+/**
+ * Slider over the chapter's pages, with a tick per page in short chapters. Dragging shows the target page's
+ * [pageThumbnail] and number in a bubble; releasing jumps there.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PageScrubber(
     index: Int,
     pages: Int,
     onJumpToPage: (Int) -> Unit,
+    pageThumbnail: @Composable (index: Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var dragValue by remember { mutableStateOf<Float?>(null) }
@@ -297,21 +308,35 @@ private fun PageScrubber(
     val interactionSource = remember { MutableInteractionSource() }
     val dragged by interactionSource.collectIsDraggedAsState()
     val pressed by interactionSource.collectIsPressedAsState()
-    val labelStyle = MaterialTheme.typography.labelLarge
+    val labelStyle = MaterialTheme.typography.labelLarge.tabular()
+    val ticks = showScrubberTicks(pages)
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         modifier = modifier
             .fillMaxWidth()
-            .height(48.dp)
-            .padding(horizontal = 16.dp)
+            .height(56.dp)
+            .padding(horizontal = 18.dp)
     ) {
-        RollingNumber(target + 1, labelStyle)
+        RollingNumber(target + 1, labelStyle, Modifier.widthIn(min = 20.dp))
         val lastIndex = (pages - 1).coerceAtLeast(1)
         Box(
             contentAlignment = Alignment.CenterStart,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .weight(1f)
+                .drawBehind {
+                    if (!ticks) return@drawBehind
+                    val inset = ScrubberThumbInset.toPx()
+                    val radius = 1.dp.toPx()
+                    repeat(pages) { i ->
+                        drawCircle(
+                            color = ScrubberTick,
+                            radius = radius,
+                            center = Offset(inset + (size.width - inset * 2) * i / lastIndex, size.height / 2)
+                        )
+                    }
+                }
         ) {
             // Plain overload on purpose: the thumb/track overload differs between the CMP and Android material3
             // artifacts and fails at runtime with NoSuchMethodError.
@@ -326,24 +351,40 @@ private fun PageScrubber(
                 interactionSource = interactionSource,
                 modifier = Modifier.fillMaxWidth()
             )
-            if (dragged || pressed) {
-                Text(
-                    "${target + 1}",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onPrimary,
+            // Qualified: inside the Row, the RowScope overload would otherwise be picked
+            androidx.compose.animation.AnimatedVisibility(
+                visible = dragged || pressed,
+                enter = fadeIn(MaterialTheme.motionScheme.fastEffectsSpec()) +
+                        scaleIn(MaterialTheme.motionScheme.fastSpatialSpec(), initialScale = .9f),
+                exit = fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()),
+                modifier = Modifier.layout { measurable, constraints ->
+                    // Zero-size so the bubble floats above the thumb without resizing the slider
+                    val placeable = measurable.measure(Constraints())
+                    val inset = ScrubberThumbInset.roundToPx()
+                    val x = inset + (constraints.maxWidth - inset * 2) * target / lastIndex
+                    layout(0, 0) {
+                        placeable.place(x - placeable.width / 2, -placeable.height - 20.dp.roundToPx())
+                    }
+                }
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
                     modifier = Modifier
-                        .layout { measurable, constraints ->
-                            // Zero-size so the bubble floats above the thumb without resizing the slider
-                            val placeable = measurable.measure(Constraints())
-                            val inset = ScrubberThumbInset.roundToPx()
-                            val x = inset + (constraints.maxWidth - inset * 2) * target / lastIndex
-                            layout(0, 0) {
-                                placeable.place(x - placeable.width / 2, -placeable.height - 20.dp.roundToPx())
-                            }
-                        }
-                        .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp))
-                        .padding(horizontal = 10.dp, vertical = 4.dp)
-                )
+                        .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(14.dp))
+                        .padding(6.dp)
+                ) {
+                    Box(
+                        Modifier
+                            .size(40.dp, 56.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                    ) { pageThumbnail(target) }
+                    Text(
+                        "p. ${target + 1}",
+                        style = MaterialTheme.typography.labelMedium.tabular(),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                    )
+                }
             }
         }
         Text("$pages", style = labelStyle, color = LocalContentColor.current.copy(alpha = .7f))
@@ -496,6 +537,7 @@ private fun MorphingPageIndicator(
     active: Boolean,
     onOpenPages: () -> Unit,
     onJumpToPage: (Int) -> Unit,
+    pageThumbnail: @Composable (index: Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val alpha by animateFloatAsState(if (active) 1f else .7f, MaterialTheme.motionScheme.defaultEffectsSpec())
@@ -513,7 +555,7 @@ private fun MorphingPageIndicator(
             contentAlignment = Alignment.Center,
         ) { isExpanded ->
             if (isExpanded) {
-                PageScrubber(index = index, pages = pages, onJumpToPage = onJumpToPage)
+                PageScrubber(index = index, pages = pages, onJumpToPage = onJumpToPage, pageThumbnail = pageThumbnail)
             } else {
                 // Count with a 2dp progress bar drawn in the 5dp below it
                 PageCount(
@@ -557,6 +599,8 @@ private fun UnclippedPill(
 
 private val IndicatorContainer: Color
     @Composable get() = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = .9f)
+
+private val ScrubberTick = Color.White.copy(alpha = .55f)
 
 /** Distance from the slider's edge to the thumb's center at either end of the track. */
 private val ScrubberThumbInset = 10.dp
