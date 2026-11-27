@@ -882,6 +882,8 @@
     <string name="tabs_refresh_up_to_date">This page is always up to date</string>
     <string name="details_refresh">Refresh</string>
     <string name="details_refreshing">Refreshing…</string>
+    <string name="details_retry">Retry</string>
+    <string name="details_retrying">Retrying…</string>
     <string name="details_refresh_failed">Couldn't refresh</string>
     <string name="details_refresh_failed_subtitle">Showing the details you already had</string>
     <string name="tabs_downloads">Downloads</string>

@@ -458,7 +458,11 @@ class DetailsViewModel(
             }
         }
             .dispatchIo()
-            .catch { emit(Result.failure(it)) }
+            // Only an unexpected throw reaches crash reporting; a failure the source reports (offline, site down) doesn't.
+            .catch {
+                crashReporter.recordException(it)
+                emit(Result.failure(it))
+            }
             .onEach { result ->
                 result
                     .onSuccess { onLoaded(it) }
@@ -489,7 +493,6 @@ class DetailsViewModel(
     }
 
     private suspend fun onLoadFailed(error: Throwable) {
-        crashReporter.recordException(error)
         itemModel?.source?.serviceName?.let { s ->
             analytics.log(SourceError(sourceNamer?.name(s) ?: s, SourceError.INFO, error::class.simpleName ?: "Exception"))
         }

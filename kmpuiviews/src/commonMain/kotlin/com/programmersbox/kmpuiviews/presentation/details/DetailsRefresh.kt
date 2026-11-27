@@ -16,6 +16,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -28,6 +29,8 @@ import org.jetbrains.compose.resources.stringResource
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.details_refresh
 import otakuworld.kmpuiviews.generated.resources.details_refreshing
+import otakuworld.kmpuiviews.generated.resources.details_retry
+import otakuworld.kmpuiviews.generated.resources.details_retrying
 
 /**
  * The Refresh row at the top of the Details overflow menu, with its divider. Not shown in the desktop tab shell, whose
@@ -87,5 +90,14 @@ internal fun Modifier.highlightOnChange(key: Any?): Modifier {
     }
     return drawBehind {
         if (alpha.value > 0f) drawRoundRect(color.copy(alpha = alpha.value), cornerRadius = CornerRadius(4.dp.toPx()))
+    }
+}
+
+/** Retry on the Details error card. The desktop toolbar's Refresh does this there, so it shows on mobile only. */
+@Composable
+internal fun DetailErrorRetry(isRefreshing: Boolean, onRetry: () -> Unit) {
+    if (LocalPageRefreshHost.current != null) return
+    TextButton(onClick = onRetry, enabled = !isRefreshing) {
+        Text(stringResource(if (isRefreshing) Res.string.details_retrying else Res.string.details_retry))
     }
 }

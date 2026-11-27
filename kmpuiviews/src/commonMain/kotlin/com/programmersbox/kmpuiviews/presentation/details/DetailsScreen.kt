@@ -787,6 +787,7 @@ private fun DetailError(
                     Icon(Icons.Default.Warning, null)
                     Text("Something happened!")
                     Text(state.e.message.orEmpty())
+                    DetailErrorRetry(isRefreshing = details.isRefreshing, onRetry = details::refresh)
                 }
             }
         }

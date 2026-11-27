@@ -16,6 +16,7 @@ import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ExceptionDatabase
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.kmpmodels.ExampleService
+import com.programmersbox.telemetry.events.SourceError
 import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpSourceInformation
@@ -137,6 +138,7 @@ class DetailsViewModelTest {
         translationHandler: TranslationHandler = FakeTranslationHandler(),
         tldrCache: TldrCache = TldrCache(),
         notifier: InAppNotifier? = null,
+        crashReporter: FakeCrashReporter = FakeCrashReporter(),
     ) = DetailsViewModel(
         details = details,
         genericInfo = FakeKmpGenericInfo(),
@@ -160,7 +162,7 @@ class DetailsViewModelTest {
         aiText = aiText,
         tldrCache = tldrCache,
         moodRepository = com.programmersbox.kmpuiviews.domain.moodtags.MoodRepository(itemDatabase.itemDao(), aiText),
-        crashReporter = FakeCrashReporter(),
+        crashReporter = crashReporter,
         analytics = analytics,
         notifier = notifier,
     ).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
@@ -283,11 +285,13 @@ class DetailsViewModelTest {
     private val controlled = ControlledService()
     private val notifier = DefaultInAppNotifier(CoroutineScope(SupervisorJob() + Dispatchers.Default))
 
+    private val crashReporter = FakeCrashReporter()
+
     private fun controlledViewModel(): DetailsViewModel {
         sourceRepository.setSources(
             listOf(KmpSourceInformation(apiService = controlled, name = "Controlled", icon = null, packageName = "com.controlled"))
         )
-        return viewModel(details = details(source = "ControlledService"), notifier = notifier)
+        return viewModel(details = details(source = "ControlledService"), notifier = notifier, crashReporter = crashReporter)
     }
 
     private fun DetailsViewModel.title() = (currentState as? DetailState.Success)?.info?.title
@@ -332,6 +336,16 @@ class DetailsViewModelTest {
 
         awaitCondition { vm.title() == "New" }
         assertTrue(notifier.banners.value.isEmpty())
+    }
+
+    @Test
+    fun `a source failure is not sent to crash reporting`() = runTest {
+        controlled.next = { error("offline") }
+        val vm = controlledViewModel()
+        awaitCondition { vm.currentState is DetailState.Error }
+
+        assertTrue(crashReporter.exceptions.isEmpty())
+        assertTrue(analytics.events.any { it is SourceError })
     }
 
     @Test

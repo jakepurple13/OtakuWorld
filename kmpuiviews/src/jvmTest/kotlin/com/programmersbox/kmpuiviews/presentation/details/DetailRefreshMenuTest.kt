@@ -84,4 +84,27 @@ class DetailRefreshMenuTest {
         mainClock.advanceTimeBy(1_200)
         assertEquals(Color.White, center())
     }
+
+    @Test
+    fun errorRetryRefreshes() = runComposeUiTest {
+        setContent { DetailErrorRetry(isRefreshing = false, onRetry = { calls += "retry" }) }
+        onNodeWithText("Retry").assertIsEnabled().performClick()
+        assertEquals(listOf("retry"), calls)
+    }
+
+    @Test
+    fun errorRetryIsDisabledWhileRetrying() = runComposeUiTest {
+        setContent { DetailErrorRetry(isRefreshing = true, onRetry = { calls += "retry" }) }
+        onNodeWithText("Retrying…").assertIsNotEnabled()
+    }
+
+    @Test
+    fun errorRetryIsHiddenInTheDesktopTabShell() = runComposeUiTest {
+        setContent {
+            CompositionLocalProvider(LocalPageRefreshHost provides PageRefreshHost { {} }) {
+                DetailErrorRetry(isRefreshing = false, onRetry = {})
+            }
+        }
+        onNodeWithText("Retry").assertDoesNotExist()
+    }
 }
