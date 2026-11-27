@@ -54,4 +54,25 @@ class RefreshButtonTest {
         onNodeWithContentDescription("Refresh").assertIsNotEnabled()
         onNodeWithContentDescription("Stop loading").assertDoesNotExist()
     }
+
+    @Test
+    fun doubleClickDoesNotStopTheRefreshItJustStarted() = runComposeUiTest {
+        val refreshing = androidx.compose.runtime.mutableStateOf(false)
+        var now = 1_000L
+        val registry = registry(
+            PageRefresh(refreshing = { refreshing.value }, refresh = { refreshing.value = true; refreshes++ }, stop = { stops++ })
+        )
+        setContent {
+            RefreshButton(registry, reduceMotion = true, onRefresh = { registry.page?.refresh?.invoke() }, onStop = { stops++ }, now = { now })
+        }
+        onNodeWithContentDescription("Refresh").performClick()
+        now += 200
+        onNodeWithContentDescription("Stop loading").performClick()
+        assertEquals(1, refreshes)
+        assertEquals(0, stops)
+
+        now += 400
+        onNodeWithContentDescription("Stop loading").performClick()
+        assertEquals(1, stops)
+    }
 }

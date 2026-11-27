@@ -23,6 +23,9 @@ import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
@@ -41,6 +44,9 @@ import otakuworld.kmpuiviews.generated.resources.tabs_stop_loading_tooltip
  * The toolbar's Refresh button, at the end of the path pill. Turns into Stop while a page that can cancel is loading;
  * disabled on pages with nothing to reload and while a page that can't cancel is loading.
  */
+/** How long after a Refresh click a Stop click is ignored, as browsers guard their reload button. */
+private const val StopGuardMillis = 500L
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun RefreshButton(
@@ -49,9 +55,12 @@ internal fun RefreshButton(
     onRefresh: () -> Unit,
     onStop: () -> Unit,
     modifier: Modifier = Modifier,
+    now: () -> Long = System::currentTimeMillis,
 ) {
     val canStop = registry.canStop
     val turn = remember { Animatable(0f) }
+    // When the last Refresh click landed, so the second click of a double-click can't stop the reload it started.
+    var refreshedAt by remember { mutableLongStateOf(Long.MIN_VALUE / 2) }
     val scope = rememberCoroutineScope()
 
     val tooltip = when {
@@ -69,8 +78,9 @@ internal fun RefreshButton(
         IconButton(
             onClick = {
                 if (canStop) {
-                    onStop()
+                    if (now() - refreshedAt >= StopGuardMillis) onStop()
                 } else {
+                    refreshedAt = now()
                     if (!reduceMotion) scope.launch {
                         turn.snapTo(0f)
                         turn.animateTo(360f, tween(450, easing = EmphasizedDecelerate))
