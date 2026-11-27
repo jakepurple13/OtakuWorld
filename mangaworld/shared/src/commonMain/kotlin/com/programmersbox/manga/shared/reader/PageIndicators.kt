@@ -1,6 +1,14 @@
 package com.programmersbox.manga.shared.reader
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.ui.unit.em
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.RadialGradientShader
+import androidx.compose.ui.graphics.Shader
+import androidx.compose.ui.graphics.ShaderBrush
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.animation.scaleIn
@@ -404,12 +412,13 @@ private fun PageRail(
 ) {
     val dots = railDotCount(pages)
     val current = railDotFor(index, pages)
-    val alpha by animateFloatAsState(if (active) 1f else .35f, MaterialTheme.motionScheme.defaultEffectsSpec())
+    val alpha by animateFloatAsState(if (active) 1f else .5f, MaterialTheme.motionScheme.defaultEffectsSpec())
     val background by animateColorAsState(
-        if (active) MaterialTheme.colorScheme.scrim.copy(alpha = .4f) else Color.Transparent,
+        MaterialTheme.colorScheme.scrim.copy(alpha = if (active) .4f else .18f),
         MaterialTheme.motionScheme.defaultEffectsSpec()
     )
     val primary = MaterialTheme.colorScheme.primary
+    val read = lerp(primary, Color.White, .45f)
     val dotSpring = spring<Dp>(dampingRatio = Spring.DampingRatioMediumBouncy)
     val flagCenter = animateDpAsState(
         RailPadding + (RailDot + RailGap) * current + RailCurrentDot / 2,
@@ -422,14 +431,14 @@ private fun PageRail(
             verticalArrangement = Arrangement.spacedBy(RailGap),
             modifier = Modifier
                 .background(background, CircleShape)
-                .padding(vertical = RailPadding, horizontal = 2.dp)
+                .padding(vertical = RailPadding, horizontal = 3.dp)
         ) {
             repeat(dots) { dot ->
                 val height by animateDpAsState(if (dot == current) RailCurrentDot else RailDot, dotSpring)
                 val color by animateColorAsState(
                     when {
                         dot == current -> primary
-                        dot < current -> Color.White.copy(alpha = .87f)
+                        dot < current -> read
                         else -> Color.White.copy(alpha = .55f)
                     }
                 )
@@ -467,14 +476,14 @@ private fun PageRail(
         ) {
             Surface(
                 onClick = onOpenPages,
-                shape = RoundedCornerShape(10.dp, 10.dp, 2.dp, 10.dp),
+                shape = RoundedCornerShape(12.dp, 3.dp, 3.dp, 12.dp),
                 color = primary,
             ) {
                 PageCount(
                     page = index + 1,
                     pages = pages,
                     style = MaterialTheme.typography.labelMedium,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
                 )
             }
         }
@@ -496,36 +505,61 @@ private fun PageFolio(
         delay(1500)
         recent = false
     }
+    val start = folioOnStart(index)
+    val shift = { width: Int -> if (start) -width / 4 else width / 4 }
     AnimatedVisibility(
         visible = recent || showItems,
-        enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()) + slideInVertically { it / 4 },
-        exit = fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec()) + slideOutVertically { it / 4 },
+        enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()) + slideInHorizontally(initialOffsetX = shift),
+        exit = fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec()) + slideOutHorizontally(targetOffsetX = shift),
         modifier = modifier
     ) {
-        Row(
-            verticalAlignment = Alignment.Bottom,
+        Column(
+            horizontalAlignment = if (start) Alignment.Start else Alignment.End,
             modifier = Modifier
-                .clip(MaterialTheme.shapes.small)
+                .clip(FolioShape)
                 .clickable(onClick = onClick)
-                .background(MaterialTheme.colorScheme.surface.copy(alpha = .85f))
-                .padding(horizontal = 8.dp, vertical = 2.dp)
+                .background(FolioScrim)
+                .padding(start = 14.dp, end = 14.dp, top = 8.dp, bottom = 6.dp)
         ) {
-            RollingNumber(
-                index + 1,
-                MaterialTheme.typography.headlineMedium.copy(
-                    fontFamily = FontFamily.Serif,
-                    color = MaterialTheme.colorScheme.onSurface
+            Box(
+                Modifier
+                    .size(22.dp, 1.dp)
+                    .background(Color.White.copy(alpha = .6f))
+            )
+            Row(
+                verticalAlignment = Alignment.Bottom,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier.padding(top = 4.dp)
+            ) {
+                RollingNumber(
+                    index + 1,
+                    MaterialTheme.typography.headlineMedium.copy(
+                        fontFamily = FontFamily.Serif,
+                        fontSize = 30.sp,
+                        color = Color.White
+                    )
                 )
-            )
-            Text(
-                " of $pages",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 5.dp)
-            )
+                Text(
+                    "OF $pages",
+                    style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.12.em),
+                    color = Color.White.copy(alpha = .75f),
+                    modifier = Modifier.padding(bottom = 7.dp)
+                )
+            }
         }
     }
 }
+
+/** Soft dark glow behind the folio, densest at the bottom edge, so it reads over any art without a box. */
+private val FolioScrim = object : ShaderBrush() {
+    override fun createShader(size: Size): Shader = RadialGradientShader(
+        center = Offset(size.width / 2, size.height),
+        radius = 1.2f * maxOf(size.width, size.height),
+        colors = listOf(Color(0xC70A0A0C), Color(0x730A0A0C), Color.Transparent),
+        colorStops = listOf(0f, .6f, 1f)
+    )
+}
+private val FolioShape = RoundedCornerShape(14.dp)
 
 /** A small pill while reading that stretches into the scrubber when the bars show. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -606,6 +640,6 @@ private val ScrubberTick = Color.White.copy(alpha = .55f)
 private val ScrubberThumbInset = 10.dp
 
 private val RailDot = 4.dp
-private val RailCurrentDot = 18.dp
+private val RailCurrentDot = 20.dp
 private val RailGap = 5.dp
-private val RailPadding = 8.dp
+private val RailPadding = 10.dp
