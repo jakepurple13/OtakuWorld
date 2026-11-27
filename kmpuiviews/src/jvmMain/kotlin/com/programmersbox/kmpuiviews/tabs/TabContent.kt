@@ -8,6 +8,7 @@ import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.ui.Modifier
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.details.LocalNotesPanelToggle
+import com.programmersbox.kmpuiviews.presentation.components.LocalPageRefreshHost
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.saveable.SaveableStateHolder
@@ -38,6 +39,7 @@ fun TabContent(
         CompositionLocalProvider(
             LocalViewModelStoreOwner provides tab.viewModelStoreOwner,
             LocalTabId provides tab.id,
+            LocalPageRefreshHost provides tab.refresh,
             LocalNotesPanelToggle provides if (tab.current is Screen.DetailsScreen.Details) tab::toggleNotes else null,
         ) {
             Row(Modifier.fillMaxSize()) {
