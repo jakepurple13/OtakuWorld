@@ -7,13 +7,10 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -22,7 +19,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -43,6 +39,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.layout.Layout
 import kotlin.math.roundToInt
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.unit.Dp
 
 /**
  * Thin line at the top edge showing how far through the chapter the reader is, shown while the bars are
@@ -176,8 +175,9 @@ internal fun IndicatorChip(
 }
 
 /**
- * The top line split into one segment per page, like a stories viewer. Segments up to the current page are
- * filled; the current one fills in as you arrive. A page chip shows while [showChip] is true.
+ * The top line split into segments, like a stories viewer, with the page count at the end of the row.
+ * Up to [SEGMENT_GROUP_THRESHOLD] pages each segment is one page; longer chapters group pages so a segment
+ * fills partway through its range. The count stays visible and dims while [showChip] is false.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -193,41 +193,49 @@ internal fun SegmentedProgressLine(
         animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec()
     )
     val fillSpec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
-    Column(
-        horizontalAlignment = Alignment.End,
-        verticalArrangement = Arrangement.spacedBy(6.dp),
+    val heightSpec = MaterialTheme.motionScheme.defaultSpatialSpec<Dp>()
+    val chipAlpha by animateFloatAsState(if (showChip) 1f else .75f, MaterialTheme.motionScheme.defaultEffectsSpec())
+    val perSegment = pagesPerSegment(pages)
+    val current = index.coerceIn(0, (pages - 1).coerceAtLeast(0)) / perSegment
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier
             .fillMaxWidth()
-            .padding(6.dp)
+            .padding(start = 10.dp, end = 8.dp, top = 8.dp, bottom = 8.dp)
     ) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(2.dp),
-            modifier = Modifier.fillMaxWidth()
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(3.dp),
+            modifier = Modifier.weight(1f)
         ) {
-            repeat(pages) { i ->
-                val fill = animateFloatAsState(if (i <= index) 1f else 0f, fillSpec)
+            repeat(segmentCount(pages)) { i ->
+                val fill = animateFloatAsState(segmentFill(i, index, pages), fillSpec)
+                val height by animateDpAsState(if (i == current) 4.dp else 3.dp, heightSpec)
                 Box(
                     Modifier
                         .weight(1f)
-                        .height(3.dp)
+                        .height(height)
                         .clip(CircleShape)
                         .drawBehind {
                             drawRect(SegmentTrack)
                             drawRect(color, size = size.copy(width = size.width * fill.value))
+                            drawRect(SegmentOutline, style = Stroke(0.75.dp.toPx()))
                         }
                 )
             }
         }
-        AnimatedVisibility(
-            visible = showChip,
-            enter = fadeIn(MaterialTheme.motionScheme.fastEffectsSpec()) + slideInVertically { -it / 2 },
-            exit = fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec()) + slideOutVertically { -it / 2 },
-        ) { IndicatorChip(Modifier.clickable(onClick = onChipClick)) { Text(pageLabel(index, pages)) } }
+        IndicatorChip(
+            Modifier
+                .graphicsLayer { alpha = chipAlpha }
+                .clickable(onClick = onChipClick)
+        ) { PageCount(index + 1, pages, style = LocalTextStyle.current) }
     }
 }
 
 private val RoundedEndShape = RoundedCornerShape(topEnd = 3.dp, bottomEnd = 3.dp)
-private val SegmentTrack = Color.Black.copy(alpha = .15f)
+private val SegmentTrack = Color.White.copy(alpha = .42f)
+private val SegmentOutline = Color.Black.copy(alpha = .35f)
 private val ChipColor = Color(0xFF101114).copy(alpha = .72f)
 private val QuarterTick = Color.Gray.copy(alpha = .6f)
 private val NotchShape = GenericShape { size, _ ->
