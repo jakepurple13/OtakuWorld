@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.presentation.details
 
 
+import com.programmersbox.kmpuiviews.presentation.components.RegisterPageRefresh
 import androidx.compose.foundation.layout.WindowInsets
 import com.programmersbox.telemetry.events.ItemShared
 import com.programmersbox.telemetry.Analytics
@@ -163,6 +164,7 @@ fun DetailsScreen(
     dao: ItemDao = LocalItemDao.current,
     details: DetailsViewModel = koinViewModel(),
 ) {
+    RegisterPageRefresh(details.isRefreshing, details::refresh, details::stopRefresh)
     CompositionLocalProvider(
         LocalDetailsSharedItemKey provides details.itemModel?.sharedItemKey(),
         LocalDetailsHandedOffCover provides details.handedOffCover,

@@ -16,6 +16,14 @@ import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ExceptionDatabase
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.kmpmodels.ExampleService
+import com.programmersbox.kmpmodels.KmpApiService
+import com.programmersbox.kmpmodels.KmpInfoModel
+import com.programmersbox.kmpmodels.KmpSourceInformation
+import com.programmersbox.sharedcomponents.notifier.DefaultInAppNotifier
+import com.programmersbox.sharedcomponents.notifier.InAppNotifier
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.SystemAlerter
@@ -128,6 +136,7 @@ class DetailsViewModelTest {
         aiText: AiText = FakeAiText(),
         translationHandler: TranslationHandler = FakeTranslationHandler(),
         tldrCache: TldrCache = TldrCache(),
+        notifier: InAppNotifier? = null,
     ) = DetailsViewModel(
         details = details,
         genericInfo = FakeKmpGenericInfo(),
@@ -153,6 +162,7 @@ class DetailsViewModelTest {
         moodRepository = com.programmersbox.kmpuiviews.domain.moodtags.MoodRepository(itemDatabase.itemDao(), aiText),
         crashReporter = FakeCrashReporter(),
         analytics = analytics,
+        notifier = notifier,
     ).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -189,7 +199,8 @@ class DetailsViewModelTest {
         viewModelStore.clearAndJoin()
         Dispatchers.resetMain()
         mainThread.close()
-        runBlocking { Cached.cache.cleanUp() }
+        // cleanUp() only drops expired entries; every test here uses the same url, so drop it outright.
+        runBlocking { Cached.cache.remove("https://example.com/") }
         itemDatabase.close()
         itemDbFile.delete()
         bookmarkDatabase.close()
@@ -244,6 +255,129 @@ class DetailsViewModelTest {
 
         val state = vm.currentState as DetailState.Success
         assertEquals("Cached Title", state.info.title)
+    }
+
+    // A source whose answer each test sets, so a refresh can see a different title than the first load.
+    private class ControlledService : KmpApiService {
+        override val baseUrl = "https://example.com/"
+        var calls = 0
+        var next: suspend () -> KmpInfoModel = { info("New") }
+
+        override suspend fun itemInfo(model: KmpItemModel): KmpInfoModel {
+            calls++
+            return next()
+        }
+
+        fun info(title: String) = KmpInfoModel(
+            title = title,
+            description = "$title description",
+            url = "https://example.com/",
+            imageUrl = "https://picsum.photos/200/300",
+            chapters = emptyList(),
+            genres = emptyList(),
+            alternativeNames = emptyList(),
+            source = this,
+        )
+    }
+
+    private val controlled = ControlledService()
+    private val notifier = DefaultInAppNotifier(CoroutineScope(SupervisorJob() + Dispatchers.Default))
+
+    private fun controlledViewModel(): DetailsViewModel {
+        sourceRepository.setSources(
+            listOf(KmpSourceInformation(apiService = controlled, name = "Controlled", icon = null, packageName = "com.controlled"))
+        )
+        return viewModel(details = details(source = "ControlledService"), notifier = notifier)
+    }
+
+    private fun DetailsViewModel.title() = (currentState as? DetailState.Success)?.info?.title
+
+    @Test
+    fun `refresh skips the cache`() = runTest {
+        Cached.cache["https://example.com/"] = controlled.info("Old")
+        val vm = controlledViewModel()
+        awaitCondition { vm.title() == "Old" }
+        assertEquals(0, controlled.calls)
+
+        withContext(Dispatchers.Main) { vm.refresh() }
+
+        awaitCondition { vm.title() == "New" && !vm.isRefreshing }
+        assertEquals(1, controlled.calls)
+        assertEquals("New", Cached.cache["https://example.com/"]?.title)
+    }
+
+    @Test
+    fun `refresh failure keeps old details and shows an error banner`() = runTest {
+        Cached.cache["https://example.com/"] = controlled.info("Old")
+        controlled.next = { error("offline") }
+        val vm = controlledViewModel()
+        awaitCondition { vm.title() == "Old" }
+
+        withContext(Dispatchers.Main) { vm.refresh() }
+
+        awaitCondition { controlled.calls == 1 && !vm.isRefreshing }
+        assertEquals("Old", vm.title())
+        awaitCondition { notifier.banners.value.isNotEmpty() }
+        assertEquals("Couldn't refresh", notifier.banners.value.single().title)
+    }
+
+    @Test
+    fun `a failed first load shows the error and refresh retries`() = runTest {
+        controlled.next = { error("offline") }
+        val vm = controlledViewModel()
+        awaitCondition { vm.currentState is DetailState.Error }
+
+        controlled.next = { controlled.info("New") }
+        withContext(Dispatchers.Main) { vm.refresh() }
+
+        awaitCondition { vm.title() == "New" }
+        assertTrue(notifier.banners.value.isEmpty())
+    }
+
+    @Test
+    fun `second refresh while refreshing is ignored`() = runTest {
+        Cached.cache["https://example.com/"] = controlled.info("Old")
+        val gate = CompletableDeferred<KmpInfoModel>()
+        controlled.next = { gate.await() }
+        val vm = controlledViewModel()
+        awaitCondition { vm.title() == "Old" }
+
+        withContext(Dispatchers.Main) {
+            vm.refresh()
+            vm.refresh()
+        }
+        awaitCondition { controlled.calls == 1 }
+        assertTrue(vm.isRefreshing)
+
+        gate.complete(controlled.info("New"))
+        awaitCondition { vm.title() == "New" && !vm.isRefreshing }
+        assertEquals(1, controlled.calls)
+    }
+
+    @Test
+    fun `stopRefresh cancels and keeps the old details`() = runTest {
+        Cached.cache["https://example.com/"] = controlled.info("Old")
+        controlled.next = { CompletableDeferred<KmpInfoModel>().await() }
+        val vm = controlledViewModel()
+        awaitCondition { vm.title() == "Old" }
+
+        withContext(Dispatchers.Main) { vm.refresh() }
+        awaitCondition { controlled.calls == 1 }
+        withContext(Dispatchers.Main) { vm.stopRefresh() }
+
+        awaitCondition { !vm.isRefreshing }
+        assertEquals("Old", vm.title())
+        assertTrue(notifier.banners.value.isEmpty())
+    }
+
+    @Test
+    fun `item_viewed fires once across a refresh`() = runTest {
+        val vm = controlledViewModel()
+        awaitCondition { vm.title() == "New" }
+        withContext(Dispatchers.Main) { vm.refresh() }
+        awaitCondition { controlled.calls == 2 && !vm.isRefreshing }
+
+        assertEquals(1, analytics.events.filterIsInstance<ItemViewed>().size)
     }
 
     @Test

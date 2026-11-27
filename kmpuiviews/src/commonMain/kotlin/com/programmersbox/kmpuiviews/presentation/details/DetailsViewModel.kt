@@ -64,6 +64,12 @@ import com.programmersbox.kmpuiviews.utils.composables.sharedelements.sharedItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
+import otakuworld.kmpuiviews.generated.resources.details_refresh_failed_subtitle
+import otakuworld.kmpuiviews.generated.resources.details_refresh_failed
+import otakuworld.kmpuiviews.generated.resources.Res
+import org.jetbrains.compose.resources.getString
+import com.programmersbox.sharedcomponents.notifier.InAppNotifier
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -104,6 +110,7 @@ class DetailsViewModel(
     private val crashReporter: CrashReporter,
     private val analytics: Analytics = NoOpAnalytics,
     private val sourceNamer: TelemetrySourceNamer? = null,
+    private val notifier: InAppNotifier? = null,
 ) : ViewModel() {
 
     private val openedFrom = details?.from ?: OpenedFrom.OTHER
@@ -193,45 +200,18 @@ class DetailsViewModel(
         } ?: detailState
     }
 
+    /** True while [refresh] fetches the item again. */
+    var isRefreshing by mutableStateOf(false)
+        private set
+
+    private var loadJob: Job? = null
+
+    // Bumped by every load, so a cancelled load finishing late can't clear a newer refresh's flag.
+    private var loadGeneration = 0
+    private var setupDone = false
+
     init {
-        itemModel?.url?.let { url ->
-            flow {
-                Cached
-                    .cache[url]
-                    ?.let { emit(Result.success(it)) }
-                    ?: emitAll(itemModel.toInfoModel())
-            }
-        }
-            ?.dispatchIo()
-            ?.catch {
-                crashReporter.recordException(it)
-                itemModel?.source?.serviceName?.let { s ->
-                    analytics.log(SourceError(sourceNamer?.name(s) ?: s, SourceError.INFO, it::class.simpleName ?: "Exception"))
-                }
-                exceptionDao.insertException(it)
-                it.printStackTrace()
-                emit(Result.failure(it))
-                detailState = DetailState.Error(it)
-            }
-            ?.filter { it.isSuccess }
-            ?.map { it.getOrThrow() }
-            ?.onEach { item ->
-                info = item
-                if (!viewLogged) {
-                    viewLogged = true
-                    val source = item.source.serviceName
-                    analytics.log(ItemViewed(sourceNamer?.name(source) ?: source, genericInfo.sourceType, openedFrom))
-                    if (openedFrom == OpenedFrom.UPDATE_NOTIFICATION) analytics.log(UpdateNotificationOpened(count = 1))
-                }
-                detailState = DetailState.Success(
-                    info = item,
-                    action = DetailFavoriteAction.Add(item)
-                )
-                description = item.description.ifEmpty { "No Description Found" }
-                setup(item)
-                Cached.cache[item.url] = item
-            }
-            ?.launchIn(viewModelScope)
+        load(force = false)
 
         snapshotFlow { info }
             .filterNotNull()
@@ -447,6 +427,80 @@ class DetailsViewModel(
         cachedTldr.value = null
         _tldrTranslating.value = false
         _tldrTranslated.value = false
+    }
+
+    /** Fetches the item from its source again, skipping and replacing the cached copy. Ignored while refreshing. */
+    fun refresh() {
+        if (isRefreshing || itemModel == null) return
+        isRefreshing = true
+        load(force = true)
+    }
+
+    /** Cancels a running [refresh]; the details already shown stay. */
+    fun stopRefresh() {
+        if (!isRefreshing) return
+        loadGeneration++
+        loadJob?.cancel()
+        isRefreshing = false
+    }
+
+    private fun load(force: Boolean) {
+        val model = itemModel ?: return
+        val generation = ++loadGeneration
+        loadJob?.cancel()
+        loadJob = flow {
+            val cached = if (force) null else Cached.cache[model.url]
+            if (cached != null) {
+                emit(Result.success(cached))
+            } else {
+                if (force) Cached.cache.remove(model.url)
+                emitAll(model.toInfoModel())
+            }
+        }
+            .dispatchIo()
+            .catch { emit(Result.failure(it)) }
+            .onEach { result ->
+                result
+                    .onSuccess { onLoaded(it) }
+                    .onFailure { onLoadFailed(it) }
+            }
+            .onCompletion { if (generation == loadGeneration) isRefreshing = false }
+            .launchIn(viewModelScope)
+    }
+
+    private suspend fun onLoaded(item: KmpInfoModel) {
+        info = item
+        if (!viewLogged) {
+            viewLogged = true
+            val source = item.source.serviceName
+            analytics.log(ItemViewed(sourceNamer?.name(source) ?: source, genericInfo.sourceType, openedFrom))
+            if (openedFrom == OpenedFrom.UPDATE_NOTIFICATION) analytics.log(UpdateNotificationOpened(count = 1))
+        }
+        detailState = DetailState.Success(
+            info = item,
+            action = DetailFavoriteAction.Add(item)
+        )
+        description = item.description.ifEmpty { "No Description Found" }
+        if (!setupDone) {
+            setupDone = true
+            setup(item)
+        }
+        Cached.cache[item.url] = item
+    }
+
+    private suspend fun onLoadFailed(error: Throwable) {
+        crashReporter.recordException(error)
+        itemModel?.source?.serviceName?.let { s ->
+            analytics.log(SourceError(sourceNamer?.name(s) ?: s, SourceError.INFO, error::class.simpleName ?: "Exception"))
+        }
+        exceptionDao.insertException(error)
+        error.printStackTrace()
+        // A failed refresh keeps the details already on screen.
+        if (detailState is DetailState.Success) {
+            notifier?.error(getString(Res.string.details_refresh_failed), getString(Res.string.details_refresh_failed_subtitle))
+        } else {
+            detailState = DetailState.Error(error)
+        }
     }
 
     private fun setup(info: KmpInfoModel) {
