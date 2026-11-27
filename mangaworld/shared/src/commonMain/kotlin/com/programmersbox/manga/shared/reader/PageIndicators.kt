@@ -125,8 +125,11 @@ internal fun PageIndicatorOverlay(
             ReadingProgressLine(
                 progress = chapterProgress(currentPage, pages),
                 visible = !showItems,
-                pageLabel = if (style == PageIndicatorStyle.Classic) pageLabel(currentPage, pages) else null,
+                page = if (style == PageIndicatorStyle.Classic) page else null,
+                pages = pages,
                 showChip = recentlyTurned,
+                swellOnTurn = style == PageIndicatorStyle.LineOnly,
+                quarterTicks = style == PageIndicatorStyle.LineOnly,
                 modifier = Modifier.align(Alignment.TopStart)
             )
         }
@@ -216,16 +219,23 @@ internal fun RollingNumber(
     ) { Text("$it", style = style) }
 }
 
+/** Digits all the same width, so counts don't shift as pages change. */
+internal fun TextStyle.tabular(): TextStyle = copy(fontFeatureSettings = "tnum")
+
+/** "[prefix]12 / 24": the page rolls, the total is dimmed, digits are tabular. */
 @Composable
-private fun PageCount(
+internal fun PageCount(
     page: Int,
     pages: Int,
     modifier: Modifier = Modifier,
     style: TextStyle = MaterialTheme.typography.labelLarge,
+    prefix: String? = null,
 ) {
+    val tabular = style.tabular()
     Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier) {
-        RollingNumber(page, style)
-        Text(" / $pages", style = style, color = LocalContentColor.current.copy(alpha = .7f))
+        if (prefix != null) Text(prefix, style = tabular)
+        RollingNumber(page, tabular)
+        Text(" / $pages", style = tabular, color = LocalContentColor.current.copy(alpha = .7f))
     }
 }
 
