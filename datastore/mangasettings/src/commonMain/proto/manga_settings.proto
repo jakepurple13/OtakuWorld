@@ -46,4 +46,7 @@ enum PageIndicatorStyle {
   Folio = 5;
   Morph = 6;
   LineOnly = 7;
+  Ring = 8;
+  Wavy = 9;
+  Dots = 10;
 }

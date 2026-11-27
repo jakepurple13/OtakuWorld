@@ -91,6 +91,9 @@ internal val PageIndicatorStyle.label: String
         PageIndicatorStyle.Folio -> "Printed folio"
         PageIndicatorStyle.Morph -> "Morphing pill"
         PageIndicatorStyle.LineOnly -> "Line only"
+        PageIndicatorStyle.Ring -> "Progress ring"
+        PageIndicatorStyle.Wavy -> "Wavy line"
+        PageIndicatorStyle.Dots -> "Dot window"
     }
 
 /**
@@ -139,6 +142,14 @@ internal fun PageIndicatorOverlay(
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .padding(top = topPadding)
+            )
+        } else if (style == PageIndicatorStyle.Wavy) {
+            WavyProgressLine(
+                page = page,
+                pages = pages,
+                visible = !showItems,
+                turning = recentlyTurned,
+                modifier = Modifier.align(Alignment.TopStart)
             )
         } else {
             ReadingProgressLine(
@@ -215,7 +226,30 @@ internal fun PageIndicatorOverlay(
                     .padding(horizontal = 16.dp)
             )
 
-            PageIndicatorStyle.Classic, PageIndicatorStyle.Segments, PageIndicatorStyle.LineOnly -> Unit
+            PageIndicatorStyle.Ring -> PageRing(
+                page = page,
+                pages = pages,
+                active = active,
+                onClick = onOpenPages,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .then(aboveBars)
+                    .padding(end = 12.dp, bottom = 4.dp)
+            )
+
+            PageIndicatorStyle.Dots -> PageDotWindow(
+                index = index,
+                pages = pages,
+                active = active,
+                onClick = onOpenPages,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .then(aboveBars)
+                    .padding(bottom = 4.dp)
+            )
+
+            PageIndicatorStyle.Classic, PageIndicatorStyle.Segments, PageIndicatorStyle.LineOnly,
+            PageIndicatorStyle.Wavy -> Unit
         }
     }
 }
@@ -631,7 +665,7 @@ private fun UnclippedPill(
     }
 }
 
-private val IndicatorContainer: Color
+internal val IndicatorContainer: Color
     @Composable get() = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = .9f)
 
 private val ScrubberTick = Color.White.copy(alpha = .55f)
