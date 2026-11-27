@@ -177,6 +177,7 @@ fun DetailsViewLandscape(
                         scrollBehavior = scrollBehavior,
                     )
                 } else {
+                    Column {
                     TopAppBar(
                         modifier = Modifier.zIndex(2f),
                         scrollBehavior = scrollBehavior,
@@ -224,9 +225,13 @@ fun DetailsViewLandscape(
                                     }
                                 },
                                 onNoteClick = { notesPanelToggle?.invoke() ?: run { showNoteSheet = true } },
+                                isRefreshing = detailsActions.isRefreshing(),
+                                onRefresh = detailsActions.refresh,
                             )
                         }
                     )
+                    DetailsRefreshProgress(detailsActions.isRefreshing())
+                    }
                 }
             }
         },
@@ -412,6 +417,7 @@ private fun DetailsLandscapeContent(
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = MaterialTheme.colorScheme.onSurface,
                                             modifier = Modifier
+                                                .highlightOnChange(info.description)
                                                 .combinedClickable(
                                                     interactionSource = null,
                                                     indication = ripple(),

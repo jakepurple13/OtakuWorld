@@ -345,6 +345,8 @@ private fun DetailsScreenInternal(
                         // Remembered so every ChapterItem gets the same instance and can skip recomposition
                         detailsActions = remember(target) {
                             DetailsActions(
+                                refresh = details::refresh,
+                                isRefreshing = { details.isRefreshing },
                                 onClick = { model ->
                                     scope.launch(Dispatchers.IO) {
                                         genericInfo.chapterOnClick(model, target.info.chapters, infoModel, navActions, currentPaletteSeed?.toArgb())
@@ -452,6 +454,10 @@ data class DetailsActions(
     val bookmarkChapter: (KmpChapterModel) -> Unit = {},
     val bookmarkedChapterUrls: Set<String> = emptySet(),
     val selection: ChapterSelectionActions = ChapterSelectionActions(),
+    /** Fetches the item again, skipping the cache (the overflow menu's Refresh). */
+    val refresh: () -> Unit = {},
+    /** Read in composition, so the menu and progress line follow it without recreating these actions. */
+    val isRefreshing: () -> Boolean = { false },
 )
 
 @OptIn(
