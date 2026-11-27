@@ -15,6 +15,7 @@
 4. Item right-click menu gains "Go to open tab", shown only when the title is open in another tab. One match: goes there directly, trailing text names the window. Two or more: a submenu lists each tab, this window first. Going to a tab in another window raises that window; the tab flashes.
 5. Toolbar icons get no right-click menu.
 6. Session restore saves each tab's history and position.
+7. The Home tab's rail becomes a labeled, scrollable, collapsible sidebar (mockup https://claude.ai/artifact/X5jSzHeSSMuK7LMe5nbS81). Sections "Home" (Recent, All, Favorites, Extensions; navigate inside Home, hover button opens a new tab) and "Open in tab" (Notifications, Lists, Search, Settings). Collapsed 64 dp; the Notifications badge moves between row end and icon corner. Collapsed state is remembered.
 
 ## Global Constraints
 
@@ -278,9 +279,67 @@ Behavior (from the mockup): `HistoryButton` draws a ring that fills over `HISTOR
 
 ---
 
+### Task 6b: Home sidebar replaces the Home rail
+
+Approved mockup: https://claude.ai/artifact/X5jSzHeSSMuK7LMe5nbS81 (option D). Desktop only.
+
+**Files:**
+- Create: `kmpuiviews/src/jvmMain/kotlin/com/programmersbox/kmpuiviews/tabs/HomeSidebar.kt`
+- Modify: `HomeTab.kt` — replace `HomeSideNav` (the `NavigationRail`) with `HomeSidebar`; keep the `showNavBar` `AnimatedVisibility` around it. Delete `HomeSideNav` and `HomeItem`.
+- Modify: `TabPrefs.kt` — `val homeSidebarCollapsedPref = boolPref("desktop_home_sidebar_collapsed", false)`.
+- Modify `strings.xml`: `tabs_home_section` "Home", `tabs_open_in_tab_section` "Open in tab", `tabs_sidebar_collapse` "Collapse", `tabs_sidebar_expand` "Expand", `tabs_open_page_in_new_tab` "Open %1$s in new tab".
+- Test: `kmpuiviews/src/jvmTest/kotlin/com/programmersbox/kmpuiviews/tabs/HomeSidebarTest.kt`
+
+**Interfaces:**
+- Consumes: `TabNavigation3Actions.homeScreenNavigate` / `currentDestination` (Task 2), `TabsController.open(key, TabOpenMode.Foreground, tab.id)`.
+- Produces:
+  ```kotlin
+  data class SidebarItem(val key: NavKey, val label: StringResource, val icon: ImageVector)
+  @Composable fun HomeSidebar(
+      homeItems: List<SidebarItem>,      // Recent, All (when showAllItem), Favorites, Extensions
+      tabItems: List<SidebarItem>,       // Notifications, Lists, Search, Settings
+      selected: (NavKey) -> Boolean,
+      notificationCount: Int,
+      collapsed: Boolean,
+      onToggleCollapsed: () -> Unit,
+      onHome: (NavKey) -> Unit,          // navigates inside Home
+      onOpenTab: (NavKey) -> Unit,       // opens a new tab
+      modifier: Modifier = Modifier,
+  )
+  ```
+  `HomeTab` supplies `notificationCount` from `ItemDao.getAllNotificationCount()` (`koinInject<ItemDao>()`, `collectAsStateWithLifecycle(0)`) and `collapsed` from `homeSidebarCollapsedPref.asState()`.
+
+Behavior (from the mockup):
+- Width `animateDpAsState(if (collapsed) 64.dp else 224.dp, motionScheme.defaultSpatialSpec())`.
+- Items in a `LazyColumn` (scrolls; every item and header `Modifier.animateItem()`); Collapse/Expand row pinned below it outside the list, with chevron left/right. Top and bottom edge fade (24.dp) only when there is more to scroll (`canScrollBackward` / `canScrollForward`).
+- Section headers "Home" and "Open in tab"; collapsed they become a 1.dp divider (the first header disappears).
+- Row: 40.dp tall, 20.dp icon, label; selected Home row uses `secondaryContainer`. Labels and trailing icons fade with `animateFloatAsState` (fast effects spec) when collapsing.
+- Home rows: an open-in-new-tab `IconButton` (28.dp, `Icons.AutoMirrored.Default.OpenInNew`) at the row end, shown only when expanded and the row is hovered or keyboard-focused (`hoverable` + `onFocusChanged`); it calls `onOpenTab(key)`. Clicking the row calls `onHome(key)`.
+- Tab rows: trailing `OpenInNew` icon (14.dp, not clickable); the row calls `onOpenTab(key)`.
+- Notifications badge: hidden at 0. One `Badge` placed with `Modifier.animateBounds(lookaheadScope)` (wrap the sidebar in `LookaheadScope`): expanded = 26×18.dp pill at the row end in place of the trailing icon; collapsed = 18×16.dp on the icon's top-right. Count changes use `AnimatedContent` slide-down.
+- Collapsed: `TooltipBox` + `PlainTooltip` with the label on every row.
+
+- [ ] **Step 1: Write the failing tests** (`runComposeUiTest`):
+  - `homeRowNavigatesInHome`: click "Favorites" → `onHome(Screen.FavoriteScreen)`.
+  - `tabRowOpensTab`: click "Lists" → `onOpenTab(Screen.CustomListScreen)`.
+  - `homeRowNewTabButtonShowsOnHoverWhenExpanded`: hover "Recent" → node with content description "Open Recent in new tab" displayed; click → `onOpenTab(Screen.RecentScreen)`, `onHome` not called. With `collapsed = true` and hover → that node does not exist.
+  - `badgeHiddenAtZeroAndShowsCount`: `notificationCount = 0` → no "3"; `= 3` → text "3" displayed, both collapsed and expanded.
+  - `collapsedHidesLabelsAndSectionTitles`: `collapsed = true` → "Open in tab" not displayed; "Collapse" row shows content description "Expand".
+  - `listScrollsWhenItemsOverflow`: 20 home items in a 300.dp-tall host → last item not displayed, `performScrollToNode` reaches it.
+
+- [ ] **Step 2: Run** `./gradlew :kmpuiviews:jvmTest --tests "*HomeSidebarTest"` — Expected: FAIL.
+
+- [ ] **Step 3: Implement** `HomeSidebar.kt`, the pref, and wire into `HomeTab.kt`. Keep `HomeTab`'s KDoc in sync (Home pages navigate inside Home; the other section opens tabs).
+
+- [ ] **Step 4: Run** the tabs test package — Expected: PASS.
+
+- [ ] **Step 5: Commit** `feat(desktop-tabs): Home sidebar with sections, collapse and moving badge`
+
+---
+
 ### Task 7: Whole-branch check
 
 - [ ] **Step 1:** Run the full check from Global Constraints. Expected: all pass, all three desktop apps compile.
 - [ ] **Step 2:** Run `RepoGraphTest` (nav map orphan check): `./gradlew :navgraph:test` (or the module that owns it; `grep -rl RepoGraphTest`). Expected: PASS.
-- [ ] **Step 3:** Hand-test list for the user (MangaWorld desktop, `./gradlew :mangaworld:desktop:run`): hold/right-click back and forward; hold-drag-release; ⌘[ ⌘]; Settings from toolbar then back; same title in two tabs; Go to open tab across windows; quit and relaunch restores history position; AnimeWorld mini player with the same episode in two tabs.
+- [ ] **Step 3:** Hand-test list for the user (MangaWorld desktop, `./gradlew :mangaworld:desktop:run`): Home sidebar collapse/expand + badge move + hover new-tab button; hold/right-click back and forward; hold-drag-release; ⌘[ ⌘]; Settings from toolbar then back; same title in two tabs; Go to open tab across windows; quit and relaunch restores history position; AnimeWorld mini player with the same episode in two tabs.
 - [ ] **Step 4:** Commit any fixes.
