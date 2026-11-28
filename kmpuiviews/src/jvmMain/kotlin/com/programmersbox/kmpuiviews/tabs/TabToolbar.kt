@@ -35,9 +35,15 @@ import otakuworld.kmpuiviews.generated.resources.global_search
 import otakuworld.kmpuiviews.generated.resources.settings
 import otakuworld.kmpuiviews.generated.resources.tabs_downloads
 
-/** "App / Title / Chapter": the app name, then each page of the tab's back stack. */
-fun tabPath(appName: String, backStack: List<NavKey>, keys: TabKeys): String =
-    (listOf(appName) + backStack.map { keys.labelOf(it).text }).joinToString(" / ")
+/**
+ * "App / … / Search / Title / Chapter": the app name, then the last [maxPages] pages of the tab's back stack, with "…"
+ * after the app name when earlier pages were left out.
+ */
+fun tabPath(appName: String, backStack: List<NavKey>, keys: TabKeys, maxPages: Int = 3): String {
+    val shown = backStack.takeLast(maxPages).map { keys.labelOf(it).text }
+    val trimmed = if (backStack.size > maxPages) listOf("…") else emptyList()
+    return (listOf(appName) + trimmed + shown).joinToString(" / ")
+}
 
 @Composable
 fun TabToolbar(
@@ -46,7 +52,7 @@ fun TabToolbar(
     keys: TabKeys = koinInject(),
     appConfig: AppConfig = koinInject(),
 ) {
-    // Through the tab's own navigation, so the interceptor opens each page's tab once and then switches to it.
+    // Through the tab's own navigation, so each page joins this tab's history (an armed click still opens a new tab).
     val nav = tab.nav
 
     Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
@@ -92,7 +98,6 @@ fun TabToolbar(
                     }
                 }
 
-                // Not nav.settings(): that switches top-level destinations and skips the interceptor.
                 IconButton(onClick = { nav.navigate(Screen.Settings) }) {
                     BadgedBox(badge = { if (updateCheck()) Badge { Text("") } }) {
                         Icon(Icons.Default.Settings, stringResource(Res.string.settings))
