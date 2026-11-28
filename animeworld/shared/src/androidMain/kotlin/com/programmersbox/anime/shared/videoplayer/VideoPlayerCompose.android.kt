@@ -227,6 +227,25 @@ private fun VideoPlayerContent(videoScreen: VideoScreen) {
 
     val overlayVisibility = viewModel.visibility == VideoPlayerVisibility.Visible || !viewModel.isPlaying || viewModel.subtitleSheetOpen
 
+    // Pausing marks the controls visible, so resuming keeps them up for the full delay instead of
+    // hiding them at once or not, depending on taps made while paused.
+    LaunchedEffect(viewModel.isPlaying) {
+        if (!viewModel.isPlaying) viewModel.visibility = VideoPlayerVisibility.Visible
+    }
+    var seeking by remember { mutableStateOf(false) }
+    // Bumped by every control press, restarting the hide delay.
+    var controlPresses by remember { mutableIntStateOf(0) }
+    LaunchedEffect(viewModel.visibility, viewModel.isPlaying, seeking, controlPresses) {
+        if (viewModel.visibility == VideoPlayerVisibility.Visible && viewModel.isPlaying && !seeking) {
+            delay(2500)
+            viewModel.visibility = VideoPlayerVisibility.Gone
+        }
+    }
+    fun pressed(action: () -> Unit): () -> Unit = {
+        controlPresses++
+        action()
+    }
+
     viewModel.exoPlayer?.let { ExoPlayerAttributes(exoPlayer = it, viewModel = viewModel, pollPosition = overlayVisibility) }
 
     // Null until DataStore emits; the player waits for it since the PlayerView's surface type is fixed when it's created.
@@ -371,12 +390,13 @@ private fun VideoPlayerContent(videoScreen: VideoScreen) {
                     speed = viewModel.speed,
                 ),
                 actions = PlayerChromeActions(
-                    onPlayPause = viewModel::playPause,
-                    onRewind = viewModel::rewind,
-                    onFastForward = viewModel::fastForward,
-                    onSkip = viewModel::skipAhead,
+                    onPlayPause = pressed(viewModel::playPause),
+                    onRewind = pressed(viewModel::rewind),
+                    onFastForward = pressed(viewModel::fastForward),
+                    onSkip = pressed(viewModel::skipAhead),
                     onSeek = { viewModel.exoPlayer?.seekTo(it) },
-                    onSpeed = viewModel::cycleSpeed,
+                    onSpeed = pressed(viewModel::cycleSpeed),
+                    onSeekingChange = { seeking = it },
                 ),
                 blur = blur,
                 topActions = {
@@ -639,22 +659,11 @@ fun MediaControlGestures(
             var showBrightness by remember { mutableStateOf(false) }
             var brightnessLevel by remember { mutableIntStateOf(0) }
 
-            var visibilityJob: Job? = remember { null }
-
-            LaunchedEffect(viewModel.visibility) {
-                if (viewModel.visibility == VideoPlayerVisibility.Visible && viewModel.isPlaying) {
-                    visibilityJob?.cancel()
-                    visibilityJob = scope.launch {
-                        delay(2500)
-                        viewModel.visibility = VideoPlayerVisibility.Gone
-                    }
-                }
-            }
-
             GestureBox(
                 doubleTap = viewModel::playPause,
                 draggingProgress = onDraggingProgressChange,
-                onTap = { viewModel.visibility = !viewModel.visibility },
+                // Paused, the controls always show, so a tap there would only flip hidden state.
+                onTap = { if (viewModel.isPlaying) viewModel.visibility = !viewModel.visibility },
                 onHorizontalDragStart = { viewModel.exoPlayer?.pause() },
                 onHorizontalDragEnd = { viewModel.exoPlayer?.play() },
                 onVerticalDragStart = {},
