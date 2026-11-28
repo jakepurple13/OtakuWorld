@@ -8,7 +8,6 @@ import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.LocalPageRefreshHost
 import com.programmersbox.kmpuiviews.presentation.components.PageRefresh
 import com.programmersbox.kmpuiviews.presentation.components.RegisterPageRefresh
-import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -20,7 +19,7 @@ import kotlin.test.assertTrue
 class TabRefreshTest {
 
     private val controller = TabsController(
-        homeNav = Navigation3Actions(Screen.RecentScreen),
+        homeNav = TabNavigation3Actions(Screen.RecentScreen),
         keys = TabKeys(listOf(CoreTabKeyProvider)),
         prefs = TabPrefsSnapshot(clickOpensNewTab = false),
         now = { 0L },

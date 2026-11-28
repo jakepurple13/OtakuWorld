@@ -875,6 +875,11 @@
     <string name="tabs_close_tab">Close tab</string>
     <string name="tabs_back">Back</string>
     <string name="tabs_forward">Forward</string>
+    <string name="tabs_history">Tab history</string>
+    <string name="tabs_history_pages">%1$d pages</string>
+    <string name="tabs_history_forward">Forward</string>
+    <string name="tabs_history_back">Back</string>
+    <string name="tabs_history_now">now</string>
     <string name="tabs_refresh">Refresh</string>
     <string name="tabs_refresh_tooltip">Refresh (%1$s)</string>
     <string name="tabs_stop_loading">Stop loading</string>
@@ -892,6 +897,14 @@
     <string name="tabs_open_in_new_tab_and_switch">Open in new tab and switch</string>
     <string name="tabs_open_in_new_window">Open in new window</string>
     <string name="tabs_more">More…</string>
+    <string name="tabs_go_to_open_tab">Go to open tab</string>
+    <string name="tabs_this_window">This window</string>
+    <string name="tabs_window_n">Window %1$d</string>
+    <string name="tabs_home_section">Home</string>
+    <string name="tabs_open_in_tab_section">Open in tab</string>
+    <string name="tabs_sidebar_collapse">Collapse</string>
+    <string name="tabs_sidebar_expand">Expand</string>
+    <string name="tabs_open_page_in_new_tab">Open %1$s in new tab</string>
     <string name="telemetry_section">Usage &amp; crash data</string>
     <string name="telemetry_analytics">Share usage analytics</string>
     <string name="telemetry_analytics_desc">Which features get used.</string>

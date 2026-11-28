@@ -10,7 +10,6 @@ import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.ViewModelStoreProvider
 import androidx.navigation3.runtime.NavKey
-import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import kotlinx.serialization.Serializable
 
 @JvmInline
@@ -25,11 +24,9 @@ class TabViewModelStoreOwner : ViewModelStoreOwner {
 
 class TabState(
     val id: TabId,
-    val nav: Navigation3Actions,
+    val nav: TabNavigation3Actions,
     val pinned: Boolean,
 ) {
-    /** Pages popped by back, most recent last. */
-    val forward: SnapshotStateList<NavKey> = mutableStateListOf()
     val notesOpen: MutableState<Boolean> = mutableStateOf(false)
     val playing: MutableState<Boolean> = mutableStateOf(false)
 
@@ -48,7 +45,7 @@ class TabState(
     var viewModelStoreProvider: ViewModelStoreProvider = ViewModelStoreProvider(parentOwner = viewModelStoreOwner)
         internal set
 
-    val current: NavKey get() = nav.backStack.last()
+    val current: NavKey get() = nav.history.current
 }
 
 @Serializable
@@ -88,8 +85,10 @@ data class TabPrefsSnapshot(
     val tearOut: Boolean = true,
 )
 
-/** A closed tab: its back stack and what the [TabHandoff]s held for it. */
-class ClosedTab(val stack: List<NavKey>, internal val handoffs: List<Any?>?)
+/** A closed tab: its history, the position in it, and what the [TabHandoff]s held for it. */
+class ClosedTab(val entries: List<NavKey>, val index: Int, internal val handoffs: List<Any?>?) {
+    val current: NavKey get() = entries[index]
+}
 
 /** A new tab page nothing has navigated from yet. */
-val TabState.isUntouchedNewTab: Boolean get() = current == NewTabRoute && nav.backStack.size == 1
+val TabState.isUntouchedNewTab: Boolean get() = current == NewTabRoute && nav.history.entries.size == 1

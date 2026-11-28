@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -30,7 +29,7 @@ class TabHandoffTest {
     }
 
     private val holder = FakeHolder()
-    private val home = Navigation3Actions(Screen.RecentScreen)
+    private val home = TabNavigation3Actions(Screen.RecentScreen)
     private val controller = TabsController(
         homeNav = home,
         keys = TabKeys(listOf(CoreTabKeyProvider)),
@@ -143,7 +142,7 @@ class TabHandoffTest {
     @Test
     fun noHandoffsIsANoOp() {
         val plain = TabsController(
-            homeNav = Navigation3Actions(Screen.RecentScreen),
+            homeNav = TabNavigation3Actions(Screen.RecentScreen),
             keys = TabKeys(listOf(CoreTabKeyProvider)),
             prefs = TabPrefsSnapshot(clickOpensNewTab = false),
         )
@@ -186,7 +185,7 @@ class TabHandoffTest {
         controller.close(one)
         controller.close(two)
 
-        val entry = controller.recentlyClosed.first { it.stack.last() == reader("1") }
+        val entry = controller.recentlyClosed.first { it.current == reader("1") }
         controller.reopenClosed(main.id, entry)
 
         assertEquals("1", holder.chapter)

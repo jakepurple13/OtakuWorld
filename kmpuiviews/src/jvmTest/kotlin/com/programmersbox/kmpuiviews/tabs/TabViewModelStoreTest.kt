@@ -16,7 +16,6 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertSame
@@ -72,7 +71,7 @@ class TabViewModelStoreTest {
     @Test
     fun parkedTabKeepsViewModelsUntilClosed() = runComposeUiTest {
         val controller = TabsController(
-            homeNav = Navigation3Actions(Screen.RecentScreen),
+            homeNav = TabNavigation3Actions(Screen.RecentScreen),
             keys = TabKeys(listOf(CoreTabKeyProvider)),
             prefs = TabPrefsSnapshot(clickOpensNewTab = false),
         )

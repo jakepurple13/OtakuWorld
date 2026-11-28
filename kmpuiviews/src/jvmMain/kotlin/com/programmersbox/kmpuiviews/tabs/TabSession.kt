@@ -51,16 +51,19 @@ data class WindowSession(
     val tabs: List<TabSessionEntry>,
 )
 
-/** Each key is its own [JsonElement], so one key that no longer decodes can't fail the whole file. */
+/**
+ * Each key is its own [JsonElement], so one key that no longer decodes can't fail the whole file. [backStack] is the
+ * tab's whole history (the name predates that); [index] is the entry shown, -1 (an older file) meaning the last.
+ */
 @Serializable
-data class TabSessionEntry(val pinned: Boolean, val backStack: List<JsonElement>)
+data class TabSessionEntry(val pinned: Boolean, val backStack: List<JsonElement>, val index: Int = -1)
 
 /**
  * The NavKeys a module can show, registered under `polymorphic(NavKey::class)`. kmpuiviews registers [Screen] and its
  * desktop pages ([CoreNavKeySerializers]); each app registers its own as a Koin single.
  *
  * [restorable] is false for a key that would come back wrong after a relaunch (a streamed reader or player needs the
- * chapter its click handed over). The saved stack is cut before it, so a reader opened from Details returns as Details.
+ * chapter its click handed over). It is left out of the saved history, so a reader opened from Details returns as Details.
  */
 class NavKeySerializers(val module: SerializersModule, val restorable: (NavKey) -> Boolean = { true })
 

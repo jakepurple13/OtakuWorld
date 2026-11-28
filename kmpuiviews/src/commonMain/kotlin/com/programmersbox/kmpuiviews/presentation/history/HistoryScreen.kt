@@ -756,7 +756,7 @@ fun HistoryItem(
             modifier = Modifier
                 .semantics { selected = isSelected }
                 // Selection mode clicks toggle selection, so there is nothing to open in a tab
-                .then(if (selectionMode) Modifier else Modifier.tabTarget(onOpen = onClick, onMore = onInfo))
+                .then(if (selectionMode) Modifier else Modifier.tabTarget(onOpen = onClick, onMore = onInfo, item = SharedItemKey(item.url, item.source)))
                 .combinedClickable(
                     onClick = onClick,
                     onLongClick = {

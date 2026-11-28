@@ -5,7 +5,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
 import org.koin.core.annotation.KoinExperimentalAPI
 import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -47,7 +46,7 @@ class TabSessionTest {
     }
 
     private fun newController() = TabsController(
-        homeNav = Navigation3Actions(Screen.RecentScreen),
+        homeNav = TabNavigation3Actions(Screen.RecentScreen),
         keys = TabKeys(listOf(CoreTabKeyProvider)),
         prefs = TabPrefsSnapshot(clickOpensNewTab = false),
     )
@@ -62,7 +61,7 @@ class TabSessionTest {
 
     private val TabsController.main get() = windows.first { it.isMain }
     private val BrowserWindowState.active get() = tabs.first { it.id == activeId.value }
-    private fun BrowserWindowState.stacks(): List<List<NavKey>> = tabs.map { it.nav.backStack.toList() }
+    private fun BrowserWindowState.stacks(): List<List<NavKey>> = tabs.map { it.nav.history.entries.toList() }
 
     private fun unknownKey(): JsonElement = buildJsonObject { put("type", JsonPrimitive("com.example.GoneRoute")) }
 
@@ -96,11 +95,11 @@ class TabSessionTest {
         // Home: a title opened in place on top of Recent.
         before.main.tabs.first().nav.navigate(title("H"))
         val a = before.open(title("A"), TabOpenMode.Foreground, homeId)
-        before.main.tabs.first { it.id == a }.nav.navBackStack.add(Screen.WebViewScreen("https://a"))
+        before.main.tabs.first { it.id == a }.nav.navigate(Screen.WebViewScreen("https://a"))
         val b = before.open(title("B"), TabOpenMode.Background, homeId)
         val c = before.open(title("C"), TabOpenMode.NewWindow, homeId)
         val torn = before.windowOf(c)
-        torn.tabs.first().nav.navBackStack.add(Screen.WebViewScreen("https://c"))
+        torn.tabs.first().nav.navigate(Screen.WebViewScreen("https://c"))
         torn.bounds.value = WindowBounds(300.dp, 200.dp, 640.dp, 480.dp)
         before.main.bounds.value = WindowBounds(10.dp, 20.dp, 900.dp, 700.dp)
         before.activate(b)
@@ -189,7 +188,24 @@ class TabSessionTest {
     }
 
     @Test
-    fun homeRestoresOnlyItsCurrentTopLevelStack() {
+    fun homeHistoryIsSaved() {
+        val before = newController()
+        val home = before.main.tabs.first().nav
+        home.navigate(Screen.FavoriteScreen)
+        home.navigate(title("A"))
+
+        store.save(before)
+        val after = newController()
+        after.startSession(OnLaunch.Restore, onboardingDone = true, session = store.load(), decode = store::decode)
+
+        val restored = after.main.tabs.first().nav
+        assertEquals(listOf<NavKey>(Screen.RecentScreen, Screen.FavoriteScreen, title("A")), restored.history.entries)
+        assertEquals(2, restored.history.index)
+        assertTrue(restored.history.canGoBack)
+    }
+
+    @Test
+    fun homeSavesItsWholeHistory() {
         val before = newController()
         val home = before.main.tabs.first().nav
         home.navigate(title("H"))
@@ -201,9 +217,69 @@ class TabSessionTest {
         after.startSession(OnLaunch.Restore, onboardingDone = true, session = store.load(), decode = store::decode)
 
         assertEquals(
-            listOf<NavKey>(Screen.RecentScreen, Screen.Settings, Screen.GeneralSettings),
-            after.main.tabs.first().nav.backStack.toList(),
+            listOf<NavKey>(Screen.RecentScreen, title("H"), Screen.Settings, Screen.GeneralSettings),
+            after.main.tabs.first().nav.history.entries,
         )
+    }
+
+    @Test
+    fun sessionRoundTripsHistoryAndIndex() {
+        val before = newController()
+        val id = before.open(title("A"), TabOpenMode.Foreground, before.main.tabs.first().id)
+        val nav = before.main.tabs.first { it.id == id }.nav
+        nav.navigate(Screen.HistoryScreen)
+        nav.navigate(Screen.FavoriteScreen)
+        nav.history.jumpTo(1)
+
+        store.save(before)
+        val after = newController()
+        after.startSession(OnLaunch.Restore, onboardingDone = true, session = store.load(), decode = store::decode)
+
+        val restored = after.main.tabs.last().nav
+        assertEquals(listOf<NavKey>(title("A"), Screen.HistoryScreen, Screen.FavoriteScreen), restored.history.entries)
+        assertEquals(1, restored.history.index)
+    }
+
+    @Test
+    fun restoreSkipsUnrestorableEntriesAndRemapsIndex() {
+        val session = TabSession(
+            windows = listOf(
+                WindowSession(
+                    bounds = null,
+                    isMain = true,
+                    activeIndex = 1,
+                    tabs = listOf(
+                        TabSessionEntry(pinned = true, backStack = listOf(encoded(Screen.RecentScreen))),
+                        TabSessionEntry(
+                            pinned = false,
+                            backStack = listOf(encoded(title("A")), unknownKey(), encoded(Screen.HistoryScreen), encoded(Screen.FavoriteScreen)),
+                            index = 2,
+                        ),
+                    ),
+                ),
+            )
+        )
+
+        val after = newController()
+        after.startSession(OnLaunch.Restore, onboardingDone = true, session = session, decode = store::decode)
+
+        val nav = after.main.tabs.last().nav
+        assertEquals(listOf<NavKey>(title("A"), Screen.HistoryScreen, Screen.FavoriteScreen), nav.history.entries)
+        assertEquals(1, nav.history.index)
+    }
+
+    @Test
+    fun oldSessionWithoutIndexOpensOnLastEntry() {
+        val json = """{"windows":[{"isMain":true,"activeIndex":1,"tabs":[
+            {"pinned":true,"backStack":[${encoded(Screen.RecentScreen)}]},
+            {"pinned":false,"backStack":[${encoded(title("A"))},${encoded(Screen.HistoryScreen)}]}]}],"version":1}"""
+        file.writeText(json)
+
+        val after = newController()
+        after.startSession(OnLaunch.Restore, onboardingDone = true, session = store.load(), decode = store::decode)
+
+        assertEquals(Screen.HistoryScreen, after.main.active.current)
+        assertEquals(2, after.main.tabs.last().nav.history.entries.size)
     }
 
     @Test
@@ -218,7 +294,7 @@ class TabSessionTest {
                         TabSessionEntry(pinned = true, backStack = listOf(encoded(Screen.RecentScreen))),
                         // Its only page is gone: the tab is dropped, and it was the active one.
                         TabSessionEntry(pinned = false, backStack = listOf(unknownKey())),
-                        // Keeps the decodable prefix.
+                        // Keeps every decodable entry.
                         TabSessionEntry(
                             pinned = false,
                             backStack = listOf(encoded(title("A")), unknownKey(), encoded(Screen.WebViewScreen("x"))),
@@ -241,7 +317,7 @@ class TabSessionTest {
 
         assertEquals(1, after.windows.size)
         assertEquals(
-            listOf(listOf<NavKey>(Screen.RecentScreen), listOf<NavKey>(title("A"))),
+            listOf(listOf<NavKey>(Screen.RecentScreen), listOf<NavKey>(title("A"), Screen.WebViewScreen("x"))),
             after.main.stacks(),
         )
         assertTrue(after.main.active.pinned)
@@ -264,6 +340,35 @@ class TabSessionTest {
         assertFalse(after.takeRestored(restoredA.id, title("B")))
         val opened = after.open(title("C"), TabOpenMode.Foreground, home.id)
         assertFalse(after.takeRestored(opened, title("C")))
+    }
+
+    @Test
+    fun forwardPagesOfARestoredHistoryAreNotRestored() {
+        val session = TabSession(
+            windows = listOf(
+                WindowSession(
+                    bounds = null,
+                    isMain = true,
+                    activeIndex = 1,
+                    tabs = listOf(
+                        TabSessionEntry(pinned = true, backStack = listOf(encoded(Screen.RecentScreen))),
+                        TabSessionEntry(
+                            pinned = false,
+                            backStack = listOf(encoded(title("A")), encoded(title("B")), encoded(title("C"))),
+                            index = 1,
+                        ),
+                    ),
+                ),
+            )
+        )
+        val after = newController()
+        after.startSession(OnLaunch.Restore, onboardingDone = true, session = session, decode = store::decode)
+        val tab = after.main.tabs.first { !it.pinned }
+
+        assertTrue(after.takeRestored(tab.id, title("B")))
+        assertTrue(after.takeRestored(tab.id, title("A")))
+        // A forward page the user opens later is a fresh visit.
+        assertFalse(after.takeRestored(tab.id, title("C")))
     }
 
     @Test
@@ -398,7 +503,7 @@ class TabSessionTest {
     }
 
     @Test
-    fun streamedReadersAreCutFromTheSavedStack() {
+    fun streamedReadersAreLeftOutOfTheSavedHistory() {
         val readerStore = TabSessionStore(
             file,
             navKeyJson(listOf(CoreNavKeySerializers, FakeReaderSerializers)),
@@ -408,7 +513,7 @@ class TabSessionTest {
         val homeId = before.main.tabs.first().id
         // Details, then a streamed reader opened from it: comes back as Details.
         val fromDetails = before.open(title("A"), TabOpenMode.Foreground, homeId)
-        before.main.tabs.first { it.id == fromDetails }.nav.navBackStack.add(FakeReader(downloaded = false))
+        before.main.tabs.first { it.id == fromDetails }.nav.navigate(FakeReader(downloaded = false))
         // Only a streamed reader: dropped.
         before.open(FakeReader(downloaded = false, url = "only"), TabOpenMode.Background, homeId)
         // A downloaded reader reads its file: kept.

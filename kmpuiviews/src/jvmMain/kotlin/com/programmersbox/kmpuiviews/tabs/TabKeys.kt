@@ -8,7 +8,7 @@ import com.programmersbox.kmpuiviews.motion.MotionSettingsRoute
 import com.programmersbox.kmpuiviews.presentation.Screen
 import net.thauvin.erik.urlencoder.UrlEncoderUtil
 
-/** Identity of a tab's content. Navigating to a key that is already open focuses that tab instead of opening another. */
+/** Identity of a tab's content. */
 sealed interface TabKey {
     data class Title(val url: String, val source: String) : TabKey
     data class Chapter(val url: String) : TabKey
@@ -19,19 +19,6 @@ sealed interface TabKey {
     data class SingleList(val uuid: String) : TabKey
     data object Downloads : TabKey
 }
-
-val TabKey.isSingleInstanceFamily: Boolean
-    get() = when (this) {
-        TabKey.Settings,
-        TabKey.Search,
-        TabKey.Lists,
-        TabKey.Notifications,
-        TabKey.Downloads -> true
-
-        is TabKey.Title,
-        is TabKey.Chapter,
-        is TabKey.SingleList -> false
-    }
 
 data class TabLabel(val text: String, val imageUrl: String?, val icon: ImageVector?)
 

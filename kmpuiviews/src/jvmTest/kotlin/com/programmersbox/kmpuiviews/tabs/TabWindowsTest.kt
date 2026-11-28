@@ -6,7 +6,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
 import com.programmersbox.kmpuiviews.motion.OverlayPlatform
 import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -16,7 +15,7 @@ import kotlin.test.assertTrue
 class TabWindowsTest {
 
     private val controller = TabsController(
-        homeNav = Navigation3Actions(Screen.RecentScreen),
+        homeNav = TabNavigation3Actions(Screen.RecentScreen),
         keys = TabKeys(listOf(CoreTabKeyProvider)),
         prefs = TabPrefsSnapshot(clickOpensNewTab = false),
     )
@@ -155,7 +154,7 @@ class TabWindowsTest {
         assertEquals(listOf(main.id), controller.windows.map { it.id })
         assertEquals(main.id, controller.focusedWindow)
         // Every tab is recorded; the active one last, so ⌘⇧T brings it back first.
-        assertEquals(listOf<NavKey>(title("B"), title("C"), title("A")), controller.recentlyClosed.map { it.stack.last() })
+        assertEquals(listOf<NavKey>(title("B"), title("C"), title("A")), controller.recentlyClosed.map { it.current })
     }
 
     @Test
@@ -200,10 +199,8 @@ class TabWindowsTest {
         controller.close(b)
         assertTrue(controller.raiseRequest === beforeClose)
 
-        // Navigating to a title open in the torn window reuses that tab and asks its window forward.
-        main.tabs.first { it.id == homeId }.nav.details(
-            title = "A", description = "d", url = "url-A", imageUrl = "img-A", source = "src",
-        )
+        // Going to a tab in the torn window asks its window forward.
+        controller.goTo(a)
         assertEquals(torn, controller.focusedWindow)
         val request = controller.raiseRequest
         assertEquals(torn, request?.window)

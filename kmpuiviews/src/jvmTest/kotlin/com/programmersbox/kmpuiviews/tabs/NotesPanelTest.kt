@@ -2,7 +2,6 @@ package com.programmersbox.kmpuiviews.tabs
 
 import androidx.navigation3.runtime.NavKey
 import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -13,7 +12,7 @@ class NotesPanelTest {
     private val details = Screen.DetailsScreen.Details("t", "d", "https%3A%2F%2Fx.com%2Fa%3Fb%3D1", "i", "src")
 
     private fun tab(start: NavKey = details) =
-        TabState(TabId(1), Navigation3Actions(start), pinned = false)
+        TabState(TabId(1), TabNavigation3Actions(start), pinned = false)
 
     @Test
     fun toggleFlipsNotesOpenPerTab() {

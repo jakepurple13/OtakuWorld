@@ -5,10 +5,10 @@ import com.programmersbox.anime.shared.subtitles.SubtitleSettingsRoute
 import com.programmersbox.anime.shared.videos.LibraryFoldersRoute
 import com.programmersbox.anime.shared.videos.VideoViewerRoute
 import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import com.programmersbox.kmpuiviews.tabs.CoreTabKeyProvider
 import com.programmersbox.kmpuiviews.tabs.TabKey
 import com.programmersbox.kmpuiviews.tabs.TabKeys
+import com.programmersbox.kmpuiviews.tabs.TabNavigation3Actions
 import com.programmersbox.kmpuiviews.tabs.TabOpenMode
 import com.programmersbox.kmpuiviews.tabs.TabPrefsSnapshot
 import com.programmersbox.kmpuiviews.tabs.TabsController
@@ -27,14 +27,14 @@ class AnimeTabKeyProviderTest {
 
     @Test
     fun downloadsSubpagesStayInTheDownloadsTab() {
-        val home = Navigation3Actions(Screen.RecentScreen)
+        val home = TabNavigation3Actions(Screen.RecentScreen)
         val controller = TabsController(
             homeNav = home,
             keys = TabKeys(listOf(AnimeTabKeyProvider, CoreTabKeyProvider)),
             prefs = TabPrefsSnapshot(clickOpensNewTab = false),
         )
         val main = controller.windows.single()
-        // A Settings tab is open too, so a Settings key would be sent there.
+        // A Settings tab is open too; the subpages still stay in this tab.
         controller.open(Screen.Settings, TabOpenMode.Background, main.activeId.value)
         val downloads = controller.open(VideoViewerRoute, TabOpenMode.Foreground, main.activeId.value)
         val nav = main.tabs.first { it.id == downloads }.nav

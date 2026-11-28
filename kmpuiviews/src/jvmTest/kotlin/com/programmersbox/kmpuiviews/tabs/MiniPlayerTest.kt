@@ -6,7 +6,6 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,7 +38,7 @@ class MiniPlayerTest {
     }
 
     private val controller = TabsController(
-        homeNav = Navigation3Actions(Screen.RecentScreen),
+        homeNav = TabNavigation3Actions(Screen.RecentScreen),
         keys = TabKeys(listOf(CoreTabKeyProvider)),
         prefs = TabPrefsSnapshot(clickOpensNewTab = false),
     )

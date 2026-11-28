@@ -6,7 +6,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -61,7 +60,7 @@ class TabSleepTest {
     private var time = 0L
     private val holder = FakeHolder()
     private val controller = TabsController(
-        homeNav = Navigation3Actions(Screen.RecentScreen),
+        homeNav = TabNavigation3Actions(Screen.RecentScreen),
         keys = TabKeys(listOf(CoreTabKeyProvider)),
         prefs = TabPrefsSnapshot(clickOpensNewTab = false),
         now = { time },
@@ -226,7 +225,7 @@ class TabSleepTest {
     fun wakingKeepsBackStackAndSnapshot() {
         val a = open("1")
         val extra = Screen.WebViewScreen("url-1b")
-        tab(a).nav.navBackStack.add(extra)
+        tab(a).nav.navigate(extra)
         val stack = tab(a).nav.backStack.toList()
         controller.activate(a)
         pageViewModel(a, withHolder = true)

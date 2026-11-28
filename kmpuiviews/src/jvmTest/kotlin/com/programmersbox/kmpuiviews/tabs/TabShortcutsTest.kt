@@ -6,7 +6,6 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
 import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import kotlin.test.Test
 import androidx.navigation3.runtime.NavKey
 import kotlin.test.assertEquals
@@ -115,7 +114,7 @@ class TabShortcutsTest {
 
     @Test
     fun windowChromeFollowsItsActiveTab() {
-        val home = Navigation3Actions(Screen.RecentScreen)
+        val home = TabNavigation3Actions(Screen.RecentScreen)
         val controller = TabsController(
             homeNav = home,
             keys = TabKeys(listOf(CoreTabKeyProvider)),
@@ -148,7 +147,7 @@ class TabShortcutsTest {
     }
 
     private val controller = TabsController(
-        homeNav = Navigation3Actions(Screen.RecentScreen),
+        homeNav = TabNavigation3Actions(Screen.RecentScreen),
         keys = TabKeys(listOf(CoreTabKeyProvider)),
         prefs = TabPrefsSnapshot(clickOpensNewTab = false),
     )
@@ -326,11 +325,12 @@ class TabShortcutsTest {
         assertEquals(2, window.tabs.size)
         assertEquals(window.tabs[1].id, window.activeId.value)
         assertEquals(true, controller.searchFocus.pending)
-        // Again: switches to the same tab instead of opening a second one.
+        // Again: it goes to the open Search tab instead of opening another.
         controller.perform(TabShortcut.SwitchTo(1), window)
         controller.perform(TabShortcut.FocusSearch, window)
         assertEquals(2, window.tabs.size)
         assertEquals(window.tabs[1].id, window.activeId.value)
+        assertEquals(true, controller.searchFocus.pending)
     }
 
     private val capKeys = mapOf(

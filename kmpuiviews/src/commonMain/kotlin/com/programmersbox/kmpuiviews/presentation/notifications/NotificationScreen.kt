@@ -683,7 +683,7 @@ private fun NotificationRow(
                     .background(container)
                     .semantics { selected = isSelected }
                     // Selection mode clicks toggle selection, so there is nothing to open in a tab
-                    .then(if (selectionMode) Modifier else Modifier.tabTarget(onOpen = onClick, onMore = onMore))
+                    .then(if (selectionMode) Modifier else Modifier.tabTarget(onOpen = onClick, onMore = onMore, item = SharedItemKey(item.url, item.source)))
                     .combinedClickable(
                         onClick = onClick,
                         onLongClick = {

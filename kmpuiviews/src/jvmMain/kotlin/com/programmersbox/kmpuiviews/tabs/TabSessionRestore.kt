@@ -2,7 +2,6 @@ package com.programmersbox.kmpuiviews.tabs
 
 import androidx.compose.runtime.snapshotFlow
 import androidx.navigation3.runtime.NavKey
-import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
 import kotlinx.serialization.json.JsonElement
@@ -11,16 +10,15 @@ import kotlinx.serialization.json.JsonElement
 const val TAB_SESSION_SAVE_DEBOUNCE_MS = 1_000L
 
 /**
- * Every window and tab. Home saves only its current top-level stack. A stack stops at the first key [encode] can't
- * save, and a tab whose first key can't be saved is left out.
+ * Every window and tab, each with its whole history and where it is in it. Keys [encode] can't save are skipped, and a
+ * tab with none left is left out.
  */
 fun TabsController.toSession(encode: (NavKey) -> JsonElement?): TabSession = TabSession(
     windows = windows.map { window ->
         val saved = window.tabs.mapNotNull { tab ->
-            val stack = if (tab.pinned) tab.nav.currentTopLevelStack() else tab.nav.backStack.toList()
-            stack.decodablePrefix(encode)
-                .takeIf { it.isNotEmpty() }
-                ?.let { tab.id to TabSessionEntry(tab.pinned, it) }
+            val (entries, index) = keepConvertible(tab.nav.history.entries, tab.nav.history.index, encode)
+            entries.takeIf { it.isNotEmpty() }
+                ?.let { tab.id to TabSessionEntry(tab.pinned, it, index) }
         }
         WindowSession(
             bounds = window.bounds.value,
@@ -49,7 +47,7 @@ fun TabsController.startSession(
         OnLaunch.Restore -> session?.let { restore(it, decode, onScreen) }
         OnLaunch.Home -> Unit
         OnLaunch.NewTab -> {
-            val page = restoredTab(listOf(NewTabRoute))
+            val page = restoredTab(listOf(NewTabRoute), -1)
             main.tabs.add(page)
             activate(page.id)
         }
@@ -57,7 +55,7 @@ fun TabsController.startSession(
 }
 
 /**
- * Restores [session]'s tabs and torn-out windows. Each stack keeps its decodable prefix; a tab with none is dropped,
+ * Restores [session]'s tabs and torn-out windows. Each history keeps its decodable entries; a tab with none is dropped,
  * and a torn-out window with no tabs left is not recreated. Restored tabs stay parked until first shown.
  */
 fun TabsController.restore(
@@ -71,15 +69,15 @@ fun TabsController.restore(
 
     session.windows.forEach { saved ->
         val restored = saved.tabs.map { entry ->
-            val stack = entry.backStack.decodablePrefix(decode)
+            val (entries, index) = keepConvertible(entry.backStack, entry.index, decode)
             when {
-                stack.isEmpty() -> null
+                entries.isEmpty() -> null
                 entry.pinned && saved.isMain -> home.also {
-                    it.nav.restoreTopLevelStack(stack)
-                    markRestored(it.id, stack)
+                    it.nav.restoreHistory(entries, index)
+                    markRestored(it)
                 }
                 entry.pinned -> null
-                else -> restoredTab(stack)
+                else -> restoredTab(entries, index)
             }
         }
         val active = restored.getOrNull(saved.activeIndex)
@@ -111,22 +109,18 @@ suspend fun TabSessionStore.autosave(controller: TabsController, writes: Pending
         .collect { session -> writes.launch { write(session) } }
 }
 
-/** The keys up to the first one [convert] can't handle. */
-private fun <A, B : Any> List<A>.decodablePrefix(convert: (A) -> B?): List<B> {
-    val out = mutableListOf<B>()
-    for (item in this) out += convert(item) ?: break
-    return out
-}
-
-/** The stack of the top-level destination Home is on now (Recent's own stack, or e.g. Settings and what's above it). */
-private fun Navigation3Actions.currentTopLevelStack(): List<NavKey> {
-    val keys = backStack.toList()
-    val start = keys.lastIndexOf(navBackStack.topLevelKey).coerceAtLeast(0)
-    return keys.subList(start, keys.size)
-}
-
-/** Puts [stack] back as Home's current top-level stack, above its root. */
-private fun Navigation3Actions.restoreTopLevelStack(stack: List<NavKey>) {
-    if (stack.first() != backStack.first()) navBackStack.addTopLevel(stack.first())
-    stack.drop(1).forEach { navBackStack.add(it) }
+/**
+ * The items [convert] can handle, and where [index] lands among them: the last kept item at or before it (0 if none).
+ * A negative [index] means the last item.
+ */
+private fun <A, B : Any> keepConvertible(items: List<A>, index: Int, convert: (A) -> B?): Pair<List<B>, Int> {
+    val at = if (index < 0) items.lastIndex else index
+    val kept = mutableListOf<B>()
+    var keptIndex = 0
+    items.forEachIndexed { i, item ->
+        val converted = convert(item) ?: return@forEachIndexed
+        kept += converted
+        if (i <= at) keptIndex = kept.lastIndex
+    }
+    return kept to keptIndex
 }

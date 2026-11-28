@@ -15,17 +15,19 @@ import com.programmersbox.kmpuiviews.presentation.tabs.SearchFocusRequest
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import net.thauvin.erik.urlencoder.UrlEncoderUtil
 
 /** Asks [window] to come to the front. Compared by identity: each request is a new one. */
 class RaiseRequest(val window: WindowId)
 
 /**
- * Owns every desktop window and tab. Each tab's [Navigation3Actions] routes its pushes through
- * [intercept], which keeps one tab per title and sends single-instance pages to their own tab.
+ * Owns every desktop window and tab. Each tab's [TabNavigation3Actions] routes its pushes through
+ * [intercept], which sends armed clicks (and titles, with "click opens new tab") to new tabs. A page
+ * may be open in any number of tabs.
  */
 class TabsController(
-    homeNav: Navigation3Actions,
-    private val keys: TabKeys,
+    homeNav: TabNavigation3Actions,
+    internal val keys: TabKeys,
     prefs: TabPrefsSnapshot,
     private val now: () -> Long = System::currentTimeMillis,
     private val handoffs: List<TabHandoff> = emptyList(),
@@ -126,25 +128,8 @@ class TabsController(
         }
 
         val tk = keys.keyOf(key)
-        // An untouched new tab page gives way: it becomes the page, or closes when the page is already open.
+        // An untouched new tab page gives way: it becomes the page.
         val replacesNewTab = fromTab.isUntouchedNewTab
-        if (tk != null) {
-            val existing = allTabs().firstOrNull { it !== fromTab && keys.keyOf(it.current) == tk }
-            if (existing != null) {
-                reuse(existing, key, activate = true)
-                if (replacesNewTab) {
-                    discard(fromTab)
-                    // Closing it activated a neighbor in its own window; the reused tab keeps focus.
-                    activate(existing.id)
-                }
-                return true
-            }
-            if (tk.isSingleInstanceFamily && keys.keyOf(fromTab.current) != tk && !replacesNewTab) {
-                open(key, TabOpenMode.Foreground, fromTab.id)
-                return true
-            }
-        }
-
         if (prefs.clickOpensNewTab && tk is TabKey.Title && !replacesNewTab) {
             open(key, TabOpenMode.Foreground, fromTab.id)
             return true
@@ -154,20 +139,12 @@ class TabsController(
         if (handoffs.isNotEmpty()) handoffOwner = fromTab.id
         val focused = window(focusedWindow)
         if (focused?.activeId?.value != fromTab.id) activate(fromTab.id)
-        fromTab.forward.clear()
         return false
     }
 
     fun open(key: NavKey, requested: TabOpenMode, from: TabId, origin: Rect? = null): TabId {
         // With "Drag tabs out into windows" off, nothing opens a window.
         val mode = if (requested == TabOpenMode.NewWindow && !prefs.tearOut) TabOpenMode.Foreground else requested
-        val tk = keys.keyOf(key)
-        val existing = tk?.let { allTabs().firstOrNull { tab -> keys.keyOf(tab.current) == tk } }
-        if (existing != null) {
-            reuse(existing, key, activate = mode != TabOpenMode.Background)
-            return existing.id
-        }
-
         val tab = newTab(key)
         // The click that opened it just wrote its chapter into the handoff holders.
         if (handoffs.isNotEmpty()) snapshots[tab.id] = captureHandoffs()
@@ -249,7 +226,7 @@ class TabsController(
         restoredKeys.remove(tab)
         if (handoffOwner == tab) handoffOwner = null
         if (record) {
-            closed.add(ClosedTab(state.nav.backStack.toList(), held))
+            closed.add(ClosedTab(state.nav.history.entries.toList(), state.nav.history.index, held))
             while (closed.size > prefs.closedKept) closed.removeFirst()
         }
         // Content still on screen (a crossfade frame) keeps its store until it leaves composition.
@@ -296,21 +273,8 @@ class TabsController(
         val newTabPage = replacing?.let(::findTab)?.takeIf { it.isUntouchedNewTab }
         val closedTab = if (entry != null) entry.takeIf { closed.remove(it) } else closed.removeLastOrNull()
         if (closedTab == null) return null
-        val stack = closedTab.stack
-        val tk = keys.keyOf(stack.last())
-        val existing = tk?.let { allTabs().firstOrNull { tab -> keys.keyOf(tab.current) == tk } }
-        if (existing != null) {
-            activate(existing.id)
-            emit(TabEvent.Flash(existing.id))
-            newTabPage?.let {
-                discard(it)
-                activate(existing.id)
-            }
-            return existing.id
-        }
-
-        val tab = newTab(stack.first())
-        stack.drop(1).forEach { tab.nav.navBackStack.add(it) }
+        val tab = newTab(closedTab.entries.first())
+        tab.nav.restoreHistory(closedTab.entries, closedTab.index)
         closedTab.handoffs?.let { snapshots[tab.id] = it }
 
         val newTabIndex = newTabPage?.let { page -> target.tabs.indexOfFirst { it.id == page.id } } ?: -1
@@ -323,16 +287,38 @@ class TabsController(
     }
 
     fun back(tab: TabId) {
-        val state = findTab(tab) ?: return
-        if (state.nav.backStack.size <= 1) return
-        state.forward.add(state.current)
-        state.nav.popBackStack()
+        findTab(tab)?.nav?.popBackStack()
     }
 
     fun forward(tab: TabId) {
-        val state = findTab(tab) ?: return
-        val key = state.forward.removeLastOrNull() ?: return
-        state.nav.navBackStack.add(key)
+        findTab(tab)?.nav?.forward()
+    }
+
+    /** Shows [tab]'s history entry at [index]. */
+    fun jumpTo(tab: TabId, index: Int) {
+        findTab(tab)?.nav?.jumpTo(index)
+    }
+
+    /**
+     * The other tabs showing the title at raw [url] from [source], except [except]: [except]'s window first, then
+     * the other windows in order.
+     */
+    fun tabsShowingTitle(url: String, source: String, except: TabId): List<TabState> {
+        val key = TabKey.Title(UrlEncoderUtil.encode(url), source)
+        val home = findTab(except)?.let { windowOf(it.id) }
+        return (listOfNotNull(home) + windows.filter { it !== home })
+            .flatMap { it.tabs }
+            .filter { it.id != except && keys.keyOf(it.current) == key }
+    }
+
+    /** The first tab of [window] whose current page is [key], or null. */
+    fun tabShowing(key: TabKey, window: WindowId): TabState? =
+        window(window)?.tabs?.firstOrNull { keys.keyOf(it.current) == key }
+
+    /** Switches to [tab], raising its window, and flashes it. */
+    fun goTo(tab: TabId) {
+        activate(tab)
+        emit(TabEvent.Flash(tab))
     }
 
     /** Drops [tab]'s pending arm, if any. */
@@ -396,15 +382,22 @@ class TabsController(
     fun windowOf(tab: TabId): BrowserWindowState =
         windows.first { window -> window.tabs.any { it.id == tab } }
 
-    /** A tab for a restored session showing [stack]. Nothing composes or loads until it is first shown. */
-    internal fun restoredTab(stack: List<NavKey>): TabState = newTab(stack.first()).also { tab ->
-        stack.drop(1).forEach { tab.nav.navBackStack.add(it) }
-        markRestored(tab.id, stack)
+    /**
+     * A tab for a restored session with history [entries] at [index] (below zero: the last). Nothing composes or
+     * loads until it is first shown.
+     */
+    internal fun restoredTab(entries: List<NavKey>, index: Int): TabState = newTab(entries.first()).also { tab ->
+        tab.nav.restoreHistory(entries, index)
+        markRestored(tab)
     }
 
-    /** [stack]'s pages in [tab] came from a session restore. */
-    internal fun markRestored(tab: TabId, stack: List<NavKey>) {
-        restoredKeys.getOrPut(tab) { mutableSetOf() }.addAll(stack)
+    /**
+     * [tab]'s pages at or before its history position came from a session restore. Forward pages are left out: one
+     * the user opens later is a fresh visit.
+     */
+    internal fun markRestored(tab: TabState) {
+        val history = tab.nav.history
+        restoredKeys.getOrPut(tab.id) { mutableSetOf() }.addAll(history.entries.take(history.index + 1))
     }
 
     /**
@@ -448,7 +441,7 @@ class TabsController(
 
     private fun newTab(key: NavKey) = TabState(
         id = TabId(nextId++),
-        nav = Navigation3Actions(startKey = key).also { it.interceptor = this },
+        nav = TabNavigation3Actions(key).also { it.interceptor = this },
         pinned = false,
     ).also { lastShown[it.id] = now() }
 
@@ -481,16 +474,6 @@ class TabsController(
                 .firstNotNullOfOrNull { id -> tabs.firstOrNull { it.id == id } }
                 ?: right ?: leftOf!!
         }
-    }
-
-    /** Switches to [tab], which already shows [key]'s identity. Single-instance tabs also navigate to [key]. */
-    private fun reuse(tab: TabState, key: NavKey, activate: Boolean) {
-        if (activate) activate(tab.id)
-        if (keys.keyOf(key)?.isSingleInstanceFamily == true && tab.current != key) {
-            tab.forward.clear()
-            tab.nav.navBackStack.add(key)
-        }
-        emit(TabEvent.Flash(tab.id))
     }
 
     /**

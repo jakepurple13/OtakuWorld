@@ -17,8 +17,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Search
@@ -46,13 +44,17 @@ import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.custom_lists_title
 import otakuworld.kmpuiviews.generated.resources.global_search
 import otakuworld.kmpuiviews.generated.resources.settings
-import otakuworld.kmpuiviews.generated.resources.tabs_back
 import otakuworld.kmpuiviews.generated.resources.tabs_downloads
-import otakuworld.kmpuiviews.generated.resources.tabs_forward
 
-/** "App / Title / Chapter": the app name, then each page of the tab's back stack. */
-fun tabPath(appName: String, backStack: List<NavKey>, keys: TabKeys): String =
-    (listOf(appName) + backStack.map { keys.labelOf(it).text }).joinToString(" / ")
+/**
+ * "App / … / Search / Title / Chapter": the app name, then the last [maxPages] pages of the tab's back stack, with "…"
+ * after the app name when earlier pages were left out.
+ */
+fun tabPath(appName: String, backStack: List<NavKey>, keys: TabKeys, maxPages: Int = 3): String {
+    val shown = backStack.takeLast(maxPages).map { keys.labelOf(it).text }
+    val trimmed = if (backStack.size > maxPages) listOf("…") else emptyList()
+    return (listOf(appName) + trimmed + shown).joinToString(" / ")
+}
 
 @Composable
 fun TabToolbar(
@@ -61,7 +63,7 @@ fun TabToolbar(
     keys: TabKeys = koinInject(),
     appConfig: AppConfig = koinInject(),
 ) {
-    // Through the tab's own navigation, so the interceptor opens each page's tab once and then switches to it.
+    // Through the tab's own navigation, so each page joins this tab's history (an armed click still opens a new tab).
     val nav = tab.nav
 
     Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
@@ -73,15 +75,14 @@ fun TabToolbar(
                     .height(44.dp)
                     .padding(horizontal = 4.dp),
             ) {
-                IconButton(
-                    onClick = { controller.back(tab.id) },
-                    enabled = tab.nav.backStack.size > 1,
-                ) { Icon(Icons.AutoMirrored.Default.ArrowBack, stringResource(Res.string.tabs_back)) }
-
-                IconButton(
-                    onClick = { controller.forward(tab.id) },
-                    enabled = tab.forward.isNotEmpty(),
-                ) { Icon(Icons.AutoMirrored.Default.ArrowForward, stringResource(Res.string.tabs_forward)) }
+                HistoryNavButtons(
+                    tab = tab,
+                    keys = keys,
+                    reducedMotion = controller.motion.reduced,
+                    onBack = { controller.back(tab.id) },
+                    onForward = { controller.forward(tab.id) },
+                    onJump = { controller.jumpTo(tab.id, it) },
+                )
 
                 // The address bar: the tab's path, with Refresh at its end.
                 Surface(
@@ -128,7 +129,6 @@ fun TabToolbar(
                     }
                 }
 
-                // Not nav.settings(): that switches top-level destinations and skips the interceptor.
                 IconButton(onClick = { nav.navigate(Screen.Settings) }) {
                     BadgedBox(badge = { if (updateCheck()) Badge { Text("") } }) {
                         Icon(Icons.Default.Settings, stringResource(Res.string.settings))
