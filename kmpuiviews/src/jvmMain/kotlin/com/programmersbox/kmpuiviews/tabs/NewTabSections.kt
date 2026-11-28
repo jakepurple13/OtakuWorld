@@ -175,7 +175,7 @@ internal fun NewTabClosed(
         } else {
             Column {
                 closed.forEach { entry ->
-                    val label = keys.labelOf(entry.stack.last())
+                    val label = keys.labelOf(entry.current)
                     ListItem(
                         headlineContent = { Text(label.text, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                         leadingContent = { Icon(label.icon ?: Icons.Default.Restore, null) },

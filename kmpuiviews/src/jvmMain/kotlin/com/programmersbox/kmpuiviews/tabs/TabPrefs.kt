@@ -270,7 +270,7 @@ internal val desktopTabsModule: Module = module {
     }
     single(createdAtStart = true) {
         TabsController(
-            homeNav = get<Navigation3Actions>(),
+            homeNav = get<Navigation3Actions>() as TabNavigation3Actions,
             keys = get(),
             prefs = TabPrefsSnapshot(clickOpensNewTab = false),
             handoffs = getAll(),

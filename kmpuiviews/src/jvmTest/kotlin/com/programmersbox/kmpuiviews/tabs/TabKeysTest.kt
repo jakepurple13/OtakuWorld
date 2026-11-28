@@ -105,15 +105,6 @@ class TabKeysTest {
     }
 
     @Test
-    fun singleInstanceFamily() {
-        listOf(TabKey.Settings, TabKey.Search, TabKey.Lists, TabKey.Notifications, TabKey.Downloads)
-            .forEach { assertTrue(it.isSingleInstanceFamily) }
-        assertTrue(!TabKey.Title("u", "s").isSingleInstanceFamily)
-        assertTrue(!TabKey.Chapter("u").isSingleInstanceFamily)
-        assertTrue(!TabKey.SingleList("u").isSingleInstanceFamily)
-    }
-
-    @Test
     fun homeSectionsHaveNoKey() {
         listOf<NavKey>(
             Screen.RecentScreen,

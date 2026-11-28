@@ -49,7 +49,7 @@ fun TabsController.startSession(
         OnLaunch.Restore -> session?.let { restore(it, decode, onScreen) }
         OnLaunch.Home -> Unit
         OnLaunch.NewTab -> {
-            val page = restoredTab(listOf(NewTabRoute))
+            val page = restoredTab(listOf(NewTabRoute), -1)
             main.tabs.add(page)
             activate(page.id)
         }
@@ -79,7 +79,7 @@ fun TabsController.restore(
                     markRestored(it.id, stack)
                 }
                 entry.pinned -> null
-                else -> restoredTab(stack)
+                else -> restoredTab(stack, -1)
             }
         }
         val active = restored.getOrNull(saved.activeIndex)

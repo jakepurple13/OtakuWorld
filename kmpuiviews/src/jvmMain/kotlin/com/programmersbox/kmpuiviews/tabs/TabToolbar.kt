@@ -64,12 +64,12 @@ fun TabToolbar(
             ) {
                 IconButton(
                     onClick = { controller.back(tab.id) },
-                    enabled = tab.nav.backStack.size > 1,
+                    enabled = tab.nav.history.canGoBack,
                 ) { Icon(Icons.AutoMirrored.Default.ArrowBack, stringResource(Res.string.tabs_back)) }
 
                 IconButton(
                     onClick = { controller.forward(tab.id) },
-                    enabled = tab.forward.isNotEmpty(),
+                    enabled = tab.nav.history.canGoForward,
                 ) { Icon(Icons.AutoMirrored.Default.ArrowForward, stringResource(Res.string.tabs_forward)) }
 
                 Text(

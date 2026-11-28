@@ -5,7 +5,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
 import org.koin.core.annotation.KoinExperimentalAPI
 import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -47,7 +46,7 @@ class TabSessionTest {
     }
 
     private fun newController() = TabsController(
-        homeNav = Navigation3Actions(Screen.RecentScreen),
+        homeNav = TabNavigation3Actions(Screen.RecentScreen),
         keys = TabKeys(listOf(CoreTabKeyProvider)),
         prefs = TabPrefsSnapshot(clickOpensNewTab = false),
     )
@@ -200,8 +199,9 @@ class TabSessionTest {
         val after = newController()
         after.startSession(OnLaunch.Restore, onboardingDone = true, session = store.load(), decode = store::decode)
 
+        // Home's history has no top-level stacks any more: Settings is pushed, so the whole stack is saved.
         assertEquals(
-            listOf<NavKey>(Screen.RecentScreen, Screen.Settings, Screen.GeneralSettings),
+            listOf<NavKey>(Screen.RecentScreen, title("H"), Screen.Settings, Screen.GeneralSettings),
             after.main.tabs.first().nav.backStack.toList(),
         )
     }
