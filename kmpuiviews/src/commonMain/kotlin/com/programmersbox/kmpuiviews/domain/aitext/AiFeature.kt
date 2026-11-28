@@ -163,6 +163,26 @@ sealed class AiFeature<in I>(
         override fun prepare(input: ErrorDetails) =
             "Source: ${input.sourceName}\nError:\n${input.detail.take(MAX_ERROR_DETAIL_CHARS)}"
     }
+
+    /** Explains an error from the Exceptions screen that has no fixed explanation. */
+    data object ExplainException : AiFeature<ErrorDetails>(
+        system = "You explain an error from a manga, anime or novel reading app. " +
+                "The reader is not technical. In 2 sentences, say what most likely went wrong and one thing " +
+                "they can try. Don't mention code, exceptions or stack traces. Return only the explanation.",
+    ) {
+        override val toggle = AiToggle.ErrorExplanations
+        override fun prepare(input: ErrorDetails) =
+            "Source: ${input.sourceName}\nError:\n${input.detail.take(MAX_ERROR_DETAIL_CHARS)}"
+    }
+
+    /** Summarizes the last day's errors: what they have in common and what to do. */
+    data object ExceptionDigest : AiFeature<List<String>>(
+        system = "You summarize recent errors from a manga, anime or novel reading app for a non-technical reader. " +
+                "In 2 or 3 sentences, say what the errors have in common and what to do. Return only the summary.",
+    ) {
+        override val toggle = AiToggle.ErrorExplanations
+        override fun prepare(input: List<String>) = input.take(MAX_DIGEST_LINES).joinToString("\n") { "- $it" }
+    }
 }
 
 /** A favorite to tag: its title, description and the moods the AI may pick from. */
@@ -172,6 +192,7 @@ data class MoodInput(val title: String, val description: String, val choices: Li
 data class ErrorDetails(val sourceName: String, val detail: String)
 
 private const val MAX_ERROR_DETAIL_CHARS = 1_500
+private const val MAX_DIGEST_LINES = 20
 private const val MAX_UPDATE_LINES = 25
 private const val MAX_DESCRIBE_CHARS = 300
 private const val MAX_KEYWORDS = 6
@@ -208,4 +229,6 @@ val AiFeature<*>.telemetryName: String
         AiFeature.SearchKeywords -> "search_keywords"
         AiFeature.MoodTags -> "mood_tags"
         AiFeature.ExplainError -> "explain_error"
+        AiFeature.ExplainException -> "explain_exception"
+        AiFeature.ExceptionDigest -> "exception_digest"
     }

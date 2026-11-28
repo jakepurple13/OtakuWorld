@@ -36,6 +36,14 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v33.0.0...develop_
 
 #### New Features
 
+- **Exceptions screen redesigned:** errors are grouped by day on a timeline, with a 24-hour graph
+  and an AI summary of recent errors. Each error has a plain-language headline (like "MangaDex took
+  too long to answer"), a fixed explanation for common errors and an on-device AI explanation for
+  the rest. More info opens a detail page with the source, extension, how often it happened this
+  week, the stack trace, Copy (a Markdown report), Share (Save… on Desktop) and a Source menu
+  (Open website, Check for extension update, Browse source, Source settings). Deleting slides the
+  error away with Undo. Desktop shows the timeline and the details side by side, with keyboard
+  shortcuts and a right-click menu
 - **New onboarding:** 9 steps (Welcome, Look, Layout, Sources, an app-specific step, Sync &
   privacy, Updates, Tips, Done) with a progress bar, live previews, and a Skip button that asks
   before skipping. Each app adds its own step: MangaWorld reader settings, AnimeWorld player and
