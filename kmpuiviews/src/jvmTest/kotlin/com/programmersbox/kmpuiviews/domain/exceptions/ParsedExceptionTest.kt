@@ -122,6 +122,19 @@ class ParsedExceptionTest {
         assertEquals(ExceptionHeadline.ServerError, parseException("java.io.IOException: HTTP 502").headline)
     }
 
+    // Minor 3: message lines that happen to start with "at " aren't stack frames.
+    @Test
+    fun htmlLineStartingWithAtStaysInMessage() {
+        val text = "kotlinx.serialization.json.internal.JsonDecodingException: Unexpected JSON token\n" +
+            "JSON input: <p>Sorry\n" +
+            "at the moment we are down for maintenance</p>\n" +
+            "\tat eu.kanade.tachiyomi.extension.all.comickfun.Comick.searchMangaParse(Comick.kt:301)"
+        val p = parseException(text)
+        assertTrue(p.message.contains("at the moment we are down"), p.message)
+        assertEquals(1, p.frames.size)
+        assertTrue(p.frames.single().text.startsWith("at eu.kanade"))
+    }
+
     @Test
     fun animeExtensionDetected() {
         val p = parseException("java.lang.IllegalStateException: x\n\tat eu.kanade.tachiyomi.animeextension.en.allanime.AllAnime.a(AllAnime.kt:1)")

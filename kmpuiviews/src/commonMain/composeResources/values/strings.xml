@@ -1013,4 +1013,8 @@
     <string name="exc_keys_hint_other">↑↓ select · Delete delete · Ctrl+C copy report · Ctrl+Z undo · right-click for more</string>
     <string name="exc_copy_report">Copy report</string>
     <string name="exc_save_report">Save report…</string>
+    <plurals name="exc_deleted_count">
+        <item quantity="one">%1$d exception deleted</item>
+        <item quantity="other">%1$d exceptions deleted</item>
+    </plurals>
 </resources>

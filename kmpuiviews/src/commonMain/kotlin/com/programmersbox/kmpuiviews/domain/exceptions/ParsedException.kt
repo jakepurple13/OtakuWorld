@@ -58,7 +58,7 @@ fun parseException(text: String): ParsedException {
         .let { if (!hasTypePrefix && continuation.isEmpty()) "" else it }
 
     val trimmed = rest.map { it.trim() }
-    val frames = trimmed.filter { it.startsWith("at ") }.map { line ->
+    val frames = trimmed.filter { frameLine.matches(it) }.map { line ->
         Frame(line, libraryPrefixes.any { line.removePrefix("at ").startsWith(it) })
     }
     val causes = trimmed.filter { it.startsWith("Caused by: ") }
@@ -108,7 +108,11 @@ private val ExceptionHeadline.kind: ExceptionKind
         ExceptionHeadline.App -> ExceptionKind.App
     }
 
+// A real frame is "at pkg.Class.method(File.kt:12)"; message text that starts with "at " is not.
+private val frameLine = Regex("""^at [^\s(]+\(.*\)$""")
+private val moreLine = Regex("""^\.\.\. \d+ more$""")
+
 private fun String.isTraceLine(): Boolean {
     val t = trim()
-    return t.startsWith("at ") || t.startsWith("Caused by: ") || t.startsWith("... ") || t.startsWith("Suppressed: ")
+    return frameLine.matches(t) || t.startsWith("Caused by: ") || moreLine.matches(t) || t.startsWith("Suppressed: ")
 }

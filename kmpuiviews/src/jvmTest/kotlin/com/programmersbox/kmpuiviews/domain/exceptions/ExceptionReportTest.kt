@@ -47,7 +47,8 @@ class ExceptionReportTest {
     @Test
     fun reportOmitsVersionWhenUnknown() {
         val r = buildExceptionReport(mangaDexTimeout, parseException(mangaDexTimeout), t, "en.mangadex", null, 1, ctx)
-        assertTrue(r.contains("- Source: en.mangadex (en.mangadex)\n"), r)
+        // Minor 1: the id isn't repeated when it's all we know about the source.
+        assertTrue(r.contains("- Source: en.mangadex\n"), r)
     }
 
     @Test

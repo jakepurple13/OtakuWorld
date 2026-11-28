@@ -222,7 +222,8 @@ private fun Header(row: ExceptionRow, sharedKeys: SharedKeys?) {
 @Composable
 private fun Facts(row: ExceptionRow, columns: Int) {
     val facts: List<Triple<StringResource, String, Boolean>> = buildList {
-        row.sourceName?.let { add(Triple(Res.string.exc_fact_source, row.source?.name ?: it, false)) }
+        // Without an installed source the name is just the extension id, which the next tile already shows.
+        row.source?.let { add(Triple(Res.string.exc_fact_source, it.name, false)) }
         row.parsed.extension?.let { add(Triple(Res.string.exc_fact_extension, it.id, true)) }
         add(Triple(Res.string.exc_fact_error, row.parsed.shortType, false))
     }

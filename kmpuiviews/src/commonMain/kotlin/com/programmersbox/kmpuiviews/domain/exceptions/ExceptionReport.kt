@@ -29,7 +29,10 @@ fun buildExceptionReport(
     appendLine("- Device: ${ctx.device}")
     appendLine("- When: ${localDateTime(time, ctx.timeZone).format()} (${ctx.timeZone.id})")
     if (sourceName != null) {
-        val ext = parsed.extension?.let { e -> listOfNotNull(e.id, extensionVersion?.let { "v$it" }).joinToString(" ") }
+        // Don't repeat the id when it's all we know (extension not installed).
+        val ext = parsed.extension
+            ?.let { e -> listOfNotNull(e.id.takeIf { it != sourceName }, extensionVersion?.let { "v$it" }).joinToString(" ") }
+            ?.takeIf { it.isNotEmpty() }
         appendLine("- Source: $sourceName" + (ext?.let { " ($it)" } ?: ""))
     }
     appendLine("- Seen: $seenThisWeek× in the last 7 days")

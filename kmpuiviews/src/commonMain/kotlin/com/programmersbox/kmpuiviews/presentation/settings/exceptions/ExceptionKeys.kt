@@ -43,3 +43,7 @@ expect fun RowContextMenu(
 /** The shortcut hint under the timeline, or null where there is no keyboard (Android). */
 @Composable
 expect fun keyboardHint(): String?
+
+/** True when [data] is a delete's Undo snackbar, so ⌘Z/Ctrl+Z never triggers other snackbars. */
+fun isUndoSnackbar(data: androidx.compose.material3.SnackbarData?, undoLabel: String): Boolean =
+    data?.visuals?.actionLabel == undoLabel

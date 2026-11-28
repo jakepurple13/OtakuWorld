@@ -368,7 +368,8 @@ private fun TimelineRow(
                         modifier = Modifier.padding(top = 10.dp),
                     ) {
                         ExplanationBlock(row, explanation, explainAvailable, autoStart = false, onExplain = onExplain)
-                        StackTraceBlock(row.parsed)
+                        // Rows stay compact; More info shows the whole message.
+                        StackTraceBlock(row.parsed, messageMaxLines = 6)
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End),
                             verticalAlignment = Alignment.CenterVertically,

@@ -135,7 +135,8 @@ class ExceptionViewModelTest {
     }
 
     @Test
-    fun undoLastRestoresNewestDelete() {
+    // Minor 7: a new screen (after rotation) can find deletes still waiting for Undo.
+    fun pendingIdsExposeWaitingDeletes() {
         insert(now - hour, ExceptionFixtures.mangaDexTimeout)
         insert(now - 2 * hour, ExceptionFixtures.comickJson)
         val vm = viewModel()
@@ -143,8 +144,36 @@ class ExceptionViewModelTest {
         val (a, b) = vm.rows.value.map { it.id }
         vm.delete(a)
         vm.delete(b)
-        vm.undoLast()
-        awaitCondition { vm.rows.value.map { it.id } == listOf(b) }
+        assertEquals(listOf(a, b), vm.pendingIds.value)
+        vm.undo(a)
+        assertEquals(listOf(b), vm.pendingIds.value)
+    }
+
+    // Minor 4: the next selection skips rows that are still sliding out.
+    @Test
+    fun nextAfterDeleteSkipsExitingRows() {
+        insert(now - hour, ExceptionFixtures.mangaDexTimeout)
+        insert(now - 2 * hour, ExceptionFixtures.comickJson)
+        insert(now - 3 * hour, ExceptionFixtures.asura403)
+        val vm = viewModel()
+        awaitCondition { vm.rows.value.size == 3 }
+        val (a, b, c) = vm.rows.value.map { it.id }
+        assertEquals(c, vm.nextAfterDelete(a, skip = setOf(b)))
+        assertNull(vm.nextAfterDelete(a, skip = setOf(b, c)))
+    }
+
+    // Minor 6: parsed rows for deleted exceptions are dropped.
+    @Test
+    fun parsedCacheDropsDeletedRows() {
+        insert(now - hour, ExceptionFixtures.mangaDexTimeout)
+        insert(now - 2 * hour, ExceptionFixtures.comickJson)
+        val vm = viewModel()
+        awaitCondition { vm.rows.value.size == 2 }
+        val id = vm.rows.value.first().id
+        vm.delete(id)
+        vm.commitDelete(id)
+        awaitCondition { storedIds().size == 1 }
+        awaitCondition { vm.parsedCacheSize == 1 }
     }
 
     @Test

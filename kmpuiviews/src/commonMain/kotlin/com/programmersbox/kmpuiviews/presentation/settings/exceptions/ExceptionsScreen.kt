@@ -26,6 +26,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -73,6 +74,7 @@ import io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher
 import io.github.vinceglb.filekit.writeString
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
+import org.jetbrains.compose.resources.getPluralString
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
@@ -83,6 +85,7 @@ import otakuworld.kmpuiviews.generated.resources.exc_delete
 import otakuworld.kmpuiviews.generated.resources.exc_delete_all_body
 import otakuworld.kmpuiviews.generated.resources.exc_delete_all_title
 import otakuworld.kmpuiviews.generated.resources.exc_deleted
+import otakuworld.kmpuiviews.generated.resources.exc_deleted_count
 import otakuworld.kmpuiviews.generated.resources.exc_report_copied
 import otakuworld.kmpuiviews.generated.resources.exc_report_saved
 import otakuworld.kmpuiviews.generated.resources.exc_title
@@ -126,8 +129,24 @@ fun ExceptionsScreen(
     val listFocus = remember { FocusRequester() }
     val listState = rememberLazyListState()
 
+    val undoLabel = stringResource(Res.string.exc_undo)
+
     // Leaving mid-slide still deletes; the view model commits pending ids when it's cleared.
     CommitExitingOnDispose(exiting) { viewModel.delete(it) }
+
+    // After a rotation or tab switch the old Undo snackbar is gone but its deletes are still pending.
+    // Offer one Undo for all of them instead of leaving them hidden until the screen closes.
+    LaunchedEffect(Unit) {
+        val waiting = viewModel.pendingIds.value
+        if (waiting.isNotEmpty()) {
+            showUndo(
+                snackbarHostState,
+                message = getPluralString(Res.plurals.exc_deleted_count, waiting.size, waiting.size),
+                onUndo = { waiting.forEach(viewModel::undo) },
+                onCommit = { waiting.forEach(viewModel::commitDelete) },
+            )
+        }
+    }
 
     fun report(row: ExceptionRow) = buildExceptionReport(
         rawText = row.item.message,
@@ -203,9 +222,7 @@ fun ExceptionsScreen(
         )
     }
 
-    OtakuScaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-    ) { padding ->
+        // Each pane brings its own Scaffold (list: top bar + snackbar; detail: top and bottom bars).
         BoxWithConstraints(Modifier.fillMaxSize()) {
             val twoPane = maxWidth >= TWO_PANE_WIDTH
             val navigator = rememberExceptionNavigator(twoPane)
@@ -240,7 +257,7 @@ fun ExceptionsScreen(
             val delete: (Long) -> Unit = { id ->
                 scope.launch {
                     if (twoPane) {
-                        val next = viewModel.nextAfterDelete(id)
+                        val next = viewModel.nextAfterDelete(id, skip = exiting)
                         if (selected == id && next != null) navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, next)
                     } else if (selected == id) {
                         navigator.navigateBack()
@@ -253,8 +270,15 @@ fun ExceptionsScreen(
             onExited = { id ->
                 exiting = exiting - id
                 viewModel.delete(id)
+                // One Undo at a time: closing the previous one commits its delete, so ⌘Z always means the latest.
+                snackbarHostState.currentSnackbarData?.takeIf { isUndoSnackbar(it, undoLabel) }?.dismiss()
                 scope.launch {
-                    showUndo(snackbarHostState, onUndo = { viewModel.undo(id) }, onCommit = { viewModel.commitDelete(id) })
+                    showUndo(
+                        snackbarHostState,
+                        message = getString(Res.string.exc_deleted),
+                        onUndo = { viewModel.undo(id) },
+                        onCommit = { viewModel.commitDelete(id) },
+                    )
                 }
             }
             val visibleIds = rows.map { it.id }.filter { it !in exiting }
@@ -272,7 +296,9 @@ fun ExceptionsScreen(
                     }
                     ExceptionKeyAction.Delete -> selected?.let(delete)
                     ExceptionKeyAction.Copy -> selected?.let(viewModel::row)?.let(actions.copy)
-                    ExceptionKeyAction.Undo -> snackbarHostState.currentSnackbarData?.performAction()
+                    ExceptionKeyAction.Undo -> snackbarHostState.currentSnackbarData
+                        ?.takeIf { isUndoSnackbar(it, undoLabel) }
+                        ?.performAction()
                 }
                 true
             }
@@ -284,22 +310,28 @@ fun ExceptionsScreen(
                     listPane = {
                         AnimatedPane(enterTransition = fadeIn(), exitTransition = fadeOut()) {
                             if (twoPane) LaunchedEffect(Unit) { runCatching { listFocus.requestFocus() } }
-                            Column(
-                                Modifier
+                            // The list pane's own scaffold: its insets keep the snackbar above the navigation bar.
+                            OtakuScaffold(
+                                topBar = {
+                                    TopAppBar(
+                                        title = { Text(stringResource(Res.string.exc_title)) },
+                                        navigationIcon = { BackButton() },
+                                        actions = {
+                                            IconButton(onClick = { showDeleteAll = true }) {
+                                                Icon(Icons.Default.DeleteSweep, contentDescription = null)
+                                            }
+                                        },
+                                    )
+                                },
+                                snackbarHost = { SnackbarHost(snackbarHostState) },
+                                contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
+                                modifier = Modifier
                                     .fillMaxSize()
                                     .focusRequester(listFocus)
                                     .onPreviewKeyEvent(onKey)
-                                    .focusable()
-                            ) {
-                                TopAppBar(
-                                    title = { Text(stringResource(Res.string.exc_title)) },
-                                    navigationIcon = { BackButton() },
-                                    actions = {
-                                        IconButton(onClick = { showDeleteAll = true }) {
-                                            Icon(Icons.Default.DeleteSweep, contentDescription = null)
-                                        }
-                                    },
-                                )
+                                    .focusable(),
+                            ) { padding ->
+                            Column(Modifier.fillMaxSize()) {
                                 ExceptionTimeline(
                                     days = days,
                                     hourly = hourly,
@@ -334,6 +366,7 @@ fun ExceptionsScreen(
                                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                                     )
                                 }
+                            }
                             }
                         }
                     },
@@ -377,7 +410,6 @@ fun ExceptionsScreen(
                 )
             }
         }
-    }
 }
 
 /** Screen-level callbacks both panes use. */
@@ -417,9 +449,9 @@ private fun DetailFor(
 }
 
 /** "Exception deleted · Undo". Undo brings the row back; anything else deletes it for good. */
-internal suspend fun showUndo(host: SnackbarHostState, onUndo: () -> Unit, onCommit: () -> Unit) {
+internal suspend fun showUndo(host: SnackbarHostState, message: String, onUndo: () -> Unit, onCommit: () -> Unit) {
     val result = host.showSnackbar(
-        message = getString(Res.string.exc_deleted),
+        message = message,
         actionLabel = getString(Res.string.exc_undo),
         duration = SnackbarDuration.Short,
     )
