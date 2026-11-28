@@ -5,7 +5,10 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.programmersbox.datastore.DataStoreHandlerNullable
 import com.programmersbox.datastore.DataStoreHandlerObject
+import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
+import com.programmersbox.sharedcomponents.Navigator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -20,6 +23,7 @@ import java.io.File
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.dsl.bind
+import org.koin.dsl.binds
 import org.koin.dsl.module
 
 /** Where the tab strip sits. */
@@ -234,11 +238,17 @@ suspend fun migrateTabsOnLaunch() {
 /** Registered only by apps with a mini player (AnimeWorld). Its rows in Tabs & browsing show only when true. */
 data class MiniPlayerSupported(val supported: Boolean)
 
+/** Makes the Home tab's navigation history-driven. Overrides `navigationModule`'s binding, so load it after that. */
+internal val tabNavigationModule: Module = module {
+    single<Navigation3Actions> { TabNavigation3Actions(Screen.RecentScreen) } binds arrayOf(NavigationActions::class, Navigator::class)
+}
+
 /**
  * Desktop tabs wiring. [TabsController] is created at start so it is already the Home tab's
  * navigation interceptor before the first navigation (the onboarding redirect).
  */
 internal val desktopTabsModule: Module = module {
+    includes(tabNavigationModule)
     single { CoreTabKeyProvider } bind TabKeyProvider::class
     single { TabKeys(getAll()) }
     single(named("coreNavKeys")) { CoreNavKeySerializers }

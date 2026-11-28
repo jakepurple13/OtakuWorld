@@ -22,7 +22,7 @@ fun interface NavInterceptor {
     fun intercept(from: Navigation3Actions, key: NavKey): Boolean
 }
 
-class Navigation3Actions(startKey: NavKey = Screen.RecentScreen) : NavigationActions, Navigator {
+open class Navigation3Actions(startKey: NavKey = Screen.RecentScreen) : NavigationActions, Navigator {
 
     var interceptor: NavInterceptor? = null
 
@@ -33,7 +33,7 @@ class Navigation3Actions(startKey: NavKey = Screen.RecentScreen) : NavigationAct
         )
     )
 
-    private fun push(key: NavKey) {
+    protected open fun push(key: NavKey) {
         if (interceptor?.intercept(this, key) == true) return
         navBackStack.add(key)
     }
@@ -345,6 +345,14 @@ class TopLevelBackStack<T : NavKey>(
             }
         }
         topLevelKey = key
+        updateBackStack()
+    }
+
+    /** Replaces every stack with one stack under the start key holding [keys]. */
+    fun replaceStack(keys: List<T>) {
+        topLevelStacks.clear()
+        topLevelStacks[startKey] = mutableStateListOf<T>().apply { addAll(keys) }
+        topLevelKey = startKey
         updateBackStack()
     }
 
