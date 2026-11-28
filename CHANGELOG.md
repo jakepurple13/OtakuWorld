@@ -205,6 +205,8 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v33.0.0...develop_
   ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
 - New help site at https://jakepurple13.github.io/OtakuWorld/, built from `docs/` with Zensical
   and published by `.github/workflows/docs.yml`
+  ([#2736](https://github.com/jakepurple13/OtakuWorld/pull/2736)). It has page-change, sidebar,
+  theme-switch, search and scroll-to-section animations, and follows reduced motion
 - Release steps and checklist in `docs/RELEASING.md`
   ([#2706](https://github.com/jakepurple13/OtakuWorld/pull/2706))
 - Flaky ViewModel tests fixed ([#2703](https://github.com/jakepurple13/OtakuWorld/pull/2703),
