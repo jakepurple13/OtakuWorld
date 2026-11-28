@@ -253,6 +253,56 @@ class TabShortcutsTest {
     }
 
     @Test
+    fun refreshShortcuts() {
+        assertEquals(TabShortcut.Refresh, tabShortcut(key(Key.R, meta = true), isMac = true))
+        assertEquals(TabShortcut.Refresh, tabShortcut(key(Key.R, ctrl = true), isMac = false))
+        assertEquals(TabShortcut.Refresh, tabShortcut(key(Key.F5), isMac = true))
+        assertEquals(TabShortcut.Refresh, tabShortcut(key(Key.F5), isMac = false))
+    }
+
+    @Test
+    fun ctrlROnMacIsNotRefresh() {
+        assertNull(tabShortcut(key(Key.R, ctrl = true), isMac = true))
+        assertNull(tabShortcut(key(Key.R, meta = true, shift = true), isMac = true))
+    }
+
+    @Test
+    fun escStopsOnlyWhileStoppable() {
+        assertEquals(TabShortcut.StopRefresh, tabShortcut(key(Key.Escape), isMac = true, canStopRefresh = true))
+        assertNull(tabShortcut(key(Key.Escape), isMac = true, canStopRefresh = false))
+        assertNull(tabShortcut(key(Key.Escape), isMac = false, textFieldFocused = true))
+    }
+
+    @Test
+    fun refreshAndStopRunOnTheActiveTab() {
+        var refreshes = 0
+        var stops = 0
+        var refreshing = false
+        val active = window.tabs.first { it.id == window.activeId.value }
+        active.refresh.register(
+            com.programmersbox.kmpuiviews.presentation.components.PageRefresh(
+                refreshing = { refreshing },
+                refresh = { refreshes++ },
+                stop = { stops++ },
+            )
+        )
+        controller.perform(TabShortcut.Refresh, window)
+        assertEquals(1, refreshes)
+        refreshing = true
+        controller.perform(TabShortcut.StopRefresh, window)
+        assertEquals(1, stops)
+    }
+
+    @Test
+    fun capsListRefreshAndStop() {
+        val mac = tabShortcutCaps(isMac = true).groupBy({ it.first }, { it.second })
+        assertEquals(listOf(listOf("⌘", "R"), listOf("F5")), mac["Refresh page"])
+        assertEquals(listOf(listOf("Esc")), mac["Stop loading"])
+        val win = tabShortcutCaps(isMac = false).groupBy({ it.first }, { it.second })
+        assertEquals(listOf(listOf("Ctrl", "R"), listOf("F5")), win["Refresh page"])
+    }
+
+    @Test
     fun nextWrapsAround() {
         assertEquals(0, wrappedTabIndex(index = 2, delta = 1, size = 3))
         assertEquals(2, wrappedTabIndex(index = 0, delta = -1, size = 3))
@@ -289,6 +339,7 @@ class TabShortcutsTest {
         Key.LeftBracket to "[", Key.RightBracket to "]", Key.DirectionLeft to "←", Key.DirectionRight to "→",
         Key.One to "1–8", Key.Two to "1–8", Key.Three to "1–8", Key.Four to "1–8", Key.Five to "1–8",
         Key.Six to "1–8", Key.Seven to "1–8", Key.Eight to "1–8", Key.Nine to "9",
+        Key.R to "R", Key.F5 to "F5", Key.Escape to "Esc",
     )
 
     private fun capSet(isMac: Boolean, k: Key, meta: Boolean, ctrl: Boolean, shift: Boolean, alt: Boolean): Set<String> =
@@ -310,7 +361,7 @@ class TabShortcutsTest {
                 val ctrl = bits and 2 != 0
                 val shift = bits and 4 != 0
                 val alt = bits and 8 != 0
-                if (tabShortcut(key(k, meta, ctrl, shift, alt), isMac) != null) {
+                if (tabShortcut(key(k, meta, ctrl, shift, alt), isMac, canStopRefresh = true) != null) {
                     accepted += capSet(isMac, k, meta, ctrl, shift, alt)
                 }
             }

@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.settings.prerelease
 
+import com.programmersbox.kmpuiviews.presentation.components.RegisterPageRefresh
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -43,6 +44,7 @@ import kotlin.time.Instant
 fun PrereleaseScreen(
     viewModel: PrereleaseViewModel = koinViewModel(),
 ) {
+    RegisterPageRefresh(viewModel.uiState is PrereleaseUiState.Loading, viewModel::reload)
     val localTimeFormat = LocalSystemDateTimeFormat.current
     Scaffold(
         topBar = {

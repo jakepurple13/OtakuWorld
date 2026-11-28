@@ -40,7 +40,9 @@ class UpdateCheckErrorsViewModelTest {
 
     private class FakeSharer(private val copiedToClipboard: Boolean = false) : UpdateCheckReportSharer {
         val shared = CompletableDeferred<String>()
-        override fun share(text: String): Boolean {
+        var subject: String? = "unset"
+        override fun share(text: String, subject: String?): Boolean {
+            this.subject = subject
             shared.complete(text)
             return copiedToClipboard
         }
@@ -174,6 +176,14 @@ class UpdateCheckErrorsViewModelTest {
         chooser.shared.await()
         // Nothing was copied, so no message may be waiting.
         assertNull(withTimeoutOrNull(200) { chooserVm.messages.first() })
+    }
+
+    @Test
+    fun `update check share has no subject`() = runTest {
+        val sharer = FakeSharer()
+        viewModel(mixedReport, sharer = sharer).share()
+        sharer.shared.await()
+        assertNull(sharer.subject)
     }
 
     @Test

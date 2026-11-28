@@ -4,11 +4,13 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.engine.mock.respondError
+import com.programmersbox.kmpmodels.RepoCheck
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertIs
 import kotlin.test.assertNull
 
 private const val REPO_URL = "https://repo.example/repo.json"
@@ -141,6 +143,46 @@ class CloudstreamRepoClientTest {
         assertEquals(REPO_URL, repoUrl)
         assertEquals("sha256-2f05a1c836915a0afb5b467d65e067ade30d970f4410dc183df8a72d3ea8d2aa", plugin.fileHash)
         assertNull(repo.pluginFor("$BUILDS/Dead.cs3"))
+    }
+
+    @Test
+    fun checkFoundReturnsRepoName() = runTest {
+        val result = CloudstreamRepoClient(client()).check("https://repo.example")
+        val found = assertIs<RepoCheck.Found>(result)
+        assertEquals("Phisher Repo", found.name)
+        assertEquals(listOf("Anichi", "Sized"), found.remotes.map { it.name })
+    }
+
+    @Test
+    fun checkAniyomiRepoIsNotThisFormat() = runTest {
+        val repo = CloudstreamRepoClient(client(repo = """{"meta":{"name":"A","signingKeyFingerprint":"x"}}"""))
+        assertEquals(RepoCheck.NotThisFormat, repo.check("https://repo.example"))
+    }
+
+    @Test
+    fun checkNonObjectRepoJsonIsNotThisFormat() = runTest {
+        val repo = CloudstreamRepoClient(client(repo = """[{"name":"x","pkg":"y"}]"""))
+        assertEquals(RepoCheck.NotThisFormat, repo.check("https://repo.example"))
+    }
+
+    @Test
+    fun checkAllPluginListsFailIsFailed() = runTest {
+        val result = CloudstreamRepoClient(client(failList = true)).check("https://repo.example")
+        val failed = assertIs<RepoCheck.Failed>(result)
+        assertEquals(true, failed.message.isNotBlank())
+    }
+
+    @Test
+    fun checkDoesNotReplacePluginLookup() = runTest {
+        val repo = CloudstreamRepoClient(client())
+        repo.fetch(listOf("https://repo.example"))
+        repo.check("https://other.example")
+        assertNotNull(repo.pluginFor("$BUILDS/Anichi.cs3"))
+    }
+
+    @Test
+    fun checkHttpIsFailed() = runTest {
+        assertIs<RepoCheck.Failed>(CloudstreamRepoClient(client()).check("http://repo.example"))
     }
 
     @Test

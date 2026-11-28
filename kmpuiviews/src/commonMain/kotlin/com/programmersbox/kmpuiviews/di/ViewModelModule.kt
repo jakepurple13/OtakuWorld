@@ -48,6 +48,7 @@ import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
 import com.programmersbox.kmpuiviews.utils.Backup
 import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.flow.map
+import com.programmersbox.kmpuiviews.repository.SourceInfoRepository
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
@@ -108,7 +109,7 @@ val viewModels: Module = module {
     viewModelOf(::WorkerInfoViewModel)
     viewModelOf(::UrlOpenerViewModel)
     viewModelOf(::OtakuCustomListViewModel)
-    viewModelOf(::ExceptionViewModel)
+    viewModel { ExceptionViewModel(get(), get(), get(), versionName = get<SourceInfoRepository>()::versionName) }
     viewModelOf(::BookmarkChaptersViewModel)
     viewModelOf(::DetailsNotesViewModel)
     viewModelOf(::AllNotesViewModel)

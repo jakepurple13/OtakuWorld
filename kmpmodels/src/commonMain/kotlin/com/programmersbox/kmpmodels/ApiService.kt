@@ -1,5 +1,6 @@
 package com.programmersbox.kmpmodels
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
@@ -122,6 +123,14 @@ interface KmpExternalCustomApiServicesCatalog : KmpApiServicesCatalog {
     fun shouldReload(packageName: String): Boolean = false
 
     suspend fun getRemoteSources(customUrls: List<String>): List<KmpRemoteSources> = emptyList()
+
+    suspend fun checkRepo(url: String): RepoCheck = try {
+        getRemoteSources(listOf(url)).let { if (it.isEmpty()) RepoCheck.NotThisFormat else RepoCheck.Found("", it) }
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        RepoCheck.Failed(e.message ?: "Unknown error")
+    }
 
     suspend fun install(remote: KmpRemoteSources): Boolean = false
 

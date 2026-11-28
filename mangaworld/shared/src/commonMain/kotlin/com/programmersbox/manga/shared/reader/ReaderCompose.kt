@@ -24,6 +24,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import io.kamel.image.KamelImage
+import io.kamel.image.asyncPainterResource
+import io.ktor.client.request.header
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -795,6 +798,15 @@ private fun ReadViewContent(
                     )
                 }
 
+                // Updates when the chapter or its pages reload; read only while the scrubber bubble shows
+                val thumbnailUrls by remember {
+                    derivedStateOf {
+                        viewModel.pageItems
+                            .filterIsInstance<PageItem.Page>()
+                            .filter { it.chapterListIndex == viewModel.currentChapter }
+                            .map { it.url }
+                    }
+                }
                 PageIndicatorOverlay(
                     style = pageIndicatorStyle,
                     currentPage = currentPage,
@@ -805,6 +817,21 @@ private fun ReadViewContent(
                     bottomPadding = p.calculateBottomPadding().animate().value,
                     onOpenPages = { showBottomSheet = true },
                     onJumpToPage = ::jumpToPage,
+                    pageThumbnail = { i ->
+                        val url = thumbnailUrls.getOrNull(i)
+                        if (url != null) {
+                            KamelImage(
+                                resource = {
+                                    asyncPainterResource(url) {
+                                        requestBuilder { viewModel.headers.forEach { (k, v) -> header(k, v) } }
+                                    }
+                                },
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                    },
                 )
 
                 ChapterBanner(

@@ -1,0 +1,174 @@
+/*
+ * Motion for the docs site (Material 3 easing). Pairs with javascripts/motion.js,
+ * which adds the classes used here. Approved mockup:
+ * https://claude.ai/artifact/YFiF9BvnD5GaYh1E8tzkiz
+ *
+ * A page change fade-through   B sliding nav highlight   C content rises in
+ * D theme reveal (JS only)     E search dialog (JS only) F "On this page" marker
+ * G hover and press            H back to top             I scroll to section glow
+ */
+
+:root {
+  --m3-emphasized: cubic-bezier(.2, 0, 0, 1);
+  --m3-decelerate: cubic-bezier(.05, .7, .1, 1);
+  --m3-accelerate: cubic-bezier(.3, 0, .8, .15);
+}
+
+/* A + C. Leaving page fades out; the new one fades in while its blocks rise one by one. */
+.md-content.m-leaving {
+  opacity: 0;
+  transition: opacity 90ms var(--m3-accelerate);
+}
+.md-content.m-entering .md-content__inner > * {
+  animation: m-rise 420ms var(--m3-decelerate) both;
+  animation-delay: calc(var(--m-i, 0) * 35ms);
+}
+@keyframes m-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* B. One highlight pill that glides between pages in the sidebar. */
+.md-nav--primary {
+  position: relative;
+}
+.m-pill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 999px;
+  background: var(--m3-secondary-container);
+  pointer-events: none;
+  z-index: 0;
+}
+.m-pill.m-go {
+  transition: transform 420ms var(--m3-emphasized), height 420ms var(--m3-emphasized), width 420ms var(--m3-emphasized);
+}
+.m-has-pill .md-nav--primary .md-nav__link {
+  position: relative;
+  z-index: 1;
+}
+.m-has-pill .md-nav--primary .md-nav__link--active {
+  background: transparent;
+}
+
+/* D. The theme icon turns while the new scheme spreads out from it. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+.md-header__button[for^="__palette_"] svg {
+  transition: transform 500ms var(--m3-emphasized);
+}
+.m-turn .md-header__button[for^="__palette_"] svg {
+  transform: rotate(360deg);
+}
+
+/* F. A marker bar that follows the section you're reading. */
+.md-nav--secondary > .md-nav__list {
+  position: relative;
+}
+.m-toc-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 3px;
+  height: 0;
+  border-radius: 3px;
+  background: var(--m3-primary);
+  pointer-events: none;
+  transition: transform 360ms var(--m3-emphasized), height 360ms var(--m3-emphasized), opacity 200ms;
+}
+.m-has-bar .md-nav--secondary .md-nav__link--active {
+  background: transparent;
+}
+
+/* G. Hover and press feedback. */
+.md-nav__link,
+.md-footer__link,
+.md-header__button,
+.md-search__button,
+.md-source {
+  transition: background-color 150ms, transform 150ms var(--m3-emphasized);
+}
+.md-nav__link:active,
+.md-footer__link:active,
+.md-header__button:active,
+.md-search__button:active,
+.md-top:active {
+  transform: scale(.97);
+}
+.md-footer__button {
+  transition: transform 250ms var(--m3-emphasized);
+}
+.md-footer__link--next:hover .md-footer__button {
+  transform: translateX(5px);
+}
+.md-footer__link--prev:hover .md-footer__button {
+  transform: translateX(-5px);
+}
+.md-typeset table:not([class]) tbody tr {
+  transition: background-color 150ms;
+}
+.md-typeset table:not([class]) tbody tr:hover {
+  background: color-mix(in srgb, var(--m3-on-surface) 5%, transparent);
+}
+
+/* H. "Back to top" as an M3 pill that rises into place when you scroll up. */
+.md-top {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  height: 40px;
+  padding: 0 1rem 0 .8rem;
+  line-height: 1;
+  border-radius: 20px;
+  background: var(--m3-surface-container-high);
+  color: var(--m3-on-surface);
+  font-weight: 500;
+  box-shadow: 0 2px 6px 2px rgb(0 0 0 / .15), 0 1px 2px rgb(0 0 0 / .3);
+  transition: transform 300ms var(--m3-emphasized), opacity 200ms, background-color 150ms;
+}
+.md-top:hover {
+  background: color-mix(in srgb, var(--m3-on-surface) 8%, var(--m3-surface-container-high));
+  color: var(--m3-on-surface);
+}
+.md-top[hidden] {
+  transform: translate(-50%, 24px) scale(.9);
+  transition-duration: 200ms;
+}
+
+/* I. The heading you jumped to glows briefly when the scroll lands. */
+.md-typeset h2,
+.md-typeset h3,
+.md-typeset h4 {
+  border-radius: 12px;
+}
+.md-typeset .m-glow {
+  animation: m-glow 1.3s var(--m3-emphasized);
+}
+@keyframes m-glow {
+  0% {
+    background: color-mix(in srgb, var(--m3-primary) 28%, transparent);
+    box-shadow: 0 0 0 8px color-mix(in srgb, var(--m3-primary) 28%, transparent);
+  }
+  100% {
+    background: transparent;
+    box-shadow: 0 0 0 8px transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .md-content.m-leaving,
+  .m-pill.m-go,
+  .m-toc-bar,
+  .md-top,
+  .md-footer__button,
+  .md-header__button[for^="__palette_"] svg {
+    transition: none;
+  }
+  .md-content.m-entering .md-content__inner > * {
+    animation: none;
+  }
+}

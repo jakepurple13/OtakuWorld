@@ -13,6 +13,9 @@
  
  [Discord Link](https://discord.gg/MhhHMWqryg) There's a discord now!!! This is something that will probably be changed and modified since it's the first time I've done this.
 
+**New here?** The [OtakuWorld help site](https://jakepurple13.github.io/OtakuWorld/) explains which
+file to download, what each app does, how to add extensions, and how to set up sync.
+
 For the nightly release, go [here](https://github.com/jakepurple13/OtakuWorld/releases/tag/nightly)
 
 A combined version of my [MangaWorld](https://github.com/jakepurple13/MangaWorld) and [AnimeWorld](https://github.com/jakepurple13/AnimeWorld) apps. This was created because there were a ton of shared elements between the two apps so I combined them, allowing two separate apps but a lot of the same base logic.

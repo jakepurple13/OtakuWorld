@@ -26,5 +26,5 @@ val videoPlayerStyle = DataStoreHandlerObject(
 enum class PlayerStyle(val label: String, val description: String) {
     Classic("Classic", "Full-width bars that slide in from the edges."),
     Floating("Floating", "Rounded floating pills and a control dock. Shows the most video."),
-    Theater("Theater", "No boxes. Blur fades in from the top and bottom edges."),
+    Theater("Cinematic", "No boxes. Blur fades in from the top and bottom edges."),
 }

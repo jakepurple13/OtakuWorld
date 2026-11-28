@@ -40,10 +40,54 @@ class PageIndicatorMathTest {
     }
 
     @Test
-    fun segmentsOnlyForShortChapters() {
-        assertTrue(usesSegments(24))
-        assertFalse(usesSegments(MAX_SEGMENTS + 1))
+    fun segmentsForAnyLength() {
+        assertTrue(usesSegments(1))
+        assertTrue(usesSegments(500))
         assertFalse(usesSegments(0))
+    }
+
+    @Test
+    fun oneSegmentPerPageUpToThirty() {
+        assertEquals(1, pagesPerSegment(30))
+        assertEquals(30, segmentCount(30))
+    }
+
+    @Test
+    fun segmentCountCapsAtTwenty() {
+        assertEquals(3, pagesPerSegment(60))
+        assertEquals(20, segmentCount(60))
+        assertTrue(segmentCount(250) <= MAX_GROUPED_SEGMENTS)
+    }
+
+    @Test
+    fun segmentFillPartialInGroup() {
+        // 60 pages, 3 per segment; index 4 = page 5 is the 2nd page of segment 1
+        assertEquals(1f, segmentFill(0, 4, 60))
+        assertEquals(2f / 3f, segmentFill(1, 4, 60), 0.001f)
+        assertEquals(0f, segmentFill(2, 4, 60))
+    }
+
+    @Test
+    fun segmentFillSinglePage() = assertEquals(1f, segmentFill(0, 0, 1))
+
+    @Test
+    fun segmentFillOnEndCard() = assertEquals(1f, segmentFill(segmentCount(24) - 1, 24, 24))
+
+    @Test
+    fun chipClampsAtEdges() {
+        assertEquals(8f, clampedChipX(tip = 10f, chipWidth = 70f, width = 260f, margin = 8f))
+        assertEquals(182f, clampedChipX(tip = 260f, chipWidth = 70f, width = 260f, margin = 8f))
+        assertEquals(95f, clampedChipX(tip = 130f, chipWidth = 70f, width = 260f, margin = 8f))
+    }
+
+    @Test
+    fun chipWiderThanScreenSitsAtMargin() = assertEquals(8f, clampedChipX(tip = 50f, chipWidth = 300f, width = 260f, margin = 8f))
+
+    @Test
+    fun ticksHiddenPastForty() {
+        assertTrue(showScrubberTicks(40))
+        assertFalse(showScrubberTicks(41))
+        assertFalse(showScrubberTicks(1))
     }
 
     @Test

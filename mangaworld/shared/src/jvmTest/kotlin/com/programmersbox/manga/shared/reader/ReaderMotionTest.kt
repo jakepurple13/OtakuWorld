@@ -44,12 +44,6 @@ class ReaderMotionTest {
     }
 
     @Test
-    fun pageLabelNeverPassesTheEnd() {
-        assertEquals("p. 3 / 24", pageLabel(currentPage = 2, pages = 24))
-        assertEquals("p. 24 / 24", pageLabel(currentPage = 24, pages = 24))
-    }
-
-    @Test
     fun bannerPageCountWording() {
         assertEquals(" · 1 page", bannerPageText(1))
         assertEquals(" · 24 pages", bannerPageText(24))

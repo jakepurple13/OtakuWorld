@@ -2,6 +2,7 @@ package com.programmersbox.cloudstream.repo
 
 import com.programmersbox.kmpmodels.KmpRemoteSources
 import com.programmersbox.kmpmodels.KmpSources
+import com.programmersbox.kmpmodels.RepoCheck
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
@@ -57,6 +58,46 @@ class CloudstreamRepoClient(private val httpClient: HttpClient) {
      */
     fun pluginFor(downloadLink: String): Pair<String, CsPlugin>? = pluginsByLink[downloadLink]
 
+    /**
+     * Classifies a single repo link without touching [pluginFor] state. A `repo.json` without `pluginLists`
+     * (an Aniyomi repo or a non-object document) is [RepoCheck.NotThisFormat]; if every plugin list fails the
+     * result is [RepoCheck.Failed].
+     */
+    suspend fun check(url: String): RepoCheck {
+        val repoUrl = normalize(url)
+        if (!repoUrl.startsWith("https://", ignoreCase = true)) return RepoCheck.Failed("Only https links are supported")
+        return try {
+            val repoText = getText(repoUrl)
+            val root = json.parseToJsonElement(repoText) as? JsonObject ?: return RepoCheck.NotThisFormat
+            if ("pluginLists" !in root) return RepoCheck.NotThisFormat
+            val repo = json.decodeFromString<CsRepo>(repoText)
+            val lists = coroutineScope {
+                repo.pluginLists.map { listUrl -> async { runCatchingNonCancel { loadPluginList(listUrl) } } }.awaitAll()
+            }
+            val firstError = lists.firstNotNullOfOrNull { it.exceptionOrNull() }
+            if (firstError != null && lists.all { it.isFailure }) {
+                RepoCheck.Failed(firstError.failureMessage())
+            } else {
+                val plugins = lists.flatMap { it.getOrDefault(emptyList()) }.distinctBy { it.url }
+                RepoCheck.Found(repo.name, plugins.map { it.toRemote() })
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            RepoCheck.Failed(e.failureMessage())
+        }
+    }
+
+    private inline fun <T> runCatchingNonCancel(block: () -> T): Result<T> = try {
+        Result.success(block())
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    private fun Throwable.failureMessage() = message?.takeIf { it.isNotBlank() } ?: this::class.simpleName ?: "Could not read repo"
+
     private suspend fun fetchRepo(repoUrl: String): List<CsPlugin> = try {
         val repoText = getText(repoUrl)
         // Not a CloudStream repo (an Aniyomi repo object, or an index array): skip silently.
@@ -76,17 +117,22 @@ class CloudstreamRepoClient(private val httpClient: HttpClient) {
     }
 
     private suspend fun fetchPluginList(listUrl: String): List<CsPlugin> = try {
-        val url = listUrl.trim()
-        // Plugins are downloaded from these entries and executed, so plain http is refused.
-        require(url.startsWith("https://", ignoreCase = true)) { "Ignoring non-https CloudStream plugin list: $url" }
-        // A cleartext .cs3 download could be swapped in transit (fileHash is optional), so drop those entries.
-        json.decodeFromString<List<CsPlugin>>(getText(url))
-            .filter { it.status != 0 && it.isAnime() && it.url.startsWith("https://", ignoreCase = true) }
+        loadPluginList(listUrl)
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
         println("CloudstreamRepoClient: $listUrl: ${e.message}")
         emptyList()
+    }
+
+    /** Fetches one `plugins.json` and returns its usable anime plugins; throws if it cannot be read. */
+    private suspend fun loadPluginList(listUrl: String): List<CsPlugin> {
+        val url = listUrl.trim()
+        // Plugins are downloaded from these entries and executed, so plain http is refused.
+        require(url.startsWith("https://", ignoreCase = true)) { "Ignoring non-https CloudStream plugin list: $url" }
+        // A cleartext .cs3 download could be swapped in transit (fileHash is optional), so drop those entries.
+        return json.decodeFromString<List<CsPlugin>>(getText(url))
+            .filter { it.status != 0 && it.isAnime() && it.url.startsWith("https://", ignoreCase = true) }
     }
 
     private suspend fun getText(url: String): String {

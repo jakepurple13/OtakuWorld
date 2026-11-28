@@ -317,7 +317,7 @@ private fun BoxScope.TheaterChrome(visible: Boolean, bars: BarParts) {
         modifier = Modifier.align(Alignment.TopCenter),
     ) {
         Row(
-            verticalAlignment = Alignment.Top,
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
                 .edge(bars, fromTop = true, scrim = scrim, style = edgeStyle)
@@ -327,7 +327,7 @@ private fun BoxScope.TheaterChrome(visible: Boolean, bars: BarParts) {
             Column(
                 Modifier
                     .weight(1f)
-                    .padding(start = 4.dp, top = 2.dp)
+                    .padding(start = 4.dp)
             ) {
                 Text(
                     bars.state.title,

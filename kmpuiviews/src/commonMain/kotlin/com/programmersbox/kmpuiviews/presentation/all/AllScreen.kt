@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.all
 
+import com.programmersbox.kmpuiviews.presentation.components.RegisterPageRefresh
 import androidx.compose.animation.AnimatedVisibility
 import com.programmersbox.telemetry.events.OpenedFrom
 import androidx.compose.animation.Crossfade
@@ -89,6 +90,7 @@ fun AllScreen(
     val source by currentSourceRepository
         .asFlow()
         .collectAsStateWithLifecycle(null)
+    source?.let { s -> RegisterPageRefresh(allVm.isRefreshing, { allVm.reset(s) }) }
 
     LaunchedEffect(isConnected) {
         if (allVm.sourceList.isEmpty() && source != null && isConnected && allVm.lastLoadFailed) allVm.reset(source!!)

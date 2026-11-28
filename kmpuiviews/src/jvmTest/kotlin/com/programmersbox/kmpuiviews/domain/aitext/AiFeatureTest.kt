@@ -91,4 +91,30 @@ class AiFeatureTest {
         assertEquals("slime\nisekai", AiFeature.SearchKeywords.finish("Keywords: slime; isekai"))
         assertEquals("", AiFeature.SearchKeywords.finish("***\n—\n\"\""))
     }
+
+    @Test
+    fun explainExceptionPrepareTrims() {
+        val p = AiFeature.ExplainException.prepare(ErrorDetails("Comick", "x".repeat(2000)))
+        assertTrue(p.startsWith("Source: Comick\nError:\n"))
+        assertEquals(1500, p.substringAfter("Error:\n").length)
+    }
+
+    @Test
+    fun digestTakesTwenty() {
+        val p = AiFeature.ExceptionDigest.prepare(List(30) { "line $it" })
+        assertEquals(20, p.lines().size)
+        assertEquals("- line 0", p.lines().first())
+    }
+
+    @Test
+    fun exceptionFeaturesUseErrorToggle() {
+        assertEquals(AiToggle.ErrorExplanations, AiFeature.ExplainException.toggle)
+        assertEquals(AiToggle.ErrorExplanations, AiFeature.ExceptionDigest.toggle)
+    }
+
+    @Test
+    fun exceptionTelemetryNames() {
+        assertEquals("explain_exception", AiFeature.ExplainException.telemetryName)
+        assertEquals("exception_digest", AiFeature.ExceptionDigest.telemetryName)
+    }
 }

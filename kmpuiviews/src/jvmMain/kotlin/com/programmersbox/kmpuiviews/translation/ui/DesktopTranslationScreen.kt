@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.translation.ui
 
+import com.programmersbox.kmpuiviews.presentation.components.RegisterPageRefresh
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.animateColorAsState
@@ -97,6 +98,7 @@ private val engineInfo = listOf(
 @Composable
 fun DesktopTranslationScreen(vm: DesktopTranslationViewModel = koinViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
+    RegisterPageRefresh(state.ollamaChecking, vm::checkOllama)
 
     OtakuScaffold(
         topBar = {

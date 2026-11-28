@@ -34,6 +34,9 @@ class TabState(
     val sleeping: MutableState<Boolean> = mutableStateOf(false)
     val viewModelStoreOwner: ViewModelStoreOwner = TabViewModelStoreOwner()
 
+    /** The current page's reload, for the toolbar's Refresh button and shortcuts. */
+    val refresh: TabRefreshRegistry = TabRefreshRegistry()
+
     /**
      * Holds the tab's page ViewModelStores. It lives outside composition, so a parked tab keeps its
      * ViewModels; clearing [viewModelStoreOwner] on close clears them. Sleeping replaces it: the old one

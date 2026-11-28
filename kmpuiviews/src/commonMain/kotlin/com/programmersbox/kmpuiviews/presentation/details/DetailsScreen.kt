@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.presentation.details
 
 
+import com.programmersbox.kmpuiviews.presentation.components.RegisterPageRefresh
 import androidx.compose.foundation.layout.WindowInsets
 import com.programmersbox.telemetry.events.ItemShared
 import com.programmersbox.telemetry.Analytics
@@ -163,6 +164,7 @@ fun DetailsScreen(
     dao: ItemDao = LocalItemDao.current,
     details: DetailsViewModel = koinViewModel(),
 ) {
+    RegisterPageRefresh(details.isRefreshing, details::refresh, details::stopRefresh)
     CompositionLocalProvider(
         LocalDetailsSharedItemKey provides details.itemModel?.sharedItemKey(),
         LocalDetailsHandedOffCover provides details.handedOffCover,
@@ -343,6 +345,8 @@ private fun DetailsScreenInternal(
                         // Remembered so every ChapterItem gets the same instance and can skip recomposition
                         detailsActions = remember(target) {
                             DetailsActions(
+                                refresh = details::refresh,
+                                isRefreshing = { details.isRefreshing },
                                 onClick = { model ->
                                     scope.launch(Dispatchers.IO) {
                                         genericInfo.chapterOnClick(model, target.info.chapters, infoModel, navActions, currentPaletteSeed?.toArgb())
@@ -450,6 +454,10 @@ data class DetailsActions(
     val bookmarkChapter: (KmpChapterModel) -> Unit = {},
     val bookmarkedChapterUrls: Set<String> = emptySet(),
     val selection: ChapterSelectionActions = ChapterSelectionActions(),
+    /** Fetches the item again, skipping the cache (the overflow menu's Refresh). */
+    val refresh: () -> Unit = {},
+    /** Read in composition, so the menu and progress line follow it without recreating these actions. */
+    val isRefreshing: () -> Boolean = { false },
 )
 
 @OptIn(
@@ -779,6 +787,7 @@ private fun DetailError(
                     Icon(Icons.Default.Warning, null)
                     Text("Something happened!")
                     Text(state.e.message.orEmpty())
+                    DetailErrorRetry(isRefreshing = details.isRefreshing, onRetry = details::refresh)
                 }
             }
         }

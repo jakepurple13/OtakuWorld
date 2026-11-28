@@ -1,0 +1,457 @@
+<title>Custom Repos Sheet</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=Roboto+Flex:opsz,wght@8..144,400;8..144,500;8..144,600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: page = intro + 4 columns (Current, A, B, C), each a live phone with a sheet; notes under each phone. */
+:root{
+  --bg:#f3f4f8; --fg:#191b23; --muted:#5c6070; --line:#d9dbe5; --card:#ffffff;
+  --accent:#4f5bd5;
+  /* in-phone M3 tokens (dark app theme, same in both page themes) */
+  --m-surface:#14151b; --m-cont:#1d1f27; --m-cont-hi:#272a34; --m-on:#e4e5ee; --m-on-var:#a8abbb;
+  --m-primary:#b9c3ff; --m-on-primary:#1e2a78; --m-pcont:#36428f; --m-on-pcont:#dee1ff;
+  --m-outline:#444756; --m-error:#ffb4ab; --m-good:#8fd9a8; --m-warn:#f2c46d;
+  --f-display:"Space Grotesk",system-ui,sans-serif; --f-body:"Inter",system-ui,sans-serif;
+  --f-ui:"Roboto Flex","Roboto",system-ui,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0e0f14;--fg:#e6e7ef;--muted:#9a9db0;--line:#2a2c37;--card:#171920;--accent:#9aa5ff;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e0f14;--fg:#e6e7ef;--muted:#9a9db0;--line:#2a2c37;--card:#171920;--accent:#9aa5ff;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 64px}
+.wrap{max-width:1480px;margin:0 auto;display:grid;gap:36px}
+header h1{font-family:var(--f-display);font-size:clamp(28px,4vw,40px);line-height:1.1;margin:0 0 10px;text-wrap:balance}
+header p{margin:0;max-width:68ch;color:var(--muted)}
+.problems{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;padding:0;list-style:none}
+.problems li{font-size:13px;border:1px solid var(--line);background:var(--card);padding:4px 10px;border-radius:99px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:28px;align-items:start}
+.col{display:grid;gap:14px;min-width:0}
+.col h2{font-family:var(--f-display);font-size:20px;margin:0;display:flex;align-items:baseline;gap:10px}
+.col h2 .tag{font-family:var(--f-mono);font-size:12px;font-weight:500;color:var(--accent);letter-spacing:.04em}
+.col .lede{margin:0;color:var(--muted);font-size:14px}
+.notes{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;font-size:13.5px}
+.notes h3{font-family:var(--f-display);font-size:13px;text-transform:uppercase;letter-spacing:.08em;margin:0 0 6px;color:var(--muted)}
+.notes ul{margin:0 0 10px;padding-left:18px}
+.notes ul:last-child{margin-bottom:0}
+.notes code{font-family:var(--f-mono);font-size:12px}
+.controls{display:flex;flex-wrap:wrap;gap:6px}
+.controls button{font:500 12.5px var(--f-body);border:1px solid var(--line);background:var(--card);color:var(--fg);padding:5px 10px;border-radius:8px;cursor:pointer}
+.controls button:hover{border-color:var(--accent)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ---------- phone ---------- */
+.phone{width:100%;max-width:360px;aspect-ratio:9/18.5;margin:0 auto;border-radius:36px;background:#000;padding:10px;box-shadow:0 20px 50px -20px rgba(20,20,40,.45)}
+.screen{position:relative;height:100%;border-radius:28px;overflow:hidden;background:#0b0c10;font-family:var(--f-ui);color:var(--m-on);font-size:14px}
+.behind{position:absolute;inset:0;padding:38px 14px;opacity:.35}
+.behind .bar{height:18px;width:55%;background:#2a2c37;border-radius:6px;margin-bottom:18px}
+.behind .row{height:52px;background:#1a1c24;border-radius:12px;margin-bottom:8px}
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.45)}
+.sheet{position:absolute;left:0;right:0;bottom:0;top:34px;background:var(--m-surface);border-radius:26px 26px 0 0;display:flex;flex-direction:column;overflow:hidden;
+  animation:sheetIn .45s cubic-bezier(.2,.8,.2,1)}
+@keyframes sheetIn{from{transform:translateY(100%)}to{transform:none}}
+.handle{width:32px;height:4px;border-radius:2px;background:var(--m-outline);margin:10px auto 4px;flex:none}
+.tb{display:flex;align-items:center;gap:8px;padding:6px 12px 8px;flex:none}
+.tb .t{flex:1;font-size:17px;font-weight:500;text-align:center}
+.tb .t.left{text-align:left}
+.ic{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;border:0;background:transparent;color:var(--m-on-var);cursor:pointer;flex:none}
+.ic:hover{background:var(--m-cont-hi)}
+.ic svg{width:20px;height:20px;fill:currentColor}
+.ic.err{color:var(--m-error)}
+.body{flex:1;overflow-y:auto;padding:0 14px 14px;display:flex;flex-direction:column;gap:8px;scrollbar-width:none}
+.body::-webkit-scrollbar{display:none}
+.sub{font-size:12.5px;color:var(--m-on-var);line-height:1.45}
+.label{font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--m-on-var);margin:8px 2px 0}
+.mono{font-family:var(--f-mono);font-size:11px;color:var(--m-on-var);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+
+/* current */
+.cur-item{border:1px solid var(--m-outline);border-radius:12px;display:flex;align-items:center;gap:12px;padding:10px 6px 10px 14px;font-size:13px}
+.cur-item span{flex:1;min-width:0;overflow-wrap:anywhere}
+.cur-bottom{background:var(--m-cont);border-radius:12px 12px 0 0;padding:14px;display:flex;gap:10px;align-items:center;flex:none}
+.field{flex:1;min-width:0;border:1px solid var(--m-outline);border-radius:6px;padding:12px;color:var(--m-on-var);font-size:13px;background:transparent;font-family:var(--f-ui)}
+input.field{color:var(--m-on)}
+input.field::placeholder{color:var(--m-on-var)}
+
+/* shared rich bits */
+.btn{border:0;border-radius:99px;padding:9px 16px;font:500 13px var(--f-ui);cursor:pointer;background:var(--m-primary);color:var(--m-on-primary);flex:none}
+.btn.tonal{background:var(--m-pcont);color:var(--m-on-pcont)}
+.btn.text{background:transparent;color:var(--m-primary);padding:9px 10px}
+.btn:disabled{opacity:.38;cursor:default}
+.chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--m-outline);border-radius:8px;padding:4px 9px;font-size:12px;color:var(--m-on-var);background:transparent;cursor:pointer;font-family:var(--f-ui)}
+.chip svg{width:14px;height:14px;fill:currentColor}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:500;border-radius:99px;padding:2px 8px;white-space:nowrap}
+.pill i{width:6px;height:6px;border-radius:50%;background:currentColor}
+.pill.ok{color:var(--m-good);background:rgba(143,217,168,.12)}
+.pill.bad{color:var(--m-error);background:rgba(255,180,171,.12)}
+.pill.load{color:var(--m-on-var);background:var(--m-cont-hi)}
+.pill.load i{animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.25}}
+.avatar{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-weight:600;font-size:15px;flex:none;background:var(--m-pcont);color:var(--m-on-pcont)}
+.row{display:flex;align-items:center;gap:12px;background:var(--m-cont);border-radius:16px;padding:10px 6px 10px 12px;transition:transform .3s,opacity .3s}
+.row .mid{flex:1;min-width:0;display:grid;gap:2px}
+.row .name{font-weight:500;font-size:14px;display:flex;gap:8px;align-items:center;min-width:0}
+.row .name span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.enter{animation:rowIn .42s cubic-bezier(.2,.8,.2,1)}
+@keyframes rowIn{from{opacity:0;transform:translateY(-10px) scale(.97)}to{opacity:1;transform:none}}
+.leave{animation:rowOut .3s ease forwards}
+@keyframes rowOut{to{opacity:0;transform:translateX(40px);height:0;padding-block:0;margin:0}}
+.snack{position:absolute;left:12px;right:12px;bottom:14px;background:#e4e5ee;color:#1b1c22;border-radius:10px;padding:10px 8px 10px 14px;display:flex;align-items:center;gap:8px;font-size:13px;
+  animation:snack .3s cubic-bezier(.2,.8,.2,1);z-index:5}
+.snack span{flex:1}
+.snack button{background:none;border:0;color:#36428f;font:600 13px var(--f-ui);cursor:pointer;padding:6px 8px}
+@keyframes snack{from{transform:translateY(30px);opacity:0}}
+.err-text{font-size:12px;color:var(--m-error);padding:0 4px}
+.empty{display:grid;justify-items:center;text-align:center;gap:8px;padding:18px 8px}
+.empty .big{width:56px;height:56px;border-radius:18px;background:var(--m-cont-hi);display:grid;place-items:center;color:var(--m-primary)}
+.empty .big svg{width:28px;height:28px;fill:currentColor}
+
+/* A */
+.a-explain{display:flex;gap:10px;background:var(--m-cont);border-radius:14px;padding:12px;align-items:flex-start}
+.a-explain svg{width:20px;height:20px;fill:var(--m-primary);flex:none;margin-top:1px}
+.a-explain b{color:var(--m-on);font-weight:500}
+.a-add{background:var(--m-cont);border-radius:20px 20px 0 0;padding:12px 14px 16px;display:grid;gap:8px;flex:none}
+.a-add .line{display:flex;gap:8px;align-items:center}
+
+/* B */
+.steps{display:grid;gap:10px;text-align:left;width:100%;margin-top:6px}
+.step{display:flex;gap:10px;align-items:flex-start;font-size:12.5px;color:var(--m-on-var)}
+.step b{width:22px;height:22px;flex:none;border-radius:50%;background:var(--m-pcont);color:var(--m-on-pcont);display:grid;place-items:center;font-size:11.5px}
+.preview{background:var(--m-cont);border:1px solid var(--m-outline);border-radius:18px;padding:14px;display:grid;gap:10px;animation:rowIn .4s cubic-bezier(.2,.8,.2,1)}
+.preview .hd{display:flex;gap:12px;align-items:center}
+.preview .langs{display:flex;flex-wrap:wrap;gap:4px}
+.preview .langs span{font-size:11px;background:var(--m-cont-hi);border-radius:6px;padding:2px 6px;color:var(--m-on-var)}
+.preview .act{display:flex;justify-content:flex-end;gap:6px}
+.trust{display:flex;gap:8px;font-size:11.5px;color:var(--m-warn);align-items:flex-start}
+.trust svg{width:16px;height:16px;fill:currentColor;flex:none}
+.skel{height:12px;border-radius:6px;background:linear-gradient(90deg,var(--m-cont-hi),#343744,var(--m-cont-hi));background-size:200% 100%;animation:shimmer 1.1s infinite}
+@keyframes shimmer{to{background-position:-200% 0}}
+
+/* C */
+.c-card{background:var(--m-cont);border-radius:18px;overflow:hidden;transition:background .2s}
+.c-card.open{background:var(--m-cont-hi)}
+.c-head{display:flex;gap:12px;align-items:center;padding:12px 8px 12px 12px;cursor:pointer;width:100%;border:0;background:none;color:inherit;text-align:left;font:inherit}
+.c-head .chev{transition:transform .3s}
+.c-card.open .chev{transform:rotate(180deg)}
+.c-more{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s cubic-bezier(.2,.8,.2,1)}
+.c-card.open .c-more{grid-template-rows:1fr}
+.c-more>div{overflow:hidden}
+.c-inner{padding:0 12px 12px;display:grid;gap:10px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.stat{background:var(--m-surface);border-radius:10px;padding:8px;display:grid;gap:1px}
+.stat b{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
+.stat span{font-size:10.5px;color:var(--m-on-var)}
+.c-actions{display:flex;flex-wrap:wrap;gap:6px}
+.fab{position:absolute;right:16px;bottom:18px;display:flex;align-items:center;gap:8px;background:var(--m-pcont);color:var(--m-on-pcont);border:0;border-radius:16px;padding:14px 18px;font:500 14px var(--f-ui);cursor:pointer;box-shadow:0 6px 16px rgba(0,0,0,.4);z-index:3}
+.fab svg{width:20px;height:20px;fill:currentColor}
+.c-dialog{position:absolute;inset:0;z-index:6;display:flex;align-items:flex-end}
+.c-dialog .dim{position:absolute;inset:0;background:rgba(0,0,0,.5);animation:fade .25s}
+@keyframes fade{from{opacity:0}}
+.c-dialog .panel{position:relative;width:100%;background:var(--m-cont);border-radius:24px 24px 0 0;padding:18px 16px 18px;display:grid;gap:10px;animation:sheetIn .35s cubic-bezier(.2,.8,.2,1)}
+.c-dialog h4{margin:0;font-size:17px;font-weight:500}
+/* C · Anime */
+.tbadge{font-size:10.5px;font-weight:600;letter-spacing:.02em;border-radius:6px;padding:1px 6px;white-space:nowrap;flex:none}
+.tbadge.ani{color:var(--m-primary);background:rgba(185,195,255,.14)}
+.tbadge.cs{color:#7fdbd0;background:rgba(127,219,208,.13)}
+.avatar.cs{background:#1f4d48;color:#b6f2ea}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.split>div{background:var(--m-cont);border-radius:14px;padding:10px 12px;display:grid;gap:4px}
+.split b{font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
+.split span{font-size:11.5px;color:var(--m-on-var);display:flex;gap:6px;align-items:center}
+.fchips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 0}
+.fchip{flex:none;border:1px solid var(--m-outline);background:transparent;color:var(--m-on-var);border-radius:8px;padding:5px 10px;font:500 12px var(--f-ui);cursor:pointer;transition:background .2s,color .2s}
+.fchip span{opacity:.7;font-variant-numeric:tabular-nums}
+.fchip.on{background:var(--m-pcont);color:var(--m-on-pcont);border-color:transparent}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+
+<div class="wrap">
+<header>
+  <h1>Custom repos sheet proposals</h1>
+  <p>The sheet behind <b>Extensions ⋮ → Custom repos</b> today is a bare list of URLs with a text field. Nothing says what a repo is, what happens after you add one, or whether it worked. Each phone below is clickable: add a repo, remove one, try the error case.</p>
+  <ul class="problems">
+    <li>No explanation of what a "custom URL" is</li>
+    <li>No feedback after Add (did it load? how many extensions?)</li>
+    <li>Raw URLs only, hard to tell repos apart</li>
+    <li>Tap-anywhere copies (hidden action)</li>
+    <li>Delete needs a dialog, no undo</li>
+    <li>Count "2" in the top bar has no label</li>
+  </ul>
+</header>
+
+<div class="grid">
+  <section class="col">
+    <h2><span class="tag">NOW</span>Current</h2>
+    <p class="lede">For reference, rebuilt from <code>CustomUrlDialog</code>.</p>
+    <div class="phone"><div class="screen" id="cur"></div></div>
+    <div class="controls"><button data-replay="cur">Replay open</button></div>
+  </section>
+
+  <section class="col">
+    <h2><span class="tag">A</span>Explained list</h2>
+    <p class="lede">Smallest change. Keep the shape, add a one-line explainer, name + status on every repo, swipe-style remove with undo.</p>
+    <div class="phone"><div class="screen" id="a"></div></div>
+    <div class="controls"><button data-replay="a">Replay open</button><button data-fill="a">Type a good URL</button><button data-bad="a">Type a bad URL</button><button data-empty="a">Empty state</button></div>
+    <div class="notes">
+      <h3>How it works</h3>
+      <ul><li>Add field pinned at bottom with a <b>Paste</b> chip and inline error under it.</li>
+      <li>New row slides in as <i>Checking…</i>, then turns into <i>N extensions</i> or <i>Couldn't load</i>.</li>
+      <li>Copy becomes an explicit icon. Remove is instant, snackbar offers Undo.</li></ul>
+      <h3>Compose</h3>
+      <ul><li><code>Modifier.animateItem()</code> on rows, <code>AnimatedContent</code> on status pill, <code>SnackbarHost</code> inside the sheet.</li></ul>
+    </div>
+  </section>
+
+  <section class="col">
+    <h2><span class="tag">B</span>Check before add</h2>
+    <p class="lede">Teach first, then confirm. Pasting a link shows what's in the repo before it is saved.</p>
+    <div class="phone"><div class="screen" id="b"></div></div>
+    <div class="controls"><button data-replay="b">Replay open</button><button data-fill="b">Paste a good URL</button><button data-bad="b">Paste a bad URL</button><button data-empty="b">Empty state</button></div>
+    <div class="notes">
+      <h3>How it works</h3>
+      <ul><li>Empty state walks through 3 steps: find a repo link, paste it, extensions show up in <b>Get extensions</b>.</li>
+      <li>Pasting triggers a fetch. A preview card shows repo name, extension count and languages, plus a trust warning.</li>
+      <li><b>Add repo</b> saves only after a good fetch. Bad links never reach the list.</li></ul>
+      <h3>Compose</h3>
+      <ul><li>Preview = <code>AnimatedContent</code> over Idle / Loading (shimmer) / Found / Error. Needs a per-URL <code>repoClient.fetch(url)</code> call.</li></ul>
+    </div>
+  </section>
+
+  <section class="col">
+    <h2><span class="tag">C · 1 CATALOG</span>MangaWorld</h2>
+    <p class="lede">One layout for every app. Here only Mihon is installed.</p>
+    <div class="phone"><div class="screen" id="cm"></div></div>
+    <div class="controls"><button data-replay="cm">Replay open</button><button data-u="cm:0">Add Mihon link</button><button data-u="cm:wrong">Add Aniyomi link</button><button data-u="cm:dead">Add dead link</button></div>
+    <div class="notes">
+      <h3>One layout, driven by data</h3>
+      <ul><li>Summary line, then cards. Problem repos sort to the top. No tiles, no filter chips, nothing that depends on catalog count.</li>
+      <li>Every card has a catalog badge once a catalog accepts the link. Failed links get no badge.</li>
+      <li>All catalog wording comes from the installed catalogs: <i>Checking Mihon…</i>, <i>Supported: Mihon</i>, <i>Mihon can't read this link</i>.</li>
+      <li>Badge colour comes from the catalog's position in the list, not its name.</li></ul>
+      <h3>In kmpuiviews</h3>
+      <ul><li>No "Mihon" / "Aniyomi" / "CloudStream" strings. The sheet reads <code>catalog.name</code> from each installed <code>KmpExternalCustomApiServicesCatalog</code>.</li>
+      <li>Needs <code>checkRepo(url): RepoCheck?</code> per catalog (null = not my format). Merge: first non-null wins, all null = Not supported.</li></ul>
+    </div>
+  </section>
+
+  <section class="col">
+    <h2><span class="tag">C · 2 CATALOGS</span>AnimeWorld</h2>
+    <p class="lede">Same composable with Aniyomi and CloudStream installed. Only the data differs.</p>
+    <div class="phone"><div class="screen" id="ca"></div></div>
+    <div class="controls"><button data-replay="ca">Replay open</button><button data-u="ca:0">Add Aniyomi link</button><button data-u="ca:1">Add CloudStream link</button><button data-u="ca:wrong">Add Mihon link</button><button data-u="ca:dead">Add dead link</button></div>
+    <div class="notes">
+      <h3>What changes with 2 catalogs</h3>
+      <ul><li>Badges show two names. Checking text lists both: <i>Checking Aniyomi + CloudStream…</i></li>
+      <li>Not supported reads <i>Neither Aniyomi nor CloudStream can read this link</i>. No pointer to another app.</li></ul>
+    </div>
+  </section>
+</div>
+</div>
+
+<script>
+const I={
+  close:'<path d="M19 6.4 17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12z"/>',
+  add:'<path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"/>',
+  del:'<path d="M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6zM19 4h-3.5l-1-1h-5l-1 1H5v2h14z"/>',
+  copy:'<path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2m0 16H8V7h11z"/>',
+  info:'<path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9a10 10 0 1 0 0 20 10 10 0 0 0 0-20m0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16"/>',
+  paste:'<path d="M19 2h-4.2A3 3 0 0 0 12 0a3 3 0 0 0-2.8 2H5a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2m-7 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2m7 18H5V4h2v3h10V4h2z"/>',
+  link:'<path d="M3.9 12a3.1 3.1 0 0 1 3.1-3.1h4V7H7a5 5 0 0 0 0 10h4v-1.9H7A3.1 3.1 0 0 1 3.9 12M8 13h8v-2H8zm9-6h-4v1.9h4a3.1 3.1 0 0 1 0 6.2h-4V17h4a5 5 0 0 0 0-10"/>',
+  chev:'<path d="M7.4 8.6 12 13.2l4.6-4.6L18 10l-6 6-6-6z"/>',
+  refresh:'<path d="M17.65 6.35A8 8 0 1 0 19.73 14h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4z"/>',
+  browse:'<path d="M15.5 14h-.8l-.3-.3A6.5 6.5 0 1 0 9.5 16a6.5 6.5 0 0 0 4.2-1.6l.3.3v.8l5 5 1.5-1.5zm-6 0a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9"/>',
+  warn:'<path d="M1 21h22L12 2zm12-3h-2v-2h2zm0-4h-2v-4h2z"/>',
+};
+const svg=k=>`<svg viewBox="0 0 24 24" aria-hidden="true">${I[k]}</svg>`;
+const behind='<div class="behind"><div class="bar"></div><div class="row"></div><div class="row"></div><div class="row"></div><div class="row"></div></div><div class="scrim"></div>';
+
+const SEED=[
+  {url:'https://raw.githubusercontent.com/keiyoushi/extensions/repo/index.min.json',name:'Keiyoushi',count:1284,installed:6,langs:['en','ja','es','fr','+38'],status:'ok',checked:'12 min ago'},
+  {url:'https://raw.githubusercontent.com/yuzono/manga-repo/repo/index.min.json',name:'Yuzono',count:212,installed:1,langs:['en','vi','id'],status:'ok',checked:'12 min ago'},
+  {url:'https://example.org/old-repo/index.min.json',name:'old-repo',count:0,installed:0,langs:[],status:'bad',checked:'12 min ago'},
+];
+const GOOD='https://raw.githubusercontent.com/Kohi-den/extensions/main/index.min.json';
+const GOOD_INFO={name:'Kohi-den',count:347,installed:0,langs:['en','pt','ru','+9'],checked:'just now'};
+const BAD='https://github.com/someone/my-repo';
+const BAD_MSG='No repo index at this link. Repo links usually end in index.min.json.';
+
+function repoName(u){try{const p=new URL(u).pathname.split('/').filter(Boolean);return p[0]==='keiyoushi'?'Keiyoushi':(p[1]||p[0]||new URL(u).host)}catch{return u}}
+function host(u){try{return new URL(u).host}catch{return u}}
+function clone(){return SEED.map(r=>({...r}))}
+const S={cur:{list:clone()},a:{list:clone()},b:{list:clone().slice(0,2)},c:{list:clone(),open:0}};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function pill(r){return r.status==='ok'?`<span class="pill ok"><i></i>${r.count.toLocaleString()} extensions</span>`:r.status==='load'?`<span class="pill load"><i></i>Checking…</span>`:`<span class="pill bad"><i></i>Couldn't load</span>`}
+
+/* ---- current ---- */
+function renderCur(){
+  const el=document.getElementById('cur');
+  el.innerHTML=behind+`<div class="sheet"><div class="handle"></div>
+  <div class="tb"><button class="ic" aria-label="Close">${svg('close')}</button><div class="t">Custom Extension Urls</div><span style="width:36px;text-align:center">${S.cur.list.length}</span></div>
+  <div class="body">${S.cur.list.map(r=>`<div class="cur-item"><span style="display:flex;gap:12px;align-items:center"><span class="ic" style="width:auto;height:auto">${svg('copy')}</span><span>${esc(r.url)}</span></span><button class="ic err" aria-label="Delete">${svg('del')}</button></div>`).join('')}</div>
+  <div class="cur-bottom"><div class="field">Custom Url</div><button class="ic" aria-label="Add">${svg('add')}</button></div></div>`;
+}
+
+/* ---- A ---- */
+function renderA(opts={}){
+  const st=S.a, el=document.getElementById('a');
+  const rows=st.list.length?st.list.map((r,i)=>`<div class="row ${r.fresh?'enter':''}" data-i="${i}">
+      <div class="avatar">${esc(r.name[0].toUpperCase())}</div>
+      <div class="mid"><div class="name"><span>${esc(r.name)}</span></div>${pill(r)}<div class="mono">${esc(r.url.replace(/^https?:\/\//,''))}</div></div>
+      <button class="ic" aria-label="Copy link" data-copy>${svg('copy')}</button>
+      <button class="ic" aria-label="Remove" data-rm="${i}">${svg('del')}</button></div>`).join('')
+    :`<div class="empty"><div class="big">${svg('link')}</div><div style="font-weight:500">No custom repos yet</div><div class="sub">Paste a repo link below. Its extensions appear in Get extensions.</div></div>`;
+  el.innerHTML=behind+`<div class="sheet" ${opts.noanim?'style="animation:none"':''}><div class="handle"></div>
+   <div class="tb"><button class="ic" aria-label="Close">${svg('close')}</button><div class="t left">Custom repos</div></div>
+   <div class="body">
+     <div class="a-explain">${svg('info')}<div class="sub">A repo is a link to a list of extensions, shared by its maintainer. Added repos show up in <b>Get extensions</b>. Only add repos you trust.</div></div>
+     <div class="label">${st.list.length} ${st.list.length===1?'repo':'repos'}</div>
+     ${rows}
+   </div>
+   <div class="a-add">
+     <div class="line"><input class="field" id="a-input" placeholder="Repo link (https://…/index.min.json)" value="${esc(st.draft||'')}" autocomplete="off"><button class="btn" id="a-go" ${st.draft?'':'disabled'}>Add</button></div>
+     ${st.err?`<div class="err-text">${esc(st.err)}</div>`:`<div><button class="chip" id="a-paste">${svg('paste')}Paste link</button></div>`}
+   </div>
+   ${st.snack?`<div class="snack"><span>Removed ${esc(st.snack.r.name)}</span><button id="a-undo">Undo</button></div>`:''}
+  </div>`;
+  st.list.forEach(r=>delete r.fresh);
+  const inp=el.querySelector('#a-input');
+  inp.oninput=e=>{st.draft=e.target.value;st.err=null;el.querySelector('#a-go').disabled=!st.draft};
+  el.querySelector('#a-go').onclick=()=>addA(st.draft);
+  const p=el.querySelector('#a-paste'); if(p)p.onclick=()=>{st.draft=GOOD;renderA({noanim:1})};
+  el.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.rm,row=b.closest('.row');row.classList.add('leave');
+    setTimeout(()=>{const r=st.list.splice(i,1)[0];st.snack={r,i};renderA({noanim:1});clearTimeout(st.t);st.t=setTimeout(()=>{st.snack=null;renderA({noanim:1})},4000)},280)});
+  const u=el.querySelector('#a-undo'); if(u)u.onclick=()=>{const {r,i}=st.snack;r.fresh=1;st.list.splice(i,0,r);st.snack=null;renderA({noanim:1})};
+}
+function addA(url){
+  const st=S.a; if(!url)return;
+  if(!/^https?:\/\//.test(url)){st.err='Links start with https://';renderA({noanim:1});return}
+  if(st.list.some(r=>r.url===url)){st.err='This repo is already added.';renderA({noanim:1});return}
+  const bad=!url.endsWith('.json');
+  const r={url,name:repoName(url),count:0,status:'load',fresh:1,langs:[]};
+  st.list.push(r);st.draft='';st.err=null;renderA({noanim:1});
+  setTimeout(()=>{if(bad){r.status='bad'}else{Object.assign(r,GOOD_INFO,{status:'ok'})}renderA({noanim:1})},1300);
+}
+
+/* ---- B ---- */
+function renderB(opts={}){
+  const st=S.b, el=document.getElementById('b');
+  let top='';
+  if(st.phase==='load') top=`<div class="preview"><div class="hd"><div class="avatar" style="background:var(--m-cont-hi)"></div><div style="flex:1;display:grid;gap:6px"><div class="skel" style="width:60%"></div><div class="skel" style="width:35%"></div></div></div><div class="sub">Checking the link…</div></div>`;
+  else if(st.phase==='found') top=`<div class="preview"><div class="hd"><div class="avatar">${GOOD_INFO.name[0]}</div><div style="flex:1;min-width:0"><div style="font-weight:500">${GOOD_INFO.name}</div><div class="mono">${host(st.draft)}</div></div><span class="pill ok"><i></i>Found</span></div>
+     <div class="sub"><b style="color:var(--m-on);font-weight:600">${GOOD_INFO.count}</b> extensions</div>
+     <div class="langs">${GOOD_INFO.langs.map(l=>`<span>${l}</span>`).join('')}</div>
+     <div class="trust">${svg('warn')}<span>Extensions run code on your device. Only add repos from people you trust.</span></div>
+     <div class="act"><button class="btn text" id="b-cancel">Cancel</button><button class="btn" id="b-add">Add repo</button></div></div>`;
+  else if(st.phase==='bad') top=`<div class="preview" style="border-color:var(--m-error)"><div class="hd"><div class="avatar" style="background:rgba(255,180,171,.15);color:var(--m-error)">!</div><div style="flex:1;min-width:0"><div style="font-weight:500">Not a repo link</div><div class="mono">${esc(host(st.draft))}</div></div></div><div class="sub">${BAD_MSG}</div><div class="act"><button class="btn text" id="b-cancel">Clear</button></div></div>`;
+  const list=st.list.length?`<div class="label">Your repos · ${st.list.length}</div>`+st.list.map((r,i)=>`<div class="row ${r.fresh?'enter':''}"><div class="avatar">${esc(r.name[0])}</div><div class="mid"><div class="name"><span>${esc(r.name)}</span></div><div class="sub">${r.count.toLocaleString()} extensions · ${esc(host(r.url))}</div></div><button class="ic" aria-label="Remove" data-rm="${i}">${svg('del')}</button></div>`).join('')
+    : (st.phase?'':`<div class="empty"><div class="big">${svg('link')}</div><div style="font-weight:500">Add extensions from other repos</div>
+       <div class="steps"><div class="step"><b>1</b><span>Get a repo link from the extension's site or community. It usually ends in <span class="mono" style="display:inline">index.min.json</span>.</span></div>
+       <div class="step"><b>2</b><span>Paste it above. We check it and show what's inside.</span></div>
+       <div class="step"><b>3</b><span>Its extensions appear in <b style="color:var(--m-on);font-weight:500">Get extensions</b>, ready to install.</span></div></div></div>`);
+  el.innerHTML=behind+`<div class="sheet" ${opts.noanim?'style="animation:none"':''}><div class="handle"></div>
+   <div class="tb"><div class="t left" style="padding-left:4px">Custom repos</div><button class="ic" aria-label="Close">${svg('close')}</button></div>
+   <div class="body">
+     <div style="display:flex;gap:8px"><input class="field" id="b-input" placeholder="Paste a repo link" value="${esc(st.draft||'')}" autocomplete="off" style="border-radius:28px;background:var(--m-cont);border-color:transparent;padding-left:16px">
+     <button class="btn tonal" id="b-paste">Paste</button></div>
+     ${top}${list}
+   </div>
+   ${st.snack?`<div class="snack"><span>Added ${esc(st.snack)} · ${GOOD_INFO.count} extensions</span><button>View</button></div>`:''}
+  </div>`;
+  st.list.forEach(r=>delete r.fresh);
+  el.querySelector('#b-paste').onclick=()=>checkB(GOOD);
+  el.querySelector('#b-input').onchange=e=>checkB(e.target.value);
+  const c=el.querySelector('#b-cancel'); if(c)c.onclick=()=>{st.phase=null;st.draft='';renderB({noanim:1})};
+  const a=el.querySelector('#b-add'); if(a)a.onclick=()=>{st.list.unshift({url:st.draft,...GOOD_INFO,status:'ok',fresh:1});st.phase=null;st.draft='';st.snack=GOOD_INFO.name;renderB({noanim:1});setTimeout(()=>{st.snack=null;renderB({noanim:1})},3000)};
+  el.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{b.closest('.row').classList.add('leave');setTimeout(()=>{st.list.splice(+b.dataset.rm,1);renderB({noanim:1})},280)});
+}
+function checkB(url){const st=S.b;if(!url)return;st.draft=url;st.phase='load';renderB({noanim:1});setTimeout(()=>{st.phase=url.endsWith('.json')?'found':'bad';renderB({noanim:1})},1200)}
+
+/* ---- C · unified (same code, data per app) ---- */
+const APPS={
+  cm:{catalogs:['Mihon'],
+    seed:[
+      {url:'https://raw.githubusercontent.com/keiyoushi/extensions/repo',name:'Keiyoushi',cat:0,count:1284,installed:6,langs:42,status:'ok'},
+      {url:'https://raw.githubusercontent.com/yuzono/manga-repo/repo',name:'Yuzono',cat:0,count:212,installed:1,langs:3,status:'ok'},
+      {url:'https://example.org/old-repo',name:'example.org',cat:null,status:'bad'},
+    ],
+    adds:{0:{url:'https://raw.githubusercontent.com/suwayomi/tachiyomi-extension/repo',name:'Suwayomi',cat:0,count:96,installed:0,langs:5,status:'ok'},
+      wrong:{url:'https://raw.githubusercontent.com/Kohi-den/extensions/main',name:'raw.githubusercontent.com',cat:null,status:'unsupported'},
+      dead:{url:'https://manga-ext.example.net/repo',name:'manga-ext.example.net',cat:null,status:'bad'}}},
+  ca:{catalogs:['Aniyomi','CloudStream'],
+    seed:[
+      {url:'https://raw.githubusercontent.com/Kohi-den/extensions/main',name:'Kohi-den',cat:0,count:347,installed:4,langs:12,status:'ok'},
+      {url:'https://raw.githubusercontent.com/yuzono/anime-repo/repo',name:'Yuzono Anime',cat:0,count:98,installed:1,langs:6,status:'ok'},
+      {url:'https://raw.githubusercontent.com/recloudstream/extensions/builds/repo.json',name:'CloudStream Community',cat:1,count:74,installed:2,langs:9,status:'ok'},
+      {url:'https://raw.githubusercontent.com/keiyoushi/extensions/repo',name:'raw.githubusercontent.com',cat:null,status:'unsupported'},
+    ],
+    adds:{0:{url:'https://raw.githubusercontent.com/hollow-anime/aniyomi-ext/repo',name:'Hollow',cat:0,count:41,installed:0,langs:3,status:'ok'},
+      1:{url:'https://raw.githubusercontent.com/phisher98/cloudstream-ext/builds/repo.json',name:'Phisher Repo',cat:1,count:126,installed:0,langs:7,status:'ok'},
+      wrong:{url:'https://raw.githubusercontent.com/yuzono/manga-repo/repo',name:'raw.githubusercontent.com',cat:null,status:'unsupported'},
+      dead:{url:'https://anime-ext.example.net/repo.json',name:'anime-ext.example.net',cat:null,status:'bad'}}},
+};
+Object.keys(APPS).forEach(k=>S[k]={list:APPS[k].seed.map(r=>({...r,checked:'8 min ago'})),open:0});
+function renderU(key,opts={}){
+  const app=APPS[key],cats=app.catalogs,st=S[key],el=document.getElementById(key);
+  const badgeU=i=>i==null?'':`<span class="tbadge ${i%2?'cs':'ani'}">${esc(cats[i])}</span>`;
+  const rank=r=>r.status==='ok'||r.status==='load'?1:0;
+  const ok=st.list.filter(r=>r.status==='ok');
+  const total=ok.reduce((a,r)=>a+r.count,0);
+  const issues=st.list.filter(r=>!rank(r)).length;
+  const pillU=r=>r.status==='ok'?`<span class="pill ok"><i></i>${r.count.toLocaleString()} extensions</span>`
+    :r.status==='load'?`<span class="pill load"><i></i>Checking ${cats.join(' + ')}…</span>`
+    :r.status==='unsupported'?`<span class="pill bad"><i></i>Not supported</span>`:`<span class="pill bad"><i></i>Couldn't load</span>`;
+  const detail=r=>r.status==='ok'?`<div class="stats"><div class="stat"><b>${r.count.toLocaleString()}</b><span>extensions</span></div><div class="stat"><b>${r.installed}</b><span>installed</span></div><div class="stat"><b>${r.langs}</b><span>languages</span></div></div>`
+    :r.status==='load'?`<div class="sub">Asking ${cats.length>1?'each catalog':cats[0]} whether it can read this link…</div>`
+    :r.status==='unsupported'?`<div class="err-text" style="padding:0">${cats.length>1?'Neither '+cats.join(' nor '):cats[0]} can read this link. Supported: ${cats.join(', ')}.</div>`
+    :`<div class="err-text" style="padding:0">Last check failed: the server didn't respond. Check the link or try again later.</div>`;
+  const actions=r=>(r.status==='ok'?`<button class="chip">${svg('browse')}Browse</button><button class="chip">${svg('refresh')}Refresh</button>`:r.status==='bad'?`<button class="chip">${svg('refresh')}Retry</button>`:'')
+    +`<button class="chip">${svg('copy')}Copy link</button><button class="chip" style="color:var(--m-error)" data-rm>${svg('del')}Remove</button>`;
+  const shown=st.list.map((r,i)=>({r,i})).sort((x,y)=>rank(x.r)-rank(y.r));
+  el.innerHTML=behind+`<div class="sheet" ${opts.noanim?'style="animation:none"':''}><div class="handle"></div>
+   <div class="tb"><button class="ic" aria-label="Close">${svg('close')}</button><div class="t left">Custom repos</div><button class="ic" aria-label="Refresh all">${svg('refresh')}</button></div>
+   <div class="body" style="padding-bottom:84px">
+     <div class="sub" style="padding:0 2px 4px"><b style="color:var(--m-on);font-weight:600">${total.toLocaleString()}</b> extensions from ${ok.length} ${ok.length===1?'repo':'repos'}${issues?` · <span style="color:var(--m-error)">${issues} need${issues===1?'s':''} attention</span>`:''}. Tap a repo for details.</div>
+     ${shown.map(({r,i})=>`<div class="c-card ${st.open===i?'open':''} ${r.fresh?'enter':''}" data-i="${i}">
+       <button class="c-head" data-tog="${i}"><div class="avatar ${r.cat%2?'cs':''}" ${rank(r)===0?'style="background:rgba(255,180,171,.15);color:var(--m-error)"':''}>${esc(r.name[0].toUpperCase())}</div>
+         <div style="flex:1;min-width:0;display:grid;gap:4px"><div style="display:flex;gap:6px;align-items:center;min-width:0"><span style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.name)}</span>${badgeU(r.cat)}</div>
+         <div style="display:flex;gap:6px;align-items:center;min-width:0">${pillU(r)}</div></div>
+         <span class="ic chev">${svg('chev')}</span></button>
+       <div class="c-more"><div><div class="c-inner">${detail(r)}
+         <div class="mono" style="white-space:normal;overflow-wrap:anywhere">${esc(r.url)}</div>
+         ${r.status!=='load'?`<div class="sub">Checked ${r.checked||'just now'}</div>`:''}
+         <div class="c-actions">${actions(r)}</div>
+       </div></div></div></div>`).join('')}
+   </div>
+   <button class="fab" data-fab>${svg('add')}Add repo</button>
+   ${st.adding?`<div class="c-dialog"><div class="dim" data-dim></div><div class="panel"><h4>Add a repo</h4><div class="sub">Paste a repo link. Supported: ${cats.join(', ')}.</div>
+      <input class="field" id="${key}-input" placeholder="https://…" value="${esc(st.draft||'')}"><div style="display:flex;justify-content:space-between"><button class="chip" data-paste>${svg('paste')}Paste</button><div><button class="btn text" data-cancel>Cancel</button><button class="btn" data-add>Add</button></div></div></div></div>`:''}
+  </div>`;
+  st.list.forEach(r=>delete r.fresh);
+  const q=s=>el.querySelector(s);
+  el.querySelectorAll('[data-tog]').forEach(b=>b.onclick=()=>{const i=+b.dataset.tog;st.open=st.open===i?null:i;
+    el.querySelectorAll('.c-card').forEach(c=>c.classList.toggle('open',+c.dataset.i===st.open))});
+  el.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{const card=b.closest('.c-card');card.classList.add('leave');setTimeout(()=>{st.list.splice(+card.dataset.i,1);st.open=null;renderU(key,{noanim:1})},280)});
+  q('[data-fab]').onclick=()=>{st.adding=1;renderU(key,{noanim:1})};
+  if(st.adding){
+    q('[data-dim]').onclick=q('[data-cancel]').onclick=()=>{st.adding=0;st.draft='';renderU(key,{noanim:1})};
+    q('[data-paste]').onclick=()=>{st.draft=app.adds[0].url;q('input').value=st.draft};
+    q('input').oninput=e=>st.draft=e.target.value;
+    q('[data-add]').onclick=()=>{if(!st.draft)return;const k=Object.keys(app.adds).find(k=>app.adds[k].url===st.draft)??0;st.adding=0;st.draft='';addU(key,k)};
+  }
+}
+function addU(key,k){
+  const st=S[key],t=APPS[key].adds[k];
+  const dup=st.list.findIndex(r=>r.url===t.url);
+  if(dup>=0){st.open=dup;renderU(key,{noanim:1});return}
+  const r={url:t.url,name:t.url.replace(/^https?:\/\//,'').split('/')[0],cat:null,status:'load',fresh:1};
+  st.list.push(r);st.open=st.list.length-1;renderU(key,{noanim:1});
+  setTimeout(()=>{Object.assign(r,t,{checked:'just now'});renderU(key,{noanim:1})},1500);
+}
+document.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>{const [key,k]=b.dataset.u.split(':');addU(key,k)});
+
+const R={cur:renderCur,a:renderA,b:renderB,cm:o=>renderU('cm',o),ca:o=>renderU('ca',o)};
+document.querySelectorAll('[data-replay]').forEach(b=>b.onclick=()=>R[b.dataset.replay]());
+document.querySelectorAll('[data-fill]').forEach(b=>b.onclick=()=>{const k=b.dataset.fill;if(k==='a'){S.a.draft=GOOD;S.a.err=null;renderA({noanim:1})}else checkB(GOOD)});
+document.querySelectorAll('[data-bad]').forEach(b=>b.onclick=()=>{const k=b.dataset.bad;if(k==='a'){addA(BAD)}else checkB(BAD)});
+document.querySelectorAll('[data-empty]').forEach(b=>b.onclick=()=>{const k=b.dataset.empty;S[k].list=[];S[k].phase=null;S[k].draft='';R[k]({noanim:1})});
+Object.values(R).forEach(f=>f());
+</script>

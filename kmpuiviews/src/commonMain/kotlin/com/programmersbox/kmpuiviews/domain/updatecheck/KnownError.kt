@@ -20,7 +20,7 @@ enum class KnownError(val resource: StringResource) {
     Offline(Res.string.uc_explain_offline),
 }
 
-private val offlineRegex = Regex(
+internal val offlineRegex = Regex(
     "UnknownHostException|Unable to resolve host|ConnectException|NoRouteToHostException|" +
             "UnresolvedAddressException|Network is unreachable"
 )
