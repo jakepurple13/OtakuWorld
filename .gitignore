@@ -22,3 +22,6 @@ local.properties
 .claude/worktrees/
 .superpowers/
 .hotswan/
+
+# Zensical docs build output
+/site/
