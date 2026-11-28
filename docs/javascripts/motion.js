@@ -23,21 +23,28 @@
 
   /* ---------- A + C: page leave and enter ---------- */
 
+  var entered = new WeakSet(); // page bodies that already played their entrance
+  var enterToken = 0;
+
   function enterPage() {
     var content = document.querySelector(".md-content");
-    if (!content) return;
+    var inner = content && content.querySelector(".md-content__inner");
+    if (!inner || entered.has(inner)) return;
+    entered.add(inner);
     content.classList.remove("m-leaving");
     if (reduced()) return;
-    var inner = content.querySelector(".md-content__inner");
-    if (inner) {
-      Array.prototype.forEach.call(inner.children, function (el, i) {
-        el.style.setProperty("--m-i", Math.min(i, 10));
-      });
-    }
-    content.classList.remove("m-entering");
-    void content.offsetWidth;
+    // Number only real content blocks, so the title starts rising right away
+    // instead of waiting behind the hidden skip link and edit button.
+    var i = 0;
+    Array.prototype.forEach.call(inner.children, function (el) {
+      if (el.id === "__skip" || el.classList.contains("md-content__button")) return;
+      el.style.setProperty("--m-i", Math.min(i++, 10));
+    });
+    var token = ++enterToken;
     content.classList.add("m-entering");
-    setTimeout(function () { content.classList.remove("m-entering"); }, 1000);
+    setTimeout(function () {
+      if (token === enterToken) content.classList.remove("m-entering");
+    }, 1000);
   }
 
   function leavePage() {
@@ -73,7 +80,7 @@
 
   function setupPill() {
     var nav = document.querySelector(".md-sidebar--primary .md-nav--primary");
-    if (!nav) return;
+    if (!nav || nav.querySelector(".m-pill")) return;
     var link = activePrimaryLink(nav);
     if (!link) { root.classList.remove("m-has-pill"); return; }
     var pill = document.createElement("div");
@@ -95,6 +102,7 @@
   function setupTocBar() {
     var list = document.querySelector(".md-sidebar--secondary .md-nav--secondary > .md-nav__list");
     if (!list) { root.classList.remove("m-has-bar"); return; }
+    if (list.querySelector(".m-toc-bar")) return;
     var bar = document.createElement("div");
     bar.className = "m-toc-bar";
     list.appendChild(bar);
@@ -236,6 +244,22 @@
   } else {
     document.addEventListener("DOMContentLoaded", onPage);
   }
+
+  // document$ can fire a frame after the new page is drawn, which flashes the
+  // page before its entrance starts. Mutation observers run before the next
+  // paint, so start the entrance as soon as the new page body is inserted.
+  new MutationObserver(function (records) {
+    for (var i = 0; i < records.length; i++) {
+      var added = records[i].addedNodes;
+      for (var j = 0; j < added.length; j++) {
+        var n = added[j];
+        if (n.nodeType === 1 && (n.matches(".md-content__inner, .md-content, .md-container, .md-main") || n.querySelector(".md-content__inner"))) {
+          onPage();
+          return;
+        }
+      }
+    }
+  }).observe(document.body, { childList: true, subtree: true });
   window.addEventListener("resize", function () {
     lastPill = null;
     var nav = document.querySelector(".md-sidebar--primary .md-nav--primary");
