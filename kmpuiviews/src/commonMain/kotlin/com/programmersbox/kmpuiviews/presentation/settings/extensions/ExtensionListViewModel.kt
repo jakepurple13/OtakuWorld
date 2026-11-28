@@ -43,6 +43,16 @@ class ExtensionListViewModel(
     private val installedSources = mutableStateListOf<KmpSourceInformation>()
     private val downloads = mutableStateListOf<DownloadAndInstallState>()
     private val remoteCatalogs = RemoteCatalogs()
+
+    /** Installed custom catalogs then the native ones, those with remote sources, deduped. */
+    val customCatalogs: List<KmpExternalCustomApiServicesCatalog>
+        get() = (installedSources.asSequence().map { it.catalog }.filterIsInstance<KmpExternalCustomApiServicesCatalog>() +
+            nativeCatalogs.catalogs.asSequence())
+            .filter { it.hasRemoteSources }
+            .distinct()
+            .toList()
+
+    val customRepos = CustomRepoChecker({ customCatalogs }, viewModelScope)
     private var loadedCustomUrls: List<String>? = null
 
     /** Links sent to the downloader that haven't reported a terminal status; queued jobs carry no url. */
@@ -150,16 +160,12 @@ class ExtensionListViewModel(
                     .toList()
                     .forEach { c -> launchLoad(c.name) { c.getRemoteSources() } }
             }
-            .combine(settingsHandling.customUrls) { sources, urls ->
+            .combine(settingsHandling.customUrls) { _, urls ->
                 // Custom catalogs depend on the urls, so a url change refetches them.
                 val urlsChanged = loadedCustomUrls != null && loadedCustomUrls != urls
                 loadedCustomUrls = urls
-                (sources.asSequence().map { it.catalog }.filterIsInstance<KmpExternalCustomApiServicesCatalog>() +
-                    nativeCatalogs.catalogs.asSequence())
-                    .filter { it.hasRemoteSources }
-                    .distinct()
-                    .toList()
-                    .forEach { c -> launchLoad(c.name, reload = urlsChanged) { c.getRemoteSources(urls) } }
+                customRepos.sync(urls)
+                customCatalogs.forEach { c -> launchLoad(c.name, reload = urlsChanged) { c.getRemoteSources(urls) } }
             }
             .launchIn(viewModelScope)
     }
