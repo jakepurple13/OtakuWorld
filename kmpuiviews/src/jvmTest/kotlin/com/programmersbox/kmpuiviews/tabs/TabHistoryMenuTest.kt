@@ -12,7 +12,11 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsNodeInteraction
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.requestFocus
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.MouseButton
@@ -211,5 +215,37 @@ class TabHistoryMenuTest {
         mainClock.advanceTimeBy(100)
 
         assertEquals(1, backs.value, "the hold ended, so a short click steps back")
+    }
+
+    @Test
+    fun tabFocusesBackAndEnterStepsBack() = runComposeUiTest {
+        val backs = mutableIntStateOf(0)
+        hostNavButtons(onBack = { backs.value++ }, onJump = {})
+
+        onRoot().performKeyInput { pressKey(Key.Tab) }
+        waitForIdle()
+        val back = onNodeWithContentDescription("Back")
+        back.assertIsFocused()
+        back.performKeyInput { pressKey(Key.Enter) }
+        waitForIdle()
+
+        assertEquals(1, backs.value)
+    }
+
+    @Test
+    fun downOnFocusedButtonOpensMenuWithAPageSelected() = runComposeUiTest {
+        val jumps = mutableStateListOf<Int>()
+        hostNavButtons(onBack = {}, onJump = { jumps += it })
+
+        val back = onNodeWithContentDescription("Back")
+        back.requestFocus()
+        back.performKeyInput { pressKey(Key.DirectionDown) }
+        waitForIdle()
+        onNodeWithText("Tab history").assertIsDisplayed()
+
+        // Opened from the keyboard, the page one step back is selected, so Enter goes there
+        onNodeWithText("Tab history").performKeyInput { pressKey(Key.Enter) }
+        waitForIdle()
+        assertEquals(listOf(1), jumps.toList())
     }
 }

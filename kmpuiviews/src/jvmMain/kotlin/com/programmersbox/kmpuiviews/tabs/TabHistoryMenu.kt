@@ -6,6 +6,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
@@ -35,6 +36,7 @@ import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
@@ -60,6 +62,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
@@ -137,10 +140,14 @@ class HistoryDrag {
         get() = pointer?.let { p -> rowBounds.entries.firstOrNull { it.value.contains(p) }?.key }
 }
 
+/** The keyboard's context-menu key. Compose's [Key.Menu] has no AWT key code on desktop. */
+private val ContextMenuKey = Key(java.awt.event.KeyEvent.VK_CONTEXT_MENU)
+
 /**
  * Back or forward button. A click steps; holding it for [HISTORY_HOLD_MS], while a ring fills around it, or a
  * right-click calls [onOpenMenu]. After the hold opens the menu the press continues: [onHoldMove] gets the pointer's
- * screen position, and [onHoldRelease] where it was let go.
+ * screen position, and [onHoldRelease] where it was let go. From the keyboard, Enter or Space steps and ↓, Shift+F10
+ * or the context-menu key opens the menu, with fromKeyboard true.
  */
 @Composable
 fun HistoryButton(
@@ -148,7 +155,7 @@ fun HistoryButton(
     description: String,
     enabled: Boolean,
     onClick: () -> Unit,
-    onOpenMenu: () -> Unit,
+    onOpenMenu: (fromKeyboard: Boolean) -> Unit,
     modifier: Modifier = Modifier,
     onHoldMove: (Offset) -> Unit = {},
     onHoldRelease: (Offset) -> Unit = {},
@@ -190,6 +197,18 @@ fun HistoryButton(
                 contentDescription = description
                 if (enabled) onClick { currentClick(); true } else disabled()
             }
+            .onPreviewKeyEvent { event ->
+                if (!enabled || event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                when {
+                    event.key == Key.Enter || event.key == Key.NumPadEnter || event.key == Key.Spacebar -> currentClick()
+                    event.key == Key.DirectionDown || event.key == ContextMenuKey ||
+                        (event.key == Key.F10 && event.isShiftPressed) -> currentOpen(true)
+                    else -> return@onPreviewKeyEvent false
+                }
+                true
+            }
+            .focusable(enabled, interactions)
+            .hoverable(interactions, enabled)
             // Keyed on nothing: a jump can flip [enabled] at the end of a hold, which must not restart the gesture
             .pointerInput(Unit) {
                 awaitPointerEventScope {
@@ -204,7 +223,7 @@ fun HistoryButton(
                         when {
                             event.buttons.isSecondaryPressed -> {
                                 down.consume()
-                                currentOpen()
+                                currentOpen(false)
                                 continue
                             }
                             event.buttons.isPrimaryPressed -> down.consume()
@@ -239,7 +258,7 @@ fun HistoryButton(
                         }
 
                         // Held: open the menu and keep following the press so it can pick a row
-                        currentOpen()
+                        currentOpen(false)
                         try {
                             while (true) {
                                 val next = awaitPointerEvent()
@@ -295,9 +314,14 @@ fun HistoryNavButtons(
 ) {
     // One menu at a time, under whichever button opened it; it shows the whole history either way
     var menuFrom by remember(tab.id) { mutableStateOf<HistoryAnchor?>(null) }
+    // Opened from the keyboard, the menu starts on the page one step towards the button, so arrows and Enter work
+    var keyboardSelection by remember(tab.id) { mutableStateOf<Int?>(null) }
     val drag = remember(tab.id) { HistoryDrag() }
+    // Only the row under the press, not every pointer move, recomposes the toolbar
+    val hotIndex by remember(drag) { derivedStateOf { drag.hotIndex } }
     val closeMenu = {
         menuFrom = null
+        keyboardSelection = null
         drag.pointer = null
         drag.rowBounds.clear()
     }
@@ -313,7 +337,15 @@ fun HistoryNavButtons(
                 description = stringResource(if (anchor == HistoryAnchor.Back) Res.string.tabs_back else Res.string.tabs_forward),
                 enabled = if (anchor == HistoryAnchor.Back) tab.nav.history.canGoBack else tab.nav.history.canGoForward,
                 onClick = if (anchor == HistoryAnchor.Back) onBack else onForward,
-                onOpenMenu = { menuFrom = anchor },
+                onOpenMenu = { fromKeyboard ->
+                    val history = tab.nav.history
+                    keyboardSelection = if (fromKeyboard) {
+                        (history.index + if (anchor == HistoryAnchor.Back) -1 else 1).coerceIn(0, history.entries.lastIndex)
+                    } else {
+                        null
+                    }
+                    menuFrom = anchor
+                },
                 onHoldMove = { drag.pointer = it },
                 onHoldRelease = {
                     drag.pointer = it
@@ -329,7 +361,8 @@ fun HistoryNavButtons(
                 expanded = menuFrom == anchor,
                 onDismiss = closeMenu,
                 onJump = jump,
-                hotIndex = drag.hotIndex,
+                hotIndex = hotIndex,
+                initialSelection = keyboardSelection,
                 keys = keys,
                 reducedMotion = reducedMotion,
                 onRowBounds = { index, bounds ->
@@ -347,7 +380,8 @@ private sealed interface HistoryItem {
 
 /**
  * The tab's whole history as a timeline, newest first, under the button that opened it. The current page is not
- * clickable; any other row calls [onJump] with its history index. [hotIndex] is the row under a held press.
+ * clickable; any other row calls [onJump] with its history index. [hotIndex] is the row under a held press, and
+ * [initialSelection] the history index the keyboard selection starts on (null: the current page, unhighlighted).
  */
 @Composable
 fun TabHistoryMenu(
@@ -356,6 +390,7 @@ fun TabHistoryMenu(
     onDismiss: () -> Unit,
     onJump: (Int) -> Unit,
     hotIndex: Int?,
+    initialSelection: Int? = null,
     keys: TabKeys = koinInject(),
     reducedMotion: Boolean = false,
     onRowBounds: (index: Int, bounds: Rect?) -> Unit = { _, _ -> },
@@ -374,7 +409,7 @@ fun TabHistoryMenu(
         fun heightOf(item: HistoryItem) = if (item is HistoryItem.Label) LabelHeight else RowHeight
         val menuHeight = items.fold(0.dp) { sum, item -> sum + heightOf(item) }.coerceAtMost(MenuMaxHeight)
         val nowPosition = items.indexOfFirst { it is HistoryItem.Page && it.row.section == HistorySection.Now }
-        var selected by remember { mutableIntStateOf(history.index) }
+        var selected by remember { mutableIntStateOf(initialSelection ?: history.index) }
         val played = remember { mutableStateOf(reducedMotion) }
         val focus = remember { FocusRequester() }
 
