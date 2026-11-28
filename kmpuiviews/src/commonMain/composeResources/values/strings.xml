@@ -875,6 +875,11 @@
     <string name="tabs_close_tab">Close tab</string>
     <string name="tabs_back">Back</string>
     <string name="tabs_forward">Forward</string>
+    <string name="tabs_history">Tab history</string>
+    <string name="tabs_history_pages">%1$d pages</string>
+    <string name="tabs_history_forward">Forward</string>
+    <string name="tabs_history_back">Back</string>
+    <string name="tabs_history_now">now</string>
     <string name="tabs_downloads">Downloads</string>
     <string name="tabs_open">Open</string>
     <string name="tabs_open_in_new_tab">Open in new tab</string>
