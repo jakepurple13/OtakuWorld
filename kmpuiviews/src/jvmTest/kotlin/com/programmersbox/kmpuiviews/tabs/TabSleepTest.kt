@@ -225,7 +225,7 @@ class TabSleepTest {
     fun wakingKeepsBackStackAndSnapshot() {
         val a = open("1")
         val extra = Screen.WebViewScreen("url-1b")
-        tab(a).nav.navBackStack.add(extra)
+        tab(a).nav.navigate(extra)
         val stack = tab(a).nav.backStack.toList()
         controller.activate(a)
         pageViewModel(a, withHolder = true)
