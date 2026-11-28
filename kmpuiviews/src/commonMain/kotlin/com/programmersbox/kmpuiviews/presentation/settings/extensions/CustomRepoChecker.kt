@@ -11,6 +11,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -74,15 +75,22 @@ class CustomRepoChecker(
     /** Keyed by saved url. */
     val statuses: SnapshotStateMap<String, CustomRepoStatus> = mutableStateMapOf()
     private val jobs = mutableMapOf<String, Job>()
+    private var lastCatalogs: List<KmpExternalCustomApiServicesCatalog>? = null
 
-    /** Checks urls with no status and drops statuses for removed urls. */
+    /**
+     * Checks urls with no status and drops statuses for removed urls.
+     * When the catalog list changed since the last sync, every url is checked again.
+     */
     fun sync(urls: List<String>) {
         val wanted = urls.toSet()
         (statuses.keys - wanted).forEach { removed ->
             jobs.remove(removed)?.cancel()
             statuses.remove(removed)
         }
-        wanted.filter { it !in statuses }.forEach(::check)
+        val current = catalogs()
+        val catalogsChanged = lastCatalogs != current
+        lastCatalogs = current
+        wanted.filter { catalogsChanged || it !in statuses }.forEach(::check)
     }
 
     fun recheck(url: String) {
@@ -100,11 +108,23 @@ class CustomRepoChecker(
     private fun check(url: String) {
         jobs.remove(url)?.cancel()
         statuses[url] = CustomRepoStatus.Checking
+        if (!url.trim().startsWith("https://", ignoreCase = true)) {
+            statuses[url] = CustomRepoStatus.Failed("Only https links are supported", clock())
+            return
+        }
         val snapshot = catalogs()
         jobs[url] = scope.launch {
-            val checks = coroutineScope { snapshot.map { async { it.checkRepo(url) } }.awaitAll() }
+            val checks = coroutineScope { snapshot.map { async { it.safeCheck(url) } }.awaitAll() }
             // The url may have been removed (and its job cancelled) while the catalogs answered.
             if (url in statuses) statuses[url] = mergeRepoChecks(checks, snapshot, clock(), url)
         }
+    }
+
+    private suspend fun KmpExternalCustomApiServicesCatalog.safeCheck(url: String): RepoCheck = try {
+        checkRepo(url)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        RepoCheck.Failed(e.message.orEmpty())
     }
 }

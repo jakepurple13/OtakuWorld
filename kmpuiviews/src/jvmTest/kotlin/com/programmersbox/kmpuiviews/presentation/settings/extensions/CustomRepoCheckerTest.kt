@@ -101,23 +101,23 @@ class CustomRepoCheckerTest {
     fun syncChecksNewAndDropsRemoved() = runTest {
         val catalog = FakeCatalog("A") { RepoCheck.Found("R", listOf(remote("p"))) }
         val checker = checker(catalog)
-        checker.sync(listOf("a", "b"))
+        checker.sync(listOf("https://a", "https://b"))
         advanceUntilIdle()
-        assertIs<CustomRepoStatus.Found>(checker.statuses["a"])
-        assertIs<CustomRepoStatus.Found>(checker.statuses["b"])
-        checker.sync(listOf("b"))
+        assertIs<CustomRepoStatus.Found>(checker.statuses["https://a"])
+        assertIs<CustomRepoStatus.Found>(checker.statuses["https://b"])
+        checker.sync(listOf("https://b"))
         advanceUntilIdle()
-        assertEquals(setOf("b"), checker.statuses.keys)
-        assertEquals(listOf("a", "b"), catalog.calls.sorted())
+        assertEquals(setOf("https://b"), checker.statuses.keys)
+        assertEquals(listOf("https://a", "https://b"), catalog.calls.sorted())
     }
 
     @Test
     fun removedDuringCheckIsDropped() = runTest {
         val gate = CompletableDeferred<RepoCheck>()
         val checker = checker(FakeCatalog("A") { gate.await() })
-        checker.sync(listOf("a"))
+        checker.sync(listOf("https://a"))
         advanceUntilIdle()
-        assertEquals(CustomRepoStatus.Checking, checker.statuses["a"])
+        assertEquals(CustomRepoStatus.Checking, checker.statuses["https://a"])
         checker.sync(emptyList())
         gate.complete(RepoCheck.Found("R", listOf(remote("p"))))
         advanceUntilIdle()
@@ -130,18 +130,18 @@ class CustomRepoCheckerTest {
         var t = now
         val checker = checker(FakeCatalog("A") { gate.await() }, clock = { t })
         gate.complete(RepoCheck.NotThisFormat)
-        checker.sync(listOf("a"))
+        checker.sync(listOf("https://a"))
         advanceUntilIdle()
-        assertEquals(CustomRepoStatus.Unsupported(now), checker.statuses["a"])
+        assertEquals(CustomRepoStatus.Unsupported(now), checker.statuses["https://a"])
 
         gate = CompletableDeferred()
         t = later
-        checker.recheck("a")
+        checker.recheck("https://a")
         advanceUntilIdle()
-        assertEquals(CustomRepoStatus.Checking, checker.statuses["a"])
+        assertEquals(CustomRepoStatus.Checking, checker.statuses["https://a"])
         gate.complete(RepoCheck.Failed("down"))
         advanceUntilIdle()
-        assertEquals(CustomRepoStatus.Failed("down", later), checker.statuses["a"])
+        assertEquals(CustomRepoStatus.Failed("down", later), checker.statuses["https://a"])
     }
 
     @Test
@@ -149,5 +149,37 @@ class CustomRepoCheckerTest {
         val checker = checker()
         assertEquals("https://x/repo", checker.existing("https://x/REPO/index.min.json", listOf("https://y", "https://x/repo")))
         assertEquals(null, checker.existing("https://z", listOf("https://y")))
+    }
+
+    @Test
+    fun catalogListChangeRechecksAll() = runTest {
+        var list = emptyList<KmpExternalCustomApiServicesCatalog>()
+        val checker = CustomRepoChecker({ list }, CoroutineScope(coroutineContext)) { now }
+        checker.sync(listOf("https://a"))
+        advanceUntilIdle()
+        assertEquals(CustomRepoStatus.Unsupported(now), checker.statuses["https://a"])
+        list = listOf(FakeCatalog("A") { RepoCheck.Found("R", listOf(remote("p"))) })
+        checker.sync(listOf("https://a"))
+        advanceUntilIdle()
+        assertIs<CustomRepoStatus.Found>(checker.statuses["https://a"])
+    }
+
+    @Test
+    fun httpLinkFailsWithoutAskingCatalogs() = runTest {
+        val catalog = FakeCatalog("A") { RepoCheck.Found("R", listOf(remote("p"))) }
+        val checker = checker(catalog)
+        checker.sync(listOf("http://a", "  HTTP://b"))
+        advanceUntilIdle()
+        assertEquals(CustomRepoStatus.Failed("Only https links are supported", now), checker.statuses["http://a"])
+        assertEquals(CustomRepoStatus.Failed("Only https links are supported", now), checker.statuses["  HTTP://b"])
+        assertEquals(emptyList(), catalog.calls)
+    }
+
+    @Test
+    fun throwingCatalogBecomesFailed() = runTest {
+        val checker = checker(FakeCatalog("A") { error("boom") })
+        checker.sync(listOf("https://a"))
+        advanceUntilIdle()
+        assertEquals(CustomRepoStatus.Failed("boom", now), checker.statuses["https://a"])
     }
 }
