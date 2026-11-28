@@ -39,7 +39,7 @@ class ExceptionUndoTest {
         setContent {
             MaterialTheme {
                 SnackbarHost(host)
-                LaunchedEffect(Unit) { showUndo(host, onUndo = { result = "undo" }, onCommit = { result = "commit" }) }
+                LaunchedEffect(Unit) { showUndo(host, message = "Exception deleted", onUndo = { result = "undo" }, onCommit = { result = "commit" }) }
             }
         }
         onNodeWithText("Undo").performClick()

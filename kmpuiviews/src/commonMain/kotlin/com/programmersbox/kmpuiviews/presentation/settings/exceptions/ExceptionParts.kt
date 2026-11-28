@@ -155,15 +155,19 @@ fun StackTraceBlock(parsed: ParsedException, modifier: Modifier = Modifier) {
         SelectionContainer {
             Column(
                 verticalArrangement = Arrangement.spacedBy(2.dp),
-                modifier = Modifier
-                    .horizontalScroll(rememberScrollState())
-                    .padding(10.dp),
+                modifier = Modifier.padding(10.dp),
             ) {
+                // The message and causes wrap, so a huge message (an HTML page) can't become one endless line.
                 Text(
                     listOf(parsed.type, parsed.message).filter { it.isNotEmpty() }.joinToString(": "),
                     style = mono,
                     color = MaterialTheme.colorScheme.error,
                 )
+                // Only the frames scroll sideways; they read best unwrapped.
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                    modifier = Modifier.horizontalScroll(rememberScrollState()),
+                ) {
                 parsed.frames.filter { showLibrary || !it.isLibrary }.forEach { frame ->
                     Text(
                         "    " + frame.text,
@@ -179,6 +183,7 @@ fun StackTraceBlock(parsed: ParsedException, modifier: Modifier = Modifier) {
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.clickable { showLibrary = true },
                     )
+                }
                 }
                 parsed.causes.forEach { cause ->
                     Text(cause, style = mono, color = kindColor(ExceptionKind.Blocked))

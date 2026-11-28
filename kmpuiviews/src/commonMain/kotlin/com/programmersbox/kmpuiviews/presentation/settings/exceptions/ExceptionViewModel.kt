@@ -77,6 +77,8 @@ class ExceptionViewModel(
         }
 
     val rows: StateFlow<List<ExceptionRow>> = combine(stored, pending, sourceRepository.sources) { items, hidden, sources ->
+        val ids = items.mapTo(HashSet()) { it.id }
+        parsedCache.keys.retainAll(ids)
         val parsed = items.associate { it.id to parsedCache.getOrPut(it.id) { parseException(it.message) } }
         val seen = seenCounts(items.map { it.time to parsed.getValue(it.id).groupKey }, now())
         items
@@ -128,7 +130,10 @@ class ExceptionViewModel(
 
     fun undo(id: Long) = pending.update { it - id }
 
-    fun undoLast() = pending.update { it.dropLast(1) }
+    /** Deletes still waiting for Undo, oldest first. A new screen (after rotation) offers Undo again. */
+    val pendingIds: StateFlow<List<Long>> = pending
+
+    internal val parsedCacheSize: Int get() = parsedCache.size
 
     /** Deletes [id] for good, unless it was undone. */
     fun commitDelete(id: Long) {
@@ -147,9 +152,9 @@ class ExceptionViewModel(
         }
     }
 
-    /** The row to select after [id] is deleted: the next one, else the previous one. */
-    fun nextAfterDelete(id: Long): Long? {
-        val list = rows.value
+    /** The row to select after [id] is deleted: the next one, else the previous one. Rows in [skip] (still sliding out) don't count. */
+    fun nextAfterDelete(id: Long, skip: Set<Long> = emptySet()): Long? {
+        val list = rows.value.filter { it.id == id || it.id !in skip }
         val i = list.indexOfFirst { it.id == id }
         if (i == -1) return null
         return (list.getOrNull(i + 1) ?: list.getOrNull(i - 1))?.id
