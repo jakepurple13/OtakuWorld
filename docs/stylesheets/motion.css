@@ -21,7 +21,7 @@
 }
 .md-content.m-entering .md-content__inner > * {
   animation: m-rise 420ms var(--m3-decelerate) both;
-  animation-delay: calc(var(--m-i, 0) * 40ms + 40ms);
+  animation-delay: calc(var(--m-i, 0) * 35ms);
 }
 @keyframes m-rise {
   from { opacity: 0; transform: translateY(14px); }
