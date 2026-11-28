@@ -6,7 +6,15 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.foundation.layout.Row
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.SemanticsNodeInteraction
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.MouseButton
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -114,5 +122,94 @@ class TabHistoryMenuTest {
         waitForIdle()
 
         assertEquals(listOf(0), jumps.toList())
+    }
+
+    private fun ComposeUiTest.hostNavButtons(onBack: () -> Unit, onJump: (Int) -> Unit) {
+        val nav = TabNavigation3Actions(r)
+        nav.history.restore(listOf(r, a, b), 2)
+        val tab = TabState(TabId(1), nav, pinned = false)
+        setContent {
+            Row {
+                HistoryNavButtons(
+                    tab = tab,
+                    keys = TabKeys(emptyList()),
+                    reducedMotion = true,
+                    onBack = onBack,
+                    onForward = {},
+                    onJump = onJump,
+                )
+            }
+        }
+    }
+
+    /** Offset from [from]'s top-left to the centre of [to], for mouse input sent to [from]. */
+    private fun offsetTo(from: SemanticsNodeInteraction, to: SemanticsNodeInteraction): Offset {
+        val source = from.fetchSemanticsNode()
+        val target = to.fetchSemanticsNode()
+        return target.positionOnScreen - source.positionOnScreen +
+            Offset(target.size.width / 2f, target.size.height / 2f)
+    }
+
+    private fun ComposeUiTest.holdBackOpen(): SemanticsNodeInteraction {
+        val back = onNodeWithContentDescription("Back")
+        back.performMouseInput {
+            moveTo(center)
+            press()
+        }
+        mainClock.advanceTimeBy(HISTORY_HOLD_MS + 50)
+        // Past the menu's enter motion, so rows sit at their final bounds
+        mainClock.advanceTimeBy(600)
+        return back
+    }
+
+    @Test
+    fun holdDragReleaseOnRowJumps() = runComposeUiTest {
+        mainClock.autoAdvance = false
+        val jumps = mutableStateListOf<Int>()
+        val backs = mutableIntStateOf(0)
+        hostNavButtons(onBack = { backs.value++ }, onJump = { jumps += it })
+
+        val back = holdBackOpen()
+        val row = onNodeWithText(TabKeys(emptyList()).labelOf(r).text)
+        val target = offsetTo(back, row)
+        back.performMouseInput {
+            moveTo(target)
+            release()
+        }
+        mainClock.advanceTimeBy(100)
+
+        assertEquals(listOf(0), jumps.toList(), "letting go on the first page jumps to it")
+        assertEquals(0, backs.value, "the hold does not also step back")
+    }
+
+    @Test
+    fun releaseOffARowEndsTheHoldSoTheNextClickSteps() = runComposeUiTest {
+        mainClock.autoAdvance = false
+        val jumps = mutableStateListOf<Int>()
+        val backs = mutableIntStateOf(0)
+        hostNavButtons(onBack = { backs.value++ }, onJump = { jumps += it })
+
+        val back = holdBackOpen()
+        val header = onNodeWithText("Tab history")
+        val target = offsetTo(back, header)
+        back.performMouseInput {
+            moveTo(target)
+            release()
+        }
+        mainClock.advanceTimeBy(100)
+        assertEquals(emptyList(), jumps.toList(), "letting go off a row does not jump")
+
+        // Close the menu the way a user would, then a short click must step back
+        onNodeWithText("Tab history").performKeyInput { pressKey(Key.Escape) }
+        mainClock.advanceTimeBy(600)
+        back.performMouseInput {
+            moveTo(center)
+            press()
+        }
+        mainClock.advanceTimeBy(100)
+        back.performMouseInput { release() }
+        mainClock.advanceTimeBy(100)
+
+        assertEquals(1, backs.value, "the hold ended, so a short click steps back")
     }
 }

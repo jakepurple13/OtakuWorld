@@ -23,6 +23,9 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
@@ -62,7 +65,9 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.isPrimaryPressed
 import androidx.compose.ui.input.pointer.isSecondaryPressed
+import androidx.compose.ui.input.pointer.PointerEvent
 import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.changedToDownIgnoreConsumed
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.LayoutCoordinates
@@ -86,6 +91,8 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import otakuworld.kmpuiviews.generated.resources.Res
+import otakuworld.kmpuiviews.generated.resources.tabs_back
+import otakuworld.kmpuiviews.generated.resources.tabs_forward
 import otakuworld.kmpuiviews.generated.resources.tabs_history
 import otakuworld.kmpuiviews.generated.resources.tabs_history_back
 import otakuworld.kmpuiviews.generated.resources.tabs_history_forward
@@ -146,6 +153,7 @@ fun HistoryButton(
     onHoldMove: (Offset) -> Unit = {},
     onHoldRelease: (Offset) -> Unit = {},
 ) {
+    val currentEnabled by rememberUpdatedState(enabled)
     val currentClick by rememberUpdatedState(onClick)
     val currentOpen by rememberUpdatedState(onOpenMenu)
     val currentMove by rememberUpdatedState(onHoldMove)
@@ -182,12 +190,15 @@ fun HistoryButton(
                 contentDescription = description
                 if (enabled) onClick { currentClick(); true } else disabled()
             }
-            .pointerInput(enabled) {
-                if (!enabled) return@pointerInput
+            // Keyed on nothing: a jump can flip [enabled] at the end of a hold, which must not restart the gesture
+            .pointerInput(Unit) {
                 awaitPointerEventScope {
+                    // A press seen while still holding means the release went elsewhere; it starts the next gesture
+                    var carried: PointerEvent? = null
                     while (true) {
-                        val event = awaitPointerEvent()
-                        if (event.type != PointerEventType.Press) continue
+                        val event = carried ?: awaitPointerEvent()
+                        carried = null
+                        if (event.type != PointerEventType.Press || !currentEnabled) continue
                         val down = event.changes.first()
                         // The pressed buttons, not event.button: injected test input leaves that null
                         when {
@@ -229,20 +240,29 @@ fun HistoryButton(
 
                         // Held: open the menu and keep following the press so it can pick a row
                         currentOpen()
-                        while (true) {
-                            val change = awaitPointerEvent().changes.firstOrNull { it.id == down.id } ?: break
-                            change.consume()
-                            val screen = coordinates[0]?.localToScreen(change.position) ?: change.position
-                            if (change.pressed) {
-                                currentMove(screen)
-                            } else {
-                                currentRelease(screen)
-                                break
+                        try {
+                            while (true) {
+                                val next = awaitPointerEvent()
+                                // Another pointer, or a fresh press after a release this button never saw: the hold is over
+                                val change = next.changes.firstOrNull { it.id == down.id } ?: break
+                                if (next.type == PointerEventType.Press || change.changedToDownIgnoreConsumed()) {
+                                    carried = next
+                                    break
+                                }
+                                change.consume()
+                                val screen = coordinates[0]?.localToScreen(change.position) ?: change.position
+                                if (change.pressed) {
+                                    currentMove(screen)
+                                } else {
+                                    currentRelease(screen)
+                                    break
+                                }
                             }
+                        } finally {
+                            fill.cancel()
+                            scope.launch { ring.snapTo(0f) }
+                            interactions.tryEmit(PressInteraction.Cancel(press))
                         }
-                        fill.cancel()
-                        scope.launch { ring.snapTo(0f) }
-                        interactions.tryEmit(PressInteraction.Cancel(press))
                     }
                 }
             }
@@ -255,6 +275,68 @@ fun HistoryButton(
             contentDescription = null,
             tint = if (enabled) LocalContentColor.current else LocalContentColor.current.copy(alpha = 0.38f),
         )
+    }
+}
+
+private enum class HistoryAnchor { Back, Forward }
+
+/**
+ * The toolbar's back and forward [HistoryButton]s, sharing one [TabHistoryMenu] that opens under whichever was
+ * pressed. A hold-drag released on a row, or a click on one, calls [onJump] and closes the menu.
+ */
+@Composable
+fun HistoryNavButtons(
+    tab: TabState,
+    keys: TabKeys,
+    reducedMotion: Boolean,
+    onBack: () -> Unit,
+    onForward: () -> Unit,
+    onJump: (Int) -> Unit,
+) {
+    // One menu at a time, under whichever button opened it; it shows the whole history either way
+    var menuFrom by remember(tab.id) { mutableStateOf<HistoryAnchor?>(null) }
+    val drag = remember(tab.id) { HistoryDrag() }
+    val closeMenu = {
+        menuFrom = null
+        drag.pointer = null
+        drag.rowBounds.clear()
+    }
+    val jump = { index: Int ->
+        onJump(index)
+        closeMenu()
+    }
+
+    HistoryAnchor.entries.forEach { anchor ->
+        Box {
+            HistoryButton(
+                icon = if (anchor == HistoryAnchor.Back) Icons.AutoMirrored.Default.ArrowBack else Icons.AutoMirrored.Default.ArrowForward,
+                description = stringResource(if (anchor == HistoryAnchor.Back) Res.string.tabs_back else Res.string.tabs_forward),
+                enabled = if (anchor == HistoryAnchor.Back) tab.nav.history.canGoBack else tab.nav.history.canGoForward,
+                onClick = if (anchor == HistoryAnchor.Back) onBack else onForward,
+                onOpenMenu = { menuFrom = anchor },
+                onHoldMove = { drag.pointer = it },
+                onHoldRelease = {
+                    drag.pointer = it
+                    val hot = drag.hotIndex
+                    drag.pointer = null
+                    // Let go on another page jumps there; anywhere else leaves the menu open
+                    if (hot != null && hot != tab.nav.history.index) jump(hot)
+                },
+                modifier = Modifier.padding(horizontal = 2.dp),
+            )
+            TabHistoryMenu(
+                tab = tab,
+                expanded = menuFrom == anchor,
+                onDismiss = closeMenu,
+                onJump = jump,
+                hotIndex = drag.hotIndex,
+                keys = keys,
+                reducedMotion = reducedMotion,
+                onRowBounds = { index, bounds ->
+                    if (bounds == null) drag.rowBounds.remove(index) else drag.rowBounds[index] = bounds
+                },
+            )
+        }
     }
 }
 
