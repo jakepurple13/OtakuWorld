@@ -3,49 +3,27 @@ package com.programmersbox.kmpuiviews.presentation.settings.extensions
 
 import com.programmersbox.kmpuiviews.presentation.components.RegisterPageRefresh
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircleOutline
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.CopyAll
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.HideSource
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Update
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.VerticalDragHandle
@@ -57,7 +35,6 @@ import androidx.compose.material3.adaptive.layout.PaneAdaptedValue
 import androidx.compose.material3.adaptive.layout.defaultDragHandleSemantics
 import androidx.compose.material3.adaptive.layout.rememberPaneExpansionState
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.runtime.Composable
 import otakuworld.kmpuiviews.generated.resources.banner_link_copied
@@ -69,16 +46,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalClipboard
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.LoadingDialog
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
@@ -140,11 +115,29 @@ fun ExtensionList(
 
     var showUrlDialog by remember { mutableStateOf(false) }
     if (showUrlDialog) {
-        CustomUrlDialog(
+        val notifier = koinInject<InAppNotifier>()
+        val sourceInfoRepository = koinInject<SourceInfoRepository>()
+        val clipboard = LocalClipboard.current
+        CustomReposSheet(
+            urls = settingsHandling.customUrls.collectAsStateWithLifecycle(initialValue = emptyList()).value,
+            statuses = viewModel.customRepos.statuses,
+            catalogNames = viewModel.customCatalogs.map { it.name },
+            installedPackages = viewModel.installedPackages,
+            onAdd = { scope.launch { settingsHandling.addCustomUrl(it) } },
+            onRemove = { scope.launch { settingsHandling.removeCustomUrl(it) } },
+            onRecheck = viewModel.customRepos::recheck,
+            onRecheckAll = viewModel.customRepos::recheckAll,
+            onBrowse = {
+                showUrlDialog = false
+                navController.navigate(Screen.ExtensionListScreen.Catalog(it))
+            },
+            onCopy = {
+                scope.launch {
+                    sourceInfoRepository.copyUrl(clipboard, it)
+                    notifier.success(getString(Res.string.banner_link_copied))
+                }
+            },
             onDismissRequest = { showUrlDialog = false },
-            onAddUrl = { scope.launch { settingsHandling.addCustomUrl(it) } },
-            onRemoveUrl = { scope.launch { settingsHandling.removeCustomUrl(it) } },
-            urls = settingsHandling.customUrls.collectAsStateWithLifecycle(initialValue = emptyList()).value
         )
     }
 
@@ -289,145 +282,5 @@ fun ExtensionList(
             },
             modifier = Modifier.padding(paddingValues),
         )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun CustomUrlDialog(
-    onDismissRequest: () -> Unit,
-    onAddUrl: (String) -> Unit,
-    onRemoveUrl: (String) -> Unit,
-    urls: List<String>,
-) {
-    val notifier = koinInject<InAppNotifier>()
-    val sourceInfoRepository = koinInject<SourceInfoRepository>()
-    ModalBottomSheet(
-        onDismissRequest = onDismissRequest,
-        sheetState = rememberModalBottomSheetState(true),
-        containerColor = MaterialTheme.colorScheme.surface,
-    ) {
-        val scope = rememberCoroutineScope()
-        Scaffold(
-            topBar = {
-                CenterAlignedTopAppBar(
-                    navigationIcon = {
-                        IconButton(
-                            onClick = onDismissRequest
-                        ) { Icon(Icons.Default.Close, null) }
-                    },
-                    title = { Text("Custom Extension Urls") },
-                    actions = { Text(urls.size.toString()) }
-                )
-            },
-            bottomBar = {
-                var customUrl by remember { mutableStateOf("") }
-
-                ElevatedCard(
-                    shape = RoundedCornerShape(
-                        topStart = 12.dp,
-                        topEnd = 12.dp,
-                        bottomEnd = 0.dp,
-                        bottomStart = 0.dp
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .fillMaxWidth()
-                    ) {
-                        OutlinedTextField(
-                            value = customUrl,
-                            label = { Text("Custom Url") },
-                            onValueChange = { customUrl = it },
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Uri
-                            ),
-                            singleLine = true,
-                            modifier = Modifier
-                                .align(Alignment.CenterVertically)
-                                .fillMaxWidth()
-                                .weight(0.85f)
-                        )
-                        IconButton(
-                            onClick = {
-                                if (customUrl.isNotBlank()) {
-                                    onAddUrl(customUrl)
-                                    customUrl = ""
-                                }
-                            },
-                            modifier = Modifier
-                                .padding(start = 16.dp)
-                                .align(Alignment.CenterVertically)
-                                .fillMaxWidth()
-                                .weight(0.15f)
-                        ) {
-                            Icon(
-                                Icons.Default.Add,
-                                contentDescription = "Add",
-                            )
-                        }
-                    }
-                }
-            }
-        ) { padding ->
-            LazyColumn(
-                contentPadding = padding,
-                verticalArrangement = Arrangement.spacedBy(2.dp),
-                modifier = Modifier.fillMaxSize()
-            ) {
-                items(urls, key = { it }) {
-                    Column(Modifier.animateItem()) {
-                        var showDeleteDialog by remember { mutableStateOf(false) }
-                        if (showDeleteDialog) {
-                            AlertDialog(
-                                onDismissRequest = { showDeleteDialog = false },
-                                title = { Text("Are you sure you want to delete this?") },
-                                text = { Text(it) },
-                                confirmButton = {
-                                    TextButton(
-                                        onClick = { onRemoveUrl(it) },
-                                        colors = ButtonDefaults.textButtonColors(
-                                            contentColor = MaterialTheme.colorScheme.error
-                                        )
-                                    ) { Text("Delete") }
-                                },
-                                dismissButton = {
-                                    TextButton(
-                                        onClick = { showDeleteDialog = false },
-                                    ) { Text("No") }
-                                }
-                            )
-                        }
-                        val clipboard = LocalClipboard.current
-                        OutlinedCard(
-                            onClick = {
-                                scope.launch {
-                                    sourceInfoRepository.copyUrl(clipboard, it)
-                                    notifier.success(getString(Res.string.banner_link_copied))
-                                }
-                            }
-                        ) {
-                            ListItem(
-                                headlineContent = { Text(it) },
-                                leadingContent = { Icon(Icons.Default.CopyAll, null) },
-                                trailingContent = {
-                                    IconButton(
-                                        onClick = { showDeleteDialog = true }
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Delete,
-                                            null,
-                                            tint = MaterialTheme.colorScheme.error
-                                        )
-                                    }
-                                }
-                            )
-                        }
-                    }
-                }
-            }
-        }
     }
 }

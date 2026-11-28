@@ -57,7 +57,7 @@ fun mergeRepoChecks(
     return CustomRepoStatus.Unsupported(now)
 }
 
-private fun hostOf(url: String): String =
+internal fun hostOf(url: String): String =
     url.trim().substringAfter("://").substringBefore('/').substringBefore('?').ifBlank { url.trim() }
 
 /** Lower-cased, trimmed, trailing "/", "/index.min.json", "/repo.json" removed. Used only for duplicate detection. */

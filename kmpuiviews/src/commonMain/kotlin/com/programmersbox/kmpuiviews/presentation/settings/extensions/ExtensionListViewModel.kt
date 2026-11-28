@@ -53,6 +53,8 @@ class ExtensionListViewModel(
             .toList()
 
     val customRepos = CustomRepoChecker({ customCatalogs }, viewModelScope)
+
+    val installedPackages by derivedStateOf { installedSources.mapTo(HashSet()) { it.packageName } }
     private var loadedCustomUrls: List<String>? = null
 
     /** Links sent to the downloader that haven't reported a terminal status; queued jobs carry no url. */
