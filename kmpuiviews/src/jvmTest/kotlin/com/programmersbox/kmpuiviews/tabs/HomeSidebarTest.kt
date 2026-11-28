@@ -131,6 +131,19 @@ class HomeSidebarTest {
     }
 
     @Test
+    fun badgeCapsAt99PlusExpanded() = runComposeUiTest {
+        sidebar(notificationCount = 120)
+        onNodeWithText("99+").assertIsDisplayed()
+    }
+
+    @Test
+    fun badgeCapsAt9PlusCollapsed() = runComposeUiTest {
+        sidebar(collapsed = true, notificationCount = 12)
+        onNodeWithText("9+").assertIsDisplayed()
+        onNodeWithText("12").assertDoesNotExist()
+    }
+
+    @Test
     fun collapsedHidesLabelsAndSectionTitles() = runComposeUiTest {
         sidebar(collapsed = true)
         onNodeWithText("Open in tab").assertDoesNotExist()

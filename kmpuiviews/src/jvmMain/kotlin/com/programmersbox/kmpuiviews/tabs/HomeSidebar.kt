@@ -319,7 +319,7 @@ private fun SidebarRow(
                             (slideInVertically { -it } + fadeIn()) togetherWith (slideOutVertically { it } + fadeOut())
                         },
                         label = "badgeCount",
-                    ) { count -> Text(if (count > 99) "99+" else count.toString()) }
+                    ) { count -> Text(badgeText(count, collapsed)) }
                 }
             }
         }
@@ -397,3 +397,9 @@ private fun Modifier.edgeFade(state: LazyListState): Modifier = this
             )
         }
     }
+
+/** The badge's count, capped to fit: "9+" in the small collapsed badge, "99+" in the expanded one. */
+private fun badgeText(count: Int, collapsed: Boolean): String {
+    val max = if (collapsed) 9 else 99
+    return if (count > max) "$max+" else count.toString()
+}
