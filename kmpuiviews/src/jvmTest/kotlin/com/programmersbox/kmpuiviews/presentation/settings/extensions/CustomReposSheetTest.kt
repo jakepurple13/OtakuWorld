@@ -175,8 +175,8 @@ class CustomReposSheetTest {
         val dir = "src/commonMain/kotlin/com/programmersbox/kmpuiviews/presentation/settings/extensions"
         listOf("CustomReposSheet.kt", "CustomRepoChecker.kt").forEach { name ->
             val text = File(dir, name).readText()
-            listOf("Mihon", "Aniyomi", "CloudStream").forEach { literal ->
-                assertEquals(false, literal in text, "$name contains $literal")
+            listOf("Mihon", "Aniyomi", "CloudStream", "Tachiyomi").forEach { literal ->
+                assertEquals(false, text.contains(literal, ignoreCase = true), "$name contains $literal")
             }
         }
     }

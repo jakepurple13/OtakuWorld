@@ -9,4 +9,4 @@ import java.awt.datatransfer.DataFlavor
 internal actual suspend fun Clipboard.plainText(): String? =
     getClipEntry()?.asAwtTransferable
         ?.takeIf { it.isDataFlavorSupported(DataFlavor.stringFlavor) }
-        ?.getTransferData(DataFlavor.stringFlavor) as? String
+        ?.let { runCatching { it.getTransferData(DataFlavor.stringFlavor) }.getOrNull() } as? String

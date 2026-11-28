@@ -5,7 +5,9 @@ import androidx.compose.runtime.snapshots.SnapshotStateMap
 import com.programmersbox.kmpmodels.KmpExternalCustomApiServicesCatalog
 import com.programmersbox.kmpmodels.KmpRemoteSources
 import com.programmersbox.kmpmodels.RepoCheck
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -32,8 +34,9 @@ sealed interface CustomRepoStatus {
 }
 
 /**
- * Found (first catalog in list order) > Failed (first message) > Unsupported.
- * [url] is only used to name a repo whose catalog reported no name.
+ * Found (first named one in list order, else first blank-named one) > Failed (first message) > Unsupported.
+ * A blank name comes from the default [KmpExternalCustomApiServicesCatalog.checkRepo], so a catalog that read the
+ * repo itself wins. [url] is only used to name a repo whose catalog reported no name.
  */
 fun mergeRepoChecks(
     checks: List<RepoCheck>,
@@ -41,13 +44,14 @@ fun mergeRepoChecks(
     now: Instant,
     url: String = "",
 ): CustomRepoStatus {
-    val foundIndex = checks.indexOfFirst { it is RepoCheck.Found }
+    val foundIndex = checks.indexOfFirst { it is RepoCheck.Found && it.name.isNotBlank() }
+        .takeIf { it >= 0 } ?: checks.indexOfFirst { it is RepoCheck.Found }
     if (foundIndex >= 0) {
         val found = checks[foundIndex] as RepoCheck.Found
         return CustomRepoStatus.Found(
             catalogIndex = foundIndex,
             catalogName = catalogs[foundIndex].name,
-            repoName = found.name.ifBlank { hostOf(url) },
+            repoName = found.name.ifBlank { repoFallbackTitle(url) },
             remotes = found.remotes,
             checkedAt = now,
         )
@@ -57,25 +61,53 @@ fun mergeRepoChecks(
     return CustomRepoStatus.Unsupported(now)
 }
 
-internal fun hostOf(url: String): String =
-    url.trim().substringAfter("://").substringBefore('/').substringBefore('?').ifBlank { url.trim() }
+private val githubHosts = setOf("raw.githubusercontent.com", "github.com")
 
-/** Lower-cased, trimmed, trailing "/", "/index.min.json", "/repo.json" removed. Used only for duplicate detection. */
-fun repoKey(url: String): String = url.trim().lowercase()
-    .trimEnd('/')
-    .removeSuffix("/index.min.json")
-    .removeSuffix("/repo.json")
-    .trimEnd('/')
+/** Card title for a repo with no reported name: "owner/repo" for GitHub links, otherwise the host. */
+internal fun repoFallbackTitle(url: String): String {
+    val rest = url.trim().substringAfter("://").substringBefore('?').substringBefore('#')
+    val host = rest.substringBefore('/').ifBlank { return url.trim() }
+    val segments = rest.substringAfter('/', "").split('/').filter { it.isNotEmpty() }
+    return if (host.lowercase() in githubHosts && segments.size >= 2) "${segments[0]}/${segments[1]}" else host
+}
+
+/**
+ * Trimmed, scheme and host lower-cased (path case kept), trailing "/", "/index.min.json", "/repo.json" removed.
+ * Used only for duplicate detection.
+ */
+fun repoKey(url: String): String {
+    val trimmed = url.trim()
+    val schemeEnd = trimmed.indexOf("://")
+    val hostEnd = if (schemeEnd < 0) -1 else trimmed.indexOf('/', schemeEnd + 3)
+    val normalized = when {
+        schemeEnd < 0 -> trimmed
+        hostEnd < 0 -> trimmed.lowercase()
+        else -> trimmed.substring(0, hostEnd).lowercase() + trimmed.substring(hostEnd)
+    }
+    return normalized
+        .trimEnd('/')
+        .removeSuffix("/index.min.json")
+        .removeSuffix("/repo.json")
+        .trimEnd('/')
+}
+
+/** The url in [saved] that has the same [repoKey] as [url], or null. */
+fun savedRepoMatching(url: String, saved: List<String>): String? {
+    val key = repoKey(url)
+    return saved.firstOrNull { repoKey(it) == key }
+}
 
 class CustomRepoChecker(
     private val catalogs: () -> List<KmpExternalCustomApiServicesCatalog>,
     private val scope: CoroutineScope,
     private val clock: () -> Instant = { Clock.System.now() },
+    /** Catalog checks run here, off the caller's (main) thread; status writes stay in [scope]. */
+    private val checkDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) {
     /** Keyed by saved url. */
     val statuses: SnapshotStateMap<String, CustomRepoStatus> = mutableStateMapOf()
     private val jobs = mutableMapOf<String, Job>()
-    private var lastCatalogs: List<KmpExternalCustomApiServicesCatalog>? = null
+    private var lastCatalogNames: List<String>? = null
 
     /**
      * Checks urls with no status and drops statuses for removed urls.
@@ -87,9 +119,10 @@ class CustomRepoChecker(
             jobs.remove(removed)?.cancel()
             statuses.remove(removed)
         }
-        val current = catalogs()
-        val catalogsChanged = lastCatalogs != current
-        lastCatalogs = current
+        // Compared by name: the catalog list is rebuilt with new instances (e.g. per-source bridge wrappers).
+        val current = catalogs().map { it.name }
+        val catalogsChanged = lastCatalogNames != current
+        lastCatalogNames = current
         wanted.filter { catalogsChanged || it !in statuses }.forEach(::check)
     }
 
@@ -98,12 +131,6 @@ class CustomRepoChecker(
     }
 
     fun recheckAll() = statuses.keys.toList().forEach(::check)
-
-    /** The saved url that has the same [repoKey] as [url], or null. */
-    fun existing(url: String, saved: List<String>): String? {
-        val key = repoKey(url)
-        return saved.firstOrNull { repoKey(it) == key }
-    }
 
     private fun check(url: String) {
         jobs.remove(url)?.cancel()
@@ -114,7 +141,7 @@ class CustomRepoChecker(
         }
         val snapshot = catalogs()
         jobs[url] = scope.launch {
-            val checks = coroutineScope { snapshot.map { async { it.safeCheck(url) } }.awaitAll() }
+            val checks = coroutineScope { snapshot.map { async(checkDispatcher) { it.safeCheck(url) } }.awaitAll() }
             // The url may have been removed (and its job cancelled) while the catalogs answered.
             if (url in statuses) statuses[url] = mergeRepoChecks(checks, snapshot, clock(), url)
         }

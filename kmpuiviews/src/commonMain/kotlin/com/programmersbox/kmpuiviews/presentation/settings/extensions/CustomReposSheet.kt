@@ -183,8 +183,7 @@ internal fun CustomReposContent(
             onDismissRequest = { adding = false },
             onAdd = { draft ->
                 adding = false
-                val key = repoKey(draft)
-                val existing = urls.firstOrNull { repoKey(it) == key }
+                val existing = savedRepoMatching(draft, urls)
                 if (existing == null) onAdd(draft)
                 expanded = existing ?: draft
                 // +1 for the summary row.
@@ -281,7 +280,7 @@ private fun RepoCard(
     val colors = MaterialTheme.colorScheme
     val container by animateColorAsState(if (expanded) colors.surfaceContainerHigh else colors.surfaceContainer)
     val chevron by animateFloatAsState(if (expanded) 180f else 0f)
-    val title = (status as? CustomRepoStatus.Found)?.repoName ?: hostOf(url)
+    val title = (status as? CustomRepoStatus.Found)?.repoName ?: repoFallbackTitle(url)
 
     Surface(color = container, shape = RoundedCornerShape(18.dp), modifier = modifier.fillMaxWidth()) {
         Column {

@@ -9,12 +9,14 @@ import com.programmersbox.kmpmodels.RepoCheck
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNotEquals
 import kotlin.time.Instant
 
 class CustomRepoCheckerTest {
@@ -40,7 +42,9 @@ class CustomRepoCheckerTest {
     private fun TestScope.checker(
         vararg catalogs: KmpExternalCustomApiServicesCatalog,
         clock: () -> Instant = { now },
-    ) = CustomRepoChecker({ catalogs.toList() }, CoroutineScope(coroutineContext), clock)
+    ) = CustomRepoChecker({ catalogs.toList() }, CoroutineScope(coroutineContext), clock, testDispatcher())
+
+    private fun TestScope.testDispatcher() = StandardTestDispatcher(testScheduler)
 
     @Test
     fun mergeFoundBeatsFailedAndUnsupported() {
@@ -92,7 +96,7 @@ class CustomRepoCheckerTest {
             "https://repo.example/repo/",
             "https://repo.example/repo/index.min.json",
             "https://repo.example/repo/repo.json",
-            "  https://repo.example/REPO  ",
+            "  HTTPS://REPO.example/repo  ",
         ).map(::repoKey)
         assertEquals(1, keys.toSet().size, keys.toString())
     }
@@ -145,16 +149,68 @@ class CustomRepoCheckerTest {
     }
 
     @Test
-    fun existingFindsSavedUrlWithSameKey() = runTest {
-        val checker = checker()
-        assertEquals("https://x/repo", checker.existing("https://x/REPO/index.min.json", listOf("https://y", "https://x/repo")))
-        assertEquals(null, checker.existing("https://z", listOf("https://y")))
+    fun repoKeyKeepsPathCase() {
+        assertNotEquals(repoKey("https://repo.example/Repo"), repoKey("https://repo.example/repo"))
+    }
+
+    @Test
+    fun savedRepoMatchingFindsSavedUrlWithSameKey() {
+        assertEquals("https://x/repo", savedRepoMatching("https://X/repo/index.min.json", listOf("https://y", "https://x/repo")))
+        assertEquals(null, savedRepoMatching("https://z", listOf("https://y")))
+    }
+
+    @Test
+    fun mergePrefersNamedFoundOverBlank() {
+        val blank = listOf(remote("legacy"))
+        val named = listOf(remote("native"))
+        val catalogs = listOf(FakeCatalog("Legacy"), FakeCatalog("Native"), FakeCatalog("Other"))
+        val status = mergeRepoChecks(
+            listOf(RepoCheck.Found("", blank), RepoCheck.Found("Repo", named), RepoCheck.Found("Second", named)),
+            catalogs,
+            now,
+        )
+        assertEquals(CustomRepoStatus.Found(1, "Native", "Repo", named, now), status)
+    }
+
+    @Test
+    fun fallbackTitleUsesOwnerRepoForGithub() {
+        assertEquals("yuzono/anime-repo", repoFallbackTitle("https://raw.githubusercontent.com/yuzono/anime-repo/repo"))
+        assertEquals("keiyoushi/extensions", repoFallbackTitle("https://github.com/keiyoushi/extensions"))
+        assertEquals("github.com", repoFallbackTitle("https://github.com/keiyoushi"))
+        assertEquals("repo.example", repoFallbackTitle("https://repo.example/a/b/repo.json"))
+    }
+
+    @Test
+    fun reemissionWithEqualNamesDoesNotRecheck() = runTest {
+        val calls = mutableListOf<String>()
+        fun catalogs() = listOf("A", "B").map { name ->
+            FakeCatalog(name) { calls += "$name $it"; RepoCheck.NotThisFormat }
+        }
+        var list = catalogs()
+        val checker = CustomRepoChecker({ list }, CoroutineScope(coroutineContext), { now }, testDispatcher())
+        checker.sync(listOf("https://a"))
+        advanceUntilIdle()
+        assertEquals(listOf("A https://a", "B https://a"), calls.sorted())
+        list = catalogs()
+        checker.sync(listOf("https://a"))
+        advanceUntilIdle()
+        assertEquals(2, calls.size)
+    }
+
+    @Test
+    fun orderCustomCatalogsPutsNativeFirstAndDedupesByName() {
+        val native = FakeCatalog("Native")
+        val legacy1 = FakeCatalog("Legacy")
+        val legacy2 = FakeCatalog("Legacy")
+        val dupNative = FakeCatalog("Native")
+        val result = orderCustomCatalogs(native = listOf(native), installed = listOf(legacy1, dupNative, legacy2))
+        assertEquals(listOf<KmpExternalCustomApiServicesCatalog>(native, legacy1), result)
     }
 
     @Test
     fun catalogListChangeRechecksAll() = runTest {
         var list = emptyList<KmpExternalCustomApiServicesCatalog>()
-        val checker = CustomRepoChecker({ list }, CoroutineScope(coroutineContext)) { now }
+        val checker = CustomRepoChecker({ list }, CoroutineScope(coroutineContext), { now }, testDispatcher())
         checker.sync(listOf("https://a"))
         advanceUntilIdle()
         assertEquals(CustomRepoStatus.Unsupported(now), checker.statuses["https://a"])

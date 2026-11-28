@@ -44,13 +44,11 @@ class ExtensionListViewModel(
     private val downloads = mutableStateListOf<DownloadAndInstallState>()
     private val remoteCatalogs = RemoteCatalogs()
 
-    /** Installed custom catalogs then the native ones, those with remote sources, deduped. */
     val customCatalogs: List<KmpExternalCustomApiServicesCatalog>
-        get() = (installedSources.asSequence().map { it.catalog }.filterIsInstance<KmpExternalCustomApiServicesCatalog>() +
-            nativeCatalogs.catalogs.asSequence())
-            .filter { it.hasRemoteSources }
-            .distinct()
-            .toList()
+        get() = orderCustomCatalogs(
+            native = nativeCatalogs.catalogs,
+            installed = installedSources.map { it.catalog }.filterIsInstance<KmpExternalCustomApiServicesCatalog>(),
+        )
 
     val customRepos = CustomRepoChecker({ customCatalogs }, viewModelScope)
 
@@ -204,3 +202,14 @@ class ExtensionListViewModel(
         }
     }
 }
+
+/**
+ * Native catalogs then installed ones, keeping those with remote sources, one per name. The legacy bridge wraps
+ * each installed source in its own catalog object, so names (not instances) identify a catalog.
+ */
+internal fun orderCustomCatalogs(
+    native: List<KmpExternalCustomApiServicesCatalog>,
+    installed: List<KmpExternalCustomApiServicesCatalog>,
+): List<KmpExternalCustomApiServicesCatalog> = (native + installed)
+    .filter { it.hasRemoteSources }
+    .distinctBy { it.name }
