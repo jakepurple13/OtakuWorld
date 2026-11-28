@@ -1,7 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.details
 
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.togetherWith
 import androidx.compose.animation.slideInVertically
@@ -194,7 +193,7 @@ fun DetailsView(
                         scrollBehavior = scrollBehavior,
                     )
                 } else {
-                    Column {
+                    Box {
                     TopAppBar(
                         title = {
                             Text(

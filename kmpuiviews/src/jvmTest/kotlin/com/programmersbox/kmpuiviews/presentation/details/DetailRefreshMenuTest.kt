@@ -24,6 +24,7 @@ import com.programmersbox.kmpuiviews.presentation.components.PageRefreshHost
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalTestApi::class)
 class DetailRefreshMenuTest {
@@ -83,6 +84,32 @@ class DetailRefreshMenuTest {
 
         mainClock.advanceTimeBy(1_200)
         assertEquals(Color.White, center())
+    }
+
+    @Test
+    fun progressLineGrowsInAndOutWithoutMovingTheBar() = runComposeUiTest {
+        val refreshing = androidx.compose.runtime.mutableStateOf(false)
+        mainClock.autoAdvance = false
+        setContent {
+            Box(Modifier.size(200.dp, 56.dp).testTag("bar")) {
+                DetailsRefreshProgress(refreshing.value)
+            }
+        }
+        mainClock.advanceTimeBy(100)
+        fun lineHeight() = onAllNodes(androidx.compose.ui.test.hasProgressBarRangeInfo(androidx.compose.ui.semantics.ProgressBarRangeInfo.Indeterminate))
+            .fetchSemanticsNodes().firstOrNull()?.boundsInRoot?.height ?: 0f
+
+        refreshing.value = true
+        val growing = List(40) { mainClock.advanceTimeByFrame(); lineHeight() }
+        val full = growing.last()
+        assertTrue(full > 0f && growing.any { it > 0f && it < full }, "heights=$growing")
+        assertEquals(56.dp, onNodeWithTag("bar").fetchSemanticsNode().size.height.let { with(density) { it.toDp() } })
+
+        // Past the 600 ms minimum (ShownAtLeastTest covers it), so the line shrinks away as soon as the load ends.
+        refreshing.value = false
+        val shrinking = List(120) { mainClock.advanceTimeByFrame(); lineHeight() }
+        assertTrue(shrinking.any { it > 0f && it < full }, "heights=$shrinking")
+        assertEquals(0f, shrinking.last())
     }
 
     @Test

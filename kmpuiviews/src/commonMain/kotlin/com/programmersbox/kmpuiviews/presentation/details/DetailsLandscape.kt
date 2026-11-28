@@ -177,7 +177,7 @@ fun DetailsViewLandscape(
                         scrollBehavior = scrollBehavior,
                     )
                 } else {
-                    Column {
+                    Box {
                     TopAppBar(
                         modifier = Modifier.zIndex(2f),
                         scrollBehavior = scrollBehavior,

@@ -5,6 +5,11 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.ui.Alignment
+import com.programmersbox.kmpuiviews.presentation.components.rememberShownAtLeast
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -61,13 +66,18 @@ internal fun RefreshMenuItem(
     HorizontalDivider()
 }
 
-/** The progress line under the Details top bar while a refresh runs. The desktop toolbar shows its own. */
+/**
+ * The progress line along the bottom of the Details top bar while a refresh runs. Drawn over the bar, so the page
+ * never shifts; it grows and fades in and out, and stays at least 600 ms so a fast source doesn't flicker it. The
+ * desktop toolbar shows its own.
+ */
 @Composable
-internal fun DetailsRefreshProgress(isRefreshing: Boolean) {
+internal fun BoxScope.DetailsRefreshProgress(isRefreshing: Boolean) {
     AnimatedVisibility(
-        visible = isRefreshing && LocalPageRefreshHost.current == null,
-        enter = fadeIn(),
-        exit = fadeOut(),
+        visible = rememberShownAtLeast(isRefreshing && LocalPageRefreshHost.current == null, minMillis = 600),
+        enter = fadeIn() + expandVertically(expandFrom = Alignment.Top),
+        exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Top),
+        modifier = Modifier.align(Alignment.BottomCenter),
     ) {
         LinearProgressIndicator(Modifier.fillMaxWidth())
     }

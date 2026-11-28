@@ -1,6 +1,12 @@
 package com.programmersbox.kmpuiviews.tabs
 
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import com.programmersbox.kmpuiviews.presentation.components.rememberShownAtLeast
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.CircleShape
@@ -129,14 +135,27 @@ fun TabToolbar(
                     }
                 }
             }
-            // The divider becomes the page's progress while it reloads, at the same height so nothing shifts.
+            // The page's progress grows over the divider while it reloads, in a fixed slot so nothing shifts. It stays
+            // at least 600 ms so a fast reload still animates in and out.
             Box(Modifier.fillMaxWidth().height(2.dp), contentAlignment = Alignment.Center) {
-                if (tab.refresh.refreshing) {
-                    LinearProgressIndicator(Modifier.fillMaxSize())
-                } else {
-                    HorizontalDivider()
-                }
+                HorizontalDivider()
+                ToolbarProgress(
+                    visible = rememberShownAtLeast(tab.refresh.refreshing, minMillis = 600),
+                    reduced = controller.motion.reduced,
+                )
             }
         }
+    }
+}
+
+@Composable
+private fun ToolbarProgress(visible: Boolean, reduced: Boolean) {
+    AnimatedVisibility(
+        visible = visible,
+        enter = if (reduced) fadeIn() else fadeIn() + expandVertically(expandFrom = Alignment.Top),
+        exit = if (reduced) fadeOut() else fadeOut() + shrinkVertically(shrinkTowards = Alignment.Top),
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        LinearProgressIndicator(Modifier.fillMaxSize())
     }
 }
