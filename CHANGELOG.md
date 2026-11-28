@@ -187,6 +187,20 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v33.0.0...develop_
   data. Pages that update on their own show the button disabled. ⌘R / Ctrl+R and F5 refresh, and
   Esc stops a Details refresh. While a page reloads, a progress line runs along the toolbar and
   the tab shows a spinner ([#2734](https://github.com/jakepurple13/OtakuWorld/pull/2734))
+- **Full tab history** ([#2741](https://github.com/jakepurple13/OtakuWorld/pull/2741)):
+  - Back and forward step through every page the tab visited, and it comes back after a restart
+  - Press and hold back or forward, or right-click them, to see the whole history and jump to any
+    page. Hold, drag onto a page and release to jump in one move. The buttons work from the
+    keyboard too
+  - The same title, Settings, Search, Lists or Downloads can be open in several tabs. Clicking
+    inside a tab always stays in that tab
+  - **Go to open tab** in the right-click menu on covers switches to a tab already showing that
+    title, in any window
+  - ⌘L / Ctrl+L goes to the Search tab already open in the window
+- **Home sidebar** replaces the Home rail: Home pages and pages that open a tab are in separate
+  sections, the list scrolls, and it collapses to icons. The Notifications count moves to the
+  bell when collapsed. Hover a Home page to open it in a new tab
+  ([#2741](https://github.com/jakepurple13/OtakuWorld/pull/2741))
 
 #### Bug Fixes
 
