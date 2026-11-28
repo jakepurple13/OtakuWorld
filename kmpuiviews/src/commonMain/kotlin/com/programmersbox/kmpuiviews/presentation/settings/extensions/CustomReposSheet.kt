@@ -3,7 +3,12 @@ package com.programmersbox.kmpuiviews.presentation.settings.extensions
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -23,6 +28,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -61,6 +68,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.testTag
@@ -72,9 +80,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
 import kotlin.time.Instant
@@ -136,7 +142,10 @@ internal fun CustomReposContent(
 ) {
     var expanded by rememberSaveable { mutableStateOf<String?>(null) }
     var adding by remember { mutableStateOf(false) }
-    val navBottom = LocalNavHostPadding.current.calculateBottomPadding()
+    val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
+    // Problem repos first; sortedBy is stable so saved order holds otherwise.
+    val shown = urls.sortedBy { if (statuses[it].isProblem()) 0 else 1 }
 
     Column(modifier.fillMaxSize()) {
         Row(
@@ -156,14 +165,14 @@ internal fun CustomReposContent(
             IconButton(onClick = onRecheckAll) { Icon(Icons.Default.Refresh, "Refresh all") }
         }
         Box(Modifier.fillMaxSize()) {
-            RepoList(urls, statuses, catalogNames, installedPackages, expanded, { expanded = it }, onRemove, onRecheck, onBrowse, onCopy, navBottom)
+            RepoList(urls, shown, statuses, catalogNames, installedPackages, expanded, { expanded = it }, onRemove, onRecheck, onBrowse, onCopy, listState)
             ExtendedFloatingActionButton(
                 text = { Text("Add repo") },
                 icon = { Icon(Icons.Default.Add, null) },
                 onClick = { adding = true },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(end = 16.dp, bottom = 16.dp + navBottom),
+                    .padding(end = 16.dp, bottom = 16.dp),
             )
         }
     }
@@ -178,6 +187,8 @@ internal fun CustomReposContent(
                 val existing = urls.firstOrNull { repoKey(it) == key }
                 if (existing == null) onAdd(draft)
                 expanded = existing ?: draft
+                // +1 for the summary row.
+                if (existing != null) scope.launch { listState.animateScrollToItem(shown.indexOf(existing) + 1) }
             },
         )
     }
@@ -186,6 +197,7 @@ internal fun CustomReposContent(
 @Composable
 private fun RepoList(
     urls: List<String>,
+    shown: List<String>,
     statuses: Map<String, CustomRepoStatus>,
     catalogNames: List<String>,
     installedPackages: Set<String>,
@@ -195,12 +207,11 @@ private fun RepoList(
     onRecheck: (String) -> Unit,
     onBrowse: (catalogName: String) -> Unit,
     onCopy: (String) -> Unit,
-    navBottom: Dp,
+    state: LazyListState,
 ) {
-    // Problem repos first; sortedBy is stable so saved order holds otherwise.
-    val shown = urls.sortedBy { if (statuses[it].isProblem()) 0 else 1 }
     LazyColumn(
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 88.dp + navBottom),
+        state = state,
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 88.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.fillMaxSize(),
     ) {
@@ -421,15 +432,30 @@ private fun StatusPill(status: CustomRepoStatus, catalogNames: List<String>) {
                 .background(bg)
                 .padding(horizontal = 8.dp, vertical = 2.dp),
         ) {
-            Box(
-                Modifier
-                    .size(6.dp)
-                    .clip(CircleShape)
-                    .background(fg)
-            )
+            if (k == PillKind.Loading) PulsingDot(fg) else Dot(fg)
             Text(text, color = fg, style = MaterialTheme.typography.labelMedium, maxLines = 1)
         }
     }
+}
+
+@Composable
+private fun Dot(color: Color, modifier: Modifier = Modifier) {
+    Box(
+        modifier
+            .size(6.dp)
+            .clip(CircleShape)
+            .background(color)
+    )
+}
+
+@Composable
+private fun PulsingDot(color: Color) {
+    val alpha by rememberInfiniteTransition().animateFloat(
+        initialValue = 1f,
+        targetValue = 0.25f,
+        animationSpec = infiniteRepeatable(tween(1000), RepeatMode.Reverse),
+    )
+    Dot(color, Modifier.graphicsLayer { this.alpha = alpha })
 }
 
 @Composable

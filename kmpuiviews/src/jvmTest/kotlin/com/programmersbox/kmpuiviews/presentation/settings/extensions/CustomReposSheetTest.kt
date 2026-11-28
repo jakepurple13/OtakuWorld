@@ -6,6 +6,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.onAllNodesWithTag
@@ -143,6 +144,30 @@ class CustomReposSheetTest {
         assertTrue(added.isEmpty(), "onAdd called with $added")
         // The existing card is expanded.
         onNodeWithText(saved).assertExists()
+    }
+
+    @Test
+    fun duplicateAddScrollsToExisting() = runComposeUiTest {
+        val urls = List(20) { "https://r$it.example/repo" }
+        val target = urls.last()
+        show(urls, urls.associateWith { found(1, it.substringAfter("://").substringBefore('.')) }, listOf("Alpha"))
+        // The target card starts far below the viewport, so the lazy list has not composed it.
+        onNodeWithText(target.substringAfter("://").substringBefore('.'), useUnmergedTree = true).assertDoesNotExist()
+        onNodeWithText("Add repo", useUnmergedTree = true).performClick()
+        onNode(hasSetTextAction()).performTextInput("$target/")
+        onNodeWithText("Add").performClick()
+        waitForIdle()
+        onNodeWithText(target).assertIsDisplayed()
+    }
+
+    @Test
+    fun failedMessageTruncatedTo120() = runComposeUiTest {
+        val a = "https://a.example/repo"
+        val long = "x".repeat(150) + "\nsecond line"
+        show(listOf(a), mapOf(a to CustomRepoStatus.Failed(long, now)), listOf("Alpha"))
+        onNodeWithText("a.example").performClick()
+        onNodeWithText("Last check failed: ${"x".repeat(120)}…. Check the link or try again later.").assertExists()
+        onNodeWithText("second line", substring = true).assertDoesNotExist()
     }
 
     @Test
