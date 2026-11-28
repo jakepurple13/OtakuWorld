@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.programmersbox.kmpuiviews.domain.aitext.AiTextState
 import com.programmersbox.kmpuiviews.domain.exceptions.ExceptionHeadline
@@ -142,7 +143,7 @@ fun headlineText(row: ExceptionRow): String {
 
 /** The trace: error line, the app's and extension's frames, library frames folded, causes. */
 @Composable
-fun StackTraceBlock(parsed: ParsedException, modifier: Modifier = Modifier) {
+fun StackTraceBlock(parsed: ParsedException, modifier: Modifier = Modifier, messageMaxLines: Int = Int.MAX_VALUE) {
     var showLibrary by rememberSaveable(parsed.groupKey) { mutableStateOf(false) }
     val mono = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace)
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
@@ -162,6 +163,8 @@ fun StackTraceBlock(parsed: ParsedException, modifier: Modifier = Modifier) {
                     listOf(parsed.type, parsed.message).filter { it.isNotEmpty() }.joinToString(": "),
                     style = mono,
                     color = MaterialTheme.colorScheme.error,
+                    maxLines = messageMaxLines,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 // Only the frames scroll sideways; they read best unwrapped.
                 Column(

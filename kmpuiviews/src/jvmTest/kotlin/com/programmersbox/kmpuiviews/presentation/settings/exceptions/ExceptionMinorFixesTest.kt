@@ -14,6 +14,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.runComposeUiTest
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.programmersbox.favoritesdatabase.ExceptionItem
 import com.programmersbox.kmpuiviews.domain.aitext.AiTextState
 import com.programmersbox.kmpuiviews.domain.exceptions.ExceptionFixtures
@@ -63,6 +64,51 @@ class ExceptionMinorFixesTest {
         // Layout width, not clipped bounds: a horizontally scrolled line is laid out at full length.
         val width = onNode(hasText("JSON input", substring = true)).fetchSemanticsNode().size.width
         assertTrue(width <= with(density) { 360.dp.roundToPx() }, "message is $width px wide")
+    }
+
+    // Timeline rows cap a huge message; the detail page shows all of it.
+    @Test
+    fun rowMessageIsCapped() = runComposeUiTest {
+        val html = "kotlinx.serialization.json.internal.JsonDecodingException: Unexpected token\nJSON input: " +
+            "<html>" + "x".repeat(4_000) + "</html>\n\tat a.b.C.d(C.kt:1)"
+        setContent {
+            MaterialTheme {
+                Box(Modifier.width(360.dp)) { StackTraceBlock(parseException(html), messageMaxLines = 6) }
+            }
+        }
+        val height = onNode(hasText("JSON input", substring = true)).fetchSemanticsNode().size.height
+        val lineHeight = with(density) { 16.sp.toPx() } // M3 bodySmall line height
+        assertTrue(height <= lineHeight * 6.5f, "message is $height px tall")
+    }
+
+    // Device bug: a row reported its exit twice, which closed its own Undo snackbar and committed the delete.
+    @Test
+    fun rowReportsExitOnce() = runComposeUiTest {
+        val target = row(ExceptionFixtures.mangaDexTimeout, "MangaDex")
+        val days = androidx.compose.runtime.mutableStateOf(listOf(ExceptionDay(kotlinx.datetime.LocalDate(2026, 11, 27), listOf(target))))
+        val exiting = androidx.compose.runtime.mutableStateOf(emptySet<Long>())
+        var exits = 0
+        setContent {
+            MaterialTheme {
+                ExceptionTimeline(
+                    days = days.value,
+                    hourly = List(24) { 0 }, digest = AiTextState.Idle, digestAvailable = false, explainAvailable = false,
+                    twoPane = false, selected = null, onSelect = {}, onMoreInfo = {}, onDelete = {}, onCopy = {},
+                    onSummarize = {}, explanation = { kotlinx.coroutines.flow.MutableStateFlow(AiTextState.Idle) }, onExplain = {},
+                    exiting = exiting.value,
+                    // Like the screen: drop from exiting, then the view model hides the row a moment later.
+                    onExited = {
+                        exits++
+                        exiting.value = exiting.value - it
+                    },
+                )
+            }
+        }
+        exiting.value = setOf(target.id)
+        waitForIdle()
+        days.value = emptyList()
+        waitForIdle()
+        kotlin.test.assertEquals(1, exits)
     }
 
     private class FakeSnackbar(label: String?) : SnackbarData {

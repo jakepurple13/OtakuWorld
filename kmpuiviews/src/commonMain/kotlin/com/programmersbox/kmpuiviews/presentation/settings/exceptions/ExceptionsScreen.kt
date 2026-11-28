@@ -26,6 +26,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -221,9 +222,7 @@ fun ExceptionsScreen(
         )
     }
 
-    OtakuScaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-    ) { padding ->
+        // Each pane brings its own Scaffold (list: top bar + snackbar; detail: top and bottom bars).
         BoxWithConstraints(Modifier.fillMaxSize()) {
             val twoPane = maxWidth >= TWO_PANE_WIDTH
             val navigator = rememberExceptionNavigator(twoPane)
@@ -311,22 +310,28 @@ fun ExceptionsScreen(
                     listPane = {
                         AnimatedPane(enterTransition = fadeIn(), exitTransition = fadeOut()) {
                             if (twoPane) LaunchedEffect(Unit) { runCatching { listFocus.requestFocus() } }
-                            Column(
-                                Modifier
+                            // The list pane's own scaffold: its insets keep the snackbar above the navigation bar.
+                            OtakuScaffold(
+                                topBar = {
+                                    TopAppBar(
+                                        title = { Text(stringResource(Res.string.exc_title)) },
+                                        navigationIcon = { BackButton() },
+                                        actions = {
+                                            IconButton(onClick = { showDeleteAll = true }) {
+                                                Icon(Icons.Default.DeleteSweep, contentDescription = null)
+                                            }
+                                        },
+                                    )
+                                },
+                                snackbarHost = { SnackbarHost(snackbarHostState) },
+                                contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
+                                modifier = Modifier
                                     .fillMaxSize()
                                     .focusRequester(listFocus)
                                     .onPreviewKeyEvent(onKey)
-                                    .focusable()
-                            ) {
-                                TopAppBar(
-                                    title = { Text(stringResource(Res.string.exc_title)) },
-                                    navigationIcon = { BackButton() },
-                                    actions = {
-                                        IconButton(onClick = { showDeleteAll = true }) {
-                                            Icon(Icons.Default.DeleteSweep, contentDescription = null)
-                                        }
-                                    },
-                                )
+                                    .focusable(),
+                            ) { padding ->
+                            Column(Modifier.fillMaxSize()) {
                                 ExceptionTimeline(
                                     days = days,
                                     hourly = hourly,
@@ -361,6 +366,7 @@ fun ExceptionsScreen(
                                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                                     )
                                 }
+                            }
                             }
                         }
                     },
@@ -404,7 +410,6 @@ fun ExceptionsScreen(
                 )
             }
         }
-    }
 }
 
 /** Screen-level callbacks both panes use. */
