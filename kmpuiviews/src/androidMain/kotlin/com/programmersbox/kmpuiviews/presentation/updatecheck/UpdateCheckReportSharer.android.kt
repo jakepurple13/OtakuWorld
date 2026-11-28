@@ -6,10 +6,11 @@ import android.content.Intent
 class AndroidUpdateCheckReportSharer(
     private val context: Context,
 ) : UpdateCheckReportSharer {
-    override fun share(text: String): Boolean {
+    override fun share(text: String, subject: String?): Boolean {
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
             putExtra(Intent.EXTRA_TEXT, text)
+            if (subject != null) putExtra(Intent.EXTRA_SUBJECT, subject)
         }
         context.startActivity(
             Intent.createChooser(intent, null).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
