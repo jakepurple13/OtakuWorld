@@ -9,18 +9,24 @@ import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
  * A desktop tab's navigation. Every navigation goes into [history], and the back stack shown is
  * rebuilt from it, so back and forward step through visited pages like a browser.
  */
-class TabNavigation3Actions(start: NavKey) : Navigation3Actions(start) {
+class TabNavigation3Actions(start: NavKey, railKeys: Set<NavKey> = setOf(start)) : Navigation3Actions(start) {
     val history = TabHistory(start)
 
-    // Pages opened from the home rail, for the rail highlight.
-    private val railKeys = mutableSetOf<NavKey>()
+    // Pages opened from the home rail, for the rail highlight. Seeded so the start page highlights at launch.
+    private val railKeys = railKeys.toMutableSet()
 
     private fun sync() = navBackStack.replaceStack(history.backStack())
 
     override fun push(key: NavKey) {
-        if (interceptor?.intercept(this, key) == true) return
+        record(key)
+    }
+
+    /** Returns false when the interceptor handled [key] and nothing was recorded. */
+    private fun record(key: NavKey): Boolean {
+        if (interceptor?.intercept(this, key) == true) return false
         history.push(key)
         sync()
+        return true
     }
 
     fun forward() {
@@ -43,9 +49,7 @@ class TabNavigation3Actions(start: NavKey) : Navigation3Actions(start) {
     override fun settings() = push(Screen.Settings)
 
     override fun <T : Any> homeScreenNavigate(nav: T) {
-        if (nav !is NavKey) return
-        railKeys += nav
-        push(nav)
+        if (nav is NavKey && record(nav)) railKeys += nav
     }
 
     override fun toOnboarding() = push(Screen.OnboardingScreen)

@@ -240,7 +240,12 @@ data class MiniPlayerSupported(val supported: Boolean)
 
 /** Makes the Home tab's navigation history-driven. Overrides `navigationModule`'s binding, so load it after that. */
 internal val tabNavigationModule: Module = module {
-    single<Navigation3Actions> { TabNavigation3Actions(Screen.RecentScreen) } binds arrayOf(NavigationActions::class, Navigator::class)
+    single<Navigation3Actions> {
+        TabNavigation3Actions(
+            Screen.RecentScreen,
+            railKeys = setOf(Screen.RecentScreen, Screen.AllScreen, Screen.FavoriteScreen, Screen.ExtensionListScreen),
+        )
+    } binds arrayOf(NavigationActions::class, Navigator::class)
 }
 
 /**

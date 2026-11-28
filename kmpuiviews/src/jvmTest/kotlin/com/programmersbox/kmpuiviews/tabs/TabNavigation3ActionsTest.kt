@@ -94,6 +94,48 @@ class TabNavigation3ActionsTest {
         assertEquals(false, recent)
     }
 
+    private val railKeys = setOf(r, Screen.AllScreen, Screen.FavoriteScreen, Screen.ExtensionListScreen)
+
+    @Test
+    fun freshHomeHighlightsRecent() = runComposeUiTest {
+        var recent: Boolean? = null
+        setContent { recent = nav.currentDestination(r) }
+        waitForIdle()
+        assertEquals(true, recent)
+    }
+
+    @Test
+    fun restoredHistoryHighlightsRailPage() = runComposeUiTest {
+        val home = TabNavigation3Actions(r, railKeys = railKeys)
+        home.restoreHistory(listOf(r, Screen.FavoriteScreen, title("X")), 2)
+        var favorite: Boolean? = null
+        setContent { favorite = home.currentDestination(Screen.FavoriteScreen) }
+        waitForIdle()
+        assertEquals(true, favorite)
+    }
+
+    @Test
+    fun onboardingToRecentKeepsRecentHighlighted() = runComposeUiTest {
+        nav.toOnboarding()
+        nav.onboardingToRecent()
+        var recent: Boolean? = null
+        setContent { recent = nav.currentDestination(r) }
+        waitForIdle()
+        assertEquals(true, recent)
+    }
+
+    @Test
+    fun interceptedRailClickIsNotARailPage() = runComposeUiTest {
+        // All is in history but was not opened from the rail; an intercepted rail click must not make it one.
+        nav.navigate(Screen.AllScreen)
+        nav.interceptor = NavInterceptor { _, _ -> true }
+        nav.homeScreenNavigate(Screen.AllScreen)
+        var x: Boolean? = null
+        setContent { x = nav.currentDestination(Screen.AllScreen) }
+        waitForIdle()
+        assertEquals(false, x)
+    }
+
     @Test
     fun onboardingToRecentResetsHistory() {
         nav.toOnboarding()
