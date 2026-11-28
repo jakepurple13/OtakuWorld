@@ -10,6 +10,7 @@ import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.kmpmodels.KmpExternalCustomApiServicesCatalog
 import com.programmersbox.kmpmodels.KmpRemoteSources
 import com.programmersbox.kmpmodels.KmpSourceInformation
+import com.programmersbox.kmpmodels.RepoCheck
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -92,6 +93,8 @@ class CloudstreamCatalog internal constructor(
     override fun getSources(): List<KmpSourceInformation> = sources
 
     override suspend fun getRemoteSources(customUrls: List<String>): List<KmpRemoteSources> = repoClient.fetch(customUrls)
+
+    override suspend fun checkRepo(url: String): RepoCheck = repoClient.check(url)
 
     override suspend fun install(remote: KmpRemoteSources): Boolean {
         val (repoUrl, plugin) = repoClient.pluginFor(remote.downloadLink) ?: run {
