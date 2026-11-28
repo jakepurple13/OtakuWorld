@@ -1,5 +1,6 @@
 package com.programmersbox.mihon.repo
 
+import com.programmersbox.kmpmodels.RepoCheck
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -8,6 +9,8 @@ import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
+import kotlin.test.assertTrue
 
 private const val REPO = """{"meta":{"name":"Keiyoushi","shortName":"Keiyoushi","website":"https://keiyoushi.github.io","signingKeyFingerprint":"abc123"}}"""
 
@@ -130,5 +133,60 @@ class MihonRepoClientTest {
         val result = repo.fetch(listOf("http://bad.example", "https://repo.example"))
         assertEquals(1, result.size)
         assertEquals(setOf("abc123"), repo.signingKeys)
+    }
+
+    @Test
+    fun checkFoundReturnsRepoNameAndSupported() = runTest {
+        val result = MihonRepoClient(client()).check("https://repo.example")
+        val found = assertIs<RepoCheck.Found>(result)
+        assertEquals("Keiyoushi", found.name)
+        assertEquals(listOf("eu.kanade.tachiyomi.extension.all.mangadex"), found.remotes.map { it.packageName })
+    }
+
+    @Test
+    fun checkAniyomiRepoIsNotThisFormat() = runTest {
+        val aniyomi = """[
+         {"name":"Aniyomi: A","pkg":"a.b","apk":"a.apk","lang":"en","code":1,"version":"14.12","nsfw":0,"sources":[]},
+         {"name":"Aniyomi: B","pkg":"a.c","apk":"b.apk","lang":"en","code":1,"version":"15.3","nsfw":0,"sources":[]}
+        ]"""
+        val http = HttpClient(MockEngine { request ->
+            when {
+                request.url.encodedPath.endsWith("/repo.json") -> respond(REPO)
+                request.url.encodedPath.endsWith("/index.min.json") -> respond(aniyomi)
+                else -> respondError(HttpStatusCode.NotFound)
+            }
+        })
+        assertEquals(RepoCheck.NotThisFormat, MihonRepoClient(http).check("https://repo.example"))
+    }
+
+    @Test
+    fun checkCloudstreamRepoIsNotThisFormat() = runTest {
+        val http = HttpClient(MockEngine {
+            respond("""{"name":"X","manifestVersion":1,"pluginLists":[]}""")
+        })
+        assertEquals(RepoCheck.NotThisFormat, MihonRepoClient(http).check("https://repo.example"))
+    }
+
+    @Test
+    fun check404IsFailed() = runTest {
+        val result = MihonRepoClient(client(failHost = "repo.example")).check("https://repo.example")
+        val failed = assertIs<RepoCheck.Failed>(result)
+        assertTrue("404" in failed.message, failed.message)
+    }
+
+    @Test
+    fun checkHttpIsFailed() = runTest {
+        assertEquals(
+            RepoCheck.Failed("Only https links are supported"),
+            MihonRepoClient(client()).check("http://repo.example"),
+        )
+    }
+
+    @Test
+    fun checkDoesNotChangeSigningKeys() = runTest {
+        val repo = MihonRepoClient(client())
+        repo.check("https://repo.example")
+        assertEquals(emptySet(), repo.signingKeys)
+        assertEquals(emptyMap(), repo.signingKeysByRepo)
     }
 }

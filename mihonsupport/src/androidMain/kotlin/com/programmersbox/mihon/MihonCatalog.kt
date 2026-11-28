@@ -5,6 +5,7 @@ import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.kmpmodels.KmpExternalCustomApiServicesCatalog
 import com.programmersbox.kmpmodels.KmpRemoteSources
 import com.programmersbox.kmpmodels.KmpSourceInformation
+import com.programmersbox.kmpmodels.RepoCheck
 import com.programmersbox.mihon.loader.MihonExtensionLoader
 import com.programmersbox.mihon.repo.MihonRepoClient
 import kotlinx.coroutines.CancellationException
@@ -46,4 +47,6 @@ class MihonCatalog(
         sources.any { it.packageName == packageName } || loader.isExtension(packageName)
 
     override suspend fun getRemoteSources(customUrls: List<String>): List<KmpRemoteSources> = repoClient.fetch(customUrls)
+
+    override suspend fun checkRepo(url: String): RepoCheck = repoClient.check(url)
 }
