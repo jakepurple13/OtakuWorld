@@ -37,7 +37,7 @@ import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.layout.AnimatedPane
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffold
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
-import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -118,28 +118,16 @@ fun ExceptionsScreen(
     val clipboard = LocalClipboardManager.current
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    val navigator = rememberListDetailPaneScaffoldNavigator<Long>()
     val timeZone = remember { TimeZone.currentSystemDefault() }
     val version = appVersion()
 
     var showDeleteAll by remember { mutableStateOf(false) }
     var exiting by remember { mutableStateOf(emptySet<Long>()) }
     val listFocus = remember { FocusRequester() }
+    val listState = rememberLazyListState()
 
-    // Predictive back: scrub the pane transition while the gesture is held.
-    val backState = rememberNavigationEventState(NavigationEventInfo.None)
-    NavigationBackHandler(
-        state = backState,
-        isBackEnabled = navigator.canNavigateBack(),
-        onBackCancelled = { scope.launch { navigator.seekBack(fraction = 0f) } },
-        onBackCompleted = { scope.launch { navigator.navigateBack() } },
-    )
-    val backTransition = backState.transitionState
-    LaunchedEffect(backTransition) {
-        if (backTransition is NavigationEventTransitionState.InProgress) {
-            navigator.seekBack(fraction = backTransition.latestEvent.progress)
-        }
-    }
+    // Leaving mid-slide still deletes; the view model commits pending ids when it's cleared.
+    CommitExitingOnDispose(exiting) { viewModel.delete(it) }
 
     fun report(row: ExceptionRow) = buildExceptionReport(
         rawText = row.item.message,
@@ -220,7 +208,23 @@ fun ExceptionsScreen(
     ) { padding ->
         BoxWithConstraints(Modifier.fillMaxSize()) {
             val twoPane = maxWidth >= TWO_PANE_WIDTH
+            val navigator = rememberExceptionNavigator(twoPane)
             val selected = navigator.currentDestination?.contentKey
+
+            // Predictive back: scrub the pane transition while the gesture is held.
+            val backState = rememberNavigationEventState(NavigationEventInfo.None)
+            NavigationBackHandler(
+                state = backState,
+                isBackEnabled = navigator.canNavigateBack(),
+                onBackCancelled = { scope.launch { navigator.seekBack(fraction = 0f) } },
+                onBackCompleted = { scope.launch { navigator.navigateBack() } },
+            )
+            val backTransition = backState.transitionState
+            LaunchedEffect(backTransition) {
+                if (backTransition is NavigationEventTransitionState.InProgress) {
+                    navigator.seekBack(fraction = backTransition.latestEvent.progress)
+                }
+            }
 
             // Two panes with nothing picked: show the newest one instead of an empty half.
             LaunchedEffect(twoPane, rows.firstOrNull()?.id, selected) {
@@ -232,6 +236,7 @@ fun ExceptionsScreen(
 
             // Delete: move the selection (or leave the detail) first, then slide the row out.
             // The row reports when it's gone; only then is it hidden and the Undo snackbar shown.
+            lateinit var onExited: (Long) -> Unit
             val delete: (Long) -> Unit = { id ->
                 scope.launch {
                     if (twoPane) {
@@ -240,10 +245,12 @@ fun ExceptionsScreen(
                     } else if (selected == id) {
                         navigator.navigateBack()
                     }
-                    exiting = exiting + id
+                    // A row that isn't on screen can't play its exit, so skip straight to the delete.
+                    val onScreen = listState.layoutInfo.visibleItemsInfo.any { it.key == id }
+                    if (onScreen) exiting = exiting + id else onExited(id)
                 }
             }
-            val onExited: (Long) -> Unit = { id ->
+            onExited = { id ->
                 exiting = exiting - id
                 viewModel.delete(id)
                 scope.launch {
@@ -310,6 +317,7 @@ fun ExceptionsScreen(
                                     onExplain = viewModel::explain,
                                     sharedKeys = if (twoPane) null else SharedKeys(this@SharedTransitionLayout, this@AnimatedPane),
                                     contentPadding = padding,
+                                    listState = listState,
                                     exiting = exiting,
                                     onExited = onExited,
                                     onSave = actions.shareOrSave,

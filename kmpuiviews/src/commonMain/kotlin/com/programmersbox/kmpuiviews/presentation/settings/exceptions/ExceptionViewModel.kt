@@ -66,6 +66,16 @@ class ExceptionViewModel(
     // Parsing is pure, so parse each stored row once. Main only.
     private val parsedCache = mutableMapOf<Long, ParsedException>()
 
+    // versionName asks the package manager (a binder call on Android); once per package. Main only.
+    private val versionCache = mutableMapOf<String, String?>()
+
+    private fun cachedVersion(source: KmpSourceInformation): String? =
+        if (versionCache.containsKey(source.packageName)) {
+            versionCache[source.packageName]
+        } else {
+            versionName(source)?.takeIf { it.isNotBlank() }.also { versionCache[source.packageName] = it }
+        }
+
     val rows: StateFlow<List<ExceptionRow>> = combine(stored, pending, sourceRepository.sources) { items, hidden, sources ->
         val parsed = items.associate { it.id to parsedCache.getOrPut(it.id) { parseException(it.message) } }
         val seen = seenCounts(items.map { it.time to parsed.getValue(it.id).groupKey }, now())
@@ -80,7 +90,7 @@ class ExceptionViewModel(
                     parsed = p,
                     source = source,
                     sourceName = source?.name ?: p.extension?.id,
-                    extensionVersion = source?.let(versionName),
+                    extensionVersion = source?.let(::cachedVersion),
                     seenThisWeek = seen[p.groupKey] ?: 1,
                 )
             }

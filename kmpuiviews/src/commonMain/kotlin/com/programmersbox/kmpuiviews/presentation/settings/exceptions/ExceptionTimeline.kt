@@ -155,7 +155,8 @@ fun ExceptionTimeline(
             items(day.rows, key = { it.id }) { row ->
                 val state by explanation(row).collectAsStateWithLifecycle()
                 val visible = remember(row.id) { MutableTransitionState(true) }
-                visible.targetState = row.id !in exiting
+                // Only ever hide: once exited, the row may still be composed while the list catches up.
+                if (row.id in exiting) visible.targetState = false
                 LaunchedEffect(visible.isIdle, visible.currentState) {
                     if (visible.isIdle && !visible.currentState) onExited(row.id)
                 }

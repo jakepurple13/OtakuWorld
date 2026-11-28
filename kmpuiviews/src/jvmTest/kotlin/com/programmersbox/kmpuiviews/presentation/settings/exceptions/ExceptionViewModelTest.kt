@@ -247,6 +247,30 @@ class ExceptionViewModelTest {
     }
 
     @Test
+    fun versionLookedUpOncePerPackageAndBlankIsNull() {
+        sources.addSource(
+            KmpSourceInformation(
+                apiService = FakeApi("https://mangadex.org"),
+                name = "MangaDex",
+                icon = null,
+                packageName = "eu.kanade.tachiyomi.extension.en.mangadex",
+            )
+        )
+        insert(now - hour, ExceptionFixtures.mangaDexTimeout)
+        insert(now - 2 * hour, ExceptionFixtures.mangaDexTimeout)
+        var calls = 0
+        val vm = viewModel(versionName = { calls++; "" })
+        awaitCondition { vm.rows.value.size == 2 }
+        val id = vm.rows.value.first().id
+        vm.delete(id)
+        awaitCondition { vm.rows.value.size == 1 }
+        vm.undo(id)
+        awaitCondition { vm.rows.value.size == 2 }
+        assertEquals(1, calls)
+        assertNull(vm.rows.value.first().extensionVersion)
+    }
+
+    @Test
     fun appErrorHasNoSource() {
         insert(now - hour, ExceptionFixtures.backupFailure)
         val vm = viewModel()
