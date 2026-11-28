@@ -18,7 +18,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.protobuf.ProtoBuf
 import kotlin.concurrent.Volatile
 
@@ -113,29 +113,36 @@ class MihonRepoClient(private val httpClient: HttpClient) {
     }
 
     /**
-     * Classifies a single repo link without touching signing-key state. Cloudstream (`pluginLists`) and
-     * Aniyomi (unsupported extension versions only) repos come back as [RepoCheck.NotThisFormat].
+     * Classifies a single repo link without touching signing-key state. Cloudstream (`pluginLists`), non-object
+     * `repo.json`, undecodable indexes, and Aniyomi (unsupported extension versions only) repos come back as
+     * [RepoCheck.NotThisFormat]. A repo with no signing key is [RepoCheck.Failed], since [fetch] drops it.
      */
     suspend fun check(url: String): RepoCheck {
         val base = normalize(url)
         if (!base.startsWith("https://", ignoreCase = true)) return RepoCheck.Failed("Only https links are supported")
         return try {
             val text = getText("$base/repo.json")
-            val root = json.parseToJsonElement(text).jsonObject
+            val root = json.parseToJsonElement(text) as? JsonObject ?: return RepoCheck.NotThisFormat
             if ("pluginLists" in root || "meta" !in root) return RepoCheck.NotThisFormat
             val repo = json.decodeFromString<MihonRepo>(text)
             val read = readIndex(base, repo)
-            if (read.rawCount > 0 && read.sources.isEmpty()) RepoCheck.NotThisFormat
-            else RepoCheck.Found(repo.meta.name, read.sources)
+            when {
+                read.rawCount > 0 && read.sources.isEmpty() -> RepoCheck.NotThisFormat
+                // fetch drops unsigned repos, so the sheet must not report them as working.
+                read.fingerprint == null -> RepoCheck.Failed("Repo has no signing key")
+                else -> RepoCheck.Found(repo.meta.name, read.sources)
+            }
         } catch (e: CancellationException) {
             throw e
+        } catch (_: IndexFormatException) {
+            RepoCheck.NotThisFormat
         } catch (e: Exception) {
             RepoCheck.Failed(e.message?.takeIf { it.isNotBlank() } ?: e::class.simpleName ?: "Could not read repo")
         }
     }
 
     private suspend fun fetchLegacy(base: String, repo: MihonRepo): RepoFetch {
-        val index = json.decodeFromString<List<MihonIndexEntry>>(getText("$base/index.min.json"))
+        val index = getText("$base/index.min.json").let { decodeIndex { json.decodeFromString<List<MihonIndexEntry>>(it) } }
         return RepoFetch(
             fingerprint = repo.meta.signingKeyFingerprint,
             rawCount = index.size,
@@ -148,19 +155,23 @@ class MihonRepoClient(private val httpClient: HttpClient) {
     /** index_v2: protobuf or proto3-JSON, optionally gzipped; the extension list is inline or behind a URL. */
     private suspend fun fetchIndexV2(repo: MihonRepo, indexV2: String): RepoFetch {
         val indexBytes = getBytes(requireHttps(indexV2))
-        val index = if (isJson(indexBytes)) {
-            v2Json.decodeFromString<V2IndexJson>(indexBytes.decodeToString()).toIndex()
-        } else {
-            ProtoBuf.decodeFromByteArray<V2Index>(indexBytes)
+        val index = decodeIndex {
+            if (isJson(indexBytes)) {
+                v2Json.decodeFromString<V2IndexJson>(indexBytes.decodeToString()).toIndex()
+            } else {
+                ProtoBuf.decodeFromByteArray<V2Index>(indexBytes)
+            }
         }
         val extensions = when (val ext = index.extensions) {
             is V2InlineList -> ext.extensionList
             is V2ListUrl -> {
                 val listBytes = getBytes(requireHttps(ext.extensionListUrl))
-                if (isJson(listBytes)) {
-                    v2Json.decodeFromString<V2ExtensionList>(listBytes.decodeToString())
-                } else {
-                    ProtoBuf.decodeFromByteArray<V2ExtensionList>(listBytes)
+                decodeIndex {
+                    if (isJson(listBytes)) {
+                        v2Json.decodeFromString<V2ExtensionList>(listBytes.decodeToString())
+                    } else {
+                        ProtoBuf.decodeFromByteArray<V2ExtensionList>(listBytes)
+                    }
                 }
             }
             null -> V2ExtensionList()
@@ -174,6 +185,16 @@ class MihonRepoClient(private val httpClient: HttpClient) {
                 .filter { MihonLib.isSupported(it.extensionLib.toDoubleOrNull()) }
                 .map { it.toRemote() },
         )
+    }
+
+    /** Thrown when an index downloaded fine but is not in a shape this client can decode. */
+    private class IndexFormatException(cause: Throwable) : Exception(cause.message, cause)
+
+    /** kotlinx decoders report malformed input as [IllegalArgumentException] (incl. `SerializationException`). */
+    private inline fun <T> decodeIndex(block: () -> T): T = try {
+        block()
+    } catch (e: IllegalArgumentException) {
+        throw IndexFormatException(e)
     }
 
     private fun requireHttps(url: String): String = url.trim().also {

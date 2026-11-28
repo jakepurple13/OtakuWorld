@@ -118,7 +118,8 @@ class AniyomiRepoClient(private val httpClient: HttpClient) {
 
     /**
      * Classifies a single repo link without touching signing-key state. Cloudstream (`pluginLists`), non-object
-     * `repo.json`, and Mihon (unsupported extension versions only) repos come back as [RepoCheck.NotThisFormat].
+     * `repo.json`, undecodable indexes, and Mihon (unsupported extension versions only) repos come back as
+     * [RepoCheck.NotThisFormat]. A repo with no signing key is [RepoCheck.Failed], since [fetch] drops it.
      */
     suspend fun check(url: String): RepoCheck {
         val base = normalize(url)
@@ -129,17 +130,23 @@ class AniyomiRepoClient(private val httpClient: HttpClient) {
             if ("pluginLists" in root || "meta" !in root) return RepoCheck.NotThisFormat
             val repo = json.decodeFromString<AniyomiRepo>(text)
             val read = readIndex(base, repo)
-            if (read.rawCount > 0 && read.sources.isEmpty()) RepoCheck.NotThisFormat
-            else RepoCheck.Found(repo.meta.name, read.sources)
+            when {
+                read.rawCount > 0 && read.sources.isEmpty() -> RepoCheck.NotThisFormat
+                // fetch drops unsigned repos, so the sheet must not report them as working.
+                read.fingerprint == null -> RepoCheck.Failed("Repo has no signing key")
+                else -> RepoCheck.Found(repo.meta.name, read.sources)
+            }
         } catch (e: CancellationException) {
             throw e
+        } catch (_: IndexFormatException) {
+            RepoCheck.NotThisFormat
         } catch (e: Exception) {
             RepoCheck.Failed(e.message?.takeIf { it.isNotBlank() } ?: e::class.simpleName ?: "Could not read repo")
         }
     }
 
     private suspend fun fetchLegacy(base: String, repo: AniyomiRepo): RepoFetch {
-        val index = json.decodeFromString<List<AniyomiIndexEntry>>(getText("$base/index.min.json"))
+        val index = getText("$base/index.min.json").let { decodeIndex { json.decodeFromString<List<AniyomiIndexEntry>>(it) } }
         return RepoFetch(
             fingerprint = repo.meta.signingKeyFingerprint,
             rawCount = index.size,
@@ -152,19 +159,23 @@ class AniyomiRepoClient(private val httpClient: HttpClient) {
     /** index_v2: protobuf or proto3-JSON, optionally gzipped; the extension list is inline or behind a URL. */
     private suspend fun fetchIndexV2(repo: AniyomiRepo, indexV2: String): RepoFetch {
         val indexBytes = getBytes(requireHttps(indexV2))
-        val index = if (isJson(indexBytes)) {
-            v2Json.decodeFromString<V2IndexJson>(indexBytes.decodeToString()).toIndex()
-        } else {
-            ProtoBuf.decodeFromByteArray<V2Index>(indexBytes)
+        val index = decodeIndex {
+            if (isJson(indexBytes)) {
+                v2Json.decodeFromString<V2IndexJson>(indexBytes.decodeToString()).toIndex()
+            } else {
+                ProtoBuf.decodeFromByteArray<V2Index>(indexBytes)
+            }
         }
         val extensions = when (val ext = index.extensions) {
             is V2InlineList -> ext.extensionList
             is V2ListUrl -> {
                 val listBytes = getBytes(requireHttps(ext.extensionListUrl))
-                if (isJson(listBytes)) {
-                    v2Json.decodeFromString<V2ExtensionList>(listBytes.decodeToString())
-                } else {
-                    ProtoBuf.decodeFromByteArray<V2ExtensionList>(listBytes)
+                decodeIndex {
+                    if (isJson(listBytes)) {
+                        v2Json.decodeFromString<V2ExtensionList>(listBytes.decodeToString())
+                    } else {
+                        ProtoBuf.decodeFromByteArray<V2ExtensionList>(listBytes)
+                    }
                 }
             }
             null -> V2ExtensionList()
@@ -178,6 +189,16 @@ class AniyomiRepoClient(private val httpClient: HttpClient) {
                 .filter { AniyomiLib.isSupported(it.extensionLib.toDoubleOrNull()) }
                 .map { it.toRemote() },
         )
+    }
+
+    /** Thrown when an index downloaded fine but is not in a shape this client can decode. */
+    private class IndexFormatException(cause: Throwable) : Exception(cause.message, cause)
+
+    /** kotlinx decoders report malformed input as [IllegalArgumentException] (incl. `SerializationException`). */
+    private inline fun <T> decodeIndex(block: () -> T): T = try {
+        block()
+    } catch (e: IllegalArgumentException) {
+        throw IndexFormatException(e)
     }
 
     private fun requireHttps(url: String): String = url.trim().also {

@@ -7,6 +7,9 @@ import io.ktor.client.engine.mock.respond
 import io.ktor.client.engine.mock.respondError
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.encodeToByteArray
+import kotlinx.serialization.protobuf.ProtoBuf
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -23,6 +26,7 @@ private const val INDEX = """[
   "sources":[{"name":"Mid","lang":"en","id":2,"baseUrl":"https://mid.example"}]}
 ]"""
 
+@OptIn(ExperimentalSerializationApi::class)
 class MihonRepoClientTest {
     private fun client(failHost: String? = null) = HttpClient(MockEngine { request ->
         val url = request.url.toString()
@@ -188,5 +192,41 @@ class MihonRepoClientTest {
         repo.check("https://repo.example")
         assertEquals(emptySet(), repo.signingKeys)
         assertEquals(emptyMap(), repo.signingKeysByRepo)
+    }
+
+    @Test
+    fun checkUnsignedRepoIsFailed() = runTest {
+        val http = HttpClient(MockEngine { request ->
+            when {
+                request.url.encodedPath.endsWith("/repo.json") -> respond("""{"meta":{"name":"Unsigned"}}""")
+                request.url.encodedPath.endsWith("/index.min.json") -> respond(INDEX)
+                else -> respondError(HttpStatusCode.NotFound)
+            }
+        })
+        assertEquals(RepoCheck.Failed("Repo has no signing key"), MihonRepoClient(http).check("https://repo.example"))
+    }
+
+    @Test
+    fun checkNonObjectRepoJsonIsNotThisFormat() = runTest {
+        val http = HttpClient(MockEngine { respond("[]") })
+        assertEquals(RepoCheck.NotThisFormat, MihonRepoClient(http).check("https://repo.example"))
+    }
+
+    @Test
+    fun checkIndexV2RepoIsFound() = runTest {
+        val indexUrl = "https://cdn.example/index.pb"
+        val index = ProtoBuf.encodeToByteArray(V2Index(name = "Store", signingKey = "indexKey", extensions = V2InlineList(V2_EXTENSIONS)))
+        // No key in repo.json: the fingerprint comes from the index.
+        val http = v2Client(mapOf("https://store.example/repo.json" to { repoJson(indexUrl, key = null) }, indexUrl to { index }))
+        val found = assertIs<RepoCheck.Found>(MihonRepoClient(http).check("https://store.example"))
+        assertEquals("Store", found.name)
+        assertEquals(listOf("pkg.dex", "pkg.six"), found.remotes.map { it.packageName })
+    }
+
+    @Test
+    fun checkUndecodableV2IndexIsNotThisFormat() = runTest {
+        val indexUrl = "https://cdn.example/index.json"
+        val http = v2Client(mapOf("https://store.example/repo.json" to { repoJson(indexUrl) }, indexUrl to { """{"name":""" }))
+        assertEquals(RepoCheck.NotThisFormat, MihonRepoClient(http).check("https://store.example"))
     }
 }

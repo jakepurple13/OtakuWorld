@@ -78,4 +78,34 @@ class AniyomiRepoClientCheckTest {
         assertEquals(emptySet(), repo.signingKeys)
         assertEquals(emptyMap(), repo.signingKeysByRepo)
     }
+
+    @Test
+    fun checkUnsignedRepoIsFailed() = runTest {
+        val http = client(repo = """{"meta":{"name":"Unsigned"}}""")
+        assertEquals(RepoCheck.Failed("Repo has no signing key"), AniyomiRepoClient(http).check("https://repo.example"))
+    }
+
+    private fun v2Client(index: String, repo: String = """{"index_v2":"https://cdn.example/index.json","meta":{"name":"Sec"}}""") =
+        HttpClient(MockEngine { request ->
+            when (request.url.toString()) {
+                "https://repo.example/repo.json" -> respond(repo)
+                "https://cdn.example/index.json" -> respond(index)
+                else -> respondError(HttpStatusCode.NotFound)
+            }
+        })
+
+    @Test
+    fun checkIndexV2RepoIsFound() = runTest {
+        // No key in repo.json: the fingerprint comes from the index.
+        val index = """{"name":"Sec","signingKey":"v2key","extensionList":{"extensions":[
+         {"name":"Aniyomi: Jelly","packageName":"a.jelly","extensionLib":"16","versionName":"16.7"}]}}"""
+        val found = assertIs<RepoCheck.Found>(AniyomiRepoClient(v2Client(index)).check("https://repo.example"))
+        assertEquals("Sec", found.name)
+        assertEquals(listOf("a.jelly"), found.remotes.map { it.packageName })
+    }
+
+    @Test
+    fun checkUndecodableV2IndexIsNotThisFormat() = runTest {
+        assertEquals(RepoCheck.NotThisFormat, AniyomiRepoClient(v2Client(index = """{"name":""")).check("https://repo.example"))
+    }
 }
