@@ -10,7 +10,8 @@ repo_url = "https://github.com/jakepurple13/OtakuWorld"
 repo_name = "jakepurple13/OtakuWorld"
 edit_uri = "edit/develop/docs/"
 docs_dir = "docs"
-extra_css = ["stylesheets/m3.css"]
+extra_css = ["stylesheets/m3.css", "stylesheets/motion.css"]
+extra_javascript = ["javascripts/motion.js"]
 
 # Everything in docs/ that isn't for app users: design specs, plans, mockups,
 # and developer guides. These stay in the repo but don't go on the site.
