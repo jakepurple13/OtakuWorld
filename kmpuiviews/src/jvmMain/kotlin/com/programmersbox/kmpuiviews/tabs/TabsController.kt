@@ -311,6 +311,10 @@ class TabsController(
             .filter { it.id != except && keys.keyOf(it.current) == key }
     }
 
+    /** The first tab of [window] whose current page is [key], or null. */
+    fun tabShowing(key: TabKey, window: WindowId): TabState? =
+        window(window)?.tabs?.firstOrNull { keys.keyOf(it.current) == key }
+
     /** Switches to [tab], raising its window, and flashes it. */
     fun goTo(tab: TabId) {
         activate(tab)

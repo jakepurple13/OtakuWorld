@@ -275,11 +275,12 @@ class TabShortcutsTest {
         assertEquals(2, window.tabs.size)
         assertEquals(window.tabs[1].id, window.activeId.value)
         assertEquals(true, controller.searchFocus.pending)
-        // Again: a page may be open in many tabs, so it opens another search tab.
+        // Again: it goes to the open Search tab instead of opening another.
         controller.perform(TabShortcut.SwitchTo(1), window)
         controller.perform(TabShortcut.FocusSearch, window)
-        assertEquals(3, window.tabs.size)
+        assertEquals(2, window.tabs.size)
         assertEquals(window.tabs[1].id, window.activeId.value)
+        assertEquals(true, controller.searchFocus.pending)
     }
 
     private val capKeys = mapOf(

@@ -187,7 +187,9 @@ fun TabsController.perform(shortcut: TabShortcut, window: BrowserWindowState) {
         TabShortcut.Back -> back(active)
         TabShortcut.Forward -> forward(active)
         TabShortcut.FocusSearch -> {
-            open(Screen.GlobalSearchScreen(), TabOpenMode.Foreground, active)
+            // The window's open Search tab, else a new one.
+            tabShowing(TabKey.Search, window.id)?.let { goTo(it.id) }
+                ?: open(Screen.GlobalSearchScreen(), TabOpenMode.Foreground, active)
             searchFocus.request()
         }
         // Ignored with "Drag tabs out into windows" off.
