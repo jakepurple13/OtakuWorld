@@ -17,7 +17,6 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,7 +33,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
@@ -322,11 +320,12 @@ private fun TimelineRow(
     ) {
         Surface(
             color = if (selected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface,
-            shape = RoundedCornerShape(12.dp),
+            // Surface's onClick clips the ripple to the shape.
+            onClick = { if (twoPane) onSelect() else expanded = !expanded },
+            shape = MaterialTheme.shapes.medium,
             modifier = Modifier
                 .fillMaxWidth()
-                .sharedIf(sharedKeys, "exception-${row.id}", bounds = true)
-                .clickable { if (twoPane) onSelect() else expanded = !expanded },
+                .sharedIf(sharedKeys, "exception-${row.id}", bounds = true),
         ) {
             Column(Modifier.padding(horizontal = 8.dp, vertical = 8.dp)) {
                 Row(verticalAlignment = Alignment.Top) {

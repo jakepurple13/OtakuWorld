@@ -2,6 +2,9 @@ package com.programmersbox.kmpuiviews.presentation.settings.exceptions
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,7 +25,10 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -68,6 +74,7 @@ import kotlin.time.Instant
  * The detail pane. Single-pane: back + delete on top, Copy · Share/Save · Source at the bottom.
  * Two-pane: everything in one row at the top. The header (badge, title, time) is shared with the row.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExceptionDetail(
     row: ExceptionRow,
@@ -85,32 +92,50 @@ fun ExceptionDetail(
     contentModifier: Modifier = Modifier,
 ) {
     val actions = remember(row) { availableActions(row) }
-    Surface(
+    // A Scaffold so the bars keep clear of the status and navigation bars.
+    Scaffold(
         modifier = modifier
             .fillMaxSize()
             .sharedIf(sharedKeys, "exception-${row.id}", bounds = true),
-    ) {
-        Column(Modifier.fillMaxSize()) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 6.dp),
-            ) {
-                if (!twoPane) {
-                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
-                }
-                Spacer(Modifier.weight(1f))
-                if (twoPane) ActionButtons(row, actions, onCopy, onShareOrSave, onSourceAction)
-                IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.exc_delete))
+        topBar = {
+            TopAppBar(
+                title = {},
+                navigationIcon = {
+                    if (!twoPane) {
+                        IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
+                    }
+                },
+                actions = {
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                        if (twoPane) ActionButtons(row, actions, onCopy, onShareOrSave, onSourceAction)
+                        IconButton(onClick = onDelete) {
+                            Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.exc_delete))
+                        }
+                    }
+                },
+            )
+        },
+        bottomBar = {
+            if (!twoPane) {
+                Surface {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .windowInsetsPadding(WindowInsets.navigationBars)
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                    ) {
+                        ActionButtons(row, actions, onCopy, onShareOrSave, onSourceAction, fill = true)
+                    }
                 }
             }
+        },
+    ) { padding ->
             Column(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier
-                    .weight(1f)
+                    .fillMaxSize()
+                    .padding(padding)
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = if (twoPane) 24.dp else 16.dp, vertical = 8.dp),
             ) {
@@ -126,17 +151,6 @@ fun ExceptionDetail(
                     StackTraceBlock(row.parsed)
                 }
             }
-            if (!twoPane) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 10.dp),
-                ) {
-                    ActionButtons(row, actions, onCopy, onShareOrSave, onSourceAction, fill = true)
-                }
-            }
-        }
     }
 }
 
