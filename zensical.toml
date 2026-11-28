@@ -1,0 +1,95 @@
+# Docs site for OtakuWorld, built with Zensical and published to GitHub Pages
+# by .github/workflows/docs.yml. Preview locally:
+#   pip install zensical
+#   zensical serve
+[project]
+site_name = "OtakuWorld"
+site_description = "Help for MangaWorld, AnimeWorld, and NovelWorld"
+site_url = "https://jakepurple13.github.io/OtakuWorld/"
+repo_url = "https://github.com/jakepurple13/OtakuWorld"
+repo_name = "jakepurple13/OtakuWorld"
+edit_uri = "edit/develop/docs/"
+docs_dir = "docs"
+extra_css = ["stylesheets/m3.css"]
+
+# Everything in docs/ that isn't for app users: design specs, plans, mockups,
+# and developer guides. These stay in the repo but don't go on the site.
+exclude_docs = """
+superpowers/
+mockups/
+supabase/
+benchmarking.md
+performance.md
+RELEASING.md
+"""
+
+nav = [
+  { "Get started" = [
+    { "Home" = "index.md" },
+    { "Download & install" = "install.md" },
+    { "Common problems" = "faq.md" },
+  ] },
+  { "Using the apps" = [
+    { "Extensions" = "extensions.md" },
+    { "Desktop add-ons" = "desktop-addons.md" },
+    { "On-device AI" = "ai.md" },
+    { "Use a small AI model" = "small-model.md" },
+  ] },
+  { "Cloud sync" = [
+    { "Set up sync" = "sync.md" },
+  ] },
+  { "Reference" = [
+    { "Privacy & telemetry" = "privacy.md" },
+    { "Write a JS/TS extension" = "js_ts_extension.md" },
+    { "Changelog" = "changelog.md" },
+  ] },
+]
+
+[project.theme]
+language = "en"
+icon.logo = "lucide/book-open"
+features = [
+  "content.action.edit",
+  "content.code.copy",
+  "navigation.footer",
+  "navigation.instant",
+  "navigation.sections",
+  "navigation.top",
+  "navigation.tracking",
+  "search.highlight",
+  "toc.follow",
+]
+
+[project.theme.font]
+text = "Roboto Flex"
+code = "Roboto Mono"
+
+# Dark is listed first, so it's the default. The header button switches to light.
+[[project.theme.palette]]
+scheme = "slate"
+primary = "blue"
+accent = "blue"
+toggle.icon = "lucide/moon"
+toggle.name = "Switch to light mode"
+
+[[project.theme.palette]]
+scheme = "default"
+primary = "blue"
+accent = "blue"
+toggle.icon = "lucide/sun"
+toggle.name = "Switch to dark mode"
+
+[project.markdown_extensions]
+admonition = {}
+attr_list = {}
+md_in_html = {}
+tables = {}
+toc.permalink = true
+pymdownx.details = {}
+pymdownx.highlight.anchor_linenums = true
+pymdownx.inlinehilite = {}
+pymdownx.keys = {}
+pymdownx.superfences = {}
+# Pulls TELEMETRY.md and CHANGELOG.md in from the repo root (see privacy.md and changelog.md).
+pymdownx.snippets.base_path = ["."]
+pymdownx.snippets.check_paths = true

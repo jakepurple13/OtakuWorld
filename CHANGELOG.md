@@ -1,5 +1,293 @@
 # Changelog
 
+## [Unreleased]
+
+_Compare: https://github.com/jakepurple13/OtakuWorld/compare/v33.0.0...develop_
+
+### Highlights
+
+- **On-device AI features.** TL;DR summaries in Details, novel chapter recaps, writing tools in
+  Notes, list name and description suggestions, update summaries, describe-to-search in Favorites,
+  mood tags, and explanations for update check errors. Everything runs on your device (Gemini Nano
+  or Gemma on Android, a local model or Ollama on Desktop) and nothing is sent to a cloud service
+  ([#2707](https://github.com/jakepurple13/OtakuWorld/pull/2707),
+  [#2721](https://github.com/jakepurple13/OtakuWorld/pull/2721),
+  [#2722](https://github.com/jakepurple13/OtakuWorld/pull/2722))
+- **Browser-style tabs on Desktop.** Open titles, chapters, and screens in tabs, drag tabs out into
+  their own windows, and restore your tabs on launch
+  ([#2732](https://github.com/jakepurple13/OtakuWorld/pull/2732))
+- **New onboarding.** A 9-step setup flow that walks through the look, layout, sources, sync,
+  updates, and app-specific reader or player settings
+  ([#2730](https://github.com/jakepurple13/OtakuWorld/pull/2730))
+- **Bug and performance audit.** Over 100 fixes across every app, including a NovelWorld reader
+  crash on every chapter open, a restore crash, and a crash when one extension fails to load
+  ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+- **Launch and quit animations on Desktop**, with three of each per app
+  ([#2727](https://github.com/jakepurple13/OtakuWorld/pull/2727))
+
+> **Upgrade note:** this release moves the local databases forward (favorites to v12, lists to
+> v14, exceptions to v3). You can't go back to 33.1.0 or older without uninstalling.
+
+---
+
+## Shared (all apps)
+
+### All Platforms
+
+#### New Features
+
+- **New onboarding:** 9 steps (Welcome, Look, Layout, Sources, an app-specific step, Sync &
+  privacy, Updates, Tips, Done) with a progress bar, live previews, and a Skip button that asks
+  before skipping. Each app adds its own step: MangaWorld reader settings, AnimeWorld player and
+  subtitle settings, and NovelWorld text size
+  ([#2730](https://github.com/jakepurple13/OtakuWorld/pull/2730))
+- NovelWorld: new **Text size** setting, also in Settings › Content & Reading
+  ([#2730](https://github.com/jakepurple13/OtakuWorld/pull/2730))
+- **Details TL;DR:** a TL;DR chip under long descriptions opens a three-bullet summary. Descriptions
+  in another language are translated first
+  ([#2707](https://github.com/jakepurple13/OtakuWorld/pull/2707))
+- **Notes writing tools:** Fix grammar (shows each changed word) and six rewrite styles. The note
+  changes only when you tap Accept ([#2707](https://github.com/jakepurple13/OtakuWorld/pull/2707))
+- **Custom list suggestions:** a "Write a description" chip and three suggested names. Nothing is
+  saved until you tap Save ([#2707](https://github.com/jakepurple13/OtakuWorld/pull/2707))
+- **AI settings page** (Settings › Integrations › AI): a master switch, the engine in use, engine
+  status, a preferred engine on Android (Automatic, Nano, or Gemma), a "Try it" sample, and a
+  switch for each AI feature ([#2721](https://github.com/jakepurple13/OtakuWorld/pull/2721))
+- **Import model file** on the AI page: pick a `.litertlm` model file (such as Gemma 3 1B) to use
+  as the on-device model. Desktop also accepts drag and drop. Replace or Remove from the ⋮ menu
+  ([#2722](https://github.com/jakepurple13/OtakuWorld/pull/2722))
+- **Update check errors explained:** common errors (timeouts, HTTP 429/403/404/5xx, offline) show
+  a plain explanation. Other errors get a short AI explanation when you expand the row
+  ([#2721](https://github.com/jakepurple13/OtakuWorld/pull/2721))
+- **Notifications update summary:** a short AI summary of the latest update check, for example
+  "Tensura has 3 new chapters". Shows when the check found 2 or more updates
+  ([#2721](https://github.com/jakepurple13/OtakuWorld/pull/2721))
+- **Describe to search** in Favorites: type a description like "that isekai where the guy is a
+  slime" and tap the spark button. The AI turns it into keywords and searches your favorites and
+  notes ([#2721](https://github.com/jakepurple13/OtakuWorld/pull/2721))
+- **Mood tags:** tag favorites with 20 built-in moods ("cozy", "found family"…) or your own. Add
+  them from the Mood row in Details, let the AI suggest up to 3, filter Favorites by mood, and see
+  your top moods in Account statistics. Moods stay on the device and are not synced
+  ([#2721](https://github.com/jakepurple13/OtakuWorld/pull/2721))
+- Any `.litertlm` model file can now be used by the on-device engine, so Gemma 3 1B works as a
+  fallback when Gemini Nano isn't available. See `docs/small-model.md`
+  ([#2721](https://github.com/jakepurple13/OtakuWorld/pull/2721))
+- **Usage & crash data** in Settings › Privacy & Security: two switches to turn off anonymous
+  usage analytics and crash reports, with a list of what is and isn't sent. Only shown in builds
+  that include Firebase. See [TELEMETRY.md](https://github.com/jakepurple13/OtakuWorld/blob/develop/TELEMETRY.md)
+  ([#2725](https://github.com/jakepurple13/OtakuWorld/pull/2725),
+  [#2726](https://github.com/jakepurple13/OtakuWorld/pull/2726),
+  [#2728](https://github.com/jakepurple13/OtakuWorld/pull/2728),
+  [#2729](https://github.com/jakepurple13/OtakuWorld/pull/2729))
+- Debug builds: Settings › About › Developer › **Navigation map** shows every screen and every
+  path to it ([#2704](https://github.com/jakepurple13/OtakuWorld/pull/2704))
+
+#### Improvements
+
+- Mood row: suggested moods fill in from shimmering placeholders, added moods pop in after the
+  sheet closes, and removed moods shrink away. Your own moods are grouped under "Your moods" in the
+  Add sheet ([#2724](https://github.com/jakepurple13/OtakuWorld/pull/2724))
+- Crash logs and screen-view analytics no longer include titles, links, or error messages
+  ([#2725](https://github.com/jakepurple13/OtakuWorld/pull/2725))
+- When no AI engine is ready, or AI is off, every AI chip and card is hidden and screens look the
+  same as before ([#2707](https://github.com/jakepurple13/OtakuWorld/pull/2707),
+  [#2721](https://github.com/jakepurple13/OtakuWorld/pull/2721))
+- Faster loading: catalogs load in parallel, Mihon pages load in parallel, and extension class
+  loaders are cached ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+
+#### Bug Fixes
+
+- Fixed a crash when searching bookmarks with `"`, `-`, or `AND`
+  ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+- Fixed back navigation sometimes leaving an empty screen
+  ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+- Fixed a crash when restoring a corrupt or unreadable backup, and the restore wizard dropping
+  items you didn't select ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+- One broken extension no longer crashes the app or stops other sources from loading. Cloudflare
+  sources no longer block every other source
+  ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+- Recent and All: fixed items from the wrong source, duplicate pages, and no reload after coming
+  back online ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+- Global search no longer says "Search for something!" while a search is running
+  ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+- "Clear update queue" no longer turns update checks off
+  ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+- Removed favorites no longer send update notifications
+  ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+- Sync: edits now reach your other devices, deleted notes stay deleted, and deleted bookmarks and
+  recents are hidden ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+- Mihon and Aniyomi extensions stay trusted when you start the app offline
+  ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+- Fixed wrong dates on lists and exceptions, collapsing by-source groups, missing sources in
+  source order, merged stats pie slices, and a laggy history slider
+  ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+- Fixed a corrupt backup when overwriting an existing file, and a corrupt AI model after an
+  interrupted download ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+- The TL;DR chip now shows on shorter descriptions, and appears once Gemini Nano finishes
+  downloading without reopening the screen
+  ([#2709](https://github.com/jakepurple13/OtakuWorld/pull/2709))
+
+### Android Only
+
+#### Bug Fixes
+
+- Home screen widget rows no longer all show the same title
+  ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+- Notifications you marked read or swiped away no longer come back after a restart. Other apps can
+  no longer clear update records ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+- Installing an extension in a release build shows real progress instead of "Unknown error"
+  ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+- Manual and scheduled update checks no longer run at the same time
+  ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+
+### Desktop Only
+
+#### New Features
+
+- **Browser-style tabs** ([#2732](https://github.com/jakepurple13/OtakuWorld/pull/2732)):
+  - Each tab has its own back and forward history. Home is a pinned tab
+  - Open in a new tab with ⌘/Ctrl-click, middle-click, or the right-click menu on covers and
+    chapter rows
+  - Browser shortcuts: ⌘T, ⌘W, ⌘⇧T, ⌃Tab, ⌘1–9, ⌘L, ⌘N. The shortcuts dialog lists them all
+  - Tabs across the top or down the side
+  - Drag a tab out into its own window, or between windows
+  - Restore on launch: your tabs, Home only, or the new-tab page
+  - Unused tabs sleep to save memory
+  - A Notes side panel inside each title's tab
+  - AnimeWorld: a mini player keeps playing when you leave a playing tab
+  - Settings in **Desktop Settings › Tabs & browsing**
+- **Launch and quit animations** for each app, with Off and Fade options and a live preview in
+  **Desktop Settings › Motion › Launch & quit animations**. Click or press a key to skip. Reduced
+  motion uses Fade ([#2727](https://github.com/jakepurple13/OtakuWorld/pull/2727)):
+  - MangaWorld: Sushi unroll, Ink panels, Impact / Sushi roll-up, Screentone fade, The End panel
+  - AnimeWorld: CRT power-on, Play button, Eyecatch / CRT power-off, Next episode, Iris out
+  - NovelWorld: Book opening, Typewriter, Ink drop / Book closing, The End, Lamp out
+- On-device AI on Desktop can use an imported local model first, then Ollama
+  ([#2722](https://github.com/jakepurple13/OtakuWorld/pull/2722))
+
+#### Bug Fixes
+
+- macOS: quitting no longer interrupts logout, restart, or shutdown
+  ([#2727](https://github.com/jakepurple13/OtakuWorld/pull/2727))
+- Scheduled update checks now run on Desktop
+  ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+- Extension updates signed with a different key are rejected
+  ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+
+### Under the Hood
+
+- New `:telemetry` module. Firebase Analytics and Crashlytics moved behind it, and the events in
+  `TELEMETRY.md` are wired. `noFirebase` builds and Desktop send nothing
+  ([#2725](https://github.com/jakepurple13/OtakuWorld/pull/2725),
+  [#2726](https://github.com/jakepurple13/OtakuWorld/pull/2726),
+  [#2728](https://github.com/jakepurple13/OtakuWorld/pull/2728),
+  [#2729](https://github.com/jakepurple13/OtakuWorld/pull/2729))
+- On-device AI setup centralized: a new AI feature is one entry in `AiFeature.kt`
+  ([#2714](https://github.com/jakepurple13/OtakuWorld/pull/2714))
+- New `:navgraph` module. `RepoGraphTest` fails when a screen has no way in
+  ([#2704](https://github.com/jakepurple13/OtakuWorld/pull/2704))
+- Faster builds: configuration cache, non-transitive R classes, iOS targets opt-in with
+  `-Potaku.includeIos=true`, and PR checks build `noFirebase` only
+  ([#2705](https://github.com/jakepurple13/OtakuWorld/pull/2705))
+- `versionCode` is now minutes since 2024-01-01 (`OTAKU_VERSION_CODE`)
+  ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+- New help site at https://jakepurple13.github.io/OtakuWorld/, built from `docs/` with Zensical
+  and published by `.github/workflows/docs.yml`
+- Release steps and checklist in `docs/RELEASING.md`
+  ([#2706](https://github.com/jakepurple13/OtakuWorld/pull/2706))
+- Flaky ViewModel tests fixed ([#2703](https://github.com/jakepurple13/OtakuWorld/pull/2703),
+  [#2731](https://github.com/jakepurple13/OtakuWorld/pull/2731))
+
+---
+
+## MangaWorld
+
+### All Platforms (shared manga code)
+
+#### New Features
+
+- Reader: a **page rail scrollbar** on wide windows (tablet landscape, unfolded foldables,
+  Desktop). Hover to see "Page n / N", drag to scrub, click to jump
+  ([#2723](https://github.com/jakepurple13/OtakuWorld/pull/2723))
+- Reader: **keyboard shortcuts** for Desktop and hardware keyboards. ↓ → Space for the next page,
+  ↑ ← for the previous page, `]` `[` for chapters, C chapter list, G page grid, B bookmark, M
+  reader mode, H bars, F fullscreen. Press `?` on Desktop to see them all
+  ([#2723](https://github.com/jakepurple13/OtakuWorld/pull/2723))
+
+#### Bug Fixes
+
+- Reader: Flip and Curl show the right page number, and jumping to a page lands on that page
+  ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+- Reader: scrolling up now loads the previous chapter. Pages no longer repeat or mix between
+  chapters, and old chapters unload during long reading
+  ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+- Reader: page grid thumbnails load on sources that need a Referer
+  ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+- Only working image loaders are listed. A saved Glide or Panpf choice falls back to Kamel
+  ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+- Downloads: a partly downloaded chapter no longer counts as downloaded, Next and Previous work in
+  downloaded chapters, and long chapters no longer crash the download
+  ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+- Desktop: a cancelled chapter can be downloaded again, and deleting from Downloads removes the
+  files ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+- Android 9/10: deleting a download now removes it
+  ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+
+---
+
+## AnimeWorld
+
+### Android
+
+#### Bug Fixes
+
+- Fixed release builds crashing on startup (`NoSuchMethodError` in `JSONObject`)
+  ([#2710](https://github.com/jakepurple13/OtakuWorld/pull/2710))
+- The player pauses when you press Home, turn off the screen, or another app starts playing audio
+  ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+- Streams load once and keep playing through rotation. Brightness resets when you leave the
+  player, and streams resume where you left off
+  ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+- Cast and download buttons keep working after an error
+  ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+
+### Desktop
+
+#### Bug Fixes
+
+- Local video library works with long folder paths
+  ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+- Cancelling an export or quitting no longer leaves ffmpeg, whisper, or `.part` files behind
+  ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+
+---
+
+## NovelWorld
+
+### All Platforms (shared novel code)
+
+#### New Features
+
+- Reader: **Previously, in ch. N** recap bar above each chapter. It's written on your device when
+  you expand it, and can be turned off with the "Chapter recap" switch in the new reader settings
+  sheet ([#2707](https://github.com/jakepurple13/OtakuWorld/pull/2707))
+
+#### Bug Fixes
+
+- Fixed the reader crashing on every chapter open
+  ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+- The chapter text always matches the chapter title after switching chapters quickly
+  ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+
+### Android
+
+#### Improvements
+
+- Release builds are now minified (R8), so the app is smaller
+  ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+
+---
+
 ## [33.1.0] - 2026-11-12
 
 _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v33.0.0...v33.1.0_
