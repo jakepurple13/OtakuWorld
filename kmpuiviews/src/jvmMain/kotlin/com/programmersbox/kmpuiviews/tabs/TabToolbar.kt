@@ -1,5 +1,16 @@
 package com.programmersbox.kmpuiviews.tabs
 
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import com.programmersbox.kmpuiviews.presentation.components.rememberShownAtLeast
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -72,16 +83,36 @@ fun TabToolbar(
                     enabled = tab.forward.isNotEmpty(),
                 ) { Icon(Icons.AutoMirrored.Default.ArrowForward, stringResource(Res.string.tabs_forward)) }
 
-                Text(
-                    text = tabPath(appConfig.appName, tab.nav.backStack, keys),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+                // The address bar: the tab's path, with Refresh at its end.
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surface,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                     modifier = Modifier
                         .weight(1f)
-                        .padding(horizontal = 8.dp),
-                )
+                        .height(32.dp)
+                        .padding(horizontal = 4.dp),
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = tabPath(appConfig.appName, tab.nav.backStack, keys),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(start = 12.dp, end = 4.dp),
+                        )
+                        RefreshButton(
+                            registry = tab.refresh,
+                            reduceMotion = controller.motion.reduced,
+                            onRefresh = { controller.refresh(tab.id) },
+                            onStop = { controller.stopRefresh(tab.id) },
+                            modifier = Modifier.padding(end = 1.dp),
+                        )
+                    }
+                }
 
                 IconButton(onClick = { nav.globalSearch(null) }) {
                     Icon(Icons.Default.Search, stringResource(Res.string.global_search))
@@ -104,7 +135,27 @@ fun TabToolbar(
                     }
                 }
             }
-            HorizontalDivider()
+            // The page's progress grows over the divider while it reloads, in a fixed slot so nothing shifts. It stays
+            // at least 600 ms so a fast reload still animates in and out.
+            Box(Modifier.fillMaxWidth().height(2.dp), contentAlignment = Alignment.Center) {
+                HorizontalDivider()
+                ToolbarProgress(
+                    visible = rememberShownAtLeast(tab.refresh.refreshing, minMillis = 600),
+                    reduced = controller.motion.reduced,
+                )
+            }
         }
+    }
+}
+
+@Composable
+private fun ToolbarProgress(visible: Boolean, reduced: Boolean) {
+    AnimatedVisibility(
+        visible = visible,
+        enter = if (reduced) fadeIn() else fadeIn() + expandVertically(expandFrom = Alignment.Top),
+        exit = if (reduced) fadeOut() else fadeOut() + shrinkVertically(shrinkTowards = Alignment.Top),
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        LinearProgressIndicator(Modifier.fillMaxSize())
     }
 }

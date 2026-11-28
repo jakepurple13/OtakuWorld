@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.globalsearch
 
+import com.programmersbox.kmpuiviews.presentation.components.RegisterPageRefresh
 import androidx.compose.animation.AnimatedVisibility
 import com.programmersbox.telemetry.events.OpenedFrom
 import androidx.compose.animation.Crossfade
@@ -137,6 +138,8 @@ fun GlobalSearchScreen(
     val pullRefreshState = rememberPullToRefreshState()
 
     val networkState by viewModel.observeNetwork.collectAsStateWithLifecycle(true)
+    // Nothing to search again until there is text.
+    if (viewModel.searchText.text.isNotEmpty()) RegisterPageRefresh(viewModel.isRefreshing, viewModel::searchForItems)
 
     val history by dao
         .searchHistory("%${viewModel.searchText.text}%")

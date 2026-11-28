@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.recent
 
+import com.programmersbox.kmpuiviews.presentation.components.RegisterPageRefresh
 import androidx.compose.animation.AnimatedContent
 import com.programmersbox.telemetry.events.OpenedFrom
 import androidx.compose.animation.AnimatedVisibility
@@ -73,6 +74,7 @@ import otakuworld.kmpuiviews.generated.resources.you_re_offline
 fun RecentView(
     viewModel: RecentViewModel = koinViewModel(),
 ) {
+    RegisterPageRefresh(viewModel.isRefreshing, viewModel::reset)
     val info = koinInject<KmpGenericInfo>()
     val settingsHandling: NewSettingsHandling = koinInject()
     val dataStoreHandling = koinInject<DataStoreHandling>()

@@ -29,6 +29,12 @@ sealed interface TabShortcut {
     data object FocusSearch : TabShortcut
     data object NewWindow : TabShortcut
     data object CloseWindow : TabShortcut
+
+    /** Reloads the active tab's page (see [TabRefreshRegistry]). */
+    data object Refresh : TabShortcut
+
+    /** Cancels the active tab's reload, when its page can. */
+    data object StopRefresh : TabShortcut
 }
 
 /**
@@ -46,12 +52,13 @@ private val numberKeys = listOf(
 )
 
 /**
- * Maps a key press to a tab shortcut. Every shortcut needs a modifier, so bare keys (the reader's
- * and player's shortcuts) always return null.
+ * Maps a key press to a tab shortcut. Every shortcut needs a modifier except F5 (refresh) and Esc while
+ * [canStopRefresh]; other bare keys (the reader's and player's shortcuts) always return null.
  *
  * - ⌘ (macOS) / Ctrl (others) + T, W, ⇧T, L, N, ⇧W, 1…8, 9 (last tab)
  * - ⌃Tab / ⌃⇧Tab and ⌃PageDown / ⌃PageUp on every OS, Ctrl+F4 closes on Windows/Linux
  * - ⌘[ / ⌘], ⌘← / ⌘→ on macOS, Alt+← / Alt+→ elsewhere; ⌘⇧] / ⌘⇧[ and ⌘⌥→ / ⌘⌥← switch tabs
+ * - ⌘R / Ctrl+R and F5 refresh the page; Esc stops the reload while [canStopRefresh]
  *
  * ⌘← / ⌘→ are skipped while [textFieldFocused], where they move the caret.
  *
@@ -63,6 +70,7 @@ fun tabShortcut(
     isMac: Boolean,
     chromeVisible: Boolean = true,
     textFieldFocused: Boolean = false,
+    canStopRefresh: Boolean = false,
 ): TabShortcut? {
     if (!chromeVisible || event.type != KeyEventType.KeyDown) return null
     val meta = event.isMetaPressed
@@ -70,6 +78,14 @@ fun tabShortcut(
     val shift = event.isShiftPressed
     val alt = event.isAltPressed
     val key = event.key
+
+    // The only bare keys: F5 refreshes, as in every browser, and Esc stops a reload that can be stopped.
+    if (!meta && !ctrl && !shift && !alt) {
+        when (key) {
+            Key.F5 -> return TabShortcut.Refresh
+            Key.Escape -> return if (canStopRefresh) TabShortcut.StopRefresh else null
+        }
+    }
 
     // Every OS: Ctrl+Tab and Ctrl+PageDown/PageUp.
     if (ctrl && !meta && !alt) {
@@ -116,6 +132,7 @@ fun tabShortcut(
         Key.W -> TabShortcut.CloseTab
         Key.L -> TabShortcut.FocusSearch
         Key.N -> TabShortcut.NewWindow
+        Key.R -> TabShortcut.Refresh
         Key.Nine -> TabShortcut.LastTab
         Key.LeftBracket -> if (isMac) TabShortcut.Back else null
         Key.RightBracket -> if (isMac) TabShortcut.Forward else null
@@ -166,6 +183,9 @@ fun tabShortcutCaps(isMac: Boolean, tearOut: Boolean = true): List<Pair<String, 
             add("Forward" to listOf("Alt", "→"))
         }
         add("Search" to listOf(mod, "L"))
+        add("Refresh page" to listOf(mod, "R"))
+        add("Refresh page" to listOf("F5"))
+        add("Stop loading" to listOf("Esc"))
         // Hidden with "Drag tabs out into windows" off, where ⌘N does nothing.
         if (tearOut) add("New window" to listOf(mod, "N"))
         add("Close window" to listOf(mod, shift, "W"))
@@ -194,5 +214,7 @@ fun TabsController.perform(shortcut: TabShortcut, window: BrowserWindowState) {
         TabShortcut.NewWindow -> openNewWindow()
         // Torn-out windows only; ignored on the main window.
         TabShortcut.CloseWindow -> closeWindow(window.id)
+        TabShortcut.Refresh -> refresh(active)
+        TabShortcut.StopRefresh -> stopRefresh(active)
     }
 }

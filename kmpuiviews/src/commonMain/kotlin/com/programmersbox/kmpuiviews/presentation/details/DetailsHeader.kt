@@ -285,13 +285,16 @@ internal fun DetailsHeader(
                     Text(
                         stringResource(Res.string.chapter_count, model.chapters.size),
                         style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.highlightOnChange(model.chapters.size),
                     )
                 }
             }
 
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
+                    .highlightOnChange(model.genres)
             ) {
                 model.genres.forEach {
                     AssistChip(

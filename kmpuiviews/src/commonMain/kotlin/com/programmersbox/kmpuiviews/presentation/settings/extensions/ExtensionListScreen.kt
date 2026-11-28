@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.presentation.settings.extensions
 
 
+import com.programmersbox.kmpuiviews.presentation.components.RegisterPageRefresh
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -106,6 +107,8 @@ fun ExtensionList(
     backgroundWorkHandler: BackgroundWorkHandler = koinInject(),
     viewModel: ExtensionListViewModel = koinViewModel(),
 ) {
+    // The reload reports no progress, so the button is never shown as loading here.
+    RegisterPageRefresh(refreshing = false, onRefresh = viewModel::refreshExtensions)
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val scope = rememberCoroutineScope()
 
