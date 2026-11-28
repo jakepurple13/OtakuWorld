@@ -146,7 +146,7 @@ private val PlayerStyle.tagline: String
     get() = when (this) {
         PlayerStyle.Classic -> "Default"
         PlayerStyle.Floating -> "Most video"
-        PlayerStyle.Theater -> "Cinematic"
+        PlayerStyle.Theater -> "Edge blur"
     }
 
 private val PreviewState = PlayerChromeState(
