@@ -996,4 +996,8 @@
     <string name="exc_delete_all_title">Delete all?</string>
     <string name="exc_delete_all_body">This removes every saved exception. It can't be undone.</string>
     <string name="exc_cancel">Cancel</string>
+    <string name="exc_keys_hint_mac">↑↓ select · ⌫ delete · ⌘C copy report · ⌘Z undo · right-click for more</string>
+    <string name="exc_keys_hint_other">↑↓ select · Delete delete · Ctrl+C copy report · Ctrl+Z undo · right-click for more</string>
+    <string name="exc_copy_report">Copy report</string>
+    <string name="exc_save_report">Save report…</string>
 </resources>

@@ -9,6 +9,14 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.key.KeyEvent
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -115,6 +123,8 @@ fun ExceptionsScreen(
     val version = appVersion()
 
     var showDeleteAll by remember { mutableStateOf(false) }
+    var exiting by remember { mutableStateOf(emptySet<Long>()) }
+    val listFocus = remember { FocusRequester() }
 
     // Predictive back: scrub the pane transition while the gesture is held.
     val backState = rememberNavigationEventState(NavigationEventInfo.None)
@@ -220,6 +230,8 @@ fun ExceptionsScreen(
                 }
             }
 
+            // Delete: move the selection (or leave the detail) first, then slide the row out.
+            // The row reports when it's gone; only then is it hidden and the Undo snackbar shown.
             val delete: (Long) -> Unit = { id ->
                 scope.launch {
                     if (twoPane) {
@@ -228,9 +240,34 @@ fun ExceptionsScreen(
                     } else if (selected == id) {
                         navigator.navigateBack()
                     }
-                    viewModel.delete(id)
-                    showUndo(snackbarHostState, id, viewModel)
+                    exiting = exiting + id
                 }
+            }
+            val onExited: (Long) -> Unit = { id ->
+                exiting = exiting - id
+                viewModel.delete(id)
+                scope.launch {
+                    showUndo(snackbarHostState, onUndo = { viewModel.undo(id) }, onCommit = { viewModel.commitDelete(id) })
+                }
+            }
+            val visibleIds = rows.map { it.id }.filter { it !in exiting }
+            val onKey: (KeyEvent) -> Boolean = handler@{ event ->
+                if (!twoPane) return@handler false
+                val action = exceptionKeyAction(event.toKeyPress()) ?: return@handler false
+                val i = visibleIds.indexOf(selected)
+                when (action) {
+                    ExceptionKeyAction.Up, ExceptionKeyAction.Down -> {
+                        val step = if (action == ExceptionKeyAction.Down) 1 else -1
+                        val target = visibleIds.getOrNull(
+                            (if (i == -1) 0 else i + step).coerceIn(0, (visibleIds.size - 1).coerceAtLeast(0))
+                        )
+                        if (target != null) scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, target) }
+                    }
+                    ExceptionKeyAction.Delete -> selected?.let(delete)
+                    ExceptionKeyAction.Copy -> selected?.let(viewModel::row)?.let(actions.copy)
+                    ExceptionKeyAction.Undo -> snackbarHostState.currentSnackbarData?.performAction()
+                }
+                true
             }
 
             SharedTransitionLayout {
@@ -239,7 +276,14 @@ fun ExceptionsScreen(
                     scaffoldState = navigator.scaffoldState,
                     listPane = {
                         AnimatedPane(enterTransition = fadeIn(), exitTransition = fadeOut()) {
-                            Column(Modifier.fillMaxSize()) {
+                            if (twoPane) LaunchedEffect(Unit) { runCatching { listFocus.requestFocus() } }
+                            Column(
+                                Modifier
+                                    .fillMaxSize()
+                                    .focusRequester(listFocus)
+                                    .onPreviewKeyEvent(onKey)
+                                    .focusable()
+                            ) {
                                 TopAppBar(
                                     title = { Text(stringResource(Res.string.exc_title)) },
                                     navigationIcon = { BackButton() },
@@ -266,8 +310,22 @@ fun ExceptionsScreen(
                                     onExplain = viewModel::explain,
                                     sharedKeys = if (twoPane) null else SharedKeys(this@SharedTransitionLayout, this@AnimatedPane),
                                     contentPadding = padding,
+                                    exiting = exiting,
+                                    onExited = onExited,
+                                    onSave = actions.shareOrSave,
+                                    onOpenWebsite = { row -> actions.sourceAction(row, SourceAction.OpenWebsite) },
                                     modifier = Modifier.weight(1f),
                                 )
+                                val hint = keyboardHint()
+                                if (twoPane && hint != null) {
+                                    HorizontalDivider()
+                                    Text(
+                                        hint,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                    )
+                                }
                             }
                         }
                     },
@@ -351,11 +409,11 @@ private fun DetailFor(
 }
 
 /** "Exception deleted · Undo". Undo brings the row back; anything else deletes it for good. */
-private suspend fun showUndo(host: SnackbarHostState, id: Long, viewModel: ExceptionViewModel) {
+internal suspend fun showUndo(host: SnackbarHostState, onUndo: () -> Unit, onCommit: () -> Unit) {
     val result = host.showSnackbar(
         message = getString(Res.string.exc_deleted),
         actionLabel = getString(Res.string.exc_undo),
         duration = SnackbarDuration.Short,
     )
-    if (result == SnackbarResult.ActionPerformed) viewModel.undo(id) else viewModel.commitDelete(id)
+    if (result == SnackbarResult.ActionPerformed) onUndo() else onCommit()
 }

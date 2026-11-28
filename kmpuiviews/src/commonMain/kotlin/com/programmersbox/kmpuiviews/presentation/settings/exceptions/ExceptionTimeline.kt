@@ -1,6 +1,12 @@
 package com.programmersbox.kmpuiviews.presentation.settings.exceptions
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.VisibilityThreshold
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -109,6 +115,11 @@ fun ExceptionTimeline(
     sharedKeys: SharedKeys? = null,
     listState: LazyListState = rememberLazyListState(),
     contentPadding: PaddingValues = PaddingValues(),
+    /** Rows sliding out after Delete; [onExited] fires when each one is gone. */
+    exiting: Set<Long> = emptySet(),
+    onExited: (Long) -> Unit = {},
+    onSave: (ExceptionRow) -> Unit = {},
+    onOpenWebsite: ((ExceptionRow) -> Unit)? = null,
 ) {
     val timeZone = remember { TimeZone.currentSystemDefault() }
     val today = remember { Clock.System.todayIn(timeZone) }
@@ -143,6 +154,28 @@ fun ExceptionTimeline(
             }
             items(day.rows, key = { it.id }) { row ->
                 val state by explanation(row).collectAsStateWithLifecycle()
+                val visible = remember(row.id) { MutableTransitionState(true) }
+                visible.targetState = row.id !in exiting
+                LaunchedEffect(visible.isIdle, visible.currentState) {
+                    if (visible.isIdle && !visible.currentState) onExited(row.id)
+                }
+                AnimatedVisibility(
+                    visibleState = visible,
+                    enter = fadeIn() + expandVertically(),
+                    exit = slideOutHorizontally(tween(220)) { -it / 6 } + fadeOut(tween(180)) +
+                        shrinkVertically(tween(260, delayMillis = 120)),
+                    modifier = Modifier.animateItem(
+                        fadeInSpec = tween(250),
+                        fadeOutSpec = tween(200),
+                        placementSpec = spring(stiffness = Spring.StiffnessMediumLow, visibilityThreshold = IntOffset.VisibilityThreshold),
+                    ),
+                ) {
+                RowContextMenu(
+                    onCopy = { onCopy(row) },
+                    onSave = { onSave(row) },
+                    onOpenWebsite = onOpenWebsite?.takeIf { row.source != null }?.let { open -> { open(row) } },
+                    onDelete = { onDelete(row.id) },
+                ) {
                 TimelineRow(
                     row = row,
                     timeZone = timeZone,
@@ -156,8 +189,9 @@ fun ExceptionTimeline(
                     onCopy = { onCopy(row) },
                     onExplain = { onExplain(row) },
                     sharedKeys = sharedKeys,
-                    modifier = Modifier.animateItem(),
                 )
+                }
+                }
             }
         }
     }
