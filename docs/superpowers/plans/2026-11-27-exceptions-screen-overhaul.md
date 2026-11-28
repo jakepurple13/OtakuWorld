@@ -31,6 +31,15 @@
 4. **Leaving the screen with an Undo snackbar up**: the delete is still committed. Covered in Task 5 `pendingDeleteCommittedOnClear`.
 5. **Empty table and "no errors in last 24 h"**: empty state shows, digest card hidden, two-pane detail shows the empty placeholder. Covered in Task 5 `hourlyCountsEmpty` and Task 7 empty-state composable.
 
+## Gate result: Option A (Android verified; desktop visual check deferred to Task 10)
+
+- CMP adaptive 1.3.0 has no `NavigableListDetailPaneScaffold` in common code. Use `ListDetailPaneScaffold(directive, scaffoldState = navigator.scaffoldState, …)` + `NavigationBackHandler` (navigationevent-compose) wired to `navigator.seekBack(fraction)` / `navigateBack()` for predictive back.
+- `AnimatedPane`'s content scope works as the `AnimatedVisibilityScope` for `sharedElement`/`sharedBounds` (compiles on JVM + Android).
+- Android emulator (gesture nav, 5x animator scale): the title flies list → detail and back; predictive back scrubs the flight while held and completes on release.
+- Panes slide horizontally by default. Task 8 sets `AnimatedPane(enterTransition = fadeIn(), exitTransition = fadeOut())` so only the shared elements move.
+- Desktop: the JVM compose test clock can't observe the transition (`waitForIdle`/`captureToImage` hang mid-transition; layout positions exclude the shared offset). Same common code path as Android. Task 10 Step 3 visually checks the flight in a narrow desktop window. If it fails there, apply Task 1B.
+- JVM UI tests in Tasks 7–9 must not wait for idle in the middle of a pane transition. Assert before clicking, or after `mainClock.advanceTimeBy(2_000)` with `autoAdvance` on.
+
 ---
 
 ### Task 1: Shared-element gate (spike)
