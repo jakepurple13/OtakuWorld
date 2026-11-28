@@ -26,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.SaveableStateHolder
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.asState
@@ -88,7 +89,8 @@ fun HomeTab(
             )
         }
 
-        Box(Modifier.weight(1f)) {
+        // Clipped: a page sliding out during a switch would otherwise overlap the sidebar and take its clicks.
+        Box(Modifier.weight(1f).clipToBounds()) {
             TabContent(
                 tab = tab,
                 stateHolder = stateHolder,
