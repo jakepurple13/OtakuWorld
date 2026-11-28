@@ -7,14 +7,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.BrowseGallery
@@ -24,26 +19,21 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationRail
-import androidx.compose.material3.NavigationRailItem
-import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.SaveableStateHolder
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation3.runtime.NavKey
 import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.datastore.asState
+import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.kmpuiviews.KmpGenericInfo
-import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.sharedcomponents.repository.ChangingSettingsRepository
-import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.all
@@ -56,8 +46,9 @@ import otakuworld.kmpuiviews.generated.resources.settings
 import otakuworld.kmpuiviews.generated.resources.viewFavoritesMenu
 
 /**
- * The pinned Home tab: today's desktop rail, then the Home pages. Recent, All, Favorites and
- * Extensions navigate inside Home; Notifications, Lists, Search and Settings open their own tabs.
+ * The pinned Home tab: the Home sidebar, then the Home pages. The sidebar's Home section (Recent, All,
+ * Favorites, Extensions) navigates inside Home; its Open in tab section (Notifications, Lists, Search,
+ * Settings) opens each in its own tab.
  */
 @Composable
 fun HomeTab(
@@ -69,9 +60,15 @@ fun HomeTab(
     customPreferences: ComposeSettingsDsl,
     settingsHandling: NewSettingsHandling = koinInject(),
     changingSettingsRepository: ChangingSettingsRepository = koinInject(),
+    itemDao: ItemDao = koinInject(),
 ) {
     val showNavBar by changingSettingsRepository.showNavBar.collectAsStateWithLifecycle(true)
     val showAllItem by settingsHandling.rememberShowAll()
+    val notificationCount by itemDao.getAllNotificationCount().collectAsStateWithLifecycle(0)
+    var collapsed by homeSidebarCollapsedPref.asState()
+    val homeItems = remember(showAllItem) { homeSidebarItems(showAllItem) }
+    // currentDestination is composable, so the highlighted page is worked out here, not in the sidebar.
+    val selectedKey = homeItems.firstOrNull { tab.nav.currentDestination(it.key as Screen) }?.key
 
     Row(Modifier.fillMaxSize()) {
         AnimatedVisibility(
@@ -79,10 +76,15 @@ fun HomeTab(
             enter = slideInHorizontally { it / 2 } + expandHorizontally() + fadeIn(),
             exit = slideOutHorizontally { it / 2 } + shrinkHorizontally() + fadeOut(),
         ) {
-            HomeSideNav(
-                tab = tab,
-                showAllItem = showAllItem,
-                openTab = { key -> controller.open(key, TabOpenMode.Foreground, tab.id) },
+            HomeSidebar(
+                homeItems = homeItems,
+                tabItems = TabSidebarItems,
+                selected = { key -> key == selectedKey },
+                notificationCount = notificationCount,
+                collapsed = collapsed,
+                onToggleCollapsed = { collapsed = !collapsed },
+                onHome = { key -> tab.nav.homeScreenNavigate(key) },
+                onOpenTab = { key -> controller.open(key, TabOpenMode.Foreground, tab.id) },
             )
         }
 
@@ -99,75 +101,17 @@ fun HomeTab(
     }
 }
 
-@Composable
-private fun HomeSideNav(
-    tab: TabState,
-    showAllItem: Boolean,
-    openTab: (NavKey) -> Unit,
-) {
-    val navActions = tab.nav
-    NavigationRail(
-        header = { Image(painterLogo(), null, modifier = Modifier.size(64.dp)) },
-        modifier = Modifier
-            .fillMaxHeight()
-            .verticalScroll(rememberScrollState()),
-    ) {
-        HomeItem(Icons.Default.History, stringResource(Res.string.recent), navActions.currentDestination(Screen.RecentScreen)) {
-            navActions.homeScreenNavigate(Screen.RecentScreen)
-        }
+private fun homeSidebarItems(showAllItem: Boolean): List<SidebarItem> = listOfNotNull(
+    SidebarItem(Screen.RecentScreen, Res.string.recent, Icons.Default.History),
+    SidebarItem(Screen.AllScreen, Res.string.all, Icons.Default.BrowseGallery).takeIf { showAllItem },
+    SidebarItem(Screen.FavoriteScreen, Res.string.viewFavoritesMenu, Icons.Default.Star),
+    SidebarItem(Screen.ExtensionListScreen, Res.string.extensions, Icons.Default.Extension),
+)
 
-        AnimatedVisibility(visible = showAllItem) {
-            HomeItem(Icons.Default.BrowseGallery, stringResource(Res.string.all), navActions.currentDestination(Screen.AllScreen)) {
-                navActions.homeScreenNavigate(Screen.AllScreen)
-            }
-        }
-
-        HomeItem(Icons.Default.Notifications, stringResource(Res.string.notifications), false) {
-            openTab(Screen.NotificationScreen)
-        }
-
-        HomeItem(Icons.AutoMirrored.Default.List, stringResource(Res.string.custom_lists_title), false) {
-            openTab(Screen.CustomListScreen)
-        }
-
-        HomeItem(Icons.Default.Search, stringResource(Res.string.global_search), false) {
-            openTab(Screen.GlobalSearchScreen())
-        }
-
-        HomeItem(
-            Icons.Default.Star,
-            stringResource(Res.string.viewFavoritesMenu),
-            navActions.currentDestination(Screen.FavoriteScreen),
-        ) {
-            navActions.homeScreenNavigate(Screen.FavoriteScreen)
-        }
-
-        HomeItem(
-            Icons.Default.Extension,
-            stringResource(Res.string.extensions),
-            navActions.currentDestination(Screen.ExtensionListScreen),
-        ) {
-            navActions.homeScreenNavigate(Screen.ExtensionListScreen)
-        }
-
-        // The update badge lives on the toolbar's Settings button.
-        HomeItem(Icons.Default.Settings, stringResource(Res.string.settings), false) {
-            openTab(Screen.Settings)
-        }
-    }
-}
-
-@Composable
-private fun HomeItem(
-    imageVector: ImageVector,
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-) {
-    NavigationRailItem(
-        icon = { Icon(imageVector, null) },
-        label = { Text(label) },
-        selected = selected,
-        onClick = onClick,
-    )
-}
+// The update badge lives on the toolbar's Settings button.
+private val TabSidebarItems = listOf(
+    SidebarItem(Screen.NotificationScreen, Res.string.notifications, Icons.Default.Notifications),
+    SidebarItem(Screen.CustomListScreen, Res.string.custom_lists_title, Icons.AutoMirrored.Default.List),
+    SidebarItem(Screen.GlobalSearchScreen(), Res.string.global_search, Icons.Default.Search),
+    SidebarItem(Screen.Settings, Res.string.settings, Icons.Default.Settings),
+)

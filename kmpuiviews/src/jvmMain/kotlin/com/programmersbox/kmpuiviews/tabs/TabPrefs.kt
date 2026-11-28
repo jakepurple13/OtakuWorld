@@ -224,6 +224,7 @@ val tabsSleepAfterPref = enumPref("desktop_tabs_sleep_after", SleepAfter.Never, 
 val miniPlayerCornerPref = enumPref("desktop_mini_player_corner", MiniPlayerCorner.BottomRight, MiniPlayerCorner::fromName)
 val miniPlayerPauseUnfocusedPref = boolPref("desktop_mini_player_pause_unfocused", false)
 val tabsTearOutPref = boolPref("desktop_tabs_tear_out", true)
+val homeSidebarCollapsedPref = boolPref("desktop_home_sidebar_collapsed", false)
 
 /**
  * Writes `desktop_tabs_on_launch` from the old `desktop_tabs_restore` switch the first time, when it is not set yet.
