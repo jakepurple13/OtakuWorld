@@ -1,5 +1,38 @@
 # Changelog
 
+## [Unreleased]
+
+---
+
+## Shared (all apps)
+
+### Desktop
+
+#### New Features
+
+- Refresh button at the end of the tab toolbar's path, which now looks like an address bar. It
+  reloads the current tab's page: Details fetches the title from its source again instead of the
+  cache, and Recent, All, Global search, Prerelease, Extensions and Translation reload their
+  data. Pages that update on their own show the button disabled. ⌘R / Ctrl+R and F5 refresh, and
+  Esc stops a Details refresh. While a page reloads, a progress line runs along the toolbar and
+  the tab shows a spinner ([#2734](https://github.com/jakepurple13/OtakuWorld/pull/2734))
+
+### All Platforms
+
+#### New Features
+
+- Details on Android and iOS: **Refresh** at the top of the ⋮ menu fetches the title from its
+  source again, skipping the cache. A progress line runs along the top bar, and the chapter count,
+  description and genres flash briefly if they changed. If the refresh fails, the details you
+  already had stay and a banner says so ([#2734](https://github.com/jakepurple13/OtakuWorld/pull/2734))
+
+#### Bug Fixes
+
+- Details no longer loads forever when a source fails. It shows the error, with a **Retry** button
+  on Android and iOS ([#2734](https://github.com/jakepurple13/OtakuWorld/pull/2734))
+
+---
+
 ## [33.1.0] - 2026-11-12
 
 _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v33.0.0...v33.1.0_
