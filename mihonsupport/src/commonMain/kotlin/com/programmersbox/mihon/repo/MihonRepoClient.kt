@@ -2,6 +2,7 @@ package com.programmersbox.mihon.repo
 
 import com.programmersbox.kmpmodels.KmpRemoteSources
 import com.programmersbox.kmpmodels.KmpSources
+import com.programmersbox.kmpmodels.RepoCheck
 import com.programmersbox.mihon.MihonLib
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -17,6 +18,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.protobuf.ProtoBuf
 import kotlin.concurrent.Volatile
 
@@ -91,13 +93,13 @@ class MihonRepoClient(private val httpClient: HttpClient) {
         return results.filterNotNull().flatMap { it.sources }
     }
 
-    private data class RepoFetch(val fingerprint: String, val sources: List<KmpRemoteSources>)
+    /** [rawCount] is the index size before the supported-version filter; [fingerprint] is null when the repo has none. */
+    private data class RepoFetch(val fingerprint: String?, val rawCount: Int, val sources: List<KmpRemoteSources>)
 
     /** Returns null when the repo could not be fetched or parsed. Cancellation is rethrown. */
     private suspend fun fetchRepo(base: String): RepoFetch? = try {
         val repo = json.decodeFromString<MihonRepo>(getText("$base/repo.json"))
-        val indexV2 = repo.indexV2
-        if (indexV2 != null) fetchIndexV2(repo, indexV2) else fetchLegacy(base, repo)
+        readIndex(base, repo).also { requireNotNull(it.fingerprint) { "$base/repo.json has no signing key" } }
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
@@ -105,10 +107,45 @@ class MihonRepoClient(private val httpClient: HttpClient) {
         null
     }
 
+    private suspend fun readIndex(base: String, repo: MihonRepo): RepoFetch {
+        val indexV2 = repo.indexV2
+        return if (indexV2 != null) fetchIndexV2(repo, indexV2) else fetchLegacy(base, repo)
+    }
+
+    /**
+     * Classifies a single repo link without touching signing-key state. Cloudstream (`pluginLists`), non-object
+     * `repo.json`, undecodable indexes, and Aniyomi (unsupported extension versions only) repos come back as
+     * [RepoCheck.NotThisFormat]. A repo with no signing key is [RepoCheck.Failed], since [fetch] drops it.
+     */
+    suspend fun check(url: String): RepoCheck {
+        val base = normalize(url)
+        if (!base.startsWith("https://", ignoreCase = true)) return RepoCheck.Failed("Only https links are supported")
+        return try {
+            val text = getText("$base/repo.json")
+            val root = json.parseToJsonElement(text) as? JsonObject ?: return RepoCheck.NotThisFormat
+            if ("pluginLists" in root || "meta" !in root) return RepoCheck.NotThisFormat
+            val repo = json.decodeFromString<MihonRepo>(text)
+            val read = readIndex(base, repo)
+            when {
+                read.rawCount > 0 && read.sources.isEmpty() -> RepoCheck.NotThisFormat
+                // fetch drops unsigned repos, so the sheet must not report them as working.
+                read.fingerprint == null -> RepoCheck.Failed("Repo has no signing key")
+                else -> RepoCheck.Found(repo.meta.name, read.sources)
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: IndexFormatException) {
+            RepoCheck.NotThisFormat
+        } catch (e: Exception) {
+            RepoCheck.Failed(e.message?.takeIf { it.isNotBlank() } ?: e::class.simpleName ?: "Could not read repo")
+        }
+    }
+
     private suspend fun fetchLegacy(base: String, repo: MihonRepo): RepoFetch {
-        val index = json.decodeFromString<List<MihonIndexEntry>>(getText("$base/index.min.json"))
+        val index = getText("$base/index.min.json").let { decodeIndex { json.decodeFromString<List<MihonIndexEntry>>(it) } }
         return RepoFetch(
-            fingerprint = requireNotNull(repo.meta.signingKeyFingerprint) { "$base/repo.json has no signingKeyFingerprint" },
+            fingerprint = repo.meta.signingKeyFingerprint,
+            rawCount = index.size,
             sources = index
                 .filter { MihonLib.isSupported(MihonLib.libVersion(it.version)) }
                 .map { it.toRemote(base) },
@@ -118,32 +155,46 @@ class MihonRepoClient(private val httpClient: HttpClient) {
     /** index_v2: protobuf or proto3-JSON, optionally gzipped; the extension list is inline or behind a URL. */
     private suspend fun fetchIndexV2(repo: MihonRepo, indexV2: String): RepoFetch {
         val indexBytes = getBytes(requireHttps(indexV2))
-        val index = if (isJson(indexBytes)) {
-            v2Json.decodeFromString<V2IndexJson>(indexBytes.decodeToString()).toIndex()
-        } else {
-            ProtoBuf.decodeFromByteArray<V2Index>(indexBytes)
+        val index = decodeIndex {
+            if (isJson(indexBytes)) {
+                v2Json.decodeFromString<V2IndexJson>(indexBytes.decodeToString()).toIndex()
+            } else {
+                ProtoBuf.decodeFromByteArray<V2Index>(indexBytes)
+            }
         }
         val extensions = when (val ext = index.extensions) {
             is V2InlineList -> ext.extensionList
             is V2ListUrl -> {
                 val listBytes = getBytes(requireHttps(ext.extensionListUrl))
-                if (isJson(listBytes)) {
-                    v2Json.decodeFromString<V2ExtensionList>(listBytes.decodeToString())
-                } else {
-                    ProtoBuf.decodeFromByteArray<V2ExtensionList>(listBytes)
+                decodeIndex {
+                    if (isJson(listBytes)) {
+                        v2Json.decodeFromString<V2ExtensionList>(listBytes.decodeToString())
+                    } else {
+                        ProtoBuf.decodeFromByteArray<V2ExtensionList>(listBytes)
+                    }
                 }
             }
             null -> V2ExtensionList()
         }
         val fingerprint = repo.meta.signingKeyFingerprint?.takeIf { it.isNotBlank() }
             ?: index.signingKey.takeIf { it.isNotBlank() }
-            ?: error("$indexV2 has no signing key")
         return RepoFetch(
             fingerprint = fingerprint,
+            rawCount = extensions.extensions.size,
             sources = extensions.extensions
                 .filter { MihonLib.isSupported(it.extensionLib.toDoubleOrNull()) }
                 .map { it.toRemote() },
         )
+    }
+
+    /** Thrown when an index downloaded fine but is not in a shape this client can decode. */
+    private class IndexFormatException(cause: Throwable) : Exception(cause.message, cause)
+
+    /** kotlinx decoders report malformed input as [IllegalArgumentException] (incl. `SerializationException`). */
+    private inline fun <T> decodeIndex(block: () -> T): T = try {
+        block()
+    } catch (e: IllegalArgumentException) {
+        throw IndexFormatException(e)
     }
 
     private fun requireHttps(url: String): String = url.trim().also {

@@ -98,6 +98,9 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v33.0.0...develop_
   [#2721](https://github.com/jakepurple13/OtakuWorld/pull/2721))
 - Faster loading: catalogs load in parallel, Mihon pages load in parallel, and extension class
   loaders are cached ([#2708](https://github.com/jakepurple13/OtakuWorld/pull/2708))
+- Custom repos sheet shows each repo's name, catalog and extension count, explains links that can't
+  be read, and lets you refresh, browse, copy or remove a repo
+  ([#2739](https://github.com/jakepurple13/OtakuWorld/pull/2739))
 
 #### Bug Fixes
 
