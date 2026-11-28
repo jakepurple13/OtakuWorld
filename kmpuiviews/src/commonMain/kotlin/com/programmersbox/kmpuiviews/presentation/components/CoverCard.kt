@@ -81,7 +81,11 @@ fun M3CoverCard(
                 ComposableUtils.IMAGE_WIDTH,
                 ComposableUtils.IMAGE_HEIGHT
             )
-            .tabTarget(onOpen = onCardClick, onMore = onLongPress?.let { { it(ComponentState.Pressed) } })
+            .tabTarget(
+                onOpen = onCardClick,
+                onMore = onLongPress?.let { { it(ComponentState.Pressed) } },
+                item = sharedItemKey,
+            )
             .bounceClick(.94f)
             .customSharedElement(sharedItemKey?.let(::OtakuImageElement))
             .clip(MaterialTheme.shapes.medium)

@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
+import net.thauvin.erik.urlencoder.UrlEncoderUtil
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -943,5 +944,21 @@ class TabsControllerTest {
         assertEquals(controller.windowOf(w1).id, controller.focusedWindow)
         assertEquals(w1, controller.windowOf(w1).activeId.value)
         assertEquals(TabEvent.Flash(w1), events.last())
+    }
+
+    @Test
+    fun tabsShowingTitleMatchesTheEncodedUrlDetailsCarries() {
+        val raw = "https://x.com/a?b=1"
+        // As Navigation3Actions.details(model) builds it.
+        val key = Screen.DetailsScreen.Details(
+            title = "A",
+            description = "d",
+            url = UrlEncoderUtil.encode(raw),
+            imageUrl = "img",
+            source = "src",
+        )
+        val a = controller.open(key, TabOpenMode.Background, homeId)
+
+        assertEquals(listOf(a), controller.tabsShowingTitle(raw, "src", except = homeId).map { it.id })
     }
 }

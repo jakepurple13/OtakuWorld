@@ -886,6 +886,9 @@
     <string name="tabs_open_in_new_tab_and_switch">Open in new tab and switch</string>
     <string name="tabs_open_in_new_window">Open in new window</string>
     <string name="tabs_more">More…</string>
+    <string name="tabs_go_to_open_tab">Go to open tab</string>
+    <string name="tabs_this_window">This window</string>
+    <string name="tabs_window_n">Window %1$d</string>
     <string name="telemetry_section">Usage &amp; crash data</string>
     <string name="telemetry_analytics">Share usage analytics</string>
     <string name="telemetry_analytics_desc">Which features get used.</string>

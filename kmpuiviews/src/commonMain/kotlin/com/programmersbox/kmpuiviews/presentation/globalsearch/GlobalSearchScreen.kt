@@ -487,7 +487,7 @@ fun SearchCoverCard(
                 ComposableUtils.IMAGE_WIDTH,
                 ComposableUtils.IMAGE_HEIGHT
             )
-            .tabTarget(onOpen = onCardClick, onMore = { onLongPress(ComponentState.Pressed) })
+            .tabTarget(onOpen = onCardClick, onMore = { onLongPress(ComponentState.Pressed) }, item = model.sharedItemKey())
             .clip(CardDefaults.shape)
             .combineClickableWithIndication(
                 onLongPress = onLongPress,

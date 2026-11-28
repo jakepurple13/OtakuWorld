@@ -27,7 +27,7 @@ class RaiseRequest(val window: WindowId)
  */
 class TabsController(
     homeNav: TabNavigation3Actions,
-    private val keys: TabKeys,
+    internal val keys: TabKeys,
     prefs: TabPrefsSnapshot,
     private val now: () -> Long = System::currentTimeMillis,
     private val handoffs: List<TabHandoff> = emptyList(),

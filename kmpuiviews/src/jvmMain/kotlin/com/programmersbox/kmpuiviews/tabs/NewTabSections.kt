@@ -48,6 +48,7 @@ import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
 import com.programmersbox.kmpuiviews.presentation.tabs.tabTarget
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.SharedItemKey
 import org.koin.compose.koinInject
 
 /** A small uppercase label above each section, as in the mockup. */
@@ -150,7 +151,7 @@ internal fun NewTabUpdates(items: List<NotificationItem>, modifier: Modifier) {
                     }
                     AssistChip(
                         onClick = open,
-                        modifier = Modifier.tabTarget(open),
+                        modifier = Modifier.tabTarget(open, item = SharedItemKey(item.url, item.source)),
                         label = { Text(item.notiTitle, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                         leadingIcon = { Icon(Icons.Default.NewReleases, null) },
                     )

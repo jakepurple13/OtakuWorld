@@ -1,10 +1,18 @@
 package com.programmersbox.kmpuiviews.tabs
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -15,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.input.pointer.PointerButton
@@ -23,22 +32,31 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.isCtrlPressed
 import androidx.compose.ui.input.pointer.isMetaPressed
 import androidx.compose.ui.input.pointer.isShiftPressed
+import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import androidx.compose.ui.window.rememberCursorPositionProvider
 import com.programmersbox.kmpuiviews.presentation.quickactions.isMacOs
 import com.programmersbox.kmpuiviews.presentation.tabs.TabActions
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.SharedItemKey
 import org.jetbrains.compose.resources.stringResource
 import otakuworld.kmpuiviews.generated.resources.Res
+import otakuworld.kmpuiviews.generated.resources.tabs_go_to_open_tab
 import otakuworld.kmpuiviews.generated.resources.tabs_more
 import otakuworld.kmpuiviews.generated.resources.tabs_open
 import otakuworld.kmpuiviews.generated.resources.tabs_open_in_new_tab
 import otakuworld.kmpuiviews.generated.resources.tabs_open_in_new_tab_and_switch
 import otakuworld.kmpuiviews.generated.resources.tabs_open_in_new_window
+import otakuworld.kmpuiviews.generated.resources.tabs_this_window
+import otakuworld.kmpuiviews.generated.resources.tabs_window_n
 
 /**
  * The mode a press asks for: ⌘ (Ctrl off macOS) opens in the background, adding ⇧ switches to it,
@@ -73,7 +91,12 @@ class DesktopTabActions(
     private val isMac: Boolean = isMacOs,
 ) : TabActions {
 
-    private class MenuRequest(val origin: Rect?, val onOpen: () -> Unit, val onMore: (() -> Unit)?)
+    private class MenuRequest(
+        val origin: Rect?,
+        val onOpen: () -> Unit,
+        val onMore: (() -> Unit)?,
+        val item: SharedItemKey?,
+    )
 
     private var menu by mutableStateOf<MenuRequest?>(null)
 
@@ -81,9 +104,10 @@ class DesktopTabActions(
 
     @OptIn(ExperimentalComposeUiApi::class)
     @Composable
-    override fun Modifier.target(onOpen: () -> Unit, onMore: (() -> Unit)?): Modifier {
+    override fun Modifier.target(onOpen: () -> Unit, onMore: (() -> Unit)?, item: SharedItemKey?): Modifier {
         val currentOpen by rememberUpdatedState(onOpen)
         val currentMore by rememberUpdatedState(onMore)
+        val currentItem by rememberUpdatedState(item)
         val bounds = remember { Bounds() }
         return this
             .onGloballyPositioned { bounds.rect = it.boundsInWindow() }
@@ -95,7 +119,7 @@ class DesktopTabActions(
                         if (event.type != PointerEventType.Press) continue
                         val button = event.button ?: continue
                         if (button == PointerButton.Secondary) {
-                            menu = MenuRequest(bounds.rect, currentOpen, currentMore)
+                            menu = MenuRequest(bounds.rect, currentOpen, currentMore, currentItem)
                             continue
                         }
                         val mods = event.keyboardModifiers
@@ -196,6 +220,16 @@ class DesktopTabActions(
             request.onOpen()
         }
 
+        // Read once as the menu opens: other tabs already showing the title.
+        val matches = remember(request) {
+            request.item?.let { controller.tabsShowingTitle(it.url, it.source, except = tabId) }.orEmpty()
+        }
+
+        fun goTo(tab: TabId) {
+            menu = null
+            controller.goTo(tab)
+        }
+
         Popup(
             popupPositionProvider = rememberCursorPositionProvider(),
             onDismissRequest = { menu = null },
@@ -207,6 +241,10 @@ class DesktopTabActions(
                 shadowElevation = 3.dp,
             ) {
                 Column(Modifier.width(IntrinsicSize.Max).padding(vertical = 8.dp)) {
+                    if (matches.isNotEmpty()) {
+                        GoToOpenTab(matches, ::goTo)
+                        HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                    }
                     DropdownMenuItem(text = { Text(stringResource(Res.string.tabs_open)) }, onClick = { pick(null) })
                     DropdownMenuItem(
                         text = { Text(stringResource(Res.string.tabs_open_in_new_tab)) },
@@ -235,6 +273,65 @@ class DesktopTabActions(
                 }
             }
         }
+    }
+
+    /**
+     * "Go to open tab": with one match, its window on the right and a click goes there; with more, a count and a
+     * submenu to the right listing each match.
+     */
+    @OptIn(ExperimentalComposeUiApi::class)
+    @Composable
+    private fun GoToOpenTab(matches: List<TabState>, onGoTo: (TabId) -> Unit) {
+        val label = stringResource(Res.string.tabs_go_to_open_tab)
+        val single = matches.singleOrNull()
+        if (single != null) {
+            DropdownMenuItem(
+                text = { Text(label) },
+                trailingIcon = { WindowTag(single.id) },
+                onClick = { onGoTo(single.id) },
+            )
+            return
+        }
+
+        var open by remember { mutableStateOf(false) }
+        var size by remember { mutableStateOf(IntSize.Zero) }
+        Box(Modifier.onSizeChanged { size = it }) {
+            DropdownMenuItem(
+                text = { Text(label) },
+                trailingIcon = {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(matches.size.toString(), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null)
+                    }
+                },
+                onClick = { open = true },
+                modifier = Modifier.onPointerEvent(PointerEventType.Enter) { open = true },
+            )
+            val offset = with(LocalDensity.current) { DpOffset(size.width.toDp(), -size.height.toDp()) }
+            DropdownMenu(expanded = open, onDismissRequest = { open = false }, offset = offset) {
+                matches.forEach { match ->
+                    DropdownMenuItem(
+                        text = { Text(controller.keys.labelOf(match.current).text) },
+                        leadingIcon = { WindowTag(match.id) },
+                        onClick = { onGoTo(match.id) },
+                    )
+                }
+            }
+        }
+    }
+
+    /** "This window" for [tab] in this tab's window, else "Window N" by its 1-based place among the windows. */
+    @Composable
+    private fun WindowTag(tab: TabId) {
+        fun windowHolding(id: TabId) = controller.windows.firstOrNull { w -> w.tabs.any { it.id == id } }
+        // A tab closed while the menu is open is in no window.
+        val window = windowHolding(tab) ?: return
+        val text = if (window === windowHolding(tabId)) {
+            stringResource(Res.string.tabs_this_window)
+        } else {
+            stringResource(Res.string.tabs_window_n, controller.windows.indexOf(window) + 1)
+        }
+        Text(text, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
