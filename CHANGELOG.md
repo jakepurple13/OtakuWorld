@@ -227,6 +227,30 @@ _Compare: https://github.com/jakepurple13/OtakuWorld/compare/v33.0.0...develop_
   ↑ ← for the previous page, `]` `[` for chapters, C chapter list, G page grid, B bookmark, M
   reader mode, H bars, F fullscreen. Press `?` on Desktop to see them all
   ([#2723](https://github.com/jakepurple13/OtakuWorld/pull/2723))
+- Reader: 3 new **Page number** styles. **Progress ring** is a small ring in the corner that
+  fills as you read and grows to show the page number when you turn a page. **Wavy line** is a
+  top progress line that ripples while you turn pages and lies flat when you stop. **Dot window**
+  shows about 7 dots that slide as you read; the current dot stretches into a pill with the page
+  number ([#2735](https://github.com/jakepurple13/OtakuWorld/pull/2735))
+
+#### Improvements
+
+- Reader page number styles got a polish pass
+  ([#2735](https://github.com/jakepurple13/OtakuWorld/pull/2735)):
+  - **Story segments**: the page count sits in a roomier pill at the end of the segment row and
+    stays visible. Empty segments are readable on dark pages, and chapters over 30 pages group
+    pages so segments stay wide enough to see. Story segments now work for chapters of any length.
+  - **Classic**: the page chip follows the end of the progress line.
+  - **Rolling pill**: roomier, fills with your progress, and numbers no longer shift the pill's
+    width.
+  - **Scrubber**: a tick for each page in chapters of 40 pages or fewer, and the drag bubble shows
+    a thumbnail of the page you'll land on.
+  - **Edge rail**: roomier page flag, and pages you've read are tinted.
+  - **Printed folio**: a soft shadow replaces the box, with a thin rule above the number.
+  - **Morphing pill**: a small progress bar under the page count.
+  - **Line only**: the line swells briefly on each page turn and has marks at 25, 50 and 75%.
+- Reader: the Progress ring and Dot window are announced as "Page N of M" by screen readers and
+  have full-size touch targets ([#2735](https://github.com/jakepurple13/OtakuWorld/pull/2735))
 
 #### Bug Fixes
 

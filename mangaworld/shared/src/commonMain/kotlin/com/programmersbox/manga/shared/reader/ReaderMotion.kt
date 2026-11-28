@@ -29,10 +29,6 @@ internal fun chapterProgress(currentPage: Int, pages: Int): Float =
 internal fun morphsPages(from: ReaderType, to: ReaderType): Boolean =
     (from == ReaderType.List && to == ReaderType.Pager) || (from == ReaderType.Pager && to == ReaderType.List)
 
-/** Page chip text; the end-of-chapter card sits one past the last page, so the number is capped. */
-internal fun pageLabel(currentPage: Int, pages: Int): String =
-    "p. ${(currentPage + 1).coerceAtMost(pages)} / $pages"
-
 /** Banner suffix for a chapter's page count, or null while unknown or when nothing loaded. */
 internal fun bannerPageText(pageCount: Int?): String? = when {
     pageCount == null || pageCount <= 0 -> null
@@ -61,10 +57,50 @@ internal fun railFirstPage(dot: Int, pages: Int): Int {
     return (dot * pages + dots - 1) / dots
 }
 
-/** Past this many pages the segmented line would be too thin, so it falls back to the plain line. */
-internal const val MAX_SEGMENTS = 60
+internal fun usesSegments(pages: Int): Boolean = pages >= 1
 
-internal fun usesSegments(pages: Int): Boolean = pages in 1..MAX_SEGMENTS
+/** Up to this many pages the segmented line gets one segment per page. */
+internal const val SEGMENT_GROUP_THRESHOLD = 30
+
+/** Past [SEGMENT_GROUP_THRESHOLD] pages, segments cover several pages each so there are at most this many. */
+internal const val MAX_GROUPED_SEGMENTS = 20
+
+internal fun pagesPerSegment(pages: Int): Int =
+    if (pages <= SEGMENT_GROUP_THRESHOLD) 1 else (pages + MAX_GROUPED_SEGMENTS - 1) / MAX_GROUPED_SEGMENTS
+
+internal fun segmentCount(pages: Int): Int {
+    val per = pagesPerSegment(pages)
+    return ((pages + per - 1) / per).coerceAtLeast(1)
+}
+
+/** How full [segment] is when [index] (0-based) is the current page: 1 before it, 0 after, partial within it. */
+internal fun segmentFill(segment: Int, index: Int, pages: Int): Float {
+    val per = pagesPerSegment(pages)
+    val clamped = index.coerceIn(0, (pages - 1).coerceAtLeast(0))
+    val current = clamped / per
+    return when {
+        segment < current -> 1f
+        segment > current -> 0f
+        else -> {
+            val first = current * per
+            (clamped - first + 1f) / minOf(per, pages - first).coerceAtLeast(1)
+        }
+    }
+}
+
+/** Left edge for a chip of [chipWidth] centered on [tip], kept [margin] from both edges of [width]. */
+internal fun clampedChipX(tip: Float, chipWidth: Float, width: Float, margin: Float): Float {
+    val max = width - chipWidth - margin
+    return if (max < margin) margin else (tip - chipWidth / 2).coerceIn(margin, max)
+}
+
+/** Past this many pages the scrubber's per-page ticks would blur together. */
+internal const val MAX_TICK_PAGES = 40
+
+internal fun showScrubberTicks(pages: Int): Boolean = pages in 2..MAX_TICK_PAGES
+
+/** How many dots the dot-window indicator shows at once. */
+internal const val DOT_WINDOW = 7
 
 /** The folio sits in the outer corner like a printed book: start on even pages, end on odd. */
 internal fun folioOnStart(page: Int): Boolean = page % 2 == 0

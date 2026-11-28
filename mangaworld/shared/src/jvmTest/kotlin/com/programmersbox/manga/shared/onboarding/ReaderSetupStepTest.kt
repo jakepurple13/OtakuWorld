@@ -13,6 +13,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.runComposeUiTest
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -111,7 +112,7 @@ class ReaderSetupStepTest {
         val h = handling()
         show(h)
         onNodeWithTag(ReaderDrawerTag).assertDoesNotExist()
-        onNodeWithText("Swipe for chapter list").performClick()
+        onNodeWithText("Swipe for chapter list").performScrollTo().performClick()
         onNodeWithTag(ReaderDrawerTag).assertIsDisplayed()
         mainClock.advanceTimeBy(1600)
         onNodeWithTag(ReaderDrawerTag).assertDoesNotExist()
