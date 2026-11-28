@@ -343,6 +343,35 @@ class TabSessionTest {
     }
 
     @Test
+    fun forwardPagesOfARestoredHistoryAreNotRestored() {
+        val session = TabSession(
+            windows = listOf(
+                WindowSession(
+                    bounds = null,
+                    isMain = true,
+                    activeIndex = 1,
+                    tabs = listOf(
+                        TabSessionEntry(pinned = true, backStack = listOf(encoded(Screen.RecentScreen))),
+                        TabSessionEntry(
+                            pinned = false,
+                            backStack = listOf(encoded(title("A")), encoded(title("B")), encoded(title("C"))),
+                            index = 1,
+                        ),
+                    ),
+                ),
+            )
+        )
+        val after = newController()
+        after.startSession(OnLaunch.Restore, onboardingDone = true, session = session, decode = store::decode)
+        val tab = after.main.tabs.first { !it.pinned }
+
+        assertTrue(after.takeRestored(tab.id, title("B")))
+        assertTrue(after.takeRestored(tab.id, title("A")))
+        // A forward page the user opens later is a fresh visit.
+        assertFalse(after.takeRestored(tab.id, title("C")))
+    }
+
+    @Test
     fun sessionFileCarriesItsVersion() {
         assertTrue(store.write(sampleSession()))
         assertTrue("\"version\":1" in file.readText().replace(" ", ""))

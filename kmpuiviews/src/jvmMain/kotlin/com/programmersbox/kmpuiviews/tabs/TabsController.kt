@@ -388,12 +388,16 @@ class TabsController(
      */
     internal fun restoredTab(entries: List<NavKey>, index: Int): TabState = newTab(entries.first()).also { tab ->
         tab.nav.restoreHistory(entries, index)
-        markRestored(tab.id, entries)
+        markRestored(tab)
     }
 
-    /** [entries]' pages in [tab] came from a session restore. */
-    internal fun markRestored(tab: TabId, entries: List<NavKey>) {
-        restoredKeys.getOrPut(tab) { mutableSetOf() }.addAll(entries)
+    /**
+     * [tab]'s pages at or before its history position came from a session restore. Forward pages are left out: one
+     * the user opens later is a fresh visit.
+     */
+    internal fun markRestored(tab: TabState) {
+        val history = tab.nav.history
+        restoredKeys.getOrPut(tab.id) { mutableSetOf() }.addAll(history.entries.take(history.index + 1))
     }
 
     /**

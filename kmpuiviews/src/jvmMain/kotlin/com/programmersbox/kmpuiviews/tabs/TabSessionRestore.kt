@@ -74,7 +74,7 @@ fun TabsController.restore(
                 entries.isEmpty() -> null
                 entry.pinned && saved.isMain -> home.also {
                     it.nav.restoreHistory(entries, index)
-                    markRestored(it.id, entries)
+                    markRestored(it)
                 }
                 entry.pinned -> null
                 else -> restoredTab(entries, index)
