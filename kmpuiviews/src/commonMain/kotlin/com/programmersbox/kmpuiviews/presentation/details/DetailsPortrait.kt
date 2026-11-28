@@ -193,6 +193,7 @@ fun DetailsView(
                         scrollBehavior = scrollBehavior,
                     )
                 } else {
+                    Box {
                     TopAppBar(
                         title = {
                             Text(
@@ -238,10 +239,14 @@ fun DetailsView(
                                     }
                                 },
                                 onNoteClick = { notesPanelToggle?.invoke() ?: run { showNoteSheet = true } },
+                                isRefreshing = detailsActions.isRefreshing(),
+                                onRefresh = detailsActions.refresh,
                             )
                         },
                         scrollBehavior = scrollBehavior,
                     )
+                    DetailsRefreshProgress(detailsActions.isRefreshing())
+                    }
                 }
             }
         },
@@ -336,6 +341,7 @@ fun DetailsView(
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier
+                                .highlightOnChange(info.description)
                                 .clip(MaterialTheme.shapes.medium)
                                 .combinedClickable(
                                     interactionSource = null,

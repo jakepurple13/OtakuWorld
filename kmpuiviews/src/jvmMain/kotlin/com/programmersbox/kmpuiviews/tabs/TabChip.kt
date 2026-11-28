@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.tabs
 
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -223,6 +224,11 @@ private fun TabIcon(tab: TabState, label: TabLabel, style: TabIconStyle) {
     val iconModifier = Modifier.size(16.dp)
     val plain = if (style.showCovers) null else plainTabIcon(style.keys.keyOf(tab.current), style.videoChapters)
     when {
+        // The page in this tab is reloading, as a browser shows it in place of the favicon.
+        tab.refresh.refreshing -> Box(iconModifier, contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(Modifier.size(12.dp), strokeWidth = 2.dp)
+        }
+
         tab.pinned -> Icon(Icons.Default.Home, null, iconModifier)
         plain != null -> Icon(plain, null, iconModifier)
         style.showCovers && label.imageUrl != null -> KamelImage(

@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews
 
+import com.programmersbox.kmpuiviews.tabs.canStopRefresh
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -87,6 +88,7 @@ internal fun windowTabShortcut(event: KeyEvent, window: BrowserWindowState, cont
         isMac = isMacOs,
         chromeVisible = window.chromeVisible,
         textFieldFocused = controller.ui.contentHasFocus[window.id] == true,
+        canStopRefresh = window.canStopRefresh,
     )?.let { controller.perform(it, window) } != null
 
 /** What every window draws over its content: tab motion, drag feedback and the mini player. */

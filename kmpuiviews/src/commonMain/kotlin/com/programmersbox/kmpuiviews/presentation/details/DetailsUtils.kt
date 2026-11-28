@@ -169,6 +169,8 @@ internal fun DetailActions(
     onShowLists: () -> Unit,
     addToForLater: () -> Unit,
     onNoteClick: () -> Unit,
+    isRefreshing: Boolean = false,
+    onRefresh: () -> Unit = {},
     customActions: @Composable () -> Unit = {},
 ) {
     val uriHandler = LocalUriHandler.current
@@ -185,6 +187,7 @@ internal fun DetailActions(
         expanded = showDropDown,
         onDismissRequest = dropDownDismiss,
     ) {
+        RefreshMenuItem(isRefreshing = isRefreshing, onRefresh = onRefresh, dismiss = dropDownDismiss)
 
         DropdownMenuItem(
             onClick = {
