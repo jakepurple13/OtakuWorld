@@ -157,6 +157,7 @@ private fun TipChip(
 @Composable
 internal fun IndicatorChip(
     modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
     content: @Composable RowScope.() -> Unit,
 ) {
     CompositionLocalProvider(
@@ -167,6 +168,7 @@ internal fun IndicatorChip(
             verticalAlignment = Alignment.CenterVertically,
             modifier = modifier
                 .clip(CircleShape)
+                .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
                 .background(ChipColor)
                 .padding(horizontal = 12.dp, vertical = 5.dp),
             content = content
@@ -226,9 +228,8 @@ internal fun SegmentedProgressLine(
             }
         }
         IndicatorChip(
-            Modifier
-                .graphicsLayer { alpha = chipAlpha }
-                .clickable(onClick = onChipClick)
+            modifier = Modifier.graphicsLayer { alpha = chipAlpha },
+            onClick = onChipClick,
         ) { PageCount(index + 1, pages, style = LocalTextStyle.current) }
     }
 }

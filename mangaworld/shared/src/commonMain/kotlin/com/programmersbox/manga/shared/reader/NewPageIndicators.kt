@@ -25,6 +25,12 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
+import androidx.compose.material3.ripple
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -74,14 +80,32 @@ internal fun PageRing(
     val alpha by animateFloatAsState(if (active) 1f else .75f, MaterialTheme.motionScheme.defaultEffectsSpec())
     val shown by animateFloatAsState(fraction(page, pages), ProgressSpring)
     val color = progressColor(page, pages)
+    // 48dp touch target around a ring that can shrink to 26dp
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
+            .size(48.dp)
+            .pageButtonSemantics(page, pages)
+            .clickable(
+                interactionSource = null,
+                indication = ripple(bounded = false, radius = 24.dp),
+                onClick = onClick
+            )
+    ) {
+        RingFace(size, alpha, shown, color, page, active)
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun RingFace(size: Dp, alpha: Float, shown: Float, color: Color, page: Int, active: Boolean) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
             .size(size)
             .graphicsLayer { this.alpha = alpha }
             .clip(CircleShape)
             .background(IndicatorContainer)
-            .clickable(onClick = onClick)
     ) {
         CircularWavyProgressIndicator(
             progress = { shown },
@@ -150,64 +174,86 @@ internal fun PageDotWindow(
     val onPrimary = MaterialTheme.colorScheme.onPrimary
     val alpha by animateFloatAsState(if (active) 1f else .7f, MaterialTheme.motionScheme.defaultEffectsSpec())
     val bouncy = spring<Dp>(dampingRatio = Spring.DampingRatioMediumBouncy)
-    val currentWidth by animateDpAsState(if (active) 30.dp else 16.dp, bouncy)
-    val currentHeight by animateDpAsState(if (active) 18.dp else DotSize, bouncy)
-    val slide = MaterialTheme.motionScheme.defaultSpatialSpec<Dp>()
+    val currentWidthTarget = if (active) 30.dp else 16.dp
+    // Read only at placement, so the bounce moves dots without recomposing them
+    val currentWidth = animateDpAsState(currentWidthTarget, bouncy)
+    val slotSpec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
     val numberStyle = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp, fontWeight = FontWeight.SemiBold).tabular()
 
+    // Touch target is at least 48dp tall around the 28dp window
     Box(
-        modifier
-            .size(DotWindowWidth, DotWindowHeight)
-            .graphicsLayer {
-                this.alpha = alpha
-                compositingStrategy = CompositingStrategy.Offscreen
-            }
-            .drawWithContent {
-                drawContent()
-                drawRect(DotWindowFade, blendMode = BlendMode.DstIn)
-            }
-            .clip(CircleShape)
-            .background(IndicatorContainer)
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .minimumInteractiveComponentSize()
+            .pageButtonSemantics(index + 1, pages)
             .clickable(onClick = onClick)
     ) {
-        val first = (index - DOT_WINDOW).coerceAtLeast(0)
-        val last = (index + DOT_WINDOW).coerceAtMost(pages - 1)
-        for (i in first..last) {
-            key(i) {
-                val isCurrent = i == index
-                val width = if (isCurrent) currentWidth else DotSize
-                val height = if (isCurrent) currentHeight else DotSize
-                // Distance from the window's center to this dot's center
-                val target = when {
-                    i < index -> -(currentWidth / 2 + DotGap + DotSize / 2 + DotPitch * (index - 1 - i))
-                    i > index -> currentWidth / 2 + DotGap + DotSize / 2 + DotPitch * (i - index - 1)
-                    else -> 0.dp
+        Box(
+            Modifier
+                .size(DotWindowWidth, DotWindowHeight)
+                .graphicsLayer {
+                    this.alpha = alpha
+                    compositingStrategy = CompositingStrategy.Offscreen
                 }
-                val center by animateDpAsState(target, slide)
-                val color by animateColorAsState(
-                    when {
-                        isCurrent -> primary
-                        i < index -> primary.copy(alpha = .55f)
-                        else -> Color.White.copy(alpha = .45f)
-                    }
-                )
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .offset {
-                            IntOffset(
-                                (DotWindowWidth / 2 + center - width / 2).roundToPx(),
-                                ((DotWindowHeight - height) / 2).roundToPx()
-                            )
+                .drawWithContent {
+                    drawContent()
+                    drawRect(DotWindowFade, blendMode = BlendMode.DstIn)
+                }
+                .clip(CircleShape)
+                .background(IndicatorContainer)
+        ) {
+            val first = (index - DOT_WINDOW).coerceAtLeast(0)
+            val last = (index + DOT_WINDOW).coerceAtMost(pages - 1)
+            for (i in first..last) {
+                key(i) {
+                    val isCurrent = i == index
+                    // Signed distance from the current page, in dots; animates so the row slides
+                    val slot = animateFloatAsState((i - index).toFloat(), slotSpec)
+                    val width by animateDpAsState(if (isCurrent) currentWidthTarget else DotSize, bouncy)
+                    val height by animateDpAsState(if (isCurrent && active) 18.dp else DotSize, bouncy)
+                    val color by animateColorAsState(
+                        when {
+                            isCurrent -> primary
+                            i < index -> primary.copy(alpha = .55f)
+                            else -> Color.White.copy(alpha = .45f)
                         }
-                        .size(width, height)
-                        .background(color, CircleShape)
-                ) {
-                    if (isCurrent && active) Text("${i + 1}", style = numberStyle, color = onPrimary)
+                    )
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .offset {
+                                val center = dotCenter(slot.value, currentWidth.value)
+                                IntOffset(
+                                    (DotWindowWidth / 2 + center - width / 2).roundToPx(),
+                                    ((DotWindowHeight - height) / 2).roundToPx()
+                                )
+                            }
+                            .size(width, height)
+                            .background(color, CircleShape)
+                    ) {
+                        if (isCurrent && active) Text("${i + 1}", style = numberStyle, color = onPrimary)
+                    }
                 }
             }
         }
     }
+}
+
+/**
+ * Distance from the window's center to a dot [slot] dots away from the current one (negative = before it),
+ * leaving room for the current dot's [currentWidth]. Continuous between slots so the row can slide.
+ */
+private fun dotCenter(slot: Float, currentWidth: Dp): Dp {
+    val distance = kotlin.math.abs(slot)
+    val firstNeighbor = currentWidth / 2 + DotGap + DotSize / 2
+    val magnitude = if (distance >= 1f) firstNeighbor + DotPitch * (distance - 1f) else firstNeighbor * distance
+    return if (slot < 0) -magnitude else magnitude
+}
+
+/** Announces "Page N of M" and acts as a button that opens the page list. */
+private fun Modifier.pageButtonSemantics(page: Int, pages: Int): Modifier = semantics(mergeDescendants = true) {
+    contentDescription = "Page $page of $pages"
+    role = Role.Button
 }
 
 private val DotSize = 6.dp

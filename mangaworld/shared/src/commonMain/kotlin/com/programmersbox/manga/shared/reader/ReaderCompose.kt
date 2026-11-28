@@ -798,6 +798,15 @@ private fun ReadViewContent(
                     )
                 }
 
+                // Updates when the chapter or its pages reload; read only while the scrubber bubble shows
+                val thumbnailUrls by remember {
+                    derivedStateOf {
+                        viewModel.pageItems
+                            .filterIsInstance<PageItem.Page>()
+                            .filter { it.chapterListIndex == viewModel.currentChapter }
+                            .map { it.url }
+                    }
+                }
                 PageIndicatorOverlay(
                     style = pageIndicatorStyle,
                     currentPage = currentPage,
@@ -809,13 +818,7 @@ private fun ReadViewContent(
                     onOpenPages = { showBottomSheet = true },
                     onJumpToPage = ::jumpToPage,
                     pageThumbnail = { i ->
-                        val url = remember(i, viewModel.currentChapter) {
-                            viewModel.pageItems
-                                .filterIsInstance<PageItem.Page>()
-                                .filter { it.chapterListIndex == viewModel.currentChapter }
-                                .getOrNull(i)
-                                ?.url
-                        }
+                        val url = thumbnailUrls.getOrNull(i)
                         if (url != null) {
                             KamelImage(
                                 resource = {

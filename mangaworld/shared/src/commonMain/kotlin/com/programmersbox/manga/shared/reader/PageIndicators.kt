@@ -234,7 +234,7 @@ internal fun PageIndicatorOverlay(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .then(aboveBars)
-                    .padding(end = 12.dp, bottom = 4.dp)
+                    .padding(end = 10.dp, bottom = 2.dp)
             )
 
             PageIndicatorStyle.Dots -> PageDotWindow(
@@ -365,23 +365,11 @@ private fun PageScrubber(
         val lastIndex = (pages - 1).coerceAtLeast(1)
         Box(
             contentAlignment = Alignment.CenterStart,
-            modifier = Modifier
-                .weight(1f)
-                .drawBehind {
-                    if (!ticks) return@drawBehind
-                    val inset = ScrubberThumbInset.toPx()
-                    val radius = 1.dp.toPx()
-                    repeat(pages) { i ->
-                        drawCircle(
-                            color = ScrubberTick,
-                            radius = radius,
-                            center = Offset(inset + (size.width - inset * 2) * i / lastIndex, size.height / 2)
-                        )
-                    }
-                }
+            modifier = Modifier.weight(1f)
         ) {
             // Plain overload on purpose: the thumb/track overload differs between the CMP and Android material3
-            // artifacts and fails at runtime with NoSuchMethodError.
+            // artifacts and fails at runtime with NoSuchMethodError. Steps draw a tick per page on top of the
+            // track and snap the thumb to whole pages.
             Slider(
                 value = dragValue ?: index.toFloat(),
                 onValueChange = { dragValue = it },
@@ -390,6 +378,7 @@ private fun PageScrubber(
                     dragValue = null
                 },
                 valueRange = 0f..lastIndex.toFloat(),
+                steps = if (ticks) pages - 2 else 0,
                 interactionSource = interactionSource,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -667,8 +656,6 @@ private fun UnclippedPill(
 
 internal val IndicatorContainer: Color
     @Composable get() = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = .9f)
-
-private val ScrubberTick = Color.White.copy(alpha = .55f)
 
 /** Distance from the slider's edge to the thumb's center at either end of the track. */
 private val ScrubberThumbInset = 10.dp
