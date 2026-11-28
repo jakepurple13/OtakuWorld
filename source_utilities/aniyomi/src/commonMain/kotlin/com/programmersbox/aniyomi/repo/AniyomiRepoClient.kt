@@ -2,6 +2,7 @@ package com.programmersbox.aniyomi.repo
 
 import com.programmersbox.kmpmodels.KmpRemoteSources
 import com.programmersbox.kmpmodels.KmpSources
+import com.programmersbox.kmpmodels.RepoCheck
 import com.programmersbox.aniyomi.AniyomiLib
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -17,6 +18,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.protobuf.ProtoBuf
 import kotlin.concurrent.Volatile
@@ -92,7 +94,8 @@ class AniyomiRepoClient(private val httpClient: HttpClient) {
         return results.filterNotNull().flatMap { it.sources }
     }
 
-    private data class RepoFetch(val fingerprint: String, val sources: List<KmpRemoteSources>)
+    /** [rawCount] is the index size before the supported-version filter; [fingerprint] is null when the repo has none. */
+    private data class RepoFetch(val fingerprint: String?, val rawCount: Int, val sources: List<KmpRemoteSources>)
 
     /** Returns null when the repo could not be fetched or parsed. Cancellation is rethrown. */
     private suspend fun fetchRepo(base: String): RepoFetch? = try {
@@ -100,8 +103,7 @@ class AniyomiRepoClient(private val httpClient: HttpClient) {
         // Cloudstream repos share the repo.json name but use a different plugin format.
         if ("pluginLists" in json.parseToJsonElement(repoText).jsonObject) return null
         val repo = json.decodeFromString<AniyomiRepo>(repoText)
-        val indexV2 = repo.indexV2
-        if (indexV2 != null) fetchIndexV2(repo, indexV2) else fetchLegacy(base, repo)
+        readIndex(base, repo).also { requireNotNull(it.fingerprint) { "$base/repo.json has no signing key" } }
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
@@ -109,10 +111,38 @@ class AniyomiRepoClient(private val httpClient: HttpClient) {
         null
     }
 
+    private suspend fun readIndex(base: String, repo: AniyomiRepo): RepoFetch {
+        val indexV2 = repo.indexV2
+        return if (indexV2 != null) fetchIndexV2(repo, indexV2) else fetchLegacy(base, repo)
+    }
+
+    /**
+     * Classifies a single repo link without touching signing-key state. Cloudstream (`pluginLists`), non-object
+     * `repo.json`, and Mihon (unsupported extension versions only) repos come back as [RepoCheck.NotThisFormat].
+     */
+    suspend fun check(url: String): RepoCheck {
+        val base = normalize(url)
+        if (!base.startsWith("https://", ignoreCase = true)) return RepoCheck.Failed("Only https links are supported")
+        return try {
+            val text = getText("$base/repo.json")
+            val root = json.parseToJsonElement(text) as? JsonObject ?: return RepoCheck.NotThisFormat
+            if ("pluginLists" in root || "meta" !in root) return RepoCheck.NotThisFormat
+            val repo = json.decodeFromString<AniyomiRepo>(text)
+            val read = readIndex(base, repo)
+            if (read.rawCount > 0 && read.sources.isEmpty()) RepoCheck.NotThisFormat
+            else RepoCheck.Found(repo.meta.name, read.sources)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            RepoCheck.Failed(e.message?.takeIf { it.isNotBlank() } ?: e::class.simpleName ?: "Could not read repo")
+        }
+    }
+
     private suspend fun fetchLegacy(base: String, repo: AniyomiRepo): RepoFetch {
         val index = json.decodeFromString<List<AniyomiIndexEntry>>(getText("$base/index.min.json"))
         return RepoFetch(
-            fingerprint = requireNotNull(repo.meta.signingKeyFingerprint) { "$base/repo.json has no signingKeyFingerprint" },
+            fingerprint = repo.meta.signingKeyFingerprint,
+            rawCount = index.size,
             sources = index
                 .filter { AniyomiLib.isSupported(AniyomiLib.libVersion(it.version)) }
                 .map { it.toRemote(base) },
@@ -141,9 +171,9 @@ class AniyomiRepoClient(private val httpClient: HttpClient) {
         }
         val fingerprint = repo.meta.signingKeyFingerprint?.takeIf { it.isNotBlank() }
             ?: index.signingKey.takeIf { it.isNotBlank() }
-            ?: error("$indexV2 has no signing key")
         return RepoFetch(
             fingerprint = fingerprint,
+            rawCount = extensions.extensions.size,
             sources = extensions.extensions
                 .filter { AniyomiLib.isSupported(it.extensionLib.toDoubleOrNull()) }
                 .map { it.toRemote() },
