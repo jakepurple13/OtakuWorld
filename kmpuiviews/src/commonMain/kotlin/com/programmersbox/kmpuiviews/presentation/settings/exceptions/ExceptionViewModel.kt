@@ -57,9 +57,6 @@ class ExceptionViewModel(
     private val now: () -> Long = { Clock.System.now().toEpochMilliseconds() },
     private val timeZone: TimeZone = TimeZone.currentSystemDefault(),
 ) : ViewModel() {
-    // Kept for the old screen until it is replaced.
-    val exceptions = exceptionDao.getAllExceptions()
-
     private val stored: StateFlow<List<ExceptionItem>> = exceptionDao.getAllExceptions()
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
@@ -181,11 +178,6 @@ class ExceptionViewModel(
 
     private fun taskFor(row: ExceptionRow) =
         explanationTasks.getOrPut(row.parsed.groupKey) { AiTask(aiText, viewModelScope) }
-
-    // Old screen API, removed with it.
-    fun deleteItem(exceptionItem: ExceptionItem) {
-        viewModelScope.launch { exceptionDao.deleteException(exceptionItem) }
-    }
 
     // The deletes onCleared hands to GlobalScope; tests join it before closing the database.
     internal var clearedDeletes: Job? = null
